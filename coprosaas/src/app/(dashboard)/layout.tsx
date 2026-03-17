@@ -23,27 +23,18 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     redirect('/login');
   }
 
-  // Récupération du profil utilisateur
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', user.id)
-    .single();
+  // Récupération du profil, copropriétés syndic et lots en parallèle
+  const [
+    { data: profile },
+    { data: syndicCopros },
+    { data: coproRows },
+  ] = await Promise.all([
+    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+    supabase.from('coproprietes').select('id, nom, adresse, ville').eq('syndic_id', user.id).order('nom'),
+    supabase.from('coproprietaires').select('copropriete_id, coproprietes(id, nom, adresse, ville)').eq('user_id', user.id),
+  ]);
 
   const userName = profile?.full_name ?? user.email ?? '';
-
-  // --- Copropriétés en tant que SYNDIC ---
-  const { data: syndicCopros } = await supabase
-    .from('coproprietes')
-    .select('id, nom, adresse, ville')
-    .eq('syndic_id', user.id)
-    .order('nom');
-
-  // --- Copropriétés en tant que COPROPRIÉTAIRE ---
-  const { data: coproRows } = await supabase
-    .from('coproprietaires')
-    .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
-    .eq('user_id', user.id);
 
   // Déduplique et fusionne les deux listes avec le rôle associé
   const syndicIds = new Set((syndicCopros ?? []).map((c) => c.id));

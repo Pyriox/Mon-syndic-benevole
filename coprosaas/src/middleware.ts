@@ -83,8 +83,24 @@ export async function middleware(request: NextRequest) {
 }
 
 // Définit les routes sur lesquelles le middleware s'exécute
+// On exclut volontairement la landing page et les assets statiques pour éviter
+// un aller-retour réseau vers Supabase sur chaque requête publique.
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/dashboard/:path*',
+    '/coproprietes/:path*',
+    '/coproprietaires/:path*',
+    '/depenses/:path*',
+    '/appels-de-fonds/:path*',
+    '/documents/:path*',
+    '/assemblees/:path*',
+    '/incidents/:path*',
+    '/profil/:path*',
+    '/abonnement/:path*',
+    '/aide/:path*',
+    '/admin/:path*',
+    '/login',
+    '/register',
+    '/reset-password',
   ],
 };
