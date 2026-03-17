@@ -90,8 +90,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
   useEffect(() => {
     if (!isOpen || !formData.copropriete_id) return;
-    setLoadingResolutions(true);
     const fetchResolutions = async () => {
+      setLoadingResolutions(true);
       const { data: ags } = await supabase
         .from('assemblees_generales')
         .select('id, titre, date_ag')

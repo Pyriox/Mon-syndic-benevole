@@ -7,8 +7,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import { formatEuros, formatDate, LABELS_STATUT_INCIDENT, LABELS_CATEGORIE } from '@/lib/utils';
+import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 import {
   Users,
   AlertTriangle,
@@ -102,12 +101,14 @@ export default async function DashboardPage() {
       .order('date_declaration', { ascending: false })
       .limit(5),
 
-    // AG à venir
+    // AG à venir (hors terminées et annulées)
     supabase
       .from('assemblees_generales')
       .select('id, titre, date_ag, statut')
       .eq('copropriete_id', scopeId)
       .gte('date_ag', new Date().toISOString())
+      .neq('statut', 'terminee')
+      .neq('statut', 'annulee')
       .order('date_ag', { ascending: true })
       .limit(3),
 
@@ -200,16 +201,6 @@ export default async function DashboardPage() {
       total,
       pct: totalRepartition > 0 ? Math.round((total / totalRepartition) * 100) : 0,
     }));
-
-  // Couleurs des statuts d'incident
-  const couleurStaIncident = (statut: string) => {
-    const map: Record<string, 'danger' | 'warning' | 'success'> = {
-      ouvert: 'danger',
-      en_cours: 'warning',
-      resolu: 'success',
-    };
-    return map[statut] ?? 'default';
-  };
 
   return (
     <div className="space-y-6">

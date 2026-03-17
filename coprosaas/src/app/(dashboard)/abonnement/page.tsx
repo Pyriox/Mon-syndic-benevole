@@ -1,13 +1,13 @@
 ﻿// ============================================================
 // Page : Abonnement
-// 3 plans : Essentiel (≤15 lots), Confort (≤25 lots), Illimité
-// -10 % pour paiement annuel sur tous les plans
+// 3 plans : Essentiel (10 lots), Confort (20 lots), Illimité
+// Facturation annuelle
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Card, { CardHeader } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import { Check, CreditCard } from 'lucide-react';
+import { CheckCircle, CreditCard } from 'lucide-react';
 
 const FEATURES = [
   'Copropriétaires illimités',
@@ -24,20 +24,18 @@ const PLANS = [
   {
     id: 'essentiel',
     name: 'Essentiel',
-    desc: "Jusqu'à 15 lots inclus",
+    desc: '10 lots inclus',
     monthly: 20,
-    annual: 216,
-    annualMonthly: 18,
+    annual: 240,
     badge: 'Le plus populaire',
     highlight: true,
   },
   {
     id: 'confort',
     name: 'Confort',
-    desc: "Jusqu'à 25 lots inclus",
+    desc: '20 lots inclus',
     monthly: 30,
-    annual: 324,
-    annualMonthly: 27,
+    annual: 360,
     badge: null,
     highlight: false,
   },
@@ -45,9 +43,8 @@ const PLANS = [
     id: 'illimite',
     name: 'Illimité',
     desc: 'Lots illimités',
-    monthly: 50,
+    monthly: 45,
     annual: 540,
-    annualMonthly: 45,
     badge: null,
     highlight: false,
   },
@@ -71,7 +68,7 @@ export default async function AbonnementPage() {
   const isSubscribed = planActuel === 'actif';
 
   // Plan recommandé selon le nombre de lots total
-  const recommendedPlan = totalLots <= 15 ? 'essentiel' : totalLots <= 25 ? 'confort' : 'illimite';
+  const recommendedPlan = totalLots <= 10 ? 'essentiel' : totalLots <= 20 ? 'confort' : 'illimite';
 
   return (
     <div className="min-h-full flex flex-col items-center justify-start py-8 px-4">
@@ -104,34 +101,27 @@ export default async function AbonnementPage() {
         </Card>
 
         {/* Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch mb-6">
           {PLANS.map((plan) => {
             const isRecommended = plan.id === recommendedPlan;
             const isPrimary = plan.highlight || isRecommended;
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-2xl p-6 flex flex-col gap-4 ${
+                className={`relative rounded-2xl p-6 flex flex-col ${
                   isPrimary
                     ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl shadow-blue-900/20'
                     : 'bg-white border border-gray-200 shadow-sm'
                 }`}
               >
-                {/* Titre + badges */}
                 <div className="flex items-start justify-between gap-2 min-h-[24px]">
                   <div>
-                    <p className={`text-sm font-bold ${isPrimary ? 'text-white' : 'text-gray-900'}`}>
-                      {plan.name}
-                    </p>
-                    <p className={`text-xs mt-0.5 ${isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>
-                      {plan.desc}
-                    </p>
+                    <p className={`text-sm font-bold ${isPrimary ? 'text-white' : 'text-gray-900'}`}>{plan.name}</p>
+                    <p className={`text-xs mt-0.5 ${isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>{plan.desc}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {plan.badge && (
-                      <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        {plan.badge}
-                      </span>
+                      <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.badge}</span>
                     )}
                     {isRecommended && (
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isPrimary ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'}`}>
@@ -140,41 +130,19 @@ export default async function AbonnementPage() {
                     )}
                   </div>
                 </div>
-
-                {/* Prix */}
-                <div>
+                <div className="mt-3">
                   <div className="flex items-end gap-1">
-                    <span className={`text-4xl font-extrabold ${isPrimary ? 'text-white' : 'text-gray-900'}`}>
-                      {plan.monthly}&nbsp;€
-                    </span>
+                    <span className={`text-4xl font-extrabold ${isPrimary ? 'text-white' : 'text-gray-900'}`}>{plan.monthly}&nbsp;€</span>
                     <span className={`pb-1 text-sm ${isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>/mois</span>
                   </div>
                   <p className={`text-xs mt-1 ${isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>
-                    ou{' '}
-                    <span className={`font-semibold ${isPrimary ? 'text-white' : 'text-gray-700'}`}>
-                      {plan.annual}&nbsp;€/an
-                    </span>
-                    {' '}({plan.annualMonthly}&nbsp;€/mois &mdash; &minus;10&nbsp;%)
+                    soit{' '}
+                    <span className={`font-semibold ${isPrimary ? 'text-white' : 'text-gray-700'}`}>{plan.annual}&nbsp;€/an</span>
                   </p>
                 </div>
-
-                {/* Fonctionnalités */}
-                <ul className="space-y-1.5 flex-1">
-                  {FEATURES.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm">
-                      <Check
-                        size={14}
-                        className={`mt-0.5 shrink-0 ${isPrimary ? 'text-green-300' : 'text-green-500'}`}
-                      />
-                      <span className={isPrimary ? 'text-white/90' : 'text-gray-600'}>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Bouton */}
                 <button
                   disabled={isSubscribed}
-                  className={`mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`mt-5 flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
                     isSubscribed
                       ? 'bg-white/10 text-white/50 cursor-default'
                       : isPrimary
@@ -183,15 +151,28 @@ export default async function AbonnementPage() {
                   }`}
                 >
                   <CreditCard size={15} />
-                  {isSubscribed ? 'Abonnement actif' : 'S’abonner — 30 jours offerts'}
+                  {isSubscribed ? 'Abonnement actif' : 'S’abonner'}
                 </button>
               </div>
             );
           })}
         </div>
 
-        <p className="text-xs text-gray-400 text-center">
-          Carte bancaire requise. Les 30 premiers jours ne seront pas facturés. Sans engagement.{' '}
+        {/* Fonctionnalités incluses dans tous les plans */}
+        <Card>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">Inclus dans tous les plans</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5">
+            {FEATURES.map((f) => (
+              <div key={f} className="flex items-center gap-2.5 text-sm">
+                <CheckCircle size={15} className="text-green-500 shrink-0" />
+                <span className="text-gray-700">{f}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+                <p className="text-xs text-gray-400 text-center">
+          Facturation annuelle. Sans engagement.{' '}
           Pour toute question :{' '}
           <a href="mailto:contact@mon-syndic-benevole.fr" className="underline hover:text-gray-600">
             contact@mon-syndic-benevole.fr

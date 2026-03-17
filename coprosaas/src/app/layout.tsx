@@ -7,10 +7,69 @@ const geist = Geist({
   subsets: ["latin"],
 });
 
+const APP_URL = "https://syndic-benevole.eu";
+const TITLE   = "Mon Syndic Bénévole — La gestion de copropriété simple & abordable";
+const DESC    = "Mon Syndic Bénévole simplifie la gestion des copropriétés pour les syndics bénévoles. Charges, appels de fonds, assemblées générales, documents et plus. Essai gratuit 30 jours, puis à partir de 20 €/mois.";
+
 export const metadata: Metadata = {
-  title: "Mon Syndic Bénévole — La gestion de copropriété simple & abordable",
-  description:
-    "Mon Syndic Bénévole simplifie la gestion des copropriétés pour les syndics bénévoles. Charges, appels de fonds, assemblées générales et plus. Essai gratuit 30 jours, puis 25€/mois.",
+  metadataBase: new URL(APP_URL),
+
+  title: {
+    default: TITLE,
+    template: "%s | Mon Syndic Bénévole",
+  },
+  description: DESC,
+
+  keywords: [
+    "syndic bénévole",
+    "gestion copropriété",
+    "logiciel syndic",
+    "assemblée générale copropriété",
+    "appel de fonds",
+    "charges copropriété",
+    "PV assemblée générale",
+    "convocation AG",
+    "tantièmes",
+    "copropriété logiciel",
+  ],
+
+  authors: [{ name: "Mon Syndic Bénévole", url: APP_URL }],
+  creator: "Mon Syndic Bénévole",
+  publisher: "Mon Syndic Bénévole",
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+
+  alternates: {
+    canonical: APP_URL,
+  },
+
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: APP_URL,
+    siteName: "Mon Syndic Bénévole",
+    title: TITLE,
+    description: DESC,
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Mon Syndic Bénévole — Logiciel de gestion de copropriété",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESC,
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

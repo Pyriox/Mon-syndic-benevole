@@ -27,13 +27,13 @@ const MAJORITE_INFO: Record<string, MajoriteInfo> = {
     ],
   },
   article_25: {
-    label: 'Art. 25',
+    label: 'Art. 25 + 25-1',
     badge: 'bg-orange-100 text-orange-700',
-    titre: 'Majorité absolue — Article 25',
+    titre: 'Majorité absolue — Article 25 (avec passerelle Art. 25-1)',
     lignes: [
-      'La décision doit recueillir la majorité des voix de TOUS les copropriétaires du syndicat (présents, représentés ET absents), soit plus de 50 % des tantièmes.',
-      'Si la résolution obtient au moins 1/3 des voix sans atteindre la majorité absolue, un second vote à la majorité simple (Art. 24) peut être organisé immédiatement.',
-      'Utilisée notamment pour la désignation du syndic.',
+      'La décision doit recueillir la majorité des voix de TOUS les copropriétaires du syndicat (présents, représentés ET absents), soit strictement plus de 50 % des tantiemes.',
+      'Passerelle Art. 25-1 : si la résolution obtient au moins 1/3 des tantiemes de tous les copropriétaires sans atteindre la majorité absolue, l’assemblée peut immédiatement procéder à un second vote à la majorité simple (Art. 24) parmi les présents et représentés.',
+      'Utilisée notamment pour la désignation du syndic, du conseil syndical, et la cotisation au fonds de travaux.',
     ],
   },
   article_26: {

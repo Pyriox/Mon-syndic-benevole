@@ -52,13 +52,13 @@ const TEMPLATES_ORDINAIRE: Omit<WizardResolution, 'inclure' | 'budgetPostes' | '
     description: "Élu par l'assemblée pour diriger les débats. Le syndic ne peut être président.",
     majorite: 'article_24', type_resolution: 'president_seance',    optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
   { id: 'r2',  numero: 2,  titre: 'Désignation du secrétaire de séance',
-    description: "Chargée de rédiger le procès-verbal. Souvent le syndic.",
+    description: "Chargé de rédiger le procès-verbal. Souvent le syndic.",
     majorite: 'article_24', type_resolution: 'secretaire_seance',   optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
   { id: 'r3',  numero: 3,  titre: 'Désignation du ou des scrutateurs',
-    description: 'Contrôlent les votes et la feuille de présence.',
+    description: 'Contrôlent les votes et la feuille de présence. Peuvent être copropriétaires ou mandataires.',
     majorite: 'article_24', type_resolution: 'scrutateurs',         optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
-  { id: 'r4',  numero: 4,  titre: "Approbation des comptes de l'exercice",
-    description: "Validation des comptes de gestion de la copropriété pour l'exercice passé.",
+  { id: 'r4',  numero: 4,  titre: `Approbation des comptes de l'exercice ${new Date().getFullYear() - 1}`,
+    description: `Validation des comptes de gestion de la copropriété pour l'exercice ${new Date().getFullYear() - 1}.`,
     majorite: 'article_24', type_resolution: 'approbation_comptes', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false },
   { id: 'r5',  numero: 5,  titre: 'Quitus au syndic',
     description: "Les copropriétaires approuvent la gestion du syndic pour l'exercice écoulé.",
@@ -72,13 +72,16 @@ const TEMPLATES_ORDINAIRE: Omit<WizardResolution, 'inclure' | 'budgetPostes' | '
   { id: 'r8',  numero: 8,  titre: 'Cotisation au fonds de travaux (ALUR)',
     description: 'Obligatoire depuis la loi ALUR. Minimum recommandé : 5% du budget prévisionnel.',
     majorite: 'article_25', type_resolution: 'fonds_travaux',       optional: false, hasBudget: false, hasFondsTravaux: true,  isDesignation: false },
-  { id: 'r9',  numero: 9,  titre: 'Calendrier de financement du budget prévisionnel et du fonds travaux',
+  { id: 'r9',  numero: 9,  titre: 'Autorisation de travaux sur parties communes',
+    description: "Vote d'autorisation et de financement de travaux sur les parties communes (hors entretien courant déjà budgété). Détaillez les postes et le montant estimatif.",
+    majorite: 'article_25', type_resolution: null, optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
+  { id: 'r10', numero: 10, titre: 'Calendrier de financement du budget prévisionnel et du fonds travaux',
     description: "Dates auxquelles les appels de fonds seront émis suite aux votes du budget et du fonds de travaux. Au moins une date requise.",
     majorite: 'article_24', type_resolution: 'calendrier_financement', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false, hasEcheancier: true },
-  { id: 'r10', numero: 10, titre: 'Désignation ou renouvellement du syndic',
+  { id: 'r11', numero: 11, titre: 'Désignation ou renouvellement du syndic',
     description: "Si le mandat du syndic arrive à échéance. Précisez la date de fin du nouveau mandat.",
     majorite: 'article_25', type_resolution: 'designation_syndic',  optional: true,  hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
-  { id: 'r11', numero: 11, titre: 'Désignation ou renouvellement du conseil syndical',
+  { id: 'r12', numero: 12, titre: 'Désignation ou renouvellement du conseil syndical',
     description: 'Élection des membres du conseil syndical. Facultatif.',
     majorite: 'article_24', type_resolution: 'conseil_syndical',    optional: true,  hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
 ];
@@ -99,7 +102,7 @@ function initResolutions(type: 'ordinaire' | 'exceptionnelle'): WizardResolution
 
 const MAJORITE_CHIPS: Record<string, string> = {
   article_24: 'Art. 24',
-  article_25: 'Art. 25',
+  article_25: 'Art. 25 + 25-1',
   article_26: 'Art. 26',
 };
 
@@ -140,6 +143,10 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
     ? Math.ceil((new Date(formData.date_ag).getTime() - Date.now()) / 86400000)
     : null;
   const avertissementDelai = joursAvantAG !== null && joursAvantAG >= 0 && joursAvantAG < 21;
+  const datePassee = joursAvantAG !== null && joursAvantAG < 0;
+  const titreFinal = typeAG === 'ordinaire'
+    ? `Assemblée Générale Ordinaire ${dateVal ? new Date(dateVal).getFullYear() : new Date().getFullYear()}`
+    : formData.titre.trim();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -148,7 +155,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
     setResolutions((prev) => prev.map((r) => r.id === id ? { ...r, ...changes } : r));
 
   const totalBudget = resolutions
-    .filter((r) => r.inclure && r.hasBudget)
+    .filter((r) => r.inclure && r.hasBudget && r.id !== 'r9')
     .flatMap((r) => r.budgetPostes)
     .reduce((s, p) => s + (parseFloat(p.montant) || 0), 0);
 
@@ -173,7 +180,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
       .from('assemblees_generales')
       .insert({
         copropriete_id: formData.copropriete_id,
-        titre: formData.titre.trim(),
+        titre: titreFinal,
         date_ag: new Date(formData.date_ag).toISOString(),
         lieu,
         notes: formData.notes.trim() || null,
@@ -192,7 +199,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
 
     const toInsert = resolutions
       .filter((r) => r.inclure)
-      .map((r) => {
+      .map((r, idx) => {
         const postesValides = r.hasBudget
           ? r.budgetPostes
               .filter((p) => p.libelle.trim())
@@ -202,7 +209,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
             : [];
         return {
           ag_id: ag.id,
-          numero: r.numero,
+          numero: idx + 1,
           titre: r.titre,
           description: r.description,
           majorite: r.majorite || null,
@@ -286,14 +293,16 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
               )}
             </div>
 
-            <Input
-              label="Titre de l'AG"
-              name="titre"
-              value={formData.titre}
-              onChange={handleChange}
-              placeholder={typeAG === 'ordinaire' ? "Assemblée Générale Ordinaire 2026" : "AG Extraordinaire – Travaux toiture"}
-              required
-            />
+            {typeAG === 'exceptionnelle' && (
+              <Input
+                label="Titre de l'AG"
+                name="titre"
+                value={formData.titre}
+                onChange={handleChange}
+                placeholder="AG Extraordinaire – Travaux toiture"
+                required
+              />
+            )}
 
             {/* Date & heure */}
             <div>
@@ -321,6 +330,14 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                   ))}
                 </select>
               </div>
+              {datePassee && (
+                <div className="mt-2 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
+                  <AlertTriangle size={15} className="shrink-0 mt-0.5 text-red-500" />
+                  <span>
+                    <strong>Date passée :</strong> la date sélectionnée est antérieure à aujourd&apos;hui.
+                  </span>
+                </div>
+              )}
               {avertissementDelai && (
                 <div className="mt-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5 text-amber-500" />
@@ -371,50 +388,71 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                 : "Configurez les résolutions de bureau. Ajoutez les résolutions spécifiques depuis la page de l'AG."}
             </p>
 
+            {/* Numérotation dynamique selon les résolutions incluses */}
+            {(() => {
+              let counter = 0;
+              const effectiveNumeros: Record<string, number> = {};
+              resolutions.forEach((r) => { if (r.inclure) effectiveNumeros[r.id] = ++counter; });
+
+              return (
             <div className="space-y-2 max-h-[52vh] overflow-y-auto pr-1">
               {resolutions.map((r) => (
                 <div key={r.id} className={`rounded-xl border transition-colors overflow-hidden ${
-                  !r.inclure           ? 'border-gray-100 bg-gray-50 opacity-50'
-                  : r.hasBudget        ? 'border-indigo-200 bg-indigo-50/60'
-                  : r.hasFondsTravaux  ? 'border-amber-200 bg-amber-50/60'
-                  : r.hasEcheancier    ? 'border-green-200 bg-green-50/60'
-                  : r.isDesignation    ? 'border-blue-100 bg-blue-50/40'
-                  : 'border-gray-200 bg-white'
+                  !r.inclure           ? 'border-gray-200 bg-gray-50 opacity-60'
+                  : r.hasBudget        ? 'border-indigo-200 bg-indigo-50'
+                  : r.hasFondsTravaux  ? 'border-amber-200 bg-amber-50'
+                  : r.hasEcheancier    ? 'border-green-200 bg-green-50'
+                  : r.isDesignation    ? 'border-blue-200 bg-blue-50'
+                  : 'border-slate-200 bg-slate-50'
                 }`}>
 
                   {/* -- En-tête de la résolution -- */}
                   <div className="flex items-start justify-between px-4 py-3 gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-gray-400">#{r.numero}</span>
-                        <span className={`text-sm font-semibold ${!r.inclure ? 'text-gray-400' : 'text-gray-900'}`}>{r.titre}</span>
+                        <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${
+                          !r.inclure ? 'bg-gray-200 text-gray-400'
+                          : r.hasBudget ? 'bg-indigo-100 text-indigo-500'
+                          : r.hasFondsTravaux ? 'bg-amber-100 text-amber-600'
+                          : r.hasEcheancier ? 'bg-green-100 text-green-600'
+                          : r.isDesignation ? 'bg-blue-100 text-blue-500'
+                          : 'bg-slate-200 text-slate-500'
+                        }`}>{r.inclure ? `#${effectiveNumeros[r.id]}` : `#${r.numero}`}</span>
+                        <span className={`text-sm font-semibold ${!r.inclure ? 'text-gray-400' : 'text-gray-800'}`}>{r.titre}</span>
                         {r.majorite && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-mono">
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded font-mono font-medium ${
+                            r.majorite === 'article_25' ? 'bg-orange-100 text-orange-600'
+                            : r.majorite === 'article_26' ? 'bg-red-100 text-red-600'
+                            : 'bg-slate-100 text-slate-500'
+                          }`}>
                             {MAJORITE_CHIPS[r.majorite] ?? r.majorite}
                           </span>
                         )}
                       </div>
                       {r.description && r.inclure && (
-                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{r.description}</p>
+                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">{r.description}</p>
                       )}
                     </div>
 
                     {/* Contrôles droite */}
                     <div className="flex items-center gap-2 ml-2 shrink-0">
                       {!r.optional ? (
-                        <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">Obligatoire</span>
+                        <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-100 px-2 py-0.5 rounded-full">Obligatoire</span>
                       ) : (
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <span className="text-xs text-gray-500">{r.inclure ? 'Inclus' : 'Exclu'}</span>
-                          <div onClick={() => updateResolution(r.id, { inclure: !r.inclure, expanded: !r.inclure && (r.hasBudget || r.hasFondsTravaux) })}
-                            className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${r.inclure ? 'bg-blue-500' : 'bg-gray-300'}`}>
-                            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${r.inclure ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                        <button
+                          type="button"
+                          onClick={() => updateResolution(r.id, { inclure: !r.inclure, expanded: !r.inclure && (r.hasBudget || r.hasFondsTravaux) })}
+                          className="flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span className={`text-[11px] font-medium ${r.inclure ? 'text-blue-600' : 'text-gray-400'}`}>{r.inclure ? 'Inclus' : 'Exclu'}</span>
+                          <div className={`relative w-9 h-5 rounded-full transition-colors ${r.inclure ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${r.inclure ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
                           </div>
-                        </label>
+                        </button>
                       )}
                       {(r.hasBudget || r.hasFondsTravaux || r.hasEcheancier) && r.inclure && (
                         <button type="button" onClick={() => updateResolution(r.id, { expanded: !r.expanded })}
-                          className="p-1 text-gray-400 hover:text-gray-700 transition-colors">
+                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                           {r.expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                         </button>
                       )}
@@ -446,23 +484,35 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                         </button>
                       </div>
                       <div className="space-y-1.5 bg-white/60 rounded-lg p-2 border border-green-100">
-                        {r.echeancierDates.map((date, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500 w-20 shrink-0">Versement {i + 1}</span>
-                            <input type="date" value={date}
-                              onChange={(e) => updateResolution(r.id, {
-                                echeancierDates: r.echeancierDates.map((d, idx) => idx === i ? e.target.value : d),
-                              })}
-                              className="flex-1 text-xs rounded-lg border border-green-200 bg-white px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500" />
-                            {r.echeancierDates.length > 1 && (
-                              <button type="button"
-                                onClick={() => updateResolution(r.id, { echeancierDates: r.echeancierDates.filter((_, idx) => idx !== i) })}
-                                className="p-1 text-green-400 hover:text-red-500 transition-colors">
-                                <Trash2 size={13} />
-                              </button>
-                            )}
-                          </div>
-                        ))}
+                        {r.echeancierDates.map((date, i) => {
+                          const datePassee = date && new Date(date) < new Date(new Date().toDateString());
+                          return (
+                            <div key={i} className="space-y-0.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500 w-20 shrink-0">Versement {i + 1}</span>
+                                <input type="date" value={date}
+                                  onChange={(e) => updateResolution(r.id, {
+                                    echeancierDates: r.echeancierDates.map((d, idx) => idx === i ? e.target.value : d),
+                                  })}
+                                  className={`flex-1 text-xs rounded-lg border bg-white px-2 py-1.5 focus:outline-none focus:ring-2 ${
+                                    datePassee ? 'border-red-300 focus:ring-red-400' : 'border-green-200 focus:ring-green-500'
+                                  }`} />
+                                {r.echeancierDates.length > 1 && (
+                                  <button type="button"
+                                    onClick={() => updateResolution(r.id, { echeancierDates: r.echeancierDates.filter((_, idx) => idx !== i) })}
+                                    className="p-1 text-green-400 hover:text-red-500 transition-colors">
+                                    <Trash2 size={13} />
+                                  </button>
+                                )}
+                              </div>
+                              {datePassee && (
+                                <p className="text-[11px] text-red-600 flex items-center gap-1 pl-[5.5rem]">
+                                  <AlertTriangle size={11} className="shrink-0" /> Date passée
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -538,6 +588,8 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                 </div>
               ))}
             </div>
+              );
+            })()}
 
             {/* Récapitulatif */}
             <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-600 flex items-center gap-4 flex-wrap">

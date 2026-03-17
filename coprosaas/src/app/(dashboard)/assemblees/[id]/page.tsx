@@ -8,16 +8,14 @@ import Link from 'next/link';
 import Card, { CardHeader } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
-import ResolutionActions, { ResolutionEdit, ResolutionDelete } from './ResolutionActions';
+import ResolutionActions from './ResolutionActions';
+import ResolutionList from './ResolutionList';
 import AGStatusActions from './AGStatusActions';
-import { AGDelete, AGAnnuler, AGEnvoyerPV } from './AGStatusActions';
+import { AGDelete, AGAnnuler, AGEnvoyerPV, AGEnvoyerConvocation, AGEditInfos } from './AGStatusActions';
 import PVPDF from './PVPDF';
 import ConvocationPDF from './ConvocationPDF';
-import VoteActions from './VoteActions';
-import VoteParCopro from './VoteParCopro';
 import PresencePanel from './PresencePanel';
-import MajoriteTooltip from './MajoriteTooltip';
-import { LABELS_STATUT_AG, TYPES_RESOLUTION } from '@/lib/utils';
+import { LABELS_STATUT_AG } from '@/lib/utils';
 import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video } from 'lucide-react';
 
 interface Props {
@@ -82,27 +80,13 @@ export default async function AGDetailPage({ params }: Props) {
     votesCopro = data ?? [];
   }
 
-  const badgeVariantStatutResolution = (statut: string) => {
-    const map: Record<string, 'success' | 'danger' | 'warning' | 'default'> = {
-      approuvee: 'success',
-      refusee: 'danger',
-      reportee: 'warning',
-      en_attente: 'default',
-    };
-    return map[statut] ?? 'default';
-  };
-
-  const labelStatutResolution: Record<string, string> = {
-    approuvee: 'Approuvée',
-    refusee: 'Refusée',
-    reportee: 'Reportée',
-    en_attente: 'En attente',
-  };
-
   const isVisio = ag.lieu === 'Visioconférence';
   const canVote = ag.statut === 'en_cours' || ag.statut === 'terminee';
-  const canEdit = ag.statut === 'creation' || ag.statut === 'planifiee' || ag.statut === 'en_cours';
+  const canEdit = ag.statut === 'creation' || ag.statut === 'planifiee';
   const hasPresences = (presences ?? []).length > 0;
+  const toutesResolutionsVotees =
+    (resolutions ?? []).length > 0 &&
+    (resolutions ?? []).every((r) => r.statut !== 'en_attente');
 
   // Présents + représentés (sans absents) pour VoteParCopro
   const voteurs = (presences ?? []).filter((p) => p.statut !== 'absent');
@@ -155,26 +139,59 @@ export default async function AGDetailPage({ params }: Props) {
         </div>
 
         {/* Actions selon le statut */}
-        <div className="flex flex-col items-end gap-2 shrink-0">
-          <div className="flex items-center gap-2">
-            {ag.statut === 'terminee' && (
-              <PVPDF
-                ag={ag}
-                resolutions={resolutions ?? []}
-                presences={presences ?? []}
-                votesCopro={votesCopro}
-                coproprietaires={coproprietaires ?? []}
-                tantiemesParCopro={tantiemesMap}
-              />
-            )}
-            <AGStatusActions agId={id} coproprieteId={ag.copropriete_id} currentStatut={ag.statut} quorumAtteint={quorumAtteintCalcule} />
-          </div>
-          {ag.statut === 'planifiee' && (
-            <ConvocationPDF ag={ag} resolutions={resolutions ?? []} />
+        <div className="flex flex-col items-end gap-3 shrink-0">
+
+          {/* Bouton principal de progression */}
+          <AGStatusActions agId={id} coproprieteId={ag.copropriete_id} currentStatut={ag.statut} quorumAtteint={quorumAtteintCalcule} toutesResolutionsVotees={toutesResolutionsVotees} />
+
+          {/* Actions secondaires : e-mails */}
+          {(ag.statut === 'planifiee' || ag.statut === 'terminee') && (
+            <div className="flex items-center gap-2">
+              {ag.statut === 'planifiee' && (
+                <AGEnvoyerConvocation
+                  agId={id}
+                  coproprieteId={ag.copropriete_id}
+                  ag={ag}
+                  resolutions={resolutions ?? []}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  convocationEnvoyeeLe={(ag as any).convocation_envoyee_le ?? null}
+                />
+              )}
+              {ag.statut === 'terminee' && (
+                <AGEnvoyerPV agId={id} coproprieteId={ag.copropriete_id} pvEnvoyeLe={(ag as any).pv_envoye_le ?? null} />
+              )}
+            </div>
           )}
-          {ag.statut === 'planifiee' && (
-            <AGDelete agId={id} />
+
+          {/* Documents PDF */}
+          {(ag.statut === 'planifiee' || ag.statut === 'terminee') && (
+            <div className="flex items-center gap-2">
+              {ag.statut === 'planifiee' && (
+                <ConvocationPDF ag={ag} resolutions={resolutions ?? []} />
+              )}
+              {ag.statut === 'terminee' && (
+                <PVPDF
+                  ag={ag}
+                  coproprieteId={ag.copropriete_id}
+                  resolutions={resolutions ?? []}
+                  presences={presences ?? []}
+                  votesCopro={votesCopro}
+                  coproprietaires={coproprietaires ?? []}
+                  tantiemesParCopro={tantiemesMap}
+                />
+              )}
+            </div>
           )}
+
+          {/* Actions de gestion (modification / suppression) */}
+          {(ag.statut === 'creation' || ag.statut === 'planifiee') && (
+            <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
+              <AGEditInfos agId={id} dateAg={ag.date_ag} lieu={ag.lieu} />
+              {ag.statut === 'creation' && <AGDelete agId={id} />}
+              {ag.statut === 'planifiee' && <AGAnnuler agId={id} />}
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -242,7 +259,7 @@ export default async function AGDetailPage({ params }: Props) {
         <CardHeader
           title="Résolutions"
           description={`${resolutions?.length ?? 0} résolution(s)${canVote && hasPresences ? ' — sélectionnez le vote de chaque copropriétaire' : ''}`}
-          actions={canEdit ? <ResolutionActions agId={id} /> : undefined}
+          actions={canEdit ? <ResolutionActions agId={id} nextNumero={(resolutions ?? []).length + 1} /> : undefined}
         />
 
         {/* Barre de progression des résolutions */}
@@ -271,127 +288,20 @@ export default async function AGDetailPage({ params }: Props) {
         })()}
 
         {resolutions && resolutions.length > 0 ? (
-          <div className="space-y-3">
-            {resolutions.map((res) => (
-              <div key={res.id} className="p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-xs font-bold text-gray-400">#{res.numero}</span>
-                      <h4 className="font-medium text-gray-900">{res.titre}</h4>
-                      <Badge variant={badgeVariantStatutResolution(res.statut)}>
-                        {labelStatutResolution[res.statut] ?? res.statut}
-                      </Badge>
-                      <MajoriteTooltip majorite={res.majorite ?? null} />
-                    </div>
-                    {res.description && (
-                      <p className="text-sm text-gray-500 mt-1">{res.description}</p>
-                    )}
-
-                    {/* Zone de vote */}
-                    {canVote ? (
-                      hasPresences && voteurs.length > 0 ? (
-                        <VoteParCopro
-                          resolutionId={res.id}
-                          resolutionStatut={res.statut}
-                          majorite={(res as any).majorite ?? null}
-                          typeResolution={(res as any).type_resolution ?? null}
-                          tantiemesMap={tantiemesMap}
-                          totalTantiemes={totalTantiemes}
-                          initialVotes={votesCopro
-                            .filter((v) => v.resolution_id === res.id)
-                            .map((v) => ({ coproprietaire_id: v.coproprietaire_id, vote: v.vote as 'pour' | 'contre' | 'abstention' }))}
-                          presences={voteurs}
-                          coproprietaires={coproprietaires ?? []}
-                          canEdit={ag.statut === 'en_cours'}
-                          designationResultats={(res as any).designation_resultats ?? null}
-                          initialBudgetPostes={(res as any).budget_postes ?? null}
-                          initialFondsTravaux={(res as any).fonds_travaux_montant ?? null}
-                        />
-                      ) : (
-                        <VoteActions
-                          resolutionId={res.id}
-                          voixPour={res.voix_pour ?? 0}
-                          voixContre={res.voix_contre ?? 0}
-                          voixAbstention={res.voix_abstention ?? 0}
-                          statut={res.statut}
-                          budgetPostes={(res as any).budget_postes ?? []}
-                        />
-                      )
-                    ) : (
-                      <div>
-                        {/* Résultat désignation */}
-                        {(() => {
-                          const tr = (res as any).type_resolution as string | null;
-                          const cfg = tr ? TYPES_RESOLUTION[tr] : null;
-                          const desig = (res as any).designation_resultats as { id: string; nom: string; prenom: string }[] | null;
-                          if (cfg?.designation && desig && desig.length > 0) {
-                            return (
-                              <div className="mt-2 text-xs text-indigo-700 bg-indigo-50 rounded-lg px-3 py-2">
-                                <span className="font-medium">Désigné{desig.length > 1 ? 's' : ''} : </span>
-                                {desig.map((d) => `${d.prenom} ${d.nom}`).join(', ')}
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                        {/* Montant fonds travaux */}
-                        {(res as any).fonds_travaux_montant != null && (
-                          <div className="mt-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
-                            <span className="font-medium">Cotisation fonds de travaux : </span>
-                            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format((res as any).fonds_travaux_montant)}
-                          </div>
-                        )}
-                        {/* Votes (masqués pour les désignations) */}
-                        {!TYPES_RESOLUTION[(res as any).type_resolution as string ?? '']?.designation && (
-                          <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-                            <span className="flex items-center gap-1 text-green-600">
-                              <CheckCircle size={12} /> Pour : {res.voix_pour ?? 0} tant.
-                            </span>
-                            <span className="flex items-center gap-1 text-red-500">
-                              <XCircle size={12} /> Contre : {res.voix_contre ?? 0} tant.
-                            </span>
-                            <span className="flex items-center gap-1">
-                              ○ Abst. : {res.voix_abstention ?? 0} tant.
-                            </span>
-                          </div>
-                        )}
-                        {((res as any).budget_postes as { libelle: string; montant: number }[] | null)?.length ? (
-                          <div className="mt-2 border border-indigo-100 rounded-lg overflow-hidden text-xs">
-                            <div className="bg-indigo-50 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 uppercase tracking-wide">
-                              Budget voté —{ }
-                              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                                ((res as any).budget_postes as { libelle: string; montant: number }[]).reduce((s: number, p: { montant: number }) => s + p.montant, 0)
-                              )}
-                            </div>
-                            <table className="w-full">
-                              <tbody>
-                                {((res as any).budget_postes as { libelle: string; montant: number }[]).map(
-                                  (p: { libelle: string; montant: number }, i: number) => (
-                                    <tr key={i} className="border-t border-gray-100">
-                                      <td className="px-3 py-1.5 text-gray-700">{p.libelle}</td>
-                                      <td className="px-3 py-1.5 text-right font-semibold text-gray-900">
-                                        {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(p.montant)}
-                                      </td>
-                                    </tr>
-                                  )
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1 shrink-0">
-                    {canEdit && <ResolutionEdit resolution={res} />}
-                    {canEdit && <ResolutionDelete resolutionId={res.id} />}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ResolutionList
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            resolutions={resolutions as any[]}
+            agStatut={ag.statut}
+            agId={id}
+            canEdit={canEdit}
+            canVote={canVote}
+            hasPresences={hasPresences}
+            voteurs={voteurs}
+            votesCopro={votesCopro}
+            coproprietaires={coproprietaires ?? []}
+            tantiemesMap={tantiemesMap}
+            totalTantiemes={totalTantiemes}
+          />
         ) : (
           <EmptyState
             title="Aucune résolution"

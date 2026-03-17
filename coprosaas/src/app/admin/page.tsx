@@ -313,8 +313,8 @@ export default async function AdminPage() {
               <h3 className="font-semibold text-gray-800 text-sm">Invitations copropriétaires</h3>
             </div>
             <p className="text-xs text-gray-500 mb-4">
-              Les invitations sont envoyées depuis chaque fiche copropriété, dans l'onglet copropriétaires.
-              L'API <code className="bg-gray-100 px-1 rounded text-gray-600">POST /api/invitations</code> est utilisée en arrière-plan.
+              Les invitations sont envoyées depuis chaque fiche copropriété, dans l&apos;onglet copropriétaires.
+              L&apos;API <code className="bg-gray-100 px-1 rounded text-gray-600">POST /api/invitations</code> est utilisée en arrière-plan.
             </p>
             <Link
               href="/coproprietes"
@@ -354,7 +354,7 @@ export default async function AdminPage() {
               <h3 className="font-semibold text-gray-800 text-sm">Emails transactionnels</h3>
             </div>
             <p className="text-xs text-gray-500 mb-4">
-              Consultez les envois d'emails (convocations, PV, contacts) via le dashboard Resend.
+              Consultez les envois d&apos;emails (convocations, PV, contacts) via le dashboard Resend.
             </p>
             <a
               href="https://resend.com/emails"

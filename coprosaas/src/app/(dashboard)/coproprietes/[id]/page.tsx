@@ -4,11 +4,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import Card, { CardHeader } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
-import LotActions, { LotDelete } from './LotActions';
+import LotActions from './LotActions';
 import LotsTable from './LotsTable';
 import CoproDelete from './CoproDelete';
+import TransfertSyndic from './TransfertSyndic';
 import { formatDate } from '@/lib/utils';
 import { MapPin, Hash, CalendarDays } from 'lucide-react';
 
@@ -69,7 +69,10 @@ export default async function CopropriétéDetailPage({ params }: Props) {
             </span>
           </div>
         </div>
-        <CoproDelete coproprieteId={copro.id} coproprieteNom={copro.nom} />
+        <div className="flex items-center gap-3">
+          <TransfertSyndic coproprieteId={copro.id} coproprieteNom={copro.nom} />
+          <CoproDelete coproprieteId={copro.id} coproprieteNom={copro.nom} />
+        </div>
       </div>
 
       {/* Carte des lots */}

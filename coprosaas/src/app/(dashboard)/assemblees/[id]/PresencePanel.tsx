@@ -66,7 +66,7 @@ export default function PresencePanel({
 
       {presences.length === 0 ? (
         <p className="mt-3 text-sm text-gray-400 italic text-center py-2">
-          La feuille de présence sera complétée au démarrage de l'AG.
+          La feuille de présence sera complétée au démarrage de l&apos;AG.
         </p>
       ) : (
         <div className="mt-3 divide-y divide-gray-50">

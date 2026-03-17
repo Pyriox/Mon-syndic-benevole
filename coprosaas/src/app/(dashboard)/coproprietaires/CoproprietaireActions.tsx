@@ -49,9 +49,12 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
 
   useEffect(() => {
     if (!formData.copropriete_id) return;
-    setSelectedLotIds([]);
-    supabase.from('lots').select('id, numero, coproprietaire_id').eq('copropriete_id', formData.copropriete_id).order('numero')
-      .then(({ data }) => setLots(data ?? []));
+    const fetchLots = async () => {
+      setSelectedLotIds([]);
+      const { data } = await supabase.from('lots').select('id, numero, coproprietaire_id').eq('copropriete_id', formData.copropriete_id).order('numero');
+      setLots(data ?? []);
+    };
+    fetchLots();
   }, [formData.copropriete_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

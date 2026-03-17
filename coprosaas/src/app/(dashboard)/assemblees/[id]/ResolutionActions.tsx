@@ -19,6 +19,7 @@ type PosteBudget = { libelle: string; montant: number };
 interface ResolutionActionsProps {
   agId: string;
   showLabel?: boolean;
+  nextNumero?: number;
 }
 
 const TYPE_OPTIONS = [
@@ -55,7 +56,7 @@ const HINTS: Record<string, string> = {
   conseil_syndical:    '👥 Désignation ou renouvellement du conseil syndical — facultatif.',
 };
 
-export default function ResolutionActions({ agId, showLabel }: ResolutionActionsProps) {
+export default function ResolutionActions({ agId, showLabel, nextNumero }: ResolutionActionsProps) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -65,7 +66,6 @@ export default function ResolutionActions({ agId, showLabel }: ResolutionActions
 
   const [typeResolution, setTypeResolution] = useState('libre');
   const [formData, setFormData] = useState({
-    numero: '',
     titre: '',
     description: '',
     majorite: '',
@@ -106,7 +106,7 @@ export default function ResolutionActions({ agId, showLabel }: ResolutionActions
 
     const { error: dbError } = await supabase.from('resolutions').insert({
       ag_id: agId,
-      numero: parseInt(formData.numero),
+      numero: nextNumero ?? 1,
       titre: formData.titre.trim(),
       description: formData.description.trim() || null,
       majorite: formData.majorite || null,
@@ -127,7 +127,7 @@ export default function ResolutionActions({ agId, showLabel }: ResolutionActions
 
     setIsOpen(false);
     setTypeResolution('libre');
-    setFormData({ numero: '', titre: '', description: '', majorite: '', statut: 'en_attente' });
+    setFormData({ titre: '', description: '', majorite: '', statut: 'en_attente' });
     setBudgetPostes([]);
     setFondsTravaux('');
     router.refresh();
@@ -157,17 +157,14 @@ export default function ResolutionActions({ agId, showLabel }: ResolutionActions
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="N° de résolution" name="numero" type="number" min="1" value={formData.numero} onChange={handleChange} placeholder="1" required />
-            <Select label="Statut" name="statut" value={formData.statut} onChange={handleChange}
-              options={[
-                { value: 'en_attente', label: 'En attente' },
-                { value: 'approuvee', label: 'Approuvée' },
-                { value: 'refusee', label: 'Refusée' },
-                { value: 'reportee', label: 'Reportée' },
-              ]}
-            />
-          </div>
+          <Select label="Statut" name="statut" value={formData.statut} onChange={handleChange}
+            options={[
+              { value: 'en_attente', label: 'En attente' },
+              { value: 'approuvee', label: 'Approuvée' },
+              { value: 'refusee', label: 'Refusée' },
+              { value: 'reportee', label: 'Reportée' },
+            ]}
+          />
 
           <Input label="Titre" name="titre" value={formData.titre} onChange={handleChange} placeholder="Titre de la résolution" required />
 
@@ -256,14 +253,14 @@ interface Resolution {
   fonds_travaux_montant?: number | null;
 }
 
-export function ResolutionEdit({ resolution }: { resolution: Resolution }) {
+export function ResolutionEdit({ resolution, agStatut }: { resolution: Resolution; agStatut?: string }) {
+  const isPreLaunch = agStatut === 'creation' || agStatut === 'planifiee';
   const router = useRouter();
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    numero: String(resolution.numero),
     titre: resolution.titre,
     description: resolution.description ?? '',
     majorite: resolution.majorite ?? '',
@@ -294,14 +291,13 @@ export function ResolutionEdit({ resolution }: { resolution: Resolution }) {
       : (resolution.budget_postes ?? []);
 
     const { error: dbError } = await supabase.from('resolutions').update({
-      numero: parseInt(formData.numero),
       titre: formData.titre.trim(),
       description: formData.description.trim() || null,
       majorite: formData.majorite || null,
-      statut: formData.statut,
-      voix_pour: parseInt(formData.voix_pour) || 0,
-      voix_contre: parseInt(formData.voix_contre) || 0,
-      voix_abstention: parseInt(formData.voix_abstention) || 0,
+      statut: isPreLaunch ? 'en_attente' : formData.statut,
+      voix_pour: isPreLaunch ? 0 : (parseInt(formData.voix_pour) || 0),
+      voix_contre: isPreLaunch ? 0 : (parseInt(formData.voix_contre) || 0),
+      voix_abstention: isPreLaunch ? 0 : (parseInt(formData.voix_abstention) || 0),
       budget_postes: editPostesValides.length > 0 ? editPostesValides : null,
       fonds_travaux_montant: typeConfig.hasFondsTravaux && fondsTravaux ? parseFloat(fondsTravaux) : null,
     }).eq('id', resolution.id);
@@ -324,8 +320,7 @@ export function ResolutionEdit({ resolution }: { resolution: Resolution }) {
               Type : {TYPES_RESOLUTION[typeResolution]?.label ?? typeResolution}
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="N°" name="numero" type="number" min="1" value={formData.numero} onChange={handleChange} required />
+          {!isPreLaunch && (
             <Select label="Statut" name="statut" value={formData.statut} onChange={handleChange}
               options={[
                 { value: 'en_attente', label: 'En attente' },
@@ -334,9 +329,19 @@ export function ResolutionEdit({ resolution }: { resolution: Resolution }) {
                 { value: 'reportee', label: 'Reportée' },
               ]}
             />
-          </div>
+          )}
           <Input label="Titre" name="titre" value={formData.titre} onChange={handleChange} required />
-          <Select label="Type de majorité" name="majorite" value={formData.majorite} onChange={handleChange} options={MAJORITE_OPTIONS} />
+          {typeResolution === 'libre' ? (
+            <Select label="Type de majorité" name="majorite" value={formData.majorite} onChange={handleChange} options={MAJORITE_OPTIONS} />
+          ) : (
+            <div>
+              <p className="block text-sm font-medium text-gray-700 mb-1">Type de majorité</p>
+              <div className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-500">
+                {MAJORITE_OPTIONS.find((o) => o.value === formData.majorite)?.label ?? formData.majorite ?? '—'}
+                <span className="ml-2 text-xs text-gray-400">(défini par le type de résolution)</span>
+              </div>
+            </div>
+          )}
           <Textarea label="Description (optionnel)" name="description" value={formData.description} onChange={handleChange} rows={2} />
 
           {typeConfig.hasFondsTravaux && (
@@ -383,14 +388,16 @@ export function ResolutionEdit({ resolution }: { resolution: Resolution }) {
             </div>
           )}
 
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Résultats du vote</p>
-            <div className="grid grid-cols-3 gap-3">
-              <Input label="Pour" name="voix_pour" type="number" min="0" value={formData.voix_pour} onChange={handleChange} />
-              <Input label="Contre" name="voix_contre" type="number" min="0" value={formData.voix_contre} onChange={handleChange} />
-              <Input label="Abstentions" name="voix_abstention" type="number" min="0" value={formData.voix_abstention} onChange={handleChange} />
+          {!isPreLaunch && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Résultats du vote</p>
+              <div className="grid grid-cols-3 gap-3">
+                <Input label="Pour" name="voix_pour" type="number" min="0" value={formData.voix_pour} onChange={handleChange} />
+                <Input label="Contre" name="voix_contre" type="number" min="0" value={formData.voix_contre} onChange={handleChange} />
+                <Input label="Abstentions" name="voix_abstention" type="number" min="0" value={formData.voix_abstention} onChange={handleChange} />
+              </div>
             </div>
-          </div>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button type="submit" loading={loading}>Enregistrer</Button>

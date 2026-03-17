@@ -109,6 +109,7 @@ export const LABELS_PRIORITE: Record<string, string> = {
 
 export const LABELS_TYPE_DOCUMENT: Record<string, string> = {
   pv_ag: "PV d'AG",
+  convocation_ag: 'Convocation AG',
   facture: 'Facture',
   contrat: 'Contrat',
   assurance: 'Assurance',

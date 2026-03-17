@@ -10,22 +10,25 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
-import { ArrowLeft, MailCheck } from 'lucide-react';
+import { ArrowRight, MailCheck, Shield, Clock, TrendingUp } from 'lucide-react';
+
+const REASSURANCES = [
+  { icon: Shield,      text: 'Données sécurisées et hébergées en Europe' },
+  { icon: Clock,       text: "Accès 24h/24 depuis n'importe quel appareil" },
+  { icon: TrendingUp,  text: 'Mis à jour régulièrement, sans frais supplémentaires' },
+];
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Mode : 'login' | 'forgot'
   const [mode, setMode] = useState<'login' | 'forgot'>('login');
 
-  // Login
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Forgot password
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -35,15 +38,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-
     if (authError) {
       setError('Email ou mot de passe incorrect. Veuillez réessayer.');
       setLoading(false);
       return;
     }
-
     router.push('/dashboard');
     router.refresh();
   };
@@ -52,64 +52,84 @@ export default function LoginPage() {
     e.preventDefault();
     setResetLoading(true);
     setResetError('');
-
     const { error: resetErr } = await supabase.auth.resetPasswordForEmail(resetEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-
     setResetLoading(false);
-
     if (resetErr) {
       setResetError('Une erreur est survenue. Vérifiez l\'adresse email et réessayez.');
       return;
     }
-
     setResetSent(true);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-0 shadow-2xl rounded-3xl overflow-hidden">
 
-      {/* Barre de navigation supérieure */}
-      <nav className="w-full px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <SiteLogo size={30} />
-          <span className="font-bold text-gray-900 text-sm">Mon Syndic Bénévole</span>
-        </Link>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft size={14} />
-          Retour à l'accueil
-        </Link>
-      </nav>
+        {/* ── Panneau gauche ── */}
+        <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-blue-600 to-indigo-700 p-12 text-white">
+          <div>
+            <Link href="/" className="flex items-center gap-3 mb-12 group">
+              <SiteLogo size={40} />
+              <span className="font-bold text-lg tracking-tight">Mon Syndic Bénévole</span>
+            </Link>
 
-      {/* Contenu centré */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
+            <h2 className="text-3xl font-extrabold leading-tight mb-4">
+              Bon retour<br />
+              <span className="text-blue-200">parmi nous.</span>
+            </h2>
+            <p className="text-blue-100/80 text-sm leading-relaxed mb-10">
+              Votre espace de gestion de copropriété vous attend.
+              Toutes vos données, documents et assemblées en un seul endroit.
+            </p>
 
-          {/* Logo + accroche */}
-          <div className="text-center mb-8">
-            <div className="inline-flex mb-4">
-              <SiteLogo size={56} />
-            </div>
-            {mode === 'login' ? (
-              <>
-                <h1 className="text-2xl font-bold text-gray-900">Connexion</h1>
-                <p className="text-gray-500 mt-1 text-sm">Votre espace Mon Syndic Bénévole</p>
-              </>
-            ) : (
-              <>
-                <h1 className="text-2xl font-bold text-gray-900">Mot de passe oublié</h1>
-                <p className="text-gray-500 mt-1 text-sm">Recevez un lien de réinitialisation par email</p>
-              </>
-            )}
+            <ul className="space-y-4">
+              {REASSURANCES.map(({ icon: Icon, text }) => (
+                <li key={text} className="flex items-start gap-3">
+                  <div className="mt-0.5 w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                    <Icon size={15} className="text-white" />
+                  </div>
+                  <span className="text-sm text-blue-50 leading-snug">{text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-12 pt-8 border-t border-white/15">
+            <p className="text-blue-200/60 text-xs">
+              © {new Date().getFullYear()} Mon Syndic Bénévole · Tous droits réservés
+            </p>
+          </div>
+        </div>
+
+        {/* ── Panneau droit : formulaire ── */}
+        <div className="bg-white flex flex-col justify-center p-10 lg:p-12">
+
+          {/* Lien retour landing */}
+          <div className="flex items-center justify-between mb-8">
+            <Link href="/" className="flex items-center justify-center gap-2.5 lg:hidden">
+              <SiteLogo size={36} />
+              <span className="font-bold text-gray-800">Mon Syndic Bénévole</span>
+            </Link>
+            <Link href="/" className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors ml-auto">
+              ← Retour à l&apos;accueil
+            </Link>
           </div>
 
           {/* ── MODE CONNEXION ── */}
           {mode === 'login' && (
-            <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/60 border border-gray-100 p-8">
+            <>
+              <div className="mb-8">
+                <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Connexion</h1>
+                <p className="text-sm text-gray-500">
+                  Pas encore de compte ?{' '}
+                  <Link href="/register" className="text-blue-600 hover:underline font-medium">
+                    Créer un compte
+                  </Link>
+                </p>
+              </div>
+
               <form onSubmit={handleLogin} className="space-y-4">
                 <Input
                   label="Adresse email"
@@ -143,65 +163,59 @@ export default function LoginPage() {
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
                     {error}
                   </div>
                 )}
 
-                <Button type="submit" fullWidth loading={loading} size="lg">
-                  Se connecter
-                </Button>
+                <div className="pt-1">
+                  <Button type="submit" fullWidth loading={loading} size="lg">
+                    <span>Se connecter</span>
+                    <ArrowRight size={16} />
+                  </Button>
+                </div>
               </form>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-100" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-white px-3 text-xs text-gray-400">ou</span>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <p className="text-sm text-gray-500">
-                  Pas encore de compte ?{' '}
-                  <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium underline-offset-2 hover:underline">
-                    Créer un compte gratuitement
-                  </Link>
-                </p>
-              </div>
-            </div>
+              <p className="text-center text-xs text-gray-400 mt-8">
+                © {new Date().getFullYear()} Mon Syndic Bénévole
+              </p>
+            </>
           )}
 
           {/* ── MODE MOT DE PASSE OUBLIÉ ── */}
           {mode === 'forgot' && (
-            <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/60 border border-gray-100 p-8">
+            <>
+              <div className="mb-8">
+                <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
+                  {resetSent ? 'Email envoyé !' : 'Mot de passe oublié ?'}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {resetSent
+                    ? 'Vérifiez votre boîte de réception (et vos spams).'
+                    : 'Saisissez votre email pour recevoir un lien de réinitialisation.'}
+                </p>
+              </div>
+
               {resetSent ? (
-                <div className="text-center py-4 space-y-4">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-100 mx-auto">
-                    <MailCheck size={28} className="text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-lg">Email envoyé !</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Un lien de réinitialisation a été envoyé à{' '}
-                      <span className="font-medium text-gray-700">{resetEmail}</span>.
-                      Vérifiez votre boîte de réception (et vos spams).
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 p-5 rounded-2xl bg-green-50 border border-green-100">
+                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                      <MailCheck size={22} className="text-green-600" />
+                    </div>
+                    <p className="text-sm text-green-800 leading-relaxed">
+                      Un lien a été envoyé à{' '}
+                      <strong className="text-green-900">{resetEmail}</strong>.
                     </p>
                   </div>
                   <button
                     onClick={() => setMode('login')}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium"
                   >
                     ← Retour à la connexion
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleForgot} className="space-y-4">
-                  <p className="text-sm text-gray-500 mb-2">
-                    Saisissez votre adresse email. Vous recevrez un lien pour choisir un nouveau mot de passe.
-                  </p>
-
                   <Input
                     label="Adresse email"
                     type="email"
@@ -213,14 +227,17 @@ export default function LoginPage() {
                   />
 
                   {resetError && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
                       {resetError}
                     </div>
                   )}
 
-                  <Button type="submit" fullWidth loading={resetLoading} size="lg">
-                    Envoyer le lien de réinitialisation
-                  </Button>
+                  <div className="pt-1">
+                    <Button type="submit" fullWidth loading={resetLoading} size="lg">
+                      <span>Envoyer le lien</span>
+                      <ArrowRight size={16} />
+                    </Button>
+                  </div>
 
                   <button
                     type="button"
@@ -231,12 +248,13 @@ export default function LoginPage() {
                   </button>
                 </form>
               )}
-            </div>
+
+              <p className="text-center text-xs text-gray-400 mt-8">
+                © {new Date().getFullYear()} Mon Syndic Bénévole
+              </p>
+            </>
           )}
 
-          <p className="text-center text-xs text-gray-400 mt-6">
-            © {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés
-          </p>
         </div>
       </div>
     </div>

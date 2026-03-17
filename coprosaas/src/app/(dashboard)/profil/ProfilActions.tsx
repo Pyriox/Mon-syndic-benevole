@@ -416,7 +416,7 @@ export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
 }
 
 // ---- Export combiné (rétrocompat) ----
-export default function ProfilActions({ fullName, email, coproprietes, fichesSyndic }: ProfilActionsProps) {
+export default function ProfilActions({ fullName: _fullName, email, coproprietes, fichesSyndic }: ProfilActionsProps) {
   return (
     <div className="space-y-4">
       {coproprietes.map((copropriete) => {

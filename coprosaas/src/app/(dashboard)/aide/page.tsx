@@ -292,7 +292,7 @@ export default function AidePage() {
           </div>
           <div>
             <h2 className="text-base font-semibold text-gray-900">Questions fréquentes</h2>
-            <p className="text-xs text-gray-400">Sur le syndic bénévole et l'application</p>
+            <p className="text-xs text-gray-400">Sur le syndic bénévole et l&apos;application</p>
           </div>
         </div>
 

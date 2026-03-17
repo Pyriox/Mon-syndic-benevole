@@ -57,11 +57,11 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     })),
     ...(coproRows ?? [])
       .filter((row) => {
-        const copro = row.coproprietes as { id: string } | null;
+        const copro = row.coproprietes as unknown as { id: string } | null;
         return copro && !syndicIds.has(copro.id);
       })
       .map((row) => {
-        const copro = row.coproprietes as { id: string; nom: string; adresse: string; ville: string };
+        const copro = row.coproprietes as unknown as { id: string; nom: string; adresse: string; ville: string };
         return {
           id: copro.id,
           nom: copro.nom,

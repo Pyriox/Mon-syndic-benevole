@@ -4,11 +4,10 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Button from '@/components/ui/Button';
-import { FileDown, Send } from 'lucide-react';
+import { FileDown } from 'lucide-react';
 
 interface Resolution {
   numero: number;
@@ -19,15 +18,18 @@ interface Resolution {
   fonds_travaux_montant?: number | null;
 }
 
+export interface ConvocationAGData {
+  id: string;
+  titre: string;
+  date_ag: string;
+  lieu: string | null;
+  notes: string | null;
+  convocation_envoyee_le?: string | null;
+  coproprietes?: { nom: string; adresse?: string; ville?: string; code_postal?: string } | null;
+}
+
 interface ConvocationPDFProps {
-  ag: {
-    id: string;
-    titre: string;
-    date_ag: string;
-    lieu: string | null;
-    notes: string | null;
-    coproprietes?: { nom: string; adresse?: string; ville?: string; code_postal?: string } | null;
-  };
+  ag: ConvocationAGData;
   resolutions: Resolution[];
 }
 
@@ -35,7 +37,11 @@ const BLUE: [number, number, number]  = [29, 78, 216];
 const LIGHT: [number, number, number] = [239, 246, 255];
 const GRAY: [number, number, number]  = [248, 250, 252];
 
-const fmtEur = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
+// Remplace les espaces insécables (U+00A0, U+202F) par une espace normale — jsPDF ne les gère pas
+const fmtEur = (n: number) =>
+  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
+    .format(n)
+    .replace(/\u00A0|\u202F/g, '\u0020');
 
 function checkPage(doc: jsPDF, y: number, needed = 30): number {
   if (y + needed > doc.internal.pageSize.height - 20) {
@@ -45,7 +51,7 @@ function checkPage(doc: jsPDF, y: number, needed = 30): number {
   return y;
 }
 
-function genererConvocationDoc(ag: ConvocationPDFProps['ag'], resolutions: ConvocationPDFProps['resolutions']): jsPDF {
+function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[]): jsPDF {
   const doc = new jsPDF();
   const W = doc.internal.pageSize.width;
   const mL = 14;
@@ -212,41 +218,18 @@ function genererConvocationDoc(ag: ConvocationPDFProps['ag'], resolutions: Convo
   return doc;
 }
 
-export default function ConvocationPDF({ ag, resolutions }: ConvocationPDFProps) {
-  const [sendLoading, setSendLoading] = useState(false);
-  const [sendResult, setSendResult] = useState<{ ok: boolean; message: string } | null>(null);
+export { genererConvocationDoc };
+export type { Resolution as ConvocationResolution };
 
+export default function ConvocationPDF({ ag, resolutions }: ConvocationPDFProps) {
   const handleDownload = () => {
     const doc = genererConvocationDoc(ag, resolutions);
     doc.save(`convocation-ag-${ag.id}.pdf`);
   };
 
-  const handleSendEmails = async () => {
-    setSendLoading(true);
-    setSendResult(null);
-    try {
-      const res = await fetch(`/api/ag/${ag.id}/envoyer-convocation`, { method: 'POST' });
-      const json = await res.json();
-      setSendResult({ ok: res.ok, message: json.message ?? (res.ok ? 'Emails envoyés !' : 'Erreur') });
-    } catch {
-      setSendResult({ ok: false, message: 'Erreur réseau.' });
-    }
-    setSendLoading(false);
-  };
-
   return (
-    <div className="flex items-center gap-2">
-      <Button variant="secondary" size="sm" onClick={handleDownload}>
-        <FileDown size={14} /> Convocation PDF
-      </Button>
-      <Button size="sm" onClick={handleSendEmails} loading={sendLoading}>
-        <Send size={14} /> Envoyer les convocations
-      </Button>
-      {sendResult && (
-        <span className={`text-xs font-medium ${sendResult.ok ? 'text-green-600' : 'text-red-600'}`}>
-          {sendResult.message}
-        </span>
-      )}
-    </div>
+    <Button variant="secondary" size="sm" onClick={handleDownload}>
+      <FileDown size={14} /> Convocation PDF
+    </Button>
   );
 }

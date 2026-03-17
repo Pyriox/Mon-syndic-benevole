@@ -8,7 +8,8 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Button from '@/components/ui/Button';
 import { FileDown, Send } from 'lucide-react';
-import { formatDate, formatEuros, TYPES_RESOLUTION } from '@/lib/utils';
+import { formatDate, TYPES_RESOLUTION } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 interface Resolution {
   id: string;
@@ -54,11 +55,43 @@ interface PVPDFProps {
     quorum_atteint: boolean;
     coproprietes?: { nom: string; adresse?: string; ville?: string; code_postal?: string } | null;
   };
+  coproprieteId: string;
   resolutions: Resolution[];
   presences?: PresenceRecord[];
   votesCopro?: VoteCoproRecord[];
   coproprietaires?: CoproRecord[];
   tantiemesParCopro?: Record<string, number>;
+}
+
+// ---- Helper : trouver ou créer un sous-dossier ----
+async function getOrCreateSubDossierPV(
+  supabase: ReturnType<typeof createClient>,
+  nom: string,
+  parentId: string | null,
+  syndicId: string
+): Promise<string | null> {
+  const base = supabase.from('document_dossiers').select('id');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const withFilter = parentId
+    ? (base as any).eq('parent_id', parentId)
+    : (base as any).is('parent_id', null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existing } = await (withFilter as any)
+    .eq('nom', nom)
+    .eq('syndic_id', syndicId)
+    .maybeSingle();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((existing as any)?.id) return (existing as any).id;
+  const payload: Record<string, string | null | boolean> = { nom, syndic_id: syndicId, is_default: false };
+  if (parentId) payload.parent_id = parentId;
+  const { data: created } = await supabase
+    .from('document_dossiers')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .insert(payload as any)
+    .select('id')
+    .single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (created as any)?.id ?? null;
 }
 
 // ─── Couleurs ─────────────────────────────────────────────
@@ -71,7 +104,12 @@ const SLATE: [number, number, number]   = [100, 116, 139];
 const LGRAY: [number, number, number]   = [248, 250, 252];
 const MGRAY: [number, number, number]   = [241, 245, 249];
 
-const fmtEur = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
+// Remplace l'espace fine insécable (U+202F) que jsPDF ne sait pas encoder par une espace normale
+const fmtEur = (n: number) =>
+  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
+    .format(n)
+    .replace(/\u202f/g, ' ')
+    .replace(/\u00a0/g, ' ');
 
 type Doc = jsPDF & { lastAutoTable: { finalY: number } };
 
@@ -123,11 +161,12 @@ const MAJORITE_LABELS: Record<string, string> = {
   article_26: 'Art. 26',
 };
 
-export default function PVPDF({ ag, resolutions, presences = [], votesCopro = [], coproprietaires = [], tantiemesParCopro = {} }: PVPDFProps) {
+export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], votesCopro = [], coproprietaires = [], tantiemesParCopro = {} }: PVPDFProps) {
+  const supabase = createClient();
   const [sendLoading, setSendLoading] = useState(false);
   const [sendResult, setSendResult] = useState<{ ok: boolean; message: string } | null>(null);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const doc = new jsPDF() as Doc;
     const W = doc.internal.pageSize.width;
     const mL = 14;
@@ -303,12 +342,6 @@ export default function PVPDF({ ag, resolutions, presences = [], votesCopro = []
     // ════════════════════════════════════════════════════════
     y = checkPage(doc, y, 40);
     y = sectionTitle(doc, 'Résolutions', y);
-
-    const voteLabels: Record<string, string> = {
-      pour:       'Pour',
-      contre:     'Contre',
-      abstention: 'Abstention',
-    };
 
     for (const res of resolutions) {
       // ── Estimer la hauteur totale de la résolution pour éviter une coupure de page ──
@@ -564,6 +597,36 @@ export default function PVPDF({ ag, resolutions, presences = [], votesCopro = []
 
     const filename = `pv-ag-${ag.titre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}.pdf`;
     doc.save(filename);
+
+    // Sauvegarder dans Documents : Assemblées Générales / Année / AG
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const year = new Date(ag.date_ag).getFullYear().toString();
+        const rootId = await getOrCreateSubDossierPV(supabase, 'Assemblées Générales', null, user.id);
+        if (rootId) {
+          const yearId = await getOrCreateSubDossierPV(supabase, year, rootId, user.id);
+          if (yearId) {
+            const dateFr = new Date(ag.date_ag).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            const agFolderName = `${ag.titre} — ${dateFr}`;
+            const agDossierId = await getOrCreateSubDossierPV(supabase, agFolderName, yearId, user.id);
+            if (agDossierId) {
+              const pdfBytes = doc.output('arraybuffer');
+              const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+              const uploadForm = new FormData();
+              uploadForm.append('file', pdfBlob, filename);
+              uploadForm.append('copropriete_id', coproprieteId);
+              uploadForm.append('nom', `PV AG — ${ag.coproprietes?.nom ?? ''} — ${year}`);
+              uploadForm.append('type', 'pv_ag');
+              uploadForm.append('dossier_id', agDossierId);
+              await fetch('/api/upload-document', { method: 'POST', body: uploadForm });
+            }
+          }
+        }
+      }
+    } catch {
+      // non-bloquant — le téléchargement réussit même si la sauvegarde échoue
+    }
   };
 
   const handleSendPV = async () => {
@@ -583,9 +646,6 @@ export default function PVPDF({ ag, resolutions, presences = [], votesCopro = []
     <div className="flex items-center gap-2 flex-wrap">
       <Button variant="secondary" size="sm" onClick={handleExport}>
         <FileDown size={14} /> Exporter PV
-      </Button>
-      <Button size="sm" onClick={handleSendPV} loading={sendLoading}>
-        <Send size={14} /> Envoyer le PV
       </Button>
       {sendResult && (
         <span className={`text-xs font-medium ${sendResult.ok ? 'text-green-600' : 'text-red-600'}`}>

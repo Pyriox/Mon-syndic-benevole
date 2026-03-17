@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
-import { Save, SkipForward, Plus, Trash2, CheckCircle2, Pencil, Users } from 'lucide-react';
+import { Save, SkipForward, Plus, Trash2, CheckCircle2, Pencil, Users, AlertTriangle, Zap } from 'lucide-react';
 import { formatEuros, TYPES_RESOLUTION } from '@/lib/utils';
 
 type Vote = 'pour' | 'contre' | 'abstention';
@@ -75,6 +75,11 @@ export default function VoteParCopro({
   const [selectedIds, setSelectedIds] = useState<string[]>(() =>
     (designationResultats ?? []).map((d) => d.id)
   );
+  const [autreTexte, setAutreTexte] = useState<string>(() => {
+    const a = (designationResultats ?? []).find((d) => d.id === '__autre__');
+    return a ? `${a.prenom} ${a.nom}`.trim() : '';
+  });
+  const isSyndic = typeResolution === 'designation_syndic';
 
   const [budgetPostes, setBudgetPostes] = useState<{ libelle: string; montant: string }[]>(() =>
     (initialBudgetPostes ?? []).map((p) => ({ libelle: p.libelle, montant: String(p.montant) }))
@@ -84,12 +89,17 @@ export default function VoteParCopro({
     initialFondsTravaux != null ? String(initialFondsTravaux) : ''
   );
 
+  const [passerelleActive, setPasserelleActive] = useState(false);
+
   const [dirty,   setDirty]   = useState(false);
   const [saving,  setSaving]  = useState(false);
   // "saved" : affiche le panneau de resultat confirme
   const [saved,   setSaved]   = useState(
     resolutionStatut === 'approuvee' || resolutionStatut === 'refusee' || resolutionStatut === 'reportee'
   );
+  // Statut optimiste : mis à jour immédiatement après enregistrement,
+  // avant que router.refresh() ne mette à jour le prop resolutionStatut
+  const [savedStatut, setSavedStatut] = useState<string | null>(null);
 
   // -- Helpers --
   const getName = (id: string) => {
@@ -127,7 +137,11 @@ export default function VoteParCopro({
     const votantsNb = Object.values(v).filter((x) => x !== null).length;
     switch (majorite) {
       case 'article_24': return exprimes === 0 ? resolutionStatut : tPour > tContre ? 'approuvee' : 'refusee';
-      case 'article_25': return totalTantiemes === 0 ? resolutionStatut : tPour > totalTantiemes / 2 ? 'approuvee' : 'refusee';
+      case 'article_25': {
+        if (totalTantiemes === 0) return resolutionStatut;
+        if (passerelleActive) return exprimes === 0 ? resolutionStatut : tPour > tContre ? 'approuvee' : 'refusee';
+        return tPour > totalTantiemes / 2 ? 'approuvee' : 'refusee';
+      }
       case 'article_26': {
         if (exprimes === 0) return resolutionStatut;
         return (tPour / exprimes >= 2 / 3) && (votantsNb > 0 && pourNb > votantsNb / 2) ? 'approuvee' : 'refusee';
@@ -139,19 +153,20 @@ export default function VoteParCopro({
   // -- Save designation --
   const handleSaveDesignation = async () => {
     setSaving(true);
-    const resultats = selectedIds.map((id) => {
-      const c = coproprietaires.find((x) => x.id === id);
+    const resultats = selectedIds.map((id) => {      if (id === '__autre__') return { id: '__autre__', nom: autreTexte.trim(), prenom: '' };      const c = coproprietaires.find((x) => x.id === id);
       return { id, nom: c?.nom ?? '', prenom: c?.prenom ?? '' };
     });
     // voix_pour = total tantièmes des voteurs présents (tous approuvent la désignation)
     const tantTotal = presences.reduce((s, p) => s + (tantiemesMap[p.coproprietaire_id] ?? 0), 0);
+    const desigStatut = resultats.length > 0 ? 'approuvee' : resolutionStatut;
     await supabase.from('resolutions').update({
       designation_resultats: resultats.length > 0 ? resultats : null,
-      statut: resultats.length > 0 ? 'approuvee' : resolutionStatut,
+      statut: desigStatut,
       voix_pour: tantTotal,
       voix_contre: 0,
       voix_abstention: 0,
     }).eq('id', resolutionId);
+    setSavedStatut(desigStatut);
     setDirty(false);
     setSaving(false);
     setSaved(true);
@@ -184,6 +199,7 @@ export default function VoteParCopro({
       .update({ voix_pour: tantPour, voix_contre: tantContre, voix_abstention: tantAbst, statut: newStatut, ...extraFields })
       .eq('id', resolutionId);
 
+    setSavedStatut(newStatut);
     setDirty(false);
     setSaving(false);
     setSaved(true);
@@ -194,6 +210,7 @@ export default function VoteParCopro({
     if (!confirm('Passer cette résolution ? Elle sera marquée comme reportée.')) return;
     setSaving(true);
     await supabase.from('resolutions').update({ statut: 'reportee' }).eq('id', resolutionId);
+    setSavedStatut('reportee');
     setSaving(false);
     setSaved(true);
     router.refresh();
@@ -206,10 +223,12 @@ export default function VoteParCopro({
   // ==============================================================
   // PANNEAU RESULTAT (apres enregistrement ou resolution deja votee)
   // ==============================================================
-  const latestStatut = saved ? computeStatut(votes) : resolutionStatut;
-  const isApproved = resolutionStatut === 'approuvee';
-  const isRefused  = resolutionStatut === 'refusee';
-  const isReported = resolutionStatut === 'reportee';
+  // effectiveStatut : utilise savedStatut (mis à jour optimistiquement après save)
+  // plutôt que le prop resolutionStatut qui n'est mis à jour qu'après router.refresh()
+  const effectiveStatut = savedStatut ?? resolutionStatut;
+  const isApproved = effectiveStatut === 'approuvee';
+  const isRefused  = effectiveStatut === 'refusee';
+  const isReported = effectiveStatut === 'reportee';
 
   if (saved && !dirty && (isApproved || isRefused || isReported)) {
     return (
@@ -322,6 +341,35 @@ export default function VoteParCopro({
               </button>
             );
           })}
+
+          {/* Option Autre (syndic uniquement) */}
+          {isSyndic && (() => {
+            const isSelected = selectedIds.includes('__autre__');
+            return (
+              <div className={`px-3 py-2 flex items-center gap-2 ${isSelected ? 'bg-indigo-50' : 'bg-white'}`}>
+                <button type="button" disabled={!canEdit}
+                  onClick={() => { toggleDesignation('__autre__'); }}
+                  className={`flex items-center gap-2 min-w-0 flex-shrink-0 ${canEdit ? 'cursor-pointer' : 'cursor-default'}`}>
+                  <div className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                    isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300 bg-white'
+                  }`}>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                  <span className="text-xs font-medium text-gray-800">Autre (extérieur)</span>
+                </button>
+                {isSelected && (
+                  <input
+                    type="text"
+                    value={autreTexte}
+                    onChange={(e) => { setAutreTexte(e.target.value); setDirty(true); }}
+                    placeholder="Nom du syndic extérieur..."
+                    className="flex-1 text-xs rounded-md border border-indigo-300 bg-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    autoFocus
+                  />
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Section votes pour / contre / abstention */}
@@ -375,9 +423,29 @@ export default function VoteParCopro({
         {/* Actions */}
         {canEdit && (
           <div className="border-t border-gray-100 px-3 py-2 bg-white flex items-center gap-2 flex-wrap">
-            <Button size="sm" onClick={handleSaveDesignation} loading={saving} disabled={!dirty}>
-              <Save size={12} /> Enregistrer la désignation
-            </Button>
+            {(() => {
+              const allVoted = Object.values(votes).every((v) => v !== null);
+              const hasValidDesignation =
+                selectedIds.length > 0 &&
+                (!selectedIds.includes('__autre__') || autreTexte.trim().length > 0);
+              return (
+                <Button
+                  size="sm"
+                  onClick={handleSaveDesignation}
+                  loading={saving}
+                  disabled={!hasValidDesignation || !allVoted}
+                  title={
+                    !hasValidDesignation
+                      ? 'Sélectionnez au moins une personne'
+                      : !allVoted
+                      ? 'Saisissez le vote de tous les présents'
+                      : undefined
+                  }
+                >
+                  <Save size={12} /> Enregistrer la désignation
+                </Button>
+              );
+            })()}
             {isOptional && (
               <Button size="sm" variant="secondary" onClick={handleSkip} loading={saving}>
                 <SkipForward size={12} /> Passer
@@ -407,15 +475,23 @@ export default function VoteParCopro({
   const tantAbstLive   = calcTantiemes('abstention');
   const exprimesLive   = tantPourLive + tantContreLive;
 
-  const tentativeStatut: string | null = exprimesLive === 0 && majorite !== 'article_25'
+  // Ne pas afficher de résultat tentative si aucun vote exprimé (pour/contre)
+  const tentativeStatut: string | null = exprimesLive === 0
     ? null
     : computeStatut(votes);
 
   const majoriteLabel: Record<string, string> = {
     article_24: 'Art. 24 — majorité simple',
-    article_25: 'Art. 25 — majorité absolue',
+    article_25: passerelleActive ? 'Passerelle Art. 25-1 → Art. 24 (majorité simple)' : 'Art. 25 — majorité absolue',
     article_26: 'Art. 26 — double majorité',
   };
+
+  // Passerelle Art. 25-1 : au moins 1/3 des tantiemes mais pas la majorite absolue
+  const passerelleDisponible = majorite === 'article_25'
+    && totalTantiemes > 0
+    && exprimesLive > 0
+    && tantPourLive * 3 >= totalTantiemes   // >= 1/3 des tantiemes totaux
+    && tantPourLive * 2 <= totalTantiemes;  // < majorite absolue (50%)
 
   return (
     <div className="mt-3 space-y-2">
@@ -546,6 +622,36 @@ export default function VoteParCopro({
             }`}>
               {tentativeStatut === 'approuvee' ? 'Serait adoptée' : 'Serait refusée'}
               {majorite && <span className="font-normal text-gray-400">({majoriteLabel[majorite]})</span>}
+            </div>
+          )}
+
+          {/* Passerelle Art. 25-1 */}
+          {passerelleDisponible && !passerelleActive && (
+            <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg text-xs text-amber-900 flex items-start gap-2">
+              <AlertTriangle size={13} className="shrink-0 mt-0.5 text-amber-500" />
+              <div className="flex-1 space-y-1">
+                <p className="font-semibold">Passerelle Art. 25-1 disponible</p>
+                <p className="text-amber-800">
+                  La résolution a obtenu <strong>{tantPourLive}</strong> tant. sur <strong>{totalTantiemes}</strong> (≥ 1/3),
+                  sans atteindre la majorité absolue (&gt; 50 %). L’assemblée peut immédiatement re-voter à la majorité simple (Art. 24).
+                </p>
+                <button type="button"
+                  onClick={() => { setPasserelleActive(true); setDirty(true); setSaved(false); }}
+                  className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-600 text-white rounded-md font-semibold text-[11px] hover:bg-amber-700 transition-colors">
+                  <Zap size={11} /> Activer la passerelle Art. 25-1
+                </button>
+              </div>
+            </div>
+          )}
+          {passerelleActive && (
+            <div className="p-2 bg-amber-100 border border-amber-400 rounded-lg text-xs text-amber-900 flex items-center gap-2">
+              <Zap size={12} className="text-amber-600 shrink-0" />
+              <span className="font-semibold flex-1">Passerelle Art. 25-1 active — vote évalué à la majorité simple (Art. 24)</span>
+              <button type="button"
+                onClick={() => { setPasserelleActive(false); setDirty(true); setSaved(false); }}
+                className="text-[11px] text-amber-700 underline hover:text-amber-900 shrink-0">
+                Désactiver
+              </button>
             </div>
           )}
         </div>
