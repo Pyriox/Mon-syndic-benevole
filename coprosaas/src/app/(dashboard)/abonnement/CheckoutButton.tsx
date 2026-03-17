@@ -23,11 +23,13 @@ export default function CheckoutButton({ planId, isSubscribed, hasStripeCustomer
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId }),
       });
-      const json = await res.json();
-      if (!res.ok) { setError(json.error ?? 'Erreur'); setLoading(false); return; }
+      let json: { url?: string; error?: string } = {};
+      try { json = await res.json(); } catch { /* réponse non-JSON */ }
+      if (!res.ok) { setError(json.error ?? `Erreur ${res.status}`); setLoading(false); return; }
+      if (!json.url) { setError('URL de paiement manquante.'); setLoading(false); return; }
       window.location.href = json.url;
     } catch {
-      setError('Erreur réseau.');
+      setError('Erreur réseau — vérifiez votre connexion.');
       setLoading(false);
     }
   };
