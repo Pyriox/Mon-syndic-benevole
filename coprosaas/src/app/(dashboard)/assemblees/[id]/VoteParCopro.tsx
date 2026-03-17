@@ -610,7 +610,19 @@ export default function VoteParCopro({
                     <SkipForward size={12} /> Passer
                   </Button>
                 )}
-                <Button size="sm" onClick={handleSave} loading={saving} disabled={!dirty}>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  loading={saving}
+                  disabled={!dirty || votesCount < presences.length || (passerelleDisponible && !passerelleActive)}
+                  title={
+                    votesCount < presences.length
+                      ? `${presences.length - votesCount} vote(s) manquant(s) — tous les présents doivent voter`
+                      : (passerelleDisponible && !passerelleActive)
+                      ? 'La passerelle Art. 25-1 est disponible — activez-la ou ignorez-la avant d\'enregistrer'
+                      : undefined
+                  }
+                >
                   <Save size={12} /> Enregistrer
                 </Button>
               </div>
@@ -630,16 +642,23 @@ export default function VoteParCopro({
             <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg text-xs text-amber-900 flex items-start gap-2">
               <AlertTriangle size={13} className="shrink-0 mt-0.5 text-amber-500" />
               <div className="flex-1 space-y-1">
-                <p className="font-semibold">Passerelle Art. 25-1 disponible</p>
+                <p className="font-semibold">⚠️ Passerelle Art. 25-1 disponible — décision requise avant d&apos;enregistrer</p>
                 <p className="text-amber-800">
-                  La résolution a obtenu <strong>{tantPourLive}</strong> tant. sur <strong>{totalTantiemes}</strong> (≥ 1/3),
-                  sans atteindre la majorité absolue (&gt; 50 %). L’assemblée peut immédiatement re-voter à la majorité simple (Art. 24).
+                  La résolution a obtenu <strong>{tantPourLive}</strong> tant. sur <strong>{totalTantiemes}</strong> (≥ 1/3),
+                  sans atteindre la majorité absolue (&gt; 50 %). L&apos;assemblée peut immédiatement voter à la majorité simple (Art. 24).
                 </p>
-                <button type="button"
-                  onClick={() => { setPasserelleActive(true); setDirty(true); setSaved(false); }}
-                  className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-600 text-white rounded-md font-semibold text-[11px] hover:bg-amber-700 transition-colors">
-                  <Zap size={11} /> Activer la passerelle Art. 25-1
-                </button>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <button type="button"
+                    onClick={() => { setPasserelleActive(true); setDirty(true); setSaved(false); }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-600 text-white rounded-md font-semibold text-[11px] hover:bg-amber-700 transition-colors">
+                    <Zap size={11} /> Activer la passerelle (vote Art. 24)
+                  </button>
+                  <button type="button"
+                    onClick={() => { setPasserelleActive(false); setDirty(true); setSaved(false); }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-200 text-gray-700 rounded-md font-semibold text-[11px] hover:bg-gray-300 transition-colors">
+                    Ne pas utiliser — résolution refusée
+                  </button>
+                </div>
               </div>
             </div>
           )}

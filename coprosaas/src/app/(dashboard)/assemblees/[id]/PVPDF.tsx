@@ -181,6 +181,23 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     // Total tantièmes des voteurs (présents + représentés)
     const voteurs = presences.filter((p) => p.statut !== 'absent');
     const tantiemesPresents = voteurs.reduce((sum, p) => sum + (tantiemesParCopro[p.coproprietaire_id] ?? 0), 0);
+    // Total tantièmes de toute la copropriété (pour Art. 25 passerelle)
+    const totalTantiemes = Object.values(tantiemesParCopro).reduce((s, t) => s + t, 0);
+
+    // Helper : recalcule le statut effectif d'une résolution Art. 25
+    // en appliquant automatiquement la passerelle si les conditions sont remplies
+    const effectifStatut = (r: { majorite?: string | null; statut: string; voix_pour: number; voix_contre: number }) => {
+      if (
+        r.majorite === 'article_25' &&
+        r.statut === 'refusee' &&
+        totalTantiemes > 0 &&
+        r.voix_pour * 3 >= totalTantiemes &&   // ≥ 1/3 des tantièmes totaux
+        r.voix_pour > r.voix_contre             // majorité simple atteinte
+      ) {
+        return 'approuvee'; // passerelle Art. 25-1 s'applique
+      }
+      return r.statut;
+    };
 
     // ════════════════════════════════════════════════════════
     // PAGE 1 — EN-TÊTE
@@ -362,7 +379,8 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         y = checkPage(doc, y, estH);
       }
 
-      const badge = statutBadge(res.statut);
+      const resStatutEffectif = effectifStatut(res);
+      const badge = statutBadge(resStatutEffectif);
       const isDesig = !!(res.designation_resultats && res.designation_resultats.length > 0);
       const hasBudget = !!(res.budget_postes && res.budget_postes.length > 0);
 
@@ -511,7 +529,8 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         startY: y,
         head: [['N°', 'Résolution', 'Résultat', 'Majorité', 'Pour', 'Contre', 'Abst.']],
         body: resolutions.map((r) => {
-          const b = statutBadge(r.statut);
+          const rStatutEff = effectifStatut(r);
+          const b = statutBadge(rStatutEff);
           // isDesig basé sur le type (et non sur designation_resultats qui peut être nul)
           const isDesig = !!(r.type_resolution && TYPES_RESOLUTION[r.type_resolution]?.designation);
           // Pour les désignations, voix_pour en base peut être obsolète (= 1) → recalcul live
@@ -519,7 +538,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
           return [
             r.numero,
             r.titre,
-            b.label,
+            rStatutEff === 'approuvee' && r.statut === 'refusee' ? 'APPROUVÉE (Art.25-1)' : b.label,
             r.majorite ? (MAJORITE_LABELS[r.majorite] ?? r.majorite) : '–',
             tantPourAffiche,
             isDesig ? 0 : r.voix_contre,
@@ -541,8 +560,8 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         margin: { left: mL, right: mR },
         didParseCell: (data) => {
           if (data.column.index === 2 && data.section === 'body') {
-            const statut = resolutions[data.row.index]?.statut;
-            const b = statutBadge(statut ?? '');
+            const r = resolutions[data.row.index];
+            const b = statutBadge(r ? effectifStatut(r) : '');
             data.cell.styles.textColor = b.color;
           }
         },
