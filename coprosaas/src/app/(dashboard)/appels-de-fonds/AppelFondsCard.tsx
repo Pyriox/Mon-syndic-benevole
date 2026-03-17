@@ -57,13 +57,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
       if (!appel.copropriete_id) { setRegenMsg('Copropriété introuvable.'); return; }
       const { data: lots } = await supabase
         .from('lots')
-        .select('id, tantiemes, coproprietaires(id)')
+        .select('id, tantiemes, coproprietaire_id')
         .eq('copropriete_id', appel.copropriete_id);
 
-      const lotsWithCopro = (lots ?? []).filter((l) => {
-        const c = Array.isArray(l.coproprietaires) ? l.coproprietaires[0] : l.coproprietaires;
-        return c != null;
-      });
+      const lotsWithCopro = (lots ?? []).filter((l) => l.coproprietaire_id != null);
 
       if (lotsWithCopro.length === 0) {
         setRegenMsg('Aucun lot avec copropriétaire assigné trouvé. Assignez d’abord des copropriétaires aux lots.');
@@ -73,11 +70,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
 
       const { error } = await supabase.from('lignes_appels_de_fonds').insert(
         lotsWithCopro.map((lot) => {
-          const copro = (Array.isArray(lot.coproprietaires) ? lot.coproprietaires[0] : lot.coproprietaires) as { id: string };
           const montant = totalTantiemes > 0
             ? Math.round((appel.montant_total * (lot.tantiemes ?? 0) / totalTantiemes) * 100) / 100
             : 0;
-          return { appel_de_fonds_id: appel.id, coproprietaire_id: copro.id, lot_id: lot.id, montant_du: montant, paye: false, date_paiement: null };
+          return { appel_de_fonds_id: appel.id, coproprietaire_id: lot.coproprietaire_id, lot_id: lot.id, montant_du: montant, paye: false, date_paiement: null };
         })
       );
       if (error) { setRegenMsg('Erreur : ' + error.message); return; }
