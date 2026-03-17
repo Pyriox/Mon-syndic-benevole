@@ -4,11 +4,12 @@
 // Facturation annuelle
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import Card, { CardHeader } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import CheckoutButton from './CheckoutButton';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Settings2 } from 'lucide-react';
 
 const FEATURES = [
   'Copropriétaires illimités',
@@ -58,6 +59,44 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // ── Sync immédiate depuis Stripe au retour du checkout ──────────────
+  // Le webhook peut être légèrement décalé ; on force la mise à jour ici.
+  if (success === '1' && !user.user_metadata?.stripe_customer_id) {
+    try {
+      const { getStripe } = await import('@/lib/stripe');
+      const stripeClient = getStripe();
+      const existing = await stripeClient.customers.search({
+        query: `metadata['supabase_user_id']:'${user.id}'`,
+        limit: 1,
+      });
+      if (existing.data.length > 0) {
+        const customer = existing.data[0];
+        const subs = await stripeClient.subscriptions.list({ customer: customer.id, status: 'active', limit: 1 });
+        if (subs.data.length > 0) {
+          const sub = subs.data[0] as unknown as { id: string; current_period_end: number; metadata: Record<string, string>; items: { data: { price: { id: string } }[] } };
+          const adminClient = createAdminClient();
+          await adminClient.auth.admin.updateUserById(user.id, {
+            user_metadata: {
+              ...user.user_metadata,
+              plan: 'actif',
+              plan_status: 'actif',
+              stripe_customer_id: customer.id,
+              stripe_subscription_id: sub.id,
+              plan_id: sub.metadata?.plan_id ?? sub.items.data[0]?.price.id,
+              plan_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+            },
+          });
+        }
+      }
+    } catch { /* non bloquant */ }
+    // Recharger avec métadonnées fraîches
+    return redirect(`/abonnement?success=1&synced=1`);
+  }
+
+  // Recharger les métadonnées fraîches après sync
+  const { data: { user: freshUser } } = await supabase.auth.getUser();
+  const meta = freshUser?.user_metadata ?? user.user_metadata ?? {};
+
   const [
     { count: nbrCopros },
     { data: lotsData },
@@ -67,10 +106,11 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
   ]);
 
   const totalLots = lotsData?.length ?? 0;
-  const planActuel: string = (user.user_metadata?.plan as string | undefined) ?? 'essai';
+  const planActuel: string = (meta?.plan as string | undefined) ?? 'essai';
   const isSubscribed = planActuel === 'actif';
-  const hasStripeCustomer = !!user.user_metadata?.stripe_customer_id;
-  const planPeriodEnd = user.user_metadata?.plan_period_end as string | undefined;
+  const hasStripeCustomer = !!meta?.stripe_customer_id;
+  const planPeriodEnd = meta?.plan_period_end as string | undefined;
+  const planId = meta?.plan_id as string | undefined;
 
   // Plan recommandé selon le nombre de lots total
   const recommendedPlan = totalLots <= 10 ? 'essentiel' : totalLots <= 20 ? 'confort' : 'illimite';
@@ -106,6 +146,12 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
                 : <Badge variant="warning">Période d&apos;essai</Badge>
               }
             </div>
+            {isSubscribed && planId && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Plan</span>
+                <span className="font-semibold text-gray-900 capitalize">{planId}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <span className="text-gray-500">Copropriétés</span>
               <span className="font-semibold text-gray-900">{nbrCopros ?? 0}</span>
@@ -114,15 +160,20 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
               <span className="text-gray-500">Lots total</span>
               <span className="font-semibold text-gray-900">{totalLots}</span>
             </div>
-            {isSubscribed && planPeriodEnd && (
+            {planPeriodEnd && (
               <div className="flex items-center gap-2">
-                <span className="text-gray-500">Prochain renouvellement</span>
+                <span className="text-gray-500">{isSubscribed ? 'Renouvellement le' : 'Fin le'}</span>
                 <span className="font-semibold text-gray-900">
                   {new Date(planPeriodEnd).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
               </div>
             )}
           </div>
+          {isSubscribed && hasStripeCustomer && (
+            <div className="mt-5 pt-4 border-t border-gray-100">
+              <CheckoutButton planId={(planId as 'essentiel' | 'confort' | 'illimite') ?? 'essentiel'} isSubscribed={true} hasStripeCustomer={true} />
+            </div>
+          )}
         </Card>
 
         {/* Plans */}
