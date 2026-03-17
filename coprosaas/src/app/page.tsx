@@ -205,7 +205,7 @@ export default function HomePage() {
 
           {/* Badges rassurants */}
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-blue-200/70">
-            <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> 30 jours offerts</span>
+            <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> 30 jours offerts, facturation au 31e jour</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> Sans engagement</span>
             <span className="flex items-center gap-1.5"><Shield size={14} className="text-green-400" /> Données hébergées en Europe</span>
             <span className="flex items-center gap-1.5"><Clock size={14} className="text-green-400" /> Prêt en 5 minutes</span>
@@ -672,8 +672,8 @@ export default function HomePage() {
           <div className="divide-y divide-gray-200">
             {[
               {
-                q: "L'essai gratuit nécessite-t-il une carte bancaire ?",
-                a: "Non. Aucune carte bancaire n'est requise pour démarrer. Vous créez votre compte et accédez directement à toutes les fonctionnalités pendant 30 jours.",
+                q: "Faut-il un moyen de paiement pour démarrer ?",
+                a: "Oui, un moyen de paiement (carte bancaire ou prélèvement) est requis lors de la souscription pour activer votre abonnement. Les 30 premiers jours sont entièrement gratuits — la première facturation intervient seulement au 31e jour. Vos coordonnées bancaires sont enregistrées dès la souscription mais aucun prélèvement n’est effectué pendant la période d’essai.",
               },
               {
                 q: "Puis-je annuler à tout moment ?",
@@ -684,8 +684,8 @@ export default function HomePage() {
                 a: "Vos données sont hébergées en Europe, chiffrées en transit (HTTPS) et au repos. Nous n'accédons jamais à vos données sans votre autorisation explicite.",
               },
               {
-                q: "Que se passe-t-il après les 30 jours d'essai ?",
-                a: "À la fin de l'essai, vous sélectionnez un plan et saisissez votre mode de paiement. Sans action de votre part, l'accès est suspendu et vos données sont conservées 30 jours supplémentaires.",
+                q: "Que se passe-t-il après les 30 jours d’essai ?",
+                a: "Après les 30 jours d’essai, le premier prélèvement est effectué automatiquement sur le moyen de paiement enregistré lors de la souscription. L’abonnement se renouvelle ensuite chaque année. Vous pouvez annuler à tout moment avant la date de renouvellement.",
               },
               {
                 q: "Un abonnement couvre-t-il plusieurs copropriétés ?",
@@ -730,7 +730,7 @@ export default function HomePage() {
           </Link>
           <p className="mt-4 text-blue-300/50 text-sm">Facturation annuelle · Sans engagement · Résiliez à tout moment</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-blue-300/60">
-            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> 30 jours gratuits, sans carte</span>
+            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> 30 jours gratuits, sans frais immédiats</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Annulation sans frais</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Données hébergées en Europe</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Prêt en 10 minutes</span>

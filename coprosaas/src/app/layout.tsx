@@ -15,6 +15,14 @@ const DESC    = "Mon Syndic Bénévole simplifie la gestion des copropriétés p
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
 
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
+
   title: {
     default: TITLE,
     template: "%s | Mon Syndic Bénévole",
