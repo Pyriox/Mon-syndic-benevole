@@ -11,10 +11,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { formatEuros, LABELS_CATEGORIE } from '@/lib/utils';
-import { buildAppelFondsPDF, type AppelForPDF } from './AppelFondsPDF';
 import {
-  CheckCircle, Clock, XCircle, Mail, Loader2,
-  ChevronUp, CalendarCheck2, X, ReceiptText,
+  CheckCircle, Clock, XCircle, Loader2,
+  ChevronUp, X, ReceiptText,
 } from 'lucide-react';
 
 interface Poste { libelle: string; categorie: string; montant: number }
@@ -69,11 +68,6 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic }: AppelFon
   const [toggling, setToggling] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const [sending, setSending] = useState(false);
-  const [sendMsg, setSendMsg] = useState('');
-  const [sendOk, setSendOk] = useState<boolean | null>(null);
-  const [emailedAt, setEmailedAt] = useState<string | null>(appel.emailed_at ?? null);
-
   const postes = parsePostes(appel.description);
   const hasPostes = postes.length > 0;
 
@@ -127,111 +121,14 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic }: AppelFon
     router.refresh();
   };
 
-  const saveToDocuments = async () => {
-    try {
-      const appelForPDF: AppelForPDF = {
-        ...appel,
-        lignes_appels_de_fonds: lignes.map((l) => ({
-          id: l.id,
-          montant_du: l.montant_du,
-          paye: l.paye,
-          coproprietaires: l.coproprietaires
-            ? { nom: l.coproprietaires.nom, prenom: l.coproprietaires.prenom }
-            : null,
-        })),
-      };
-      const pdfDoc = buildAppelFondsPDF(appelForPDF);
-      const pdfBlob = pdfDoc.output('blob');
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !appel.copropriete_id) return;
-
-      const { data: dossier } = await supabase
-        .from('dossiers').select('id')
-        .eq('nom', 'Appels de fonds').eq('created_by', user.id).maybeSingle();
-
-      const fileName = `${appel.copropriete_id}/${Date.now()}-appel-${appel.id.slice(0, 8)}.pdf`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents').upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: false });
-
-      if (uploadError) return;
-
-      const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(uploadData.path);
-      await supabase.from('documents').insert({
-        copropriete_id: appel.copropriete_id,
-        dossier_id: dossier?.id ?? null,
-        nom: `Appel de fonds — ${appel.titre}`,
-        type: 'autre',
-        url: publicUrl,
-        taille: pdfBlob.size,
-        uploaded_by: user.id,
-      });
-    } catch { /* silent — non bloquant */ }
-  };
-
-  const handleSendEmails = async () => {
-    setSending(true);
-    setSendMsg('');
-    setSendOk(null);
-    try {
-      const res = await fetch(`/api/appels-de-fonds/${appel.id}/envoyer`, { method: 'POST' });
-      const json = await res.json();
-      setSendMsg(json.message ?? 'Envoyé');
-      setSendOk(res.ok);
-      if (res.ok) {
-        setEmailedAt(new Date().toISOString());
-        await saveToDocuments();
-        router.refresh();
-      }
-    } catch {
-      setSendMsg("Erreur réseau lors de l'envoi.");
-      setSendOk(false);
-    }
-    setSending(false);
-  };
-
   const nbPayes = lignes.filter((l) => l.paye).length;
 
   return (
     <div className="mt-4 space-y-3">
       {/* ── En-tête ──────────────────────────────────── */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-          Répartition — {nbPayes}/{lignes.length} payé(s)
-        </p>
-        {isSyndic && (
-          <button
-            type="button"
-            onClick={handleSendEmails}
-            disabled={sending}
-            className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50 transition-colors"
-          >
-            {sending ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
-            {emailedAt ? 'Renvoyer par e-mail' : 'Envoyer par e-mail'}
-          </button>
-        )}
-      </div>
-
-      {/* ── Badge e-mail envoyé ───────────────────────── */}
-      {emailedAt && (
-        <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2 text-xs text-indigo-700">
-          <CalendarCheck2 size={13} className="shrink-0" />
-          <span>
-            Envoyé le{' '}
-            {new Date(emailedAt).toLocaleDateString('fr-FR', {
-              day: 'numeric', month: 'long', year: 'numeric',
-            })}{' '}
-            à {new Date(emailedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-          </span>
-        </div>
-      )}
-
-      {/* ── Feedback envoi ───────────────────────────── */}
-      {sendMsg && (
-        <div className={`text-xs rounded-lg px-3 py-2 border ${sendOk ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-          {sendMsg}
-        </div>
-      )}
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        Répartition — {nbPayes}/{lignes.length} payé(s)
+      </p>
 
       {/* ── Table copropriétaires ─────────────────────── */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">

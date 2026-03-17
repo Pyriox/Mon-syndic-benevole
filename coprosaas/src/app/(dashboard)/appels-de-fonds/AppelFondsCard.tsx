@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, AlertTriangle, Link2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
-import AppelFondsPDF from './AppelFondsPDF';
+import { createClient } from '@/lib/supabase/client';
+import AppelFondsPDF, { buildAppelFondsPDF, type AppelForPDF } from './AppelFondsPDF';
 import AppelFondsPaiement, { type Ligne } from './AppelFondsPaiement';
 
 interface Poste { libelle: string; categorie: string; montant: number }
@@ -39,6 +41,70 @@ interface AppelCardProps {
 
 export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPayes, nbImpayes, pctPaye }: AppelCardProps) {
   const [open, setOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendMsg, setSendMsg] = useState('');
+  const [sendOk, setSendOk] = useState<boolean | null>(null);
+  const [emailedAt, setEmailedAt] = useState<string | null>(appel.emailed_at ?? null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  const saveToDocuments = async () => {
+    try {
+      const appelForPDF: AppelForPDF = {
+        ...appel,
+        lignes_appels_de_fonds: lignes.map((l) => ({
+          id: l.id,
+          montant_du: l.montant_du,
+          paye: l.paye,
+          coproprietaires: l.coproprietaires
+            ? { nom: l.coproprietaires.nom, prenom: l.coproprietaires.prenom }
+            : null,
+        })),
+      };
+      const pdfDoc = buildAppelFondsPDF(appelForPDF);
+      const pdfBlob = pdfDoc.output('blob');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !appel.copropriete_id) return;
+      const { data: dossier } = await supabase
+        .from('dossiers').select('id')
+        .eq('nom', 'Appels de fonds').eq('created_by', user.id).maybeSingle();
+      const fileName = `${appel.copropriete_id}/${Date.now()}-appel-${appel.id.slice(0, 8)}.pdf`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents').upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: false });
+      if (uploadError) return;
+      const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(uploadData.path);
+      await supabase.from('documents').insert({
+        copropriete_id: appel.copropriete_id,
+        dossier_id: dossier?.id ?? null,
+        nom: `Appel de fonds — ${appel.titre}`,
+        type: 'autre',
+        url: publicUrl,
+        taille: pdfBlob.size,
+        uploaded_by: user.id,
+      });
+    } catch { /* silent */ }
+  };
+
+  const handleSendEmails = async () => {
+    setSending(true);
+    setSendMsg('');
+    setSendOk(null);
+    try {
+      const res = await fetch(`/api/appels-de-fonds/${appel.id}/envoyer`, { method: 'POST' });
+      const json = await res.json();
+      setSendMsg(json.message ?? 'Envoyé');
+      setSendOk(res.ok);
+      if (res.ok) {
+        setEmailedAt(new Date().toISOString());
+        await saveToDocuments();
+        router.refresh();
+      }
+    } catch {
+      setSendMsg("Erreur réseau lors de l'envoi.");
+      setSendOk(false);
+    }
+    setSending(false);
+  };
 
   const typeAppel = appel.type_appel;
   const barColor = pctPaye === 100 ? 'bg-green-500' : nbImpayes > 0 ? 'bg-red-500' : 'bg-blue-500';
@@ -94,20 +160,42 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
 
           {/* Actions droite */}
           <div className="flex items-center gap-1 shrink-0">
-            <AppelFondsPDF appel={appel} />
-            {lignes.length > 0 && (
+            {isSyndic && (
               <button
                 type="button"
-                onClick={() => setOpen((v) => !v)}
-                className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+                onClick={handleSendEmails}
+                disabled={sending}
+                title={emailedAt ? `Renvoyer (envoyé le ${new Date(emailedAt).toLocaleDateString('fr-FR')})` : 'Envoyer par e-mail'}
+                className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${emailedAt ? 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
               >
-                {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                {open ? 'Réduire' : 'Détail'}
+                {sending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
               </button>
             )}
+            <AppelFondsPDF appel={appel} />
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              {open ? 'Réduire' : 'Détail'}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* ── Feedback email ───────────────────────────────────── */}
+      {sendMsg && (
+        <div className={`mx-5 mb-3 text-xs rounded-lg px-3 py-2 border ${sendOk ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+          {sendMsg}
+        </div>
+      )}
+      {emailedAt && !sendMsg && (
+        <div className="mx-5 mb-3 flex items-center gap-1.5 text-xs text-indigo-500">
+          <CalendarCheck2 size={12} className="shrink-0" />
+          <span>Envoyé le {new Date(emailedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} à {new Date(emailedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      )}
 
       {/* ── Section dépliable ────────────────────────────────── */}
       {open && (
