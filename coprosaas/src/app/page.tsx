@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Script from 'next/script';
 import {
   Building2, CheckCircle, Users, Receipt, CalendarDays,
-  AlertTriangle, FileText, Wallet, ArrowRight, Star,
+  AlertTriangle, FileText, Wallet, ArrowRight,
   Shield, Clock, TrendingUp, Zap,
   Scale, ArrowUp, BellRing, Banknote,
   LayoutDashboard, HelpCircle, UserCircle, LogOut, CreditCard,
@@ -15,7 +15,7 @@ import SiteLogo from '@/components/ui/SiteLogo';
 
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
-  alternates: { canonical: 'https://syndic-benevole.eu' },
+  alternates: { canonical: 'https://mon-syndic-benevole.fr' },
 };
 
 const features = [
@@ -94,18 +94,18 @@ export default function HomePage() {
     '@graph': [
       {
         '@type': 'Organization',
-        '@id': 'https://syndic-benevole.eu/#organization',
+        '@id': 'https://mon-syndic-benevole.fr/#organization',
         name: 'Mon Syndic Bénévole',
-        url: 'https://syndic-benevole.eu',
-        logo: 'https://syndic-benevole.eu/logo.png',
+        url: 'https://mon-syndic-benevole.fr',
+        logo: 'https://mon-syndic-benevole.fr/logo.png',
         description: 'Logiciel de gestion de copropriété pour syndics bénévoles.',
         sameAs: [],
       },
       {
         '@type': 'SoftwareApplication',
-        '@id': 'https://syndic-benevole.eu/#app',
+        '@id': 'https://mon-syndic-benevole.fr/#app',
         name: 'Mon Syndic Bénévole',
-        url: 'https://syndic-benevole.eu',
+        url: 'https://mon-syndic-benevole.fr',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         offers: {
@@ -125,10 +125,10 @@ export default function HomePage() {
       },
       {
         '@type': 'WebPage',
-        '@id': 'https://syndic-benevole.eu/#webpage',
-        url: 'https://syndic-benevole.eu',
+        '@id': 'https://mon-syndic-benevole.fr/#webpage',
+        url: 'https://mon-syndic-benevole.fr',
         name: 'Mon Syndic Bénévole — La gestion de copropriété simple & abordable',
-        isPartOf: { '@id': 'https://syndic-benevole.eu/#organization' },
+        isPartOf: { '@id': 'https://mon-syndic-benevole.fr/#organization' },
         inLanguage: 'fr-FR',
       },
     ],
@@ -143,21 +143,34 @@ export default function HomePage() {
       />
       <div className="min-h-screen bg-white font-sans">
 
-      {/* ── Navigation ── */}
+      {/* ── Navigation sticky ── */}
+      <nav aria-label="Navigation principale" className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-white/10">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <SiteLogo size={28} />
+            <span className="font-bold text-white text-sm hidden sm:block">Mon Syndic Bénévole</span>
+          </Link>
+          <div className="hidden md:flex items-center gap-8 text-sm text-white/70">
+            <Link href="#fonctionnalites" className="hover:text-white transition-colors">Fonctionnalités</Link>
+            <Link href="#tarif" className="hover:text-white transition-colors">Tarifs</Link>
+            <Link href="#faq" className="hover:text-white transition-colors">FAQ</Link>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="text-sm text-white/70 hover:text-white transition-colors hidden md:block">Connexion</Link>
+            <Link href="/register" className="text-sm bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-xl transition-colors">
+              Essai gratuit
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       <header>
-        <nav aria-label="Navigation principale" className="sr-only">
-          <Link href="/">Accueil</Link>
-          <Link href="#fonctionnalites">Fonctionnalités</Link>
-          <Link href="#tarif">Tarifs</Link>
-          <Link href="/login">Connexion</Link>
-          <Link href="/register">Inscription</Link>
-        </nav>
         <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white" aria-label="Présentation">
         {/* Orbs décoratifs */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative max-w-6xl mx-auto px-6 pt-20 pb-12 text-center">
+        <div className="relative max-w-6xl mx-auto px-6 pt-32 pb-12 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-blue-200 text-sm font-medium px-4 py-2 rounded-full mb-8">
             <Zap size={14} className="text-yellow-400" />
             Pensé par un syndic bénévole, pour les syndics bénévoles
@@ -171,8 +184,8 @@ export default function HomePage() {
           </h1>
 
           <p className="text-xl text-blue-100/80 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Gérez vos charges, assemblées générales, appels de fonds et documents
-            depuis une seule plateforme — sans formation, sans prise de tête.
+            Configurez votre copropriété en 10 minutes et économisez jusqu&apos;à 2 700 €/an
+            par rapport à un syndic professionnel — sans formation, sans prise de tête.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
@@ -468,6 +481,28 @@ export default function HomePage() {
       </header>
 
       <main>
+      {/* ── Chiffres clés ── */}
+      <section className="bg-white border-b border-gray-100 py-12 px-6">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-600">240 €</p>
+            <p className="text-sm text-gray-500 mt-1">par an seulement</p>
+          </div>
+          <div>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-600">10 min</p>
+            <p className="text-sm text-gray-500 mt-1">pour démarrer</p>
+          </div>
+          <div>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-600">8</p>
+            <p className="text-sm text-gray-500 mt-1">modules inclus</p>
+          </div>
+          <div>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-600">30 j</p>
+            <p className="text-sm text-gray-500 mt-1">d&apos;essai gratuit</p>
+          </div>
+        </div>
+      </section>
+
       {/* ── Problèmes résolus ── */}
       <section className="bg-white py-20 px-6" aria-labelledby="problems-heading">
         <div className="max-w-4xl mx-auto text-center">
@@ -541,6 +576,15 @@ export default function HomePage() {
 
           </div>
 
+          {/* Callout économies vs syndic professionnel */}
+          <div className="flex items-start gap-4 bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 mb-8 text-left">
+            <div className="text-2xl shrink-0">💡</div>
+            <div>
+              <p className="text-sm font-bold text-amber-900">Un syndic professionnel coûte entre 1 500 € et 3 000 €/an.</p>
+              <p className="text-sm text-amber-700 mt-0.5">Mon Syndic Bénévole : à partir de <span className="font-bold">240 €/an</span>. Soit jusqu&apos;à <span className="font-bold text-amber-900">2 760 € d&apos;économies</span> chaque année — à fonctionnalités équivalentes.</p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch mb-10">
 
             {/* Plan Essentiel */}
@@ -564,29 +608,35 @@ export default function HomePage() {
             </div>
 
             {/* Plan Confort */}
-            <div className="bg-white border border-gray-200 rounded-3xl p-7 shadow-lg flex flex-col">
-              <p className="text-gray-900 text-sm font-semibold mb-1">Confort</p>
+            <div className="bg-white border-2 border-emerald-200 rounded-3xl p-7 shadow-lg flex flex-col relative overflow-hidden">
+              <div className="absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                Copros moyennes
+              </div>
+              <p className="text-emerald-700 text-sm font-semibold mb-1">Confort</p>
               <p className="text-gray-400 text-xs mb-4">20 lots inclus</p>
               <div className="flex items-end gap-1.5 mb-1">
-                <span className="text-5xl font-extrabold text-gray-900">30 €</span>
+                <span className="text-5xl font-extrabold text-gray-900">30 €</span>
                 <span className="text-gray-400 pb-1.5">/mois</span>
               </div>
-              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">360 €/an</span></p>
-              <Link href="/register" className="block text-center bg-blue-600 text-white font-bold py-3.5 rounded-2xl hover:bg-blue-700 transition-colors mt-auto">
+              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">360 €/an</span></p>
+              <Link href="/register" className="block text-center bg-emerald-600 text-white font-bold py-3.5 rounded-2xl hover:bg-emerald-700 transition-colors mt-auto">
                 Commencer gratuitement →
               </Link>
             </div>
 
             {/* Plan Illimité */}
-            <div className="bg-white border border-gray-200 rounded-3xl p-7 shadow-lg flex flex-col">
-              <p className="text-gray-900 text-sm font-semibold mb-1">Illimité</p>
+            <div className="bg-white border-2 border-violet-200 rounded-3xl p-7 shadow-lg flex flex-col relative overflow-hidden">
+              <div className="absolute top-4 right-4 bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                Grandes copros
+              </div>
+              <p className="text-violet-700 text-sm font-semibold mb-1">Illimité</p>
               <p className="text-gray-400 text-xs mb-4">Lots illimités</p>
               <div className="flex items-end gap-1.5 mb-1">
-                <span className="text-5xl font-extrabold text-gray-900">45 €</span>
+                <span className="text-5xl font-extrabold text-gray-900">45 €</span>
                 <span className="text-gray-400 pb-1.5">/mois</span>
               </div>
-              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">540 €/an</span></p>
-              <Link href="/register" className="block text-center bg-blue-600 text-white font-bold py-3.5 rounded-2xl hover:bg-blue-700 transition-colors mt-auto">
+              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">540 €/an</span></p>
+              <Link href="/register" className="block text-center bg-violet-600 text-white font-bold py-3.5 rounded-2xl hover:bg-violet-700 transition-colors mt-auto">
                 Commencer gratuitement →
               </Link>
             </div>
@@ -612,41 +662,47 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Avis ── */}
-      <section aria-labelledby="reviews-heading" className="bg-gray-50 py-20 px-6">
-        <div className="max-w-4xl mx-auto">
+      {/* ── FAQ ── */}
+      <section id="faq" aria-labelledby="faq-heading" className="bg-gray-50 py-20 px-6">
+        <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Ils nous font confiance</p>
-            <h2 id="reviews-heading" className="text-3xl font-bold text-gray-900">Des syndics bénévoles comme vous</h2>
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Questions fréquentes</p>
+            <h2 id="faq-heading" className="text-3xl font-bold text-gray-900">Tout ce que vous devez savoir</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="divide-y divide-gray-200">
             {[
               {
-                name: 'Marie L.',
-                role: 'Syndic bénévole · 8 lots',
-                text: "Avant, je gérais tout sous Excel. Maintenant les répartitions de charges se font automatiquement. J'ai économisé des heures chaque mois.",
+                q: "L'essai gratuit nécessite-t-il une carte bancaire ?",
+                a: "Non. Aucune carte bancaire n'est requise pour démarrer. Vous créez votre compte et accédez directement à toutes les fonctionnalités pendant 30 jours.",
               },
               {
-                name: 'Thierry M.',
-                role: 'Syndic bénévole · 14 lots',
-                text: "L'envoi des convocations et des PV par e-mail directement depuis l'app est un gain de temps énorme. Mes copropriétaires apprécient aussi !",
+                q: "Puis-je annuler à tout moment ?",
+                a: "Oui, sans frais ni préavis. Si vous souhaitez arrêter, votre abonnement n'est pas renouvelé. Vos données restent accessibles jusqu'à la fin de la période payée.",
               },
               {
-                name: 'Sophie D.',
-                role: 'Syndic bénévole · 6 lots',
-                text: "Simple, rapide, efficace. En 10 minutes j'avais saisi ma copropriété et mes premiers copropriétaires. L'outil idéal pour les petites copros.",
+                q: "Mes données sont-elles sécurisées ?",
+                a: "Vos données sont hébergées en Europe, chiffrées en transit (HTTPS) et au repos. Nous n'accédons jamais à vos données sans votre autorisation explicite.",
               },
-            ].map(({ name, role, text }) => (
-              <div key={name} className="bg-white border border-gray-200 rounded-2xl p-6">
-                <div className="flex mb-3">
-                  {[1,2,3,4,5].map((i) => <Star key={i} size={14} className="text-yellow-400 fill-yellow-400" />)}
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed mb-4 italic">&ldquo;{text}&rdquo;</p>
-                <div>
-                  <p className="text-sm font-bold text-gray-900">{name}</p>
-                  <p className="text-xs text-gray-400">{role}</p>
-                </div>
-              </div>
+              {
+                q: "Que se passe-t-il après les 30 jours d'essai ?",
+                a: "À la fin de l'essai, vous sélectionnez un plan et saisissez votre mode de paiement. Sans action de votre part, l'accès est suspendu et vos données sont conservées 30 jours supplémentaires.",
+              },
+              {
+                q: "Un abonnement couvre-t-il plusieurs copropriétés ?",
+                a: "Chaque abonnement est lié à une copropriété. Vous pouvez gérer plusieurs copropriétés depuis un seul compte en souscrivant un abonnement par copropriété.",
+              },
+              {
+                q: "Cela remplace-t-il un syndic professionnel ?",
+                a: "Mon Syndic Bénévole est conçu pour les syndics non-professionnels élus au sein de leur copropriété. L'outil couvre la gestion courante mais ne se substitue pas à un conseiller juridique ou à un expert-comptable.",
+              },
+            ].map(({ q, a }) => (
+              <details key={q} className="group py-5">
+                <summary className="flex items-center justify-between cursor-pointer list-none">
+                  <span className="text-base font-semibold text-gray-900 pr-4">{q}</span>
+                  <span className="text-gray-400 group-open:rotate-180 transition-transform inline-block shrink-0 text-lg leading-none">▾</span>
+                </summary>
+                <p className="mt-3 text-sm text-gray-600 leading-relaxed">{a}</p>
+              </details>
             ))}
           </div>
         </div>
@@ -673,6 +729,12 @@ export default function HomePage() {
             Démarrer gratuitement <ArrowRight size={20} />
           </Link>
           <p className="mt-4 text-blue-300/50 text-sm">Facturation annuelle · Sans engagement · Résiliez à tout moment</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-blue-300/60">
+            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> 30 jours gratuits, sans carte</span>
+            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Annulation sans frais</span>
+            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Données hébergées en Europe</span>
+            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Prêt en 10 minutes</span>
+          </div>
         </div>
       </section>
       </main>

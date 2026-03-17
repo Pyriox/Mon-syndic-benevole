@@ -367,7 +367,8 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
       const hasBudget = !!(res.budget_postes && res.budget_postes.length > 0);
 
       // ── Numéro + titre ────────────────────────────────────
-      const titreLines = doc.splitTextToSize(res.titre, inner - 80);
+      const hasMajorite = !!(res.majorite && MAJORITE_LABELS[res.majorite]);
+      const titreLines = doc.splitTextToSize(res.titre, inner - (hasMajorite ? 100 : 80));
       const rectH = Math.max(10, titreLines.length * 5 + 4);
 
       doc.setFillColor(...MGRAY);

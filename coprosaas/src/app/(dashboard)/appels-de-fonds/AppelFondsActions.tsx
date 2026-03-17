@@ -1,18 +1,19 @@
-// ============================================================
-// Client Component : Formulaire de création d'un appel de fonds
-// Calcule automatiquement les parts selon les tantièmes
-// Peut être lié à une résolution AG votée ou être exceptionnel
+﻿// ============================================================
+// Client Component : Formulaire de crÃ©ation d'un appel de fonds
+// Calcule automatiquement les parts selon les tantiÃ¨mes
+// Peut importer tous les budgets votÃ©s d'une AG (prÃ©visionnel,
+// fonds travaux ALUR, travaux) avec son Ã©chÃ©ancier suggÃ©rÃ©.
 // ============================================================
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { formatEuros, calculerPart, LABELS_CATEGORIE } from '@/lib/utils';
-import { Plus, Trash2, AlertTriangle, Link2, Calendar } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Link2, Calendar, CheckCircle, ChevronDown } from 'lucide-react';
 
 interface Copropriete { id: string; nom: string; }
 interface AppelFondsActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; }
@@ -20,14 +21,21 @@ interface AppelFondsActionsProps { coproprietes: Copropriete[]; showLabel?: bool
 interface Poste { libelle: string; categorie: string; montant: string; }
 const POSTE_VIDE: Poste = { libelle: '', categorie: 'entretien', montant: '' };
 
-interface AGResolutionOption {
+// Une rÃ©solution budgÃ©taire issue d'une AG
+interface BudgetResolution {
   id: string;
   titre: string;
   type_resolution: string | null;
   budget_postes: { libelle: string; montant: number }[] | null;
   fonds_travaux_montant: number | null;
+}
+
+// Une AG avec toutes ses rÃ©solutions budgÃ©taires approuvÃ©es
+interface AGWithBudgets {
+  ag_id: string;
   ag_titre: string;
   ag_date: string;
+  resolutions: BudgetResolution[];
 }
 
 function addMonths(dateStr: string, months: number): string {
@@ -38,6 +46,12 @@ function addMonths(dateStr: string, months: number): string {
 
 const PERIODICITE_MOIS: Record<string, number> = {
   mensuel: 1, trimestriel: 3, semestriel: 6, annuel: 12,
+};
+
+const LABELS_TYPE: Record<string, string> = {
+  budget_previsionnel: 'Budget prÃ©visionnel',
+  revision_budget: 'RÃ©vision budgÃ©taire',
+  fonds_travaux: 'Fonds de travaux ALUR',
 };
 
 export default function AppelFondsActions({ coproprietes, showLabel }: AppelFondsActionsProps) {
@@ -53,10 +67,13 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     coproprietaire?: { id: string; nom: string; prenom: string };
   }[]>([]);
 
-  const [resolutionsDisponibles, setResolutionsDisponibles] = useState<AGResolutionOption[]>([]);
-  const [loadingResolutions, setLoadingResolutions] = useState(false);
+  const [agsDisponibles, setAgsDisponibles] = useState<AGWithBudgets[]>([]);
+  const [loadingAGs, setLoadingAGs] = useState(false);
 
   const [modeExceptionnel, setModeExceptionnel] = useState(false);
+  const [selectedAGId, setSelectedAGId] = useState('');
+  const [agImportee, setAgImportee] = useState<AGWithBudgets | null>(null);
+  // ID de la rÃ©solution principale liÃ©e (pour le champ ag_resolution_id en DB)
   const [resolutionLieeId, setResolutionLieeId] = useState('');
 
   const [formData, setFormData] = useState({
@@ -72,6 +89,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     periodicite: 'mensuel' | 'trimestriel' | 'semestriel' | 'annuel';
   }>({ enabled: false, nb: 4, periodicite: 'trimestriel' });
 
+  // â”€â”€ Charger les lots dÃ¨s que la copropriÃ©tÃ© change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!formData.copropriete_id) return;
     supabase
@@ -88,17 +106,19 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       });
   }, [formData.copropriete_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // â”€â”€ Charger les AGs terminÃ©es avec leurs rÃ©solutions budgÃ©taires â”€â”€
   useEffect(() => {
     if (!isOpen || !formData.copropriete_id) return;
-    const fetchResolutions = async () => {
-      setLoadingResolutions(true);
+    const fetch = async () => {
+      setLoadingAGs(true);
       const { data: ags } = await supabase
         .from('assemblees_generales')
         .select('id, titre, date_ag')
         .eq('copropriete_id', formData.copropriete_id)
-        .eq('statut', 'terminee');
+        .eq('statut', 'terminee')
+        .order('date_ag', { ascending: false });
 
-      if (!ags?.length) { setLoadingResolutions(false); return; }
+      if (!ags?.length) { setLoadingAGs(false); return; }
 
       const { data: resolutions } = await supabase
         .from('resolutions')
@@ -107,38 +127,85 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         .in('type_resolution', ['budget_previsionnel', 'revision_budget', 'fonds_travaux'])
         .eq('statut', 'approuvee');
 
-      const opts: AGResolutionOption[] = (resolutions ?? []).map((r) => {
-        const ag = ags.find((a) => a.id === r.ag_id)!;
-        return {
-          id: r.id,
-          titre: r.titre,
-          type_resolution: r.type_resolution,
-          budget_postes: r.budget_postes as { libelle: string; montant: number }[] | null,
-          fonds_travaux_montant: r.fonds_travaux_montant,
+      const grouped: AGWithBudgets[] = ags
+        .map((ag) => ({
+          ag_id: ag.id,
           ag_titre: ag.titre,
           ag_date: ag.date_ag,
-        };
-      });
-      setResolutionsDisponibles(opts);
-      setLoadingResolutions(false);
+          resolutions: (resolutions ?? [])
+            .filter((r) => r.ag_id === ag.id)
+            .map((r) => ({
+              id: r.id,
+              titre: r.titre,
+              type_resolution: r.type_resolution,
+              budget_postes: r.budget_postes as { libelle: string; montant: number }[] | null,
+              fonds_travaux_montant: r.fonds_travaux_montant,
+            })),
+        }))
+        .filter((ag) => ag.resolutions.length > 0);
+
+      setAgsDisponibles(grouped);
+      setLoadingAGs(false);
     };
-    fetchResolutions();
+    fetch();
   }, [isOpen, formData.copropriete_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleResolutionChange = (resolutionId: string) => {
-    setResolutionLieeId(resolutionId);
-    const res = resolutionsDisponibles.find((r) => r.id === resolutionId);
-    if (!res) return;
-    // Regroupe budget prévisionnel ET fonds de travaux ALUR s'ils sont tous les deux présents
+  // â”€â”€ Importer tous les budgets d'une AG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const importerDepuisAG = (agId: string) => {
+    const ag = agsDisponibles.find((a) => a.ag_id === agId);
+    if (!ag) return;
+
+    setSelectedAGId(agId);
+    setAgImportee(ag);
+
+    // Construire les postes depuis TOUTES les rÃ©solutions de l'AG
     const newPostes: Poste[] = [];
-    if (res.budget_postes && res.budget_postes.length > 0) {
-      newPostes.push(...res.budget_postes.map((p) => ({ libelle: p.libelle, categorie: 'autre', montant: String(p.montant) })));
+    let hasBudgetPrevisionnel = false;
+    let primaryResolutionId = '';
+
+    for (const res of ag.resolutions) {
+      if (res.type_resolution === 'budget_previsionnel' || res.type_resolution === 'revision_budget') {
+        hasBudgetPrevisionnel = true;
+        if (!primaryResolutionId) primaryResolutionId = res.id;
+        if (res.budget_postes && res.budget_postes.length > 0) {
+          newPostes.push(
+            ...res.budget_postes.map((p) => ({
+              libelle: p.libelle,
+              categorie: 'autre',
+              montant: String(p.montant),
+            }))
+          );
+        }
+      }
+      if (res.type_resolution === 'fonds_travaux' && res.fonds_travaux_montant) {
+        if (!primaryResolutionId) primaryResolutionId = res.id;
+        newPostes.push({
+          libelle: 'Fonds de travaux (ALUR)',
+          categorie: 'fonds_travaux_alur',
+          montant: String(res.fonds_travaux_montant),
+        });
+      }
     }
-    if (res.fonds_travaux_montant) {
-      newPostes.push({ libelle: 'Fonds de travaux (ALUR)', categorie: 'fonds_travaux_alur', montant: String(res.fonds_travaux_montant) });
-    }
+
     if (newPostes.length > 0) setPostes(newPostes);
+    setResolutionLieeId(primaryResolutionId);
+
+    // PrÃ©-remplir l'Ã©chÃ©ancier : 4 versements trimestriels si budget prÃ©visionnel (art. 14-1)
+    if (hasBudgetPrevisionnel) {
+      setEcheancier({ enabled: true, nb: 4, periodicite: 'trimestriel' });
+    }
   };
+
+  // â”€â”€ Effacer l'import AG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const effacerImport = () => {
+    setSelectedAGId('');
+    setAgImportee(null);
+    setResolutionLieeId('');
+    setPostes([{ ...POSTE_VIDE }]);
+    setEcheancier({ enabled: false, nb: 4, periodicite: 'trimestriel' });
+  };
+
+  const derniereAG = agsDisponibles[0] ?? null;
 
   const totalTantiemsVal = lots.reduce((s, l) => s + (l.tantiemes ?? 0), 0);
   const montantNum = postes.reduce((s, p) => s + (parseFloat(p.montant) || 0), 0);
@@ -152,6 +219,18 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         addMonths(formData.date_echeance, i * PERIODICITE_MOIS[echeancier.periodicite])
       )
     : [];
+
+  const montantParVers = echeancier.enabled ? Math.round((montantNum / echeancier.nb) * 100) / 100 : montantNum;
+
+  // RÃ©sumÃ© de ce qui sera importÃ© depuis l'AG (pour la prÃ©visualisation)
+  const resumeImport = useMemo(() => {
+    if (!agImportee) return null;
+    return agImportee.resolutions.map((r) => {
+      const total = r.fonds_travaux_montant
+        ?? (r.budget_postes ?? []).reduce((s, p) => s + p.montant, 0);
+      return { label: LABELS_TYPE[r.type_resolution ?? ''] ?? r.titre, total };
+    });
+  }, [agImportee]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,17 +247,18 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const resolutionLiee = resolutionsDisponibles.find((r) => r.id === resolutionLieeId);
-    const typeAppel = resolutionLiee?.type_resolution ?? 'exceptionnel';
+    // DÃ©terminer le type d'appel depuis la rÃ©solution principale
+    const ag = agsDisponibles.find((a) => a.ag_id === selectedAGId);
+    const resLiee = ag?.resolutions.find((r) => r.id === resolutionLieeId);
+    const typeAppel = resLiee?.type_resolution ?? 'exceptionnel';
 
     if (echeancier.enabled) {
-      // ── Échéancier : créer N appels de fonds ────────────────
+      // â”€â”€ Ã‰chÃ©ancier : crÃ©er N appels de fonds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const mois = PERIODICITE_MOIS[echeancier.periodicite];
-      const montantVers = Math.round((montantNum / echeancier.nb) * 100) / 100;
 
       for (let i = 0; i < echeancier.nb; i++) {
         const dateVers = addMonths(formData.date_echeance, i * mois);
-        const titreVers = `${formData.titre.trim()} – ${i + 1}/${echeancier.nb}`;
+        const titreVers = `${formData.titre.trim()} â€“ ${i + 1}/${echeancier.nb}`;
         const postesDiv = postesValides.map((p) => ({
           ...p,
           montant: String(Math.round((parseFloat(p.montant) / echeancier.nb) * 100) / 100),
@@ -189,7 +269,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           .insert({
             copropriete_id: formData.copropriete_id,
             titre: titreVers,
-            montant_total: montantVers,
+            montant_total: montantParVers,
             date_echeance: dateVers,
             description: JSON.stringify(postesDiv),
             ag_resolution_id: resolutionLieeId || null,
@@ -208,7 +288,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         if (appelVers) {
           const repartitionVers = lots
             .filter((l) => l.coproprietaire)
-            .map((lot) => ({ lot, montant: calculerPart(montantVers, lot.tantiemes ?? 0, totalTantiemsVal) }));
+            .map((lot) => ({ lot, montant: calculerPart(montantParVers, lot.tantiemes ?? 0, totalTantiemsVal) }));
           await supabase.from('lignes_appels_de_fonds').insert(
             repartitionVers.map((r) => ({
               appel_de_fonds_id: appelVers.id,
@@ -222,7 +302,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         }
       }
     } else {
-      // ── Appel unique ─────────────────────────────────────────
+      // â”€â”€ Appel unique â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const { data: appel, error: appelError } = await supabase
         .from('appels_de_fonds')
         .insert({
@@ -263,11 +343,12 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   };
 
   const categorieOptions = Object.entries(LABELS_CATEGORIE).map(([v, l]) => ({ value: v, label: l }));
-  const hasResolutions = resolutionsDisponibles.length > 0;
 
   const resetAndClose = () => {
     setIsOpen(false);
     setModeExceptionnel(false);
+    setSelectedAGId('');
+    setAgImportee(null);
     setResolutionLieeId('');
     setPostes([{ ...POSTE_VIDE }]);
     setFormData({ copropriete_id: coproprietes[0]?.id ?? '', titre: 'Appel de fonds', date_echeance: '' });
@@ -278,23 +359,23 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   return (
     <>
       <Button onClick={() => setIsOpen(true)} size={showLabel ? 'md' : 'sm'}>
-        <Plus size={16} /> {showLabel ? 'Créer un appel de fonds' : 'Créer'}
+        <Plus size={16} /> {showLabel ? 'CrÃ©er un appel de fonds' : 'CrÃ©er'}
       </Button>
 
       <Modal isOpen={isOpen} onClose={resetAndClose} title="Nouvel appel de fonds" size="xl">
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* Origine */}
+          {/* â”€â”€ Origine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div>
             <p className="text-sm font-medium text-gray-700 mb-2">Origine de l&apos;appel de fonds</p>
             <div className="grid grid-cols-2 gap-2">
               <button type="button"
-                onClick={() => { setModeExceptionnel(false); setResolutionLieeId(''); setPostes([{ ...POSTE_VIDE }]); }}
+                onClick={() => { setModeExceptionnel(false); effacerImport(); }}
                 className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors flex items-center justify-center gap-2 ${!modeExceptionnel ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                <Link2 size={14} /> Lier à une résolution AG
+                <Link2 size={14} /> BasÃ© sur une AG
               </button>
               <button type="button"
-                onClick={() => { setModeExceptionnel(true); setResolutionLieeId(''); }}
+                onClick={() => { setModeExceptionnel(true); effacerImport(); }}
                 className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors flex items-center justify-center gap-2 ${modeExceptionnel ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>
                 <AlertTriangle size={14} /> Appel exceptionnel
               </button>
@@ -304,39 +385,96 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           {modeExceptionnel && (
             <div className="flex gap-2 items-start bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 text-xs text-amber-800">
               <AlertTriangle size={13} className="mt-0.5 shrink-0 text-amber-600" />
-              <span>Un appel de fonds doit normalement être basé sur un budget voté en assemblée générale (art. 14-1 loi 65-557). Cet appel exceptionnel sera signalé comme non lié à une résolution.</span>
+              <span>Un appel de fonds doit normalement Ãªtre basÃ© sur un budget votÃ© en AG (art. 14-1 loi 65-557). Cet appel exceptionnel sera signalÃ© comme non liÃ© Ã  une rÃ©solution.</span>
             </div>
           )}
 
+          {/* â”€â”€ SÃ©lection de l'AG et import des budgets â”€â”€â”€â”€â”€â”€â”€ */}
           {!modeExceptionnel && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Résolution budgétaire approuvée en AG
-              </label>
-              {loadingResolutions ? (
-                <p className="text-xs text-gray-400">Chargement des résolutions&hellip;</p>
-              ) : !hasResolutions ? (
+            <div className="space-y-3">
+              {loadingAGs ? (
+                <p className="text-xs text-gray-400">Chargement des assemblÃ©es gÃ©nÃ©rales&hellip;</p>
+              ) : agsDisponibles.length === 0 ? (
                 <div className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-200">
-                  Aucune résolution de budget approuvée trouvée. Finalisez d&apos;abord une AG avec un budget voté, ou créez un appel exceptionnel.
+                  Aucune AG terminÃ©e avec un budget approuvÃ© trouvÃ©e. Finalisez d&apos;abord une AG avec des rÃ©solutions budgÃ©taires, ou crÃ©ez un appel exceptionnel.
+                </div>
+              ) : agImportee ? (
+                /* â”€â”€ Bandeau AG importÃ©e â”€â”€ */
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={16} className="text-green-600 shrink-0" />
+                      <div>
+                        <p className="text-sm font-semibold text-green-800">{agImportee.ag_titre}</p>
+                        <p className="text-xs text-green-600">{new Date(agImportee.ag_date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                      </div>
+                    </div>
+                    <button type="button" onClick={effacerImport}
+                      className="text-xs text-green-700 hover:text-red-600 underline underline-offset-2 shrink-0 transition-colors">
+                      Changer
+                    </button>
+                  </div>
+                  {resumeImport && (
+                    <div className="space-y-1.5">
+                      {resumeImport.map((r, i) => (
+                        <div key={i} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-2 border border-green-100">
+                          <span className="text-gray-700 font-medium">{r.label}</span>
+                          <span className="font-bold text-green-700">{formatEuros(r.total)}</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between text-xs font-bold px-3 pt-1">
+                        <span className="text-gray-600">Total importÃ©</span>
+                        <span className="text-green-800">{formatEuros(resumeImport.reduce((s, r) => s + r.total, 0))}</span>
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-xs text-green-600 mt-2 italic">Tous les postes sont modifiables ci-dessous.</p>
                 </div>
               ) : (
-                <select
-                  value={resolutionLieeId}
-                  onChange={(e) => handleResolutionChange(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required={!modeExceptionnel}
-                >
-                  <option value="">— Sélectionner une résolution —</option>
-                  {resolutionsDisponibles.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {new Date(r.ag_date).toLocaleDateString('fr-FR')} — {r.ag_titre} — {r.titre}
-                    </option>
-                  ))}
-                </select>
+                /* â”€â”€ SÃ©lection de l'AG â”€â”€ */
+                <div className="space-y-2">
+                  {/* Bouton "DerniÃ¨re AG" */}
+                  {derniereAG && (
+                    <button type="button" onClick={() => importerDepuisAG(derniereAG.ag_id)}
+                      className="w-full flex items-center justify-between gap-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl px-4 py-3 text-left transition-colors group">
+                      <div>
+                        <p className="text-sm font-semibold text-blue-800 flex items-center gap-1.5">
+                          <span className="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full font-bold">DerniÃ¨re AG</span>
+                          {derniereAG.ag_titre}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-0.5">
+                          {new Date(derniereAG.ag_date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          {' Â· '}{derniereAG.resolutions.length} rÃ©solution(s) budgÃ©taire(s)
+                        </p>
+                      </div>
+                      <ChevronDown size={16} className="text-blue-500 group-hover:translate-x-1 transition-transform rotate-[-90deg]" />
+                    </button>
+                  )}
+
+                  {/* Autres AGs si plusieurs */}
+                  {agsDisponibles.length > 1 && (
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Ou choisir une autre AG :</label>
+                      <select
+                        value={selectedAGId}
+                        onChange={(e) => { if (e.target.value) importerDepuisAG(e.target.value); }}
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">â€” SÃ©lectionner une AG â€”</option>
+                        {agsDisponibles.map((ag) => (
+                          <option key={ag.ag_id} value={ag.ag_id}>
+                            {new Date(ag.ag_date + 'T00:00:00').toLocaleDateString('fr-FR')} â€” {ag.ag_titre} ({ag.resolutions.length} budget{ag.resolutions.length > 1 ? 's' : ''})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
 
+          {/* â”€â”€ Titre et date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <Input
             label="Titre"
             name="titre"
@@ -348,7 +486,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label={echeancier.enabled ? "Date de la première échéance" : "Date d'échéance"}
+              label={echeancier.enabled ? 'Date du 1er versement' : "Date d'Ã©chÃ©ance"}
               name="date_echeance"
               type="date"
               value={formData.date_echeance}
@@ -357,7 +495,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
             />
             <div className="flex items-end pb-1">
               <div className="text-sm text-gray-700">
-                <span className="block text-xs text-gray-500 mb-1 font-medium">Montant total calculé</span>
+                <span className="block text-xs text-gray-500 mb-1 font-medium">Montant total</span>
                 <span className="text-xl font-bold text-blue-700">{formatEuros(montantNum)}</span>
               </div>
             </div>
@@ -366,14 +504,17 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           {dateEcheancePast && (
             <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
               <AlertTriangle size={13} className="shrink-0 text-amber-600" />
-              La date d&apos;échéance choisie est déjà passée.
+              La date choisie est dÃ©jÃ  passÃ©e.
             </div>
           )}
 
-          {/* Postes de charges */}
+          {/* â”€â”€ Postes de charges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">Postes de charges <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-gray-700">
+                Postes de charges <span className="text-red-500">*</span>
+                {agImportee && <span className="ml-2 text-xs font-normal text-green-600">(importÃ©s depuis l&apos;AG â€” modifiables)</span>}
+              </label>
               <button type="button"
                 onClick={() => setPostes((p) => [...p, { ...POSTE_VIDE }])}
                 className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
@@ -384,13 +525,13 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
               {postes.map((poste, idx) => (
                 <div key={idx} className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-end">
                   <div>
-                    {idx === 0 && <label className="block text-xs text-gray-500 mb-1">Libellé</label>}
+                    {idx === 0 && <label className="block text-xs text-gray-500 mb-1">LibellÃ©</label>}
                     <input type="text" placeholder="Ex : Entretien ascenseur" value={poste.libelle}
                       onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? { ...x, libelle: e.target.value } : x))}
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
-                    {idx === 0 && <label className="block text-xs text-gray-500 mb-1">Catégorie</label>}
+                    {idx === 0 && <label className="block text-xs text-gray-500 mb-1">CatÃ©gorie</label>}
                     <select value={poste.categorie}
                       onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? { ...x, categorie: e.target.value } : x))}
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -398,7 +539,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                     </select>
                   </div>
                   <div>
-                    {idx === 0 && <label className="block text-xs text-gray-500 mb-1">Montant</label>}
+                    {idx === 0 && <label className="block text-xs text-gray-500 mb-1">Montant (â‚¬)</label>}
                     <input type="number" min="0" step="0.01" placeholder="0.00" value={poste.montant}
                       onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? { ...x, montant: e.target.value } : x))}
                       className="w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -417,7 +558,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
             </div>
           </div>
 
-          {/* Échéancier */}
+          {/* â”€â”€ Ã‰chÃ©ancier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="space-y-3">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
@@ -428,7 +569,10 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
               />
               <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                 <Calendar size={14} className="text-blue-600" />
-                Créer un échéancier (plusieurs versements)
+                CrÃ©er un Ã©chÃ©ancier (plusieurs versements)
+                {agImportee && echeancier.enabled && (
+                  <span className="ml-1 text-xs font-normal text-blue-500">(prÃ©-rempli depuis l&apos;AG)</span>
+                )}
               </span>
             </label>
             {echeancier.enabled && (
@@ -437,16 +581,13 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                   <div>
                     <label className="block text-xs text-gray-600 mb-1 font-medium">Nombre de versements</label>
                     <input
-                      type="number"
-                      min="2"
-                      max="12"
-                      value={echeancier.nb}
+                      type="number" min="2" max="12" value={echeancier.nb}
                       onChange={(e) => setEcheancier((p) => ({ ...p, nb: Math.max(2, Math.min(12, parseInt(e.target.value) || 2)) }))}
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1 font-medium">Périodicité</label>
+                    <label className="block text-xs text-gray-600 mb-1 font-medium">PÃ©riodicitÃ©</label>
                     <select
                       value={echeancier.periodicite}
                       onChange={(e) => setEcheancier((p) => ({ ...p, periodicite: e.target.value as typeof echeancier.periodicite }))}
@@ -461,14 +602,14 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                 </div>
                 {echeancierDates.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-blue-700 mb-1.5">{echeancierDates.length} appels de fonds seront créés&nbsp;:</p>
+                    <p className="text-xs font-medium text-blue-700 mb-1.5">{echeancierDates.length} appels seront crÃ©Ã©s :</p>
                     <div className="space-y-1">
                       {echeancierDates.map((date, i) => (
                         <div key={i} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-1.5 border border-blue-100">
-                          <span className="font-medium text-gray-700">{formData.titre || 'Appel de fonds'} – {i + 1}/{echeancier.nb}</span>
+                          <span className="font-medium text-gray-700">{formData.titre || 'Appel de fonds'} â€“ {i + 1}/{echeancier.nb}</span>
                           <div className="flex items-center gap-3">
                             <span className="text-gray-500">{new Date(date + 'T00:00:00').toLocaleDateString('fr-FR')}</span>
-                            <span className="font-semibold text-blue-700">{formatEuros(Math.round((montantNum / echeancier.nb) * 100) / 100)}</span>
+                            <span className="font-semibold text-blue-700">{formatEuros(montantParVers)}</span>
                           </div>
                         </div>
                       ))}
@@ -479,13 +620,13 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
             )}
           </div>
 
-          {/* Prévisualisation de la répartition */}
+          {/* â”€â”€ RÃ©partition par copropriÃ©taire â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {montantNum > 0 && repartition.length > 0 && (
             <div className="border border-blue-200 rounded-lg overflow-hidden">
               <div className="bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700">
                 {echeancier.enabled
-                  ? `Répartition par versement — ${formatEuros(Math.round((montantNum / echeancier.nb) * 100) / 100)} (sur ${totalTantiemsVal} tantièmes)`
-                  : `Répartition calculée (${totalTantiemsVal} tantièmes au total)`}
+                  ? `RÃ©partition par versement â€” ${formatEuros(montantParVers)} (${totalTantiemsVal} tantiÃ¨mes)`
+                  : `RÃ©partition calculÃ©e (${totalTantiemsVal} tantiÃ¨mes)`}
               </div>
               <table className="w-full text-xs">
                 <tbody>
@@ -506,7 +647,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button type="submit" loading={loading}>
-              {echeancier.enabled ? `Créer l'échéancier (${echeancier.nb} appels)` : "Créer l'appel de fonds"}
+              {echeancier.enabled ? `CrÃ©er l'Ã©chÃ©ancier (${echeancier.nb} appels)` : "CrÃ©er l'appel de fonds"}
             </Button>
             <Button type="button" variant="secondary" onClick={resetAndClose}>Annuler</Button>
           </div>
