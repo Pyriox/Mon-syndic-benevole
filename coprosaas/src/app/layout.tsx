@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geist = Geist({
@@ -7,7 +8,7 @@ const geist = Geist({
   subsets: ["latin"],
 });
 
-const APP_URL = "https://syndic-benevole.eu";
+const APP_URL = "https://mon-syndic-benevole.fr";
 const TITLE   = "Mon Syndic Bénévole — La gestion de copropriété simple & abordable";
 const DESC    = "Mon Syndic Bénévole simplifie la gestion des copropriétés pour les syndics bénévoles. Charges, appels de fonds, assemblées générales, documents et plus. Essai gratuit 30 jours, puis à partir de 20 €/mois.";
 
@@ -77,10 +78,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+
   return (
     <html lang="fr">
       <body className={`${geist.variable} antialiased`}>
         {children}
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
