@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Card, { CardHeader } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import { CheckCircle, CreditCard } from 'lucide-react';
+import CheckoutButton from './CheckoutButton';
+import { CheckCircle } from 'lucide-react';
 
 const FEATURES = [
   'Copropriétaires illimités',
@@ -50,7 +51,9 @@ const PLANS = [
   },
 ] as const;
 
-export default async function AbonnementPage() {
+export default async function AbonnementPage({ searchParams }: { searchParams: Promise<{ success?: string; canceled?: string }> }) {
+  const { success, canceled } = await searchParams;
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -66,6 +69,8 @@ export default async function AbonnementPage() {
   const totalLots = lotsData?.length ?? 0;
   const planActuel: string = (user.user_metadata?.plan as string | undefined) ?? 'essai';
   const isSubscribed = planActuel === 'actif';
+  const hasStripeCustomer = !!user.user_metadata?.stripe_customer_id;
+  const planPeriodEnd = user.user_metadata?.plan_period_end as string | undefined;
 
   // Plan recommandé selon le nombre de lots total
   const recommendedPlan = totalLots <= 10 ? 'essentiel' : totalLots <= 20 ? 'confort' : 'illimite';
@@ -78,6 +83,18 @@ export default async function AbonnementPage() {
           <h2 className="text-2xl font-bold text-gray-900">Abonnement</h2>
           <p className="text-gray-500 mt-1">Un abonnement par copropriété — choisissez le plan adapté à votre nombre de lots.</p>
         </div>
+
+        {success === '1' && (
+          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700 flex items-center gap-2">
+            <CheckCircle size={15} />
+            Abonnement activé avec succès. Bienvenue !
+          </div>
+        )}
+        {canceled === '1' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
+            Paiement annulé. Votre abonnement n&apos;a pas été modifié.
+          </div>
+        )}
 
         <Card>
           <CardHeader title="Votre compte" description="État de votre abonnement actuel" />
@@ -97,6 +114,14 @@ export default async function AbonnementPage() {
               <span className="text-gray-500">Lots total</span>
               <span className="font-semibold text-gray-900">{totalLots}</span>
             </div>
+            {isSubscribed && planPeriodEnd && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Prochain renouvellement</span>
+                <span className="font-semibold text-gray-900">
+                  {new Date(planPeriodEnd).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -140,19 +165,12 @@ export default async function AbonnementPage() {
                     <span className={`font-semibold ${isPrimary ? 'text-white' : 'text-gray-700'}`}>{plan.annual}&nbsp;€/an</span>
                   </p>
                 </div>
-                <button
-                  disabled={isSubscribed}
-                  className={`mt-5 flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
-                    isSubscribed
-                      ? 'bg-white/10 text-white/50 cursor-default'
-                      : isPrimary
-                        ? 'bg-white text-blue-700 hover:bg-blue-50'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  <CreditCard size={15} />
-                  {isSubscribed ? 'Abonnement actif' : 'S’abonner'}
-                </button>
+                <CheckoutButton
+                  planId={plan.id}
+                  isSubscribed={isSubscribed}
+                  hasStripeCustomer={hasStripeCustomer}
+                  isPrimary={isPrimary}
+                />
               </div>
             );
           })}
