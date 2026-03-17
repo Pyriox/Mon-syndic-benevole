@@ -52,16 +52,16 @@ const PLANS = [
   },
 ] as const;
 
-export default async function AbonnementPage({ searchParams }: { searchParams: Promise<{ success?: string; canceled?: string }> }) {
-  const { success, canceled } = await searchParams;
+export default async function AbonnementPage({ searchParams }: { searchParams: Promise<{ success?: string; canceled?: string; synced?: string }> }) {
+  const { success, canceled, synced } = await searchParams;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
   // ── Sync immédiate depuis Stripe au retour du checkout ──────────────
-  // Le webhook peut être légèrement décalé ; on force la mise à jour ici.
-  if (success === '1' && !user.user_metadata?.stripe_customer_id) {
+  // Ne le faire qu'une seule fois (synced=1 coupe la boucle).
+  if (success === '1' && synced !== '1') {
     try {
       const { getStripe } = await import('@/lib/stripe');
       const stripeClient = getStripe();
@@ -89,7 +89,7 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
         }
       }
     } catch { /* non bloquant */ }
-    // Recharger avec métadonnées fraîches
+    // Recharger une seule fois avec synced=1 pour éviter la boucle
     return redirect(`/abonnement?success=1&synced=1`);
   }
 
