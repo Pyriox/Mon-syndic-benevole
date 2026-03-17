@@ -61,7 +61,9 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic }: AppelFon
   const todayStr = new Date().toISOString().slice(0, 10);
   const today = new Date(todayStr + 'T00:00:00');
   const echeance = new Date(appel.date_echeance.slice(0, 10) + 'T00:00:00');
-  const isOverdue = today > echeance;
+  const echeancePlusGrace = new Date(echeance);
+  echeancePlusGrace.setDate(echeancePlusGrace.getDate() + 15);
+  const isOverdue = today > echeancePlusGrace;
 
   const [payingId, setPayingId] = useState<string | null>(null);
   const [payDate, setPayDate] = useState(todayStr);

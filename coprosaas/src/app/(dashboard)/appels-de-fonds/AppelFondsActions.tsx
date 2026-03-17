@@ -319,6 +319,14 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
               date_paiement: null,
             }))
           );
+          // Débit du solde (l'appel crée une créance sur chaque copropriétaire)
+          for (const lot of lots.filter((l) => l.coproprietaire)) {
+            const montant = calculerPart(montantParVers, lot.tantiemes ?? 0, totalTantiemsVal);
+            const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', lot.coproprietaire!.id).single();
+            await supabase.from('coproprietaires').update({
+              solde: Math.round(((cop?.solde ?? 0) - montant) * 100) / 100,
+            }).eq('id', lot.coproprietaire!.id);
+          }
         }
       }
     } else {
@@ -349,6 +357,13 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
             date_paiement: null,
           }))
         );
+        // Débit du solde (l'appel crée une créance sur chaque copropriétaire)
+        for (const r of repartition) {
+          const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', r.lot.coproprietaire!.id).single();
+          await supabase.from('coproprietaires').update({
+            solde: Math.round(((cop?.solde ?? 0) - r.montant) * 100) / 100,
+          }).eq('id', r.lot.coproprietaire!.id);
+        }
       }
     }
 

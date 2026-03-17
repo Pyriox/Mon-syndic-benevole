@@ -28,22 +28,35 @@ export async function POST(
 
   if (!appel) return NextResponse.json({ message: 'Appel de fonds introuvable' }, { status: 404 });
 
-  // Récupérer les lignes avec copropriétaires (email inclus)
+  // Récupérer les lignes avec copropriétaires (email + user_id pour fallback auth)
   const { data: lignes } = await supabase
     .from('lignes_appels_de_fonds')
-    .select('montant_du, paye, coproprietaires(nom, prenom, email)')
+    .select('montant_du, paye, coproprietaires(nom, prenom, email, user_id)')
     .eq('appel_de_fonds_id', appelId);
 
-  const destinataires = (lignes ?? [])
-    .map((l) => {
-      const c = Array.isArray(l.coproprietaires) ? l.coproprietaires[0] as { nom: string; prenom: string; email: string } | undefined : l.coproprietaires as { nom: string; prenom: string; email: string } | null;
-      if (!c?.email) return null;
-      return { nom: c.nom, prenom: c.prenom, email: c.email, montant_du: l.montant_du, paye: l.paye };
-    })
-    .filter(Boolean) as { nom: string; prenom: string; email: string; montant_du: number; paye: boolean }[];
+  const destinataires: { nom: string; prenom: string; email: string; montant_du: number; paye: boolean }[] = [];
+  for (const l of lignes ?? []) {
+    const c = Array.isArray(l.coproprietaires)
+      ? l.coproprietaires[0] as { nom: string; prenom: string; email: string; user_id: string | null } | undefined
+      : l.coproprietaires as { nom: string; prenom: string; email: string; user_id: string | null } | null;
+    if (!c) continue;
+    let email = c.email ?? '';
+    // Fallback : récupérer l’e-mail depuis auth.users si le champ est vide
+    if (!email && c.user_id) {
+      const { data: authData } = await supabase.auth.admin.getUserById(c.user_id);
+      email = authData?.user?.email ?? '';
+    }
+    if (!email) continue;
+    destinataires.push({ nom: c.nom, prenom: c.prenom, email, montant_du: l.montant_du, paye: l.paye });
+  }
 
   if (!destinataires.length) {
-    return NextResponse.json({ message: 'Aucun copropriétaire avec e-mail trouvé.' }, { status: 422 });
+    const total = (lignes ?? []).length;
+    return NextResponse.json({
+      message: total === 0
+        ? 'Aucune répartition générée pour cet appel. Cliquez sur « Détail » puis « Générer la répartition ».'
+        : `${total} copropriétaire(s) trouvé(s) mais aucun n’a d’adresse e-mail renseignée.`,
+    }, { status: 422 });
   }
 
   const dateEcheance = new Date(appel.date_echeance).toLocaleDateString('fr-FR', {

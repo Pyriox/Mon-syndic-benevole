@@ -70,7 +70,9 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
             const nbPayes = lignes.filter((l) => l.paye).length;
             const echeance = new Date(appel.date_echeance);
             echeance.setHours(0, 0, 0, 0);
-            const nbImpayes = today > echeance ? lignes.filter((l) => !l.paye).length : 0;
+            const echeancePlusGrace = new Date(echeance);
+            echeancePlusGrace.setDate(echeancePlusGrace.getDate() + 15);
+            const nbImpayes = today > echeancePlusGrace ? lignes.filter((l) => !l.paye).length : 0;
             const pctPaye = lignes.length > 0 ? Math.round((nbPayes / lignes.length) * 100) : 0;
 
             return (

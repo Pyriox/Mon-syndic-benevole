@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -45,8 +45,47 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
   const [sendMsg, setSendMsg] = useState('');
   const [sendOk, setSendOk] = useState<boolean | null>(null);
   const [emailedAt, setEmailedAt] = useState<string | null>(appel.emailed_at ?? null);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenMsg, setRegenMsg] = useState('');
   const router = useRouter();
   const supabase = createClient();
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    setRegenMsg('');
+    try {
+      if (!appel.copropriete_id) { setRegenMsg('Copropriété introuvable.'); return; }
+      const { data: lots } = await supabase
+        .from('lots')
+        .select('id, tantiemes, coproprietaires(id)')
+        .eq('copropriete_id', appel.copropriete_id);
+
+      const lotsWithCopro = (lots ?? []).filter((l) => {
+        const c = Array.isArray(l.coproprietaires) ? l.coproprietaires[0] : l.coproprietaires;
+        return c != null;
+      });
+
+      if (lotsWithCopro.length === 0) {
+        setRegenMsg('Aucun lot avec copropriétaire assigné trouvé. Assignez d’abord des copropriétaires aux lots.');
+        return;
+      }
+      const totalTantiemes = lotsWithCopro.reduce((s, l) => s + (l.tantiemes ?? 0), 0);
+
+      const { error } = await supabase.from('lignes_appels_de_fonds').insert(
+        lotsWithCopro.map((lot) => {
+          const copro = (Array.isArray(lot.coproprietaires) ? lot.coproprietaires[0] : lot.coproprietaires) as { id: string };
+          const montant = totalTantiemes > 0
+            ? Math.round((appel.montant_total * (lot.tantiemes ?? 0) / totalTantiemes) * 100) / 100
+            : 0;
+          return { appel_de_fonds_id: appel.id, coproprietaire_id: copro.id, lot_id: lot.id, montant_du: montant, paye: false, date_paiement: null };
+        })
+      );
+      if (error) { setRegenMsg('Erreur : ' + error.message); return; }
+      router.refresh();
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   const saveToDocuments = async () => {
     try {
@@ -225,11 +264,33 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
           )}
 
           {/* Suivi paiements */}
-          <AppelFondsPaiement
-            appel={appel}
-            lignes={lignes}
-            isSyndic={isSyndic}
-          />
+          {lignes.length === 0 ? (
+            <div className="text-center py-4 space-y-3">
+              <p className="text-sm text-gray-400">
+                Aucune répartition générée — les copropriétaires n&apos;étaient peut-être pas encore assignés aux lots.
+              </p>
+              {isSyndic && (
+                <button
+                  type="button"
+                  onClick={handleRegenerate}
+                  disabled={regenerating}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50 transition-colors"
+                >
+                  {regenerating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                  Générer la répartition
+                </button>
+              )}
+              {regenMsg && (
+                <p className="text-xs text-red-600">{regenMsg}</p>
+              )}
+            </div>
+          ) : (
+            <AppelFondsPaiement
+              appel={appel}
+              lignes={lignes}
+              isSyndic={isSyndic}
+            />
+          )}
         </div>
       )}
     </div>
