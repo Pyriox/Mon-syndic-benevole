@@ -28,6 +28,7 @@ interface BudgetResolution {
   type_resolution: string | null;
   budget_postes: { libelle: string; montant: number }[] | null;
   fonds_travaux_montant: number | null;
+  echeancier_dates?: string[]; // extrait du calendrier_financement
 }
 
 // Une AG avec toutes ses résolutions budgétaires approuvées
@@ -124,7 +125,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         .from('resolutions')
         .select('id, titre, type_resolution, budget_postes, fonds_travaux_montant, ag_id')
         .in('ag_id', ags.map((a) => a.id))
-        .in('type_resolution', ['budget_previsionnel', 'revision_budget', 'fonds_travaux'])
+        .in('type_resolution', ['budget_previsionnel', 'revision_budget', 'fonds_travaux', 'calendrier_financement'])
         .eq('statut', 'approuvee');
 
       const grouped: AGWithBudgets[] = ags
@@ -162,6 +163,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     const newPostes: Poste[] = [];
     let hasBudgetPrevisionnel = false;
     let primaryResolutionId = '';
+    let echeancierDatesImport: string[] = [];
 
     for (const res of ag.resolutions) {
       if (res.type_resolution === 'budget_previsionnel' || res.type_resolution === 'revision_budget') {
@@ -185,13 +187,33 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           montant: String(res.fonds_travaux_montant),
         });
       }
+      if (res.type_resolution === 'calendrier_financement' && res.budget_postes && res.budget_postes.length > 0) {
+        // Les postes du calendrier_financement contiennent des dates dans libelle
+        echeancierDatesImport = res.budget_postes.map((p) => p.libelle).filter((d) => !!d);
+      }
     }
 
     if (newPostes.length > 0) setPostes(newPostes);
     setResolutionLieeId(primaryResolutionId);
 
-    // Pré-remplir l'échéancier : 4 versements trimestriels si budget prévisionnel (art. 14-1)
-    if (hasBudgetPrevisionnel) {
+    // Appliquer l'échéancier depuis le calendrier_financement voté, sinon fallback 4 trimestriels
+    if (echeancierDatesImport.length >= 2) {
+      // Détecter la périodicité depuis l'écart entre les deux premières dates
+      const d1 = new Date(echeancierDatesImport[0] + 'T00:00:00');
+      const d2 = new Date(echeancierDatesImport[1] + 'T00:00:00');
+      const diffMois = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+      const periodicite: 'mensuel' | 'trimestriel' | 'semestriel' | 'annuel' =
+        diffMois <= 1 ? 'mensuel'
+        : diffMois <= 3 ? 'trimestriel'
+        : diffMois <= 6 ? 'semestriel'
+        : 'annuel';
+      setFormData((p) => ({ ...p, date_echeance: echeancierDatesImport[0] }));
+      setEcheancier({ enabled: true, nb: echeancierDatesImport.length, periodicite });
+    } else if (echeancierDatesImport.length === 1) {
+      setFormData((p) => ({ ...p, date_echeance: echeancierDatesImport[0] }));
+      setEcheancier({ enabled: false, nb: 4, periodicite: 'trimestriel' });
+    } else if (hasBudgetPrevisionnel) {
+      // Pré-remplir l'échéancier : 4 versements trimestriels si budget prévisionnel (art. 14-1)
       setEcheancier({ enabled: true, nb: 4, periodicite: 'trimestriel' });
     }
   };
