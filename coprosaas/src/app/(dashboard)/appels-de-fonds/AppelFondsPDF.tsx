@@ -13,28 +13,28 @@ import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 
 interface Poste { libelle: string; categorie: string; montant: number }
 
-interface Ligne {
+export interface LigneForPDF {
   id: string;
   montant_du: number;
   paye: boolean;
   coproprietaires: { nom: string; prenom: string } | null;
 }
 
-interface Appel {
+export interface AppelForPDF {
   id: string;
   titre: string;
   montant_total: number;
   date_echeance: string;
   description?: string | null;
   coproprietes?: { nom: string } | null;
-  lignes_appels_de_fonds?: Ligne[];
+  lignes_appels_de_fonds?: LigneForPDF[];
   copropriete_id?: string;
   type_appel?: string | null;
   ag_resolution_id?: string | null;
 }
 
 interface AppelFondsPDFProps {
-  appel: Appel;
+  appel: AppelForPDF;
 }
 
 function parsePostes(description: string | null | undefined): Poste[] | null {
@@ -53,7 +53,7 @@ const LABELS_TYPE_APPEL: Record<string, string> = {
   exceptionnel: 'Appel exceptionnel',
 };
 
-function buildPDF(appel: Appel): jsPDF {
+export function buildAppelFondsPDF(appel: AppelForPDF): jsPDF {
   const doc = new jsPDF();
 
   doc.setFontSize(18);
@@ -135,7 +135,7 @@ export default function AppelFondsPDF({ appel }: AppelFondsPDFProps) {
   const [saveOk, setSaveOk] = useState<boolean | null>(null);
 
   const handleExport = () => {
-    const doc = buildPDF(appel);
+    const doc = buildAppelFondsPDF(appel);
     doc.save(`appel-de-fonds-${appel.titre.toLowerCase().replace(/\s+/g, '-')}.pdf`);
   };
 
@@ -145,7 +145,7 @@ export default function AppelFondsPDF({ appel }: AppelFondsPDFProps) {
     setSaveOk(null);
 
     try {
-      const doc = buildPDF(appel);
+      const doc = buildAppelFondsPDF(appel);
       const pdfBlob = doc.output('blob');
 
       const { data: { user } } = await supabase.auth.getUser();

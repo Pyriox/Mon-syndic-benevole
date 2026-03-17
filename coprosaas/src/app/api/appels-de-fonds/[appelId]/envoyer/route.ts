@@ -90,6 +90,13 @@ export async function POST(
     else sent++;
   }
 
+  // Enregistrer la date d'envoi (nécessite la colonne emailed_at sur appels_de_fonds)
+  if (sent > 0) {
+    await supabase.from('appels_de_fonds')
+      .update({ emailed_at: new Date().toISOString() } as Record<string, unknown>)
+      .eq('id', appelId);
+  }
+
   return NextResponse.json({
     message: errors.length
       ? `${sent} e-mail(s) envoyé(s), ${errors.length} échec(s) : ${errors.join('; ')}`

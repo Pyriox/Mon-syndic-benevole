@@ -51,7 +51,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
 
   const { data: appels } = await supabase
     .from('appels_de_fonds')
-    .select('*, coproprietes(nom), lignes_appels_de_fonds(id, montant_du, paye, date_paiement, coproprietaires(nom, prenom))')
+    .select('*, coproprietes(nom), lignes_appels_de_fonds(id, montant_du, paye, date_paiement, coproprietaires(id, nom, prenom))')
     .eq('copropriete_id', selectedCoproId ?? 'none')
     .gte('created_at', `${annee}-01-01`)
     .lt('created_at', `${annee + 1}-01-01`)
@@ -198,9 +198,14 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
                 {/* Suivi paiements (interactif) */}
                 {lignes.length > 0 && (
                   <AppelFondsPaiement
-                    appelId={appel.id}
-                    dateEcheance={appel.date_echeance}
-                    lignes={lignes}
+                    appel={{ ...appel, copropriete_id: selectedCoproId ?? undefined }}
+                    lignes={(lignes as any[]).map((l) => ({
+                      ...l,
+                      coproprietaires: Array.isArray(l.coproprietaires)
+                        ? (l.coproprietaires[0] ?? null)
+                        : l.coproprietaires,
+                    }))}
+                    isSyndic={copropriete?.syndic_id === user.id}
                   />
                 )}
               </Card>
