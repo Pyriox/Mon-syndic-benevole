@@ -199,6 +199,12 @@ export function SecurityActions({ currentEmail }: { currentEmail: string }) {
     if (error) { setEmailError(error.message); setEmailLoading(false); return; }
     setEmailSuccess(`Un email de confirmation a été envoyé à ${newEmail}.`);
     setEmailLoading(false);
+    // Notifier l'ancienne adresse du changement demandé
+    fetch('/api/auth/send-security-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'email_change_requested', newEmail: newEmail.trim().toLowerCase() }),
+    }).catch(() => {});
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -224,6 +230,12 @@ export function SecurityActions({ currentEmail }: { currentEmail: string }) {
     setPwSuccess('Mot de passe mis à jour avec succès.');
     setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
     setPwLoading(false);
+    // Envoyer un e-mail de confirmation de changement de mot de passe
+    fetch('/api/auth/send-security-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'password_changed' }),
+    }).catch(() => {});
   };
 
   const closeEmail = () => { setEmailOpen(false); setEmailError(''); setEmailSuccess(''); setNewEmail(''); };

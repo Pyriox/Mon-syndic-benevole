@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM ?? 'noreply@syndic-benevole.eu';
+const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
 
 export async function POST(
   _req: NextRequest,
@@ -88,7 +88,7 @@ export async function POST(
     </div>
     <p style="font-size:13px;color:#6b7280">Veuillez effectuer votre règlement avant la date limite indiquée. Passé ce délai, votre compte sera signalé en impayé.</p>
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
-    <p style="font-size:12px;color:#9ca3af">Mon Syndic Bénévole — <a href="https://syndic-benevole.eu" style="color:#2563eb">syndic-benevole.eu</a></p>
+    <p style="font-size:12px;color:#9ca3af">Mon Syndic Bénévole — <a href="https://www.mon-syndic-benevole.fr" style="color:#2563eb">mon-syndic-benevole.fr</a></p>
   </div>
 </div>`;
 

@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM ?? 'noreply@syndic-benevole.eu';
+const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ agId: string }> }) {
   const { agId } = await params;
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     <ol style="padding-left:20px;line-height:1.8">${ordreduJour}</ol>
     ${ag.notes ? `<p style="background:#fef9c3;padding:12px;border-radius:8px;font-size:13px"><strong>Notes :</strong> ${ag.notes}</p>` : ''}
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
-    <p style="font-size:12px;color:#9ca3af">Le Syndic bénévole — <a href="https://syndic-benevole.eu" style="color:#2563eb">Syndic-Bénévole.eu</a></p>
+    <p style="font-size:12px;color:#9ca3af">Mon Syndic Bénévole — <a href="https://www.mon-syndic-benevole.fr" style="color:#2563eb">mon-syndic-benevole.fr</a></p>
   </div>
 </div>`;
 

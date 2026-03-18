@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? 'onboarding@resend.dev';
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? 'support@syndic-benevole.eu';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? 'contact@mon-syndic-benevole.fr';
 
 export async function POST(req: NextRequest) {
   // Validation basique de la source (Content-Type JSON)

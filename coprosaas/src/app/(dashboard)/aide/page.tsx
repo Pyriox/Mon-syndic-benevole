@@ -240,8 +240,8 @@ export default function AidePage() {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-700">Email</p>
-                  <a href="mailto:support@syndic-benevole.eu" className="text-xs text-blue-600 hover:underline">
-                    support@syndic-benevole.eu
+                  <a href="mailto:contact@mon-syndic-benevole.fr" className="text-xs text-blue-600 hover:underline">
+                    contact@mon-syndic-benevole.fr
                   </a>
                 </div>
               </li>

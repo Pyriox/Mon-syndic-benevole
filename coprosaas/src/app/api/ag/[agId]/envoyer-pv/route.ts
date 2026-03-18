@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM ?? 'noreply@syndic-benevole.eu';
+const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
 
 const STATUT_LABELS: Record<string, string> = {
   approuvee: 'APPROUVÉE ✅',
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     </table>
     ${ag.notes ? `<p style="background:#fef9c3;padding:12px;border-radius:8px;font-size:13px;margin-top:20px"><strong>Notes :</strong> ${ag.notes}</p>` : ''}
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
-    <p style="font-size:12px;color:#9ca3af">Le Syndic bénévole — <a href="https://syndic-benevole.eu" style="color:#16a34a">Syndic-Bénévole.eu</a></p>
+    <p style="font-size:12px;color:#9ca3af">Mon Syndic Bénévole — <a href="https://www.mon-syndic-benevole.fr" style="color:#16a34a">mon-syndic-benevole.fr</a></p>
   </div>
 </div>`;
 

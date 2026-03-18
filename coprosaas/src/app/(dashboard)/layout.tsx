@@ -188,7 +188,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       coproprietes={userCoproprietes}
       selectedCoproId={selectedCoproId}
       userRole={userRole}
-      title={selectedCopro?.nom ?? 'CoproSaaS'}
+      title={selectedCopro?.nom ?? 'Mon Syndic Bénévole'}
       userName={userName}
       notifications={notifications}
     >
