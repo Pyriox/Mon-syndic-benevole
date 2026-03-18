@@ -1,15 +1,15 @@
-﻿// POST /api/stripe/webhook
-// ReÃ§oit les Ã©vÃ©nements Stripe et met Ã  jour la table coproprietes en consÃ©quence
-// UN abonnement Stripe = UNE copropriÃ©tÃ©
+// POST /api/stripe/webhook
+// Reçoit les événements Stripe et met à jour la table coproprietes en conséquence.
+// UN abonnement Stripe = UNE copropriété.
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
 import Stripe from 'stripe';
 
-// âš ï¸ Ne pas parser le body en JSON â€” Stripe exige le raw body pour vÃ©rifier la signature
+// ⚠️ Ne pas parser le body en JSON — Stripe exige le raw body pour vérifier la signature.
 export const runtime = 'nodejs';
 
-/** Met Ã  jour les champs d'abonnement sur la table coproprietes */
+/** Met à jour les champs d'abonnement sur la table coproprietes. */
 async function updateCoproSubscription(coproId: string, data: {
   stripe_customer_id?: string;
   stripe_subscription_id?: string | null;
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
 
-      // â”€â”€ Abonnement crÃ©Ã© aprÃ¨s un checkout rÃ©ussi â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── Abonnement créé après un checkout réussi ──────────────────────────
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const coproId = session.metadata?.copropriete_id;
@@ -59,7 +59,9 @@ export async function POST(req: NextRequest) {
         let periodEnd: string | null = null;
         let subId: string | undefined;
         if (session.subscription) {
-          const sub = await stripe.subscriptions.retrieve(session.subscription as string) as unknown as {
+          const sub = await stripe.subscriptions.retrieve(
+            session.subscription as string,
+          ) as unknown as {
             id: string; current_period_end: number; metadata: Record<string, string>;
           };
           subId = sub.id;
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      // â”€â”€ Abonnement mis Ã  jour (upgrade/downgrade/renouvellement) â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── Abonnement mis à jour (upgrade / downgrade / renouvellement) ──────
       case 'customer.subscription.updated': {
         const sub = event.data.object as unknown as {
           id: string; status: string; customer: string;
@@ -85,7 +87,7 @@ export async function POST(req: NextRequest) {
         const coproId = sub.metadata?.copropriete_id;
         if (!coproId) break;
 
-        const plan = sub.status === 'active' ? 'actif'
+        const plan = sub.status === 'active'   ? 'actif'
           : sub.status === 'past_due'  ? 'passe_du'
           : sub.status === 'trialing'  ? 'essai'
           : 'inactif';
@@ -100,7 +102,7 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      // â”€â”€ Abonnement rÃ©siliÃ© â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── Abonnement résilié ────────────────────────────────────────────────
       case 'customer.subscription.deleted': {
         const sub = event.data.object as unknown as {
           id: string; customer: string; metadata: Record<string, string>;
@@ -118,11 +120,10 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      // â”€â”€ Paiement Ã©chouÃ© â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── Paiement échoué ───────────────────────────────────────────────────
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
-        // Trouver la copropriÃ©tÃ© via le customer_id en base
         const supabase = createAdminClient();
         const { data: copro } = await supabase
           .from('coproprietes')
