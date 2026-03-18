@@ -358,24 +358,7 @@ export default async function AbonnementPage({
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 shrink-0">
-                      {hasStripeCustomer && (
-                        <form action={portalAction}>
-                          <input type="hidden" name="coproId" value={copro.id} />
-                          <button
-                            type="submit"
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                              isPastDue
-                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                : 'bg-white text-green-700 hover:bg-green-50'
-                            }`}
-                          >
-                            <Settings2 size={14} />
-                            Gérer l&apos;abonnement
-                          </button>
-                        </form>
-                      )}
-                    </div>
+
                   </div>
                 </div>
               )}
@@ -472,6 +455,20 @@ export default async function AbonnementPage({
                   );
                 })}
               </div>
+
+              {/* Lien discret gérer l'abonnement */}
+              {(isSubscribed || isPastDue) && hasStripeCustomer && (
+                <form action={portalAction} className="flex justify-end">
+                  <input type="hidden" name="coproId" value={copro.id} />
+                  <button
+                    type="submit"
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <Settings2 size={12} />
+                    Gérer l&apos;abonnement
+                  </button>
+                </form>
+              )}
 
               <hr className="border-gray-100" />
             </section>
