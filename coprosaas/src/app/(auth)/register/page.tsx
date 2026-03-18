@@ -205,7 +205,7 @@ function RegisterForm() {
         </div>
 
         {/* ── Panneau droit : formulaire ── */}
-        <div className="bg-white flex flex-col justify-center p-10 lg:p-12">
+        <div className="bg-white flex flex-col justify-center p-6 sm:p-10 lg:p-12">
           {/* Logo mobile + lien retour */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex lg:hidden items-center gap-2.5">

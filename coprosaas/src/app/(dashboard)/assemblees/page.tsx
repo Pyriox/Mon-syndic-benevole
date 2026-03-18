@@ -51,7 +51,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Assemblées Générales</h2>
           <p className="text-gray-500 mt-1">{assemblees?.length ?? 0} assemblée(s)</p>

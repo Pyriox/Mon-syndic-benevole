@@ -54,10 +54,10 @@ export default async function CopropriétéDetailPage({ params }: Props) {
 
 
       {/* En-tête */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{copro.nom}</h2>
-          <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-500">
             <span className="flex items-center gap-1">
               <MapPin size={14} /> {copro.adresse}, {copro.code_postal} {copro.ville}
             </span>

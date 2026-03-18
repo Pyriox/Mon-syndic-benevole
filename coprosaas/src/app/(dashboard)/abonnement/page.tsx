@@ -126,9 +126,12 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
     redirect('/abonnement?resynced=1');
   }
 
-  // Recharger les métadonnées fraîches après sync
-  const { data: { user: freshUser } } = await supabase.auth.getUser();
-  const meta = freshUser?.user_metadata ?? user.user_metadata ?? {};
+  // Recharger les métadonnées DIRECTEMENT depuis Supabase DB (bypass JWT cache)
+  // La session JWT ne se met à jour qu'après un refresh côté client ;
+  // l'admin client lit toujours la valeur persistée en base.
+  const adminClient = createAdminClient();
+  const { data: adminUserData } = await adminClient.auth.admin.getUserById(user.id);
+  const meta = adminUserData?.user?.user_metadata ?? user.user_metadata ?? {};
 
   const [
     { count: nbrCopros },
@@ -144,6 +147,11 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
   const hasStripeCustomer = !!meta?.stripe_customer_id;
   const planPeriodEnd = meta?.plan_period_end as string | undefined;
   const planId = meta?.plan_id as string | undefined;
+
+  // Plan souscrit parmi nos 3 identifiants connus
+  const PLAN_IDS = ['essentiel', 'confort', 'illimite'] as const;
+  type PlanId = typeof PLAN_IDS[number];
+  const currentPlanId: PlanId | undefined = PLAN_IDS.find(p => p === planId);
 
   // Plan recommandé selon le nombre de lots total
   const recommendedPlan = totalLots <= 10 ? 'essentiel' : totalLots <= 20 ? 'confort' : 'illimite';
@@ -179,10 +187,10 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
                 : <Badge variant="warning">Période d&apos;essai</Badge>
               }
             </div>
-            {isSubscribed && planId && (
+            {isSubscribed && currentPlanId && (
               <div className="flex items-center gap-2">
                 <span className="text-gray-500">Plan</span>
-                <span className="font-semibold text-gray-900 capitalize">{planId}</span>
+                <span className="font-semibold text-gray-900 capitalize">{currentPlanId}</span>
               </div>
             )}
             <div className="flex items-center gap-2">
@@ -204,7 +212,7 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
           </div>
           {isSubscribed && hasStripeCustomer && (
             <div className="mt-5 pt-4 border-t border-gray-100">
-              <CheckoutButton planId={(planId as 'essentiel' | 'confort' | 'illimite') ?? 'essentiel'} isSubscribed={true} hasStripeCustomer={true} />
+              <CheckoutButton planId={currentPlanId ?? 'essentiel'} isSubscribed={true} hasStripeCustomer={true} />
             </div>
           )}
           {!isSubscribed && (
@@ -222,24 +230,35 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
         {/* Plans */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch mb-6">
           {PLANS.map((plan) => {
-            const isRecommended = plan.id === recommendedPlan;
-            const isPrimary = plan.highlight || isRecommended;
+            const isCurrentPlan = isSubscribed && plan.id === currentPlanId;
+            const isOtherPlan   = isSubscribed && !isCurrentPlan;
+            const isRecommended = !isSubscribed && plan.id === recommendedPlan;
+            const isPrimary = !isSubscribed && (plan.highlight || isRecommended);
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-2xl p-6 flex flex-col ${
-                  isPrimary
+                className={`relative rounded-2xl p-6 flex flex-col transition-all ${
+                  isCurrentPlan
+                    ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-xl shadow-green-900/20 ring-2 ring-green-400'
+                    : isOtherPlan
+                    ? 'bg-white border border-gray-200 shadow-sm opacity-50'
+                    : isPrimary
                     ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl shadow-blue-900/20'
                     : 'bg-white border border-gray-200 shadow-sm'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2 min-h-[24px]">
                   <div>
-                    <p className={`text-sm font-bold ${isPrimary ? 'text-white' : 'text-gray-900'}`}>{plan.name}</p>
-                    <p className={`text-xs mt-0.5 ${isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>{plan.desc}</p>
+                    <p className={`text-sm font-bold ${isCurrentPlan || isPrimary ? 'text-white' : 'text-gray-900'}`}>{plan.name}</p>
+                    <p className={`text-xs mt-0.5 ${isCurrentPlan ? 'text-green-100' : isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>{plan.desc}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    {plan.badge && (
+                    {isCurrentPlan && (
+                      <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <CheckCircle size={10} /> Plan actuel
+                      </span>
+                    )}
+                    {!isSubscribed && plan.badge && (
                       <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.badge}</span>
                     )}
                     {isRecommended && (
@@ -251,12 +270,12 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
                 </div>
                 <div className="mt-3">
                   <div className="flex items-end gap-1">
-                    <span className={`text-4xl font-extrabold ${isPrimary ? 'text-white' : 'text-gray-900'}`}>{plan.monthly}&nbsp;€</span>
-                    <span className={`pb-1 text-sm ${isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>/mois</span>
+                    <span className={`text-4xl font-extrabold ${isCurrentPlan || isPrimary ? 'text-white' : 'text-gray-900'}`}>{plan.monthly}&nbsp;€</span>
+                    <span className={`pb-1 text-sm ${isCurrentPlan ? 'text-green-100' : isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>/mois</span>
                   </div>
-                  <p className={`text-xs mt-1 ${isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>
+                  <p className={`text-xs mt-1 ${isCurrentPlan ? 'text-green-100' : isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>
                     soit{' '}
-                    <span className={`font-semibold ${isPrimary ? 'text-white' : 'text-gray-700'}`}>{plan.annual}&nbsp;€/an</span>
+                    <span className={`font-semibold ${isCurrentPlan || isPrimary ? 'text-white' : 'text-gray-700'}`}>{plan.annual}&nbsp;€/an</span>
                   </p>
                 </div>
                 <CheckoutButton
@@ -264,6 +283,7 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
                   isSubscribed={isSubscribed}
                   hasStripeCustomer={hasStripeCustomer}
                   isPrimary={isPrimary}
+                  isCurrentPlan={isCurrentPlan}
                 />
               </div>
             );

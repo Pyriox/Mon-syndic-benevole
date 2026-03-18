@@ -5,7 +5,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet } from 'lucide-react';
+import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AppNotification } from '@/types';
 
@@ -13,6 +13,7 @@ interface HeaderProps {
   title: string;
   userName?: string;
   notifications?: AppNotification[];
+  onMenuOpen?: () => void;
 }
 
 const iconByType = {
@@ -28,7 +29,7 @@ const colorBySeverity = {
   info: 'text-blue-500 bg-blue-50',
 };
 
-export default function Header({ title, userName, notifications = [] }: HeaderProps) {
+export default function Header({ title, userName, notifications = [], onMenuOpen }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -45,13 +46,22 @@ export default function Header({ title, userName, notifications = [] }: HeaderPr
   const nbDanger = notifications.filter((n) => n.severity === 'danger').length;
 
   return (
-    <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
+      <div className="flex items-center justify-between gap-3">
+        {/* Hamburger menu — visible uniquement sur mobile */}
+        <button
+          onClick={onMenuOpen}
+          className="md:hidden p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
+          aria-label="Ouvrir le menu"
+        >
+          <Menu size={20} />
+        </button>
+
         {/* Titre */}
-        <h1 className="text-xl font-semibold text-gray-900 truncate">{title}</h1>
+        <h1 className="text-base md:text-xl font-semibold text-gray-900 truncate flex-1">{title}</h1>
 
         {/* Zone droite */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           {/* Cloche notifications */}
           <div ref={ref} className="relative">
             <button
@@ -72,9 +82,9 @@ export default function Header({ title, userName, notifications = [] }: HeaderPr
               )}
             </button>
 
-            {/* Panel dropdown */}
+            {/* Panel dropdown — plein écran sur mobile */}
             {open && (
-              <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50">
+              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 w-[min(320px,calc(100vw-1rem))]">
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-900">Notifications</p>
                   {nbNotifs > 0 && (
@@ -118,12 +128,12 @@ export default function Header({ title, userName, notifications = [] }: HeaderPr
           </div>
 
           {/* Avatar utilisateur */}
-          <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+          <div className="flex items-center gap-2 pl-2 md:pl-3 border-l border-gray-200">
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
               <User size={16} className="text-blue-600" />
             </div>
             {userName && (
-              <span className="text-sm font-medium text-gray-700 hidden md:block">
+              <span className="text-sm font-medium text-gray-700 hidden lg:block">
                 {userName}
               </span>
             )}

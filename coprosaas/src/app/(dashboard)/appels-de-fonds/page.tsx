@@ -52,7 +52,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Appels de fonds</h2>
           <p className="text-gray-500 mt-1">{appels?.length ?? 0} appel(s) de fonds</p>

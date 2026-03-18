@@ -107,9 +107,9 @@ export default async function AGDetailPage({ params }: Props) {
       </Link>
 
       {/* En-tête */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-1">
+          <div className="flex items-center gap-3 mb-1 flex-wrap">
             <h2 className="text-2xl font-bold text-gray-900">{ag.titre}</h2>
             <Badge variant={
               ag.statut === 'terminee' ? 'success'
@@ -121,7 +121,7 @@ export default async function AGDetailPage({ params }: Props) {
               {LABELS_STATUT_AG[ag.statut] ?? ag.statut}
             </Badge>
           </div>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
             <span>{ag.coproprietes?.nom}</span>
             <span className="flex items-center gap-1">
               <CalendarDays size={13} />
@@ -139,7 +139,7 @@ export default async function AGDetailPage({ params }: Props) {
         </div>
 
         {/* Actions selon le statut */}
-        <div className="flex flex-col items-end gap-3 shrink-0">
+        <div className="flex flex-col items-start sm:items-end gap-3 shrink-0">
 
           {/* Bouton principal de progression */}
           <AGStatusActions agId={id} coproprieteId={ag.copropriete_id} currentStatut={ag.statut} quorumAtteint={quorumAtteintCalcule} toutesResolutionsVotees={toutesResolutionsVotees} />

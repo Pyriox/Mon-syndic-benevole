@@ -296,7 +296,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
         </div>
 
         {/* En-tête */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">{currentDossier.nom}</h2>
             <p className="text-gray-500 mt-1">
@@ -406,7 +406,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
           <p className="text-gray-500 mt-1">{rootDossiers.length} dossier(s)</p>

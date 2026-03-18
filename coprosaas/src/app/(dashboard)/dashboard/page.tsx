@@ -210,7 +210,7 @@ export default async function DashboardPage() {
         <p className="text-gray-500 mt-1">
           {copropriete
             ? `${nbLots ?? 0} lot(s) · ${nbCoproprietaires} copropriétaire(s)`
-            : 'Sélectionnez une copropriété dans le menu de gauche'}
+            : 'Sélectionnez une copropriété dans le menu de navigation'}
         </p>
       </div>
 
@@ -249,7 +249,7 @@ export default async function DashboardPage() {
           <Building2 size={48} className="mx-auto text-gray-300 mb-4" />
           <h3 className="text-lg font-semibold text-gray-700">Aucune copropriété sélectionnée</h3>
           <p className="text-gray-500 text-sm mt-1 mb-4">
-            Choisissez une copropriété dans le sélecteur du menu de gauche.
+            Choisissez une copropriété dans le sélecteur du menu de navigation.
           </p>
         </Card>
       )}
@@ -429,9 +429,9 @@ export default async function DashboardPage() {
               </div>
               <div className="divide-y divide-gray-100">
                 {nbImpayes60j > 0 && (
-                  <div className="flex items-center justify-between py-3">
+                  <div className="flex flex-wrap items-start gap-3 justify-between py-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-1" />
                       <div>
                         <p className="text-sm font-medium text-gray-800">
                           {nbImpayes60j} ligne{nbImpayes60j > 1 ? 's' : ''} impayée{nbImpayes60j > 1 ? 's' : ''} depuis plus de 60 jours
@@ -445,9 +445,9 @@ export default async function DashboardPage() {
                   </div>
                 )}
                 {incidentsAnciens.length > 0 && (
-                  <div className="flex items-center justify-between py-3">
+                  <div className="flex flex-wrap items-start gap-3 justify-between py-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0 mt-1" />
                       <div>
                         <p className="text-sm font-medium text-gray-800">
                           {incidentsAnciens.length} incident{incidentsAnciens.length > 1 ? 's' : ''} ouvert{incidentsAnciens.length > 1 ? 's' : ''} sans suivi depuis plus de 7 jours

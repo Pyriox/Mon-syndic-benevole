@@ -104,7 +104,7 @@ export default function LoginPage() {
         </div>
 
         {/* ── Panneau droit : formulaire ── */}
-        <div className="bg-white flex flex-col justify-center p-10 lg:p-12">
+        <div className="bg-white flex flex-col justify-center p-6 sm:p-10 lg:p-12">
 
           {/* Lien retour landing */}
           <div className="flex items-center justify-between mb-8">

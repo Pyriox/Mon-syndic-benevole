@@ -15,6 +15,7 @@ import {
   UserCircle,
   CreditCard,
   HelpCircle,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -26,9 +27,11 @@ interface SidebarProps {
   coproprietes: UserCopropriete[];
   selectedCoproId: string | null;
   userRole: 'syndic' | 'copropriétaire';
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function Sidebar({ coproprietes, selectedCoproId, userRole }: SidebarProps) {
+export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -105,8 +108,9 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole }: Sid
     return (
       <Link
         href={href}
+        onClick={onClose}
         className={cn(
-          'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 group relative',
+          'flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-lg text-sm transition-all duration-150 group relative',
           isActive
             ? 'bg-blue-50 text-blue-700 font-semibold'
             : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium'
@@ -128,16 +132,34 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole }: Sid
   };
 
   return (
-    <aside className="flex flex-col w-60 min-h-screen bg-white border-r border-gray-100">
-
-      {/* Logo */}
+    <aside
+      className={cn(
+        // Base : colonne flex, fond blanc, bordure droite
+        'flex flex-col bg-white border-r border-gray-100 h-full',
+        // Mobile : drawer fixe superposé, largeur légèrement plus grande pour le confort tactile
+        'fixed top-0 left-0 bottom-0 z-40 w-72 transition-transform duration-300 ease-in-out',
+        // Desktop : position normale dans le flux flex, largeur standard
+        'md:static md:w-60 md:z-auto md:translate-x-0 md:min-h-screen',
+        // Ouverture / fermeture mobile
+        isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0',
+      )}
+    >
+      {/* Logo + bouton fermer (mobile) */}
       <div className="px-5 pt-6 pb-4">
         <div className="flex items-center gap-2.5">
           <SiteLogo size={32} />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold text-gray-900 leading-tight truncate">Mon Syndic</p>
             <p className="text-[11px] font-semibold text-blue-600 leading-tight">Bénévole</p>
           </div>
+          {/* Bouton fermer visible uniquement sur mobile */}
+          <button
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors shrink-0"
+            aria-label="Fermer le menu"
+          >
+            <X size={18} />
+          </button>
         </div>
       </div>
 
@@ -169,8 +191,8 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole }: Sid
         )}
         <NavLink href="/profil" label="Mon profil" icon={UserCircle} />
         <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium w-full
+          onClick={() => { onClose?.(); handleLogout(); }}
+          className="flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-lg text-sm font-medium w-full
                      text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all duration-150 group"
         >
           <LogOut size={17} className="shrink-0 text-gray-400 group-hover:text-red-500 transition-colors" />
