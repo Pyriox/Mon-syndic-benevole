@@ -170,20 +170,20 @@ export default function HomePage() {
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative max-w-6xl mx-auto px-6 pt-32 pb-12 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-blue-200 text-sm font-medium px-4 py-2 rounded-full mb-8">
-            <Zap size={14} className="text-yellow-400" />
-            Pensé par un syndic bénévole, pour les syndics bénévoles
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-12 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-blue-200 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 rounded-full mb-6 sm:mb-8">
+            <Zap size={14} className="text-yellow-400 shrink-0" />
+            <span>Pensé par un syndic bénévole, pour les syndics bénévoles</span>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6 tracking-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-5 sm:mb-6 tracking-tight">
             La gestion de copropriété<br />
             <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
               enfin simple &amp; abordable
             </span>
           </h1>
 
-          <p className="text-xl text-blue-100/80 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-base sm:text-xl text-blue-100/80 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
             Configurez votre copropriété en 10 minutes et économisez jusqu&apos;à 2 700 €/an
             par rapport à un syndic professionnel — sans formation, sans prise de tête.
           </p>
@@ -204,7 +204,7 @@ export default function HomePage() {
           </div>
 
           {/* Badges rassurants */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-blue-200/70">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-blue-200/70">
             <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> 30 jours offerts, facturation au 31e jour</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> Sans engagement</span>
             <span className="flex items-center gap-1.5"><Shield size={14} className="text-green-400" /> Données hébergées en Europe</span>
@@ -213,7 +213,7 @@ export default function HomePage() {
         </div>
 
         {/* ── Mock Dashboard Preview ── */}
-        <div id="apercu" className="relative max-w-5xl mx-auto px-6 pb-0">
+        <div id="apercu" className="relative max-w-5xl mx-auto px-6 pb-0 hidden sm:block">
           {/* Fenêtre navigateur */}
           <div className="rounded-t-2xl overflow-hidden shadow-2xl shadow-black/40 border border-white/10 relative">
             {/* Barre navigateur */}
@@ -228,7 +228,7 @@ export default function HomePage() {
               </div>
             </div>
             {/* Contenu app simulé */}
-            <div className="bg-gray-50 flex" style={{ height: '680px' }}>
+            <div className="bg-gray-50 flex" style={{ height: '460px' }}>
               {/* Sidebar */}
               <div className="w-56 bg-white border-r border-gray-100 flex flex-col shrink-0 overflow-hidden">
                 {/* Logo */}
@@ -482,8 +482,8 @@ export default function HomePage() {
 
       <main>
       {/* ── Chiffres clés ── */}
-      <section className="bg-white border-b border-gray-100 py-12 px-6">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <section className="bg-white border-b border-gray-100 py-10 sm:py-12 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 text-center">
           <div>
             <p className="text-3xl md:text-4xl font-extrabold text-blue-600">240 €</p>
             <p className="text-sm text-gray-500 mt-1">par an seulement</p>
@@ -503,47 +503,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Problèmes résolus ── */}
-      <section className="bg-white py-20 px-6" aria-labelledby="problems-heading">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Conçu pour vous</p>
-          <h2 id="problems-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            En avez-vous assez des tableurs et des dossiers papier ?
-          </h2>
-          <p className="text-lg text-gray-500 mb-14 max-w-2xl mx-auto">
-            Mon Syndic Bénévole centralise toute la gestion de votre copropriété. Fini le suivi hasardeux,
-            les oublis de convocations et les répartitions de charges calculées à la main.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-            {[
-              {
-                emoji: '📊',
-                title: 'Répartitions automatiques',
-                desc: 'Saisissez une dépense — l\'appli calcule instantanément la part de chaque copropriétaire selon ses tantièmes.',
-              },
-              {
-                emoji: '📧',
-                title: 'Envois automatiques',
-                desc: 'Convocations, appels de fonds et PV d\'AG envoyés par e-mail à tous vos copropriétaires en un clic.',
-              },
-              {
-                emoji: '📁',
-                title: 'Zéro papier perdu',
-                desc: 'GED intégrée avec dossiers thématiques. Retrouvez n\'importe quel document en quelques secondes.',
-              },
-            ].map(({ emoji, title, desc }) => (
-              <div key={title} className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
-                <div className="text-3xl mb-4">{emoji}</div>
-                <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── Fonctionnalités ── */}
-      <section id="fonctionnalites" aria-labelledby="features-heading" className="bg-gradient-to-b from-gray-50 to-white py-20 px-6">
+      <section id="fonctionnalites" aria-labelledby="features-heading" className="bg-gradient-to-b from-gray-50 to-white py-14 sm:py-20 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-indigo-600 uppercase tracking-widest mb-3">Fonctionnalités</p>
@@ -567,7 +528,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Tarif ── */}
-      <section id="tarif" aria-labelledby="pricing-heading" className="py-20 px-6 bg-white">
+      <section id="tarif" aria-labelledby="pricing-heading" className="py-14 sm:py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-violet-600 uppercase tracking-widest mb-3">Tarifs</p>
@@ -577,7 +538,7 @@ export default function HomePage() {
           </div>
 
           {/* Callout économies vs syndic professionnel */}
-          <div className="flex items-start gap-4 bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 mb-8 text-left">
+          <div className="flex items-start gap-3 sm:gap-4 bg-amber-50 border border-amber-200 rounded-2xl px-4 sm:px-6 py-4 mb-8 text-left">
             <div className="text-2xl shrink-0">💡</div>
             <div>
               <p className="text-sm font-bold text-amber-900">Un syndic professionnel coûte entre 1 500 € et 3 000 €/an.</p>
@@ -588,7 +549,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch mb-10">
 
             {/* Plan Essentiel */}
-            <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-7 text-white shadow-2xl shadow-blue-900/20 overflow-hidden flex flex-col">
+            <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-5 sm:p-7 text-white shadow-2xl shadow-blue-900/20 overflow-hidden flex flex-col">
               <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 text-xs font-bold px-2.5 py-1 rounded-full">
                 Le plus populaire
               </div>
@@ -608,7 +569,7 @@ export default function HomePage() {
             </div>
 
             {/* Plan Confort */}
-            <div className="bg-white border-2 border-emerald-200 rounded-3xl p-7 shadow-lg flex flex-col relative overflow-hidden">
+            <div className="bg-white border-2 border-emerald-200 rounded-3xl p-5 sm:p-7 shadow-lg flex flex-col relative overflow-hidden">
               <div className="absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">
                 Copros moyennes
               </div>
@@ -625,7 +586,7 @@ export default function HomePage() {
             </div>
 
             {/* Plan Illimité */}
-            <div className="bg-white border-2 border-violet-200 rounded-3xl p-7 shadow-lg flex flex-col relative overflow-hidden">
+            <div className="bg-white border-2 border-violet-200 rounded-3xl p-5 sm:p-7 shadow-lg flex flex-col relative overflow-hidden">
               <div className="absolute top-4 right-4 bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-1 rounded-full">
                 Grandes copros
               </div>
@@ -644,7 +605,7 @@ export default function HomePage() {
           </div>
 
           {/* Fonctionnalités incluses dans tous les plans */}
-          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8">
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 sm:p-8">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest text-center mb-6">Inclus dans tous les plans</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3">
               {planFeatures.map((f) => (
@@ -663,7 +624,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" aria-labelledby="faq-heading" className="bg-gray-50 py-20 px-6">
+      <section id="faq" aria-labelledby="faq-heading" className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Questions fréquentes</p>
@@ -673,7 +634,7 @@ export default function HomePage() {
             {[
               {
                 q: "Faut-il un moyen de paiement pour démarrer ?",
-                a: "Oui, un moyen de paiement (carte bancaire ou prélèvement) est requis lors de la souscription pour activer votre abonnement. Les 30 premiers jours sont entièrement gratuits — la première facturation intervient seulement au 31e jour. Vos coordonnées bancaires sont enregistrées dès la souscription mais aucun prélèvement n’est effectué pendant la période d’essai.",
+                a: "Oui, un moyen de paiement est requis à la souscription. Les 30 premiers jours sont entièrement gratuits — la première facturation intervient au 31e jour, puis l'abonnement se renouvelle chaque année. Vous pouvez annuler à tout moment avant la date de renouvellement.",
               },
               {
                 q: "Puis-je annuler à tout moment ?",
@@ -684,16 +645,9 @@ export default function HomePage() {
                 a: "Vos données sont hébergées en Europe, chiffrées en transit (HTTPS) et au repos. Nous n'accédons jamais à vos données sans votre autorisation explicite.",
               },
               {
-                q: "Que se passe-t-il après les 30 jours d’essai ?",
-                a: "Après les 30 jours d’essai, le premier prélèvement est effectué automatiquement sur le moyen de paiement enregistré lors de la souscription. L’abonnement se renouvelle ensuite chaque année. Vous pouvez annuler à tout moment avant la date de renouvellement.",
-              },
-              {
+
                 q: "Un abonnement couvre-t-il plusieurs copropriétés ?",
                 a: "Chaque abonnement est lié à une copropriété. Vous pouvez gérer plusieurs copropriétés depuis un seul compte en souscrivant un abonnement par copropriété.",
-              },
-              {
-                q: "Cela remplace-t-il un syndic professionnel ?",
-                a: "Mon Syndic Bénévole est conçu pour les syndics non-professionnels élus au sein de leur copropriété. L'outil couvre la gestion courante mais ne se substitue pas à un conseiller juridique ou à un expert-comptable.",
               },
             ].map(({ q, a }) => (
               <details key={q} className="group py-5">
@@ -709,11 +663,11 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA final ── */}
-      <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-24 px-6 text-white text-center relative overflow-hidden">
+      <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-16 sm:py-24 px-4 sm:px-6 text-white text-center relative overflow-hidden">
         <div className="absolute top-0 left-1/3 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-2xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-5 leading-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-5 leading-tight">
             Prêt à reprendre le contrôle<br />
             <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
               de votre copropriété ?
@@ -724,7 +678,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-10 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-xl shadow-xl shadow-blue-900/30"
+            className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-7 sm:px-10 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg sm:text-xl shadow-xl shadow-blue-900/30"
           >
             Démarrer gratuitement <ArrowRight size={20} />
           </Link>
@@ -740,7 +694,7 @@ export default function HomePage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="bg-slate-950 py-10 px-6" aria-label="Pied de page">
+      <footer className="bg-slate-950 py-10 px-4 sm:px-6" aria-label="Pied de page">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <SiteLogo size={32} />
@@ -751,6 +705,7 @@ export default function HomePage() {
           </p>
           <nav aria-label="Liens du pied de page">
             <div className="flex items-center gap-5 text-sm text-gray-500">
+              <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
               <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
             </div>

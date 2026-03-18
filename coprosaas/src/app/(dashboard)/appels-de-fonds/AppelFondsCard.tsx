@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
@@ -47,8 +47,18 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
   const [emailedAt, setEmailedAt] = useState<string | null>(appel.emailed_at ?? null);
   const [regenerating, setRegenerating] = useState(false);
   const [regenMsg, setRegenMsg] = useState('');
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false);
+  const autoRegenRef = useRef(false);
   const router = useRouter();
   const supabase = createClient();
+
+  // Auto-generate répartition when accordion opens with no lines
+  useEffect(() => {
+    if (open && lignes.length === 0 && isSyndic && !autoRegenRef.current && !regenerating) {
+      autoRegenRef.current = true;
+      handleRegenerate();
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRegenerate = async () => {
     setRegenerating(true);
@@ -77,6 +87,21 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
         })
       );
       if (error) { setRegenMsg('Erreur : ' + error.message); return; }
+      // Débit du solde pour chaque copropriétaire (la répartition crée une créance)
+      const soldesMap: Record<string, number> = {};
+      for (const lot of lotsWithCopro) {
+        const montant = totalTantiemes > 0
+          ? Math.round((appel.montant_total * (lot.tantiemes ?? 0) / totalTantiemes) * 100) / 100
+          : 0;
+        const coproId = lot.coproprietaire_id as string;
+        soldesMap[coproId] = (soldesMap[coproId] ?? 0) + montant;
+      }
+      for (const [coproId, montant] of Object.entries(soldesMap)) {
+        const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', coproId).single();
+        await supabase.from('coproprietaires').update({
+          solde: Math.round(((cop?.solde ?? 0) - montant) * 100) / 100,
+        }).eq('id', coproId);
+      }
       router.refresh();
     } finally {
       setRegenerating(false);
@@ -121,6 +146,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
   };
 
   const handleSendEmails = async () => {
+    setShowEmailConfirm(false);
     setSending(true);
     setSendMsg('');
     setSendOk(null);
@@ -185,10 +211,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
               )}
             </div>
 
-            {/* Barre de progression fine */}
+            {/* Barre de progression */}
             {lignes.length > 0 && (
-              <div className="mt-2.5 w-full bg-gray-100 rounded-full h-1.5">
-                <div className={`h-1.5 rounded-full transition-all ${barColor}`} style={{ width: `${pctPaye}%` }} />
+              <div className="mt-2.5 w-full bg-gray-200 rounded-full h-2">
+                <div className={`h-2 rounded-full transition-all ${barColor}`} style={{ width: `${Math.max(pctPaye, pctPaye > 0 ? 2 : 0)}%` }} />
               </div>
             )}
           </div>
@@ -198,12 +224,17 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
             {isSyndic && (
               <button
                 type="button"
-                onClick={handleSendEmails}
+                onClick={() => setShowEmailConfirm(true)}
                 disabled={sending}
-                title={emailedAt ? `Renvoyer (envoyé le ${new Date(emailedAt).toLocaleDateString('fr-FR')})` : 'Envoyer par e-mail'}
-                className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${emailedAt ? 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                title={emailedAt ? `Renvoyer (envoyé le ${new Date(emailedAt).toLocaleDateString('fr-FR')})` : 'Envoyer les avis par e-mail'}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+                  emailedAt
+                    ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200'
+                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                }`}
               >
-                {sending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                {sending ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
+                <span>{sending ? 'Envoi…' : emailedAt ? 'Renvoyer' : 'Envoyer'}</span>
               </button>
             )}
             <AppelFondsPDF appel={appel} />
@@ -218,6 +249,35 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
           </div>
         </div>
       </div>
+
+      {/* ── Confirmation envoi email ─────────────────────────── */}
+      {showEmailConfirm && !sending && (
+        <div className="mx-5 mb-3 flex flex-wrap items-center justify-between gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-blue-800">
+            <Mail size={15} className="shrink-0 text-blue-600" />
+            <span>
+              Envoyer les avis de paiement à{' '}
+              <strong>{lignes.length} copropriétaire{lignes.length > 1 ? 's' : ''}</strong> ?
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleSendEmails}
+              className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Confirmer
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowEmailConfirm(false)}
+              className="text-xs font-medium text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Feedback email ───────────────────────────────────── */}
       {sendMsg && (
@@ -262,19 +322,28 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
           {/* Suivi paiements */}
           {lignes.length === 0 ? (
             <div className="text-center py-4 space-y-3">
-              <p className="text-sm text-gray-400">
-                Aucune répartition générée — les copropriétaires n&apos;étaient peut-être pas encore assignés aux lots.
-              </p>
-              {isSyndic && (
-                <button
-                  type="button"
-                  onClick={handleRegenerate}
-                  disabled={regenerating}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50 transition-colors"
-                >
-                  {regenerating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                  Générer la répartition
-                </button>
+              {regenerating ? (
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>Génération de la répartition…</span>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-400">
+                    Aucune répartition générée.
+                  </p>
+                  {isSyndic && (
+                    <button
+                      type="button"
+                      onClick={handleRegenerate}
+                      disabled={regenerating}
+                      className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50 transition-colors"
+                    >
+                      <RefreshCw size={14} />
+                      Réessayer
+                    </button>
+                  )}
+                </>
               )}
               {regenMsg && (
                 <p className="text-xs text-red-600">{regenMsg}</p>

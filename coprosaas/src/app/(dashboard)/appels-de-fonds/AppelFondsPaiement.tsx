@@ -13,8 +13,9 @@ import { createClient } from '@/lib/supabase/client';
 import { formatEuros, LABELS_CATEGORIE } from '@/lib/utils';
 import {
   CheckCircle, Clock, XCircle, Loader2,
-  ChevronUp, X, ReceiptText,
+  ChevronUp, X, ReceiptText, FileDown,
 } from 'lucide-react';
+import { buildAvisPersonnelPDF } from './AppelFondsPDF';
 
 interface Poste { libelle: string; categorie: string; montant: number }
 
@@ -190,6 +191,20 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic }: AppelFon
                     <ReceiptText size={14} />
                   </button>
                 )}
+
+                {/* Bouton PDF personnel */}
+                <button
+                  type="button"
+                  title={`Télécharger l'avis de paiement — ${nom}`}
+                  onClick={() => {
+                    const pdf = buildAvisPersonnelPDF(appel, ligne);
+                    const safe = nom.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    pdf.save(`avis-appel-fonds-${safe}.pdf`);
+                  }}
+                  className="shrink-0 p-1 text-gray-300 hover:text-blue-500 transition-colors"
+                >
+                  <FileDown size={14} />
+                </button>
 
                 {/* Action syndic */}
                 {isSyndic && !isPaying && (

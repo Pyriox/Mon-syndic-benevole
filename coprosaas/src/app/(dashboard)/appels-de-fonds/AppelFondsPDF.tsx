@@ -128,6 +128,94 @@ export function buildAppelFondsPDF(appel: AppelForPDF): jsPDF {
   return doc;
 }
 
+// ── PDF personnel par copropriétaire ────────────────────────
+export interface AvisPersonnelInput {
+  titre: string;
+  montant_total: number;
+  date_echeance: string;
+  coproprietes?: { nom: string } | null;
+  description?: string | null;
+}
+
+export function buildAvisPersonnelPDF(
+  appel: AvisPersonnelInput,
+  ligne: { montant_du: number; coproprietaires: { nom: string; prenom: string } | null },
+): jsPDF {
+  const doc = new jsPDF();
+  const postes = parsePostes(appel.description) ?? [];
+  const nomCopro = ligne.coproprietaires
+    ? `${ligne.coproprietaires.prenom} ${ligne.coproprietaires.nom}`
+    : 'Copropriétaire';
+  const ratio = appel.montant_total > 0 ? ligne.montant_du / appel.montant_total : 0;
+
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text("AVIS D'APPEL DE FONDS", 14, 22);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100);
+  doc.text(`Copropriete : ${appel.coproprietes?.nom ?? ''}`, 14, 34);
+  doc.text(`A l'attention de : ${nomCopro}`, 14, 41);
+  doc.text(`Objet : ${appel.titre}`, 14, 48);
+  doc.text(`Date d'echeance : ${formatDate(appel.date_echeance)}`, 14, 55);
+  doc.text(
+    `Quote-part : ${(ratio * 100).toFixed(2)} % du budget total (${formatEuros(appel.montant_total)})`,
+    14, 62
+  );
+
+  let nextY = 72;
+  doc.setTextColor(0);
+
+  if (postes.length > 0) {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Detail de votre quote-part par poste', 14, nextY);
+
+    autoTable(doc, {
+      startY: nextY + 4,
+      head: [['Poste de charge', 'Categorie', 'Votre part (EUR)']],
+      body: postes.map((p) => {
+        const part = Math.round(p.montant * ratio * 100) / 100;
+        return [
+          p.libelle,
+          LABELS_CATEGORIE[p.categorie as keyof typeof LABELS_CATEGORIE] ?? p.categorie,
+          formatEuros(part),
+        ];
+      }),
+      foot: [['TOTAL A REGLER', '', formatEuros(ligne.montant_du)]],
+      headStyles: { fillColor: [37, 99, 235] },
+      footStyles: { fillColor: [243, 244, 246], textColor: [17, 24, 39], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+    });
+
+    nextY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+  } else {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Montant a regler : ${formatEuros(ligne.montant_du)}`, 14, nextY);
+    nextY += 12;
+  }
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(60);
+  doc.text(
+    `Veuillez regler la somme de ${formatEuros(ligne.montant_du)} avant le ${formatDate(appel.date_echeance)}.`,
+    14, nextY
+  );
+
+  doc.setFontSize(8);
+  doc.setTextColor(150);
+  doc.text(
+    `Genere le ${new Date().toLocaleDateString('fr-FR')} — Mon Syndic Benevole`,
+    14, doc.internal.pageSize.height - 10
+  );
+
+  return doc;
+}
+
+// ── Composant principal (PDF syndic) ───────────────────────
 export default function AppelFondsPDF({ appel }: AppelFondsPDFProps) {
   const supabase = createClient();
   const [saving, setSaving] = useState(false);

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'sepa_debit'],
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: {
         supabase_user_id: user.id,
@@ -49,6 +49,11 @@ export async function POST(req: NextRequest) {
       cancel_url:  `${origin}/abonnement?canceled=1`,
       locale: 'fr',
       allow_promotion_codes: true,
+      payment_method_options: {
+        sepa_debit: {
+          mandate_options: {},
+        },
+      },
       subscription_data: {
         metadata: {
           supabase_user_id: user.id,
