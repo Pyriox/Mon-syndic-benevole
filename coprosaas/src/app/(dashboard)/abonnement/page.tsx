@@ -126,6 +126,23 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
     redirect('/abonnement?resynced=1');
   }
 
+  // ── Action serveur : portail Stripe ──────────────────────────────
+  async function portalAction() {
+    'use server';
+    const supa = await createClient();
+    const { data: { user: u } } = await supa.auth.getUser();
+    if (!u) return;
+    const { getStripe } = await import('@/lib/stripe');
+    const stripeClient = getStripe();
+    const customerId = u.user_metadata?.stripe_customer_id as string | undefined;
+    if (!customerId) { redirect('/abonnement'); return; }
+    const session = await stripeClient.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr'}/abonnement`,
+    });
+    redirect(session.url);
+  }
+
   // Recharger les métadonnées DIRECTEMENT depuis Supabase DB (bypass JWT cache)
   // La session JWT ne se met à jour qu'après un refresh côté client ;
   // l'admin client lit toujours la valeur persistée en base.
@@ -143,8 +160,10 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
 
   const totalLots = lotsData?.length ?? 0;
   const planActuel: string = (meta?.plan as string | undefined) ?? 'essai';
-  const isSubscribed = planActuel === 'actif';
   const hasStripeCustomer = !!meta?.stripe_customer_id;
+  const hasStripeSubscription = !!meta?.stripe_subscription_id;
+  // Considéré abonné si plan actif, OU si une subscription Stripe existe (trialing, past_due…)
+  const isSubscribed = planActuel === 'actif' || (hasStripeSubscription && planActuel !== 'inactif');
   const planPeriodEnd = meta?.plan_period_end as string | undefined;
   const planId = meta?.plan_id as string | undefined;
 
@@ -182,8 +201,14 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
           <div className="mt-4 flex flex-wrap items-center gap-6 text-sm">
             <div className="flex items-center gap-2">
               <span className="text-gray-500">Statut</span>
-              {isSubscribed
+              {planActuel === 'actif'
                 ? <Badge variant="success">Abonné</Badge>
+                : planActuel === 'passe_du'
+                ? <Badge variant="danger">Paiement en retard</Badge>
+                : planActuel === 'inactif'
+                ? <Badge variant="danger">Inactif</Badge>
+                : hasStripeSubscription
+                ? <Badge variant="info">En essai</Badge>
                 : <Badge variant="warning">Période d&apos;essai</Badge>
               }
             </div>
@@ -210,21 +235,24 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
               </div>
             )}
           </div>
-          {isSubscribed && hasStripeCustomer && (
-            <div className="mt-5 pt-4 border-t border-gray-100">
-              <CheckoutButton planId={currentPlanId ?? 'essentiel'} isSubscribed={true} hasStripeCustomer={true} />
-            </div>
-          )}
-          {!isSubscribed && (
-            <form action={resyncAction} className="mt-5 pt-4 border-t border-gray-100">
+          <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4">
+            {isSubscribed && hasStripeCustomer && (
+              <form action={portalAction}>
+                <button type="submit" className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
+                  <Settings2 size={14} />
+                  Gérer l&apos;abonnement
+                </button>
+              </form>
+            )}
+            <form action={resyncAction}>
               <button
                 type="submit"
                 className="text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
               >
-                Vous avez déjà souscrit ? Vérifier mon abonnement Stripe
+                {isSubscribed ? 'Synchroniser le statut' : 'Vous avez déjà souscrit ? Vérifier mon abonnement Stripe'}
               </button>
             </form>
-          )}
+          </div>
         </Card>
 
         {/* Plans */}
