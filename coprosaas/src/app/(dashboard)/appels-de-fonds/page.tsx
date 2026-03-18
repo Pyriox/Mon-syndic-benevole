@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import EmptyState from '@/components/ui/EmptyState';
 import AppelFondsActions from './AppelFondsActions';
 import AppelFondsCard from './AppelFondsCard';
+import AppelFondsSerieCard from './AppelFondsSerieCard';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { Wallet } from 'lucide-react';
 import { cookies } from 'next/headers';
@@ -21,6 +22,13 @@ function parsePostes(description: string | null | undefined): Poste[] | null {
     if (Array.isArray(parsed) && parsed.length > 0 && 'libelle' in parsed[0]) return parsed;
   } catch { /* not JSON */ }
   return null;
+}
+
+// Extrait la clé de série et le numéro (ex. "Appel 2026 — 2/4" → { base: "Appel 2026", n: 2, total: 4 })
+function parseSerie(titre: string): { base: string; n: number; total: number } | null {
+  const m = titre.match(/^(.+) — (\d+)\/(\d+)$/);
+  if (!m) return null;
+  return { base: m[1], n: parseInt(m[2]), total: parseInt(m[3]) };
 }
 
 export default async function AppelsDeFondsPage({ searchParams }: { searchParams: Promise<{ annee?: string }> }) {
@@ -46,19 +54,92 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
     .eq('copropriete_id', selectedCoproId ?? 'none')
     .gte('created_at', `${annee}-01-01`)
     .lt('created_at', `${annee + 1}-01-01`)
-    .order('created_at', { ascending: false });
+    .order('date_echeance', { ascending: true });
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const isSyndic = copropriete?.syndic_id === user.id;
   const canCreate = isSubscribed(copropriete?.plan);
 
+  // ── Calculer les stats par appel ──────────────────────────────────────────
+  type AppelWithStats = {
+    appel: NonNullable<typeof appels>[number];
+    lignes: ReturnType<typeof normaliseLignes>;
+    postes: Poste[] | null;
+    nbPayes: number;
+    nbImpayes: number;
+    pctPaye: number;
+  };
+
+  const normaliseLignes = (raw: unknown[]) =>
+    raw.map((l: unknown) => {
+      const ligne = l as Record<string, unknown>;
+      return {
+        ...ligne,
+        coproprietaires: Array.isArray(ligne.coproprietaires) ? (ligne.coproprietaires[0] ?? null) : ligne.coproprietaires,
+      };
+    });
+
+  const withStats: AppelWithStats[] = (appels ?? []).map((appel) => {
+    const lignes = normaliseLignes((appel.lignes_appels_de_fonds ?? []) as unknown[]);
+    const nbPayes = lignes.filter((l) => (l as unknown as { paye: boolean }).paye).length;
+    const echeance = new Date(appel.date_echeance);
+    echeance.setHours(0, 0, 0, 0);
+    const echeancePlusGrace = new Date(echeance);
+    echeancePlusGrace.setDate(echeancePlusGrace.getDate() + 15);
+    const nbImpayes = today > echeancePlusGrace ? lignes.filter((l) => !(l as unknown as { paye: boolean }).paye).length : 0;
+    const pctPaye = lignes.length > 0 ? Math.round((nbPayes / lignes.length) * 100) : 0;
+    return { appel, lignes: lignes as ReturnType<typeof normaliseLignes>, postes: parsePostes(appel.description), nbPayes, nbImpayes, pctPaye };
+  });
+
+  // ── Grouper les séries ────────────────────────────────────────────────────
+  // Une série = appels partageant le même ag_resolution_id (non null) ET dont le titre finit en "— N/M"
+  type SerieGroup = {
+    key: string;
+    serieTitre: string;
+    agResolutionId: string;
+    items: AppelWithStats[];
+  };
+
+  const seriesMap = new Map<string, SerieGroup>();
+  const singles: AppelWithStats[] = [];
+
+  for (const item of withStats) {
+    const parsed = parseSerie(item.appel.titre);
+    if (parsed && item.appel.ag_resolution_id) {
+      const key = `${item.appel.ag_resolution_id}__${parsed.base}`;
+      if (!seriesMap.has(key)) {
+        seriesMap.set(key, { key, serieTitre: parsed.base, agResolutionId: item.appel.ag_resolution_id, items: [] });
+      }
+      seriesMap.get(key)!.items.push(item);
+    } else {
+      singles.push(item);
+    }
+  }
+
+  // Les series avec un seul élément sont traitées comme singles
+  const confirmedSeries: SerieGroup[] = [];
+  for (const serie of seriesMap.values()) {
+    if (serie.items.length > 1) {
+      serie.items.sort((a, b) => {
+        const pa = parseSerie(a.appel.titre);
+        const pb = parseSerie(b.appel.titre);
+        return (pa?.n ?? 0) - (pb?.n ?? 0);
+      });
+      confirmedSeries.push(serie);
+    } else {
+      singles.push(...serie.items);
+    }
+  }
+
+  const totalCount = confirmedSeries.length + singles.length;
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Appels de fonds</h2>
-          <p className="text-gray-500 mt-1">{appels?.length ?? 0} appel(s) de fonds</p>
+          <p className="text-gray-500 mt-1">{totalCount} appel(s) de fonds</p>
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
@@ -66,34 +147,53 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
         </div>
       </div>
 
-      {appels && appels.length > 0 ? (
+      {totalCount > 0 ? (
         <div className="space-y-3">
-          {appels.map((appel) => {
-            const lignes = (appel.lignes_appels_de_fonds ?? []) as any[];
-            const nbPayes = lignes.filter((l) => l.paye).length;
-            const echeance = new Date(appel.date_echeance);
-            echeance.setHours(0, 0, 0, 0);
-            const echeancePlusGrace = new Date(echeance);
-            echeancePlusGrace.setDate(echeancePlusGrace.getDate() + 15);
-            const nbImpayes = today > echeancePlusGrace ? lignes.filter((l) => !l.paye).length : 0;
-            const pctPaye = lignes.length > 0 ? Math.round((nbPayes / lignes.length) * 100) : 0;
+          {/* Séries */}
+          {confirmedSeries.map((serie) => (
+            <AppelFondsSerieCard
+              key={serie.key}
+              serieTitre={serie.serieTitre}
+              agResolutionId={serie.agResolutionId}
+              total={serie.items.reduce((s, i) => s + i.appel.montant_total, 0)}
+              appels={serie.items.map((item) => ({
+                id: item.appel.id,
+                titre: item.appel.titre,
+                montant_total: item.appel.montant_total,
+                date_echeance: item.appel.date_echeance,
+                nbPayes: item.nbPayes,
+                nbImpayes: item.nbImpayes,
+                pctPaye: item.pctPaye,
+                lignesCount: item.lignes.length,
+              }))}
+              appelCards={serie.items.map((item) => (
+                <AppelFondsCard
+                  key={item.appel.id}
+                  appel={{ ...item.appel, copropriete_id: selectedCoproId ?? undefined }}
+                  lignes={item.lignes as Parameters<typeof AppelFondsCard>[0]['lignes']}
+                  postes={item.postes}
+                  isSyndic={isSyndic}
+                  nbPayes={item.nbPayes}
+                  nbImpayes={item.nbImpayes}
+                  pctPaye={item.pctPaye}
+                />
+              ))}
+            />
+          ))}
 
-            return (
-              <AppelFondsCard
-                key={appel.id}
-                appel={{ ...appel, copropriete_id: selectedCoproId ?? undefined }}
-                lignes={lignes.map((l) => ({
-                  ...l,
-                  coproprietaires: Array.isArray(l.coproprietaires) ? (l.coproprietaires[0] ?? null) : l.coproprietaires,
-                }))}
-                postes={parsePostes(appel.description)}
-                isSyndic={isSyndic}
-                nbPayes={nbPayes}
-                nbImpayes={nbImpayes}
-                pctPaye={pctPaye}
-              />
-            );
-          })}
+          {/* Appels individuels */}
+          {singles.map((item) => (
+            <AppelFondsCard
+              key={item.appel.id}
+              appel={{ ...item.appel, copropriete_id: selectedCoproId ?? undefined }}
+              lignes={item.lignes as Parameters<typeof AppelFondsCard>[0]['lignes']}
+              postes={item.postes}
+              isSyndic={isSyndic}
+              nbPayes={item.nbPayes}
+              nbImpayes={item.nbImpayes}
+              pctPaye={item.pctPaye}
+            />
+          ))}
         </div>
       ) : (
         <EmptyState

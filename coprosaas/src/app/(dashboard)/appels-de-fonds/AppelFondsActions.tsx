@@ -1,7 +1,7 @@
 // ============================================================
 // Client Component : Formulaire de création d'un appel de fonds
-// Flux en 2 étapes : (1) sélection de l'AG source →
-// (2) révision du budget et de l'échéancier importés.
+// Flux en 2 étapes : (1) choix source AG / exceptionnel →
+// (2) confirmation budget + échéancier.
 // ============================================================
 'use client';
 
@@ -12,7 +12,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { formatEuros, calculerPart } from '@/lib/utils';
-import { Plus, Trash2, AlertTriangle, Calendar, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 
 interface Copropriete { id: string; nom: string; }
 interface AppelFondsActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; }
@@ -632,15 +632,20 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                 </div>
               </div>
 
-              {/* ── Répartition (collapsible) ─────────────────── */}
+              {/* ── Aperçu répartition ──────────────────────── */}
               {montantTotal > 0 && repartition.length > 0 && (
                 <div className="border border-gray-200 rounded-xl overflow-hidden">
                   <button type="button" onClick={() => setRepartitionExpanded((v) => !v)}
                     className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors">
                     <span className="text-sm font-semibold text-gray-700">Répartition</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">{repartition.length} lot(s){finalDatesCount > 1 ? ` · par versement : ${formatEuros(montantParVers)}` : ` · total : ${formatEuros(montantTotal)}`}</span>
-                      {repartitionExpanded ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+                      <span className="text-xs text-gray-500">
+                        {repartition.length} copropriétaire{repartition.length > 1 ? 's' : ''}
+                        {finalDatesCount > 1 && ` · ${formatEuros(montantParVers)}/versement`}
+                      </span>
+                      {repartitionExpanded
+                        ? <ChevronUp size={16} className="text-gray-400" />
+                        : <ChevronDown size={16} className="text-gray-400" />}
                     </div>
                   </button>
                   {repartitionExpanded && (
@@ -648,11 +653,13 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                       <tbody>
                         {repartition.map(({ lot, montant }) => (
                           <tr key={lot.id} className="border-t border-gray-100 hover:bg-gray-50">
-                            <td className="px-4 py-2 font-medium text-gray-700">Lot {lot.numero}</td>
-                            <td className="px-4 py-2 text-gray-500">{lot.coproprietaire!.prenom} {lot.coproprietaire!.nom}</td>
-                            <td className="px-4 py-2 text-right font-bold text-gray-800">
-                              {formatEuros(useEcheancier && editableDates.length > 0
-                                ? Math.round((montant / editableDates.length) * 100) / 100
+                            <td className="px-4 py-2 text-gray-500">Lot {lot.numero}</td>
+                            <td className="px-4 py-2 font-medium text-gray-700">
+                              {lot.coproprietaire!.prenom} {lot.coproprietaire!.nom}
+                            </td>
+                            <td className="px-4 py-2 text-right font-bold text-gray-800 tabular-nums">
+                              {formatEuros(finalDatesCount > 1
+                                ? Math.round((montant / finalDatesCount) * 100) / 100
                                 : montant)}
                             </td>
                           </tr>
@@ -667,14 +674,13 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
               <div className="flex gap-3 pt-1">
                 <Button type="submit" loading={loading}>
-                  {useEcheancier && editableDates.length > 1
-                    ? `Créer ${editableDates.length} appels de fonds`
-                    : "Créer l'appel de fonds"}
+                  {finalDatesCount > 1 ? `Créer ${finalDatesCount} appels de fonds` : "Créer l'appel de fonds"}
                 </Button>
                 <Button type="button" variant="secondary" onClick={close}>Annuler</Button>
               </div>
             </>
           )}
+
         </form>
       </Modal>
     </>
