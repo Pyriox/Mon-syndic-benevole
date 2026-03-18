@@ -52,45 +52,78 @@ const PLANS = [
   },
 ] as const;
 
-export default async function AbonnementPage({ searchParams }: { searchParams: Promise<{ success?: string; canceled?: string; synced?: string }> }) {
-  const { success, canceled, synced } = await searchParams;
+// Helpers de sync Stripe (réutilisable depuis la page et l'action)
+async function doStripeSync(userId: string, existingMeta: Record<string, unknown>) {
+  const { getStripe } = await import('@/lib/stripe');
+  const stripeClient = getStripe();
+  const existing = await stripeClient.customers.search({
+    query: `metadata['supabase_user_id']:'${userId}'`,
+    limit: 1,
+  });
+  if (existing.data.length === 0) return false;
+
+  const customer = existing.data[0];
+  // Cherche tous les abonnements non expirés (pas seulement active)
+  const subs = await stripeClient.subscriptions.list({
+    customer: customer.id,
+    status: 'all' as 'active',   // cast : l'API Stripe accepte 'all'
+    limit: 5,
+  });
+  const validSub = subs.data
+    .filter(s => !['canceled', 'incomplete_expired'].includes(s.status))
+    .sort((a, b) => b.created - a.created)[0];
+
+  if (!validSub) return false;
+
+  const planStatus =
+    validSub.status === 'active' || validSub.status === 'incomplete' ? 'actif'
+    : validSub.status === 'trialing' ? 'essai'
+    : validSub.status === 'past_due'  ? 'passe_du'
+    : 'actif';
+
+  const sub = validSub as unknown as {
+    id: string;
+    current_period_end: number;
+    metadata: Record<string, string>;
+    items: { data: { price: { id: string } }[] };
+  };
+
+  const adminClient = createAdminClient();
+  await adminClient.auth.admin.updateUserById(userId, {
+    user_metadata: {
+      ...existingMeta,
+      plan:                   planStatus,
+      plan_status:            planStatus,
+      stripe_customer_id:     customer.id,
+      stripe_subscription_id: sub.id,
+      plan_id:                sub.metadata?.plan_id ?? sub.items.data[0]?.price.id,
+      plan_period_end:        new Date(sub.current_period_end * 1000).toISOString(),
+    },
+  });
+  return true;
+}
+
+export default async function AbonnementPage({ searchParams }: { searchParams: Promise<{ success?: string; canceled?: string; synced?: string; resynced?: string }> }) {
+  const { success, canceled, synced, resynced } = await searchParams;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
   // ── Sync immédiate depuis Stripe au retour du checkout ──────────────
-  // Ne le faire qu'une seule fois (synced=1 coupe la boucle).
   if (success === '1' && synced !== '1') {
-    try {
-      const { getStripe } = await import('@/lib/stripe');
-      const stripeClient = getStripe();
-      const existing = await stripeClient.customers.search({
-        query: `metadata['supabase_user_id']:'${user.id}'`,
-        limit: 1,
-      });
-      if (existing.data.length > 0) {
-        const customer = existing.data[0];
-        const subs = await stripeClient.subscriptions.list({ customer: customer.id, status: 'active', limit: 1 });
-        if (subs.data.length > 0) {
-          const sub = subs.data[0] as unknown as { id: string; current_period_end: number; metadata: Record<string, string>; items: { data: { price: { id: string } }[] } };
-          const adminClient = createAdminClient();
-          await adminClient.auth.admin.updateUserById(user.id, {
-            user_metadata: {
-              ...user.user_metadata,
-              plan: 'actif',
-              plan_status: 'actif',
-              stripe_customer_id: customer.id,
-              stripe_subscription_id: sub.id,
-              plan_id: sub.metadata?.plan_id ?? sub.items.data[0]?.price.id,
-              plan_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-            },
-          });
-        }
-      }
-    } catch { /* non bloquant */ }
-    // Recharger une seule fois avec synced=1 pour éviter la boucle
+    try { await doStripeSync(user.id, user.user_metadata ?? {}); } catch { /* non bloquant */ }
     return redirect(`/abonnement?success=1&synced=1`);
+  }
+
+  // ── Action serveur : resync manuel ────────────────────────────────
+  async function resyncAction() {
+    'use server';
+    const supa = await createClient();
+    const { data: { user: u } } = await supa.auth.getUser();
+    if (!u) return;
+    try { await doStripeSync(u.id, u.user_metadata ?? {}); } catch { /* non bloquant */ }
+    redirect('/abonnement?resynced=1');
   }
 
   // Recharger les métadonnées fraîches après sync
@@ -124,7 +157,7 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
           <p className="text-gray-500 mt-1">Un abonnement par copropriété — choisissez le plan adapté à votre nombre de lots.</p>
         </div>
 
-        {success === '1' && (
+        {(success === '1' || resynced === '1') && (
           <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700 flex items-center gap-2">
             <CheckCircle size={15} />
             Abonnement activé avec succès. Bienvenue !
@@ -173,6 +206,16 @@ export default async function AbonnementPage({ searchParams }: { searchParams: P
             <div className="mt-5 pt-4 border-t border-gray-100">
               <CheckoutButton planId={(planId as 'essentiel' | 'confort' | 'illimite') ?? 'essentiel'} isSubscribed={true} hasStripeCustomer={true} />
             </div>
+          )}
+          {!isSubscribed && (
+            <form action={resyncAction} className="mt-5 pt-4 border-t border-gray-100">
+              <button
+                type="submit"
+                className="text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+              >
+                Vous avez déjà souscrit ? Vérifier mon abonnement Stripe
+              </button>
+            </form>
           )}
         </Card>
 
