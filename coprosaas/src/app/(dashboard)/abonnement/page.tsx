@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import CheckoutButton from './CheckoutButton';
-import { AlertCircle, CheckCircle, Lock, RefreshCw, Settings2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Lock, Settings2 } from 'lucide-react';
 
 const FEATURES = [
   'Copropriétaires illimités',
@@ -169,11 +169,10 @@ export default async function AbonnementPage({
     success?: string;
     canceled?: string;
     synced?: string;
-    resynced?: string;
     coproId?: string;
   }>;
 }) {
-  const { success, canceled, synced, resynced, coproId } = await searchParams;
+  const { success, canceled, synced, coproId } = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -207,14 +206,6 @@ export default async function AbonnementPage({
   }
 
   // ── Actions serveur ───────────────────────────────────────────────────
-  async function resyncAction(formData: FormData) {
-    'use server';
-    const id = formData.get('coproId') as string | null;
-    if (!id) return;
-    try { await doStripeSync(id); } catch { /* non bloquant */ }
-    redirect('/abonnement?resynced=1');
-  }
-
   async function portalAction(formData: FormData) {
     'use server';
     const id = formData.get('coproId') as string | null;
@@ -259,26 +250,13 @@ export default async function AbonnementPage({
 
         {/* ── Bannières */}
         {success === '1' && (
-          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-start gap-3">
-            <CheckCircle size={16} className="text-green-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-green-800">
-                {syncedCopro
-                  ? `Abonnement activé pour « ${syncedCopro.nom} » !`
-                  : 'Abonnement activé avec succès.'}
-              </p>
-              <p className="text-xs text-green-600 mt-0.5">
-                Si le statut affiche encore « Période d&apos;essai », cliquez sur{' '}
-                <strong>Synchroniser</strong> ci-dessous.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {resynced === '1' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center gap-3">
-            <CheckCircle size={16} className="text-blue-600 shrink-0" />
-            <p className="text-sm font-medium text-blue-800">Statut synchronisé avec Stripe.</p>
+          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <CheckCircle size={16} className="text-green-600 shrink-0" />
+            <p className="text-sm font-medium text-green-800">
+              {syncedCopro
+                ? `Abonnement activé pour « ${syncedCopro.nom} » !`
+                : 'Abonnement activé avec succès.'}
+            </p>
           </div>
         )}
 
@@ -397,20 +375,6 @@ export default async function AbonnementPage({
                           </button>
                         </form>
                       )}
-                      <form action={resyncAction}>
-                        <input type="hidden" name="coproId" value={copro.id} />
-                        <button
-                          type="submit"
-                          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                            isPastDue
-                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                              : 'bg-white/20 text-white hover:bg-white/30'
-                          }`}
-                        >
-                          <RefreshCw size={12} />
-                          Synchroniser
-                        </button>
-                      </form>
                     </div>
                   </div>
                 </div>
@@ -508,19 +472,6 @@ export default async function AbonnementPage({
                   );
                 })}
               </div>
-
-              {/* Lien sync pour les non-abonnés */}
-              {!isSubscribed && !isPastDue && (
-                <form action={resyncAction}>
-                  <input type="hidden" name="coproId" value={copro.id} />
-                  <button
-                    type="submit"
-                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                  >
-                    Vous avez déjà souscrit ? Cliquer pour synchroniser votre statut depuis Stripe
-                  </button>
-                </form>
-              )}
 
               <hr className="border-gray-100" />
             </section>
