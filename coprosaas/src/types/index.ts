@@ -45,6 +45,12 @@ export interface Copropriete {
   nombre_lots: number;
   syndic_id: string;   // UUID du syndic propriétaire
   created_at: string;
+  // Abonnement (1 abonnement Stripe par copropriété)
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  plan?: string | null;             // 'essai' | 'actif' | 'inactif' | 'passe_du'
+  plan_id?: string | null;          // 'essentiel' | 'confort' | 'illimite'
+  plan_period_end?: string | null;  // ISO date string
 }
 
 // --- Lot (appartement/local) ---

@@ -1,5 +1,5 @@
 // POST /api/stripe/portal
-// Crée une session Stripe Billing Portal (gestion abonnement, factures, CB)
+// Crée une session Stripe Billing Portal pour une copropriété donnée
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe';
@@ -9,12 +9,24 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
 
-  const customerId = user.user_metadata?.stripe_customer_id as string | undefined;
-  if (!customerId) return NextResponse.json({ error: 'Aucun abonnement Stripe trouvé.' }, { status: 404 });
+  const { coproprieteid } = await req.json().catch(() => ({})) as { coproprieteid?: string };
+  if (!coproprieteid) return NextResponse.json({ error: 'Copropriété manquante.' }, { status: 400 });
+
+  // Lire le stripe_customer_id depuis la copropriété (vérification appartenance)
+  const { data: copro, error } = await supabase
+    .from('coproprietes')
+    .select('stripe_customer_id')
+    .eq('id', coproprieteid)
+    .eq('syndic_id', user.id)
+    .single();
+
+  if (error || !copro?.stripe_customer_id) {
+    return NextResponse.json({ error: 'Aucun abonnement Stripe trouvé pour cette copropriété.' }, { status: 404 });
+  }
 
   const origin = req.headers.get('origin') ?? 'https://www.mon-syndic-benevole.fr';
   const session = await stripe.billingPortal.sessions.create({
-    customer: customerId,
+    customer: copro.stripe_customer_id,
     return_url: `${origin}/abonnement`,
   });
 

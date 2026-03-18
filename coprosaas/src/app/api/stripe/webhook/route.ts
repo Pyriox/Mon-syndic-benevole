@@ -1,31 +1,33 @@
-// POST /api/stripe/webhook
-// Reçoit les événements Stripe et met à jour Supabase en conséquence
+﻿// POST /api/stripe/webhook
+// ReÃ§oit les Ã©vÃ©nements Stripe et met Ã  jour la table coproprietes en consÃ©quence
+// UN abonnement Stripe = UNE copropriÃ©tÃ©
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
 import Stripe from 'stripe';
 
-// ⚠️ Ne pas parser le body en JSON — Stripe exige le raw body pour vérifier la signature
+// âš ï¸ Ne pas parser le body en JSON â€” Stripe exige le raw body pour vÃ©rifier la signature
 export const runtime = 'nodejs';
 
-async function updateUserSubscription(supabaseUserId: string, data: {
+/** Met Ã  jour les champs d'abonnement sur la table coproprietes */
+async function updateCoproSubscription(coproId: string, data: {
   stripe_customer_id?: string;
-  stripe_subscription_id?: string;
-  plan_id?: string;
-  plan_status?: 'actif' | 'inactif' | 'passe_du' | 'essai';
+  stripe_subscription_id?: string | null;
+  plan_id?: string | null;
+  plan?: 'actif' | 'inactif' | 'passe_du' | 'essai';
   plan_period_end?: string | null;
 }) {
   const supabase = createAdminClient();
-  await supabase.auth.admin.updateUserById(supabaseUserId, {
-    user_metadata: {
-      plan:                   data.plan_status ?? 'essai',
-      plan_id:                data.plan_id,
-      plan_status:            data.plan_status,
+  await supabase
+    .from('coproprietes')
+    .update({
       stripe_customer_id:     data.stripe_customer_id,
       stripe_subscription_id: data.stripe_subscription_id,
+      plan_id:                data.plan_id,
+      plan:                   data.plan ?? 'essai',
       plan_period_end:        data.plan_period_end,
-    },
-  });
+    })
+    .eq('id', coproId);
 }
 
 export async function POST(req: NextRequest) {
@@ -48,82 +50,92 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
 
-      // ── Abonnement créé après un checkout réussi ──────────────────
+      // â”€â”€ Abonnement crÃ©Ã© aprÃ¨s un checkout rÃ©ussi â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const userId = (session.metadata?.supabase_user_id ?? session.client_reference_id) as string | null;
-        if (!userId) break;
+        const coproId = session.metadata?.copropriete_id;
+        if (!coproId) break;
 
-        // Récupérer les détails de l'abonnement
         let periodEnd: string | null = null;
         let subId: string | undefined;
         if (session.subscription) {
-          const sub = await stripe.subscriptions.retrieve(session.subscription as string) as unknown as { id: string; current_period_end: number; metadata: Record<string, string> };
+          const sub = await stripe.subscriptions.retrieve(session.subscription as string) as unknown as {
+            id: string; current_period_end: number; metadata: Record<string, string>;
+          };
           subId = sub.id;
           periodEnd = new Date(sub.current_period_end * 1000).toISOString();
         }
 
-        await updateUserSubscription(userId, {
+        await updateCoproSubscription(coproId, {
           stripe_customer_id:     session.customer as string,
           stripe_subscription_id: subId,
           plan_id:                session.metadata?.plan_id,
-          plan_status:            'actif',
+          plan:                   'actif',
           plan_period_end:        periodEnd,
         });
         break;
       }
 
-      // ── Abonnement mis à jour (upgrade/downgrade/renouvellement) ──
+      // â”€â”€ Abonnement mis Ã  jour (upgrade/downgrade/renouvellement) â”€â”€â”€â”€â”€â”€â”€â”€
       case 'customer.subscription.updated': {
-        const sub = event.data.object as unknown as { id: string; status: string; customer: string; current_period_end: number; metadata: Record<string, string> };
-        const userId = sub.metadata?.supabase_user_id as string | undefined;
-        if (!userId) break;
+        const sub = event.data.object as unknown as {
+          id: string; status: string; customer: string;
+          current_period_end: number; metadata: Record<string, string>;
+        };
+        const coproId = sub.metadata?.copropriete_id;
+        if (!coproId) break;
 
-        const status = sub.status === 'active' ? 'actif'
-          : sub.status === 'past_due' ? 'passe_du'
-          : sub.status === 'trialing' ? 'essai'
+        const plan = sub.status === 'active' ? 'actif'
+          : sub.status === 'past_due'  ? 'passe_du'
+          : sub.status === 'trialing'  ? 'essai'
           : 'inactif';
 
-        await updateUserSubscription(userId, {
+        await updateCoproSubscription(coproId, {
           stripe_customer_id:     sub.customer as string,
           stripe_subscription_id: sub.id,
           plan_id:                sub.metadata?.plan_id,
-          plan_status:            status as 'actif' | 'inactif' | 'passe_du' | 'essai',
+          plan:                   plan as 'actif' | 'inactif' | 'passe_du' | 'essai',
           plan_period_end:        new Date(sub.current_period_end * 1000).toISOString(),
         });
         break;
       }
 
-      // ── Abonnement résilié ────────────────────────────────────────
+      // â”€â”€ Abonnement rÃ©siliÃ© â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       case 'customer.subscription.deleted': {
-        const sub = event.data.object as unknown as { id: string; customer: string; metadata: Record<string, string> };
-        const userId = sub.metadata?.supabase_user_id as string | undefined;
-        if (!userId) break;
+        const sub = event.data.object as unknown as {
+          id: string; customer: string; metadata: Record<string, string>;
+        };
+        const coproId = sub.metadata?.copropriete_id;
+        if (!coproId) break;
 
-        await updateUserSubscription(userId, {
+        await updateCoproSubscription(coproId, {
           stripe_customer_id:     sub.customer as string,
-          stripe_subscription_id: sub.id,
-          plan_id:                sub.metadata?.plan_id,
-          plan_status:            'inactif',
+          stripe_subscription_id: null,
+          plan_id:                null,
+          plan:                   'inactif',
           plan_period_end:        null,
         });
         break;
       }
 
-      // ── Paiement échoué ───────────────────────────────────────────
+      // â”€â”€ Paiement Ã©chouÃ© â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
-        const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
-        const userId = customer.metadata?.supabase_user_id;
-        if (!userId) break;
-        await updateUserSubscription(userId, { plan_status: 'passe_du' });
+        // Trouver la copropriÃ©tÃ© via le customer_id en base
+        const supabase = createAdminClient();
+        const { data: copro } = await supabase
+          .from('coproprietes')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+        if (!copro) break;
+        await updateCoproSubscription(copro.id, { plan: 'passe_du' });
         break;
       }
     }
   } catch (e) {
     console.error('[Stripe webhook] Erreur traitement:', e);
-    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

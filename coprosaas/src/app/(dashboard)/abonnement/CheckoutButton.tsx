@@ -1,17 +1,25 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { CheckCircle, CreditCard, Loader2, Settings2 } from 'lucide-react';
 
 interface CheckoutButtonProps {
   planId: 'essentiel' | 'confort' | 'illimite';
+  coproprieteid: string;
   isSubscribed: boolean;
   hasStripeCustomer: boolean;
   isPrimary?: boolean;
   isCurrentPlan?: boolean;
 }
 
-export default function CheckoutButton({ planId, isSubscribed, hasStripeCustomer, isPrimary, isCurrentPlan }: CheckoutButtonProps) {
+export default function CheckoutButton({
+  planId,
+  coproprieteid,
+  isSubscribed,
+  hasStripeCustomer,
+  isPrimary,
+  isCurrentPlan,
+}: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -22,10 +30,10 @@ export default function CheckoutButton({ planId, isSubscribed, hasStripeCustomer
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId, coproprieteid }),
       });
       let json: { url?: string; error?: string } = {};
-      try { json = await res.json(); } catch { /* réponse non-JSON */ }
+      try { json = await res.json(); } catch { /* non-JSON */ }
       if (!res.ok) { setError(json.error ?? `Erreur ${res.status}`); setLoading(false); return; }
       if (!json.url) { setError('URL de paiement manquante.'); setLoading(false); return; }
       window.location.href = json.url;
@@ -39,7 +47,11 @@ export default function CheckoutButton({ planId, isSubscribed, hasStripeCustomer
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/stripe/portal', { method: 'POST' });
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coproprieteid }),
+      });
       const json = await res.json();
       if (!res.ok) { setError(json.error ?? 'Erreur'); setLoading(false); return; }
       window.location.href = json.url;
@@ -49,7 +61,6 @@ export default function CheckoutButton({ planId, isSubscribed, hasStripeCustomer
     }
   };
 
-  // Plan actuellement souscrit : badge "Plan actuel"
   if (isSubscribed && isCurrentPlan) {
     return (
       <div className="mt-5 space-y-2">
@@ -73,7 +84,6 @@ export default function CheckoutButton({ planId, isSubscribed, hasStripeCustomer
     );
   }
 
-  // Autre plan — abonné à un plan différent : grisé, redirection portail pour changer
   if (isSubscribed) {
     return (
       <div className="mt-5 space-y-2">

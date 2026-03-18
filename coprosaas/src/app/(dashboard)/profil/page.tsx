@@ -64,7 +64,7 @@ export default async function ProfilPage() {
     .in('copropriete_id', coproprieteIds.length ? coproprieteIds : ['none']);
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl mx-auto">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Mon profil</h2>
         <p className="text-gray-500 mt-1">Gérez vos informations et la sécurité de votre compte.</p>
