@@ -9,6 +9,8 @@ import AppelFondsCard from './AppelFondsCard';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { Wallet } from 'lucide-react';
 import { cookies } from 'next/headers';
+import { isSubscribed } from '@/lib/subscription';
+import UpgradeBanner from '@/components/ui/UpgradeBanner';
 
 interface Poste { libelle: string; categorie: string; montant: number }
 
@@ -33,7 +35,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
 
   const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id').eq('id', selectedCoproId).maybeSingle()
+    ? await supabase.from('coproprietes').select('id, nom, syndic_id, plan, plan_id').eq('id', selectedCoproId).maybeSingle()
     : { data: null };
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
@@ -49,6 +51,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const isSyndic = copropriete?.syndic_id === user.id;
+  const canCreate = isSubscribed(copropriete?.plan);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -59,7 +62,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          <AppelFondsActions coproprietes={coproprietes ?? []} />
+          {canCreate ? <AppelFondsActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />}
         </div>
       </div>
 
@@ -97,7 +100,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
           icon={<Wallet size={48} strokeWidth={1.5} />}
           title="Aucun appel de fonds"
           description="Créez un appel de fonds pour répartir les charges entre les copropriétaires."
-          action={<AppelFondsActions coproprietes={coproprietes ?? []} showLabel />}
+          action={canCreate ? <AppelFondsActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />}
         />
       )}
     </div>

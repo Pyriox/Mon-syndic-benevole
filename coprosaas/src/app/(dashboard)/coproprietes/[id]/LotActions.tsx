@@ -13,7 +13,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Lock, Trash2 } from 'lucide-react';
 
 const TYPE_OPTIONS = [
   { value: 'appartement', label: 'Appartement' },
@@ -29,9 +29,12 @@ interface LotActionsProps {
   showLabel?: boolean;
   // Présent en mode modification
   lot?: { id: string; numero: string; type: string; tantiemes: number };
+  // Limite de lots : undefined = pas de restriction (mode édition)
+  canAdd?: boolean;
+  lotLimit?: number;
 }
 
-export default function LotActions({ coproprieteId, showLabel, lot }: LotActionsProps) {
+export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotLimit }: LotActionsProps) {
   const router = useRouter();
   const supabase = createClient();
   const isEdit = Boolean(lot);
@@ -106,6 +109,16 @@ export default function LotActions({ coproprieteId, showLabel, lot }: LotActions
           className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
         >
           <Pencil size={15} />
+        </button>
+      ) : canAdd === false ? (
+        <button
+          type="button"
+          onClick={() => router.push('/abonnement')}
+          title={`Limite de ${lotLimit ?? 10} lots atteinte — Passez au plan supérieur`}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-xl transition-colors"
+        >
+          <Lock size={13} />
+          {showLabel ? `Limite de ${lotLimit ?? 10} lots atteinte` : 'Limite atteinte'}
         </button>
       ) : (
         <Button onClick={handleOpen} size="sm">

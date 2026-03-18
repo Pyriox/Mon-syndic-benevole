@@ -11,6 +11,8 @@ import DepenseActions, { DepenseDelete } from './DepenseActions';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 import { Receipt } from 'lucide-react';
+import { isSubscribed } from '@/lib/subscription';
+import UpgradeBanner from '@/components/ui/UpgradeBanner';
 
 const catColorMap: Record<string, string> = {
   entretien:          'bg-orange-400',
@@ -52,10 +54,11 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
 
   const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id').eq('id', selectedCoproId).maybeSingle()
+    ? await supabase.from('coproprietes').select('id, nom, syndic_id, plan, plan_id').eq('id', selectedCoproId).maybeSingle()
     : { data: null };
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
+  const canCreate = isSubscribed(copropriete?.plan);
 
   // Récupérer (ou créer) le dossier "Dépenses" pour lier les pièces jointes
   let { data: depDossier } = await supabase
@@ -145,7 +148,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} />
+          {canCreate ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} /> : <UpgradeBanner compact />}
         </div>
       </div>
 
@@ -233,7 +236,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
           icon={<Receipt size={48} strokeWidth={1.5} />}
           title="Aucune dépense enregistrée"
           description="Ajoutez vos dépenses pour calculer automatiquement la répartition entre copropriétaires."
-          action={<DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} showLabel />}
+          action={canCreate ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} showLabel /> : <UpgradeBanner />}
         />
       )}
 

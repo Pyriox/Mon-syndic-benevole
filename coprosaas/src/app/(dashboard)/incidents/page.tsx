@@ -11,6 +11,8 @@ import IncidentActions from './IncidentActions';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { formatDate, LABELS_STATUT_INCIDENT, LABELS_PRIORITE } from '@/lib/utils';
 import { AlertTriangle } from 'lucide-react';
+import { isSubscribed } from '@/lib/subscription';
+import UpgradeBanner from '@/components/ui/UpgradeBanner';
 
 // Couleur du badge de statut
 function variantStatut(statut: string): 'danger' | 'warning' | 'success' {
@@ -39,10 +41,11 @@ export default async function IncidentsPage({ searchParams }: { searchParams: Pr
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
 
   const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id').eq('id', selectedCoproId).maybeSingle()
+    ? await supabase.from('coproprietes').select('id, nom, syndic_id, plan, plan_id').eq('id', selectedCoproId).maybeSingle()
     : { data: null };
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
+  const canCreate = isSubscribed(copropriete?.plan);
 
   const { data: incidents } = await supabase
     .from('incidents')
@@ -68,7 +71,7 @@ export default async function IncidentsPage({ searchParams }: { searchParams: Pr
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          <IncidentActions coproprietes={coproprietes ?? []} />
+          {canCreate ? <IncidentActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />}
         </div>
       </div>
 
@@ -130,7 +133,7 @@ export default async function IncidentsPage({ searchParams }: { searchParams: Pr
           icon={<AlertTriangle size={48} strokeWidth={1.5} />}
           title="Aucun incident signalé"
           description="Signalez les problèmes et suivez leur résolution."
-          action={<IncidentActions coproprietes={coproprietes ?? []} showLabel />}
+          action={canCreate ? <IncidentActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />}
         />
       )}
     </div>

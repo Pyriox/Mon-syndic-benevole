@@ -12,6 +12,8 @@ import AGActions from './AGActions';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { formatDate, LABELS_STATUT_AG } from '@/lib/utils';
 import { CalendarDays, MapPin, ChevronRight } from 'lucide-react';
+import { isSubscribed } from '@/lib/subscription';
+import UpgradeBanner from '@/components/ui/UpgradeBanner';
 
 export default async function AssembleesPage({ searchParams }: { searchParams: Promise<{ annee?: string }> }) {
   const { annee: anneeParam } = await searchParams;
@@ -25,7 +27,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
 
   const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id').eq('id', selectedCoproId).maybeSingle()
+    ? await supabase.from('coproprietes').select('id, nom, syndic_id, plan, plan_id').eq('id', selectedCoproId).maybeSingle()
     : { data: null };
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
@@ -49,6 +51,8 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
     return map[statut] ?? 'default';
   };
 
+  const canCreate = isSubscribed(copropriete?.plan);
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -58,7 +62,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          <AGActions coproprietes={coproprietes ?? []} />
+          {canCreate ? <AGActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />}
         </div>
       </div>
 
@@ -105,7 +109,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
           icon={<CalendarDays size={48} strokeWidth={1.5} />}
           title="Aucune assemblée générale"
           description="Planifiez vos AG, gérez les résolutions et générez les procès-verbaux."
-          action={<AGActions coproprietes={coproprietes ?? []} showLabel />}
+          action={canCreate ? <AGActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />}
         />
       )}
     </div>

@@ -15,6 +15,8 @@ import DocumentActions, { DocumentRename } from './DocumentActions';
 import DossierActions, { DossierDelete, SubDossierActions } from './DossierActions';
 import { formatDate, LABELS_TYPE_DOCUMENT } from '@/lib/utils';
 import { FileText, Download, ExternalLink, Folder, ChevronRight } from 'lucide-react';
+import { isSubscribed } from '@/lib/subscription';
+import UpgradeBanner from '@/components/ui/UpgradeBanner';
 
 // Dossiers racine créés automatiquement pour chaque syndic
 const DEFAULT_DOSSIER_NAMES = [
@@ -70,10 +72,11 @@ export default async function DocumentsPage({ searchParams }: Props) {
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
 
   const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id').eq('id', selectedCoproId).maybeSingle()
+    ? await supabase.from('coproprietes').select('id, nom, syndic_id, plan, plan_id').eq('id', selectedCoproId).maybeSingle()
     : { data: null };
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
+  const canCreate = isSubscribed(copropriete?.plan);
 
   // ---- Initialisation des dossiers par défaut si absents ----
   const { data: rawDossiers } = await supabase
@@ -306,15 +309,19 @@ export default async function DocumentsPage({ searchParams }: Props) {
             </p>
           </div>
           <div className="flex gap-2">
-            {subDossiers.length > 0 && (
+            {canCreate && subDossiers.length > 0 && (
               <SubDossierActions mode="create" parentId={dossierId} />
             )}
             {subDossiers.length === 0 && (
-              <DocumentActions
-                coproprietes={coproprietes ?? []}
-                dossiers={dossiers}
-                defaultDossierId={dossierId}
-              />
+              canCreate ? (
+                <DocumentActions
+                  coproprietes={coproprietes ?? []}
+                  dossiers={dossiers}
+                  defaultDossierId={dossierId}
+                />
+              ) : (
+                <UpgradeBanner compact />
+              )
             )}
           </div>
         </div>
@@ -381,12 +388,16 @@ export default async function DocumentsPage({ searchParams }: Props) {
             title="Dossier vide"
             description={`Aucun document dans « ${currentDossier.nom} » pour le moment.`}
             action={
-              <DocumentActions
-                coproprietes={coproprietes ?? []}
-                dossiers={dossiers}
-                defaultDossierId={dossierId}
-                showLabel
-              />
+              canCreate ? (
+                <DocumentActions
+                  coproprietes={coproprietes ?? []}
+                  dossiers={dossiers}
+                  defaultDossierId={dossierId}
+                  showLabel
+                />
+              ) : (
+                <UpgradeBanner />
+              )
             }
           />
         )}
@@ -412,8 +423,12 @@ export default async function DocumentsPage({ searchParams }: Props) {
           <p className="text-gray-500 mt-1">{rootDossiers.length} dossier(s)</p>
         </div>
         <div className="flex gap-2">
-          <DossierActions />
-          <DocumentActions coproprietes={coproprietes ?? []} dossiers={rootDossiers} />
+          {canCreate && <DossierActions />}
+          {canCreate ? (
+            <DocumentActions coproprietes={coproprietes ?? []} dossiers={rootDossiers} />
+          ) : (
+            <UpgradeBanner compact />
+          )}
         </div>
       </div>
 

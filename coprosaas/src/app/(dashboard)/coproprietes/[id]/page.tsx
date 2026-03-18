@@ -10,6 +10,7 @@ import LotsTable from './LotsTable';
 import CoproDelete from './CoproDelete';
 import TransfertSyndic from './TransfertSyndic';
 import { formatDate } from '@/lib/utils';
+import { getLotLimit } from '@/lib/subscription';
 import { MapPin, Hash, CalendarDays } from 'lucide-react';
 
 interface Props {
@@ -49,6 +50,11 @@ export default async function CopropriétéDetailPage({ params }: Props) {
   // Calcul du total des tantièmes
   const totalTantiemes = lots?.reduce((sum, lot) => sum + (lot.tantiemes ?? 0), 0) ?? 0;
 
+  // Limite de lots selon le plan d'abonnement
+  const lotCount = lots?.length ?? 0;
+  const lotLimit = getLotLimit(copro.plan, copro.plan_id);
+  const canAddLot = lotCount < lotLimit;
+
   return (
     <div className="space-y-6">
 
@@ -80,7 +86,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
         <CardHeader
           title="Lots"
           description={`${lots?.length ?? 0} lot(s) — Total tantièmes : ${totalTantiemes}`}
-          actions={<LotActions coproprieteId={id} />}
+          actions={<LotActions coproprieteId={id} canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} />}
         />
 
         {lots && lots.length > 0 ? (
@@ -89,7 +95,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
           <EmptyState
             title="Aucun lot"
             description="Ajoutez les lots de cette copropriété (appartements, parkings, caves...)."
-            action={<LotActions coproprieteId={id} showLabel />}
+            action={<LotActions coproprieteId={id} showLabel canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} />}
           />
         )}
       </Card>
