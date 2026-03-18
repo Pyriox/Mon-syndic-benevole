@@ -1,8 +1,9 @@
-// POST /api/stripe/checkout
+﻿// POST /api/stripe/checkout
 // Crée une Checkout Session Stripe et retourne l'URL de paiement
 // Un abonnement Stripe = une copropriété (pas un utilisateur)
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe, STRIPE_PRICES } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
@@ -49,7 +50,6 @@ export async function POST(req: NextRequest) {
     if (copro.stripe_customer_id) {
       customerId = copro.stripe_customer_id;
     } else {
-      // Chercher un customer Stripe déjà existant pour cette copropriété
       const existing = await stripe.customers.search({
         query: `metadata['copropriete_id']:'${coproprieteid}'`,
         limit: 1,
@@ -67,6 +67,16 @@ export async function POST(req: NextRequest) {
         });
         customerId = customer.id;
       }
+    }
+
+    // Persister immédiatement le stripe_customer_id en base pour que doStripeSync
+    // puisse le retrouver directement (sans passer par la recherche Stripe qui a un délai)
+    if (!copro.stripe_customer_id) {
+      const adminClient = createAdminClient();
+      await adminClient
+        .from('coproprietes')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', coproprieteid);
     }
 
     const session = await stripe.checkout.sessions.create({

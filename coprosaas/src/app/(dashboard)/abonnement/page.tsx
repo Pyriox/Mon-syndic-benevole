@@ -62,17 +62,30 @@ const PLAN_IDS = PLANS.map((p) => p.id) as PlanId[];
 async function doStripeSync(coproId: string): Promise<boolean> {
   const { getStripe } = await import('@/lib/stripe');
   const stripeClient = getStripe();
+  const adminClient = createAdminClient();
 
-  const existing = await stripeClient.customers.search({
-    query: `metadata['copropriete_id']:'${coproId}'`,
-    limit: 1,
-  });
-  if (existing.data.length === 0) return false;
+  // Lire le stripe_customer_id depuis la DB (persisté lors du checkout)
+  // On utilise l'admin client pour bypass le cache de session
+  const { data: coproRow } = await adminClient
+    .from('coproprietes')
+    .select('stripe_customer_id')
+    .eq('id', coproId)
+    .single();
 
-  const customer = existing.data[0];
+  let customerId: string | undefined = coproRow?.stripe_customer_id ?? undefined;
+
+  // Fallback : chercher dans Stripe si pas encore en DB
+  if (!customerId) {
+    const existing = await stripeClient.customers.search({
+      query: `metadata['copropriete_id']:'${coproId}'`,
+      limit: 1,
+    });
+    if (existing.data.length === 0) return false;
+    customerId = existing.data[0].id;
+  }
 
   const subs = await stripeClient.subscriptions.list({
-    customer: customer.id,
+    customer: customerId,
     status: 'all' as 'active',
     limit: 5,
   });
@@ -95,11 +108,10 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     items: { data: { price: { id: string } }[] };
   };
 
-  const adminClient = createAdminClient();
   await adminClient
     .from('coproprietes')
     .update({
-      stripe_customer_id:     customer.id,
+      stripe_customer_id:     customerId,
       stripe_subscription_id: sub.id,
       plan,
       plan_id:  sub.metadata?.plan_id ?? sub.items.data[0]?.price.id,
