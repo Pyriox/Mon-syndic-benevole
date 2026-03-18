@@ -1,5 +1,5 @@
-// ============================================================
-// Client Component : Formulaire d'ajout/mise à jour d'incident
+﻿// ============================================================
+// Client Component : CrÃ©ation + transitions de statut d'incident
 // ============================================================
 'use client';
 
@@ -11,32 +11,17 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import type { StatutIncident } from '@/types';
 
-interface Copropriete {
-  id: string;
-  nom: string;
-}
-
-interface Incident {
-  id: string;
-  statut: string;
-  titre?: string;
-}
+interface Copropriete { id: string; nom: string; }
 
 interface IncidentActionsProps {
   coproprietes: Copropriete[];
   showLabel?: boolean;
-  mode?: 'create' | 'update';  // "create" = formulaire complet, "update" = juste le statut
-  incident?: Incident;
 }
 
-export default function IncidentActions({
-  coproprietes,
-  showLabel,
-  mode = 'create',
-  incident,
-}: IncidentActionsProps) {
+export default function IncidentActions({ coproprietes, showLabel }: IncidentActionsProps) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -44,92 +29,42 @@ export default function IncidentActions({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [formData, setFormData] = useState({
-    copropriete_id: coproprietes[0]?.id ?? '',
+  const [form, setForm] = useState({
     titre: '',
     description: '',
     priorite: 'moyenne',
-    statut: incident?.statut ?? 'ouvert',
+    type_incident: 'autre',
+    localisation: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const handle = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
-  // ---- Création d'un nouvel incident ----
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error: dbError } = await supabase.from('incidents').insert({
-      copropriete_id: formData.copropriete_id,
-      titre: formData.titre.trim(),
-      description: formData.description.trim(),
-      priorite: formData.priorite,
-      statut: 'ouvert',
+    const { error: dbErr } = await supabase.from('incidents').insert({
+      copropriete_id: coproprietes[0]?.id ?? '',
+      titre: form.titre.trim(),
+      description: form.description.trim(),
+      priorite: form.priorite,
+      type_incident: form.type_incident,
+      localisation: form.localisation.trim() || null,
+      statut: 'ouvert' as StatutIncident,
       declare_par: user.id,
       date_declaration: new Date().toISOString(),
     });
 
-    if (dbError) {
-      setError('Erreur : ' + dbError.message);
-      setLoading(false);
-      return;
-    }
-
+    if (dbErr) { setError('Erreur : ' + dbErr.message); setLoading(false); return; }
     setIsOpen(false);
+    setForm({ titre: '', description: '', priorite: 'moyenne', type_incident: 'autre', localisation: '' });
     router.refresh();
   };
 
-  // ---- Mise à jour du statut d'un incident existant ----
-  const handleUpdateStatut = async (newStatut: string) => {
-    if (!incident) return;
-    setLoading(true);
-
-    const updates: Record<string, unknown> = { statut: newStatut };
-    if (newStatut === 'resolu') {
-      updates.date_resolution = new Date().toISOString();
-    }
-
-    await supabase.from('incidents').update(updates).eq('id', incident.id);
-
-    router.refresh();
-    setLoading(false);
-  };
-
-  // ---- Mode de mise à jour du statut (boutons rapides) ----
-  if (mode === 'update' && incident) {
-    return (
-      <div className="flex items-center gap-1 ml-3 shrink-0">
-        {incident.statut === 'ouvert' && (
-          <Button
-            size="sm"
-            variant="secondary"
-            loading={loading}
-            onClick={() => handleUpdateStatut('en_cours')}
-          >
-            <RefreshCw size={12} /> En cours
-          </Button>
-        )}
-        {incident.statut !== 'resolu' && (
-          <Button
-            size="sm"
-            variant="success"
-            loading={loading}
-            onClick={() => handleUpdateStatut('resolu')}
-          >
-            Résolu
-          </Button>
-        )}
-      </div>
-    );
-  }
-
-  // ---- Mode de création ----
   return (
     <>
       <Button onClick={() => setIsOpen(true)} size={showLabel ? 'md' : 'sm'}>
@@ -139,36 +74,60 @@ export default function IncidentActions({
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Signaler un incident" size="lg">
         <form onSubmit={handleCreate} className="space-y-4">
           <Input
-            label="Titre de l'incident"
+            label="Titre"
             name="titre"
-            value={formData.titre}
-            onChange={handleChange}
-            placeholder="Fuite d'eau dans le couloir du 2ème"
+            value={form.titre}
+            onChange={handle}
+            placeholder="Fuite d'eau dans le couloir du 2Ã¨me"
             required
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Type"
+              name="type_incident"
+              value={form.type_incident}
+              onChange={handle}
+              options={[
+                { value: 'plomberie', label: 'Plomberie' },
+                { value: 'electricite', label: 'Ã‰lectricitÃ©' },
+                { value: 'parties_communes', label: 'Parties communes' },
+                { value: 'ascenseur', label: 'Ascenseur' },
+                { value: 'toiture', label: 'Toiture' },
+                { value: 'securite', label: 'SÃ©curitÃ©' },
+                { value: 'espaces_verts', label: 'Espaces verts' },
+                { value: 'autre', label: 'Autre' },
+              ]}
+            />
+            <Select
+              label="PrioritÃ©"
+              name="priorite"
+              value={form.priorite}
+              onChange={handle}
+              options={[
+                { value: 'faible', label: 'Faible' },
+                { value: 'moyenne', label: 'Moyenne' },
+                { value: 'haute', label: 'Haute' },
+                { value: 'urgente', label: 'ðŸš¨ Urgente' },
+              ]}
+            />
+          </div>
+
+          <Input
+            label="Localisation (optionnel)"
+            name="localisation"
+            value={form.localisation}
+            onChange={handle}
+            placeholder="Ex : Cage A, 2Ã¨me Ã©tage"
           />
 
           <Textarea
-            label="Description détaillée"
+            label="Description"
             name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Décrivez l'incident, sa localisation précise, les dommages constatés..."
-            required
-            rows={4}
-          />
-
-          <Select
-            label="Priorité"
-            name="priorite"
-            value={formData.priorite}
-            onChange={handleChange}
-            options={[
-              { value: 'faible', label: 'Faible — Peut attendre' },
-              { value: 'moyenne', label: 'Moyenne — À traiter prochainement' },
-              { value: 'haute', label: 'Haute — Traiter rapidement' },
-              { value: 'urgente', label: '🚨 Urgente — Traiter immédiatement' },
-            ]}
-            required
+            value={form.description}
+            onChange={handle}
+            placeholder="DÃ©crivez l'incident, les dommages constatÃ©s..."
+            rows={3}
           />
 
           {error && <p className="text-sm text-red-600">{error}</p>}

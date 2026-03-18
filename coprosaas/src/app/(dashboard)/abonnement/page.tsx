@@ -439,11 +439,7 @@ export default async function AbonnementPage({
                             <CheckCircle size={14} />
                             Plan actuel
                           </div>
-                        ) : isLocked ? (
-                          <p className="text-center text-xs text-gray-400 py-2.5">
-                            Modifiable via le portail
-                          </p>
-                        ) : (
+                        ) : isLocked ? null : (
                           <CheckoutButton
                             planId={plan.id}
                             coproprieteid={copro.id}

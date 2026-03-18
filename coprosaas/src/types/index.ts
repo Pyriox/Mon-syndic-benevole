@@ -203,8 +203,11 @@ export interface Resolution {
 }
 
 // --- Incident / Travaux ---
-export type StatutIncident = 'ouvert' | 'en_cours' | 'resolu';
+export type StatutIncident = 'ouvert' | 'devis_demande' | 'devis_recu' | 'en_cours' | 'resolu';
 export type PrioriteIncident = 'faible' | 'moyenne' | 'haute' | 'urgente';
+export type TypeIncident =
+  | 'plomberie' | 'electricite' | 'parties_communes' | 'ascenseur'
+  | 'toiture' | 'securite' | 'espaces_verts' | 'autre';
 
 export interface Incident {
   id: string;
@@ -213,8 +216,16 @@ export interface Incident {
   description: string;
   statut: StatutIncident;
   priorite: PrioriteIncident;
-  declare_par: string;      // UUID utilisateur
-  assigne_a: string | null; // UUID prestataire ou syndic
+  type_incident: TypeIncident | null;
+  localisation: string | null;
+  artisan_nom: string | null;
+  artisan_contact: string | null;
+  montant_devis: number | null;
+  montant_final: number | null;
+  date_intervention_prevue: string | null;
+  notes_internes: string | null;   // JSON array of { date, texte }
+  declare_par: string;             // UUID utilisateur
+  assigne_a: string | null;
   date_declaration: string;
   date_resolution: string | null;
   created_at: string;

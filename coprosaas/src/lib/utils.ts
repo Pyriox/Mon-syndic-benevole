@@ -96,8 +96,21 @@ export const LABELS_CATEGORIE: Record<string, string> = {
 
 export const LABELS_STATUT_INCIDENT: Record<string, string> = {
   ouvert: 'Ouvert',
+  devis_demande: 'Devis demandé',
+  devis_recu: 'Devis reçu',
   en_cours: 'En cours',
   resolu: 'Résolu',
+};
+
+export const LABELS_TYPE_INCIDENT: Record<string, string> = {
+  plomberie: 'Plomberie',
+  electricite: 'Électricité',
+  parties_communes: 'Parties communes',
+  ascenseur: 'Ascenseur',
+  toiture: 'Toiture',
+  securite: 'Sécurité',
+  espaces_verts: 'Espaces verts',
+  autre: 'Autre',
 };
 
 export const LABELS_PRIORITE: Record<string, string> = {
