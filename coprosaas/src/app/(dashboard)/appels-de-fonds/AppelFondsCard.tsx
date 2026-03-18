@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw, Send } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -29,6 +29,7 @@ interface AppelCardProps {
     type_appel?: string | null;
     ag_resolution_id?: string | null;
     emailed_at?: string | null;
+    statut?: string | null;
     coproprietes?: { nom: string } | null;
   };
   lignes: Ligne[];
@@ -47,14 +48,34 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
   const [emailedAt, setEmailedAt] = useState<string | null>(appel.emailed_at ?? null);
   const [regenerating, setRegenerating] = useState(false);
   const [regenMsg, setRegenMsg] = useState('');
+  const [publishing, setPublishing] = useState(false);
+  const [publishMsg, setPublishMsg] = useState('');
+  const [publishOk, setPublishOk] = useState<boolean | null>(null);
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
   const autoRegenRef = useRef(false);
   const router = useRouter();
   const supabase = createClient();
 
-  // Auto-generate répartition when accordion opens with no lines
+  const handlePublish = async () => {
+    setPublishing(true);
+    setPublishMsg('');
+    setPublishOk(null);
+    try {
+      const res = await fetch(`/api/appels-de-fonds/${appel.id}/publier`, { method: 'POST' });
+      const json = await res.json();
+      setPublishMsg(json.message ?? (res.ok ? 'Publié avec succès' : 'Erreur'));
+      setPublishOk(res.ok);
+      if (res.ok) router.refresh();
+    } catch {
+      setPublishMsg('Erreur réseau.');
+      setPublishOk(false);
+    }
+    setPublishing(false);
+  };
+
+  // Auto-generate répartition when accordion opens with no lines (publié only)
   useEffect(() => {
-    if (open && lignes.length === 0 && isSyndic && !autoRegenRef.current && !regenerating) {
+    if (open && lignes.length === 0 && isSyndic && !autoRegenRef.current && !regenerating && appel.statut !== 'brouillon') {
       autoRegenRef.current = true;
       handleRegenerate();
     }
@@ -236,20 +257,33 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
           {/* Actions droite */}
           <div className="flex items-center gap-1 shrink-0">
             {isSyndic && (
-              <button
-                type="button"
-                onClick={() => setShowEmailConfirm(true)}
-                disabled={sending}
-                title={emailedAt ? `Renvoyer (envoyé le ${new Date(emailedAt).toLocaleDateString('fr-FR')})` : 'Envoyer les avis par e-mail'}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
-                  emailedAt
-                    ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200'
-                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
-                }`}
-              >
-                {sending ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
-                <span>{sending ? 'Envoi…' : emailedAt ? 'Renvoyer' : 'Envoyer'}</span>
-              </button>
+              appel.statut === 'brouillon' ? (
+                <button
+                  type="button"
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  title="Générer la répartition et envoyer les avis aux copropriétaires"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  {publishing ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                  <span>{publishing ? 'Publication…' : 'Publier'}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowEmailConfirm(true)}
+                  disabled={sending}
+                  title={emailedAt ? `Renvoyer (envoyé le ${new Date(emailedAt).toLocaleDateString('fr-FR')})` : 'Envoyer les avis par e-mail'}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+                    emailedAt
+                      ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200'
+                      : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                  }`}
+                >
+                  {sending ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
+                  <span>{sending ? 'Envoi…' : emailedAt ? 'Renvoyer' : 'Envoyer'}</span>
+                </button>
+              )
             )}
             <AppelFondsPDF appel={appel} />
             <button
@@ -263,6 +297,15 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
           </div>
         </div>
       </div>
+
+      {/* ── Feedback publication ─────────────────────────────── */}
+      {publishMsg && (
+        <div className={`mx-5 mb-3 text-xs rounded-lg px-3 py-2 border ${
+          publishOk ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+        }`}>
+          {publishMsg}
+        </div>
+      )}
 
       {/* ── Confirmation envoi email ─────────────────────────── */}
       {showEmailConfirm && !sending && (

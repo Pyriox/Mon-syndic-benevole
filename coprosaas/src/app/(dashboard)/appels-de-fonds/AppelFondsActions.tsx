@@ -309,7 +309,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
     if (finalDates.length > 1) {
       for (let i = 0; i < finalDates.length; i++) {
-        const { data: appel, error: err } = await supabase
+        const { error: err } = await supabase
           .from('appels_de_fonds')
           .insert({
             copropriete_id: coproprieteId,
@@ -321,35 +321,14 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
             }))),
             ag_resolution_id: resolutionLieeId || null,
             type_appel: typeAppel,
+            statut: 'brouillon',
             created_by: user.id,
-          })
-          .select('id')
-          .single();
+          });
 
         if (err) { setError(`Erreur versement ${i + 1} : ${err.message}`); setLoading(false); return; }
-        if (appel) {
-          await supabase.from('lignes_appels_de_fonds').insert(
-            repartition.map((r) => ({
-              appel_de_fonds_id: appel.id,
-              coproprietaire_id: r.copId,
-              lot_id: r.lotId,
-              montant_du: calculerPart(montantParVers, r.tantiemes, totalTantiemsVal),
-              paye: false,
-              date_paiement: null,
-            }))
-          );
-          // Débit du solde (une ligne par copropriétaire, tantièmes cumulés)
-          for (const r of repartition) {
-            const montant = calculerPart(montantParVers, r.tantiemes, totalTantiemsVal);
-            const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', r.copId).single();
-            await supabase.from('coproprietaires').update({
-              solde: Math.round(((cop?.solde ?? 0) - montant) * 100) / 100,
-            }).eq('id', r.copId);
-          }
-        }
       }
     } else {
-      const { data: appel, error: err } = await supabase
+      const { error: err } = await supabase
         .from('appels_de_fonds')
         .insert({
           copropriete_id: coproprieteId,
@@ -359,31 +338,11 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           description: JSON.stringify(postesValides),
           ag_resolution_id: resolutionLieeId || null,
           type_appel: typeAppel,
+          statut: 'brouillon',
           created_by: user.id,
-        })
-        .select('id')
-        .single();
+        });
 
       if (err) { setError('Erreur : ' + err.message); setLoading(false); return; }
-      if (appel && repartition.length > 0) {
-        await supabase.from('lignes_appels_de_fonds').insert(
-          repartition.map((r) => ({
-            appel_de_fonds_id: appel.id,
-            coproprietaire_id: r.copId,
-            lot_id: r.lotId,
-            montant_du: r.montant,
-            paye: false,
-            date_paiement: null,
-          }))
-        );
-        // Débit du solde (une ligne par copropriétaire, tantièmes cumulés)
-        for (const r of repartition) {
-          const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', r.copId).single();
-          await supabase.from('coproprietaires').update({
-            solde: Math.round(((cop?.solde ?? 0) - r.montant) * 100) / 100,
-          }).eq('id', r.copId);
-        }
-      }
     }
 
     close();
@@ -692,7 +651,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
               <div className="flex gap-3 pt-1">
                 <Button type="submit" loading={loading}>
-                  {finalDatesCount > 1 ? `Créer ${finalDatesCount} appels de fonds` : "Créer l'appel de fonds"}
+                  {finalDatesCount > 1 ? `Enregistrer ${finalDatesCount} brouillons` : 'Enregistrer en brouillon'}
                 </Button>
                 <Button type="button" variant="secondary" onClick={close}>Annuler</Button>
               </div>
