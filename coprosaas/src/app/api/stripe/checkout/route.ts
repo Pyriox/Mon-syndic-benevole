@@ -47,31 +47,44 @@ export async function POST(req: NextRequest) {
 
     // Créer ou récupérer le customer Stripe propre à cette copropriété
     let customerId: string;
-    if (copro.stripe_customer_id) {
-      customerId = copro.stripe_customer_id;
-    } else {
+    let needsPersist = !copro.stripe_customer_id;
+
+    const createFreshCustomer = async () => {
+      // Essaie d'abord de trouver un customer Stripe existant par métadonnée
       const existing = await stripe.customers.search({
         query: `metadata['copropriete_id']:'${coproprieteid}'`,
         limit: 1,
       });
-      if (existing.data.length > 0) {
-        customerId = existing.data[0].id;
-      } else {
-        const customer = await stripe.customers.create({
-          email: user.email,
-          name: copro.nom,
-          metadata: {
-            supabase_user_id: user.id,
-            copropriete_id: coproprieteid,
-          },
-        });
-        customerId = customer.id;
+      if (existing.data.length > 0) return existing.data[0].id;
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: copro.nom,
+        metadata: {
+          supabase_user_id: user.id,
+          copropriete_id: coproprieteid,
+        },
+      });
+      return customer.id;
+    };
+
+    if (copro.stripe_customer_id) {
+      // Vérifier que le customer existe toujours dans Stripe
+      try {
+        const existing = await stripe.customers.retrieve(copro.stripe_customer_id);
+        if ((existing as { deleted?: boolean }).deleted) throw new Error('deleted');
+        customerId = existing.id;
+      } catch {
+        // Customer supprimé ou introuvable → en recréer un
+        customerId = await createFreshCustomer();
+        needsPersist = true;
       }
+    } else {
+      customerId = await createFreshCustomer();
     }
 
     // Persister immédiatement le stripe_customer_id en base pour que doStripeSync
     // puisse le retrouver directement (sans passer par la recherche Stripe qui a un délai)
-    if (!copro.stripe_customer_id) {
+    if (needsPersist) {
       const adminClient = createAdminClient();
       await adminClient
         .from('coproprietes')

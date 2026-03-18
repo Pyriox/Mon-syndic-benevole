@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe';
+import Stripe from 'stripe';
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -25,10 +26,17 @@ export async function POST(req: NextRequest) {
   }
 
   const origin = req.headers.get('origin') ?? 'https://www.mon-syndic-benevole.fr';
-  const session = await stripe.billingPortal.sessions.create({
-    customer: copro.stripe_customer_id,
-    return_url: `${origin}/abonnement`,
-  });
 
-  return NextResponse.json({ url: session.url });
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: copro.stripe_customer_id,
+      return_url: `${origin}/abonnement`,
+    });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    if (err instanceof Stripe.errors.StripeInvalidRequestError && err.code === 'resource_missing') {
+      return NextResponse.json({ error: 'Le client Stripe associé à cette copropriété est introuvable. Veuillez contacter le support.' }, { status: 404 });
+    }
+    throw err;
+  }
 }
