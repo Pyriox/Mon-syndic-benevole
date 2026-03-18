@@ -251,10 +251,29 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   // -- Calculs -------------------------------------------------
   const totalTantiemsVal = lots.reduce((s, l) => s + (l.tantiemes ?? 0), 0);
   const montantTotal = postes.reduce((s, p) => s + (parseFloat(p.montant) || 0), 0);
-  const repartition = useMemo(() =>
-    lots.filter((l) => l.coproprietaire)
-      .map((lot) => ({ lot, montant: calculerPart(montantTotal, lot.tantiemes ?? 0, totalTantiemsVal) })),
-  [lots, montantTotal, totalTantiemsVal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Regrouper les lots par copropriétaire (cumul des tantièmes si multi-lots)
+  const repartition = useMemo(() => {
+    const map = new Map<string, { copId: string; cop: { id: string; nom: string; prenom: string }; tantiemes: number; lotId: string | null }>();
+    for (const lot of lots) {
+      if (!lot.coproprietaire) continue;
+      const copId = lot.coproprietaire.id;
+      if (map.has(copId)) {
+        const e = map.get(copId)!;
+        e.tantiemes += lot.tantiemes ?? 0;
+        e.lotId = null; // plusieurs lots → pas de lot_id unique
+      } else {
+        map.set(copId, { copId, cop: lot.coproprietaire, tantiemes: lot.tantiemes ?? 0, lotId: lot.id });
+      }
+    }
+    return Array.from(map.values()).map((e) => ({
+      copId: e.copId,
+      cop: e.cop,
+      tantiemes: e.tantiemes,
+      lotId: e.lotId,
+      montant: calculerPart(montantTotal, e.tantiemes, totalTantiemsVal),
+    }));
+  }, [lots, montantTotal, totalTantiemsVal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const montantParVers = useEcheancier && editableDates.length > 0
     ? Math.round((montantTotal / editableDates.length) * 100) / 100
@@ -310,22 +329,22 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         if (err) { setError(`Erreur versement ${i + 1} : ${err.message}`); setLoading(false); return; }
         if (appel) {
           await supabase.from('lignes_appels_de_fonds').insert(
-            lots.filter((l) => l.coproprietaire).map((lot) => ({
+            repartition.map((r) => ({
               appel_de_fonds_id: appel.id,
-              coproprietaire_id: lot.coproprietaire!.id,
-              lot_id: lot.id,
-              montant_du: calculerPart(montantParVers, lot.tantiemes ?? 0, totalTantiemsVal),
+              coproprietaire_id: r.copId,
+              lot_id: r.lotId,
+              montant_du: calculerPart(montantParVers, r.tantiemes, totalTantiemsVal),
               paye: false,
               date_paiement: null,
             }))
           );
-          // Débit du solde (l'appel crée une créance sur chaque copropriétaire)
-          for (const lot of lots.filter((l) => l.coproprietaire)) {
-            const montant = calculerPart(montantParVers, lot.tantiemes ?? 0, totalTantiemsVal);
-            const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', lot.coproprietaire!.id).single();
+          // Débit du solde (une ligne par copropriétaire, tantièmes cumulés)
+          for (const r of repartition) {
+            const montant = calculerPart(montantParVers, r.tantiemes, totalTantiemsVal);
+            const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', r.copId).single();
             await supabase.from('coproprietaires').update({
               solde: Math.round(((cop?.solde ?? 0) - montant) * 100) / 100,
-            }).eq('id', lot.coproprietaire!.id);
+            }).eq('id', r.copId);
           }
         }
       }
@@ -350,19 +369,19 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         await supabase.from('lignes_appels_de_fonds').insert(
           repartition.map((r) => ({
             appel_de_fonds_id: appel.id,
-            coproprietaire_id: r.lot.coproprietaire!.id,
-            lot_id: r.lot.id,
+            coproprietaire_id: r.copId,
+            lot_id: r.lotId,
             montant_du: r.montant,
             paye: false,
             date_paiement: null,
           }))
         );
-        // Débit du solde (l'appel crée une créance sur chaque copropriétaire)
+        // Débit du solde (une ligne par copropriétaire, tantièmes cumulés)
         for (const r of repartition) {
-          const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', r.lot.coproprietaire!.id).single();
+          const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', r.copId).single();
           await supabase.from('coproprietaires').update({
             solde: Math.round(((cop?.solde ?? 0) - r.montant) * 100) / 100,
-          }).eq('id', r.lot.coproprietaire!.id);
+          }).eq('id', r.copId);
         }
       }
     }
@@ -651,16 +670,15 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                   {repartitionExpanded && (
                     <table className="w-full text-xs border-t border-gray-200">
                       <tbody>
-                        {repartition.map(({ lot, montant }) => (
-                          <tr key={lot.id} className="border-t border-gray-100 hover:bg-gray-50">
-                            <td className="px-4 py-2 text-gray-500">Lot {lot.numero}</td>
+                        {repartition.map((r) => (
+                          <tr key={r.copId} className="border-t border-gray-100 hover:bg-gray-50">
                             <td className="px-4 py-2 font-medium text-gray-700">
-                              {lot.coproprietaire!.prenom} {lot.coproprietaire!.nom}
+                              {r.cop.prenom} {r.cop.nom}
                             </td>
                             <td className="px-4 py-2 text-right font-bold text-gray-800 tabular-nums">
                               {formatEuros(finalDatesCount > 1
-                                ? Math.round((montant / finalDatesCount) * 100) / 100
-                                : montant)}
+                                ? Math.round((r.montant / finalDatesCount) * 100) / 100
+                                : r.montant)}
                             </td>
                           </tr>
                         ))}

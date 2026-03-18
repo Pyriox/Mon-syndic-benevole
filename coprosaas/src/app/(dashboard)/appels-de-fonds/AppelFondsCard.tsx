@@ -78,29 +78,43 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
       }
       const totalTantiemes = lotsWithCopro.reduce((s, l) => s + (l.tantiemes ?? 0), 0);
 
+      // Regrouper par copropriétaire (cumul des tantièmes si multi-lots)
+      const coprMap = new Map<string, { tantiemes: number; lotId: string | null }>();
+      for (const lot of lotsWithCopro) {
+        const copId = lot.coproprietaire_id as string;
+        if (coprMap.has(copId)) {
+          const e = coprMap.get(copId)!;
+          e.tantiemes += lot.tantiemes ?? 0;
+          e.lotId = null;
+        } else {
+          coprMap.set(copId, { tantiemes: lot.tantiemes ?? 0, lotId: lot.id });
+        }
+      }
+      const grouped = Array.from(coprMap.entries()).map(([copId, e]) => ({
+        copId,
+        lotId: e.lotId,
+        montant: totalTantiemes > 0
+          ? Math.round((appel.montant_total * e.tantiemes / totalTantiemes) * 100) / 100
+          : 0,
+      }));
+
       const { error } = await supabase.from('lignes_appels_de_fonds').insert(
-        lotsWithCopro.map((lot) => {
-          const montant = totalTantiemes > 0
-            ? Math.round((appel.montant_total * (lot.tantiemes ?? 0) / totalTantiemes) * 100) / 100
-            : 0;
-          return { appel_de_fonds_id: appel.id, coproprietaire_id: lot.coproprietaire_id, lot_id: lot.id, montant_du: montant, paye: false, date_paiement: null };
-        })
+        grouped.map((g) => ({
+          appel_de_fonds_id: appel.id,
+          coproprietaire_id: g.copId,
+          lot_id: g.lotId,
+          montant_du: g.montant,
+          paye: false,
+          date_paiement: null,
+        }))
       );
       if (error) { setRegenMsg('Erreur : ' + error.message); return; }
-      // Débit du solde pour chaque copropriétaire (la répartition crée une créance)
-      const soldesMap: Record<string, number> = {};
-      for (const lot of lotsWithCopro) {
-        const montant = totalTantiemes > 0
-          ? Math.round((appel.montant_total * (lot.tantiemes ?? 0) / totalTantiemes) * 100) / 100
-          : 0;
-        const coproId = lot.coproprietaire_id as string;
-        soldesMap[coproId] = (soldesMap[coproId] ?? 0) + montant;
-      }
-      for (const [coproId, montant] of Object.entries(soldesMap)) {
-        const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', coproId).single();
+      // Débit du solde (une entry par copropriétaire)
+      for (const g of grouped) {
+        const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', g.copId).single();
         await supabase.from('coproprietaires').update({
-          solde: Math.round(((cop?.solde ?? 0) - montant) * 100) / 100,
-        }).eq('id', coproId);
+          solde: Math.round(((cop?.solde ?? 0) - g.montant) * 100) / 100,
+        }).eq('id', g.copId);
       }
       router.refresh();
     } finally {
