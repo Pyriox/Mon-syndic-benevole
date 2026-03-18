@@ -62,22 +62,31 @@ async function doStripeSync(coproId: string): Promise<boolean> {
   const admin = createAdminClient();
 
   // Lire le stripe_customer_id depuis la DB (persisté lors du checkout)
-  const { data: coproRow } = await admin
+  const { data: coproRow, error: coproErr } = await admin
     .from('coproprietes')
     .select('stripe_customer_id')
     .eq('id', coproId)
     .single();
 
+  if (coproErr) console.error('[doStripeSync] Erreur lecture copropriété:', coproErr);
+
   let customerId: string | undefined = coproRow?.stripe_customer_id ?? undefined;
+  let customerFoundViaStripe = false;
 
   // Fallback : chercher dans Stripe par métadonnée si absent de la DB
   if (!customerId) {
+    console.log('[doStripeSync] stripe_customer_id absent de la DB — recherche Stripe...');
     const existing = await stripeClient.customers.search({
       query: `metadata['copropriete_id']:'${coproId}'`,
       limit: 1,
     });
-    if (existing.data.length === 0) return false;
+    if (existing.data.length === 0) {
+      console.log('[doStripeSync] Aucun customer Stripe trouvé pour coproId:', coproId);
+      return false;
+    }
     customerId = existing.data[0].id;
+    customerFoundViaStripe = true;
+    console.log('[doStripeSync] Customer trouvé via Stripe search:', customerId);
   }
 
   const subs = await stripeClient.subscriptions.list({
@@ -86,15 +95,23 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     limit: 5,
   });
 
+  console.log('[doStripeSync] Abonnements trouvés:', subs.data.map((s) => ({ id: s.id, status: s.status })));
+
   const validSub = subs.data
     .filter((s) => !['canceled', 'incomplete_expired'].includes(s.status))
     .sort((a, b) => b.created - a.created)[0];
 
-  if (!validSub) return false;
+  if (!validSub) {
+    console.log('[doStripeSync] Aucun abonnement valide trouvé.');
+    return false;
+  }
 
+  console.log('[doStripeSync] Abonnement retenu:', validSub.id, 'status:', validSub.status);
+
+  // trialing = abonnement payant en période d'essai → on affiche "actif"
   const plan =
     validSub.status === 'active'    ? 'actif'
-    : validSub.status === 'trialing' ? 'essai'
+    : validSub.status === 'trialing' ? 'actif'
     : validSub.status === 'past_due' ? 'passe_du'
     : 'actif';
 
@@ -105,7 +122,7 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     items: { data: { price: { id: string } }[] };
   };
 
-  await admin
+  const { error: updateErr } = await admin
     .from('coproprietes')
     .update({
       stripe_customer_id:     customerId,
@@ -116,6 +133,16 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     })
     .eq('id', coproId);
 
+  if (updateErr) {
+    console.error('[doStripeSync] Erreur UPDATE coproprietes:', updateErr);
+    return false;
+  }
+
+  if (customerFoundViaStripe) {
+    console.log('[doStripeSync] stripe_customer_id persisté en DB:', customerId);
+  }
+
+  console.log('[doStripeSync] Sync réussie. plan=', plan, 'sub=', sub.id);
   return true;
 }
 
