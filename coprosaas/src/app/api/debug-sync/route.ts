@@ -66,14 +66,22 @@ export async function GET(req: NextRequest) {
       status: 'all' as 'active',
       limit: 10,
     });
-    result.stripe_subscriptions = subs.data.map((s) => ({
-      id: s.id,
-      status: s.status,
-      created: new Date(s.created * 1000).toISOString(),
-      current_period_end: new Date((s as unknown as { current_period_end: number }).current_period_end * 1000).toISOString(),
-      metadata: s.metadata,
-      price_id: (s as unknown as { items: { data: { price: { id: string } }[] } }).items.data[0]?.price.id,
-    }));
+    result.stripe_subscriptions = subs.data.map((s) => {
+      const raw = s as unknown as Record<string, unknown>;
+      const ts = raw['current_period_end'] as number | undefined;
+      let periodEnd: string | null = null;
+      try { periodEnd = ts && ts > 0 ? new Date(ts * 1000).toISOString() : null; } catch { periodEnd = `INVALID(${ts})`; }
+      return {
+        id: s.id,
+        status: s.status,
+        created: new Date(s.created * 1000).toISOString(),
+        current_period_end_raw: ts,
+        current_period_end: periodEnd,
+        all_fields: Object.keys(raw),
+        metadata: s.metadata,
+        price_id: (raw['items'] as { data: { price: { id: string } }[] } | undefined)?.data[0]?.price.id,
+      };
+    });
   } catch (e) {
     result.stripe_error = String(e);
   }

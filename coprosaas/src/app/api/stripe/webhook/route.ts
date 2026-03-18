@@ -61,11 +61,10 @@ export async function POST(req: NextRequest) {
         if (session.subscription) {
           const sub = await stripe.subscriptions.retrieve(
             session.subscription as string,
-          ) as unknown as {
-            id: string; current_period_end: number; metadata: Record<string, string>;
-          };
-          subId = sub.id;
-          periodEnd = new Date(sub.current_period_end * 1000).toISOString();
+          ) as unknown as Record<string, unknown>;
+          subId = sub['id'] as string;
+          const ts = sub['current_period_end'] as number | undefined;
+          periodEnd = ts && ts > 0 ? (() => { try { return new Date(ts * 1000).toISOString(); } catch { return null; } })() : null;
         }
 
         await updateCoproSubscription(coproId, {
@@ -80,24 +79,26 @@ export async function POST(req: NextRequest) {
 
       // ── Abonnement mis à jour (upgrade / downgrade / renouvellement) ──────
       case 'customer.subscription.updated': {
-        const sub = event.data.object as unknown as {
-          id: string; status: string; customer: string;
-          current_period_end: number; metadata: Record<string, string>;
-        };
-        const coproId = sub.metadata?.copropriete_id;
+        const sub = event.data.object as unknown as Record<string, unknown>;
+        const subMeta = (sub['metadata'] as Record<string, string>) ?? {};
+        const coproId = subMeta?.copropriete_id;
         if (!coproId) break;
 
-        const plan = sub.status === 'active'   ? 'actif'
-          : sub.status === 'past_due'  ? 'passe_du'
-          : sub.status === 'trialing'  ? 'essai'
+        const subStatus = sub['status'] as string;
+        const plan = subStatus === 'active' ? 'actif'
+          : subStatus === 'past_due'  ? 'passe_du'
+          : subStatus === 'trialing'  ? 'actif'
           : 'inactif';
 
+        const ts = (sub['current_period_end'] as number | undefined) || 0;
+        const periodEnd = ts > 0 ? (() => { try { return new Date(ts * 1000).toISOString(); } catch { return null; } })() : null;
+
         await updateCoproSubscription(coproId, {
-          stripe_customer_id:     sub.customer as string,
-          stripe_subscription_id: sub.id,
-          plan_id:                sub.metadata?.plan_id,
+          stripe_customer_id:     sub['customer'] as string,
+          stripe_subscription_id: sub['id'] as string,
+          plan_id:                subMeta?.plan_id ?? null,
           plan:                   plan as 'actif' | 'inactif' | 'passe_du' | 'essai',
-          plan_period_end:        new Date(sub.current_period_end * 1000).toISOString(),
+          plan_period_end:        periodEnd,
         });
         break;
       }

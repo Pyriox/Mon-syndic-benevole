@@ -106,7 +106,11 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     return false;
   }
 
-  console.log('[doStripeSync] Abonnement retenu:', validSub.id, 'status:', validSub.status);
+  // Loguer la structure réelle pour identifier les champs disponibles
+  const rawSub = validSub as unknown as Record<string, unknown>;
+  console.log('[doStripeSync] Abonnement retenu:', rawSub['id'], 'status:', rawSub['status']);
+  console.log('[doStripeSync] Champs disponibles:', Object.keys(rawSub).join(', '));
+  console.log('[doStripeSync] current_period_end:', rawSub['current_period_end']);
 
   // trialing = abonnement payant en période d'essai → on affiche "actif"
   const plan =
@@ -115,21 +119,32 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     : validSub.status === 'past_due' ? 'passe_du'
     : 'actif';
 
-  const sub = validSub as unknown as {
-    id: string;
-    current_period_end: number;
-    metadata: Record<string, string>;
-    items: { data: { price: { id: string } }[] };
-  };
+  // current_period_end peut être absent ou 0 dans certaines versions de l'API Stripe
+  // On essaie plusieurs champs selon la version de l'API
+  const rawItems = rawSub['items'] as { data: { price: { id: string } }[] } | undefined;
+  const rawMeta = (rawSub['metadata'] as Record<string, string>) ?? {};
+  const subId = rawSub['id'] as string;
+
+  const periodEndTimestamp: number =
+    (rawSub['current_period_end'] as number) ||
+    (rawSub['billing_cycle_anchor'] as number) ||
+    0;
+
+  const periodEndIso: string | null =
+    periodEndTimestamp > 0
+      ? (() => { try { return new Date(periodEndTimestamp * 1000).toISOString(); } catch { return null; } })()
+      : null;
+
+  console.log('[doStripeSync] period_end calculé:', periodEndIso);
 
   const { error: updateErr } = await admin
     .from('coproprietes')
     .update({
       stripe_customer_id:     customerId,
-      stripe_subscription_id: sub.id,
+      stripe_subscription_id: subId,
       plan,
-      plan_id:         sub.metadata?.plan_id ?? sub.items.data[0]?.price.id,
-      plan_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+      plan_id:         rawMeta?.plan_id ?? rawItems?.data[0]?.price.id ?? null,
+      plan_period_end: periodEndIso,
     })
     .eq('id', coproId);
 
@@ -142,7 +157,7 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     console.log('[doStripeSync] stripe_customer_id persisté en DB:', customerId);
   }
 
-  console.log('[doStripeSync] Sync réussie. plan=', plan, 'sub=', sub.id);
+  console.log('[doStripeSync] Sync réussie. plan=', plan, 'sub=', subId);
   return true;
 }
 
