@@ -154,6 +154,7 @@ export default function HomePage() {
             <Link href="#fonctionnalites" className="hover:text-white transition-colors">Fonctionnalités</Link>
             <Link href="#tarif" className="hover:text-white transition-colors">Tarifs</Link>
             <Link href="#faq" className="hover:text-white transition-colors">FAQ</Link>
+            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm text-white/70 hover:text-white transition-colors hidden md:block">Connexion</Link>
@@ -224,7 +225,7 @@ export default function HomePage() {
                 <div className="w-3 h-3 rounded-full bg-green-500" />
               </div>
               <div className="flex-1 bg-gray-700 rounded-md px-3 py-1 text-xs text-gray-400 max-w-xs mx-auto text-center">
-                app.mon-syndic-benevole.fr
+                mon-syndic-benevole.fr
               </div>
             </div>
             {/* Contenu app simulé */}
@@ -706,6 +707,7 @@ export default function HomePage() {
           <nav aria-label="Liens du pied de page">
             <div className="flex items-center gap-5 text-sm text-gray-500">
               <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
+              <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
               <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
             </div>

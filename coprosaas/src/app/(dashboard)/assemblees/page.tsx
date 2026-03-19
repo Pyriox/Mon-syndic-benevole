@@ -73,7 +73,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
                         {LABELS_STATUT_AG[ag.statut] ?? ag.statut}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                       <span>{ag.coproprietes?.nom}</span>
                       <span className="flex items-center gap-1">
                         <CalendarDays size={13} />

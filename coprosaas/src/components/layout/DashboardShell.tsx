@@ -32,7 +32,7 @@ export default function DashboardShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Overlay sombre — masque le contenu derrière la sidebar sur mobile */}
       {sidebarOpen && (
         <div

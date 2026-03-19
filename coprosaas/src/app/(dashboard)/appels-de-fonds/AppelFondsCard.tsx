@@ -209,7 +209,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
       {/* ── En-tête compact ─────────────────────────────────── */}
       <div className="px-5 py-4">
-        <div className="flex items-start gap-3">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:gap-3">
           {/* Infos principales */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -254,8 +254,8 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
             )}
           </div>
 
-          {/* Actions droite */}
-          <div className="flex items-center gap-1 shrink-0">
+          {/* Actions */}
+          <div className="flex items-center gap-1 flex-wrap sm:shrink-0 sm:flex-nowrap">
             {isSyndic && (
               appel.statut === 'brouillon' ? (
                 <button
