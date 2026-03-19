@@ -2,7 +2,6 @@
 // Page : Appels de fonds
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import EmptyState from '@/components/ui/EmptyState';
 import AppelFondsActions from './AppelFondsActions';
@@ -39,8 +38,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
-  // Copropriétaires utilisent l'admin client pour bypasser les RLS syndic-only
-  const db = userRole === 'copropriétaire' ? createAdminClient() : supabase;
+  const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
   const { data: appels } = await db
     .from('appels_de_fonds')

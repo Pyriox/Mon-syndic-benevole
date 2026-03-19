@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { wrapEmail, h, alertBanner, infoTable, infoRow, COLOR, CONTACT_EMAIL, SITE_URL } from '@/lib/emails/base';
+import { rateLimit } from '@/lib/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
@@ -83,6 +84,11 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) {
     return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });
+  }
+
+  // Rate limiting : 5 emails de sécurité par utilisateur par heure
+  if (!rateLimit(user.id, 5, 3_600_000)) {
+    return NextResponse.json({ message: 'Trop de tentatives. Réessayez dans une heure.' }, { status: 429 });
   }
 
   const toEmail = user.email; // toujours envoyé à l'adresse actuelle (avant changement)

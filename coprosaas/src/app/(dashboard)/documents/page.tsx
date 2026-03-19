@@ -4,7 +4,6 @@
 // - Vue dossier (?dossier=<id>) : liste des documents du dossier
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -105,8 +104,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   // ================================================================
   if (userRole === 'copropriétaire') {
     const syndicId = copropriete?.syndic_id ?? 'none';
-    // Utilise l'admin client car les RLS restreignent document_dossiers/documents au syndic
-    const admin = createAdminClient();
+    const admin = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
     const { data: rawDossiers } = await admin
       .from('document_dossiers')

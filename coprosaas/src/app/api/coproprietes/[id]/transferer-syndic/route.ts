@@ -55,15 +55,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 401 });
   }
 
-  // Rechercher le nouveau syndic par email via le client admin
+  // Rechercher le nouveau syndic par email via une fonction SQL dédiée
+  // (getUserByEmail n'est pas disponible dans @supabase/supabase-js v2)
   const admin = createAdminClient();
-  const { data: usersData } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  const newSyndicUser = usersData?.users?.find(
-    (u) => u.email?.toLowerCase() === email.toLowerCase().trim()
-  );
+  const { data: targetUserId } = await admin.rpc('find_auth_user_id_by_email', {
+    user_email: email.toLowerCase().trim(),
+  });
+
+  if (!targetUserId) {
+    return NextResponse.json({ error: "Aucun compte trouvé pour cet email. Le nouveau syndic doit d'abord créer un compte." }, { status: 404 });
+  }
+
+  const { data: targetUserData } = await admin.auth.admin.getUserById(targetUserId as string);
+  const newSyndicUser = targetUserData?.user ?? null;
 
   if (!newSyndicUser) {
-    return NextResponse.json({ error: 'Aucun compte trouvé pour cet email. Le nouveau syndic doit d\'abord créer un compte.' }, { status: 404 });
+    return NextResponse.json({ error: "Aucun compte trouvé pour cet email. Le nouveau syndic doit d'abord créer un compte." }, { status: 404 });
   }
 
   if (newSyndicUser.id === user.id) {
@@ -77,7 +84,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .eq('id', coproprieteId);
 
   if (updateError) {
-    return NextResponse.json({ error: 'Erreur lors du transfert : ' + updateError.message }, { status: 500 });
+    console.error('[transferer-syndic] DB error:', updateError.message);
+    return NextResponse.json({ error: 'Une erreur est survenue lors du transfert.' }, { status: 500 });
   }
 
   return NextResponse.json({

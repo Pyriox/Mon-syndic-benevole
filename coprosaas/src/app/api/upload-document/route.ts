@@ -75,7 +75,8 @@ export async function POST(req: NextRequest) {
     });
 
   if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    console.error('[upload-document] Storage error:', uploadError.message);
+    return NextResponse.json({ error: "Erreur lors de l'upload du fichier." }, { status: 500 });
   }
 
   const { data: { publicUrl } } = admin.storage.from('documents').getPublicUrl(uploadData.path);
@@ -92,7 +93,8 @@ export async function POST(req: NextRequest) {
   });
 
   if (dbError) {
-    return NextResponse.json({ error: dbError.message }, { status: 500 });
+    console.error('[upload-document] DB error:', dbError.message);
+    return NextResponse.json({ error: "Erreur lors de l'enregistrement du document." }, { status: 500 });
   }
 
   return NextResponse.json({ url: publicUrl });

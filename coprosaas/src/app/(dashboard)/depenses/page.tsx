@@ -2,7 +2,6 @@
 // Page : Liste des dépenses avec répartition automatique
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -53,8 +52,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
   // VUE LECTURE SEULE — Copropriétaires
   // ================================================================
   if (userRole === 'copropriétaire') {
-    // Utilise l'admin client car les RLS restreignent les dépenses au syndic
-    const admin = createAdminClient();
+    const admin = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
     const { data: depenses } = await admin
       .from('depenses')

@@ -3,7 +3,6 @@
 // Gestion des résolutions, présences, votes et génération du PV
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -29,8 +28,7 @@ export default async function AGDetailPage({ params }: Props) {
   const supabase = await createClient();
   const { selectedCoproId, role } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
-  // Les RLS bloquent les copropriétaires sur plusieurs tables — on utilise le client admin
-  const db = isSyndic ? supabase : createAdminClient();
+  const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
   const { data: ag } = await db
     .from('assemblees_generales')

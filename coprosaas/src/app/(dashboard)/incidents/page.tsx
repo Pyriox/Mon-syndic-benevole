@@ -2,7 +2,6 @@
 // Page : Incidents et travaux — Pipeline de suivi par statut
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import EmptyState from '@/components/ui/EmptyState';
 import IncidentActions from './IncidentActions';
@@ -20,8 +19,7 @@ export default async function IncidentsPage() {
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const isSyndic   = userRole === 'syndic';
   const canCreate  = isSubscribed(copropriete?.plan);
-  // Copropriétaires utilisent l'admin client pour bypasser les RLS syndic-only
-  const db = userRole === 'copropriétaire' ? createAdminClient() : supabase;
+  const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
   const { data: incidents } = await db
     .from('incidents')

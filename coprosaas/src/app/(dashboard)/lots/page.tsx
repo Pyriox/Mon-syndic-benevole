@@ -5,7 +5,6 @@
 export const revalidate = 60;
 
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
@@ -57,7 +56,7 @@ export default async function LotsPage() {
   const supabase = await createClient();
   const { selectedCoproId, role, copro } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
-  const db = role === 'copropriétaire' ? createAdminClient() : supabase;
+  const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
   const { data: lots } = await db
     .from('lots')

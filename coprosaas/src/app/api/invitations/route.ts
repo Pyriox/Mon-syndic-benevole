@@ -10,6 +10,7 @@ import { cookies } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 import { buildInvitationEmail, buildInvitationEmailSubject } from '@/lib/emails/invitation';
+import { rateLimit } from '@/lib/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? 'onboarding@resend.dev';
@@ -36,6 +37,11 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+  }
+
+  // Rate limiting : 20 invitations par utilisateur par 10 minutes
+  if (!rateLimit(user.id, 20, 600_000)) {
+    return NextResponse.json({ error: "Trop d'invitations envoyées. Réessayez dans 10 minutes." }, { status: 429 });
   }
 
   const body = await request.json();
@@ -86,7 +92,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('[invitations] DB error:', error.message);
+      return NextResponse.json({ error: "Erreur lors de la création de l'invitation." }, { status: 500 });
     }
     token = data.token;
   }

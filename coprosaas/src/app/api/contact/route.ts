@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? 'onboarding@resend.dev';
@@ -10,6 +11,12 @@ export async function POST(req: NextRequest) {
   const contentType = req.headers.get('content-type') ?? '';
   if (!contentType.includes('application/json')) {
     return NextResponse.json({ message: 'Bad request' }, { status: 400 });
+  }
+
+  // Rate limiting : 5 messages par IP par minute
+  const ip = getClientIp(req);
+  if (!rateLimit(ip, 5, 60_000)) {
+    return NextResponse.json({ message: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 });
   }
 
   let body: { name?: string; email?: string; subject?: string; message?: string };
