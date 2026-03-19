@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { saveLot, deleteLot } from './actions';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
@@ -36,7 +36,6 @@ interface LotActionsProps {
 
 export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotLimit }: LotActionsProps) {
   const router = useRouter();
-  const supabase = createClient();
   const isEdit = Boolean(lot);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -58,29 +57,15 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
     setLoading(true);
     setError('');
 
-    if (isEdit && lot) {
-      // Mise à jour du lot existant
-      const { error: dbError } = await supabase
-        .from('lots')
-        .update({
-          numero: formData.numero.trim(),
-          type: formData.type,
-          tantiemes: parseFloat(formData.tantiemes) || 0,
-        })
-        .eq('id', lot.id);
+    const result = await saveLot({
+      coproprieteId,
+      lotId: isEdit ? lot!.id : undefined,
+      numero: formData.numero.trim(),
+      type: formData.type,
+      tantiemes: parseFloat(formData.tantiemes) || 0,
+    });
 
-      if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
-    } else {
-      // Création d'un nouveau lot
-      const { error: dbError } = await supabase.from('lots').insert({
-        copropriete_id: coproprieteId,
-        numero: formData.numero.trim(),
-        type: formData.type,
-        tantiemes: parseFloat(formData.tantiemes) || 0,
-      });
-
-      if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
-    }
+    if (result.error) { setError('Erreur : ' + result.error); setLoading(false); return; }
 
     setLoading(false);
     setIsOpen(false);
@@ -184,17 +169,18 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
 interface LotDeleteProps {
   lotId: string;
   lotNumero: string;
+  coproprieteId: string;
 }
 
-export function LotDelete({ lotId, lotNumero }: LotDeleteProps) {
+export function LotDelete({ lotId, lotNumero, coproprieteId }: LotDeleteProps) {
   const router = useRouter();
-  const supabase = createClient();
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
     if (!confirm(`Supprimer le lot "${lotNumero}" ? Cette action est irréversible.`)) return;
     setLoading(true);
-    await supabase.from('lots').delete().eq('id', lotId);
+    const result = await deleteLot(lotId, coproprieteId);
+    if (result.error) { setLoading(false); return; }
     router.refresh();
   };
 

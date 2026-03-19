@@ -108,7 +108,7 @@ function SortableLotRow({
             coproprieteId={coproprieteId}
             lot={{ id: lot.id, numero: lot.numero, type: lot.type, tantiemes: lot.tantiemes }}
           />
-          <LotDelete lotId={lot.id} lotNumero={lot.numero} />
+          <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} />
         </div>
       </td>
     </tr>
