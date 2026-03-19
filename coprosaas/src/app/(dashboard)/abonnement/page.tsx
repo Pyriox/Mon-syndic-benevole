@@ -180,6 +180,15 @@ export default async function AbonnementPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // Réservé aux syndics
+  const { data: syndicCheck } = await supabase
+    .from('coproprietes')
+    .select('id')
+    .eq('syndic_id', user.id)
+    .limit(1)
+    .maybeSingle();
+  if (!syndicCheck) redirect('/dashboard');
+
   // Sync immédiate au retour du checkout Stripe
   if (success === '1' && synced !== '1' && coproId) {
     try { await doStripeSync(coproId); } catch { /* non bloquant */ }

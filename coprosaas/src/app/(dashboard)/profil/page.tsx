@@ -18,7 +18,6 @@ export default async function ProfilPage() {
 
   const fullName: string = user.user_metadata?.full_name ?? '';
   const email: string = user.email ?? '';
-  const accountRole = (user.user_metadata?.role ?? 'syndic') as 'syndic' | 'copropriétaire';
 
   const cookieStore = await cookies();
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
@@ -29,6 +28,9 @@ export default async function ProfilPage() {
     .select('id, nom, lots(id, numero, tantiemes, coproprietaire_id)')
     .eq('syndic_id', user.id)
     .order('nom');
+
+  // Rôle déterminé depuis la DB (plus fiable que les métadonnées)
+  const accountRole: 'syndic' | 'copropriétaire' = (coproprietes ?? []).length > 0 ? 'syndic' : 'copropriétaire';
 
   const selectedCopro = (coproprietes ?? []).find((c) => c.id === selectedCoproId) ?? null;
 

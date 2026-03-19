@@ -27,16 +27,23 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     { data: profile },
     { data: syndicCopros },
     { data: coproRows },
+    { data: coproRowsByEmail },
   ] = await Promise.all([
     supabase.from('profiles').select('full_name').eq('id', user.id).single(),
     supabase.from('coproprietes').select('id, nom, adresse, ville').eq('syndic_id', user.id).order('nom'),
     supabase.from('coproprietaires').select('copropriete_id, coproprietes(id, nom, adresse, ville)').eq('user_id', user.id),
+    // Fallback pour les copropriétaires non encore liés (user_id non renseigné)
+    supabase.from('coproprietaires').select('copropriete_id, coproprietes(id, nom, adresse, ville)').eq('email', user.email ?? '').is('user_id', null),
   ]);
 
   const userName = profile?.full_name ?? user.email ?? '';
 
-  // Le rôle du compte (stocké lors de l'inscription dans user_metadata)
-  const accountRole = (user.user_metadata?.role ?? 'syndic') as 'syndic' | 'copropriétaire';
+  // Fusionne les coproprietaires trouvés par user_id et par email (non liés)
+  const linkedCoproIds = new Set((coproRows ?? []).map((r) => r.copropriete_id));
+  const allCoproRows = [
+    ...(coproRows ?? []),
+    ...(coproRowsByEmail ?? []).filter((r) => !linkedCoproIds.has(r.copropriete_id)),
+  ];
 
   // Déduplique et fusionne les deux listes avec le rôle associé
   const syndicIds = new Set((syndicCopros ?? []).map((c) => c.id));
@@ -48,7 +55,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       ville: c.ville,
       role: 'syndic' as const,
     })),
-    ...(coproRows ?? [])
+    ...allCoproRows
       .filter((row) => {
         const copro = row.coproprietes as unknown as { id: string } | null;
         return copro && !syndicIds.has(copro.id);
@@ -78,9 +85,9 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   }
 
   const selectedCopro = userCoproprietes.find((c) => c.id === selectedCoproId) ?? null;
-  // Utilise le rôle de la copropriété sélectionnée, ou le rôle du compte en fallback
-  // (évite qu'un coproprietaire non lié voie la navigation syndic complète)
-  const userRole = selectedCopro?.role ?? accountRole;
+  // Utilise le rôle de la copropriété sélectionnée, ou le rôle déterminé depuis la DB en fallback
+  const accountRoleFromDb: 'syndic' | 'copropriétaire' = (syndicCopros ?? []).length > 0 ? 'syndic' : 'copropriétaire';
+  const userRole = selectedCopro?.role ?? accountRoleFromDb;
 
   // --- Notifications (uniquement pour le syndic sur la copropriété sélectionnée) ---
   const notifications: AppNotification[] = [];

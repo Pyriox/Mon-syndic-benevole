@@ -79,6 +79,21 @@ export async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<Co
     return { user, selectedCoproId, role: 'copropriétaire', copro };
   }
 
+  // Fallback : chercher par email si user_id non encore lié
+  const { data: asCoproByEmail } = await supabase
+    .from('coproprietaires')
+    .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
+    .eq('copropriete_id', selectedCoproId)
+    .eq('email', user.email ?? '')
+    .is('user_id', null)
+    .maybeSingle();
+
+  if (asCoproByEmail?.coproprietes) {
+    const copro = asCoproByEmail.coproprietes as unknown as CoproInfo;
+    if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
+    return { user, selectedCoproId, role: 'copropriétaire', copro };
+  }
+
   // Cookie présent mais aucun accès → redirection
   redirect('/dashboard');
 }
