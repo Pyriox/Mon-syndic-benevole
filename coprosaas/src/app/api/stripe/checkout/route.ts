@@ -96,6 +96,7 @@ export async function POST(req: NextRequest) {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card', 'sepa_debit'],
+      payment_method_collection: 'if_required',
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: {
         supabase_user_id: user.id,
@@ -113,6 +114,7 @@ export async function POST(req: NextRequest) {
         },
       },
       subscription_data: {
+        trial_period_days: 30,
         metadata: {
           supabase_user_id: user.id,
           copropriete_id: coproprieteid,
