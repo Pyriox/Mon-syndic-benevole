@@ -3,8 +3,7 @@
 // Filtrée sur la copropriété sélectionnée (cookie selected_copro_id)
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
 import CoproprietaireActions from './CoproprietaireActions';
@@ -13,20 +12,8 @@ import { Users } from 'lucide-react';
 
 export default async function CoproprietairesPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const cookieStore = await cookies();
-  const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
-
-  const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id').eq('id', selectedCoproId).maybeSingle()
-    : { data: null };
-
-  // Seul le syndic gérant cette copropriété peut voir la liste complète
-  if (!copropriete || copropriete.syndic_id !== user.id) {
-    redirect('/dashboard');
-  }
+  // Accès réservé au syndic gérant cette copropriété
+  const { selectedCoproId, copro: copropriete } = await requireCoproAccess(['syndic']);
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
 

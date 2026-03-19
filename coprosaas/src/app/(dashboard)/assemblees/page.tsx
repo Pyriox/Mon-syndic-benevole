@@ -2,8 +2,7 @@
 // Page : Liste des Assemblées Générales
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -20,15 +19,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
   const annee = parseInt(anneeParam ?? String(new Date().getFullYear()));
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const cookieStore = await cookies();
-  const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
-
-  const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id, plan, plan_id').eq('id', selectedCoproId).maybeSingle()
-    : { data: null };
+  const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
 

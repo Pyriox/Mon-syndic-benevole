@@ -3,8 +3,7 @@
 // Affiche les KPIs, dépenses récentes, incidents et AG à venir
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
@@ -25,17 +24,7 @@ import {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) redirect('/login');
-
-  const cookieStore = await cookies();
-  const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
-
-  // Copropriété sélectionnée
-  const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id').eq('id', selectedCoproId).maybeSingle()
-    : { data: null };
+  const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
   const scopeId = selectedCoproId ?? 'none';
 

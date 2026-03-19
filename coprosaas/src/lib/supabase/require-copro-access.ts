@@ -1,0 +1,84 @@
+// ============================================================
+// Utilitaire de contrôle d'accès à une copropriété
+//
+// Vérifie que l'utilisateur connecté a bien accès à la
+// copropriété contenue dans le cookie selected_copro_id.
+// Si le cookie est absent (premier rendu), aucune vérification n'est nécessaire
+// car toutes les requêtes utiliseront 'none' comme identifiant → résultats vides.
+// Si le cookie est présent et que l'utilisateur n'a pas accès → redirect('/dashboard').
+//
+// Usage :
+//   const { user, selectedCoproId, role, copro } = await requireCoproAccess();
+//   // role: 'syndic' | 'copropriétaire' | null  (null si aucun cookie)
+//
+// Usage (syndic uniquement, redirige si coproprietaire) :
+//   await requireCoproAccess(['syndic']);
+// ============================================================
+import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import type { User } from '@supabase/supabase-js';
+
+export type CoproRole = 'syndic' | 'copropriétaire';
+
+export type CoproInfo = {
+  id: string;
+  nom: string;
+  syndic_id: string;
+  plan: string | null;
+  plan_id: string | null;
+};
+
+export interface CoproAccess {
+  user: User;
+  selectedCoproId: string | null;
+  role: CoproRole | null;
+  copro: CoproInfo | null;
+}
+
+export async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<CoproAccess> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const cookieStore = await cookies();
+  const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
+
+  // Pas de cookie = premier rendu ou aucune copropriété sélectionnée.
+  // Aucun risque d'accès non autorisé puisqu'aucun ID n'est fourni.
+  if (!selectedCoproId) {
+    // Si un rôle spécifique est requis (ex. syndic), on redirige quand même.
+    if (allowedRoles) redirect('/dashboard');
+    return { user, selectedCoproId: null, role: null, copro: null };
+  }
+
+  // --- L'utilisateur est-il le syndic de cette copropriété ? ---
+  const { data: asSyndic } = await supabase
+    .from('coproprietes')
+    .select('id, nom, syndic_id, plan, plan_id')
+    .eq('id', selectedCoproId)
+    .eq('syndic_id', user.id)
+    .maybeSingle();
+
+  if (asSyndic) {
+    if (allowedRoles && !allowedRoles.includes('syndic')) redirect('/dashboard');
+    return { user, selectedCoproId, role: 'syndic', copro: asSyndic };
+  }
+
+  // --- L'utilisateur est-il un copropriétaire de cette copropriété ? ---
+  const { data: asCopro } = await supabase
+    .from('coproprietaires')
+    .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
+    .eq('copropriete_id', selectedCoproId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (asCopro?.coproprietes) {
+    const copro = asCopro.coproprietes as unknown as CoproInfo;
+    if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
+    return { user, selectedCoproId, role: 'copropriétaire', copro };
+  }
+
+  // Cookie présent mais aucun accès → redirection
+  redirect('/dashboard');
+}

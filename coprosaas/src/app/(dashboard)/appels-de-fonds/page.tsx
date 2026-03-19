@@ -2,14 +2,13 @@
 // Page : Appels de fonds
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import EmptyState from '@/components/ui/EmptyState';
 import AppelFondsActions from './AppelFondsActions';
 import AppelFondsCard from './AppelFondsCard';
 import AppelFondsSerieCard from './AppelFondsSerieCard';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { Wallet } from 'lucide-react';
-import { cookies } from 'next/headers';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 
@@ -36,15 +35,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   const annee = parseInt(anneeParam ?? String(new Date().getFullYear()));
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const cookieStore = await cookies();
-  const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
-
-  const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id, plan, plan_id').eq('id', selectedCoproId).maybeSingle()
-    : { data: null };
+  const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
 
@@ -58,7 +49,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const isSyndic = copropriete?.syndic_id === user.id;
+  const isSyndic = userRole === 'syndic';
   const canCreate = isSubscribed(copropriete?.plan);
 
   // ── Calculer les stats par appel ──────────────────────────────────────────

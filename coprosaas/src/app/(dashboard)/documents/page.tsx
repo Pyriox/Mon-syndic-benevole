@@ -4,8 +4,8 @@
 // - Vue dossier (?dossier=<id>) : liste des documents du dossier
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
+import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { Fragment } from 'react';
 import Card from '@/components/ui/Card';
@@ -79,15 +79,7 @@ interface Props {
 export default async function DocumentsPage({ searchParams }: Props) {
   const { dossier: dossierId } = await searchParams;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const cookieStore = await cookies();
-  const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
-
-  const { data: copropriete } = selectedCoproId
-    ? await supabase.from('coproprietes').select('id, nom, syndic_id, plan, plan_id').eq('id', selectedCoproId).maybeSingle()
-    : { data: null };
+  const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const canCreate = isSubscribed(copropriete?.plan);

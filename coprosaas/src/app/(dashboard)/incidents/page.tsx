@@ -2,8 +2,7 @@
 // Page : Incidents et travaux — Pipeline de suivi par statut
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import EmptyState from '@/components/ui/EmptyState';
 import IncidentActions from './IncidentActions';
 import IncidentCard from './IncidentCard';
@@ -15,22 +14,10 @@ import type { Incident } from '@/types';
 
 export default async function IncidentsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const cookieStore = await cookies();
-  const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
-
-  const { data: copropriete } = selectedCoproId
-    ? await supabase
-        .from('coproprietes')
-        .select('id, nom, syndic_id, plan, plan_id')
-        .eq('id', selectedCoproId)
-        .maybeSingle()
-    : { data: null };
+  const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
-  const isSyndic   = copropriete?.syndic_id === user.id;
+  const isSyndic   = userRole === 'syndic';
   const canCreate  = isSubscribed(copropriete?.plan);
 
   const { data: incidents } = await supabase
