@@ -793,7 +793,7 @@ export default function HomePage() {
               },
               {
                 q: "Puis-je importer mes données existantes ?",
-                a: "Vous pouvez ajouter vos copropriétaires, lots et tantièmes directement depuis l'interface en quelques minutes. L'import automatisé (fichier Excel ou CSV) fait partie de notre roadmap. En attendant, nos guides pas-à-pas rendent la configuration rapide même pour une grande copropriété.",
+                a: "Vous pouvez ajouter vos copropriétaires, lots et tantièmes directement depuis l'interface en quelques minutes. L'import automatisé (fichier Excel ou CSV) est une fonctionnalité prévue dans nos prochaines mises à jour. En attendant, nos guides pas-à-pas rendent la configuration rapide même pour une grande copropriété.",
               },
             ].map(({ q, a }) => (
               <details key={q} className="group py-5">
