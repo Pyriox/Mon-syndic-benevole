@@ -4,6 +4,7 @@
 // - Vue dossier (?dossier=<id>) : liste des documents du dossier
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -86,8 +87,10 @@ export default async function DocumentsPage({ searchParams }: Props) {
   // ================================================================
   if (userRole === 'copropriétaire') {
     const syndicId = copropriete?.syndic_id ?? 'none';
+    // Utilise l'admin client car les RLS restreignent document_dossiers/documents au syndic
+    const admin = createAdminClient();
 
-    const { data: rawDossiers } = await supabase
+    const { data: rawDossiers } = await admin
       .from('document_dossiers')
       .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
       .eq('syndic_id', syndicId)
@@ -95,7 +98,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
       .order('created_at');
     const dossiers: Dossier[] = (rawDossiers ?? []) as unknown as Dossier[];
 
-    const { data: docCounts } = await supabase
+    const { data: docCounts } = await admin
       .from('documents')
       .select('dossier_id')
       .eq('copropriete_id', selectedCoproId ?? 'none');
@@ -119,7 +122,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
         ? dossiers.filter((d) => d.parent_id === dossierId).sort((a, b) => b.nom.localeCompare(a.nom))
         : dossiers.filter((d) => d.parent_id === dossierId);
 
-      const { data: documents } = await supabase
+      const { data: documents } = await admin
         .from('documents')
         .select('*, coproprietes(nom)')
         .eq('copropriete_id', selectedCoproId ?? 'none')

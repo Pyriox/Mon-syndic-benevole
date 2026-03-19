@@ -2,6 +2,7 @@
 // Page : Liste des dépenses avec répartition automatique
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -48,6 +49,186 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
   const supabase = await createClient();
   const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
+  // ================================================================
+  // VUE LECTURE SEULE — Copropriétaires
+  // ================================================================
+  if (userRole === 'copropriétaire') {
+    // Utilise l'admin client car les RLS restreignent les dépenses au syndic
+    const admin = createAdminClient();
+
+    const { data: depenses } = await admin
+      .from('depenses')
+      .select('id, titre, description, montant, date_depense, categorie, piece_jointe_url')
+      .eq('copropriete_id', selectedCoproId ?? 'none')
+      .gte('date_depense', `${annee}-01-01`)
+      .lt('date_depense', `${annee + 1}-01-01`)
+      .order('date_depense', { ascending: false });
+
+    const { data: lots } = await admin
+      .from('lots')
+      .select('id, tantiemes, coproprietaire_id')
+      .eq('copropriete_id', selectedCoproId ?? 'none')
+      .not('coproprietaire_id', 'is', null);
+
+    const { data: coproprietaires } = await admin
+      .from('coproprietaires')
+      .select('id, nom, prenom')
+      .eq('copropriete_id', selectedCoproId ?? 'none')
+      .order('nom');
+
+    const totalDepenses = depenses?.reduce((sum, d) => sum + d.montant, 0) ?? 0;
+
+    const repartitionCat: Record<string, number> = {};
+    for (const d of depenses ?? []) {
+      repartitionCat[d.categorie] = (repartitionCat[d.categorie] ?? 0) + d.montant;
+    }
+    const repartitionCatSorted = Object.entries(repartitionCat)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, total]) => ({ cat, total, pct: totalDepenses > 0 ? Math.round((total / totalDepenses) * 100) : 0 }));
+
+    const totalTantiemes = (lots ?? []).reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+    const tantByOwner: Record<string, number> = {};
+    for (const l of lots ?? []) {
+      if (l.coproprietaire_id) tantByOwner[l.coproprietaire_id] = (tantByOwner[l.coproprietaire_id] ?? 0) + (l.tantiemes ?? 0);
+    }
+    const myCopro = (coproprietaires ?? []).find((c) => tantByOwner[c.id]);
+    const myTant = myCopro ? (tantByOwner[myCopro.id] ?? 0) : 0;
+    const myPct = totalTantiemes > 0 ? myTant / totalTantiemes : 0;
+    const myPart = totalDepenses * myPct;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Dépenses</h2>
+            <p className="text-gray-500 mt-1">
+              {depenses?.length ?? 0} dépense(s) — Total : <strong>{formatEuros(totalDepenses)}</strong>
+            </p>
+          </div>
+          <AnneeSelector annee={annee} />
+        </div>
+
+        {depenses && depenses.length > 0 ? (
+          <Card padding="none">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-5 py-3 font-medium text-gray-500">Date</th>
+                    <th className="text-left px-5 py-3 font-medium text-gray-500">Titre</th>
+                    <th className="text-left px-5 py-3 font-medium text-gray-500">Catégorie</th>
+                    <th className="text-right px-5 py-3 font-medium text-gray-500">Montant</th>
+                    <th className="text-center px-5 py-3 font-medium text-gray-500">P.J.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {depenses.map((d) => (
+                    <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDate(d.date_depense)}</td>
+                      <td className="px-5 py-3">
+                        <p className="font-medium text-gray-900">{d.titre}</p>
+                        {d.description && <p className="text-xs text-gray-400 truncate max-w-xs">{d.description}</p>}
+                      </td>
+                      <td className="px-5 py-3">
+                        <Badge variant={couleurCategorie(d.categorie)}>
+                          {LABELS_CATEGORIE[d.categorie] ?? d.categorie}
+                        </Badge>
+                      </td>
+                      <td className="px-5 py-3 text-right font-semibold text-gray-900">{formatEuros(d.montant)}</td>
+                      <td className="px-5 py-3 text-center">
+                        {d.piece_jointe_url ? (
+                          <a href={d.piece_jointe_url} target="_blank" rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-xs">Voir</a>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-gray-50 border-t-2 border-gray-200">
+                  <tr>
+                    <td colSpan={3} className="px-5 py-3 font-semibold text-gray-700">Total</td>
+                    <td className="px-5 py-3 text-right font-bold text-gray-900">{formatEuros(totalDepenses)}</td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </Card>
+        ) : (
+          <EmptyState
+            icon={<Receipt size={48} strokeWidth={1.5} />}
+            title="Aucune dépense enregistrée"
+            description="Aucune dépense n'a été saisie pour cette copropriété."
+          />
+        )}
+
+        {depenses && depenses.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Répartition par catégorie */}
+            <Card>
+              <h3 className="font-semibold text-gray-900 mb-4">Répartition par catégorie</h3>
+              <div className="space-y-3">
+                {repartitionCatSorted.map(({ cat, total, pct }) => (
+                  <div key={cat}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${catColorMap[cat] ?? 'bg-gray-300'}`} />
+                        <span className="text-gray-700 font-medium">{LABELS_CATEGORIE[cat] ?? cat}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-500">
+                        <span>{formatEuros(total)}</span>
+                        <span className="font-semibold text-gray-700 w-9 text-right">{pct}%</span>
+                      </div>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`${catColorMap[cat] ?? 'bg-gray-300'} h-full rounded-full`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs text-gray-400 pt-2 border-t border-gray-100 text-right">
+                  Total : <span className="font-semibold text-gray-600">{formatEuros(totalDepenses)}</span>
+                </p>
+              </div>
+            </Card>
+
+            {/* Ma quote-part */}
+            <Card>
+              <h3 className="font-semibold text-gray-900 mb-4">Ma quote-part</h3>
+              {myTant > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Mes tantièmes</span>
+                    <span className="font-semibold text-gray-900">{myTant} / {totalTantiemes}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Ma part</span>
+                    <span className="font-bold text-blue-700 text-lg">{formatEuros(myPart)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Pourcentage</span>
+                    <span className="font-semibold text-gray-700">{Math.round(myPct * 100)}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="bg-blue-400 h-full rounded-full" style={{ width: `${Math.round(myPct * 100)}%` }} />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 italic text-center py-4">
+                  Aucun lot associé à votre fiche pour calculer votre quote-part.
+                </p>
+              )}
+            </Card>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ================================================================
+  // VUE SYNDIC
+  // ================================================================
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const canCreate = isSubscribed(copropriete?.plan);
 
