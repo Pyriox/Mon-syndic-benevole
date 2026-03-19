@@ -17,9 +17,41 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { createClient } from '@/lib/supabase/client';
-import Badge from '@/components/ui/Badge';
 import LotActions, { LotDelete } from './LotActions';
-import { GripVertical } from 'lucide-react';
+import {
+  GripVertical,
+  Building2, Car, Archive, ShoppingBag, Briefcase, LayoutGrid,
+  Users, AlertCircle,
+} from 'lucide-react';
+
+// ── Config par type ───────────────────────────────────────────────────────────
+const LOT_TYPE_CONFIG: Record<string, {
+  label: string;
+  icon: React.ElementType;
+  bgColor: string;
+  iconColor: string;
+  badgeBg: string;
+  badgeText: string;
+  barColor: string;
+}> = {
+  appartement: { label: 'Appartement', icon: Building2,   bgColor: 'bg-blue-50',   iconColor: 'text-blue-500',   badgeBg: 'bg-blue-100',   badgeText: 'text-blue-700',   barColor: 'bg-blue-400' },
+  parking:     { label: 'Parking',     icon: Car,         bgColor: 'bg-slate-50',  iconColor: 'text-slate-500',  badgeBg: 'bg-slate-100',  badgeText: 'text-slate-700',  barColor: 'bg-slate-400' },
+  cave:        { label: 'Cave',        icon: Archive,     bgColor: 'bg-amber-50',  iconColor: 'text-amber-500',  badgeBg: 'bg-amber-100',  badgeText: 'text-amber-700',  barColor: 'bg-amber-400' },
+  commerce:    { label: 'Commerce',    icon: ShoppingBag, bgColor: 'bg-green-50',  iconColor: 'text-green-500',  badgeBg: 'bg-green-100',  badgeText: 'text-green-700',  barColor: 'bg-green-400' },
+  bureau:      { label: 'Bureau',      icon: Briefcase,   bgColor: 'bg-purple-50', iconColor: 'text-purple-500', badgeBg: 'bg-purple-100', badgeText: 'text-purple-700', barColor: 'bg-purple-400' },
+  autre:       { label: 'Autre',       icon: LayoutGrid,  bgColor: 'bg-gray-50',   iconColor: 'text-gray-400',   badgeBg: 'bg-gray-100',   badgeText: 'text-gray-600',   barColor: 'bg-gray-300' },
+};
+const defaultConfig = LOT_TYPE_CONFIG.autre;
+function getConfig(type: string) { return LOT_TYPE_CONFIG[type] ?? defaultConfig; }
+
+function OwnerAvatar({ name }: { name: string }) {
+  const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+  return (
+    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold shrink-0">
+      {initials}
+    </span>
+  );
+}
 
 interface LotRow {
   id: string;
@@ -41,9 +73,7 @@ interface LotsTableProps {
   coproprieteId: string;
 }
 
-// -------------------------------------------------------
-// Ligne sortable (dnd-kit useSortable)
-// -------------------------------------------------------
+// ── Ligne sortable ────────────────────────────────────────────────────────────
 function SortableLotRow({
   lot,
   totalTantiemes,
@@ -55,10 +85,7 @@ function SortableLotRow({
   coproMap: Record<string, CoproEntry>;
   coproprieteId: string;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: lot.id,
-  });
-
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lot.id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -67,42 +94,68 @@ function SortableLotRow({
     zIndex: isDragging ? 10 : undefined,
   };
 
-  const quotePart =
-    totalTantiemes > 0 ? ((lot.tantiemes / totalTantiemes) * 100).toFixed(2) : '0.00';
-
+  const quotePart = totalTantiemes > 0 ? (lot.tantiemes / totalTantiemes) * 100 : 0;
   const owner = lot.coproprietaire_id ? coproMap[lot.coproprietaire_id] : null;
-  const ownerName = owner
-    ? owner.raison_sociale ?? `${owner.prenom ?? ''} ${owner.nom ?? ''}`.trim()
-    : null;
+  const ownerName = owner ? owner.raison_sociale ?? `${owner.prenom ?? ''} ${owner.nom ?? ''}`.trim() : null;
+  const cfg = getConfig(lot.type);
+  const Icon = cfg.icon;
 
   return (
     <tr
       ref={setNodeRef}
       style={style}
-      className={`border-b border-gray-100 last:border-0 ${
-        isDragging ? 'bg-blue-50' : 'hover:bg-gray-50'
-      }`}
+      className={`border-b border-gray-100 last:border-0 transition-colors ${isDragging ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
     >
-      <td className="py-3 px-2">
+      {/* Grip */}
+      <td className="py-3.5 px-2 w-7">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-700 focus:outline-none touch-none"
+          className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 focus:outline-none touch-none"
           aria-label="Réordonner"
         >
           <GripVertical size={16} />
         </button>
       </td>
-      <td className="py-3 px-3 font-medium text-gray-900">{lot.numero}</td>
-      <td className="py-3 px-3 text-gray-600">
-        <Badge variant="default">{lot.type}</Badge>
+      {/* Lot */}
+      <td className="py-3.5 px-3">
+        <div className="flex items-center gap-2.5">
+          <div className={`p-1.5 ${cfg.bgColor} rounded-lg`}>
+            <Icon size={14} className={cfg.iconColor} />
+          </div>
+          <span className="font-semibold text-gray-900">{lot.numero}</span>
+        </div>
       </td>
-      <td className="py-3 px-3 text-right text-gray-900">{lot.tantiemes}</td>
-      <td className="py-3 px-3 text-right text-gray-600">{quotePart}%</td>
-      <td className="py-3 px-3 text-gray-600">
-        {ownerName ? ownerName : <span className="text-gray-400 italic">Non assigné</span>}
+      {/* Type */}
+      <td className="py-3.5 px-3">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cfg.badgeBg} ${cfg.badgeText}`}>
+          {cfg.label}
+        </span>
       </td>
-      <td className="py-3 px-3">
+      {/* Tantièmes */}
+      <td className="py-3.5 px-3 text-right font-medium text-gray-900">{lot.tantiemes}</td>
+      {/* Quote-part */}
+      <td className="py-3.5 px-3 w-36">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className={`${cfg.barColor} h-full rounded-full`} style={{ width: `${quotePart}%` }} />
+          </div>
+          <span className="text-xs font-medium text-gray-600 w-10 text-right">{quotePart.toFixed(1)}%</span>
+        </div>
+      </td>
+      {/* Copropriétaire */}
+      <td className="py-3.5 px-3">
+        {ownerName ? (
+          <div className="flex items-center gap-2">
+            <OwnerAvatar name={ownerName} />
+            <span className="text-gray-700 text-sm">{ownerName}</span>
+          </div>
+        ) : (
+          <span className="text-orange-400 italic text-xs font-medium">Non assigné</span>
+        )}
+      </td>
+      {/* Actions */}
+      <td className="py-3.5 px-3">
         <div className="flex items-center justify-end gap-1">
           <LotActions
             coproprieteId={coproprieteId}
@@ -115,6 +168,95 @@ function SortableLotRow({
   );
 }
 
+// ── Carte mobile sortable ─────────────────────────────────────────────────────
+function SortableLotCard({
+  lot,
+  totalTantiemes,
+  coproMap,
+  coproprieteId,
+}: {
+  lot: LotRow;
+  totalTantiemes: number;
+  coproMap: Record<string, CoproEntry>;
+  coproprieteId: string;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lot.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  const quotePart = totalTantiemes > 0 ? (lot.tantiemes / totalTantiemes) * 100 : 0;
+  const owner = lot.coproprietaire_id ? coproMap[lot.coproprietaire_id] : null;
+  const ownerName = owner ? owner.raison_sociale ?? `${owner.prenom ?? ''} ${owner.nom ?? ''}`.trim() : null;
+  const cfg = getConfig(lot.type);
+  const Icon = cfg.icon;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white border rounded-xl p-4 ${isDragging ? 'border-blue-300 shadow-md' : 'border-gray-200'}`}
+    >
+      <div className="flex items-start gap-3">
+        {/* Grip */}
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 focus:outline-none touch-none mt-0.5"
+          aria-label="Réordonner"
+        >
+          <GripVertical size={16} />
+        </button>
+        {/* Icon */}
+        <div className={`p-2.5 ${cfg.bgColor} rounded-xl shrink-0`}>
+          <Icon size={18} className={cfg.iconColor} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-semibold text-gray-900 truncate">Lot {lot.numero}</p>
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${cfg.badgeBg} ${cfg.badgeText}`}>
+              {cfg.label}
+            </span>
+          </div>
+          {/* Tantièmes + barre */}
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>{lot.tantiemes} tantièmes</span>
+              <span className="font-medium text-gray-700">{quotePart.toFixed(1)}%</span>
+            </div>
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className={`${cfg.barColor} h-full rounded-full`} style={{ width: `${quotePart}%` }} />
+            </div>
+          </div>
+          {/* Propriétaire + actions */}
+          <div className="mt-2.5 flex items-center justify-between gap-2">
+            <div>
+              {ownerName ? (
+                <div className="flex items-center gap-1.5">
+                  <OwnerAvatar name={ownerName} />
+                  <span className="text-sm text-gray-700 truncate">{ownerName}</span>
+                </div>
+              ) : (
+                <span className="text-xs text-orange-400 italic font-medium">Non assigné</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <LotActions
+                coproprieteId={coproprieteId}
+                lot={{ id: lot.id, numero: lot.numero, type: lot.type, tantiemes: lot.tantiemes }}
+              />
+              <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Composant principal ───────────────────────────────────────────────────────
 export default function LotsTable({ initialLots, coproMap, coproprieteId }: LotsTableProps) {
   const [lots, setLots] = useState<LotRow[]>(initialLots);
   const supabase = createClient();
@@ -124,16 +266,23 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId }: Lots
   );
 
   const totalTantiemes = lots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+  const assignedCount = lots.filter((l) => l.coproprietaire_id).length;
+  const unassignedCount = lots.length - assignedCount;
+
+  // Répartition par type (top 1 pour la 4e stat card)
+  const countByType = lots.reduce<Record<string, number>>((acc, l) => {
+    acc[l.type] = (acc[l.type] ?? 0) + 1;
+    return acc;
+  }, {});
+  const topType = Object.entries(countByType).sort((a, b) => b[1] - a[1])[0];
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-
     const oldIndex = lots.findIndex((l) => l.id === active.id);
     const newIndex = lots.findIndex((l) => l.id === over.id);
     const reordered = arrayMove(lots, oldIndex, newIndex);
     setLots(reordered);
-
     await Promise.all(
       reordered.map((lot, idx) =>
         supabase.from('lots').update({ position: idx + 1 } as never).eq('id', lot.id)
@@ -144,22 +293,73 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId }: Lots
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={lots.map((l) => l.id)} strategy={verticalListSortingStrategy}>
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="py-3 px-2 w-6"></th>
-            <th className="text-left py-3 px-3 font-medium text-gray-500">Numéro</th>
-            <th className="text-left py-3 px-3 font-medium text-gray-500">Type</th>
-            <th className="text-right py-3 px-3 font-medium text-gray-500">Tantièmes</th>
-            <th className="text-right py-3 px-3 font-medium text-gray-500">Quote-part</th>
-            <th className="text-left py-3 px-3 font-medium text-gray-500">Copropriétaire</th>
-            <th className="py-3 px-3"></th>
-          </tr>
-        </thead>
-        <tbody>
+
+        {/* ── Bande de stats ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          {/* Total */}
+          <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl">
+            <div className="p-2 bg-blue-50 rounded-lg shrink-0">
+              <Building2 size={16} className="text-blue-500" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Total lots</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">{lots.length}</p>
+            </div>
+          </div>
+          {/* Assignés */}
+          <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl">
+            <div className="p-2 bg-green-50 rounded-lg shrink-0">
+              <Users size={16} className="text-green-500" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Assignés</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">
+                {assignedCount} <span className="text-sm font-normal text-gray-400">/ {lots.length}</span>
+              </p>
+            </div>
+          </div>
+          {/* Non assignés ou top type */}
+          {unassignedCount > 0 ? (
+            <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-xl">
+              <div className="p-2 bg-orange-100 rounded-lg shrink-0">
+                <AlertCircle size={16} className="text-orange-500" />
+              </div>
+              <div>
+                <p className="text-xs text-orange-600">Non assignés</p>
+                <p className="text-lg font-bold text-orange-700 leading-tight">{unassignedCount}</p>
+              </div>
+            </div>
+          ) : topType ? (() => {
+            const cfg = getConfig(topType[0]);
+            const Icon = cfg.icon;
+            return (
+              <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl">
+                <div className={`p-2 ${cfg.bgColor} rounded-lg shrink-0`}>
+                  <Icon size={16} className={cfg.iconColor} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">{cfg.label}s</p>
+                  <p className="text-lg font-bold text-gray-900 leading-tight">{topType[1]}</p>
+                </div>
+              </div>
+            );
+          })() : <div />}
+          {/* Tantièmes */}
+          <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl">
+            <div className="p-2 bg-indigo-50 rounded-lg shrink-0">
+              <LayoutGrid size={16} className="text-indigo-500" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Tantièmes</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">{totalTantiemes}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Vue cartes : mobile ── */}
+        <div className="md:hidden space-y-3">
           {lots.map((lot) => (
-            <SortableLotRow
+            <SortableLotCard
               key={lot.id}
               lot={lot}
               totalTantiemes={totalTantiemes}
@@ -167,9 +367,36 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId }: Lots
               coproprieteId={coproprieteId}
             />
           ))}
-        </tbody>
-      </table>
-    </div>
+        </div>
+
+        {/* ── Vue tableau : desktop ── */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="py-3 px-2 w-7" />
+                <th className="text-left py-3 px-3 font-medium text-gray-500">Lot</th>
+                <th className="text-left py-3 px-3 font-medium text-gray-500">Type</th>
+                <th className="text-right py-3 px-3 font-medium text-gray-500">Tantièmes</th>
+                <th className="text-left py-3 px-3 font-medium text-gray-500 w-36">Quote-part</th>
+                <th className="text-left py-3 px-3 font-medium text-gray-500">Copropriétaire</th>
+                <th className="py-3 px-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {lots.map((lot) => (
+                <SortableLotRow
+                  key={lot.id}
+                  lot={lot}
+                  totalTantiemes={totalTantiemes}
+                  coproMap={coproMap}
+                  coproprieteId={coproprieteId}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+
       </SortableContext>
     </DndContext>
   );
