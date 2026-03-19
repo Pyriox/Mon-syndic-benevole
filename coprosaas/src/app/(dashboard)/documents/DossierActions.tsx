@@ -1,6 +1,7 @@
 // ============================================================
 // Client Component : Gestion des dossiers & sous-dossiers
 // - DossierActions (default) : bouton "Nouveau dossier" (racine)
+// - DossierRename            : renommer un dossier racine (avec couleur)
 // - SubDossierActions        : créer / renommer / supprimer un sous-dossier
 // - DossierDelete            : bouton poubelle (dossiers custom racine)
 // ============================================================
@@ -12,7 +13,40 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import { FolderPlus, Trash2, Pencil, Plus, AlertTriangle } from 'lucide-react';
+import { FolderPlus, Trash2, Pencil, Plus, AlertTriangle, Palette } from 'lucide-react';
+
+// Palette de couleurs disponibles pour les dossiers racine
+export const FOLDER_COLORS = [
+  { value: 'blue',   label: 'Bleu',   bg: 'bg-blue-500',   ring: 'ring-blue-400' },
+  { value: 'amber',  label: 'Ambre',  bg: 'bg-amber-500',  ring: 'ring-amber-400' },
+  { value: 'green',  label: 'Vert',   bg: 'bg-green-500',  ring: 'ring-green-400' },
+  { value: 'purple', label: 'Violet', bg: 'bg-purple-500', ring: 'ring-purple-400' },
+  { value: 'red',    label: 'Rouge',  bg: 'bg-red-500',    ring: 'ring-red-400' },
+  { value: 'pink',   label: 'Rose',   bg: 'bg-pink-500',   ring: 'ring-pink-400' },
+  { value: 'cyan',   label: 'Cyan',   bg: 'bg-cyan-500',   ring: 'ring-cyan-400' },
+  { value: 'gray',   label: 'Gris',   bg: 'bg-gray-400',   ring: 'ring-gray-400' },
+] as const;
+
+function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <p className="text-sm font-medium text-gray-700 mb-2">Couleur</p>
+      <div className="flex gap-2 flex-wrap">
+        {FOLDER_COLORS.map((c) => (
+          <button
+            key={c.value}
+            type="button"
+            title={c.label}
+            onClick={() => onChange(c.value)}
+            className={`w-7 h-7 rounded-full ${c.bg} transition-all ${
+              value === c.value ? `ring-2 ring-offset-2 ${c.ring}` : 'opacity-60 hover:opacity-100'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────
 // Bouton "Nouveau dossier" (niveau racine)
@@ -23,10 +57,11 @@ export default function DossierActions() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [nom, setNom] = useState('');
+  const [couleur, setCouleur] = useState('amber');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleClose = () => { setIsOpen(false); setNom(''); setError(''); };
+  const handleClose = () => { setIsOpen(false); setNom(''); setCouleur('amber'); setError(''); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +75,7 @@ export default function DossierActions() {
       nom: nom.trim(),
       is_default: false,
       syndic_id: user.id,
+      couleur,
     });
 
     if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
@@ -62,9 +98,79 @@ export default function DossierActions() {
             placeholder="Contrats prestataires, Travaux 2025…"
             required
           />
+          <ColorPicker value={couleur} onChange={setCouleur} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button type="submit" loading={loading}>Créer</Button>
+            <Button type="button" variant="secondary" onClick={handleClose}>Annuler</Button>
+          </div>
+        </form>
+      </Modal>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Bouton crayon/palette : renommer un dossier racine (custom)
+// ou changer uniquement sa couleur (défaut — colorOnly)
+// ─────────────────────────────────────────────
+interface DossierRenameProps {
+  dossierId: string;
+  dossierNom: string;
+  dossierCouleur?: string | null;
+  /** true pour les dossiers par défaut : seule la couleur est modifiable */
+  colorOnly?: boolean;
+}
+
+export function DossierRename({ dossierId, dossierNom, dossierCouleur, colorOnly }: DossierRenameProps) {
+  const router = useRouter();
+  const supabase = createClient();
+  const [isOpen, setIsOpen] = useState(false);
+  const [nom, setNom] = useState(dossierNom);
+  const [couleur, setCouleur] = useState(dossierCouleur ?? 'blue');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleClose = () => { setIsOpen(false); setNom(dossierNom); setCouleur(dossierCouleur ?? 'blue'); setError(''); };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    const update = colorOnly ? { couleur } : { nom: nom.trim(), couleur };
+    const { error: dbError } = await supabase
+      .from('document_dossiers')
+      .update(update)
+      .eq('id', dossierId);
+    if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
+    handleClose();
+    router.refresh();
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        title={colorOnly ? 'Personnaliser la couleur' : 'Renommer ce dossier'}
+        className="p-1.5 rounded-lg bg-white shadow-sm border border-gray-200 text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-colors"
+      >
+        {colorOnly ? <Palette size={13} /> : <Pencil size={13} />}
+      </button>
+      <Modal isOpen={isOpen} onClose={handleClose} title={colorOnly ? 'Couleur du dossier' : 'Renommer le dossier'}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {!colorOnly && (
+            <Input
+              label="Nom du dossier"
+              name="nom"
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+              required
+            />
+          )}
+          <ColorPicker value={couleur} onChange={setCouleur} />
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <div className="flex gap-3 pt-1">
+            <Button type="submit" loading={loading}>Enregistrer</Button>
             <Button type="button" variant="secondary" onClick={handleClose}>Annuler</Button>
           </div>
         </form>

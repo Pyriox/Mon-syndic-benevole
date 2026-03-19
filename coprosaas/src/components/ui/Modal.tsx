@@ -54,14 +54,15 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
       {/* Boîte du modal */}
       <div
         className={cn(
-          'relative z-10 bg-white rounded-xl shadow-xl w-full',
+          'relative z-10 bg-white rounded-xl shadow-xl w-full flex flex-col',
+          'max-h-[calc(100dvh-2rem)]',
           sizeClasses[size]
         )}
         onClick={(e) => e.stopPropagation()} // Empêche la fermeture au clic sur le contenu
       >
         {/* En-tête du modal */}
         {title && (
-          <div className="flex items-center justify-between p-5 border-b border-gray-200">
+          <div className="flex items-center justify-between p-5 border-b border-gray-200 shrink-0">
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <button
               onClick={onClose}
@@ -73,7 +74,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
         )}
 
         {/* Corps du modal */}
-        <div className="p-5">{children}</div>
+        <div className="p-5 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );

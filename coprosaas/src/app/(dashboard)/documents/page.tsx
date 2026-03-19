@@ -12,7 +12,7 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import DocumentActions, { DocumentRename } from './DocumentActions';
-import DossierActions, { DossierDelete, SubDossierActions } from './DossierActions';
+import DossierActions, { DossierDelete, DossierRename, SubDossierActions } from './DossierActions';
 import { formatDate, LABELS_TYPE_DOCUMENT } from '@/lib/utils';
 import { FileText, Download, ExternalLink, Folder, ChevronRight } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
@@ -26,7 +26,21 @@ const DEFAULT_DOSSIER_NAMES = [
   'Règlement copropriété',
 ];
 
-type Dossier = { id: string; nom: string; is_default: boolean; created_at: string; parent_id?: string | null };
+type Dossier = { id: string; nom: string; is_default: boolean; created_at: string; parent_id?: string | null; couleur?: string | null };
+
+const FOLDER_COLOR_CLASS: Record<string, string> = {
+  blue:   'text-blue-500',
+  amber:  'text-amber-500',
+  green:  'text-green-500',
+  purple: 'text-purple-500',
+  red:    'text-red-500',
+  pink:   'text-pink-500',
+  cyan:   'text-cyan-500',
+  gray:   'text-gray-400',
+};
+const folderColorClass = (d: Dossier) =>
+  (d.couleur && FOLDER_COLOR_CLASS[d.couleur]) ??
+  (d.is_default ? 'text-blue-500' : 'text-amber-500');
 
 function buildBreadcrumb(dossiers: Dossier[], dossierId: string): { id: string; nom: string }[] {
   const map = new Map(dossiers.map((d) => [d.id, d]));
@@ -81,7 +95,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   // ---- Initialisation des dossiers par défaut si absents ----
   const { data: rawDossiers } = await supabase
     .from('document_dossiers')
-    .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
+    .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
     .eq('syndic_id', user.id)
     .order('is_default', { ascending: false })
     .order('created_at');
@@ -119,7 +133,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
     );
     const { data: refreshed2 } = await supabase
       .from('document_dossiers')
-      .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
+      .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
       .eq('syndic_id', user.id)
       .order('is_default', { ascending: false })
       .order('created_at');
@@ -182,7 +196,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
     if (yearFolderCreated) {
       const { data: refreshedYears } = await supabase
         .from('document_dossiers')
-        .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
+        .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
         .eq('syndic_id', user.id)
         .order('is_default', { ascending: false })
         .order('created_at');
@@ -335,17 +349,12 @@ export default async function DocumentsPage({ searchParams }: Props) {
               const titre = hasDate ? sub.nom.slice(0, sepIdx) : sub.nom;
               const date  = hasDate ? sub.nom.slice(sepIdx + 3) : null;
               const subCount = dossiers.filter((d) => d.parent_id === sub.id).length;
-              const docCount = Object.entries(
-                (docCounts ?? []).reduce<Record<string, number>>((acc, doc: { dossier_id: string | null }) => {
-                  if (doc.dossier_id) acc[doc.dossier_id] = (acc[doc.dossier_id] ?? 0) + 1;
-                  return acc;
-                }, {})
-              ).find(([id]) => id === sub.id)?.[1] ?? 0;
+              const docCount = countByDossier[sub.id] ?? 0;
               return (
                 <div key={sub.id} className="relative group">
                   <Link href={`/documents?dossier=${sub.id}`} className="block">
                     <div className="bg-white rounded-xl border-2 border-gray-200 p-5 flex items-center gap-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
-                      <Folder size={36} className="text-blue-400 shrink-0" />
+                      <Folder size={36} className="text-blue-400 shrink-0" aria-hidden="true" />
                       <div className="min-w-0">
                         <p className="font-semibold text-gray-900 text-sm leading-snug truncate">{titre}</p>
                         {date && (
@@ -445,7 +454,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
               >
                 <Folder
                   size={36}
-                  className={dossier.is_default ? 'text-blue-500 shrink-0' : 'text-amber-500 shrink-0'}
+                  className={`${folderColorClass(dossier)} shrink-0`}
                 />
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900 text-sm leading-snug">{dossier.nom}</p>
@@ -457,11 +466,17 @@ export default async function DocumentsPage({ searchParams }: Props) {
                 </div>
               </div>
             </Link>
-            {!dossier.is_default && !dossier.parent_id && (
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <DossierRename
+                dossierId={dossier.id}
+                dossierNom={dossier.nom}
+                dossierCouleur={dossier.couleur}
+                colorOnly={dossier.is_default}
+              />
+              {!dossier.is_default && (
                 <DossierDelete dossierId={dossier.id} dossierNom={dossier.nom} />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ))}
       </div>

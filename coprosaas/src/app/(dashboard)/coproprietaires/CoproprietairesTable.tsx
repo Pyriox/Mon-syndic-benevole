@@ -20,7 +20,7 @@ import { createClient } from '@/lib/supabase/client';
 import Badge from '@/components/ui/Badge';
 import { CoproprietaireEdit, CoproprietaireDelete } from './CoproprietaireActions';
 import { formatEuros } from '@/lib/utils';
-import { GripVertical, Mail, Phone } from 'lucide-react';
+import { GripVertical, Mail, Phone, UserCheck } from 'lucide-react';
 
 interface CoproRow {
   id: string;
@@ -33,6 +33,7 @@ interface CoproRow {
   code_postal: string | null;
   ville: string | null;
   solde: number;
+  user_id: string | null;
 }
 
 interface LotEntry {
@@ -53,6 +54,105 @@ interface CoproprietairesTableProps {
   lotsByOwner: Record<string, LotEntry[]>;
   lotsForSelect: LotForSelect[];
   totalTantiemes: number;
+}
+
+// -------------------------------------------------------
+// Carte mobile pour un copropriétaire
+// -------------------------------------------------------
+function MobileCoproCard({
+  cp,
+  ownedLots,
+  lotsForSelect,
+  totalTantiemes,
+}: {
+  cp: CoproRow;
+  ownedLots: LotEntry[];
+  lotsForSelect: LotForSelect[];
+  totalTantiemes: number;
+}) {
+  const cpTantiemes = ownedLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+  const cpPercent = totalTantiemes > 0 ? ((cpTantiemes / totalTantiemes) * 100).toFixed(2) : '0.00';
+  const displayName = cp.raison_sociale
+    ? cp.raison_sociale
+    : `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim();
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+      {/* Ligne 1 : nom + actions */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-gray-900 leading-tight">{displayName}</p>
+            {cp.user_id && (
+              <span
+                title="Compte actif"
+                className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
+              >
+                <UserCheck size={11} />
+                Inscrit
+              </span>
+            )}
+          </div>
+          {cp.raison_sociale && (cp.prenom || cp.nom) && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              {`${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim()}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <CoproprietaireEdit
+            coproprietaire={cp}
+            lots={lotsForSelect}
+            assignedLotIds={ownedLots.map((l) => l.id)}
+          />
+          <CoproprietaireDelete id={cp.id} nom={displayName} />
+        </div>
+      </div>
+
+      {/* Lots */}
+      {ownedLots.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {ownedLots.map((lot) => (
+            <span
+              key={lot.id}
+              className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full"
+            >
+              {lot.numero}
+              <span className="text-blue-400">· {lot.tantiemes} t.</span>
+            </span>
+          ))}
+          <span className="text-xs text-gray-400 self-center">
+            {cpTantiemes} t. &mdash; {cpPercent}%
+          </span>
+        </div>
+      )}
+
+      {/* Contact + Solde */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="space-y-1 min-w-0">
+          <a
+            href={`mailto:${cp.email}`}
+            className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            <Mail size={13} className="shrink-0" />
+            <span className="truncate">{cp.email}</span>
+          </a>
+          {cp.telephone && (
+            <a
+              href={`tel:${cp.telephone}`}
+              className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600 transition-colors"
+            >
+              <Phone size={13} className="shrink-0" />
+              {cp.telephone}
+            </a>
+          )}
+        </div>
+        <Badge variant={cp.solde < 0 ? 'danger' : cp.solde > 0 ? 'success' : 'default'} className="shrink-0">
+          {formatEuros(cp.solde)}
+        </Badge>
+      </div>
+    </div>
+  );
 }
 
 // -------------------------------------------------------
@@ -110,7 +210,18 @@ function SortableCoproRow({
 
       {/* Nom */}
       <td className="py-3 px-4">
-        <p className="font-medium text-gray-900">{displayName}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-gray-900">{displayName}</p>
+          {cp.user_id && (
+            <span
+              title="Compte actif"
+              className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
+            >
+              <UserCheck size={11} />
+              Inscrit
+            </span>
+          )}
+        </div>
         {cp.raison_sociale && (
           <p className="text-xs text-gray-400 mt-0.5">
             {(cp.prenom || cp.nom)
@@ -223,7 +334,24 @@ export default function CoproprietairesTable({
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <>
+      {/* ── Vue cartes : mobile uniquement ── */}
+      <div className="md:hidden divide-y divide-gray-100">
+        {coproprietaires.map((cp) => (
+          <div key={cp.id} className="p-3">
+            <MobileCoproCard
+              cp={cp}
+              ownedLots={lotsByOwner[cp.id] ?? []}
+              lotsForSelect={lotsForSelect}
+              totalTantiemes={totalTantiemes}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* ── Vue tableau : md+ uniquement ── */}
+      <div className="hidden md:block">
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext
         items={coproprietaires.map((c) => c.id)}
         strategy={verticalListSortingStrategy}
@@ -255,5 +383,7 @@ export default function CoproprietairesTable({
         </div>
       </SortableContext>
     </DndContext>
+      </div>
+    </>
   );
 }
