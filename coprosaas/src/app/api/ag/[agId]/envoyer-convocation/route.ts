@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
+import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emails/base';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
@@ -48,38 +49,51 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
   const heureFormatted = new Date(ag.date_ag).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
   const ordreduJour = (resolutions ?? [])
-    .map((r) => `<li><strong>Résolution ${r.numero} :</strong> ${r.titre}${r.description ? `<br><small style="color:#6b7280">${r.description}</small>` : ''}</li>`)
+    .map((r) => `
+      <tr>
+        <td style="padding:10px 12px;font-size:13px;font-weight:600;color:${COLOR.muted};width:24px;vertical-align:top">${r.numero}.</td>
+        <td style="padding:10px 12px;font-size:13px;color:${COLOR.text};line-height:1.5">
+          ${h(r.titre)}
+          ${r.description ? `<div style="margin-top:4px;font-size:12px;color:${COLOR.muted}">${h(r.description)}</div>` : ''}
+        </td>
+      </tr>`)
     .join('');
 
   let sent = 0;
   const errors: string[] = [];
 
   for (const cp of coproprietaires) {
-    const html = `
-<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937">
-  <div style="background:#2563eb;padding:24px 32px;border-radius:12px 12px 0 0">
-    <h1 style="color:#fff;margin:0;font-size:20px">Convocation à l'Assemblée Générale</h1>
-    <p style="color:#bfdbfe;margin:6px 0 0">${ag.coproprietes?.nom}</p>
-  </div>
-  <div style="background:#fff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-    <p>Bonjour <strong>${cp.prenom} ${cp.nom}</strong>,</p>
-    <p>Vous êtes convoqué(e) à l'assemblée générale de la copropriété <strong>${ag.coproprietes?.nom}</strong> :</p>
-    <div style="background:#f8fafc;border-left:4px solid #2563eb;padding:16px;border-radius:0 8px 8px 0;margin:20px 0">
-      <p style="margin:0"><strong>📅 Date :</strong> ${dateFormatted} à ${heureFormatted}</p>
-      ${ag.lieu ? `<p style="margin:8px 0 0"><strong>📍 Lieu :</strong> ${ag.lieu}</p>` : ''}
-    </div>
-    <h3 style="font-size:15px;color:#1f2937;border-bottom:2px solid #e5e7eb;padding-bottom:8px">Ordre du jour</h3>
-    <ol style="padding-left:20px;line-height:1.8">${ordreduJour}</ol>
-    ${ag.notes ? `<p style="background:#fef9c3;padding:12px;border-radius:8px;font-size:13px"><strong>Notes :</strong> ${ag.notes}</p>` : ''}
-    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
-    <p style="font-size:12px;color:#9ca3af">Mon Syndic Bénévole — <a href="https://www.mon-syndic-benevole.fr" style="color:#2563eb">mon-syndic-benevole.fr</a></p>
-  </div>
-</div>`;
+    const infoRows = infoTable(
+      infoRow('Date', `${dateFormatted} à ${heureFormatted}`) +
+      (ag.lieu ? infoRow('Lieu', h(ag.lieu)) : '') +
+      infoRow('Copropriété', h(ag.coproprietes?.nom ?? ''))
+    );
+
+    const content = `
+<h1 style="margin:0 0 4px;font-size:22px;font-weight:700;color:${COLOR.text}">Convocation à l'Assemblée Générale</h1>
+<p style="margin:0 0 24px;font-size:13px;color:${COLOR.muted}">${h(ag.coproprietes?.nom ?? '')}</p>
+
+<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Bonjour <strong>${h(cp.prenom)} ${h(cp.nom)}</strong>,<br/>
+  vous êtes convoqué(e) à l'assemblée générale de votre copropriété.
+</p>
+
+${infoRows}
+
+<h2 style="margin:24px 0 12px;font-size:15px;font-weight:700;color:${COLOR.text}">Ordre du jour</h2>
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${COLOR.border};border-radius:8px;border-collapse:separate;border-spacing:0;overflow:hidden">
+  <tbody>${ordreduJour}</tbody>
+</table>
+
+${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
+`;
+
+    const html = wrapEmail(content, COLOR.blue);
 
     const { error } = await resend.emails.send({
       from: FROM,
       to: cp.email,
-      subject: `Convocation AG — ${ag.coproprietes?.nom} — ${dateFormatted}`,
+      subject: `Convocation AG — ${h(ag.coproprietes?.nom ?? '')} — ${dateFormatted}`,
       html,
     });
 

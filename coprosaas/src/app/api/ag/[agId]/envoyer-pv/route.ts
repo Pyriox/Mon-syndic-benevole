@@ -2,15 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
+import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emails/base';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
 
-const STATUT_LABELS: Record<string, string> = {
-  approuvee: 'APPROUVÉE ✅',
-  refusee: 'REFUSÉE ❌',
-  reportee: 'REPORTÉE ⏸',
-  en_attente: 'EN ATTENTE',
+const STATUT_LABELS: Record<string, { label: string; color: string }> = {
+  approuvee: { label: 'Approuvée', color: COLOR.green },
+  refusee:   { label: 'Refusée',   color: COLOR.red },
+  reportee:  { label: 'Reportée',  color: COLOR.amber },
+  en_attente:{ label: 'En attente',color: COLOR.muted },
 };
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ agId: string }> }) {
@@ -51,13 +52,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
-  const tableauResolutions = (resolutions ?? []).map((r) => `
-    <tr style="border-bottom:1px solid #e5e7eb">
-      <td style="padding:10px 12px;font-size:13px"><strong>#${r.numero}</strong></td>
-      <td style="padding:10px 12px;font-size:13px">${r.titre}</td>
-      <td style="padding:10px 12px;font-size:13px;font-weight:bold">${STATUT_LABELS[r.statut] ?? r.statut}</td>
-      <td style="padding:10px 12px;font-size:12px;color:#6b7280">${r.voix_pour}✓ / ${r.voix_contre}✗ / ${r.voix_abstention}○</td>
-    </tr>`).join('');
+  const tableauResolutions = (resolutions ?? []).map((r) => {
+    const statut = STATUT_LABELS[r.statut] ?? { label: r.statut, color: COLOR.muted };
+    return `
+    <tr style="border-bottom:1px solid ${COLOR.border}">
+      <td style="padding:10px 12px;font-size:13px;font-weight:600;color:${COLOR.muted};white-space:nowrap">#${r.numero}</td>
+      <td style="padding:10px 12px;font-size:13px;color:${COLOR.text}">${h(r.titre)}</td>
+      <td style="padding:10px 12px;font-size:12px;font-weight:700;color:${statut.color};white-space:nowrap">${statut.label}</td>
+      <td style="padding:10px 12px;font-size:12px;color:${COLOR.muted};white-space:nowrap">${r.voix_pour}+ / ${r.voix_contre}− / ${r.voix_abstention}=</td>
+    </tr>`;
+  }).join('');
 
   // Sauvegarde dans les documents de la copropriété
   const pvNom = `PV AG — ${ag.titre} — ${new Date(ag.date_ag).getFullYear()}`;
@@ -83,34 +87,40 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
   const errors: string[] = [];
 
   for (const cp of coproprietaires) {
-    const html = `
-<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937">
-  <div style="background:#16a34a;padding:24px 32px;border-radius:12px 12px 0 0">
-    <h1 style="color:#fff;margin:0;font-size:20px">Procès-Verbal d'Assemblée Générale</h1>
-    <p style="color:#bbf7d0;margin:6px 0 0">${ag.coproprietes?.nom}</p>
-  </div>
-  <div style="background:#fff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-    <p>Bonjour <strong>${cp.prenom} ${cp.nom}</strong>,</p>
-    <p>Veuillez trouver ci-dessous le procès-verbal de l'assemblée générale du <strong>${dateFormatted}</strong>
-    ${ag.lieu ? ` tenue à <strong>${ag.lieu}</strong>` : ''}.</p>
-    <p>Quorum : <strong>${ag.quorum_atteint ? 'Atteint ✅' : 'Non atteint ❌'}</strong></p>
-    <h3 style="font-size:15px;color:#1f2937;border-bottom:2px solid #e5e7eb;padding-bottom:8px">Résolutions votées</h3>
-    <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px">
-      <thead style="background:#f3f4f6">
-        <tr>
-          <th style="padding:10px 12px;text-align:left;font-size:12px;color:#6b7280">N°</th>
-          <th style="padding:10px 12px;text-align:left;font-size:12px;color:#6b7280">Résolution</th>
-          <th style="padding:10px 12px;text-align:left;font-size:12px;color:#6b7280">Résultat</th>
-          <th style="padding:10px 12px;text-align:left;font-size:12px;color:#6b7280">Votes</th>
-        </tr>
-      </thead>
-      <tbody>${tableauResolutions}</tbody>
-    </table>
-    ${ag.notes ? `<p style="background:#fef9c3;padding:12px;border-radius:8px;font-size:13px;margin-top:20px"><strong>Notes :</strong> ${ag.notes}</p>` : ''}
-    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
-    <p style="font-size:12px;color:#9ca3af">Mon Syndic Bénévole — <a href="https://www.mon-syndic-benevole.fr" style="color:#16a34a">mon-syndic-benevole.fr</a></p>
-  </div>
-</div>`;
+    const infoRows = infoTable(
+      infoRow('Date', dateFormatted) +
+      (ag.lieu ? infoRow('Lieu', h(ag.lieu)) : '') +
+      infoRow('Quorum', ag.quorum_atteint ? 'Atteint' : 'Non atteint')
+    );
+
+    const content = `
+<h1 style="margin:0 0 4px;font-size:22px;font-weight:700;color:${COLOR.text}">Procès-Verbal d'Assemblée Générale</h1>
+<p style="margin:0 0 24px;font-size:13px;color:${COLOR.muted}">${h(ag.coproprietes?.nom ?? '')}</p>
+
+<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Bonjour <strong>${h(cp.prenom)} ${h(cp.nom)}</strong>,<br/>
+  veuillez trouver ci-dessous le procès-verbal de l'assemblée générale.
+</p>
+
+${infoRows}
+
+<h2 style="margin:24px 0 12px;font-size:15px;font-weight:700;color:${COLOR.text}">Résolutions votées</h2>
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${COLOR.border};border-radius:8px;border-collapse:separate;border-spacing:0;overflow:hidden">
+  <thead>
+    <tr style="background:#f9fafb">
+      <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:${COLOR.muted};letter-spacing:.05em">N°</th>
+      <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:${COLOR.muted};letter-spacing:.05em">Résolution</th>
+      <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:${COLOR.muted};letter-spacing:.05em">Résultat</th>
+      <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:${COLOR.muted};letter-spacing:.05em">Votes</th>
+    </tr>
+  </thead>
+  <tbody>${tableauResolutions}</tbody>
+</table>
+
+${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
+`;
+
+    const html = wrapEmail(content, COLOR.green);
 
     const { error } = await resend.emails.send({
       from: FROM,
