@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CreditCard, Loader2 } from 'lucide-react';
+import { trackEvent } from '@/lib/gtag';
 
 interface CheckoutButtonProps {
   planId: 'essentiel' | 'confort' | 'illimite';
@@ -26,6 +27,7 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
       try { json = await res.json(); } catch { /* non-JSON */ }
       if (!res.ok) { setError(json.error ?? `Erreur ${res.status}`); setLoading(false); return; }
       if (!json.url) { setError('URL de paiement manquante.'); setLoading(false); return; }
+      trackEvent('begin_checkout', { plan_id: planId });
       window.location.href = json.url;
     } catch {
       setError('Erreur réseau — vérifiez votre connexion.');

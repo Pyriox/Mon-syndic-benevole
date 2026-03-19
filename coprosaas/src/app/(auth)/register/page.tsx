@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
 import { Lock, ArrowRight, Building2, Users, FileText, CalendarDays } from 'lucide-react';
+import { trackEvent } from '@/lib/gtag';
 
 const BENEFITS = [
   { icon: Building2, text: 'Gérez plusieurs copropriétés depuis un seul espace' },
@@ -102,6 +103,8 @@ function RegisterForm() {
         body: JSON.stringify({ token, user_id: data.user.id, full_name: fullName }),
       });
     }
+
+    trackEvent('sign_up', { role, method: 'email' });
 
     if (data.user && !data.session) {
       setSuccess(true);
