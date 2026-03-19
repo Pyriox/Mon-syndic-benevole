@@ -21,7 +21,7 @@ import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import { CoproprietaireEdit, CoproprietaireDelete } from './CoproprietaireActions';
 import { formatEuros } from '@/lib/utils';
-import { GripVertical, Mail, MapPin, Phone, UserCheck } from 'lucide-react';
+import { GripVertical, Mail, Phone, UserCheck } from 'lucide-react';
 
 function Avatar({ name }: { name: string }) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -133,13 +133,7 @@ function ReadOnlyMobileCoproCard({
       ) : (
         <p className="text-xs text-gray-400 italic">Aucun lot assigné</p>
       )}
-      {/* Adresse */}
-      {address && (
-        <p className="text-xs text-gray-500 flex items-start gap-1.5">
-          <MapPin size={12} className="text-gray-400 mt-0.5 shrink-0" />
-          {address}
-        </p>
-      )}
+      {/* Adresse masquée en vue copropriétaire — données personnelles */}
     </Card>
   );
 }
@@ -207,7 +201,7 @@ function ReadOnlyCoproRow({
         )}
       </td>
       <td className="py-3.5 px-5 text-sm text-gray-500">
-        {address || <span className="text-gray-300 text-xs">—</span>}
+        {/* Adresse masquée — donnée personnelle non visible par les copropriétaires */}
       </td>
     </tr>
   );
@@ -532,7 +526,6 @@ export default function CoproprietairesTable({
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="text-left py-3 px-5 font-medium text-gray-500">Copropriétaire</th>
                 <th className="text-left py-3 px-5 font-medium text-gray-500">Lots &amp; quote-part</th>
-                <th className="text-left py-3 px-5 font-medium text-gray-500">Adresse</th>
               </tr>
             </thead>
             <tbody>

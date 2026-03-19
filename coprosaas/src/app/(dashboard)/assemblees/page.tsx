@@ -42,6 +42,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
     return map[statut] ?? 'default';
   };
 
+  const isSyndic = userRole === 'syndic';
   const canCreate = isSubscribed(copropriete?.plan);
 
   return (
@@ -53,7 +54,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {canCreate ? <AGActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />}
+          {isSyndic && (canCreate ? <AGActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
         </div>
       </div>
 
@@ -100,7 +101,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
           icon={<CalendarDays size={48} strokeWidth={1.5} />}
           title="Aucune assemblée générale"
           description="Planifiez vos AG, gérez les résolutions et générez les procès-verbaux."
-          action={canCreate ? <AGActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />}
+          action={isSyndic && (canCreate ? <AGActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />)}
         />
       )}
     </div>

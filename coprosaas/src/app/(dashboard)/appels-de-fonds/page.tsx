@@ -194,7 +194,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
           icon={<Wallet size={48} strokeWidth={1.5} />}
           title="Aucun appel de fonds"
           description="Créez un appel de fonds pour répartir les charges entre les copropriétaires."
-          action={canCreate ? <AppelFondsActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />}
+          action={isSyndic && (canCreate ? <AppelFondsActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />)}
         />
       )}
     </div>
