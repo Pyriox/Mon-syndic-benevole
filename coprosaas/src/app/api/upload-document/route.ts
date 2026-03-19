@@ -29,6 +29,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 });
   }
 
+  // 2b. Validation du type et de la taille du fichier
+  const ALLOWED_TYPES = [
+    'application/pdf',
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain', 'text/csv',
+  ];
+  const MAX_SIZE = 20 * 1024 * 1024; // 20 Mo
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return NextResponse.json({ error: 'Type de fichier non autorisé' }, { status: 400 });
+  }
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'Fichier trop volumineux (max 20 Mo)' }, { status: 413 });
+  }
+
   // 3. Vérification que l'utilisateur possède bien cette copropriété
   const { data: copro } = await supabase
     .from('coproprietes')

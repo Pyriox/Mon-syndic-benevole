@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     description: DESC,
     images: [
       {
-        url: "/og-image.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Mon Syndic Bénévole — Logiciel de gestion de copropriété",
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: TITLE,
     description: DESC,
-    images: ["/og-image.png"],
+    images: ["/opengraph-image"],
   },
 };
 

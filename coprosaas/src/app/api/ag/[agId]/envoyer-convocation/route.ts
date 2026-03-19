@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emails/base';
+import { createClient } from '@/lib/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
@@ -10,6 +11,11 @@ const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
 export async function POST(req: NextRequest, { params }: { params: Promise<{ agId: string }> }) {
   const { agId } = await params;
   const cookieStore = await cookies();
+
+  // Vérification de l'authentification
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,11 +26,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
   // Récupération de l'AG et ses résolutions
   const { data: ag } = await supabase
     .from('assemblees_generales')
-    .select('*, coproprietes(nom, adresse, ville, code_postal)')
+    .select('*, coproprietes(nom, adresse, ville, code_postal, syndic_id)')
     .eq('id', agId)
     .single();
 
   if (!ag) return NextResponse.json({ message: 'AG introuvable' }, { status: 404 });
+
+  // Vérification que l'utilisateur est bien le syndic de cette copropriété
+  const copros = ag.coproprietes as { syndic_id: string } | null;
+  if (copros?.syndic_id !== user.id) {
+    return NextResponse.json({ message: 'Accès refusé' }, { status: 403 });
+  }
 
   const { data: resolutions } = await supabase
     .from('resolutions')

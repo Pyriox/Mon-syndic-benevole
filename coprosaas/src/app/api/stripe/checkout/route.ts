@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cette copropriété possède déjà un abonnement. Utilisez le portail pour le modifier.' }, { status: 409 });
     }
 
-    const origin = req.headers.get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
     // Créer ou récupérer le customer Stripe propre à cette copropriété
     let customerId: string;
@@ -103,8 +103,8 @@ export async function POST(req: NextRequest) {
         plan_id: planId,
       },
       client_reference_id: user.id,
-      success_url: `${origin}/abonnement?success=1&coproId=${coproprieteid}`,
-      cancel_url:  `${origin}/abonnement?canceled=1`,
+      success_url: `${siteUrl}/abonnement?success=1&coproId=${coproprieteid}`,
+      cancel_url:  `${siteUrl}/abonnement?canceled=1`,
       locale: 'fr',
       allow_promotion_codes: true,
       payment_method_options: {

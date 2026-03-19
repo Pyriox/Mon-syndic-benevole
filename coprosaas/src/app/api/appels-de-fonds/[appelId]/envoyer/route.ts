@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
+import { createClient } from '@/lib/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
@@ -13,6 +14,11 @@ export async function POST(
   const { appelId } = await params;
   const cookieStore = await cookies();
 
+  // Vérification de l'authentification
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -22,11 +28,17 @@ export async function POST(
   // Récupérer l'appel de fonds + copropriété
   const { data: appel } = await supabase
     .from('appels_de_fonds')
-    .select('*, coproprietes(nom, adresse, ville, code_postal)')
+    .select('*, coproprietes(nom, adresse, ville, code_postal, syndic_id)')
     .eq('id', appelId)
     .single();
 
   if (!appel) return NextResponse.json({ message: 'Appel de fonds introuvable' }, { status: 404 });
+
+  // Vérification que l'utilisateur est bien le syndic de cette copropriété
+  const copros = appel.coproprietes as { syndic_id: string } | null;
+  if (copros?.syndic_id !== user.id) {
+    return NextResponse.json({ message: 'Accès refusé' }, { status: 403 });
+  }
 
   // Récupérer les lignes avec copropriétaires (email + user_id pour fallback auth)
   const { data: lignes } = await supabase

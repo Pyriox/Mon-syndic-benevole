@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'Mon Syndic Bénévole — Logiciel de gestion de copropriété pour syndic bénévole',
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: 'Mon Syndic Bénévole — Gestion de copropriété pour syndic bénévole',
     description:
       'Gérez votre copropriété sans syndic professionnel. À partir de 20 €/mois, 30 jours gratuits.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
 };
 

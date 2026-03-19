@@ -99,9 +99,9 @@ export async function POST(request: NextRequest) {
     .single();
   const syndicPrenom = (profile?.full_name ?? '').split(' ')[0] || 'Le syndic';
 
-  // Construire le lien d'invitation
-  const origin = request.headers.get('origin') ?? 'http://localhost:3001';
-  const link = `${origin}/register?token=${token}`;
+  // Construire le lien d'invitation (utiliser la variable d'environnement plutôt que l'en-tête Origin)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mon-syndic-benevole.fr';
+  const link = `${siteUrl}/register?token=${token}`;
 
   // Envoyer l'email d'invitation via Resend
   const { error: emailError } = await resend.emails.send({
@@ -179,6 +179,12 @@ export async function PATCH(request: NextRequest) {
 
   if (invErr || !invitation) {
     return NextResponse.json({ error: 'Invitation introuvable' }, { status: 404 });
+  }
+
+  // Vérifier que user_id appartient bien à l'email de l'invitation (protection contre l'usurpation d'identité)
+  const { data: authUser } = await admin.auth.admin.getUserById(user_id);
+  if (!authUser?.user || authUser.user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
+    return NextResponse.json({ error: 'Association non autorisée' }, { status: 403 });
   }
 
   if (invitation.statut === 'acceptee') {

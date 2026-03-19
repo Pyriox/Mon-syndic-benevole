@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Route /admin : réservée exclusivement à l'administrateur
-  const ADMIN_EMAIL = 'tpn.fabien@gmail.com';
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
   if (pathname.startsWith('/admin')) {
     if (!user) {
       const url = request.nextUrl.clone();
