@@ -81,6 +81,199 @@ export default async function DocumentsPage({ searchParams }: Props) {
   const supabase = await createClient();
   const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
+  // ================================================================
+  // VUE LECTURE SEULE — Copropriétaires
+  // ================================================================
+  if (userRole === 'copropriétaire') {
+    const syndicId = copropriete?.syndic_id ?? 'none';
+
+    const { data: rawDossiers } = await supabase
+      .from('document_dossiers')
+      .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
+      .eq('syndic_id', syndicId)
+      .order('is_default', { ascending: false })
+      .order('created_at');
+    const dossiers: Dossier[] = (rawDossiers ?? []) as unknown as Dossier[];
+
+    const { data: docCounts } = await supabase
+      .from('documents')
+      .select('dossier_id')
+      .eq('copropriete_id', selectedCoproId ?? 'none');
+    const countByDossier = (docCounts ?? []).reduce<Record<string, number>>((acc, doc) => {
+      if (doc.dossier_id) acc[doc.dossier_id] = (acc[doc.dossier_id] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    const subCountByParent = dossiers.reduce<Record<string, number>>((acc, d) => {
+      if (d.parent_id) acc[d.parent_id] = (acc[d.parent_id] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    // ── Vue dossier spécifique ──
+    if (dossierId) {
+      const currentDossier = dossiers.find((d) => d.id === dossierId);
+      if (!currentDossier) redirect('/documents');
+
+      const isYearClassified = ['Dépenses', 'Appels de fonds'].includes(currentDossier.nom);
+      const subDossiers = isYearClassified
+        ? dossiers.filter((d) => d.parent_id === dossierId).sort((a, b) => b.nom.localeCompare(a.nom))
+        : dossiers.filter((d) => d.parent_id === dossierId);
+
+      const { data: documents } = await supabase
+        .from('documents')
+        .select('*, coproprietes(nom)')
+        .eq('copropriete_id', selectedCoproId ?? 'none')
+        .eq('dossier_id', dossierId)
+        .order('created_at', { ascending: false });
+
+      const breadcrumb = buildBreadcrumb(dossiers, dossierId);
+
+      return (
+        <div className="space-y-6">
+          {/* Fil d'Ariane */}
+          <div className="flex items-center gap-1 text-sm flex-wrap">
+            <Link href="/documents" className="text-gray-500 hover:text-gray-700 transition-colors">Documents</Link>
+            {breadcrumb.map((b, i) => (
+              <Fragment key={b.id}>
+                <ChevronRight size={14} className="text-gray-400 shrink-0" />
+                {i < breadcrumb.length - 1 ? (
+                  <Link href={`/documents?dossier=${b.id}`} className="text-gray-500 hover:text-gray-700 transition-colors">{b.nom}</Link>
+                ) : (
+                  <span className="font-semibold text-gray-900">{b.nom}</span>
+                )}
+              </Fragment>
+            ))}
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">{currentDossier.nom}</h2>
+            <p className="text-gray-500 mt-1">
+              {subDossiers.length > 0
+                ? `${subDossiers.length} sous-dossier${subDossiers.length !== 1 ? 's' : ''}`
+                : `${documents?.length ?? 0} document${(documents?.length ?? 0) !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+          {/* Sous-dossiers */}
+          {subDossiers.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {subDossiers.map((sub) => {
+                const sepIdx = sub.nom.indexOf(' — ');
+                const hasDate = sepIdx !== -1;
+                const titre = hasDate ? sub.nom.slice(0, sepIdx) : sub.nom;
+                const date  = hasDate ? sub.nom.slice(sepIdx + 3) : null;
+                const subCount = dossiers.filter((d) => d.parent_id === sub.id).length;
+                const docCount = countByDossier[sub.id] ?? 0;
+                return (
+                  <Link key={sub.id} href={`/documents?dossier=${sub.id}`} className="block">
+                    <div className="bg-white rounded-xl border-2 border-gray-200 p-5 flex items-center gap-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
+                      <Folder size={36} className="text-blue-400 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm leading-snug truncate">{titre}</p>
+                        {date && <p className="text-xs font-medium text-blue-600 mt-0.5">{date}</p>}
+                        <p className="text-xs text-gray-400 mt-1">
+                          {subCount > 0 ? `${subCount} sous-dossier(s)` : `${docCount} document${docCount !== 1 ? 's' : ''}`}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+          {/* Documents */}
+          {subDossiers.length === 0 && documents && documents.length > 0 && (
+            <Card padding="none">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-5 py-3 font-medium text-gray-500">Nom</th>
+                      <th className="text-left px-5 py-3 font-medium text-gray-500">Type</th>
+                      <th className="text-left px-5 py-3 font-medium text-gray-500">Date</th>
+                      <th className="text-right px-5 py-3 font-medium text-gray-500">Taille</th>
+                      <th className="text-center px-5 py-3 font-medium text-gray-500">Télécharger</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {documents.map((doc) => (
+                      <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2">
+                            <FileText size={16} className="text-gray-400 shrink-0" />
+                            <span className="font-medium text-gray-900">{doc.nom}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <Badge variant={couleurType(doc.type)}>
+                            {LABELS_TYPE_DOCUMENT[doc.type] ?? doc.type}
+                          </Badge>
+                        </td>
+                        <td className="px-5 py-3 text-gray-500">{formatDate(doc.created_at)}</td>
+                        <td className="px-5 py-3 text-right text-gray-500">{formatTaille(doc.taille)}</td>
+                        <td className="px-5 py-3 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Ouvrir">
+                              <ExternalLink size={15} />
+                            </a>
+                            <a href={doc.url} download={doc.nom}
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" title="Télécharger">
+                              <Download size={15} />
+                            </a>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+          {/* État vide */}
+          {subDossiers.length === 0 && !documents?.length && (
+            <EmptyState
+              icon={<FileText size={48} strokeWidth={1.5} />}
+              title="Dossier vide"
+              description={`Aucun document dans « ${currentDossier.nom} » pour le moment.`}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // ── Vue grille racine ──
+    const rootDossiers = dossiers.filter((d) => !d.parent_id);
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
+          <p className="text-gray-500 mt-1">{rootDossiers.length} dossier(s)</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {rootDossiers.map((dossier) => (
+            <Link key={dossier.id} href={`/documents?dossier=${dossier.id}`} className="block">
+              <div className={`bg-white rounded-xl border-2 p-5 flex items-center gap-4 hover:shadow-md transition-all ${
+                dossier.is_default ? 'border-gray-200 hover:border-blue-300' : 'border-dashed border-gray-300 hover:border-amber-400'
+              }`}>
+                <Folder size={36} className={`${folderColorClass(dossier)} shrink-0`} />
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm leading-snug">{dossier.nom}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {subCountByParent[dossier.id]
+                      ? `${subCountByParent[dossier.id]} sous-dossier${subCountByParent[dossier.id] !== 1 ? 's' : ''}`
+                      : `${countByDossier[dossier.id] ?? 0} document${(countByDossier[dossier.id] ?? 0) !== 1 ? 's' : ''}`}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ================================================================
+  // VUE SYNDIC — logique complète (création, migrations, actions)
+  // ================================================================
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const canCreate = isSubscribed(copropriete?.plan);
 

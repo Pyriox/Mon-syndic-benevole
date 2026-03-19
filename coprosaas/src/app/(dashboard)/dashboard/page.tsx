@@ -28,7 +28,215 @@ export default async function DashboardPage() {
 
   const scopeId = selectedCoproId ?? 'none';
 
-  // Comptage réel des lots (la colonne nombre_lots est statique)
+  // ── Tableau de bord copropriétaire ───────────────────────────────────────
+  if (userRole === 'copropriétaire') {
+    const [
+      { data: fiche },
+      { data: assembleesUpcoming },
+    ] = await Promise.all([
+      supabase
+        .from('coproprietaires')
+        .select('id, nom, prenom, raison_sociale, solde')
+        .eq('copropriete_id', scopeId)
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('assemblees_generales')
+        .select('id, titre, date_ag, statut')
+        .eq('copropriete_id', scopeId)
+        .gte('date_ag', new Date().toISOString().split('T')[0])
+        .neq('statut', 'terminee')
+        .neq('statut', 'annulee')
+        .order('date_ag', { ascending: true })
+        .limit(3),
+    ]);
+
+    const { data: chargesImpayees } = fiche
+      ? await supabase
+          .from('lignes_appels_de_fonds')
+          .select('id, montant_du, appels_de_fonds!inner(id, titre, date_echeance)')
+          .eq('coproprietaire_id', fiche.id)
+          .eq('paye', false)
+          .limit(5)
+      : { data: null };
+
+    const prochaineAG = assembleesUpcoming?.[0] ?? null;
+    const joursAvantAG = prochaineAG
+      ? Math.ceil((new Date(prochaineAG.date_ag).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      : null;
+    const solde = fiche?.solde ?? 0;
+    const displayFirstName =
+      (fiche?.raison_sociale ? fiche.raison_sociale : (fiche?.prenom ?? fiche?.nom ?? '')).split(' ')[0] || null;
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {displayFirstName ? `Bonjour, ${displayFirstName}` : 'Tableau de bord'}
+          </h2>
+          <p className="text-gray-500 mt-1">
+            {copropriete ? copropriete.nom : 'Sélectionnez une copropriété dans le menu de navigation'}
+          </p>
+        </div>
+
+        {!copropriete && (
+          <Card className="text-center py-12">
+            <Building2 size={48} className="mx-auto text-gray-300 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700">Aucune copropriété sélectionnée</h3>
+            <p className="text-gray-500 text-sm mt-1">
+              Choisissez une copropriété dans le sélecteur du menu de navigation.
+            </p>
+          </Card>
+        )}
+
+        {copropriete && (
+          <>
+            {/* Alerte AG imminente */}
+            {prochaineAG && joursAvantAG !== null && joursAvantAG <= 30 && (
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <BellRing size={18} className="text-amber-500 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-amber-800">
+                    Assemblée Générale dans{' '}
+                    <span className="inline-flex items-center bg-amber-100 text-amber-700 rounded-md px-2 py-0.5 text-xs font-bold">
+                      J&minus;{joursAvantAG}
+                    </span>
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5 truncate">
+                    {prochaineAG.titre} &middot;{' '}
+                    {new Date(prochaineAG.date_ag).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </p>
+                </div>
+                <Link href={`/assemblees/${prochaineAG.id}`}
+                  className="shrink-0 text-xs text-amber-700 hover:text-amber-900 font-semibold underline-offset-2 hover:underline">
+                  Voir &rarr;
+                </Link>
+              </div>
+            )}
+
+            {/* Fiche non liée */}
+            {!fiche && (
+              <Card className="text-center py-8">
+                <p className="text-gray-400 text-sm italic">
+                  Votre fiche copropriétaire n&apos;est pas encore associée à ce compte. Contactez votre syndic.
+                </p>
+              </Card>
+            )}
+
+            {fiche && (
+              <>
+                {/* KPIs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Mon solde */}
+                  <Card className="flex items-center gap-4">
+                    <div className={`p-3 rounded-xl shrink-0 ${solde >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                      <Scale size={24} className={solde >= 0 ? 'text-green-600' : 'text-red-600'} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Mon solde</p>
+                      <p className={`text-2xl font-bold ${solde >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+                        {solde >= 0 ? '+' : ''}{formatEuros(solde)}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {solde >= 0 ? 'Avance de trésorerie' : 'Charges à régler'}
+                      </p>
+                    </div>
+                  </Card>
+
+                  {/* Prochaine AG */}
+                  <Card className="flex items-center gap-4">
+                    <div className="p-3 bg-purple-100 rounded-xl shrink-0">
+                      <CalendarDays size={24} className="text-purple-600" />
+                    </div>
+                    {prochaineAG ? (
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
+                        <p className="font-bold text-gray-900 truncate">{prochaineAG.titre}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {new Date(prochaineAG.date_ag).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
+                        <p className="text-sm text-gray-400 mt-1 italic">Aucune AG planifiée</p>
+                      </div>
+                    )}
+                  </Card>
+                </div>
+
+                {/* Charges à régler */}
+                {chargesImpayees && chargesImpayees.length > 0 ? (
+                  <Card>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900">Mes charges à régler</h3>
+                      <Link href="/appels-de-fonds" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+                        Voir tout <ArrowRight size={14} />
+                      </Link>
+                    </div>
+                    <ul className="divide-y divide-gray-100">
+                      {chargesImpayees.map((ligne) => {
+                        type AppelRef = { id: string; titre: string; date_echeance: string };
+                        const appel = ligne.appels_de_fonds as unknown as AppelRef;
+                        return (
+                          <li key={ligne.id} className="flex items-center justify-between py-2.5">
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">{appel?.titre ?? 'Appel de fonds'}</p>
+                              {appel?.date_echeance && (
+                                <p className="text-xs text-gray-400">Échéance : {formatDate(appel.date_echeance)}</p>
+                              )}
+                            </div>
+                            <span className="text-sm font-semibold text-red-600 shrink-0 ml-3">
+                              {formatEuros(ligne.montant_du)}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </Card>
+                ) : (
+                  <Card>
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="p-2 bg-green-100 rounded-lg shrink-0">
+                        <Banknote size={18} className="text-green-600" />
+                      </div>
+                      <p className="text-sm font-medium text-green-700">Aucune charge en attente — vous êtes à jour !</p>
+                    </div>
+                  </Card>
+                )}
+
+                {/* AG à venir */}
+                {assembleesUpcoming && assembleesUpcoming.length > 0 && (
+                  <Card>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900">
+                        <CalendarDays size={18} className="inline mr-2 text-purple-600" />
+                        Assemblées générales à venir
+                      </h3>
+                      <Link href="/assemblees" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+                        Voir tout <ArrowRight size={14} />
+                      </Link>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {assembleesUpcoming.map((ag) => (
+                        <Link key={ag.id} href={`/assemblees/${ag.id}`}
+                          className="p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                          <p className="font-medium text-gray-800 text-sm">{ag.titre}</p>
+                          <p className="text-xs text-gray-500 mt-1">{formatDate(ag.date_ag)}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+              </>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ── Tableau de bord syndic ────────────────────────────────────────────────
   const { count: nbLots } = await supabase
     .from('lots')
     .select('id', { count: 'exact', head: true })
