@@ -26,6 +26,7 @@ import {
   Send,
   XCircle,
   CheckCircle2,
+  CreditCard,
 } from 'lucide-react';
 
 const ADMIN_EMAIL = 'tpn.fabien@gmail.com';
@@ -64,6 +65,20 @@ function KpiCard({
       </div>
     </div>
   );
+}
+
+// ── Composant plan badge ─────────────────────────────────────
+function PlanBadge({ plan, planId }: { plan: string | null; planId: string | null }) {
+  if (plan === 'actif') {
+    const cfg: Record<string, { label: string; cls: string }> = {
+      essentiel: { label: 'Essentiel', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+      confort:   { label: 'Confort',   cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+      illimite:  { label: 'Illimité',  cls: 'bg-purple-50 text-purple-700 border-purple-200' },
+    };
+    const c = cfg[planId ?? ''] ?? { label: planId ?? 'Actif', cls: 'bg-green-50 text-green-700 border-green-200' };
+    return <span className={`inline-flex text-xs px-2 py-0.5 rounded-md font-medium border ${c.cls}`}>{c.label}</span>;
+  }
+  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-400 border border-gray-200">Essai</span>;
 }
 
 // ── Composant section titre ───────────────────────────────────
@@ -118,7 +133,7 @@ export default async function AdminPage() {
     admin.from('depenses').select('montant').gte('date_depense', startOfYear),
     admin
       .from('coproprietes')
-      .select('id, nom, adresse, ville, created_at, syndic_id, profiles!coproprietes_syndic_id_fkey(full_name, id)')
+      .select('id, nom, adresse, ville, plan, plan_id, created_at, syndic_id, profiles!coproprietes_syndic_id_fkey(full_name, id)')
       .order('created_at', { ascending: false })
       .limit(20),
     admin
@@ -168,6 +183,31 @@ export default async function AdminPage() {
     depCount[d.copropriete_id].total += d.montant;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const coprosTyped = (coproprietes ?? []) as any[];
+
+  // ── Abonnements ───────────────────────────────────────────────
+  const MRR_PRICES: Record<string, number> = { essentiel: 20, confort: 30, illimite: 45 };
+  const nbActifs = coprosTyped.filter((c) => c.plan === 'actif').length;
+  const nbEssai = coprosTyped.length - nbActifs;
+  const planBreakdown: Record<string, number> = { essentiel: 0, confort: 0, illimite: 0 };
+  for (const c of coprosTyped) {
+    if (c.plan === 'actif' && c.plan_id) planBreakdown[c.plan_id] = (planBreakdown[c.plan_id] ?? 0) + 1;
+  }
+  const mrr = Object.entries(planBreakdown).reduce((sum, [id, nb]) => sum + (MRR_PRICES[id] ?? 0) * nb, 0);
+  const conversionPct = coprosTyped.length > 0 ? Math.round((nbActifs / coprosTyped.length) * 100) : 0;
+
+  // ── Alertes ────────────────────────────────────────────────────
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+  const alertNonConfirmedOld = authUsers.filter(
+    (u) => !u.email_confirmed_at && u.created_at < sevenDaysAgo && u.email !== ADMIN_EMAIL
+  );
+  const alertInvitationsExpirees = (invitations ?? []).filter(
+    (inv) => inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date()
+  );
+  const alertCoprosWithoutLots = coprosTyped.filter((c) => (lotsCount[c.id] ?? 0) === 0);
+  const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertCoprosWithoutLots.length;
+
   return (
     <div className="space-y-10 pb-12">
 
@@ -201,6 +241,82 @@ export default async function AdminPage() {
           <KpiCard label="Incidents ouverts" value={nbIncidentsOuverts ?? 0} icon={AlertTriangle} color={`${(nbIncidentsOuverts ?? 0) > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`} />
         </div>
       </section>
+
+      {/* ── Abonnements ── */}
+      <section>
+        <SectionTitle icon={CreditCard} title="Abonnements &amp; revenus" sub="Plans Stripe synchronisés en temps réel" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <KpiCard label="Abonnés actifs" value={nbActifs} sub={`${nbEssai} en période d'essai`} icon={CreditCard} color="bg-green-100 text-green-600" />
+          <KpiCard label="MRR estimé" value={formatEuros(mrr)} sub="revenus mensuels récurrents" icon={TrendingUp} color="bg-emerald-100 text-emerald-600" />
+          <KpiCard label="Taux de conversion" value={`${conversionPct} %`} sub="essai → abonnement" icon={TrendingUp} color="bg-blue-100 text-blue-600" />
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-3">Répartition plans</p>
+            <div className="space-y-2">
+              {([['essentiel', '20€/mois', 'bg-blue-400'], ['confort', '30€/mois', 'bg-indigo-400'], ['illimite', '45€/mois', 'bg-purple-400']] as const).map(([id, price, color]) => {
+                const nb = planBreakdown[id] ?? 0;
+                const pct = nbActifs > 0 ? Math.round((nb / nbActifs) * 100) : 0;
+                return (
+                  <div key={id}>
+                    <div className="flex items-center justify-between text-xs mb-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-2 h-2 rounded-full ${color}`} />
+                        <span className="text-gray-700 capitalize">{id}</span>
+                        <span className="text-gray-400">· {price}</span>
+                      </div>
+                      <span className="font-bold text-gray-800">{nb}</span>
+                    </div>
+                    <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full ${color} opacity-70`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Alertes ── */}
+      {nbAlertes > 0 && (
+        <section>
+          <SectionTitle icon={AlertTriangle} title="Alertes" sub={`${nbAlertes} point${nbAlertes > 1 ? 's' : ''} nécessitant une attention`} />
+          <div className="space-y-2">
+            {alertNonConfirmedOld.length > 0 && (
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <AlertTriangle size={15} className="text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">
+                    {alertNonConfirmedOld.length} compte{alertNonConfirmedOld.length > 1 ? 's' : ''} non vérifié{alertNonConfirmedOld.length > 1 ? 's' : ''} depuis plus de 7 jours
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5 truncate">{alertNonConfirmedOld.map((u) => u.email).join(', ')}</p>
+                </div>
+              </div>
+            )}
+            {alertInvitationsExpirees.length > 0 && (
+              <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <Clock size={15} className="text-orange-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-orange-800">
+                    {alertInvitationsExpirees.length} invitation{alertInvitationsExpirees.length > 1 ? 's' : ''} expirée{alertInvitationsExpirees.length > 1 ? 's' : ''} non utilisée{alertInvitationsExpirees.length > 1 ? 's' : ''}
+                  </p>
+                  <p className="text-xs text-orange-700 mt-0.5">Pensez à les relancer depuis la fiche copropriété.</p>
+                </div>
+              </div>
+            )}
+            {alertCoprosWithoutLots.length > 0 && (
+              <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <DoorOpen size={15} className="text-blue-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-800">
+                    {alertCoprosWithoutLots.length} copropriété{alertCoprosWithoutLots.length > 1 ? 's' : ''} sans aucun lot configuré
+                  </p>
+                  <p className="text-xs text-blue-700 mt-0.5 truncate">{alertCoprosWithoutLots.map((c: { nom: string }) => c.nom).join(', ')}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ── Utilisateurs inscrits ── */}
       <section>
@@ -334,6 +450,7 @@ export default async function AdminPage() {
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Lots</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">AG</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Dépenses</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Plan</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Créée le</th>
               </tr>
             </thead>
@@ -361,6 +478,10 @@ export default async function AdminPage() {
                     <td className="px-4 py-3 text-right text-gray-700 hidden lg:table-cell text-xs font-medium">
                       {dep ? formatEuros(dep.total) : '—'}
                     </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      <PlanBadge plan={(c as any).plan} planId={(c as any).plan_id} />
+                    </td>
                     <td className="px-4 py-3 text-gray-400 hidden xl:table-cell text-xs">
                       {formatDate(c.created_at)}
                     </td>
@@ -376,6 +497,27 @@ export default async function AdminPage() {
       <section>
         <SectionTitle icon={Database} title="Outils de gestion" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          {/* Stripe */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <CreditCard size={15} className="text-indigo-600" />
+              </div>
+              <h3 className="font-semibold text-gray-800 text-sm">Paiements Stripe</h3>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">
+              Consultez les abonnements, les factures et les paiements échoués dans le dashboard Stripe.
+            </p>
+            <a
+              href="https://dashboard.stripe.com/subscriptions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+            >
+              Ouvrir Stripe <ExternalLink size={11} />
+            </a>
+          </div>
 
           {/* Invitations */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">

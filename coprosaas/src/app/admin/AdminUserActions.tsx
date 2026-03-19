@@ -4,7 +4,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, Mail, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Trash2, Mail, MoreHorizontal, Loader2, ShieldCheck } from 'lucide-react';
 
 interface Props {
   userId: string;
@@ -50,6 +50,25 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
     }
   };
 
+  const handleForceConfirm = async () => {
+    if (!confirm(`Forcer la vérification du compte de ${userEmail} sans envoyer d'email ?`)) return;
+    setLoading(true);
+    setOpen(false);
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'force_confirm', userId }),
+    });
+    setLoading(false);
+    if (res.ok) {
+      setDone('Compte vérifié');
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      const { error } = await res.json();
+      alert('Erreur : ' + error);
+    }
+  };
+
   if (isSelf) return null;
 
   if (done) {
@@ -80,6 +99,15 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
                   >
                     <Mail size={14} className="text-blue-500" />
                     Renvoyer la confirmation
+                  </button>
+                )}
+                {!isConfirmed && (
+                  <button
+                    onClick={handleForceConfirm}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <ShieldCheck size={14} className="text-green-500" />
+                    Forcer la vérification
                   </button>
                 )}
                 <button
