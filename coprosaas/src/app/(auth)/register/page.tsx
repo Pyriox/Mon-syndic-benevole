@@ -83,7 +83,10 @@ function RegisterForm() {
     const { data, error: authError } = await supabase.auth.signUp({
       email: emailToUse,
       password: formData.password,
-      options: { data: { full_name: fullName, prenom: formData.prenom.trim(), nom: formData.nom.trim(), role } },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        data: { full_name: fullName, prenom: formData.prenom.trim(), nom: formData.nom.trim(), role },
+      },
     });
 
     if (authError) {

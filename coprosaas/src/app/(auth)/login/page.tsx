@@ -3,8 +3,8 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -20,6 +20,7 @@ const REASSURANCES = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [mode, setMode] = useState<'login' | 'forgot'>('login');
@@ -33,6 +34,12 @@ export default function LoginPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [resetError, setResetError] = useState('');
+
+  useEffect(() => {
+    if (searchParams.get('error') === 'lien_invalide') {
+      setError('Ce lien de confirmation est invalide ou a expiré. Veuillez vous reconnecter ou faire une nouvelle demande.');
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +60,7 @@ export default function LoginPage() {
     setResetLoading(true);
     setResetError('');
     const { error: resetErr } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/confirm?next=/reset-password`,
     });
     setResetLoading(false);
     if (resetErr) {
