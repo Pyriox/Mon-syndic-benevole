@@ -10,7 +10,7 @@ import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
 import CoproprietaireActions from './CoproprietaireActions';
 import CoproprietairesTable from './CoproprietairesTable';
-import { Users } from 'lucide-react';
+import { Building2, UserCheck, Users } from 'lucide-react';
 
 export default async function CoproprietairesPage() {
   const supabase = await createClient();
@@ -61,6 +61,8 @@ export default async function CoproprietairesPage() {
   const lotsForSelect = (allLots ?? []).map((l) => ({ id: l.id, numero: l.numero, coproprietaire_id: l.coproprietaire_id }));
 
   const totalTantiemes = (allLots ?? []).reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nbInscrits = (coproprietaires ?? []).filter((c: any) => c.user_id).length;
 
   return (
     <div className="space-y-6">
@@ -71,6 +73,35 @@ export default async function CoproprietairesPage() {
         </div>
         {isSyndic && <CoproprietaireActions coproprietes={coproprietes} />}
       </div>
+
+      {/* Bande de stats */}
+      {coproprietaires && coproprietaires.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <Card padding="sm" className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg shrink-0"><Users size={18} className="text-blue-500" /></div>
+            <div>
+              <p className="text-xs text-gray-500">Copropriétaires</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">{coproprietaires.length}</p>
+            </div>
+          </Card>
+          <Card padding="sm" className="flex items-center gap-3">
+            <div className="p-2 bg-green-50 rounded-lg shrink-0"><UserCheck size={18} className="text-green-500" /></div>
+            <div>
+              <p className="text-xs text-gray-500">Inscrits</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">
+                {nbInscrits} <span className="text-sm font-normal text-gray-400">/ {coproprietaires.length}</span>
+              </p>
+            </div>
+          </Card>
+          <Card padding="sm" className="flex items-center gap-3 col-span-2 sm:col-span-1">
+            <div className="p-2 bg-purple-50 rounded-lg shrink-0"><Building2 size={18} className="text-purple-500" /></div>
+            <div>
+              <p className="text-xs text-gray-500">Tantièmes totaux</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">{totalTantiemes}</p>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {coproprietaires && coproprietaires.length > 0 ? (
         <Card>

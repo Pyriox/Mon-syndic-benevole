@@ -18,9 +18,22 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { createClient } from '@/lib/supabase/client';
 import Badge from '@/components/ui/Badge';
+import Card from '@/components/ui/Card';
 import { CoproprietaireEdit, CoproprietaireDelete } from './CoproprietaireActions';
 import { formatEuros } from '@/lib/utils';
-import { GripVertical, Mail, Phone, UserCheck } from 'lucide-react';
+import { GripVertical, Mail, MapPin, Phone, UserCheck } from 'lucide-react';
+
+function Avatar({ name }: { name: string }) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const initials = parts.length >= 2
+    ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+  return (
+    <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-100 text-blue-700 text-sm font-bold shrink-0">
+      {initials || '?'}
+    </span>
+  );
+}
 
 interface CoproRow {
   id: string;
@@ -70,36 +83,64 @@ function ReadOnlyMobileCoproCard({
   totalTantiemes: number;
 }) {
   const cpTantiemes = ownedLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
-  const cpPercent = totalTantiemes > 0 ? ((cpTantiemes / totalTantiemes) * 100).toFixed(2) : '0.00';
+  const cpPct = totalTantiemes > 0 ? (cpTantiemes / totalTantiemes) * 100 : 0;
   const displayName = cp.raison_sociale
     ? cp.raison_sociale
     : `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim();
+  const address = [cp.adresse, cp.code_postal, cp.ville].filter(Boolean).join(' ');
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-2">
-      <div className="flex items-center gap-2">
-        <p className="font-semibold text-gray-900 leading-tight">{displayName || <span className="text-gray-400 italic">Sans nom</span>}</p>
-        {cp.user_id && (
-          <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
-            <UserCheck size={11} />
-            Inscrit
-          </span>
-        )}
-      </div>
-      {cp.raison_sociale && (cp.prenom || cp.nom) && (
-        <p className="text-xs text-gray-400">{`${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim()}</p>
-      )}
-      {ownedLots.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {ownedLots.map((lot) => (
-            <span key={lot.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full">
-              {lot.numero}<span className="text-blue-400">· {lot.tantiemes} t.</span>
-            </span>
-          ))}
-          <span className="text-xs text-gray-400 self-center">{cpTantiemes} t. — {cpPercent}%</span>
+    <Card className="space-y-3">
+      {/* Avatar + nom */}
+      <div className="flex items-center gap-3">
+        <Avatar name={displayName || '?'} />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="font-semibold text-gray-900 leading-tight truncate">
+              {displayName || <span className="text-gray-400 italic">Sans nom</span>}
+            </p>
+            {cp.user_id && (
+              <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
+                <UserCheck size={11} />Inscrit
+              </span>
+            )}
+          </div>
+          {cp.raison_sociale && (cp.prenom || cp.nom) && (
+            <p className="text-xs text-gray-400 mt-0.5">{`${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim()}</p>
+          )}
         </div>
+      </div>
+      {/* Lots + barre quote-part */}
+      {ownedLots.length > 0 ? (
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap gap-1.5">
+            {ownedLots.map((lot) => (
+              <span key={lot.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full">
+                {lot.numero}<span className="text-blue-400">· {lot.tantiemes} t.</span>
+              </span>
+            ))}
+          </div>
+          <div className="space-y-0.5">
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>{cpTantiemes} tantièmes</span>
+              <span className="font-medium text-gray-700">{cpPct.toFixed(1)}%</span>
+            </div>
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className="bg-blue-400 h-full rounded-full" style={{ width: `${cpPct}%` }} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-400 italic">Aucun lot assigné</p>
       )}
-    </div>
+      {/* Adresse */}
+      {address && (
+        <p className="text-xs text-gray-500 flex items-start gap-1.5">
+          <MapPin size={12} className="text-gray-400 mt-0.5 shrink-0" />
+          {address}
+        </p>
+      )}
+    </Card>
   );
 }
 
@@ -116,45 +157,57 @@ function ReadOnlyCoproRow({
   totalTantiemes: number;
 }) {
   const cpTantiemes = ownedLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
-  const cpPercent = totalTantiemes > 0 ? ((cpTantiemes / totalTantiemes) * 100).toFixed(2) : '0.00';
+  const cpPct = totalTantiemes > 0 ? (cpTantiemes / totalTantiemes) * 100 : 0;
   const displayName = cp.raison_sociale
     ? cp.raison_sociale
     : `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim();
+  const address = [cp.adresse, cp.code_postal, cp.ville].filter(Boolean).join(' ');
 
   return (
-    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-      <td className="py-3 px-4">
-        <div className="flex items-center gap-2">
-          <p className="font-medium text-gray-900">{displayName || <span className="text-gray-400 italic">Sans nom</span>}</p>
-          {cp.user_id && (
-            <span title="Compte actif" className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
-              <UserCheck size={11} />Inscrit
-            </span>
-          )}
+    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+      <td className="py-3.5 px-5">
+        <div className="flex items-center gap-3">
+          <Avatar name={displayName || '?'} />
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-gray-900">{displayName || <span className="text-gray-400 italic">Sans nom</span>}</p>
+              {cp.user_id && (
+                <span title="Compte actif" className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
+                  <UserCheck size={11} />Inscrit
+                </span>
+              )}
+            </div>
+            {cp.raison_sociale && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                {(cp.prenom || cp.nom) ? `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim() : 'Personne morale'}
+              </p>
+            )}
+          </div>
         </div>
-        {cp.raison_sociale && (
-          <p className="text-xs text-gray-400 mt-0.5">
-            {(cp.prenom || cp.nom) ? `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim() : 'Personne morale'}
-          </p>
-        )}
       </td>
-      <td className="py-3 px-4">
+      <td className="py-3.5 px-5">
         {ownedLots.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {ownedLots.map((lot) => (
-              <span key={lot.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full">
-                {lot.numero}<span className="text-blue-400">· {lot.tantiemes} t.</span>
-              </span>
-            ))}
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap gap-1">
+              {ownedLots.map((lot) => (
+                <span key={lot.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full">
+                  {lot.numero}<span className="text-blue-400">· {lot.tantiemes} t.</span>
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="bg-blue-400 h-full rounded-full" style={{ width: `${cpPct}%` }} />
+              </div>
+              <span className="text-xs font-medium text-gray-600 w-10 text-right">{cpPct.toFixed(1)}%</span>
+            </div>
           </div>
         ) : (
           <span className="text-xs text-gray-400 italic">Aucun lot</span>
         )}
-        {ownedLots.length > 0 && (
-          <p className="text-xs text-gray-400 mt-1">
-            {cpTantiemes} / {totalTantiemes} t. — <span className="font-medium text-gray-600">{cpPercent}%</span>
-          </p>
-        )}
+      </td>
+      <td className="py-3.5 px-5 text-sm text-gray-500">
+        {address || <span className="text-gray-300 text-xs">—</span>}
       </td>
     </tr>
   );
@@ -182,26 +235,29 @@ function MobileCoproCard({
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
-      {/* Ligne 1 : nom + actions */}
+      {/* Ligne 1 : avatar + nom + actions */}
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-gray-900 leading-tight">{displayName}</p>
-            {cp.user_id && (
-              <span
-                title="Compte actif"
-                className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
-              >
-                <UserCheck size={11} />
-                Inscrit
-              </span>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Avatar name={displayName || '?'} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-semibold text-gray-900 leading-tight truncate">{displayName}</p>
+              {cp.user_id && (
+                <span
+                  title="Compte actif"
+                  className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
+                >
+                  <UserCheck size={11} />
+                  Inscrit
+                </span>
+              )}
+            </div>
+            {cp.raison_sociale && (cp.prenom || cp.nom) && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                {`${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim()}
+              </p>
             )}
           </div>
-          {cp.raison_sociale && (cp.prenom || cp.nom) && (
-            <p className="text-xs text-gray-400 mt-0.5">
-              {`${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim()}
-            </p>
-          )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <CoproprietaireEdit
@@ -213,22 +269,29 @@ function MobileCoproCard({
         </div>
       </div>
 
-      {/* Lots */}
-      {ownedLots.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {ownedLots.map((lot) => (
-            <span
-              key={lot.id}
-              className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full"
-            >
-              {lot.numero}
-              <span className="text-blue-400">· {lot.tantiemes} t.</span>
-            </span>
-          ))}
-          <span className="text-xs text-gray-400 self-center">
-            {cpTantiemes} t. &mdash; {cpPercent}%
-          </span>
+      {/* Lots + barre quote-part */}
+      {ownedLots.length > 0 ? (
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap gap-1.5">
+            {ownedLots.map((lot) => (
+              <span
+                key={lot.id}
+                className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full"
+              >
+                {lot.numero}
+                <span className="text-blue-400">· {lot.tantiemes} t.</span>
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className="bg-blue-400 h-full rounded-full" style={{ width: `${cpPercent}%` }} />
+            </div>
+            <span className="text-xs font-medium text-gray-600 w-10 text-right">{cpPercent}%</span>
+          </div>
         </div>
+      ) : (
+        <p className="text-xs text-gray-400 italic">Aucun lot assigné</p>
       )}
 
       {/* Contact + Solde */}
@@ -314,48 +377,56 @@ function SortableCoproRow({
 
       {/* Nom */}
       <td className="py-3 px-4">
-        <div className="flex items-center gap-2">
-          <p className="font-medium text-gray-900">{displayName}</p>
-          {cp.user_id && (
-            <span
-              title="Compte actif"
-              className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
-            >
-              <UserCheck size={11} />
-              Inscrit
-            </span>
-          )}
+        <div className="flex items-center gap-2.5">
+          <Avatar name={displayName || '?'} />
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-gray-900">{displayName}</p>
+              {cp.user_id && (
+                <span
+                  title="Compte actif"
+                  className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
+                >
+                  <UserCheck size={11} />
+                  Inscrit
+                </span>
+              )}
+            </div>
+            {cp.raison_sociale && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                {(cp.prenom || cp.nom)
+                  ? `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim()
+                  : 'Personne morale'}
+              </p>
+            )}
+          </div>
         </div>
-        {cp.raison_sociale && (
-          <p className="text-xs text-gray-400 mt-0.5">
-            {(cp.prenom || cp.nom)
-              ? `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim()
-              : 'Personne morale'}
-          </p>
-        )}
       </td>
 
       {/* Lots */}
       <td className="py-3 px-4">
         {ownedLots.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {ownedLots.map((lot) => (
-              <span
-                key={lot.id}
-                className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full"
-              >
-                {lot.numero}
-                <span className="text-blue-400">· {lot.tantiemes} t.</span>
-              </span>
-            ))}
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap gap-1">
+              {ownedLots.map((lot) => (
+                <span
+                  key={lot.id}
+                  className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full"
+                >
+                  {lot.numero}
+                  <span className="text-blue-400">· {lot.tantiemes} t.</span>
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="bg-blue-400 h-full rounded-full" style={{ width: `${cpPercent}%` }} />
+              </div>
+              <span className="text-xs font-medium text-gray-600 w-10 text-right">{cpPercent}%</span>
+            </div>
           </div>
         ) : (
           <span className="text-xs text-gray-400 italic">Aucun lot</span>
-        )}
-        {ownedLots.length > 0 && (
-          <p className="text-xs text-gray-400 mt-1">
-            {cpTantiemes} / {totalTantiemes} t. &mdash; <span className="font-medium text-gray-600">{cpPercent}%</span>
-          </p>
         )}
       </td>
 
@@ -458,9 +529,10 @@ export default function CoproprietairesTable({
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Nom</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Lots</th>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="text-left py-3 px-5 font-medium text-gray-500">Copropriétaire</th>
+                <th className="text-left py-3 px-5 font-medium text-gray-500">Lots &amp; quote-part</th>
+                <th className="text-left py-3 px-5 font-medium text-gray-500">Adresse</th>
               </tr>
             </thead>
             <tbody>
@@ -506,10 +578,10 @@ export default function CoproprietairesTable({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200">
+              <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="py-3 px-2 w-6"></th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Nom</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Lots</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Copropriétaire</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Lots &amp; tantièmes</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Contact</th>
                 <th className="text-right py-3 px-4 font-medium text-gray-500">Solde</th>
                 <th className="py-3 px-4"></th>
