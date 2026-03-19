@@ -5,6 +5,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import DashboardShell from '@/components/layout/DashboardShell';
 import type { UserCopropriete, AppNotification } from '@/types';
 
@@ -40,10 +41,22 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 
   // Fusionne les coproprietaires trouvés par user_id et par email (non liés)
   const linkedCoproIds = new Set((coproRows ?? []).map((r) => r.copropriete_id));
-  const allCoproRows = [
-    ...(coproRows ?? []),
-    ...(coproRowsByEmail ?? []).filter((r) => !linkedCoproIds.has(r.copropriete_id)),
-  ];
+  const unlinkedRows = (coproRowsByEmail ?? []).filter((r) => !linkedCoproIds.has(r.copropriete_id));
+  const allCoproRows = [...(coproRows ?? []), ...unlinkedRows];
+
+  // Auto-liaison : si des fiches sont trouvées par email sans user_id, on les lie maintenant
+  if (unlinkedRows.length > 0 && user.email) {
+    try {
+      const admin = createAdminClient();
+      await admin
+        .from('coproprietaires')
+        .update({ user_id: user.id })
+        .eq('email', user.email.toLowerCase())
+        .is('user_id', null);
+    } catch {
+      // Non bloquant
+    }
+  }
 
   // Déduplique et fusionne les deux listes avec le rôle associé
   const syndicIds = new Set((syndicCopros ?? []).map((c) => c.id));

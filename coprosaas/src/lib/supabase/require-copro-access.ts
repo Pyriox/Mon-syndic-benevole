@@ -94,6 +94,8 @@ export async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<Co
     return { user, selectedCoproId, role: 'copropriétaire', copro };
   }
 
-  // Cookie présent mais aucun accès → redirection
-  redirect('/dashboard');
+  // Cookie présent mais aucun accès
+  // Si un rôle spécifique est requis → redirection. Sinon on retourne null pour éviter une boucle infinie sur /dashboard.
+  if (allowedRoles) redirect('/dashboard');
+  return { user, selectedCoproId: null, role: null, copro: null };
 }
