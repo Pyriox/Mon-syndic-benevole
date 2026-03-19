@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import AdminUserActions from './AdminUserActions';
 import {
   Users,
   Building2,
@@ -22,6 +23,9 @@ import {
   ShieldCheck,
   Database,
   Activity,
+  Send,
+  XCircle,
+  CheckCircle2,
 } from 'lucide-react';
 
 const ADMIN_EMAIL = 'tpn.fabien@gmail.com';
@@ -102,6 +106,7 @@ export default async function AdminPage() {
     { data: coproprietes },
     { data: recentCopros },
     authResult,
+    { data: invitations },
   ] = await Promise.all([
     admin.from('coproprietes').select('id', { count: 'exact', head: true }),
     admin.from('lots').select('id', { count: 'exact', head: true }),
@@ -121,7 +126,12 @@ export default async function AdminPage() {
       .select('id, nom, ville, created_at')
       .gte('created_at', startOf30Days)
       .order('created_at', { ascending: false }),
-    admin.auth.admin.listUsers({ perPage: 200 }),
+    admin.auth.admin.listUsers({ perPage: 500 }),
+    admin
+      .from('invitations')
+      .select('id, email, statut, expires_at, created_at, coproprietes(nom)')
+      .order('created_at', { ascending: false })
+      .limit(50),
   ]);
 
   // ── Calculs ───────────────────────
@@ -134,8 +144,9 @@ export default async function AdminPage() {
 
   // Trier par date d'inscription desc pour l'affichage
   const recentUsers = [...authUsers]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 15);
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  const nbUnconfirmed = authUsers.filter((u) => !u.email_confirmed_at).length;
 
   // Stats copropriétés : nb lots par coproprieté
   const { data: lotsParCopro } = await admin.from('lots').select('copropriete_id');
@@ -178,7 +189,7 @@ export default async function AdminPage() {
       <section>
         <SectionTitle icon={Activity} title="Statistiques globales" sub="Toutes copropriétés confondues" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <KpiCard label="Utilisateurs" value={nbUsers} sub={`+${newUsersThisMonth} ce mois`} icon={Users} color="bg-blue-100 text-blue-600" />
+          <KpiCard label="Utilisateurs" value={nbUsers} sub={`+${newUsersThisMonth} ce mois · ${nbUnconfirmed} non vérifiés`} icon={Users} color="bg-blue-100 text-blue-600" />
           <KpiCard label="Copropriétés" value={nbCoproprietes ?? 0} sub={`${recentCopros?.length ?? 0} créées ce mois`} icon={Building2} color="bg-indigo-100 text-indigo-600" />
           <KpiCard label="Lots gérés" value={nbLots ?? 0} icon={DoorOpen} color="bg-violet-100 text-violet-600" />
           <KpiCard label="Copropriétaires" value={nbCoproprietaires ?? 0} icon={UserCheck} color="bg-green-100 text-green-600" />
@@ -191,18 +202,20 @@ export default async function AdminPage() {
         </div>
       </section>
 
-      {/* ── Utilisateurs récents ── */}
+      {/* ── Utilisateurs inscrits ── */}
       <section>
-        <SectionTitle icon={Users} title="Utilisateurs inscrits" sub={`${nbUsers} comptes au total`} />
+        <SectionTitle icon={Users} title="Utilisateurs inscrits" sub={`${nbUsers} comptes au total — ${nbUnconfirmed} non vérifiés`} />
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Nom</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Rôle</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Inscription</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Dernière connexion</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
+                <th className="px-4 py-3 w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -224,6 +237,15 @@ export default async function AdminPage() {
                   <td className="px-4 py-3 text-gray-600 hidden md:table-cell">
                     {(u.user_metadata as Record<string, string> | null)?.full_name ?? '—'}
                   </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <span className={`inline-flex items-center text-xs px-2 py-0.5 rounded-md font-medium ${
+                      (u.user_metadata as Record<string, string> | null)?.role === 'copropriétaire'
+                        ? 'bg-green-50 text-green-700'
+                        : 'bg-indigo-50 text-indigo-700'
+                    }`}>
+                      {(u.user_metadata as Record<string, string> | null)?.role ?? 'syndic'}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-gray-500 hidden lg:table-cell text-xs">{formatDate(u.created_at)}</td>
                   <td className="px-4 py-3 text-gray-500 hidden lg:table-cell text-xs">{formatDateTime(u.last_sign_in_at)}</td>
                   <td className="px-4 py-3">
@@ -237,15 +259,66 @@ export default async function AdminPage() {
                       </span>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    <AdminUserActions
+                      userId={u.id}
+                      userEmail={u.email ?? ''}
+                      isConfirmed={!!u.email_confirmed_at}
+                      isSelf={u.email === ADMIN_EMAIL}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {nbUsers > 15 && (
-            <p className="text-xs text-gray-400 text-center py-3 border-t border-gray-100">
-              Affichage des 15 derniers sur {nbUsers} utilisateurs
-            </p>
-          )}
+        </div>
+      </section>
+
+      {/* ── Invitations ── */}
+      <section>
+        <SectionTitle icon={Send} title="Invitations copropriétaires" sub="50 dernières invitations" />
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email invité</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropriété</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Envoyée le</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Expire le</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {(invitations ?? []).length === 0 && (
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">Aucune invitation</td></tr>
+              )}
+              {(invitations ?? []).map((inv) => {
+                const copro = (inv.coproprietes as unknown as { nom: string } | null);
+                const isExpired = inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date();
+                const statut: string = isExpired ? 'expiree' : inv.statut;
+                const statutMap: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
+                  en_attente: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-200', icon: <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> },
+                  acceptee:   { label: 'Acceptée',   cls: 'bg-green-50 text-green-700 border-green-200', icon: <CheckCircle2 size={10} /> },
+                  expiree:    { label: 'Expirée',    cls: 'bg-gray-100 text-gray-500 border-gray-200',  icon: <XCircle size={10} /> },
+                  annulee:    { label: 'Annulée',    cls: 'bg-red-50 text-red-600 border-red-200',     icon: <XCircle size={10} /> },
+                };
+                const statutConfig = statutMap[statut] ?? { label: statut, cls: 'bg-gray-100 text-gray-500 border-gray-200', icon: null };
+                return (
+                  <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-gray-800">{inv.email}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{copro?.nom ?? '—'}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{formatDate(inv.created_at)}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{formatDate(inv.expires_at)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center gap-1 text-xs border rounded-md px-2 py-0.5 font-medium ${statutConfig.cls}`}>
+                        {statutConfig.icon}{statutConfig.label}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </section>
 
