@@ -55,6 +55,12 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('[auth/confirm] verifyOtp error:', error.message);
+    // Pour une confirmation d'inscription, Supabase confirme le compte en DB
+    // même si notre échange de token échoue (token déjà utilisé, délai, etc.).
+    // On redirige vers /login avec un message positif plutôt qu'une erreur.
+    if (type === 'signup' || type === 'email_change') {
+      return NextResponse.redirect(new URL('/login?compte=active', request.url));
+    }
     return NextResponse.redirect(new URL('/login?error=lien_invalide', request.url));
   }
 

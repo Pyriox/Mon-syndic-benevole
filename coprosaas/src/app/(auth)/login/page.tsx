@@ -42,10 +42,16 @@ function LoginForm() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [resetError, setResetError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (searchParams.get('error') === 'lien_invalide') {
-      setError('Ce lien de confirmation est invalide ou a expiré. Veuillez vous reconnecter ou faire une nouvelle demande.');
+    const errorParam = searchParams.get('error');
+    const compteParam = searchParams.get('compte');
+    if (errorParam === 'lien_invalide') {
+      setError('Ce lien de réinitialisation est invalide ou a expiré. Veuillez faire une nouvelle demande.');
+    }
+    if (compteParam === 'active') {
+      setSuccess('Votre compte est activé ! Connectez-vous ci-dessous.');
     }
   }, [searchParams]);
 
@@ -176,6 +182,12 @@ function LoginForm() {
                     </button>
                   </div>
                 </div>
+
+                {success && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700 font-medium">
+                    {success}
+                  </div>
+                )}
 
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
