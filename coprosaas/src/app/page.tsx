@@ -553,8 +553,8 @@ export default function HomePage() {
       <section className="bg-white border-b border-gray-100 py-10 sm:py-12 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 text-center">
           <div>
-            <p className="text-3xl md:text-4xl font-extrabold text-blue-600">300 €</p>
-            <p className="text-sm text-gray-500 mt-1">par an seulement</p>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-600">25 €</p>
+            <p className="text-sm text-gray-500 mt-1">par mois seulement</p>
           </div>
           <div>
             <p className="text-3xl md:text-4xl font-extrabold text-blue-600">10 min</p>
