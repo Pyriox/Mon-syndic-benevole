@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import SiteLogo from '@/components/ui/SiteLogo';
 import LandingNav from './LandingNav';
+import LandingStickyCTA from './LandingStickyCTA';
 
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
@@ -230,6 +231,52 @@ export default function HomePage() {
             <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> Sans engagement</span>
             <span className="flex items-center gap-1.5"><Shield size={14} className="text-green-400" /> Données hébergées en Europe</span>
             <span className="flex items-center gap-1.5"><Clock size={14} className="text-green-400" /> Prêt en 5 minutes</span>
+          </div>
+        </div>
+
+        {/* ── Mobile simplified preview ── */}
+        <div className="sm:hidden max-w-xs mx-auto px-4 mt-6 pb-0">
+          <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/40">
+            <div className="bg-gray-800 px-3 py-2.5 flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              </div>
+              <span className="text-[10px] text-gray-400 mx-auto">mon-syndic-benevole.fr</span>
+            </div>
+            <div className="bg-gray-50 p-3 space-y-2">
+              <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl p-2.5 mb-1">
+                <SiteLogo size={22} />
+                <div>
+                  <p className="text-[10px] font-bold text-gray-900">Résidence Les Acacias</p>
+                  <p className="text-[9px] text-blue-600 font-medium">8 lots · 980 tantièmes</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Copropriétaires', value: '6', color: 'text-blue-600' },
+                  { label: 'Lots', value: '8', color: 'text-indigo-600' },
+                  { label: 'Charges 2026', value: '4 870 €', color: 'text-violet-600' },
+                  { label: 'Incidents', value: '1 ouvert', color: 'text-amber-600' },
+                ].map(({ label, value, color }) => (
+                  <div key={label} className="bg-white border border-gray-100 rounded-xl p-2.5">
+                    <p className="text-[9px] text-gray-400">{label}</p>
+                    <p className={`text-sm font-bold ${color}`}>{value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white border border-gray-100 rounded-xl p-2.5 flex items-center gap-2">
+                <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                  <CalendarDays size={12} className="text-blue-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold text-gray-800 truncate">AGO 2026 — 30 mars · 10h00</p>
+                  <p className="text-[9px] text-gray-400">7 copropriétaires invités</p>
+                </div>
+                <span className="shrink-0 text-[8px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">Planifiée</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -524,6 +571,39 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Comment ça marche ── */}
+      <section className="bg-white py-14 sm:py-20 px-4 sm:px-6 border-b border-gray-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-sm font-semibold text-green-600 uppercase tracking-widest mb-3">Simple comme bonjour</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Opérationnel en 3 étapes</h2>
+            <p className="text-lg text-gray-500 max-w-xl mx-auto">Pas de formation, pas de migration. Vous gérez tout depuis votre navigateur.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative">
+            <div className="hidden md:block absolute top-10 left-[calc(33.33%+0.5rem)] right-[calc(33.33%+0.5rem)] h-px bg-gradient-to-r from-blue-200 to-violet-200" />
+            {[
+              { step: '1', bg: 'bg-blue-600', ring: 'ring-blue-100', Icon: Building2, title: 'Créez votre copropriété', desc: "Renseignez l'adresse, ajoutez vos lots et les tantièmes. Tout est guidé, pas à pas." },
+              { step: '2', bg: 'bg-indigo-600', ring: 'ring-indigo-100', Icon: Users, title: 'Invitez vos copropriétaires', desc: "Chaque copropriétaire reçoit un e-mail et accède à son espace personnel sécurisé." },
+              { step: '3', bg: 'bg-violet-600', ring: 'ring-violet-100', Icon: LayoutDashboard, title: 'Gérez au quotidien', desc: "Charges, appels de fonds, AG, documents — tout centralisé, rien à oublier." },
+            ].map(({ step, bg, ring, Icon, title, desc }) => (
+              <div key={step} className="flex flex-col items-center text-center">
+                <div className={`relative w-20 h-20 ${bg} ring-8 ${ring} rounded-3xl flex items-center justify-center mb-5 shadow-lg`}>
+                  <Icon size={32} className="text-white" />
+                  <span className={`absolute -top-2 -right-2 w-6 h-6 ${bg} border-2 border-white rounded-full text-white text-[11px] font-bold flex items-center justify-center`}>{step}</span>
+                </div>
+                <h3 className="font-bold text-gray-900 text-lg mb-2">{title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed max-w-xs">{desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-12 text-center">
+            <Link href="/register" className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:underline text-sm">
+              Commencer maintenant — c&apos;est gratuit <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── Fonctionnalités ── */}
       <section id="fonctionnalites" aria-labelledby="features-heading" className="bg-gradient-to-b from-gray-50 to-white py-14 sm:py-20 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
@@ -542,6 +622,40 @@ export default function HomePage() {
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Comparaison ── */}
+      <section className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-amber-600 uppercase tracking-widest mb-3">Pourquoi le bénévolat ?</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Mon Syndic Bénévole vs cabinet professionnel</h2>
+            <p className="text-gray-500 text-lg">Les mêmes fonctions, sans le coût ni les contraintes d&apos;un contrat.</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+            <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-200 text-sm font-semibold">
+              <div className="py-4 px-5 text-gray-400" />
+              <div className="py-4 px-4 text-center text-gray-600 border-l border-gray-200">Syndic professionnel</div>
+              <div className="py-4 px-4 text-center text-blue-700 border-l border-gray-200 bg-blue-50/60">Mon Syndic Bénévole</div>
+            </div>
+            {[
+              ['Coût annuel', '1 500 – 3 000 €', 'À partir de 240 €'],
+              ['Engagement', 'Contrat 1–3 ans', 'Résiliable à tout moment'],
+              ['Accès à vos données', 'Sur demande', 'Temps réel, 24h/24'],
+              ['Délai de réponse', 'Plusieurs jours', 'Immédiat'],
+              ['Convocations & PV AG', 'Souvent en supplément', '✓ Incluses'],
+              ['GED Documents en ligne', '✗ Rarement', '✓ Incluse'],
+              ['Tableau de bord live', '✗', '✓'],
+              ['Transparence des comptes', 'Partielle', '✓ Totale'],
+            ].map(([label, pro, nous], i) => (
+              <div key={label} className={`grid grid-cols-3 text-sm border-b border-gray-100 last:border-0 ${i % 2 === 1 ? 'bg-gray-50/40' : ''}`}>
+                <div className="py-3.5 px-5 text-gray-700 font-medium">{label}</div>
+                <div className="py-3.5 px-4 text-center text-gray-500 border-l border-gray-100">{pro}</div>
+                <div className="py-3.5 px-4 text-center font-semibold text-blue-700 border-l border-gray-100 bg-blue-50/20">{nous}</div>
               </div>
             ))}
           </div>
@@ -666,9 +780,20 @@ export default function HomePage() {
                 a: "Vos données sont hébergées en Europe, chiffrées en transit (HTTPS) et au repos. Nous n'accédons jamais à vos données sans votre autorisation explicite.",
               },
               {
-
                 q: "Un abonnement couvre-t-il plusieurs copropriétés ?",
                 a: "Chaque abonnement est lié à une copropriété. Vous pouvez gérer plusieurs copropriétés depuis un seul compte en souscrivant un abonnement par copropriété.",
+              },
+              {
+                q: "Est-ce conforme à la loi ALUR et aux obligations du syndic bénévole ?",
+                a: "Oui. Mon Syndic Bénévole est conçu pour répondre aux obligations légales du syndic non-professionnel : fonds de travaux, appels de charges, convocations AG, procès-verbaux, conservation des documents. Les workflows suivent les bonnes pratiques issues de la loi du 10 juillet 1965 et de ses décrets d'application.",
+              },
+              {
+                q: "Y a-t-il une application mobile ?",
+                a: "L'application est entièrement accessible depuis le navigateur de votre smartphone, iOS ou Android. Elle est optimisée pour mobile — aucune installation requise. Une application native est dans notre feuille de route.",
+              },
+              {
+                q: "Puis-je importer mes données existantes ?",
+                a: "Vous pouvez ajouter vos copropriétaires, lots et tantièmes directement depuis l'interface en quelques minutes. L'import automatisé (fichier Excel ou CSV) fait partie de notre roadmap. En attendant, nos guides pas-à-pas rendent la configuration rapide même pour une grande copropriété.",
               },
             ].map(({ q, a }) => (
               <details key={q} className="group py-5">
@@ -684,7 +809,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA final ── */}
-      <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-16 sm:py-24 px-4 sm:px-6 text-white text-center relative overflow-hidden">
+      <section data-cta-final className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-16 sm:py-24 px-4 sm:px-6 text-white text-center relative overflow-hidden">
         <div className="absolute top-0 left-1/3 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-2xl mx-auto">
@@ -713,6 +838,8 @@ export default function HomePage() {
         </div>
       </section>
       </main>
+
+      <LandingStickyCTA />
 
       {/* ── Footer ── */}
       <footer className="bg-slate-950 py-10 px-4 sm:px-6" aria-label="Pied de page">
