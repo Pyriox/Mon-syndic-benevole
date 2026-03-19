@@ -3,6 +3,7 @@
 // (Le syndic peut gérer les lots depuis la page copropriétés)
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
@@ -23,14 +24,16 @@ export default async function LotsPage() {
   const supabase = await createClient();
   const { selectedCoproId, role, copro } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
+  // Copropriétaires utilisent l'admin client pour bypasser les RLS syndic-only
+  const db = role === 'copropriétaire' ? createAdminClient() : supabase;
 
-  const { data: lots } = await supabase
+  const { data: lots } = await db
     .from('lots')
     .select('id, numero, type, tantiemes, coproprietaire_id')
     .eq('copropriete_id', selectedCoproId ?? 'none')
     .order('position', { ascending: true, nullsFirst: false });
 
-  const { data: coproprietaires } = await supabase
+  const { data: coproprietaires } = await db
     .from('coproprietaires')
     .select('id, nom, prenom, raison_sociale')
     .eq('copropriete_id', selectedCoproId ?? 'none');

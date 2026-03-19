@@ -61,6 +61,7 @@ export async function middleware(request: NextRequest) {
     '/documents',
     '/assemblees',
     '/incidents',
+    '/lots',
   ];
 
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
@@ -95,6 +96,7 @@ export const config = {
     '/documents/:path*',
     '/assemblees/:path*',
     '/incidents/:path*',
+    '/lots/:path*',
     '/profil/:path*',
     '/abonnement/:path*',
     '/aide/:path*',
