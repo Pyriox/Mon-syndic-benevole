@@ -3,7 +3,9 @@
 // Gestion des résolutions, présences, votes et génération du PV
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
-import { redirect, notFound } from 'next/navigation';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Card, { CardHeader } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -25,32 +27,34 @@ interface Props {
 export default async function AGDetailPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { selectedCoproId, role } = await requireCoproAccess();
+  const isSyndic = role === 'syndic';
+  // Les RLS bloquent les copropriétaires sur plusieurs tables — on utilise le client admin
+  const db = isSyndic ? supabase : createAdminClient();
 
-  const { data: ag } = await supabase
+  const { data: ag } = await db
     .from('assemblees_generales')
     .select('*, coproprietes(id, nom, adresse, ville, code_postal, syndic_id)')
     .eq('id', id)
     .single();
 
-  if (!ag || ag.coproprietes?.syndic_id !== user.id) notFound();
+  if (!ag || ag.copropriete_id !== selectedCoproId) notFound();
 
-  const { data: resolutions } = await supabase
+  const { data: resolutions } = await db
     .from('resolutions')
     .select('*')
     .eq('ag_id', id)
     .order('numero', { ascending: true });
 
   // Copropriétaires de la copropriété (pour présences, votes et PV)
-  const { data: coproprietaires } = await supabase
+  const { data: coproprietaires } = await db
     .from('coproprietaires')
     .select('id, nom, prenom')
     .eq('copropriete_id', ag.copropriete_id)
     .order('nom');
 
   // Lots et tantièmes de la copropriété (pour le calcul légal des votes)
-  const { data: lotsData } = await supabase
+  const { data: lotsData } = await db
     .from('lots')
     .select('tantiemes, coproprietaire_id')
     .eq('copropriete_id', ag.copropriete_id);
@@ -64,7 +68,7 @@ export default async function AGDetailPage({ params }: Props) {
   }
 
   // Feuille de présence pour cette AG
-  const { data: presences } = await supabase
+  const { data: presences } = await db
     .from('ag_presences')
     .select('*')
     .eq('ag_id', id);
@@ -73,7 +77,7 @@ export default async function AGDetailPage({ params }: Props) {
   const resolutionIds = (resolutions ?? []).map((r) => r.id);
   let votesCopro: { resolution_id: string; coproprietaire_id: string; vote: string }[] = [];
   if (resolutionIds.length > 0) {
-    const { data } = await supabase
+    const { data } = await db
       .from('votes_coproprietaires')
       .select('*')
       .in('resolution_id', resolutionIds);
@@ -81,8 +85,8 @@ export default async function AGDetailPage({ params }: Props) {
   }
 
   const isVisio = ag.lieu === 'Visioconférence';
-  const canVote = ag.statut === 'en_cours' || ag.statut === 'terminee';
-  const canEdit = ag.statut === 'creation' || ag.statut === 'planifiee';
+  const canVote = isSyndic && (ag.statut === 'en_cours' || ag.statut === 'terminee');
+  const canEdit = isSyndic && (ag.statut === 'creation' || ag.statut === 'planifiee');
   const hasPresences = (presences ?? []).length > 0;
   const toutesResolutionsVotees =
     (resolutions ?? []).length > 0 &&
@@ -138,7 +142,8 @@ export default async function AGDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Actions selon le statut */}
+        {/* Actions selon le statut — syndic uniquement */}
+        {isSyndic && (
         <div className="flex flex-col items-start sm:items-end gap-3 shrink-0">
 
           {/* Bouton principal de progression */}
@@ -193,6 +198,7 @@ export default async function AGDetailPage({ params }: Props) {
           )}
 
         </div>
+        )}
       </div>
 
       {ag.notes && (
@@ -250,7 +256,7 @@ export default async function AGDetailPage({ params }: Props) {
           coproprieteId={ag.copropriete_id}
           presences={presences ?? []}
           coproprietaires={coproprietaires ?? []}
-          canEdit={ag.statut === 'en_cours'}
+          canEdit={isSyndic && ag.statut === 'en_cours'}
         />
       )}
 
@@ -306,7 +312,7 @@ export default async function AGDetailPage({ params }: Props) {
           <EmptyState
             title="Aucune résolution"
             description="Ajoutez les points à l'ordre du jour."
-            action={<ResolutionActions agId={id} showLabel />}
+            action={canEdit ? <ResolutionActions agId={id} showLabel /> : undefined}
           />
         )}
       </Card>
