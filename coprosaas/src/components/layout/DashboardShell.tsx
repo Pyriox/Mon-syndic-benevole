@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import BottomNav from './BottomNav';
 import type { UserCopropriete, AppNotification } from '@/types';
 
 interface DashboardShellProps {
@@ -57,10 +58,17 @@ export default function DashboardShell({
           notifications={notifications}
           onMenuOpen={() => setSidebarOpen(true)}
         />
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        {/* pb-20 sur mobile pour ne pas cacher le contenu derrière la bottom nav */}
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 overflow-auto">
           {children}
         </main>
       </div>
+
+      {/* Barre de navigation fixe en bas — mobile uniquement */}
+      <BottomNav
+        userRole={userRole}
+        onMenuOpen={() => setSidebarOpen(true)}
+      />
     </div>
   );
 }

@@ -23,4 +23,18 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  /* Évite le zoom automatique sur les inputs iOS */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Support safe-area pour iPhone X et suivants (encoches, Dynamic Island) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Amélioration du tap highlight sur mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
 }

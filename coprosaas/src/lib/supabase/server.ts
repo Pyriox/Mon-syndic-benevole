@@ -2,14 +2,16 @@
 // Client Supabase côté serveur (Server Components, Server Actions, Route Handlers)
 // Utilise createServerClient de @supabase/ssr avec les cookies Next.js
 // ============================================================
+import { cache } from 'react';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 /**
  * Crée un client Supabase pour l'utilisation côté serveur.
- * À utiliser dans les Server Components et Route Handlers.
+ * Wrappé avec React cache() pour dédupliquer les appels dans le même arbre de rendu :
+ * layout.tsx + page.tsx partagent la même instance → 1 seul appel auth.getUser() par request.
  */
-export async function createClient() {
+export const createClient = cache(async () => {
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -33,4 +35,4 @@ export async function createClient() {
       },
     }
   );
-}
+});

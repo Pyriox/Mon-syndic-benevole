@@ -47,18 +47,18 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
 
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
-      <div className="flex items-center justify-between gap-3">
-        {/* Hamburger menu — visible uniquement sur mobile */}
+      <div className="flex items-center justify-between gap-2">
+        {/* Hamburger — visible uniquement sur desktop (mobile utilise la bottom nav) */}
         <button
           onClick={onMenuOpen}
-          className="md:hidden p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
+          className="hidden md:flex p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
           aria-label="Ouvrir le menu"
         >
           <Menu size={20} />
         </button>
 
-        {/* Titre */}
-        <h1 className="text-base md:text-xl font-semibold text-gray-900 truncate flex-1">{title}</h1>
+        {/* Titre : taille réduite sur mobile pour laisser de la place */}
+        <h1 className="text-sm md:text-xl font-semibold text-gray-900 truncate flex-1 leading-tight">{title}</h1>
 
         {/* Zone droite */}
         <div className="flex items-center gap-2 md:gap-3">
@@ -84,7 +84,7 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
 
             {/* Panel dropdown — plein écran sur mobile */}
             {open && (
-              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 w-[min(320px,calc(100vw-1rem))]">
+              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 w-[min(340px,calc(100vw-2rem))]">
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-900">Notifications</p>
                   {nbNotifs > 0 && (
@@ -98,7 +98,7 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
                     <p className="text-sm text-gray-500">Aucune alerte en cours</p>
                   </div>
                 ) : (
-                  <ul className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                  <ul className="max-h-[60vh] md:max-h-80 overflow-y-auto divide-y divide-gray-50">
                     {notifications.map((notif) => {
                       const Icon = iconByType[notif.type];
                       return (
@@ -106,7 +106,7 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
                           <Link
                             href={notif.href}
                             onClick={() => setOpen(false)}
-                            className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                            className="flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors"
                           >
                             <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
                               <Icon size={13} />
