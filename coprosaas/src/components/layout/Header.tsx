@@ -5,7 +5,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu } from 'lucide-react';
+import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AppNotification } from '@/types';
 
@@ -48,15 +48,6 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
       <div className="flex items-center justify-between gap-2">
-        {/* Hamburger — visible uniquement sur desktop (mobile utilise la bottom nav) */}
-        <button
-          onClick={onMenuOpen}
-          className="hidden md:flex p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
-          aria-label="Ouvrir le menu"
-        >
-          <Menu size={20} />
-        </button>
-
         {/* Titre : taille réduite sur mobile pour laisser de la place */}
         <h1 className="text-sm md:text-xl font-semibold text-gray-900 truncate flex-1 leading-tight">{title}</h1>
 
