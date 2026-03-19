@@ -97,19 +97,6 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
--- ── presences ────────────────────────────────────────────────
-DO $$ BEGIN
-  CREATE POLICY "coproprietaires_select_presences"
-    ON presences FOR SELECT
-    USING (
-      ag_id IN (
-        SELECT id FROM assemblees_generales
-        WHERE copropriete_id IN (SELECT get_user_copropriete_ids())
-      )
-    );
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
 -- ── documents ────────────────────────────────────────────────
 DO $$ BEGIN
   CREATE POLICY "coproprietaires_select_documents"
