@@ -12,10 +12,49 @@ import {
   LayoutDashboard, HelpCircle, UserCircle, LogOut, CreditCard,
 } from 'lucide-react';
 import SiteLogo from '@/components/ui/SiteLogo';
+import LandingNav from './LandingNav';
 
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
+  title: {
+    absolute: 'Mon Syndic Bénévole — Logiciel de gestion de copropriété pour syndic bénévole',
+  },
+  description:
+    'Gérez votre copropriété sans syndic professionnel. Charges, appels de fonds, assemblées générales, documents et incidents — tout en un. À partir de 20 €/mois, 30 jours offerts.',
+  keywords: [
+    'syndic bénévole',
+    'logiciel syndic bénévole',
+    'gestion copropriété sans syndic professionnel',
+    'appel de fonds copropriété',
+    'assemblée générale copropriété',
+    'charges copropriété logiciel',
+    'tantièmes millièmes',
+  ],
   alternates: { canonical: 'https://mon-syndic-benevole.fr' },
+  openGraph: {
+    title: 'Mon Syndic Bénévole — Gestion de copropriété pour syndic bénévole',
+    description:
+      'Gérez votre copropriété sans syndic professionnel. Charges, appels de fonds, assemblées générales, documents et incidents — tout en un. À partir de 20 €/mois, 30 jours offerts.',
+    url: 'https://mon-syndic-benevole.fr',
+    siteName: 'Mon Syndic Bénévole',
+    locale: 'fr_FR',
+    type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Mon Syndic Bénévole — Logiciel de gestion de copropriété pour syndic bénévole',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mon Syndic Bénévole — Gestion de copropriété pour syndic bénévole',
+    description:
+      'Gérez votre copropriété sans syndic professionnel. À partir de 20 €/mois, 30 jours gratuits.',
+    images: ['/og-image.png'],
+  },
 };
 
 const features = [
@@ -144,26 +183,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-white font-sans">
 
       {/* ── Navigation sticky ── */}
-      <nav aria-label="Navigation principale" className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <SiteLogo size={28} />
-            <span className="font-bold text-white text-sm hidden sm:block">Mon Syndic Bénévole</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-8 text-sm text-white/70">
-            <Link href="#fonctionnalites" className="hover:text-white transition-colors">Fonctionnalités</Link>
-            <Link href="#tarif" className="hover:text-white transition-colors">Tarifs</Link>
-            <Link href="#faq" className="hover:text-white transition-colors">FAQ</Link>
-            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-white/70 hover:text-white transition-colors hidden md:block">Connexion</Link>
-            <Link href="/register" className="text-sm bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-xl transition-colors">
-              Essai gratuit
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <LandingNav />
 
       <header>
         <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white" aria-label="Présentation">
@@ -178,9 +198,9 @@ export default function HomePage() {
           </div>
 
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-5 sm:mb-6 tracking-tight">
-            La gestion de copropriété<br />
+            Le logiciel du syndic bénévole<br />
             <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-              enfin simple &amp; abordable
+              simple &amp; abordable
             </span>
           </h1>
 
