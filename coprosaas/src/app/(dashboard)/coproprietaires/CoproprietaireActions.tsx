@@ -110,6 +110,8 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [inviteLink, setInviteLink] = useState('');
+  const [inviteEmailSent, setInviteEmailSent] = useState(false);
+  const [inviteEmailWarning, setInviteEmailWarning] = useState('');
   const [copied, setCopied] = useState(false);
   const [inviteLots, setInviteLots] = useState<{ id: string; numero: string }[]>([]);
   const [invite, setInvite] = useState({
@@ -149,6 +151,8 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
     }
 
     setInviteLink(data.link);
+    setInviteEmailSent(!!data.emailSent);
+    setInviteEmailWarning(data.emailWarning ?? '');
     setInviteLoading(false);
   };
 
@@ -162,6 +166,8 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
     setIsOpen(false);
     setInviteLink('');
     setInviteError('');
+    setInviteEmailSent(false);
+    setInviteEmailWarning('');
     setError('');
     setSelectedLotIds([]);
     setActiveTab('ajouter');
@@ -273,7 +279,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
         {activeTab === 'inviter' && (
           <div className="space-y-4">
             <p className="text-xs text-gray-500 bg-blue-50 rounded-lg px-3 py-2 text-blue-700">
-              Génère un lien unique à envoyer au copropriétaire. Il pourra créer son compte et accéder à la copropriété.
+              Génère un lien unique <strong>et envoie un email automatique</strong> au copropriétaire. Il pourra créer son compte et accéder à la copropriété.
               Le lien est valable <strong>7 jours</strong>.
             </p>
 
@@ -298,18 +304,28 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
                 />
                 {inviteError && <p className="text-sm text-red-600">{inviteError}</p>}
                 <div className="flex gap-3 pt-1">
-                  <Button type="submit" loading={inviteLoading}>
-                    <Mail size={15} /> Générer le lien
-                  </Button>
-                  <Button type="button" variant="secondary" onClick={handleClose}>Annuler</Button>
-                </div>
+                    <Button type="submit" loading={inviteLoading}>
+                      <Mail size={15} /> Envoyer l&apos;invitation
+                    </Button>
+                    <Button type="button" variant="secondary" onClick={handleClose}>Annuler</Button>
+                  </div>
               </form>
             ) : (
               <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-sm font-medium text-green-800 mb-1">✅ Lien d&apos;invitation créé !</p>
-                  <p className="text-xs text-green-700">Envoyez ce lien à <strong>{invite.email}</strong></p>
-                </div>
+                {inviteEmailSent ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="text-sm font-medium text-green-800 mb-1">✅ Invitation envoyée !</p>
+                    <p className="text-xs text-green-700">
+                      Un email d&apos;invitation a été envoyé à <strong>{invite.email}</strong>.
+                      Le lien est valable 7 jours.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="text-sm font-medium text-amber-800 mb-1">⚠️ Lien créé (email non envoyé)</p>
+                    <p className="text-xs text-amber-700">{inviteEmailWarning || "Transmettez le lien ci-dessous manuellement à " + invite.email}</p>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <input
                     readOnly
@@ -323,12 +339,6 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
                     {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
                   </button>
                 </div>
-                <a
-                  href={`mailto:${invite.email}?subject=Invitation Mon Syndic Bénévole&body=Bonjour,%0A%0AVous avez été invité à rejoindre votre copropriété sur Mon Syndic Bénévole.%0A%0ACliquez sur ce lien pour créer votre compte :%0A${encodeURIComponent(inviteLink)}%0A%0ACe lien est valable 7 jours.`}
-                  className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
-                >
-                  <Mail size={14} /> Ouvrir dans ma messagerie
-                </a>
                 <Button type="button" variant="secondary" onClick={handleClose} fullWidth>Fermer</Button>
               </div>
             )}

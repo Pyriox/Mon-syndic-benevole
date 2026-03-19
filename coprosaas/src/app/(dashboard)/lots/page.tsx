@@ -10,7 +10,7 @@ import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
-import { Building2, Car, Archive, ShoppingBag, Briefcase, LayoutGrid, ExternalLink, Users } from 'lucide-react';
+import { Building2, Car, Archive, ShoppingBag, Briefcase, LayoutGrid, ExternalLink, Users, UserCheck, Mail, AlertCircle } from 'lucide-react';
 
 // ── Config par type ──
 const LOT_TYPE_CONFIG: Record<string, {
@@ -44,6 +44,15 @@ function OwnerAvatar({ name }: { name: string }) {
   );
 }
 
+interface CoproEntry {
+  id: string;
+  nom: string | null;
+  prenom: string | null;
+  raison_sociale: string | null;
+  user_id?: string | null;
+  email?: string | null;
+}
+
 export default async function LotsPage() {
   const supabase = await createClient();
   const { selectedCoproId, role, copro } = await requireCoproAccess();
@@ -56,18 +65,26 @@ export default async function LotsPage() {
     .eq('copropriete_id', selectedCoproId ?? 'none')
     .order('position', { ascending: true, nullsFirst: false });
 
-  const { data: coproprietaires } = await db
+  const { data: coproprietairesRaw } = await db
     .from('coproprietaires')
-    .select('id, nom, prenom, raison_sociale')
+    .select('id, nom, prenom, raison_sociale, user_id, email')
     .eq('copropriete_id', selectedCoproId ?? 'none');
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const coproprietaires = (coproprietairesRaw ?? []) as any[] as CoproEntry[];
+
   const coproMap = Object.fromEntries(
-    (coproprietaires ?? []).map((c) => [c.id, c])
+    coproprietaires.map((c) => [c.id, c])
   );
 
   const allLots = lots ?? [];
   const totalTantiemes = allLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
   const assignedCount = allLots.filter((l) => l.coproprietaire_id).length;
+  const unassignedCount = allLots.length - assignedCount;
+  const assignedTantiemes = allLots
+    .filter((l) => l.coproprietaire_id)
+    .reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+  const unassignedTantiemes = totalTantiemes - assignedTantiemes;
 
   // Répartition par type pour les stats
   const countByType = allLots.reduce<Record<string, number>>((acc, l) => {
@@ -92,7 +109,7 @@ export default async function LotsPage() {
         {isSyndic && copro && (
           <Link
             href={`/coproprietes/${copro.id}`}
-            className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 font-medium px-4 py-2 rounded-lg transition-colors shrink-0"
           >
             <ExternalLink size={14} />
             Gérer les lots
@@ -119,10 +136,45 @@ export default async function LotsPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Assignés</p>
-                <p className="text-lg font-bold text-gray-900 leading-tight">{assignedCount} <span className="text-sm font-normal text-gray-400">/ {allLots.length}</span></p>
+                <p className="text-lg font-bold text-gray-900 leading-tight">
+                  {assignedCount} <span className="text-sm font-normal text-gray-400">/ {allLots.length}</span>
+                </p>
               </div>
             </Card>
-            {statTypes.slice(0, 2).map(([type, count]) => {
+            {isSyndic && unassignedCount > 0 ? (
+              <Card padding="sm" className="flex items-center gap-3 border-orange-200 bg-orange-50">
+                <div className="p-2 bg-orange-100 rounded-lg shrink-0">
+                  <AlertCircle size={18} className="text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-orange-600">Non assignés</p>
+                  <p className="text-lg font-bold text-orange-700 leading-tight">
+                    {unassignedCount}
+                    {unassignedTantiemes > 0 && (
+                      <span className="text-xs font-normal text-orange-500 ml-1">· {unassignedTantiemes} t.</span>
+                    )}
+                  </p>
+                </div>
+              </Card>
+            ) : (
+              statTypes[0] ? (() => {
+                const [type, count] = statTypes[0];
+                const cfg = getConfig(type);
+                const Icon = cfg.icon;
+                return (
+                  <Card padding="sm" className="flex items-center gap-3">
+                    <div className={`p-2 ${cfg.bgColor} rounded-lg shrink-0`}>
+                      <Icon size={18} className={cfg.iconColor} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">{cfg.label}s</p>
+                      <p className="text-lg font-bold text-gray-900 leading-tight">{count}</p>
+                    </div>
+                  </Card>
+                );
+              })() : <Card padding="sm" className="hidden sm:flex" />
+            )}
+            {statTypes.slice(isSyndic && unassignedCount > 0 ? 0 : 1, isSyndic && unassignedCount > 0 ? 1 : 2).map(([type, count]) => {
               const cfg = getConfig(type);
               const Icon = cfg.icon;
               return (
@@ -178,12 +230,32 @@ export default async function LotsPage() {
                       {/* Propriétaire */}
                       <div className="mt-2">
                         {ownerName ? (
-                          <div className="flex items-center gap-1.5">
-                            <OwnerAvatar name={ownerName} />
-                            <span className="text-sm text-gray-700 truncate">{ownerName}</span>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <OwnerAvatar name={ownerName} />
+                              <span className="text-sm text-gray-700 truncate">{ownerName}</span>
+                              {owner?.user_id && (
+                                <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
+                                  <UserCheck size={10} />Inscrit
+                                </span>
+                              )}
+                              {isSyndic && !owner?.user_id && (
+                                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-500 text-xs px-1.5 py-0.5 rounded-full shrink-0">
+                                  Non inscrit
+                                </span>
+                              )}
+                            </div>
+                            {isSyndic && owner?.email && (
+                              <a
+                                href={`mailto:${owner.email}`}
+                                className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition-colors ml-7"
+                              >
+                                <Mail size={11} />{owner.email}
+                              </a>
+                            )}
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400 italic">Non assigné</span>
+                          <span className="text-xs text-orange-400 italic font-medium">Non assigné</span>
                         )}
                       </div>
                     </div>
@@ -205,6 +277,7 @@ export default async function LotsPage() {
                   </th>
                   <th className="text-left py-3 px-5 font-medium text-gray-500 w-40">Quote-part</th>
                   <th className="text-left py-3 px-5 font-medium text-gray-500">Copropriétaire</th>
+                  {isSyndic && <th className="text-left py-3 px-5 font-medium text-gray-500 hidden lg:table-cell">Email</th>}
                 </tr>
               </thead>
               <tbody>
@@ -246,14 +319,39 @@ export default async function LotsPage() {
                       </td>
                       <td className="py-3.5 px-5">
                         {ownerName ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <OwnerAvatar name={ownerName} />
                             <span className="text-gray-700">{ownerName}</span>
+                            {owner?.user_id && (
+                              <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
+                                <UserCheck size={10} />Inscrit
+                              </span>
+                            )}
+                            {isSyndic && !owner?.user_id && (
+                              <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-500 text-xs px-1.5 py-0.5 rounded-full shrink-0">
+                                Non inscrit
+                              </span>
+                            )}
                           </div>
                         ) : (
-                          <span className="text-gray-400 italic text-xs">Non assigné</span>
+                          <span className="text-orange-400 italic text-xs font-medium">Non assigné</span>
                         )}
                       </td>
+                      {isSyndic && (
+                        <td className="py-3.5 px-5 hidden lg:table-cell">
+                          {owner?.email ? (
+                            <a
+                              href={`mailto:${owner.email}`}
+                              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+                            >
+                              <Mail size={13} className="shrink-0" />
+                              <span className="truncate max-w-[180px]">{owner.email}</span>
+                            </a>
+                          ) : (
+                            <span className="text-gray-300 text-xs">—</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

@@ -8,6 +8,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { Resend } from 'resend';
+import { buildInvitationEmail, buildInvitationEmailSubject } from '@/lib/emails/invitation';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = process.env.EMAIL_FROM ?? 'onboarding@resend.dev';
 
 function makeSupabase(cookieStore: Awaited<ReturnType<typeof cookies>>) {
   return createServerClient(
@@ -86,11 +91,33 @@ export async function POST(request: NextRequest) {
     token = data.token;
   }
 
+  // Récupérer le prénom du syndic pour personnaliser l'email
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
+  const syndicPrenom = (profile?.full_name ?? '').split(' ')[0] || 'Le syndic';
+
   // Construire le lien d'invitation
   const origin = request.headers.get('origin') ?? 'http://localhost:3001';
   const link = `${origin}/register?token=${token}`;
 
-  return NextResponse.json({ link, token, copropriete: copro.nom });
+  // Envoyer l'email d'invitation via Resend
+  const { error: emailError } = await resend.emails.send({
+    from: FROM,
+    to: [email.toLowerCase().trim()],
+    subject: buildInvitationEmailSubject(copro.nom),
+    html: buildInvitationEmail({ coproprieteNom: copro.nom, syndicPrenom, inviteLink: link }),
+  });
+
+  if (emailError) {
+    console.error('[invitations] Resend error:', emailError);
+    // On retourne quand même le lien — l'invitation est créée, seul l'email a échoué
+    return NextResponse.json({ link, token, copropriete: copro.nom, emailWarning: "L'email n'a pas pu être envoyé. Utilisez le lien ci-dessous." });
+  }
+
+  return NextResponse.json({ link, token, copropriete: copro.nom, emailSent: true });
 }
 
 // ---- GET : valider un token ----------------------------------
