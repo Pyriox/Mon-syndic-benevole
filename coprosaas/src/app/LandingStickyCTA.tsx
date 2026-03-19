@@ -34,7 +34,7 @@ export default function LandingStickyCTA() {
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-xl px-4 py-3 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-gray-900 leading-tight">30 jours gratuits</p>
-        <p className="text-xs text-gray-500 truncate">Sans engagement · À partir de 20 €/mois</p>
+        <p className="text-xs text-gray-500 truncate">Sans engagement · À partir de 300 €/an</p>
       </div>
       <Link
         href="/register"

@@ -98,7 +98,7 @@ export default async function Image() {
               fontWeight: '600',
             }}
           >
-            ✓ À partir de 20 €/mois
+            ✓ À partir de 300 €/an
           </div>
           <div
             style={{

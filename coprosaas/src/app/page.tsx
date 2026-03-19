@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     absolute: 'Mon Syndic Bénévole — Logiciel de gestion de copropriété pour syndic bénévole',
   },
   description:
-    'Gérez votre copropriété sans syndic professionnel. Charges, appels de fonds, assemblées générales, documents et incidents — tout en un. À partir de 20 €/mois, 30 jours offerts.',
+    'Gérez votre copropriété sans syndic professionnel. Charges, appels de fonds, assemblées générales, documents et incidents — tout en un. À partir de 300 €/an, 30 jours offerts.',
   keywords: [
     'syndic bénévole',
     'logiciel syndic bénévole',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Mon Syndic Bénévole — Gestion de copropriété pour syndic bénévole',
     description:
-      'Gérez votre copropriété sans syndic professionnel. Charges, appels de fonds, assemblées générales, documents et incidents — tout en un. À partir de 20 €/mois, 30 jours offerts.',
+      'Gérez votre copropriété sans syndic professionnel. Charges, appels de fonds, assemblées générales, documents et incidents — tout en un. À partir de 300 €/an, 30 jours offerts.',
     url: 'https://mon-syndic-benevole.fr',
     siteName: 'Mon Syndic Bénévole',
     locale: 'fr_FR',
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Mon Syndic Bénévole — Gestion de copropriété pour syndic bénévole',
     description:
-      'Gérez votre copropriété sans syndic professionnel. À partir de 20 €/mois, 30 jours gratuits.',
+      'Gérez votre copropriété sans syndic professionnel. À partir de 300 €/an, 30 jours gratuits.',
     images: ['/opengraph-image'],
   },
 };
@@ -150,13 +150,13 @@ export default function HomePage() {
         operatingSystem: 'Web',
         offers: {
           '@type': 'Offer',
-          price: '20',
+          price: '300',
           priceCurrency: 'EUR',
           priceSpecification: {
             '@type': 'UnitPriceSpecification',
-            price: '20',
+            price: '300',
             priceCurrency: 'EUR',
-            unitText: 'MONTH',
+            unitText: 'YEAR',
           },
           description: 'Essai gratuit 30 jours, sans engagement.',
         },
@@ -553,7 +553,7 @@ export default function HomePage() {
       <section className="bg-white border-b border-gray-100 py-10 sm:py-12 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 text-center">
           <div>
-            <p className="text-3xl md:text-4xl font-extrabold text-blue-600">240 €</p>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-600">300 €</p>
             <p className="text-sm text-gray-500 mt-1">par an seulement</p>
           </div>
           <div>
@@ -643,7 +643,7 @@ export default function HomePage() {
               <div className="py-4 px-4 text-center text-blue-700 border-l border-gray-200 bg-blue-50/60">Mon Syndic Bénévole</div>
             </div>
             {[
-              ['Coût annuel', '1 500 – 3 000 €', 'À partir de 240 €'],
+              ['Coût annuel', '1 500 – 3 000 €', 'À partir de 300 €'],
               ['Engagement', 'Contrat 1–3 ans', 'Résiliable à tout moment'],
               ['Accès à vos données', 'Sur demande', 'Temps réel, 24h/24'],
               ['Délai de réponse', 'Plusieurs jours', 'Immédiat'],
@@ -677,7 +677,7 @@ export default function HomePage() {
             <div className="text-2xl shrink-0">💡</div>
             <div>
               <p className="text-sm font-bold text-amber-900">Un syndic professionnel coûte entre 1 500 € et 3 000 €/an.</p>
-              <p className="text-sm text-amber-700 mt-0.5">Mon Syndic Bénévole : à partir de <span className="font-bold">240 €/an</span>. Soit jusqu&apos;à <span className="font-bold text-amber-900">2 760 € d&apos;économies</span> chaque année — à fonctionnalités équivalentes.</p>
+              <p className="text-sm text-amber-700 mt-0.5">Mon Syndic Bénévole : à partir de <span className="font-bold">300 €/an</span>. Soit jusqu&apos;à <span className="font-bold text-amber-900">2 700 € d&apos;économies</span> chaque année — à fonctionnalités équivalentes.</p>
             </div>
           </div>
 
@@ -693,10 +693,10 @@ export default function HomePage() {
                 <p className="text-blue-200 text-sm font-semibold mb-1">Essentiel</p>
                 <p className="text-blue-100/70 text-xs mb-4">10 lots inclus</p>
                 <div className="flex items-end gap-1.5 mb-1">
-                  <span className="text-5xl font-extrabold">20 €</span>
-                  <span className="text-blue-200 pb-1.5">/mois</span>
-                </div>
-                <p className="text-blue-200/80 text-xs mb-6">soit <span className="font-semibold text-white">240 €/an</span></p>
+                    <span className="text-5xl font-extrabold">300 €</span>
+                    <span className="text-blue-200 pb-1.5">/an</span>
+                  </div>
+                  <p className="text-blue-200/80 text-xs mb-6">soit <span className="font-semibold text-white">25 €/mois</span></p>
                 <Link href="/register" className="block text-center bg-white text-blue-700 font-bold py-3.5 rounded-2xl hover:bg-blue-50 transition-colors mt-auto">
                   Commencer gratuitement →
                 </Link>
@@ -711,10 +711,10 @@ export default function HomePage() {
               <p className="text-emerald-700 text-sm font-semibold mb-1">Confort</p>
               <p className="text-gray-400 text-xs mb-4">20 lots inclus</p>
               <div className="flex items-end gap-1.5 mb-1">
-                <span className="text-5xl font-extrabold text-gray-900">30 €</span>
-                <span className="text-gray-400 pb-1.5">/mois</span>
+                <span className="text-5xl font-extrabold text-gray-900">450 €</span>
+                <span className="text-gray-400 pb-1.5">/an</span>
               </div>
-              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">360 €/an</span></p>
+              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">37,50 €/mois</span></p>
               <Link href="/register" className="block text-center bg-emerald-600 text-white font-bold py-3.5 rounded-2xl hover:bg-emerald-700 transition-colors mt-auto">
                 Commencer gratuitement →
               </Link>
@@ -728,10 +728,10 @@ export default function HomePage() {
               <p className="text-violet-700 text-sm font-semibold mb-1">Illimité</p>
               <p className="text-gray-400 text-xs mb-4">Lots illimités</p>
               <div className="flex items-end gap-1.5 mb-1">
-                <span className="text-5xl font-extrabold text-gray-900">45 €</span>
-                <span className="text-gray-400 pb-1.5">/mois</span>
+                <span className="text-5xl font-extrabold text-gray-900">600 €</span>
+                <span className="text-gray-400 pb-1.5">/an</span>
               </div>
-              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">540 €/an</span></p>
+              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">50 €/mois</span></p>
               <Link href="/register" className="block text-center bg-violet-600 text-white font-bold py-3.5 rounded-2xl hover:bg-violet-700 transition-colors mt-auto">
                 Commencer gratuitement →
               </Link>

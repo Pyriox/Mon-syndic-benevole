@@ -25,8 +25,8 @@ const PLANS = [
     id: 'essentiel',
     name: 'Essentiel',
     desc: '10 lots inclus',
-    monthly: 20,
-    annual: 240,
+    annual: 300,
+    monthlyLabel: '25 €',
     badge: 'Le plus populaire',
     highlight: true,
     maxLots: 10,
@@ -35,8 +35,8 @@ const PLANS = [
     id: 'confort',
     name: 'Confort',
     desc: '20 lots inclus',
-    monthly: 30,
-    annual: 360,
+    annual: 450,
+    monthlyLabel: '37,50 €',
     badge: null,
     highlight: false,
     maxLots: 20,
@@ -45,8 +45,8 @@ const PLANS = [
     id: 'illimite',
     name: 'Illimité',
     desc: 'Lots illimités',
-    monthly: 45,
-    annual: 540,
+    annual: 600,
+    monthlyLabel: '50 €',
     badge: null,
     highlight: false,
     maxLots: Infinity,
@@ -436,16 +436,16 @@ export default async function AbonnementPage({
                       {/* Prix */}
                       <div className="flex items-end gap-1 mb-0.5">
                         <span className={`text-3xl font-extrabold ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-white' : 'text-gray-900'}`}>
-                          {plan.monthly}&nbsp;€
+                          {plan.annual}&nbsp;€
                         </span>
                         <span className={`pb-0.5 text-sm ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-blue-200' : 'text-gray-400'}`}>
-                          /mois
+                          /an
                         </span>
                       </div>
                       <p className={`text-xs mb-4 ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-blue-200' : 'text-gray-400'}`}>
                         soit{' '}
                         <span className={`font-semibold ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-white' : 'text-gray-700'}`}>
-                          {plan.annual}&nbsp;€/an
+                          {plan.monthlyLabel}/mois
                         </span>
                       </p>
 
