@@ -13,6 +13,7 @@
 import { type EmailOtpType } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -50,11 +51,39 @@ export async function GET(request: NextRequest) {
   );
 
   // Échange du token contre une session active
-  const { error } = await supabase.auth.verifyOtp({ type, token_hash });
+  const { data, error } = await supabase.auth.verifyOtp({ type, token_hash });
 
   if (error) {
     console.error('[auth/confirm] verifyOtp error:', error.message);
     return NextResponse.redirect(new URL('/login?error=lien_invalide', request.url));
+  }
+
+  // Après une confirmation d'inscription, lier automatiquement l'utilisateur
+  // à sa fiche coproprietaire (si une fiche avec ce même email existe sans user_id)
+  if (type === 'signup' && data.user) {
+    const { id: userId, email } = data.user;
+    if (email) {
+      try {
+        const admin = createAdminClient();
+
+        // 1. Lier toutes les fiches coproprietaires avec cet email et sans user_id
+        await admin
+          .from('coproprietaires')
+          .update({ user_id: userId })
+          .eq('email', email.toLowerCase())
+          .is('user_id', null);
+
+        // 2. Marquer les invitations en attente pour cet email comme acceptées
+        await admin
+          .from('invitations')
+          .update({ statut: 'acceptee' })
+          .eq('email', email.toLowerCase())
+          .eq('statut', 'en_attente');
+      } catch (linkErr) {
+        // Non bloquant — l'utilisateur peut quand même accéder au dashboard
+        console.error('[auth/confirm] auto-link error:', linkErr);
+      }
+    }
   }
 
   return response;

@@ -35,6 +35,9 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 
   const userName = profile?.full_name ?? user.email ?? '';
 
+  // Le rôle du compte (stocké lors de l'inscription dans user_metadata)
+  const accountRole = (user.user_metadata?.role ?? 'syndic') as 'syndic' | 'copropriétaire';
+
   // Déduplique et fusionne les deux listes avec le rôle associé
   const syndicIds = new Set((syndicCopros ?? []).map((c) => c.id));
   const userCoproprietes: UserCopropriete[] = [
@@ -75,7 +78,9 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   }
 
   const selectedCopro = userCoproprietes.find((c) => c.id === selectedCoproId) ?? null;
-  const userRole = selectedCopro?.role ?? 'syndic';
+  // Utilise le rôle de la copropriété sélectionnée, ou le rôle du compte en fallback
+  // (évite qu'un coproprietaire non lié voie la navigation syndic complète)
+  const userRole = selectedCopro?.role ?? accountRole;
 
   // --- Notifications (uniquement pour le syndic sur la copropriété sélectionnée) ---
   const notifications: AppNotification[] = [];
