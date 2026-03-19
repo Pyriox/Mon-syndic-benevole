@@ -19,13 +19,31 @@ import { FileText, Download, ExternalLink, Folder, ChevronRight } from 'lucide-r
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 
-// Dossiers racine créés automatiquement pour chaque syndic
+// Dossiers racine permanents — dans l'ordre d'affichage souhaité
 const DEFAULT_DOSSIER_NAMES = [
   'Assemblées Générales',
   'Appels de fonds',
   'Dépenses',
   'Règlement copropriété',
 ];
+
+// Ordre d'utilité des dossiers permanents (plus petit = en premier)
+const DEFAULT_DOSSIER_ORDER: Record<string, number> = {
+  'Assemblées Générales': 0,
+  'Appels de fonds':      1,
+  'Dépenses':             2,
+  'Règlement copropriété': 3,
+};
+
+function sortRootDossiers(dossiers: Dossier[]): Dossier[] {
+  const defaults = dossiers
+    .filter((d) => d.is_default)
+    .sort((a, b) => (DEFAULT_DOSSIER_ORDER[a.nom] ?? 99) - (DEFAULT_DOSSIER_ORDER[b.nom] ?? 99));
+  const customs = dossiers
+    .filter((d) => !d.is_default)
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+  return [...defaults, ...customs];
+}
 
 type Dossier = { id: string; nom: string; is_default: boolean; created_at: string; parent_id?: string | null; couleur?: string | null };
 
@@ -111,6 +129,8 @@ export default async function DocumentsPage({ searchParams }: Props) {
       if (d.parent_id) acc[d.parent_id] = (acc[d.parent_id] ?? 0) + 1;
       return acc;
     }, {});
+
+    const rootDossiersCopro = sortRootDossiers(dossiers.filter((d) => !d.parent_id));
 
     // ── Vue dossier spécifique ──
     if (dossierId) {
@@ -244,15 +264,14 @@ export default async function DocumentsPage({ searchParams }: Props) {
     }
 
     // ── Vue grille racine ──
-    const rootDossiers = dossiers.filter((d) => !d.parent_id);
     return (
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
-          <p className="text-gray-500 mt-1">{rootDossiers.length} dossier(s)</p>
+          <p className="text-gray-500 mt-1">{rootDossiersCopro.length} dossier(s)</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {rootDossiers.map((dossier) => (
+          {rootDossiersCopro.map((dossier) => (
             <Link key={dossier.id} href={`/documents?dossier=${dossier.id}`} className="block">
               <div className={`bg-white rounded-xl border-2 p-5 flex items-center gap-4 hover:shadow-md transition-all ${
                 dossier.is_default ? 'border-gray-200 hover:border-blue-300' : 'border-dashed border-gray-300 hover:border-amber-400'
@@ -605,7 +624,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   // ================================================================
   // VUE PRINCIPALE : grille des dossiers racine
   // ================================================================
-  const rootDossiers = dossiers.filter((d) => !d.parent_id);
+  const rootDossiers = sortRootDossiers(dossiers.filter((d) => !d.parent_id));
 
   const subCountByParent = dossiers.reduce<Record<string, number>>((acc, d) => {
     if (d.parent_id) acc[d.parent_id] = (acc[d.parent_id] ?? 0) + 1;
