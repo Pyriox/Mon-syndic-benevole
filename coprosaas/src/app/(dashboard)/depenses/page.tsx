@@ -109,53 +109,85 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
         </div>
 
         {depenses && depenses.length > 0 ? (
-          <Card padding="none">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left px-5 py-3 font-medium text-gray-500">Date</th>
-                    <th className="text-left px-5 py-3 font-medium text-gray-500">Titre</th>
-                    <th className="text-left px-5 py-3 font-medium text-gray-500">Catégorie</th>
-                    <th className="text-right px-5 py-3 font-medium text-gray-500">Montant</th>
-                    <th className="text-center px-5 py-3 font-medium text-gray-500">P.J.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {depenses.map((d) => (
-                    <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDate(d.date_depense)}</td>
-                      <td className="px-5 py-3">
-                        <p className="font-medium text-gray-900">{d.titre}</p>
-                        {d.description && <p className="text-xs text-gray-400 truncate max-w-xs">{d.description}</p>}
-                      </td>
-                      <td className="px-5 py-3">
+          <>
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-2">
+              {depenses.map((d) => (
+                <Card key={d.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 truncate">{d.titre}</p>
+                      {d.description && <p className="text-xs text-gray-400 truncate">{d.description}</p>}
+                      <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                         <Badge variant={couleurCategorie(d.categorie)}>
                           {LABELS_CATEGORIE[d.categorie] ?? d.categorie}
                         </Badge>
-                      </td>
-                      <td className="px-5 py-3 text-right font-semibold text-gray-900">{formatEuros(d.montant)}</td>
-                      <td className="px-5 py-3 text-center">
-                        {d.piece_jointe_url ? (
-                          <a href={d.piece_jointe_url} target="_blank" rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline text-xs">Voir</a>
-                        ) : (
-                          <span className="text-gray-300">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-gray-50 border-t-2 border-gray-200">
-                  <tr>
-                    <td colSpan={3} className="px-5 py-3 font-semibold text-gray-700">Total</td>
-                    <td className="px-5 py-3 text-right font-bold text-gray-900">{formatEuros(totalDepenses)}</td>
-                    <td />
-                  </tr>
-                </tfoot>
-              </table>
+                        <span className="text-xs text-gray-500">{formatDate(d.date_depense)}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-semibold text-gray-900">{formatEuros(d.montant)}</p>
+                      {d.piece_jointe_url && (
+                        <a href={d.piece_jointe_url} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline">P.J.</a>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              <p className="text-right text-sm font-semibold text-gray-700 px-1 pt-1">
+                Total : {formatEuros(totalDepenses)}
+              </p>
             </div>
-          </Card>
+            {/* Desktop table */}
+            <Card padding="none" className="hidden md:block">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-5 py-3 font-medium text-gray-500">Date</th>
+                      <th className="text-left px-5 py-3 font-medium text-gray-500">Titre</th>
+                      <th className="text-left px-5 py-3 font-medium text-gray-500">Catégorie</th>
+                      <th className="text-right px-5 py-3 font-medium text-gray-500">Montant</th>
+                      <th className="text-center px-5 py-3 font-medium text-gray-500">P.J.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {depenses.map((d) => (
+                      <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDate(d.date_depense)}</td>
+                        <td className="px-5 py-3">
+                          <p className="font-medium text-gray-900">{d.titre}</p>
+                          {d.description && <p className="text-xs text-gray-400 truncate max-w-xs">{d.description}</p>}
+                        </td>
+                        <td className="px-5 py-3">
+                          <Badge variant={couleurCategorie(d.categorie)}>
+                            {LABELS_CATEGORIE[d.categorie] ?? d.categorie}
+                          </Badge>
+                        </td>
+                        <td className="px-5 py-3 text-right font-semibold text-gray-900">{formatEuros(d.montant)}</td>
+                        <td className="px-5 py-3 text-center">
+                          {d.piece_jointe_url ? (
+                            <a href={d.piece_jointe_url} target="_blank" rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-xs">Voir</a>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-gray-50 border-t-2 border-gray-200">
+                    <tr>
+                      <td colSpan={3} className="px-5 py-3 font-semibold text-gray-700">Total</td>
+                      <td className="px-5 py-3 text-right font-bold text-gray-900">{formatEuros(totalDepenses)}</td>
+                      <td />
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </Card>
+          </>
         ) : (
           <EmptyState
             icon={<Receipt size={48} strokeWidth={1.5} />}
@@ -325,84 +357,133 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
       </div>
 
       {depenses && depenses.length > 0 ? (
-        <Card padding="none">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">Date</th>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">Titre</th>
-                  <th className="text-left px-5 py-3 font-medium text-gray-500">Catégorie</th>
-                  <th className="text-right px-5 py-3 font-medium text-gray-500">Montant</th>
-                  <th className="text-center px-5 py-3 font-medium text-gray-500">P.J.</th>
-                  <th className="text-center px-5 py-3 font-medium text-gray-500">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {depenses.map((d) => (
-                  <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDate(d.date_depense)}</td>
-                    <td className="px-5 py-3">
-                      <p className="font-medium text-gray-900">{d.titre}</p>
-                      {d.description && (
-                        <p className="text-xs text-gray-400 truncate max-w-xs">{d.description}</p>
-                      )}
-                    </td>
-                    <td className="px-5 py-3">
+        <>
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-2">
+            {depenses.map((d) => (
+              <Card key={d.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 truncate">{d.titre}</p>
+                    {d.description && <p className="text-xs text-gray-400 truncate">{d.description}</p>}
+                    <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                       <Badge variant={couleurCategorie(d.categorie)}>
                         {LABELS_CATEGORIE[d.categorie] ?? d.categorie}
                       </Badge>
-                    </td>
-                    <td className="px-5 py-3 text-right font-semibold text-gray-900">
-                      {formatEuros(d.montant)}
-                    </td>
-                    <td className="px-5 py-3 text-center">
-                      {d.piece_jointe_url ? (
-                        <a
-                          href={d.piece_jointe_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-xs"
-                        >
-                          Voir
-                        </a>
-                      ) : (
-                        <span className="text-gray-300">—</span>
+                      <span className="text-xs text-gray-500">{formatDate(d.date_depense)}</span>
+                      {d.piece_jointe_url && (
+                        <a href={d.piece_jointe_url} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline">P.J.</a>
                       )}
-                    </td>
-                    <td className="px-5 py-3 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <DepenseActions
-                          coproprietes={coproprietes ?? []}
-                          depensesDossierId={depDossier?.id}
-                          depense={{
-                            id: d.id,
-                            copropriete_id: d.copropriete_id,
-                            titre: d.titre,
-                            categorie: d.categorie,
-                            montant: d.montant,
-                            date_depense: d.date_depense,
-                            description: d.description ?? null,
-                            piece_jointe_url: d.piece_jointe_url ?? null,
-                          }}
-                        />
-                        <DepenseDelete depenseId={d.id} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              {/* Ligne de total */}
-              <tfoot className="bg-gray-50 border-t-2 border-gray-200">
-                <tr>
-                  <td colSpan={3} className="px-5 py-3 font-semibold text-gray-700">Total</td>
-                  <td className="px-5 py-3 text-right font-bold text-gray-900">{formatEuros(totalDepenses)}</td>
-                  <td /><td />
-                </tr>
-              </tfoot>
-            </table>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-semibold text-gray-900">{formatEuros(d.montant)}</p>
+                    <div className="flex items-center justify-end gap-1 mt-1">
+                      <DepenseActions
+                        coproprietes={coproprietes ?? []}
+                        depensesDossierId={depDossier?.id}
+                        depense={{
+                          id: d.id,
+                          copropriete_id: d.copropriete_id,
+                          titre: d.titre,
+                          categorie: d.categorie,
+                          montant: d.montant,
+                          date_depense: d.date_depense,
+                          description: d.description ?? null,
+                          piece_jointe_url: d.piece_jointe_url ?? null,
+                        }}
+                      />
+                      <DepenseDelete depenseId={d.id} />
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+            <p className="text-right text-sm font-semibold text-gray-700 px-1 pt-1">
+              Total : {formatEuros(totalDepenses)}
+            </p>
           </div>
-        </Card>
+          {/* Desktop table */}
+          <Card padding="none" className="hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-5 py-3 font-medium text-gray-500">Date</th>
+                    <th className="text-left px-5 py-3 font-medium text-gray-500">Titre</th>
+                    <th className="text-left px-5 py-3 font-medium text-gray-500">Catégorie</th>
+                    <th className="text-right px-5 py-3 font-medium text-gray-500">Montant</th>
+                    <th className="text-center px-5 py-3 font-medium text-gray-500">P.J.</th>
+                    <th className="text-center px-5 py-3 font-medium text-gray-500">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {depenses.map((d) => (
+                    <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDate(d.date_depense)}</td>
+                      <td className="px-5 py-3">
+                        <p className="font-medium text-gray-900">{d.titre}</p>
+                        {d.description && (
+                          <p className="text-xs text-gray-400 truncate max-w-xs">{d.description}</p>
+                        )}
+                      </td>
+                      <td className="px-5 py-3">
+                        <Badge variant={couleurCategorie(d.categorie)}>
+                          {LABELS_CATEGORIE[d.categorie] ?? d.categorie}
+                        </Badge>
+                      </td>
+                      <td className="px-5 py-3 text-right font-semibold text-gray-900">
+                        {formatEuros(d.montant)}
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        {d.piece_jointe_url ? (
+                          <a
+                            href={d.piece_jointe_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-xs"
+                          >
+                            Voir
+                          </a>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <DepenseActions
+                            coproprietes={coproprietes ?? []}
+                            depensesDossierId={depDossier?.id}
+                            depense={{
+                              id: d.id,
+                              copropriete_id: d.copropriete_id,
+                              titre: d.titre,
+                              categorie: d.categorie,
+                              montant: d.montant,
+                              date_depense: d.date_depense,
+                              description: d.description ?? null,
+                              piece_jointe_url: d.piece_jointe_url ?? null,
+                            }}
+                          />
+                          <DepenseDelete depenseId={d.id} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                {/* Ligne de total */}
+                <tfoot className="bg-gray-50 border-t-2 border-gray-200">
+                  <tr>
+                    <td colSpan={3} className="px-5 py-3 font-semibold text-gray-700">Total</td>
+                    <td className="px-5 py-3 text-right font-bold text-gray-900">{formatEuros(totalDepenses)}</td>
+                    <td /><td />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </Card>
+        </>
       ) : (
         <EmptyState
           icon={<Receipt size={48} strokeWidth={1.5} />}

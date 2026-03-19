@@ -2,6 +2,8 @@
 // Page : Liste des copropriétaires (vue tableau)
 // Filtrée sur la copropriété sélectionnée (cookie selected_copro_id)
 // ============================================================
+export const revalidate = 60;
+
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';

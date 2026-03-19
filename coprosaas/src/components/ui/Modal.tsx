@@ -1,6 +1,6 @@
 // ============================================================
 // Composant Modal / Dialog
-// Affiche un contenu en overlay sur la page
+// Mobile : bottom sheet (slide up)  |  Desktop (md+) : dialog centré
 // ============================================================
 'use client';
 
@@ -16,11 +16,11 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-2xl',
+const desktopSizeClasses = {
+  sm: 'md:max-w-sm',
+  md: 'md:max-w-md',
+  lg: 'md:max-w-lg',
+  xl: 'md:max-w-2xl',
 };
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
@@ -43,9 +43,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   if (!isOpen) return null;
 
   return (
-    // Overlay sombre
+    // Overlay — mobile : aligne en bas | desktop : centre
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end md:items-center md:justify-center md:p-4"
       onClick={onClose}
     >
       {/* Fond semi-transparent */}
@@ -54,15 +54,24 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
       {/* Boîte du modal */}
       <div
         className={cn(
-          'relative z-10 bg-white rounded-xl shadow-xl w-full flex flex-col',
-          'max-h-[calc(100dvh-2rem)]',
-          sizeClasses[size]
+          // Commun
+          'relative z-10 bg-white shadow-xl w-full flex flex-col',
+          // Mobile : full width, arrondi en haut, hauteur max 90vh
+          'rounded-t-2xl max-h-[90dvh]',
+          // Desktop : arrondi partout, hauteur max réduite, largeur contrainte
+          'md:rounded-xl md:max-h-[calc(100dvh-2rem)]',
+          desktopSizeClasses[size]
         )}
-        onClick={(e) => e.stopPropagation()} // Empêche la fermeture au clic sur le contenu
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Poignée de drag (mobile uniquement) */}
+        <div className="flex justify-center pt-3 pb-1 md:hidden" aria-hidden>
+          <div className="w-10 h-1 rounded-full bg-gray-300" />
+        </div>
+
         {/* En-tête du modal */}
         {title && (
-          <div className="flex items-center justify-between p-5 border-b border-gray-200 shrink-0">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0">
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <button
               onClick={onClose}

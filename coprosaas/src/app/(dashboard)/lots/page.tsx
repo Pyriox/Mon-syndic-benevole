@@ -2,6 +2,8 @@
 // Page : Lots de la copropriété — lecture seule pour tous les rôles
 // (Le syndic peut gérer les lots depuis la page copropriétés)
 // ============================================================
+export const revalidate = 60;
+
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
