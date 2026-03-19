@@ -92,6 +92,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
         { href: '/coproprietaires', label: 'Copropriétaires', icon: Users },
         { href: '/assemblees', label: 'Assemblées Générales', icon: CalendarDays },
         { href: '/appels-de-fonds', label: 'Mes charges', icon: Wallet },
+        { href: '/depenses', label: 'Dépenses', icon: Receipt },
         { href: '/documents', label: 'Documents', icon: FileText },
       ],
     },
