@@ -88,6 +88,8 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
     {
       label: 'Ma copropriété',
       items: [
+        { href: '/lots', label: 'Lots & bâtiment', icon: Building2 },
+        { href: '/coproprietaires', label: 'Copropriétaires', icon: Users },
         { href: '/assemblees', label: 'Assemblées Générales', icon: CalendarDays },
         { href: '/appels-de-fonds', label: 'Mes charges', icon: Wallet },
         { href: '/documents', label: 'Documents', icon: FileText },

@@ -27,12 +27,12 @@ interface CoproRow {
   nom: string | null;
   prenom: string | null;
   raison_sociale: string | null;
-  email: string;
-  telephone: string | null;
+  email?: string | null;      // masqué en mode lecture seule
+  telephone?: string | null;  // masqué en mode lecture seule
   adresse: string | null;
   code_postal: string | null;
   ville: string | null;
-  solde: number;
+  solde?: number;             // masqué en mode lecture seule
   user_id: string | null;
 }
 
@@ -52,8 +52,112 @@ interface LotForSelect {
 interface CoproprietairesTableProps {
   initialCoproprietaires: CoproRow[];
   lotsByOwner: Record<string, LotEntry[]>;
-  lotsForSelect: LotForSelect[];
+  lotsForSelect?: LotForSelect[];
   totalTantiemes: number;
+  readOnly?: boolean;
+}
+
+// -------------------------------------------------------
+// Carte mobile lecture seule (pas de contact, pas de solde, pas d'actions)
+// -------------------------------------------------------
+function ReadOnlyMobileCoproCard({
+  cp,
+  ownedLots,
+  totalTantiemes,
+}: {
+  cp: CoproRow;
+  ownedLots: LotEntry[];
+  totalTantiemes: number;
+}) {
+  const cpTantiemes = ownedLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+  const cpPercent = totalTantiemes > 0 ? ((cpTantiemes / totalTantiemes) * 100).toFixed(2) : '0.00';
+  const displayName = cp.raison_sociale
+    ? cp.raison_sociale
+    : `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim();
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-2">
+      <div className="flex items-center gap-2">
+        <p className="font-semibold text-gray-900 leading-tight">{displayName || <span className="text-gray-400 italic">Sans nom</span>}</p>
+        {cp.user_id && (
+          <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
+            <UserCheck size={11} />
+            Inscrit
+          </span>
+        )}
+      </div>
+      {cp.raison_sociale && (cp.prenom || cp.nom) && (
+        <p className="text-xs text-gray-400">{`${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim()}</p>
+      )}
+      {ownedLots.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {ownedLots.map((lot) => (
+            <span key={lot.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full">
+              {lot.numero}<span className="text-blue-400">· {lot.tantiemes} t.</span>
+            </span>
+          ))}
+          <span className="text-xs text-gray-400 self-center">{cpTantiemes} t. — {cpPercent}%</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// -------------------------------------------------------
+// Ligne lecture seule (pas de drag, pas de contact, pas de solde, pas d'actions)
+// -------------------------------------------------------
+function ReadOnlyCoproRow({
+  cp,
+  ownedLots,
+  totalTantiemes,
+}: {
+  cp: CoproRow;
+  ownedLots: LotEntry[];
+  totalTantiemes: number;
+}) {
+  const cpTantiemes = ownedLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+  const cpPercent = totalTantiemes > 0 ? ((cpTantiemes / totalTantiemes) * 100).toFixed(2) : '0.00';
+  const displayName = cp.raison_sociale
+    ? cp.raison_sociale
+    : `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim();
+
+  return (
+    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+      <td className="py-3 px-4">
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-gray-900">{displayName || <span className="text-gray-400 italic">Sans nom</span>}</p>
+          {cp.user_id && (
+            <span title="Compte actif" className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
+              <UserCheck size={11} />Inscrit
+            </span>
+          )}
+        </div>
+        {cp.raison_sociale && (
+          <p className="text-xs text-gray-400 mt-0.5">
+            {(cp.prenom || cp.nom) ? `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim() : 'Personne morale'}
+          </p>
+        )}
+      </td>
+      <td className="py-3 px-4">
+        {ownedLots.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {ownedLots.map((lot) => (
+              <span key={lot.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full">
+                {lot.numero}<span className="text-blue-400">· {lot.tantiemes} t.</span>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="text-xs text-gray-400 italic">Aucun lot</span>
+        )}
+        {ownedLots.length > 0 && (
+          <p className="text-xs text-gray-400 mt-1">
+            {cpTantiemes} / {totalTantiemes} t. — <span className="font-medium text-gray-600">{cpPercent}%</span>
+          </p>
+        )}
+      </td>
+    </tr>
+  );
 }
 
 // -------------------------------------------------------
@@ -101,7 +205,7 @@ function MobileCoproCard({
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <CoproprietaireEdit
-            coproprietaire={cp}
+            coproprietaire={{ ...cp, email: cp.email ?? '', telephone: cp.telephone ?? null, solde: cp.solde ?? 0 }}
             lots={lotsForSelect}
             assignedLotIds={ownedLots.map((l) => l.id)}
           />
@@ -147,8 +251,8 @@ function MobileCoproCard({
             </a>
           )}
         </div>
-        <Badge variant={cp.solde < 0 ? 'danger' : cp.solde > 0 ? 'success' : 'default'} className="shrink-0">
-          {formatEuros(cp.solde)}
+        <Badge variant={(cp.solde ?? 0) < 0 ? 'danger' : (cp.solde ?? 0) > 0 ? 'success' : 'default'} className="shrink-0">
+          {formatEuros(cp.solde ?? 0)}
         </Badge>
       </div>
     </div>
@@ -277,8 +381,8 @@ function SortableCoproRow({
 
       {/* Solde */}
       <td className="py-3 px-4 text-right">
-        <Badge variant={cp.solde < 0 ? 'danger' : cp.solde > 0 ? 'success' : 'default'}>
-          {formatEuros(cp.solde)}
+        <Badge variant={(cp.solde ?? 0) < 0 ? 'danger' : (cp.solde ?? 0) > 0 ? 'success' : 'default'}>
+          {formatEuros(cp.solde ?? 0)}
         </Badge>
       </td>
 
@@ -286,7 +390,7 @@ function SortableCoproRow({
       <td className="py-3 px-4">
         <div className="flex items-center justify-end gap-0.5">
           <CoproprietaireEdit
-            coproprietaire={cp}
+            coproprietaire={{ ...cp, email: cp.email ?? '', telephone: cp.telephone ?? null, solde: cp.solde ?? 0 }}
             lots={lotsForSelect}
             assignedLotIds={ownedLots.map((l) => l.id)}
           />
@@ -303,8 +407,9 @@ function SortableCoproRow({
 export default function CoproprietairesTable({
   initialCoproprietaires,
   lotsByOwner,
-  lotsForSelect,
+  lotsForSelect = [],
   totalTantiemes,
+  readOnly = false,
 }: CoproprietairesTableProps) {
   const [coproprietaires, setCoproprietaires] = useState<CoproRow[]>(initialCoproprietaires);
   const supabase = createClient();
@@ -333,6 +438,48 @@ export default function CoproprietairesTable({
     );
   };
 
+  // ── Mode lecture seule (copropriétaire) ───────────────────────────────────
+  if (readOnly) {
+    return (
+      <>
+        {/* Cartes mobile */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {coproprietaires.map((cp) => (
+            <div key={cp.id} className="p-3">
+              <ReadOnlyMobileCoproCard
+                cp={cp}
+                ownedLots={lotsByOwner[cp.id] ?? []}
+                totalTantiemes={totalTantiemes}
+              />
+            </div>
+          ))}
+        </div>
+        {/* Tableau desktop */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Nom</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Lots</th>
+              </tr>
+            </thead>
+            <tbody>
+              {coproprietaires.map((cp) => (
+                <ReadOnlyCoproRow
+                  key={cp.id}
+                  cp={cp}
+                  ownedLots={lotsByOwner[cp.id] ?? []}
+                  totalTantiemes={totalTantiemes}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  }
+
+  // ── Mode édition (syndic) ─────────────────────────────────────────────────
   return (
     <>
       {/* ── Vue cartes : mobile uniquement ── */}
