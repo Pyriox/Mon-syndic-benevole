@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import CheckoutButton from './CheckoutButton';
+import SubscriptionSuccessTracker from './SubscriptionSuccessTracker';
 import { AlertCircle, CheckCircle, Lock, Settings2 } from 'lucide-react';
 
 const FEATURES = [
@@ -258,6 +259,13 @@ export default async function AbonnementPage({
         </div>
 
         {/* ── Bannières */}
+        {success === '1' && (
+          <SubscriptionSuccessTracker
+            planId={syncedCopro?.plan_id ?? null}
+            subscriptionId={syncedCopro?.stripe_subscription_id ?? null}
+            coproNom={syncedCopro?.nom ?? null}
+          />
+        )}
         {success === '1' && (
           <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
             <CheckCircle size={16} className="text-green-600 shrink-0" />
