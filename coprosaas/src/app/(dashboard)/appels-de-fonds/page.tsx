@@ -137,7 +137,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {canCreate ? <AppelFondsActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />}
+          {isSyndic && (canCreate ? <AppelFondsActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
         </div>
       </div>
 
