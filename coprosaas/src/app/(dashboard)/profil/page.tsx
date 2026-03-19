@@ -18,6 +18,7 @@ export default async function ProfilPage() {
 
   const fullName: string = user.user_metadata?.full_name ?? '';
   const email: string = user.email ?? '';
+  const accountRole = (user.user_metadata?.role ?? 'syndic') as 'syndic' | 'copropriétaire';
 
   const cookieStore = await cookies();
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
@@ -63,6 +64,18 @@ export default async function ProfilPage() {
     .eq('user_id', user.id)
     .in('copropriete_id', coproprieteIds.length ? coproprieteIds : ['none']);
 
+  // Pour les comptes copropriétaires : résoudre le nom de la copropriété sélectionnée
+  // (selectedCopro est null pour eux car ils ne sont pas syndic_id de la copropriété)
+  let selectedCoproNomAffiche: string | null = selectedCopro?.nom ?? null;
+  if (!selectedCoproNomAffiche && selectedCoproId) {
+    const { data: sc } = await supabase
+      .from('coproprietes')
+      .select('nom')
+      .eq('id', selectedCoproId)
+      .maybeSingle();
+    selectedCoproNomAffiche = sc?.nom ?? null;
+  }
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div>
@@ -88,7 +101,7 @@ export default async function ProfilPage() {
             <ShieldCheck size={16} className="text-blue-500 shrink-0" />
             <div>
               <p className="text-xs text-gray-400 leading-none mb-0.5">Rôle</p>
-              <p className="font-medium text-blue-700">Syndic bénévole</p>
+              <p className="font-medium text-blue-700">{accountRole === 'syndic' ? 'Syndic bénévole' : 'Copropriétaire'}</p>
             </div>
           </div>
         </div>
@@ -98,16 +111,16 @@ export default async function ProfilPage() {
       </Card>
 
       {/* ---- Identité liée à la copropriété en cours ---- */}
-      {selectedCopro ? (
+      {selectedCoproNomAffiche ? (
         <Card>
           <CardHeader
-            title={`Mon identité — ${selectedCopro.nom}`}
+            title={`Mon identité — ${selectedCoproNomAffiche}`}
             description="Vos informations en tant que copropriétaire sur cette copropriété"
             actions={
               <ProfilEditActions
                 fiche={ficheSelectionnee}
                 selectedCoproId={selectedCoproId}
-                selectedCoproNom={selectedCopro.nom}
+                selectedCoproNom={selectedCoproNomAffiche ?? ''}
                 userEmail={email}
                 fullName={fullName}
               />
@@ -141,7 +154,8 @@ export default async function ProfilPage() {
         </Card>
       ) : null}
 
-      {/* ---- Statut copropriétaire (lots) ---- */}
+      {/* ---- Statut copropriétaire (lots) — syndic uniquement ---- */}
+      {accountRole === 'syndic' && (
       <Card>
         <CardHeader
           title="Mon statut de copropriétaire"
@@ -195,6 +209,7 @@ export default async function ProfilPage() {
           </div>
         )}
       </Card>
+      )}
     </div>
   );
 }

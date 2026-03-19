@@ -23,6 +23,11 @@ export default async function CoproprietairesPage() {
     ? await supabase.from('coproprietes').select('id, nom, syndic_id').eq('id', selectedCoproId).maybeSingle()
     : { data: null };
 
+  // Seul le syndic gérant cette copropriété peut voir la liste complète
+  if (!copropriete || copropriete.syndic_id !== user.id) {
+    redirect('/dashboard');
+  }
+
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
 
   const { data: coproprietaires } = await supabase
