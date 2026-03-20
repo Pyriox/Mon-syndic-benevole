@@ -314,11 +314,8 @@ export default async function AdminPage() {
       )}
 
       {/* ── Onglets ── */}
-      <AdminTabs>
-        {(tab: TabId) => (
-          <>
-            {/* ══════════ VUE D'ENSEMBLE ══════════ */}
-            {tab === 'overview' && (
+      <AdminTabs panels={{
+        overview: (
               <div className="space-y-8">
                 <section>
                   <SectionTitle icon={BarChart3} title="Plateforme en chiffres" />
@@ -444,10 +441,9 @@ export default async function AdminPage() {
                   </div>
                 </section>
               </div>
-            )}
+        ),
 
-            {/* ══════════ SYNDICS ══════════ */}
-            {tab === 'syndics' && (
+        syndics: (
               <div className="space-y-6">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <SectionTitle icon={UserCheck} title="Syndics bénévoles" sub={`${syndicUsers.length} comptes syndic`} />
@@ -520,10 +516,9 @@ export default async function AdminPage() {
                   </table>
                 </div>
               </div>
-            )}
+        ),
 
-            {/* ══════════ MEMBRES ══════════ */}
-            {tab === 'members' && (
+        members: (
               <div className="space-y-6">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <SectionTitle icon={Users} title="Membres copropriétaires" sub={`${memberUsers.length} comptes membres`} />
@@ -644,10 +639,9 @@ export default async function AdminPage() {
                   </div>
                 </section>
               </div>
-            )}
+        ),
 
-            {/* ══════════ ABONNEMENTS ══════════ */}
-            {tab === 'subscriptions' && (
+        subscriptions: (
               <div className="space-y-6">
                 <SectionTitle icon={CreditCard} title="Abonnements Stripe" sub="Synchronisé avec Stripe" />
 
@@ -796,10 +790,9 @@ export default async function AdminPage() {
                   </div>
                 </section>
               </div>
-            )}
+        ),
 
-            {/* ══════════ COPROPRIÉTÉS ══════════ */}
-            {tab === 'copros' && (
+        copros: (
               <div className="space-y-6">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <SectionTitle icon={Building2} title="Toutes les copropriétés" sub={`${nbCoproprietes} au total`} />
@@ -855,10 +848,8 @@ export default async function AdminPage() {
                   </table>
                 </div>
               </div>
-            )}
-          </>
-        )}
-      </AdminTabs>
+        ),
+      }} />
 
       {/* ── Footer ── */}
       <div className="flex items-center gap-2 text-xs text-gray-400 pt-4 border-t border-gray-200">

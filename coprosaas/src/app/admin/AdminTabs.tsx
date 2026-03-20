@@ -14,10 +14,10 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 interface Props {
-  children: (activeTab: TabId) => React.ReactNode;
+  panels: Record<TabId, React.ReactNode>;
 }
 
-export default function AdminTabs({ children }: Props) {
+export default function AdminTabs({ panels }: Props) {
   const [active, setActive] = useState<TabId>('overview');
 
   return (
@@ -39,7 +39,7 @@ export default function AdminTabs({ children }: Props) {
           </button>
         ))}
       </div>
-      {children(active)}
+      {panels[active]}
     </div>
   );
 }
