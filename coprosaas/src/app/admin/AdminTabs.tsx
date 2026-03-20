@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { LayoutDashboard, Building2, Users, CreditCard, ShieldCheck } from 'lucide-react';
