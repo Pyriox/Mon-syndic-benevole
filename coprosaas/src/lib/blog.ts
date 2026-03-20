@@ -18,41 +18,47 @@ export const posts: BlogPost[] = [
     slug: 'gerer-copropriete-sans-syndic-professionnel',
     title: 'Gérer une copropriété sans syndic professionnel : est-ce vraiment possible ?',
     description:
-      'Syndic bénévole, auto-gestion, copropriétaires qui se regroupent… Gérer sa copropriété sans passer par un cabinet professionnel est légal, courant et souvent bien plus économique. On vous explique comment.',
+      'Gérer une copropriété sans syndic professionnel : responsabilités légales, avantages et étapes pratiques. Le guide complet du syndic bénévole.',
+    // 143 chars — dans la limite Google
     publishedAt: '2026-03-19',
     readingTime: 8,
     category: 'Guide pratique',
     keywords: [
       'syndic bénévole',
       'gestion copropriété sans syndic professionnel',
-      'syndic non professionnel',
-      'auto-gestion copropriété',
-      'copropriété bénévole',
+      'logiciel syndic bénévole',
       'obligations syndic bénévole',
+      'avantages syndic bénévole vs syndic professionnel',
+      'comment gérer une copropriété bénévole',
+      'passer syndic professionnel à syndic bénévole',
     ],
   },
   {
     slug: 'appel-de-fonds-copropriete-calcul-repartition',
     title: 'Appel de fonds copropriété : comment le calculer et le répartir ?',
     description:
-      "Budget prévisionnel, tantèmes, charges générales ou spéciales… L’appel de fonds est au cœur de la gestion d’une copropriété. Voici comment le calculer, le répartir équitablement, et éviter les erreurs classiques.",
+      "Appel de fonds copropriété : calcul selon les tantièmes, répartition charges générales et spéciales, régularisation annuelle et gestion des impayés. Guide pratique syndic bénévole.",
+    // 152 chars
     publishedAt: '2026-03-19',
     readingTime: 9,
     category: 'Guide pratique – Finances',
     keywords: [
       'appel de fonds copropriété',
-      'calcul appel de fonds',
-      'répartition charges copropriété',
+      'calcul appel de fonds copropriété',
+      'répartition charges copropriété tantièmes',
       'tantièmes millièmes copropriété',
       'budget prévisionnel copropriété',
-      'impayés charges copropriété',
+      'implayés charges copropriété procédure',
+      'appel de fonds trimestriel',
+      'charges générales spéciales copropriété',
     ],
   },
   {
     slug: 'fonds-de-travaux-alur-obligations-montant-gestion',
     title: 'Fonds de travaux ALUR : obligations, montant et gestion pratique',
     description:
-      "Le fonds de travaux ALUR est obligatoire depuis 2017 pour les copropriétés de 10 lots et plus. Montant minimum, règles de vote, utilisation des sommes… voici tout ce qu’un syndic bénévole doit savoir.",
+      "Fonds de travaux ALUR obligatoire depuis 2017 : montant minimum 5 %, vote en AG, compte séparé, utilisation et cession de lot. Guide complet pour syndic bénévole.",
+    // 150 chars
     publishedAt: '2026-03-19',
     readingTime: 8,
     category: 'Guide pratique – Finances & Réglementation',

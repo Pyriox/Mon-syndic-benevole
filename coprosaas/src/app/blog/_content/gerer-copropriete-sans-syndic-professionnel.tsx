@@ -64,9 +64,9 @@ export default function ArticleGererCopropriete() {
       <h3 className={h3}>Sur le plan financier</h3>
       <ul className={ul}>
         <li className={li}>Établir le budget prévisionnel et le soumettre au vote</li>
-        <li className={li}>Appeler les charges trimestrielles auprès des copropriétaires</li>
+        <li className={li}><a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>Appeler les charges trimestrielles auprès des copropriétaires</a> (appels de fonds provisionnels)</li>
         <li className={li}>Tenir une comptabilité claire (en partie double pour les copropriétés de plus de 10 lots)</li>
-        <li className={li}>Gérer le fonds de travaux ALUR (obligatoire depuis 2017 pour les copropriétés de 10 lots et plus)</li>
+        <li className={li}>Gérer le <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a> (obligatoire depuis 2017 pour les copropriétés de 10 lots et plus)</li>
       </ul>
 
       <h3 className={h3}>Sur le plan opérationnel</h3>
@@ -95,8 +95,32 @@ export default function ArticleGererCopropriete() {
       <p className={p}>
         C&apos;est précisément ce que des outils comme{' '}
         <a href="https://mon-syndic-benevole.fr" className={a}>Mon Syndic Bénévole</a>{' '}
-        cherchent à corriger : centraliser la gestion (charges, appels de fonds, AG, documents, incidents) dans un espace simple, sans nécessiter le moindre background en comptabilité.
+        cherchent à corriger : centraliser la gestion de copropriété (charges, appels de fonds, AG, documents, incidents) dans un espace simple, sans nécessiter le moindre background en comptabilité.
       </p>
+
+      <div className="bg-blue-950/40 border border-blue-800/60 rounded-2xl p-6 mb-8">
+        <p className="text-blue-200 font-semibold mb-3">Ce que Mon Syndic Bénévole centralise pour vous</p>
+        <ul className="space-y-2">
+          {[
+            'Appels de fonds trimestriels calculés automatiquement selon les tantièmes de chaque lot.',
+            'Assemblées générales : convocations, votes, procès-verbaux et feuilles de présence en PDF.',
+            'GED documents : PV, factures et contrats par dossier, accessibles à tout moment.',
+            'Suivi des incidents et travaux : de la déclaration à la résolution.',
+            'Tableau de bord temps réel : trésorerie, dépenses, impayés et prochaine AG.',
+          ].map((item) => (
+            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0" />
+              {item}
+            </li>
+          ))}
+        </ul>
+        <a
+          href="https://mon-syndic-benevole.fr/register"
+          className="inline-block mt-5 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
+        >
+          Essayer gratuitement — 30 jours offerts →
+        </a>
+      </div>
 
       {/* Section 5 */}
       <h2 className={h2}>Les avantages concrets d&apos;une gestion sans cabinet</h2>
@@ -174,7 +198,8 @@ export default function ArticleGererCopropriete() {
       <p className={p}>
         Gérer sa copropriété sans syndic professionnel, c&apos;est légal, courant, et souvent très judicieux pour les immeubles de taille moyenne à petite. Les obstacles réels sont moins la compétence que l&apos;organisation et les outils.
       </p>
-      <p className={p}>Si vous lisez cet article en vous demandant si vous avez les épaules pour assumer ce rôle : dans la très grande majorité des cas, la réponse est oui. Ce qu&apos;il vous faut, c&apos;est un cadre clair, des outils adaptés, et une copropriété qui joue le jeu collectivement.</p>
+      <p className={p}>Si vous lisez cet article en vous demandant si vous avez les épaules pour assumer ce rôle : dans la très grande majorité des cas, la réponse est oui. Ce qu&apos;il vous faut, c&apos;est un cadre clair, des outils adaptés, et une copropriété qui joue le jeu collectivement.</p>
+      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>le calcul et la répartition des appels de fonds</a> ou les <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>obligations liées au fonds de travaux ALUR</a>.</p>
     </>
   );
 }

@@ -18,10 +18,10 @@ import LandingStickyCTA from './LandingStickyCTA';
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
   title: {
-    absolute: 'Mon Syndic Bénévole — Logiciel de gestion de copropriété pour syndic bénévole',
+    absolute: 'Logiciel de gestion de copropriété pour syndic bénévole | Mon Syndic Bénévole',
   },
   description:
-    'Gérez votre copropriété sans syndic professionnel. Charges, appels de fonds, assemblées générales, documents et incidents — tout en un. À partir de 300 €/an, 30 jours offerts.',
+    'Logiciel syndic bénévole : gérez charges, appels de fonds, AG, documents et incidents depuis un seul outil. 30 jours gratuits, puis à partir de 300 €/an.',
   keywords: [
     'syndic bénévole',
     'logiciel syndic bénévole',
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: 'https://mon-syndic-benevole.fr' },
   openGraph: {
-    title: 'Mon Syndic Bénévole — Gestion de copropriété pour syndic bénévole',
+    title: 'Logiciel de gestion de copropriété pour syndic bénévole | Mon Syndic Bénévole',
     description:
-      'Gérez votre copropriété sans syndic professionnel. Charges, appels de fonds, assemblées générales, documents et incidents — tout en un. À partir de 300 €/an, 30 jours offerts.',
+      'Logiciel syndic bénévole : gérez charges, appels de fonds, AG, documents et incidents depuis un seul outil. 30 jours gratuits, puis à partir de 300 €/an.',
     url: 'https://mon-syndic-benevole.fr',
     siteName: 'Mon Syndic Bénévole',
     locale: 'fr_FR',
@@ -51,9 +51,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mon Syndic Bénévole — Gestion de copropriété pour syndic bénévole',
+    title: 'Logiciel de gestion de copropriété pour syndic bénévole | Mon Syndic Bénévole',
     description:
-      'Gérez votre copropriété sans syndic professionnel. À partir de 300 €/an, 30 jours gratuits.',
+      'Logiciel syndic bénévole : charges, appels de fonds, AG et documents. 30 jours gratuits, puis 300 €/an.',
     images: ['/opengraph-image'],
   },
 };
@@ -259,15 +259,15 @@ export default function HomePage() {
           </div>
 
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-5 sm:mb-6 tracking-tight">
-            Le logiciel du syndic bénévole<br />
+            Logiciel de gestion de copropriété<br />
             <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-              simple &amp; abordable
+              pour syndic bénévole
             </span>
           </h1>
 
           <p className="text-base sm:text-xl text-blue-100/80 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
-            Configurez votre copropriété en 10 minutes et économisez jusqu&apos;à 2 700 €/an
-            par rapport à un syndic professionnel — sans formation, sans prise de tête.
+            Simple, abordable et opérationnel en 10 minutes — économisez jusqu&apos;à 2 700 €/an
+            par rapport à un cabinet syndic professionnel, sans formation ni prise de tête.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
@@ -636,8 +636,8 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-green-600 uppercase tracking-widest mb-3">Simple comme bonjour</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Opérationnel en 3 étapes</h2>
-            <p className="text-lg text-gray-500 max-w-xl mx-auto">Pas de formation, pas de migration. Vous gérez tout depuis votre navigateur.</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Configurez votre gestion de copropriété en 3 étapes</h2>
+            <p className="text-lg text-gray-500 max-w-xl mx-auto">Pas de formation, pas de migration. Vous gérez votre copropriété entièrement depuis votre navigateur.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative">
             <div className="hidden md:block absolute top-10 left-[calc(33.33%+0.5rem)] right-[calc(33.33%+0.5rem)] h-px bg-gradient-to-r from-blue-200 to-violet-200" />
@@ -735,9 +735,9 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-indigo-600 uppercase tracking-widest mb-3">Fonctionnalités</p>
-            <h2 id="features-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Tout ce dont vous avez besoin</h2>
+            <h2 id="features-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Toutes les fonctionnalités pour gérer votre copropriété</h2>
             <p className="text-lg text-gray-500 max-w-xl mx-auto">
-              Un outil complet, pensé sur le terrain par un syndic bénévole. Rien de superflu, tout l&apos;essentiel.
+              Un outil complet, pensé sur le terrain par un syndic bénévole. Rien de superflu, tout l&apos;essentiel pour charges, AG, documents et incidents.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -750,6 +750,69 @@ export default function HomePage() {
                 <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pourquoi un logiciel ? (contenu SEO longue-traîne) ── */}
+      <section className="bg-white py-14 sm:py-20 px-4 sm:px-6 border-y border-gray-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Pourquoi un logiciel ?</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Pourquoi utiliser un logiciel de gestion de copropriété en syndic bénévole&nbsp;?
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Exercer en tant que syndic non&nbsp;professionnel est une responsabilité légale et administrative
+              exigeante. La loi du 10&nbsp;juillet&nbsp;1965 et la loi ALUR imposent des obligations précises&nbsp;:
+              tenue d&apos;une comptabilité séparée, fonds de travaux obligatoire, convocations d&apos;assemblée
+              générale dans les délais légaux, archivage des documents. Un logiciel dédié vous aide
+              à tout respecter sans formation comptable.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <article className="flex flex-col gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                <Receipt size={20} className="text-blue-600" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg">
+                Automatisez les appels de fonds et les répartitions
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Calculer la quote-part de chaque copropriétaire selon ses tantièmes prend des heures sur
+                Excel et expose aux erreurs de répartition des charges. Mon Syndic&nbsp;Bénévole génère
+                automatiquement l&apos;appel de fonds, le ventile par tantième ou millième, et l&apos;envoie
+                par e-mail aux copropriétaires avec export PDF en un clic.
+              </p>
+            </article>
+            <article className="flex flex-col gap-3">
+              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center shrink-0">
+                <CalendarDays size={20} className="text-indigo-600" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg">
+                Assemblées générales conformes à la loi ALUR
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                La convocation d&apos;assemblée générale doit respecter un délai de 21&nbsp;jours, inclure
+                l&apos;ordre du jour complet et être envoyée à chaque copropriétaire. Le procès-verbal doit
+                ensuite être archivé 10&nbsp;ans. Convocations, votes, PV et feuille de présence sont
+                générés automatiquement et expédiés par e-mail.
+              </p>
+            </article>
+            <article className="flex flex-col gap-3">
+              <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center shrink-0">
+                <Banknote size={20} className="text-violet-600" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg">
+                Économisez jusqu&apos;à&nbsp;2&nbsp;700&nbsp;€ vs un cabinet syndic professionnel
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Un syndic professionnel facture en moyenne de 1&nbsp;500 à 3&nbsp;000&nbsp;€/an par copropriété,
+                hors honoraires supplémentaires pour travaux ou contentieux. Mon Syndic&nbsp;Bénévole
+                offre les mêmes fonctionnalités à partir de 300&nbsp;€/an, avec accès en temps réel
+                à toutes vos données et résiliation sans frais à tout moment.
+              </p>
+            </article>
           </div>
         </div>
       </section>
@@ -793,8 +856,8 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-violet-600 uppercase tracking-widest mb-3">Tarifs</p>
-            <h2 id="pricing-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Simple, transparent, sans surprise</h2>
-            <p className="text-lg text-gray-500">Un abonnement par copropriété. Toutes les fonctionnalités incluses. Résiliable à tout moment.</p>
+            <h2 id="pricing-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Tarif logiciel syndic bénévole — simple &amp; transparent</h2>
+            <p className="text-lg text-gray-500">Un abonnement par copropriété. Toutes les fonctionnalités incluses. Résiliable à tout moment, sans engagement.</p>
 
           </div>
 
@@ -889,7 +952,7 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Questions fréquentes</p>
-            <h2 id="faq-heading" className="text-3xl font-bold text-gray-900">Tout ce que vous devez savoir</h2>
+            <h2 id="faq-heading" className="text-3xl font-bold text-gray-900">Questions fréquentes sur la gestion de copropriété en syndic bénévole</h2>
           </div>
           <div className="divide-y divide-gray-200">
             {[

@@ -18,7 +18,7 @@ export default function ArticleAppelDeFonds() {
         Chaque trimestre, le même e-mail ou la même lettre dans les boîtes aux lettres : l&apos;appel de fonds. Et chaque trimestre, les mêmes questions dans l&apos;immeuble — pourquoi ce montant ? Comment c&apos;est calculé ? Pourquoi M. Dupont au rez-de-chaussée paie-t-il moins que Mme Martin au troisième ?
       </p>
       <p className={p}>
-        Pour le syndic bénévole, c&apos;est souvent le sujet qui génère le plus de questions et, parfois, le plus de tensions. Non pas parce que le calcul est compliqué, mais parce qu&apos;il n&apos;est pas toujours bien expliqué ni bien documenté.
+        Pour le <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>syndic bénévole</a>, c&apos;est souvent le sujet qui génère le plus de questions et, parfois, le plus de tensions. Non pas parce que le calcul est compliqué, mais parce qu&apos;il n&apos;est pas toujours bien expliqué ni bien documenté.
       </p>
       <p className={p}>Cet article remet les pendules à l&apos;heure.</p>
 
@@ -184,9 +184,9 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>Plus besoin de rechercher dans vos mails quel copropriétaire a payé quoi. Tout est centralisé, daté, et exportable.</p>
 
       {/* Section 9 */}
-      <h2 className={h2}>Appel de fonds et fonds de travaux ALUR : ne pas confondre</h2>
+      <h2 className={h2}>Appel de fonds et fonds de travaux ALUR : ne pas confondre</h2>
       <p className={p}>
-        Depuis le 1er janvier 2017, les copropriétés de 10 lots et plus ont l&apos;obligation de constituer un <strong className={strong}>fonds de travaux</strong>. Ce fonds est alimenté par une cotisation annuelle votée en AG, dont le montant ne peut être inférieur à 5&nbsp;% du budget prévisionnel.
+        Depuis le 1er janvier 2017, les copropriétés de 10 lots et plus ont l&apos;obligation de constituer un <strong className={strong}><a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a></strong>. Ce fonds est alimenté par une cotisation annuelle votée en AG, dont le montant ne peut être inférieur à 5&nbsp;% du budget prévisionnel.
       </p>
       <p className={p}>
         Attention : le fonds de travaux <strong className={strong}>n&apos;est pas remboursable</strong>. Quand un copropriétaire vend son lot, la somme qu&apos;il a versée dans ce fonds reste acquise à la copropriété. C&apos;est un point à bien communiquer aux nouveaux acquéreurs.
@@ -216,8 +216,9 @@ export default function ArticleAppelDeFonds() {
         L&apos;appel de fonds n&apos;est pas une science exacte, mais c&apos;est un processus qui gagne à être rigoureux, transparent et traçable. Les disputes entre voisins sur les charges viennent rarement de mauvaise volonté — elles viennent presque toujours d&apos;un manque de lisibilité.
       </p>
       <p className={p}>
-        Un copropriétaire qui comprend d&apos;où vient son montant, qui voit l&apos;état de la trésorerie, qui reçoit un avis de paiement clair avec la date d&apos;échéance : c&apos;est un copropriétaire qui paie à temps et qui fait confiance au syndic bénévole.
+        Un copropriétaire qui comprend d&apos;où vient son montant, qui voit l&apos;état de la trésorerie, qui reçoit un avis de paiement clair avec la date d&apos;échéance : c&apos;est un copropriétaire qui paie à temps et qui fait confiance au syndic bénévole.
       </p>
+      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>les obligations du fonds de travaux ALUR</a> ou <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>comment gérer une copropriété sans syndic professionnel</a>.</p>
     </>
   );
 }

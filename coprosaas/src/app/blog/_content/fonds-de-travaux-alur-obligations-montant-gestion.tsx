@@ -14,7 +14,7 @@ export default function ArticleFondsTravaux() {
   return (
     <>
       <p className={p}>
-        Il y a des obligations légales qu&apos;on connaît de nom sans vraiment en maîtriser les contours. Le fonds de travaux ALUR en fait partie. Beaucoup de syndics bénévoles savent qu&apos;il faut &ldquo;mettre de l&apos;argent de côté pour les travaux&rdquo;, mais ignorent les règles précises qui encadrent ce mécanisme — ce qui expose la copropriété à des irrégularités, parfois sans le savoir.
+        Il y a des obligations légales qu&apos;on connaît de nom sans vraiment en maître les contours. Le fonds de travaux ALUR en fait partie. Beaucoup de <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>syndics bénévoles</a> savent qu&apos;il faut &ldquo;mettre de l&apos;argent de côté pour les travaux&rdquo;, mais ignorent les règles précises qui encadrent ce mécanisme — ce qui expose la copropriété à des irrégularités, parfois sans le savoir.
       </p>
       <p className={p}>Ce guide fait le tour complet de la question : cadre légal, calcul du montant, vote en AG, utilisation des sommes, et ce qui se passe en cas de cession d&apos;un lot.</p>
 
@@ -134,7 +134,7 @@ export default function ArticleFondsTravaux() {
       {/* Section 11 — Product */}
       <h2 className={h2}>Ce que Mon Syndic Bénévole fait pour vous</h2>
       <p className={p}>
-        Gérés manuellement, les appels de fonds travaux ALUR ressemblent à tout le reste : un tableau Excel, des virements à vérifier, des soldes à recalculer. Le risque d&apos;erreur et d&apos;oubli est réel.
+        Gérés manuellement, les <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>appels de fonds travaux ALUR</a> ressemblent à tout le reste : un tableau Excel, des virements à vérifier, des soldes à recalculer. Le risque d&apos;erreur et d&apos;oubli est réel.
       </p>
       <p className={p}>
         Sur <a href="https://mon-syndic-benevole.fr" className={a}>Mon Syndic Bénévole</a>, le fonds de travaux ALUR est traité comme un type d&apos;appel de fonds dédié, distinct des charges courantes :
@@ -183,8 +183,9 @@ export default function ArticleFondsTravaux() {
         Le fonds de travaux ALUR n&apos;est pas une contrainte administrative parmi d&apos;autres. C&apos;est un outil de gestion saine qui protège l&apos;immeuble, les copropriétaires et la valeur des biens sur le long terme. Les copropriétés qui l&apos;ont correctement constitué traversent les imprévus — tempête, vétusté soudaine, mise aux normes imposée — sans crise financière ni guerre entre voisins.
       </p>
       <p className={p}>
-        Pour un syndic bénévole, le défi n&apos;est pas de comprendre le principe — il est simple — c&apos;est de le mettre en œuvre rigoureusement année après année, avec les bons outils et la bonne traçabilité.
+        Pour un <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>syndic bénévole</a>, le défi n&apos;est pas de comprendre le principe — il est simple — c&apos;est de le mettre en œuvre rigoureusement année après année, avec les bons outils et la bonne traçabilité.
       </p>
+      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>le calcul et la répartition des appels de fonds copropriété</a> ou <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>comment gérer une copropriété sans syndic professionnel</a>.</p>
     </>
   );
 }
