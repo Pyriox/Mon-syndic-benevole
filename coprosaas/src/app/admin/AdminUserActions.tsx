@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Trash2, Mail, MoreHorizontal, Loader2, ShieldCheck } from 'lucide-react';
 
 interface Props {
@@ -17,6 +17,16 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropPos, setDropPos] = useState<{ top: number; right: number } | null>(null);
+
+  const toggleOpen = () => {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    }
+    setOpen((v) => !v);
+  };
 
   const handleDelete = async () => {
     if (!confirm(`Supprimer définitivement le compte de ${userEmail} ?\n\nCette action est irréversible.`)) return;
@@ -82,7 +92,8 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
       ) : (
         <>
           <button
-            onClick={() => setOpen((v) => !v)}
+            ref={buttonRef}
+            onClick={toggleOpen}
             className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
           >
             <MoreHorizontal size={15} />
@@ -90,8 +101,11 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
 
           {open && (
             <>
-              <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-              <div className="absolute right-0 top-7 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[190px]">
+              <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+              <div
+                className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[190px]"
+                style={{ top: dropPos?.top ?? 0, right: dropPos?.right ?? 0 }}
+              >
                 {!isConfirmed && (
                   <button
                     onClick={handleResend}

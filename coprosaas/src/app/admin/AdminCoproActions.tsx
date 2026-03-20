@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { MoreHorizontal, Loader2, RotateCcw, RefreshCw } from 'lucide-react';
 
 interface Props {
@@ -17,6 +17,16 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Pr
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropPos, setDropPos] = useState<{ top: number; right: number } | null>(null);
+
+  const toggleOpen = () => {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    }
+    setOpen((v) => !v);
+  };
 
   const post = async (body: object) => {
     setLoading(true);
@@ -54,7 +64,8 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Pr
         <Loader2 size={15} className="animate-spin text-gray-400" />
       ) : (
         <button
-          onClick={() => setOpen((v) => !v)}
+          ref={buttonRef}
+          onClick={toggleOpen}
           className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
           aria-label="Actions"
         >
@@ -63,8 +74,11 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Pr
       )}
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-20 bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[210px]">
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="fixed z-50 bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[210px]"
+            style={{ top: dropPos?.top ?? 0, right: dropPos?.right ?? 0 }}
+          >
             <button
               onClick={handleSync}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-blue-700 hover:bg-blue-50 transition-colors"

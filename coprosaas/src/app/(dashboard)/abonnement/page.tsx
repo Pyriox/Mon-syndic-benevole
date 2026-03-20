@@ -242,7 +242,19 @@ export default async function AbonnementPage({
         return_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr'}/abonnement`,
       });
       portalUrl = session.url;
-    } catch {
+    } catch (err: unknown) {
+      // Si le customer Stripe n'existe plus → réinitialiser la DB et afficher le bon message
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes('no such customer') || msg.toLowerCase().includes('customer')) {
+        await adminSupa.from('coproprietes').update({
+          stripe_customer_id: null,
+          stripe_subscription_id: null,
+          plan: 'inactif',
+          plan_id: null,
+          plan_period_end: null,
+        }).eq('id', id).eq('syndic_id', u!.id);
+        redirect('/abonnement?error=no_customer');
+      }
       redirect('/abonnement?error=portal');
     }
     redirect(portalUrl!);
@@ -302,10 +314,10 @@ export default async function AbonnementPage({
         )}
 
         {pageError === 'no_customer' && (
-          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
-            <AlertCircle size={16} className="text-red-500 shrink-0" />
-            <p className="text-sm text-red-700">
-              Aucun client Stripe associé à cette copropriété. Contactez le support.
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <AlertCircle size={16} className="text-amber-500 shrink-0" />
+            <p className="text-sm text-amber-700">
+              Votre abonnement Stripe n&apos;est plus actif (compte client supprimé ou inexistant). Vos données ont été réinitialisées — vous pouvez souscrire un nouvel abonnement ci-dessous.
             </p>
           </div>
         )}

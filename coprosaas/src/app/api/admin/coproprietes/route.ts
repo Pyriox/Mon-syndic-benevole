@@ -71,8 +71,21 @@ export async function POST(request: NextRequest) {
     }
     // 2. Fallback : lister les abonnements du customer
     if (!sub && copro.stripe_customer_id) {
-      const list = await stripe.subscriptions.list({ customer: copro.stripe_customer_id, limit: 1, status: 'all' });
-      if (list.data.length > 0) sub = list.data[0] as unknown as Record<string, unknown>;
+      try {
+        const list = await stripe.subscriptions.list({ customer: copro.stripe_customer_id, limit: 5, status: 'all' });
+        // Prefer active/trialing/past_due over canceled
+        const best = list.data.find((s) => !['canceled', 'incomplete_expired'].includes(s.status))
+          ?? list.data[0]
+          ?? null;
+        sub = best as unknown as Record<string, unknown> | null;
+      } catch {
+        // Customer deleted on Stripe → clear customer ID too
+        await admin.from('coproprietes').update({
+          plan: 'inactif', plan_id: null,
+          stripe_subscription_id: null, stripe_customer_id: null, plan_period_end: null,
+        }).eq('id', coproId);
+        return NextResponse.json({ success: true, plan: 'inactif', note: 'customer_deleted' });
+      }
     }
 
     if (!sub) {
