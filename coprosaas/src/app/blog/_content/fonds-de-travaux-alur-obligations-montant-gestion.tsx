@@ -2,13 +2,7 @@
 // Article : Fonds de travaux ALUR — obligations, montant, gestion
 // ============================================================
 
-const h2 = 'text-xl md:text-2xl font-bold text-white mt-12 mb-5 pb-3 border-b border-slate-800';
-const h3 = 'text-lg font-semibold text-white mt-8 mb-3';
-const p = 'text-gray-300 leading-relaxed mb-5';
-const ul = 'space-y-2 mb-5 ml-5 list-disc list-outside text-gray-300';
-const li = 'leading-relaxed pl-1';
-const strong = 'text-white font-semibold';
-const a = 'text-blue-400 hover:text-blue-300 underline underline-offset-2';
+import { h2, h3, p, ul, li, strong, a } from './styles';
 
 export default function ArticleFondsTravaux() {
   return (
@@ -140,7 +134,7 @@ export default function ArticleFondsTravaux() {
         Sur <a href="https://mon-syndic-benevole.fr" className={a}>Mon Syndic Bénévole</a>, le fonds de travaux ALUR est traité comme un type d&apos;appel de fonds dédié, distinct des charges courantes :
       </p>
 
-      <div className="bg-blue-950/40 border border-blue-800/60 rounded-2xl p-6 mb-8">
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
         <ul className="space-y-2">
           {[
             'Création en quelques clics : vous renseignez le montant annuel voté, la plateforme calcule la cotisation trimestrielle de chaque copropriétaire selon ses tantièmes.',
@@ -149,8 +143,8 @@ export default function ArticleFondsTravaux() {
             'Séparation comptable claire : le fonds de travaux est tracé séparément des charges courantes dans les rapports financiers.',
             'Export des données pour préparer l\'approbation des comptes ou répondre aux demandes du notaire lors d\'une transaction.',
           ].map((item) => (
-            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0" />
+            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
               {item}
             </li>
           ))}

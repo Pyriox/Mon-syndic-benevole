@@ -2,14 +2,7 @@
 // Article : Gérer une copropriété sans syndic professionnel
 // ============================================================
 
-const h2 = 'text-xl md:text-2xl font-bold text-white mt-12 mb-5 pb-3 border-b border-slate-800';
-const h3 = 'text-lg font-semibold text-white mt-8 mb-3';
-const p = 'text-gray-300 leading-relaxed mb-5';
-const ul = 'space-y-2 mb-5 ml-5 list-disc list-outside text-gray-300';
-const ol = 'space-y-3 mb-5 ml-5 list-decimal list-outside text-gray-300';
-const li = 'leading-relaxed pl-1';
-const strong = 'text-white font-semibold';
-const a = 'text-blue-400 hover:text-blue-300 underline underline-offset-2';
+import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleGererCopropriete() {
   return (
@@ -98,8 +91,8 @@ export default function ArticleGererCopropriete() {
         cherchent à corriger : centraliser la gestion de copropriété (charges, appels de fonds, AG, documents, incidents) dans un espace simple, sans nécessiter le moindre background en comptabilité.
       </p>
 
-      <div className="bg-blue-950/40 border border-blue-800/60 rounded-2xl p-6 mb-8">
-        <p className="text-blue-200 font-semibold mb-3">Ce que Mon Syndic Bénévole centralise pour vous</p>
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
+        <p className="text-blue-800 font-semibold mb-3">Ce que Mon Syndic Bénévole centralise pour vous</p>
         <ul className="space-y-2">
           {[
             'Appels de fonds trimestriels calculés automatiquement selon les tantièmes de chaque lot.',
@@ -108,8 +101,8 @@ export default function ArticleGererCopropriete() {
             'Suivi des incidents et travaux : de la déclaration à la résolution.',
             'Tableau de bord temps réel : trésorerie, dépenses, impayés et prochaine AG.',
           ].map((item) => (
-            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0" />
+            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
               {item}
             </li>
           ))}

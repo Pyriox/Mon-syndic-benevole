@@ -3,11 +3,12 @@
 //
 // POST /api/admin/coproprietes  { action, coproId }
 //   → reset_subscription : remet le plan à 'essai', efface les champs Stripe
-//     À utiliser uniquement quand Stripe est désynchronisé (suppression manuelle)
+//   → stripe_sync        : lit l'abonnement réel depuis Stripe et met à jour Supabase
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { stripe } from '@/lib/stripe';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
 
@@ -45,6 +46,62 @@ export async function POST(request: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
+  }
+
+  if (action === 'stripe_sync') {
+    const { data: copro, error: coproError } = await admin
+      .from('coproprietes')
+      .select('stripe_customer_id, stripe_subscription_id')
+      .eq('id', coproId)
+      .single();
+
+    if (!copro || coproError) {
+      return NextResponse.json({ error: 'Copropriété introuvable' }, { status: 404 });
+    }
+    if (!copro.stripe_customer_id && !copro.stripe_subscription_id) {
+      return NextResponse.json({ error: 'Aucun identifiant Stripe sur cette copropriété' }, { status: 400 });
+    }
+
+    // 1. Récupérer l'abonnement directement par son ID si disponible
+    let sub: Record<string, unknown> | null = null;
+    if (copro.stripe_subscription_id) {
+      try {
+        sub = await stripe.subscriptions.retrieve(copro.stripe_subscription_id) as unknown as Record<string, unknown>;
+      } catch { sub = null; }
+    }
+    // 2. Fallback : lister les abonnements du customer
+    if (!sub && copro.stripe_customer_id) {
+      const list = await stripe.subscriptions.list({ customer: copro.stripe_customer_id, limit: 1, status: 'all' });
+      if (list.data.length > 0) sub = list.data[0] as unknown as Record<string, unknown>;
+    }
+
+    if (!sub) {
+      await admin.from('coproprietes').update({
+        plan: 'inactif', plan_id: null, stripe_subscription_id: null, plan_period_end: null,
+      }).eq('id', coproId);
+      return NextResponse.json({ success: true, plan: 'inactif' });
+    }
+
+    const status = sub['status'] as string;
+    const plan = status === 'active' ? 'actif'
+      : status === 'past_due' ? 'passe_du'
+      : status === 'trialing' ? 'actif'
+      : 'inactif';
+    const subMeta = (sub['metadata'] as Record<string, string>) ?? {};
+    const planId = subMeta?.plan_id ?? null;
+    const ts = sub['current_period_end'] as number | undefined;
+    const periodEnd = ts && ts > 0 ? new Date(ts * 1000).toISOString() : null;
+
+    const { error: syncError } = await admin.from('coproprietes').update({
+      plan: plan as 'actif' | 'inactif' | 'passe_du' | 'essai',
+      plan_id: planId,
+      stripe_subscription_id: sub['id'] as string,
+      stripe_customer_id: sub['customer'] as string,
+      plan_period_end: periodEnd,
+    }).eq('id', coproId);
+
+    if (syncError) return NextResponse.json({ error: syncError.message }, { status: 500 });
+    return NextResponse.json({ success: true, plan, planId });
   }
 
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 });

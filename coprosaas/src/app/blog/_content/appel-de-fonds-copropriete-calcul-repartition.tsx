@@ -2,14 +2,7 @@
 // Article : Appel de fonds copropriété — calcul et répartition
 // ============================================================
 
-const h2 = 'text-xl md:text-2xl font-bold text-white mt-12 mb-5 pb-3 border-b border-slate-800';
-const h3 = 'text-lg font-semibold text-white mt-8 mb-3';
-const p = 'text-gray-300 leading-relaxed mb-5';
-const ul = 'space-y-2 mb-5 ml-5 list-disc list-outside text-gray-300';
-const ol = 'space-y-3 mb-5 ml-5 list-decimal list-outside text-gray-300';
-const li = 'leading-relaxed pl-1';
-const strong = 'text-white font-semibold';
-const a = 'text-blue-400 hover:text-blue-300 underline underline-offset-2';
+import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleAppelDeFonds() {
   return (
@@ -50,27 +43,27 @@ export default function ArticleAppelDeFonds() {
       <div className="overflow-x-auto mb-6">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="border-b border-slate-700">
-              <th className="text-left py-3 px-4 text-gray-400 font-medium">Lot</th>
-              <th className="text-left py-3 px-4 text-gray-400 font-medium">Tantièmes</th>
-              <th className="text-left py-3 px-4 text-gray-400 font-medium">Quote-part</th>
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-3 px-4 text-gray-500 font-medium">Lot</th>
+              <th className="text-left py-3 px-4 text-gray-500 font-medium">Tantièmes</th>
+              <th className="text-left py-3 px-4 text-gray-500 font-medium">Quote-part</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
+          <tbody className="divide-y divide-gray-100">
             <tr>
-              <td className="py-3 px-4 text-gray-300">Appartement T3, 3e étage, avec parking</td>
-              <td className="py-3 px-4 text-gray-300">140</td>
-              <td className="py-3 px-4 text-gray-300">14,0 %</td>
+              <td className="py-3 px-4 text-gray-700">Appartement T3, 3e étage, avec parking</td>
+              <td className="py-3 px-4 text-gray-700">140</td>
+              <td className="py-3 px-4 text-gray-700">14,0 %</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 text-gray-300">Appartement T2, RDC</td>
-              <td className="py-3 px-4 text-gray-300">72</td>
-              <td className="py-3 px-4 text-gray-300">7,2 %</td>
+              <td className="py-3 px-4 text-gray-700">Appartement T2, RDC</td>
+              <td className="py-3 px-4 text-gray-700">72</td>
+              <td className="py-3 px-4 text-gray-700">7,2 %</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 text-gray-300">Studio, 1er étage</td>
-              <td className="py-3 px-4 text-gray-300">58</td>
-              <td className="py-3 px-4 text-gray-300">5,8 %</td>
+              <td className="py-3 px-4 text-gray-700">Studio, 1er étage</td>
+              <td className="py-3 px-4 text-gray-700">58</td>
+              <td className="py-3 px-4 text-gray-700">5,8 %</td>
             </tr>
           </tbody>
         </table>
@@ -163,8 +156,8 @@ export default function ArticleAppelDeFonds() {
         <a href="https://mon-syndic-benevole.fr" className={a}>Mon Syndic Bénévole</a>.
       </p>
 
-      <div className="bg-blue-950/40 border border-blue-800/60 rounded-2xl p-6 mb-8">
-        <p className="text-blue-200 font-semibold mb-3">Ce que la plateforme gère pour vous</p>
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
+        <p className="text-blue-800 font-semibold mb-3">Ce que la plateforme gère pour vous</p>
         <ul className="space-y-2">
           {[
             'La répartition par tantièmes calculée instantanément, lot par lot.',
@@ -173,8 +166,8 @@ export default function ArticleAppelDeFonds() {
             'Les appels en série (trimestriels sur toute une année) générés en une seule opération.',
             'Un tableau de bord avec le taux de recouvrement, les impayés en cours et l\'état de la trésorerie.',
           ].map((item) => (
-            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0" />
+            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
               {item}
             </li>
           ))}

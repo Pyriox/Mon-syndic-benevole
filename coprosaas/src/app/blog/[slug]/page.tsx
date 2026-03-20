@@ -109,16 +109,16 @@ export default async function ArticlePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
-      <div className="min-h-screen bg-slate-950 text-gray-200">
+      <div className="min-h-screen bg-white text-gray-900">
 
       {/* ── Header ── */}
-      <header className="border-b border-slate-800 py-4 px-6 sticky top-0 z-50 bg-slate-950/95 backdrop-blur-sm">
+      <header className="border-b border-gray-200 py-4 px-6 sticky top-0 z-50 bg-white/95 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
             <SiteLogo size={32} />
-            <span className="font-bold text-white text-sm hidden sm:block">Mon Syndic Bénévole</span>
+            <span className="font-bold text-gray-900 text-sm hidden sm:block">Mon Syndic Bénévole</span>
           </Link>
-          <Link href="/blog" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
+          <Link href="/blog" className="text-sm text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1.5">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
             Blog
           </Link>
@@ -129,28 +129,28 @@ export default async function ArticlePage({
       <div className="max-w-3xl mx-auto px-6 pt-12 pb-4">
         {/* Breadcrumb */}
         <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs text-gray-500 mb-6">
-          <Link href="/" className="hover:text-gray-300 transition-colors">Accueil</Link>
-          <span className="text-gray-700" aria-hidden="true">/</span>
-          <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
-          <span className="text-gray-700" aria-hidden="true">/</span>
-          <span className="text-gray-400 truncate max-w-[200px]">{post.title}</span>
+          <Link href="/" className="hover:text-gray-700 transition-colors">Accueil</Link>
+          <span className="text-gray-300" aria-hidden="true">/</span>
+          <Link href="/blog" className="hover:text-gray-700 transition-colors">Blog</Link>
+          <span className="text-gray-300" aria-hidden="true">/</span>
+          <span className="text-gray-500 truncate max-w-[200px]">{post.title}</span>
         </nav>
         {/* Category */}
-        <span className="inline-block text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-full px-3 py-0.5 mb-6">
+        <span className="inline-block text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-3 py-0.5 mb-6">
           {post.category}
         </span>
 
         {/* Title */}
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight mb-6">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-6">
           {post.title}
         </h1>
 
         {/* Meta row */}
-        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 border-b border-slate-800 pb-8 mb-4">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 border-b border-gray-200 pb-8 mb-4">
           <span>
             <time dateTime={post.publishedAt}>{formatPublishedAt(post.publishedAt)}</time>
           </span>
-          <span className="w-1 h-1 rounded-full bg-slate-700" aria-hidden="true" />
+          <span className="w-1 h-1 rounded-full bg-gray-300" aria-hidden="true" />
           <span>{post.readingTime} min de lecture</span>
         </div>
       </div>
@@ -181,19 +181,19 @@ export default async function ArticlePage({
       {/* ── Related articles ── */}
       {related.length > 0 && (
         <section className="max-w-3xl mx-auto px-6 mb-20">
-          <h2 className="text-lg font-bold text-white mb-5">Articles liés</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-5">Articles liés</h2>
           <div className="grid gap-5 sm:grid-cols-2">
             {related.map((rel) => (
               <Link
                 key={rel.slug}
                 href={`/blog/${rel.slug}`}
-                className="group bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 hover:bg-slate-800/60 transition-all"
+                className="group bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
               >
-                <span className="text-xs text-blue-400 font-medium">{rel.category}</span>
-                <h3 className="text-sm font-semibold text-white mt-2 mb-2 group-hover:text-blue-100 transition-colors leading-snug">
+                <span className="text-xs text-blue-600 font-medium">{rel.category}</span>
+                <h3 className="text-sm font-semibold text-gray-900 mt-2 mb-2 group-hover:text-blue-700 transition-colors leading-snug">
                   {rel.title}
                 </h3>
-                <span className="text-xs text-blue-400 group-hover:text-blue-300 font-medium transition-colors">
+                <span className="text-xs text-blue-600 group-hover:text-blue-700 font-medium transition-colors">
                   Lire →
                 </span>
               </Link>
@@ -205,17 +205,17 @@ export default async function ArticlePage({
       <ScrollToTopButton />
 
       {/* ── Footer ── */}
-      <footer className="bg-slate-950 border-t border-slate-800 py-10 px-4 sm:px-6">
+      <footer className="bg-gray-50 border-t border-gray-200 py-10 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
           <span>© {new Date().getFullYear()} Mon Syndic Bénévole</span>
           <nav className="flex items-center gap-5" aria-label="Liens du pied de page">
-            <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">
+            <Link href="/mentions-legales" className="hover:text-gray-700 transition-colors">
               Mentions légales
             </Link>
-            <Link href="/blog" className="hover:text-gray-300 transition-colors">
+            <Link href="/blog" className="hover:text-gray-700 transition-colors">
               Blog
             </Link>
-            <Link href="/login" className="hover:text-gray-300 transition-colors">
+            <Link href="/login" className="hover:text-gray-700 transition-colors">
               Connexion
             </Link>
           </nav>

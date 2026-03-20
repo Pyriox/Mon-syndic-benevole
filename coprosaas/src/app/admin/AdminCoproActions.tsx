@@ -4,7 +4,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreHorizontal, Loader2, RotateCcw } from 'lucide-react';
+import { MoreHorizontal, Loader2, RotateCcw, RefreshCw } from 'lucide-react';
 
 interface Props {
   coproId: string;
@@ -41,6 +41,11 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Pr
     post({ action: 'reset_subscription', coproId });
   };
 
+  const handleSync = () => {
+    if (!confirm(`Synchroniser « ${coproNom} » depuis Stripe ?\n\nLe plan sera mis à jour selon l'abonnement réel dans Stripe.`)) return;
+    post({ action: 'stripe_sync', coproId });
+  };
+
   if (done) return <span className="text-xs text-green-600 font-medium">✓</span>;
 
   return (
@@ -59,17 +64,25 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Pr
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-20 bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[200px]">
-            {currentPlan !== 'essai' ? (
-              <button
-                onClick={handleReset}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 transition-colors"
-              >
-                <RotateCcw size={12} className="shrink-0" />
-                Réinitialiser (essai)
-              </button>
-            ) : (
-              <p className="px-3 py-2 text-xs text-gray-400 italic">Aucune action disponible</p>
+          <div className="absolute right-0 top-8 z-20 bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[210px]">
+            <button
+              onClick={handleSync}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-blue-700 hover:bg-blue-50 transition-colors"
+            >
+              <RefreshCw size={12} className="shrink-0" />
+              Sync depuis Stripe
+            </button>
+            {currentPlan !== 'essai' && (
+              <>
+                <div className="border-t border-gray-100 my-1" />
+                <button
+                  onClick={handleReset}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 transition-colors"
+                >
+                  <RotateCcw size={12} className="shrink-0" />
+                  Réinitialiser (essai)
+                </button>
+              </>
             )}
           </div>
         </>
