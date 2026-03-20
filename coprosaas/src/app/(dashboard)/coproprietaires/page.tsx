@@ -21,32 +21,20 @@ export default async function CoproprietairesPage() {
   // Si syndic mais pas gérant de cette copropriété → redirect (requireCoproAccess gère déjà ce cas)
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
 
+  // Copropriétaires + tous les lots de la copropriété, en parallèle
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let coproprietaires: any[] | null = null;
-  if (isSyndic) {
-    const { data } = await supabase
-      .from('coproprietaires')
-      .select('*')
+  const [coproResult, { data: allLots }] = await Promise.all([
+    isSyndic
+      ? supabase.from('coproprietaires').select('*').eq('copropriete_id', selectedCoproId ?? 'none').order('position', { ascending: true, nullsFirst: false })
+      : supabase.from('coproprietaires').select('id, nom, prenom, raison_sociale, adresse, code_postal, ville, user_id').eq('copropriete_id', selectedCoproId ?? 'none').order('position', { ascending: true, nullsFirst: false }),
+    supabase
+      .from('lots')
+      .select('id, numero, type, tantiemes, coproprietaire_id')
       .eq('copropriete_id', selectedCoproId ?? 'none')
-      .order('position', { ascending: true, nullsFirst: false });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    coproprietaires = data as any;
-  } else {
-    const { data } = await supabase
-      .from('coproprietaires')
-      .select('id, nom, prenom, raison_sociale, adresse, code_postal, ville, user_id')
-      .eq('copropriete_id', selectedCoproId ?? 'none')
-      .order('position', { ascending: true, nullsFirst: false });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    coproprietaires = data as any;
-  }
-
-  // Tous les lots de la copropriété
-  const { data: allLots } = await supabase
-    .from('lots')
-    .select('id, numero, type, tantiemes, coproprietaire_id')
-    .eq('copropriete_id', selectedCoproId ?? 'none')
-    .order('position', { ascending: true, nullsFirst: false });
+      .order('position', { ascending: true, nullsFirst: false }),
+  ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const coproprietaires = (coproResult as { data: any[] | null }).data;
 
   // Lots disponibles (non assignés) + lots déjà assignés à chaque proprio
   const lotsByOwner = (allLots ?? []).reduce<Record<string, { id: string; numero: string; type: string; tantiemes: number }[]>>(

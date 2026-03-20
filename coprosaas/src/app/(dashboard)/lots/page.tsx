@@ -58,16 +58,17 @@ export default async function LotsPage() {
   const isSyndic = role === 'syndic';
   const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
-  const { data: lots } = await db
-    .from('lots')
-    .select('id, numero, type, tantiemes, coproprietaire_id')
-    .eq('copropriete_id', selectedCoproId ?? 'none')
-    .order('position', { ascending: true, nullsFirst: false });
-
-  const { data: coproprietairesRaw } = await db
-    .from('coproprietaires')
-    .select('id, nom, prenom, raison_sociale, user_id, email')
-    .eq('copropriete_id', selectedCoproId ?? 'none');
+  const [{ data: lots }, { data: coproprietairesRaw }] = await Promise.all([
+    db
+      .from('lots')
+      .select('id, numero, type, tantiemes, coproprietaire_id')
+      .eq('copropriete_id', selectedCoproId ?? 'none')
+      .order('position', { ascending: true, nullsFirst: false }),
+    db
+      .from('coproprietaires')
+      .select('id, nom, prenom, raison_sociale, user_id, email')
+      .eq('copropriete_id', selectedCoproId ?? 'none'),
+  ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coproprietaires = (coproprietairesRaw ?? []) as any[] as CoproEntry[];

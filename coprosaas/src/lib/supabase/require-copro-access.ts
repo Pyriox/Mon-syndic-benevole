@@ -52,41 +52,39 @@ export async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<Co
     return { user, selectedCoproId: null, role: null, copro: null };
   }
 
-  // --- L'utilisateur est-il le syndic de cette copropriété ? ---
-  const { data: asSyndic } = await supabase
-    .from('coproprietes')
-    .select('id, nom, syndic_id, plan, plan_id')
-    .eq('id', selectedCoproId)
-    .eq('syndic_id', user.id)
-    .maybeSingle();
+  // --- Toutes les vérifications d'accès en parallèle (syndic + copropriétaire par user_id + par email) ---
+  const [{ data: asSyndic }, { data: asCopro }, { data: asCoproByEmail }] = await Promise.all([
+    supabase
+      .from('coproprietes')
+      .select('id, nom, syndic_id, plan, plan_id')
+      .eq('id', selectedCoproId)
+      .eq('syndic_id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('coproprietaires')
+      .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
+      .eq('copropriete_id', selectedCoproId)
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('coproprietaires')
+      .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
+      .eq('copropriete_id', selectedCoproId)
+      .eq('email', user.email ?? '')
+      .is('user_id', null)
+      .maybeSingle(),
+  ]);
 
   if (asSyndic) {
     if (allowedRoles && !allowedRoles.includes('syndic')) redirect('/dashboard');
     return { user, selectedCoproId, role: 'syndic', copro: asSyndic };
   }
 
-  // --- L'utilisateur est-il un copropriétaire de cette copropriété ? ---
-  const { data: asCopro } = await supabase
-    .from('coproprietaires')
-    .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
-    .eq('copropriete_id', selectedCoproId)
-    .eq('user_id', user.id)
-    .maybeSingle();
-
   if (asCopro?.coproprietes) {
     const copro = asCopro.coproprietes as unknown as CoproInfo;
     if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
     return { user, selectedCoproId, role: 'copropriétaire', copro };
   }
-
-  // Fallback : chercher par email si user_id non encore lié
-  const { data: asCoproByEmail } = await supabase
-    .from('coproprietaires')
-    .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
-    .eq('copropriete_id', selectedCoproId)
-    .eq('email', user.email ?? '')
-    .is('user_id', null)
-    .maybeSingle();
 
   if (asCoproByEmail?.coproprietes) {
     const copro = asCoproByEmail.coproprietes as unknown as CoproInfo;

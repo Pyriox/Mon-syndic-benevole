@@ -53,26 +53,27 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
   // ================================================================
   if (userRole === 'copropriétaire') {
     const admin = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
+    const scopeId = selectedCoproId ?? 'none';
 
-    const { data: depenses } = await admin
-      .from('depenses')
-      .select('id, titre, description, montant, date_depense, categorie, piece_jointe_url')
-      .eq('copropriete_id', selectedCoproId ?? 'none')
-      .gte('date_depense', `${annee}-01-01`)
-      .lt('date_depense', `${annee + 1}-01-01`)
-      .order('date_depense', { ascending: false });
-
-    const { data: lots } = await admin
-      .from('lots')
-      .select('id, tantiemes, coproprietaire_id')
-      .eq('copropriete_id', selectedCoproId ?? 'none')
-      .not('coproprietaire_id', 'is', null);
-
-    const { data: coproprietaires } = await admin
-      .from('coproprietaires')
-      .select('id, nom, prenom')
-      .eq('copropriete_id', selectedCoproId ?? 'none')
-      .order('nom');
+    const [{ data: depenses }, { data: lots }, { data: coproprietaires }] = await Promise.all([
+      admin
+        .from('depenses')
+        .select('id, titre, description, montant, date_depense, categorie, piece_jointe_url')
+        .eq('copropriete_id', scopeId)
+        .gte('date_depense', `${annee}-01-01`)
+        .lt('date_depense', `${annee + 1}-01-01`)
+        .order('date_depense', { ascending: false }),
+      admin
+        .from('lots')
+        .select('id, tantiemes, coproprietaire_id')
+        .eq('copropriete_id', scopeId)
+        .not('coproprietaire_id', 'is', null),
+      admin
+        .from('coproprietaires')
+        .select('id, nom, prenom')
+        .eq('copropriete_id', scopeId)
+        .order('nom'),
+    ]);
 
     const totalDepenses = depenses?.reduce((sum, d) => sum + d.montant, 0) ?? 0;
 
@@ -262,14 +263,38 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const canCreate = isSubscribed(copropriete?.plan);
 
-  // Récupérer (ou créer) le dossier "Dépenses" pour lier les pièces jointes
-  let { data: depDossier } = await supabase
-    .from('document_dossiers')
-    .select('id')
-    .eq('nom', 'Dépenses')
-    .eq('syndic_id', user.id)
-    .maybeSingle();
+  // Toutes les données syndic en parallèle
+  const scopeId = selectedCoproId ?? 'none';
+  const [{ data: depDossierRaw }, { data: depenses }, { data: lots }, { data: coproprietaires }] = await Promise.all([
+    // Dossier "Dépenses" pour lier les pièces jointes
+    supabase
+      .from('document_dossiers')
+      .select('id')
+      .eq('nom', 'Dépenses')
+      .eq('syndic_id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('depenses')
+      .select('*')
+      .eq('copropriete_id', scopeId)
+      .gte('date_depense', `${annee}-01-01`)
+      .lt('date_depense', `${annee + 1}-01-01`)
+      .order('date_depense', { ascending: true }),
+    // Lots + coproprietaires pour la répartition par personne
+    supabase
+      .from('lots')
+      .select('id, tantiemes, coproprietaire_id')
+      .eq('copropriete_id', scopeId)
+      .not('coproprietaire_id', 'is', null),
+    supabase
+      .from('coproprietaires')
+      .select('id, nom, prenom')
+      .eq('copropriete_id', scopeId)
+      .order('nom'),
+  ]);
 
+  // Créer le dossier "Dépenses" s'il n'existe pas encore
+  let depDossier = depDossierRaw;
   if (!depDossier) {
     const { data } = await supabase
       .from('document_dossiers')
@@ -278,27 +303,6 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
       .single();
     depDossier = data;
   }
-
-  const { data: depenses } = await supabase
-    .from('depenses')
-    .select('*')
-    .eq('copropriete_id', selectedCoproId ?? 'none')
-    .gte('date_depense', `${annee}-01-01`)
-    .lt('date_depense', `${annee + 1}-01-01`)
-    .order('date_depense', { ascending: true });
-
-  // Lots + coproprietaires pour la répartition par personne
-  const { data: lots } = await supabase
-    .from('lots')
-    .select('id, tantiemes, coproprietaire_id')
-    .eq('copropriete_id', selectedCoproId ?? 'none')
-    .not('coproprietaire_id', 'is', null);
-
-  const { data: coproprietaires } = await supabase
-    .from('coproprietaires')
-    .select('id, nom, prenom')
-    .eq('copropriete_id', selectedCoproId ?? 'none')
-    .order('nom');
 
   // Calcul du total
   const totalDepenses = depenses?.reduce((sum, d) => sum + d.montant, 0) ?? 0;
