@@ -22,7 +22,7 @@ export default async function CopropriétésPage() {
     .order('created_at', { ascending: false });
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Copropriétés</h2>

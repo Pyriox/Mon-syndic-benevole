@@ -150,7 +150,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
       const breadcrumb = buildBreadcrumb(dossiers, dossierId);
 
       return (
-        <div className="space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
           {/* Fil d'Ariane */}
           <div className="flex items-center gap-1 text-sm flex-wrap">
             <Link href="/documents" className="text-gray-500 hover:text-gray-700 transition-colors">Documents</Link>
@@ -263,7 +263,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
 
     // ── Vue grille racine ──
     return (
-      <div className="space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
           <p className="text-gray-500 mt-1">{rootDossiersCopro.length} dossier(s)</p>
@@ -497,7 +497,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
     ) : null;
 
     return (
-      <div className="space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Fil d'Ariane */}
         <div className="flex items-center gap-1 text-sm flex-wrap">
           <Link href="/documents" className="text-gray-500 hover:text-gray-700 transition-colors">
@@ -630,7 +630,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   }, {});
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Documents</h2>

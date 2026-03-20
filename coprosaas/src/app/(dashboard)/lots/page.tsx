@@ -94,7 +94,7 @@ export default async function LotsPage() {
   const statTypes = Object.entries(countByType).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
 
       {/* ── En-tête ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

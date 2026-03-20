@@ -35,7 +35,7 @@ export default async function IncidentsPage() {
   const nbResolus = list.filter(i => i.statut === 'resolu').length;
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
 
       {/* ── Header ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

@@ -69,7 +69,7 @@ export default async function DashboardPage() {
       (fiche?.raison_sociale ? fiche.raison_sociale : (fiche?.prenom ?? fiche?.nom ?? '')).split(' ')[0] || null;
 
     return (
-      <div className="space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
             {displayFirstName ? `Bonjour, ${displayFirstName}` : 'Tableau de bord'}
@@ -400,7 +400,7 @@ export default async function DashboardPage() {
     }));
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Titre de bienvenue */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Tableau de bord</h2>
