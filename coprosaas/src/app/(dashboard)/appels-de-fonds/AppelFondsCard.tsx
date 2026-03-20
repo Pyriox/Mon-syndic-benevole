@@ -35,12 +35,13 @@ interface AppelCardProps {
   lignes: Ligne[];
   postes: Poste[] | null;
   isSyndic: boolean;
+  canWrite?: boolean;
   nbPayes: number;
   nbImpayes: number;
   pctPaye: number;
 }
 
-export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPayes, nbImpayes, pctPaye }: AppelCardProps) {
+export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWrite = true, nbPayes, nbImpayes, pctPaye }: AppelCardProps) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendMsg, setSendMsg] = useState('');
@@ -256,7 +257,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
 
           {/* Actions */}
           <div className="flex items-center gap-1 flex-wrap sm:shrink-0 sm:flex-nowrap">
-            {isSyndic && (
+            {isSyndic && canWrite && (
               appel.statut === 'brouillon' ? (
                 <button
                   type="button"
@@ -389,7 +390,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
                   <p className="text-sm text-gray-400">
                     Aucune répartition générée.
                   </p>
-                  {isSyndic && (
+                  {isSyndic && canWrite && (
                     <button
                       type="button"
                       onClick={handleRegenerate}
@@ -411,6 +412,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, nbPaye
               appel={appel}
               lignes={lignes}
               isSyndic={isSyndic}
+              canWrite={canWrite}
             />
           )}
         </div>

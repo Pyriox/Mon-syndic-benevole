@@ -171,6 +171,66 @@ export default function HomePage() {
         isPartOf: { '@id': 'https://mon-syndic-benevole.fr/#organization' },
         inLanguage: 'fr-FR',
       },
+      {
+        '@type': 'WebSite',
+        '@id': 'https://mon-syndic-benevole.fr/#website',
+        url: 'https://mon-syndic-benevole.fr',
+        name: 'Mon Syndic Bénévole',
+        inLanguage: 'fr-FR',
+        publisher: { '@id': 'https://mon-syndic-benevole.fr/#organization' },
+      },
+      {
+        '@type': 'FAQPage',
+        '@id': 'https://mon-syndic-benevole.fr/#faq',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: "Faut-il un moyen de paiement pour démarrer ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Oui, un moyen de paiement est requis à la souscription. Les 30 premiers jours sont entièrement gratuits — la première facturation intervient au 31e jour, puis l'abonnement se renouvelle chaque année. Vous pouvez annuler à tout moment avant la date de renouvellement." },
+          },
+          {
+            '@type': 'Question',
+            name: "Puis-je annuler à tout moment ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Oui, sans frais ni préavis. Si vous souhaitez arrêter, votre abonnement n'est pas renouvelé. Vos données restent accessibles jusqu'à la fin de la période payée." },
+          },
+          {
+            '@type': 'Question',
+            name: "Mes données sont-elles sécurisées ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Vos données sont hébergées en Europe, chiffrées en transit (HTTPS) et au repos. Nous n'accédons jamais à vos données sans votre autorisation explicite." },
+          },
+          {
+            '@type': 'Question',
+            name: "Un abonnement couvre-t-il plusieurs copropriétés ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Chaque abonnement est lié à une copropriété. Vous pouvez gérer plusieurs copropriétés depuis un seul compte en souscrivant un abonnement par copropriété." },
+          },
+          {
+            '@type': 'Question',
+            name: "Est-ce conforme à la loi ALUR et aux obligations du syndic bénévole ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Oui. Mon Syndic Bénévole est conçu pour répondre aux obligations légales du syndic non-professionnel : fonds de travaux, appels de charges, convocations AG, procès-verbaux, conservation des documents." },
+          },
+          {
+            '@type': 'Question',
+            name: "Y a-t-il une application mobile ?",
+            acceptedAnswer: { '@type': 'Answer', text: "L'application est entièrement accessible depuis le navigateur de votre smartphone, iOS ou Android. Elle est optimisée pour mobile — aucune installation requise. Une application native est dans notre feuille de route." },
+          },
+          {
+            '@type': 'Question',
+            name: "Puis-je importer mes données existantes ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Vous pouvez ajouter vos copropriétaires, lots et tantièmes directement depuis l'interface en quelques minutes. L'import automatisé (fichier Excel ou CSV) est une fonctionnalité prévue dans nos prochaines mises à jour." },
+          },
+        ],
+      },
+      {
+        '@type': 'HowTo',
+        '@id': 'https://mon-syndic-benevole.fr/#howto',
+        name: 'Comment gérer sa copropriété avec Mon Syndic Bénévole',
+        description: "Gérez votre copropriété en 3 étapes simples, sans formation ni migration.",
+        step: [
+          { '@type': 'HowToStep', position: 1, name: 'Créez votre copropriété', text: "Renseignez l'adresse, ajoutez vos lots et les tantièmes. Tout est guidé, pas à pas." },
+          { '@type': 'HowToStep', position: 2, name: 'Invitez vos copropriétaires', text: "Chaque copropriétaire reçoit un e-mail et accède à son espace personnel sécurisé." },
+          { '@type': 'HowToStep', position: 3, name: 'Gérez au quotidien', text: "Charges, appels de fonds, AG, documents — tout centralisé, rien à oublier." },
+        ],
+      },
     ],
   };
 
@@ -599,6 +659,72 @@ export default function HomePage() {
           <div className="mt-12 text-center">
             <Link href="/register" className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:underline text-sm">
               Commencer maintenant — c&apos;est gratuit <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pour qui ? ── */}
+      <section className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6 border-b border-gray-100">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-green-600 uppercase tracking-widest mb-3">Pour qui ?</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Conçu pour chaque profil de syndic bénévole</h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">Que vous débutiez ou que vous cherchiez à structurer une gestion existante, l&apos;outil s&apos;adapte à votre situation.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Building2,
+                bg: 'bg-blue-50',
+                border: 'border-blue-100',
+                iconBg: 'bg-blue-100',
+                iconColor: 'text-blue-600',
+                sub: '2 à 15 lots',
+                title: 'La petite copropriété',
+                desc: "Inutile de payer un cabinet pour quelques lots. Gérez vous-même : charges, AG et documents — en moins d'une heure par mois.",
+                tag: "↓ Jusqu'à 2 700 €/an économisés",
+                tagBg: 'bg-blue-100 text-blue-700',
+              },
+              {
+                icon: UserCircle,
+                bg: 'bg-indigo-50',
+                border: 'border-indigo-100',
+                iconBg: 'bg-indigo-100',
+                iconColor: 'text-indigo-600',
+                sub: 'Nouvellement élu',
+                title: 'Le syndic bénévole débutant',
+                desc: "Vous venez d'être désigné syndic lors de l'AG ? Le logiciel vous guide : convocations légales, appels de charges, PV — rien n'est oublié.",
+                tag: '↑ Opérationnel en 5 minutes',
+                tagBg: 'bg-indigo-100 text-indigo-700',
+              },
+              {
+                icon: Zap,
+                bg: 'bg-violet-50',
+                border: 'border-violet-100',
+                iconBg: 'bg-violet-100',
+                iconColor: 'text-violet-600',
+                sub: 'Syndic en poste',
+                title: 'Le syndic expérimenté',
+                desc: "Vous gérez déjà sur Excel ou dans des classeurs ? Centralisez tout : annuaire, charges, documents et AG. Fini les fichiers éparpillés.",
+                tag: '→ Migration en 10 minutes',
+                tagBg: 'bg-violet-100 text-violet-700',
+              },
+            ].map(({ icon: Icon, bg, border, iconBg, iconColor, sub, title, desc, tag, tagBg }) => (
+              <div key={title} className={`${bg} border ${border} rounded-2xl p-6 flex flex-col`}>
+                <div className={`w-12 h-12 ${iconBg} rounded-xl flex items-center justify-center mb-4 shrink-0`}>
+                  <Icon size={22} className={iconColor} />
+                </div>
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">{sub}</p>
+                <h3 className="font-bold text-gray-900 text-lg mb-3">{title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed flex-1">{desc}</p>
+                <span className={`mt-5 self-start text-xs font-semibold px-3 py-1.5 rounded-full ${tagBg}`}>{tag}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 text-center">
+            <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm">
+              Démarrer gratuitement — 30 jours offerts <ArrowRight size={14} />
             </Link>
           </div>
         </div>

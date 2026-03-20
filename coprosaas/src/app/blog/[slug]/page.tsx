@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ComponentType } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Script from 'next/script';
 import SiteLogo from '@/components/ui/SiteLogo';
 import { getPost, formatPublishedAt, posts } from '@/lib/blog';
 
@@ -65,8 +66,49 @@ export default async function ArticlePage({
   // Related articles (others)
   const related = posts.filter((p) => p.slug !== slug).slice(0, 2);
 
+  const APP_URL = 'https://mon-syndic-benevole.fr';
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Article',
+        '@id': `${APP_URL}/blog/${post.slug}#article`,
+        headline: post.title,
+        description: post.description,
+        url: `${APP_URL}/blog/${post.slug}`,
+        datePublished: post.publishedAt,
+        dateModified: post.updatedAt ?? post.publishedAt,
+        inLanguage: 'fr-FR',
+        keywords: post.keywords.join(', '),
+        author: { '@type': 'Organization', name: 'Mon Syndic Bénévole', url: APP_URL },
+        publisher: {
+          '@type': 'Organization',
+          name: 'Mon Syndic Bénévole',
+          url: APP_URL,
+          logo: { '@type': 'ImageObject', url: `${APP_URL}/logo.png` },
+        },
+        isPartOf: { '@type': 'Blog', name: 'Blog Mon Syndic Bénévole', url: `${APP_URL}/blog` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${APP_URL}/blog/${post.slug}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Accueil', item: APP_URL },
+          { '@type': 'ListItem', position: 2, name: 'Blog', item: `${APP_URL}/blog` },
+          { '@type': 'ListItem', position: 3, name: post.title, item: `${APP_URL}/blog/${post.slug}` },
+        ],
+      },
+    ],
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-gray-200">
+    <>
+      <Script
+        id="article-json-ld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+      <div className="min-h-screen bg-slate-950 text-gray-200">
 
       {/* ── Header ── */}
       <header className="border-b border-slate-800 py-4 px-6 sticky top-0 z-50 bg-slate-950/95 backdrop-blur-sm">
@@ -84,6 +126,14 @@ export default async function ArticlePage({
 
       {/* ── Article hero ── */}
       <div className="max-w-3xl mx-auto px-6 pt-12 pb-4">
+        {/* Breadcrumb */}
+        <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs text-gray-500 mb-6">
+          <Link href="/" className="hover:text-gray-300 transition-colors">Accueil</Link>
+          <span className="text-gray-700" aria-hidden="true">/</span>
+          <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
+          <span className="text-gray-700" aria-hidden="true">/</span>
+          <span className="text-gray-400 truncate max-w-[200px]">{post.title}</span>
+        </nav>
         {/* Category */}
         <span className="inline-block text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-full px-3 py-0.5 mb-6">
           {post.category}
@@ -169,5 +219,6 @@ export default async function ArticlePage({
         </div>
       </footer>
     </div>
+    </>
   );
 }

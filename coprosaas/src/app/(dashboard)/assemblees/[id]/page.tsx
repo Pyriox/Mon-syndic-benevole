@@ -18,6 +18,8 @@ import ConvocationPDF from './ConvocationPDF';
 import PresencePanel from './PresencePanel';
 import { LABELS_STATUT_AG } from '@/lib/utils';
 import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video } from 'lucide-react';
+import { isSubscribed } from '@/lib/subscription';
+import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -26,8 +28,9 @@ interface Props {
 export default async function AGDetailPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
-  const { selectedCoproId, role } = await requireCoproAccess();
+  const { selectedCoproId, role, copro } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
+  const canWrite = isSubscribed(copro?.plan);
   const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
   const { data: ag } = await db
@@ -83,8 +86,8 @@ export default async function AGDetailPage({ params }: Props) {
   }
 
   const isVisio = ag.lieu === 'Visioconférence';
-  const canVote = isSyndic && (ag.statut === 'en_cours' || ag.statut === 'terminee');
-  const canEdit = isSyndic && (ag.statut === 'creation' || ag.statut === 'planifiee');
+  const canVote = isSyndic && canWrite && (ag.statut === 'en_cours' || ag.statut === 'terminee');
+  const canEdit = isSyndic && canWrite && (ag.statut === 'creation' || ag.statut === 'planifiee');
   const hasPresences = (presences ?? []).length > 0;
   const toutesResolutionsVotees =
     (resolutions ?? []).length > 0 &&
@@ -107,6 +110,9 @@ export default async function AGDetailPage({ params }: Props) {
       <Link href="/assemblees" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
         <ArrowLeft size={16} /> Retour aux assemblées
       </Link>
+
+      {/* ── Bandeau lecture seule ── */}
+      {isSyndic && !canWrite && <ReadOnlyBanner />}
 
       {/* En-tête */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -141,7 +147,7 @@ export default async function AGDetailPage({ params }: Props) {
         </div>
 
         {/* Actions selon le statut — syndic uniquement */}
-        {isSyndic && (
+        {isSyndic && canWrite && (
         <div className="flex flex-col items-start sm:items-end gap-3 shrink-0">
 
           {/* Bouton principal de progression */}
@@ -254,7 +260,7 @@ export default async function AGDetailPage({ params }: Props) {
           coproprieteId={ag.copropriete_id}
           presences={presences ?? []}
           coproprietaires={coproprietaires ?? []}
-          canEdit={isSyndic && ag.statut === 'en_cours'}
+          canEdit={isSyndic && canWrite && ag.statut === 'en_cours'}
         />
       )}
 

@@ -336,7 +336,7 @@ export default async function AbonnementPage({
                 )}
                 {!isSubscribed && !isPastDue && (
                   <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-semibold px-3 py-1 rounded-full shrink-0">
-                    Période d&apos;essai
+                    Accès limité
                   </span>
                 )}
               </div>

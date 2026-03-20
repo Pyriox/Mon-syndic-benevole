@@ -17,6 +17,7 @@ import { formatDate, LABELS_TYPE_DOCUMENT } from '@/lib/utils';
 import { FileText, Download, ExternalLink, Folder, ChevronRight } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
+import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 
 // Dossiers racine permanents — dans l'ordre d'affichage souhaité
 const DEFAULT_DOSSIER_NAMES = [
@@ -295,7 +296,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   // VUE SYNDIC — logique complète (création, migrations, actions)
   // ================================================================
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
-  const canCreate = isSubscribed(copropriete?.plan);
+  const canWrite = isSubscribed(copropriete?.plan);
 
   // ---- Initialisation des dossiers par défaut si absents ----
   const { data: rawDossiers } = await supabase
@@ -466,7 +467,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
                     <div className="flex items-center gap-2">
                       <FileText size={16} className="text-gray-400 shrink-0" />
                       <span className="font-medium text-gray-900">{doc.nom}</span>
-                      <DocumentRename documentId={doc.id} nomActuel={doc.nom} />
+                      {canWrite && <DocumentRename documentId={doc.id} nomActuel={doc.nom} />}
                     </div>
                   </td>
                   <td className="px-5 py-3">
@@ -498,6 +499,9 @@ export default async function DocumentsPage({ searchParams }: Props) {
 
     return (
       <div className="max-w-5xl mx-auto space-y-6">
+        {/* ── Bandeau lecture seule ── */}
+        {!canWrite && <ReadOnlyBanner />}
+
         {/* Fil d'Ariane */}
         <div className="flex items-center gap-1 text-sm flex-wrap">
           <Link href="/documents" className="text-gray-500 hover:text-gray-700 transition-colors">
@@ -528,11 +532,11 @@ export default async function DocumentsPage({ searchParams }: Props) {
             </p>
           </div>
           <div className="flex gap-2">
-            {canCreate && subDossiers.length > 0 && (
+            {canWrite && subDossiers.length > 0 && (
               <SubDossierActions mode="create" parentId={dossierId} />
             )}
             {subDossiers.length === 0 && (
-              canCreate ? (
+              canWrite ? (
                 <DocumentActions
                   coproprietes={coproprietes ?? []}
                   dossiers={dossiers}
@@ -572,20 +576,22 @@ export default async function DocumentsPage({ searchParams }: Props) {
                     </div>
                   </Link>
                   {/* Boutons renommer / supprimer au survol */}
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <SubDossierActions
-                      mode="rename"
-                      parentId={dossierId}
-                      dossier={{ id: sub.id, nom: sub.nom }}
-                    />
-                    <SubDossierActions
-                      mode="delete"
-                      parentId={dossierId}
-                      dossier={{ id: sub.id, nom: sub.nom }}
-                      hasDocuments={docCount > 0}
-                      hasSubs={subCount > 0}
-                    />
-                  </div>
+                  {canWrite && (
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <SubDossierActions
+                        mode="rename"
+                        parentId={dossierId}
+                        dossier={{ id: sub.id, nom: sub.nom }}
+                      />
+                      <SubDossierActions
+                        mode="delete"
+                        parentId={dossierId}
+                        dossier={{ id: sub.id, nom: sub.nom }}
+                        hasDocuments={docCount > 0}
+                        hasSubs={subCount > 0}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -602,7 +608,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
             title="Dossier vide"
             description={`Aucun document dans « ${currentDossier.nom} » pour le moment.`}
             action={
-              canCreate ? (
+              canWrite ? (
                 <DocumentActions
                   coproprietes={coproprietes ?? []}
                   dossiers={dossiers}
@@ -631,14 +637,17 @@ export default async function DocumentsPage({ searchParams }: Props) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {/* ── Bandeau lecture seule ── */}
+      {!canWrite && <ReadOnlyBanner />}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
           <p className="text-gray-500 mt-1">{rootDossiers.length} dossier(s)</p>
         </div>
         <div className="flex gap-2">
-          {canCreate && <DossierActions />}
-          {canCreate ? (
+          {canWrite && <DossierActions />}
+          {canWrite ? (
             <DocumentActions coproprietes={coproprietes ?? []} dossiers={rootDossiers} />
           ) : (
             <UpgradeBanner compact />
@@ -672,13 +681,15 @@ export default async function DocumentsPage({ searchParams }: Props) {
               </div>
             </Link>
             <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <DossierRename
-                dossierId={dossier.id}
-                dossierNom={dossier.nom}
-                dossierCouleur={dossier.couleur}
-                colorOnly={dossier.is_default}
-              />
-              {!dossier.is_default && (
+              {canWrite && (
+                <DossierRename
+                  dossierId={dossier.id}
+                  dossierNom={dossier.nom}
+                  dossierCouleur={dossier.couleur}
+                  colorOnly={dossier.is_default}
+                />
+              )}
+              {canWrite && !dossier.is_default && (
                 <DossierDelete dossierId={dossier.id} dossierNom={dossier.nom} />
               )}
             </div>

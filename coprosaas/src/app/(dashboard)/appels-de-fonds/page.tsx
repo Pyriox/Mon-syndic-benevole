@@ -11,6 +11,7 @@ import AnneeSelector from '@/components/ui/AnneeSelector';
 import { Wallet } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
+import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 
 interface Poste { libelle: string; categorie: string; montant: number }
 
@@ -51,7 +52,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const isSyndic = userRole === 'syndic';
-  const canCreate = isSubscribed(copropriete?.plan);
+  const canWrite = isSubscribed(copropriete?.plan);
 
   // ── Calculer les stats par appel ──────────────────────────────────────────
   type AppelWithStats = {
@@ -128,6 +129,9 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* ── Bandeau lecture seule ── */}
+      {isSyndic && !canWrite && <ReadOnlyBanner />}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Appels de fonds</h2>
@@ -135,7 +139,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {isSyndic && (canCreate ? <AppelFondsActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
+          {isSyndic && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
         </div>
       </div>
 
@@ -165,6 +169,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
                   lignes={item.lignes as Parameters<typeof AppelFondsCard>[0]['lignes']}
                   postes={item.postes}
                   isSyndic={isSyndic}
+                  canWrite={canWrite}
                   nbPayes={item.nbPayes}
                   nbImpayes={item.nbImpayes}
                   pctPaye={item.pctPaye}
@@ -181,6 +186,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
               lignes={item.lignes as Parameters<typeof AppelFondsCard>[0]['lignes']}
               postes={item.postes}
               isSyndic={isSyndic}
+              canWrite={canWrite}
               nbPayes={item.nbPayes}
               nbImpayes={item.nbImpayes}
               pctPaye={item.pctPaye}
@@ -192,7 +198,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
           icon={<Wallet size={48} strokeWidth={1.5} />}
           title="Aucun appel de fonds"
           description="Créez un appel de fonds pour répartir les charges entre les copropriétaires."
-          action={isSyndic && (canCreate ? <AppelFondsActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />)}
+          action={isSyndic && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />)}
         />
       )}
     </div>

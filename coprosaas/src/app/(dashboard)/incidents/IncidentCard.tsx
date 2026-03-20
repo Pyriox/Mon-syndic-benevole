@@ -210,9 +210,10 @@ function TransitionPanel({ incident, data, setData, onTransition, loading }: Tra
 export interface IncidentCardProps {
   incident: Incident;
   isSyndic: boolean;
+  canWrite: boolean;
 }
 
-export default function IncidentCard({ incident, isSyndic }: IncidentCardProps) {
+export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentCardProps) {
   const router  = useRouter();
   const supabase = createClient();
 
@@ -390,7 +391,7 @@ export default function IncidentCard({ incident, isSyndic }: IncidentCardProps) 
           )}
 
           {/* Transition panel (syndic only, not resolved) */}
-          {isSyndic && incident.statut !== 'resolu' && (
+          {isSyndic && canWrite && incident.statut !== 'resolu' && (
             <TransitionPanel
               incident={incident}
               data={transitionData}
@@ -438,7 +439,7 @@ export default function IncidentCard({ incident, isSyndic }: IncidentCardProps) 
 
           {/* Bottom action row */}
           <div className="flex items-center gap-3 flex-wrap pt-1">
-            {isSyndic && !showNoteForm && (
+            {isSyndic && canWrite && !showNoteForm && (
               <button
                 onClick={() => setShowNoteForm(true)}
                 className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
@@ -447,7 +448,7 @@ export default function IncidentCard({ incident, isSyndic }: IncidentCardProps) 
               </button>
             )}
 
-            {incident.statut === 'resolu' && (
+            {canWrite && incident.statut === 'resolu' && (
               <a
                 href={`/depenses?${depenseQuery}`}
                 className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-700 font-medium"
@@ -456,7 +457,7 @@ export default function IncidentCard({ incident, isSyndic }: IncidentCardProps) 
               </a>
             )}
 
-            {isSyndic && incident.statut === 'resolu' && (
+            {isSyndic && canWrite && incident.statut === 'resolu' && (
               <button
                 onClick={() => transition('ouvert')}
                 disabled={loading}
@@ -466,7 +467,7 @@ export default function IncidentCard({ incident, isSyndic }: IncidentCardProps) 
               </button>
             )}
 
-            {isSyndic && (
+            {isSyndic && canWrite && (
               <button
                 onClick={() => setDeleteModal(true)}
                 className="inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium ml-auto"

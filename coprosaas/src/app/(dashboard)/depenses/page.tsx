@@ -12,6 +12,7 @@ import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 import { Receipt } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
+import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 
 const catColorMap: Record<string, string> = {
   entretien:          'bg-orange-400',
@@ -261,7 +262,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
   // VUE SYNDIC
   // ================================================================
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
-  const canCreate = isSubscribed(copropriete?.plan);
+  const canWrite = isSubscribed(copropriete?.plan);
 
   // Toutes les données syndic en parallèle
   const scopeId = selectedCoproId ?? 'none';
@@ -345,6 +346,9 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {/* ── Bandeau lecture seule ── */}
+      {!canWrite && <ReadOnlyBanner />}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Dépenses</h2>
@@ -354,7 +358,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {canCreate ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} /> : <UpgradeBanner compact />}
+          {canWrite ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} /> : <UpgradeBanner compact />}
         </div>
       </div>
 
@@ -382,21 +386,23 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                   <div className="text-right shrink-0">
                     <p className="font-semibold text-gray-900">{formatEuros(d.montant)}</p>
                     <div className="flex items-center justify-end gap-1 mt-1">
-                      <DepenseActions
-                        coproprietes={coproprietes ?? []}
-                        depensesDossierId={depDossier?.id}
-                        depense={{
-                          id: d.id,
-                          copropriete_id: d.copropriete_id,
-                          titre: d.titre,
-                          categorie: d.categorie,
-                          montant: d.montant,
-                          date_depense: d.date_depense,
-                          description: d.description ?? null,
-                          piece_jointe_url: d.piece_jointe_url ?? null,
-                        }}
-                      />
-                      <DepenseDelete depenseId={d.id} />
+                      {canWrite && (
+                        <DepenseActions
+                          coproprietes={coproprietes ?? []}
+                          depensesDossierId={depDossier?.id}
+                          depense={{
+                            id: d.id,
+                            copropriete_id: d.copropriete_id,
+                            titre: d.titre,
+                            categorie: d.categorie,
+                            montant: d.montant,
+                            date_depense: d.date_depense,
+                            description: d.description ?? null,
+                            piece_jointe_url: d.piece_jointe_url ?? null,
+                          }}
+                        />
+                      )}
+                      {canWrite && <DepenseDelete depenseId={d.id} />}
                     </div>
                   </div>
                 </div>
@@ -454,21 +460,23 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                       </td>
                       <td className="px-5 py-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <DepenseActions
-                            coproprietes={coproprietes ?? []}
-                            depensesDossierId={depDossier?.id}
-                            depense={{
-                              id: d.id,
-                              copropriete_id: d.copropriete_id,
-                              titre: d.titre,
-                              categorie: d.categorie,
-                              montant: d.montant,
-                              date_depense: d.date_depense,
-                              description: d.description ?? null,
-                              piece_jointe_url: d.piece_jointe_url ?? null,
-                            }}
-                          />
-                          <DepenseDelete depenseId={d.id} />
+                          {canWrite && (
+                            <DepenseActions
+                              coproprietes={coproprietes ?? []}
+                              depensesDossierId={depDossier?.id}
+                              depense={{
+                                id: d.id,
+                                copropriete_id: d.copropriete_id,
+                                titre: d.titre,
+                                categorie: d.categorie,
+                                montant: d.montant,
+                                date_depense: d.date_depense,
+                                description: d.description ?? null,
+                                piece_jointe_url: d.piece_jointe_url ?? null,
+                              }}
+                            />
+                          )}
+                          {canWrite && <DepenseDelete depenseId={d.id} />}
                         </div>
                       </td>
                     </tr>
@@ -491,7 +499,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
           icon={<Receipt size={48} strokeWidth={1.5} />}
           title="Aucune dépense enregistrée"
           description="Ajoutez vos dépenses pour calculer automatiquement la répartition entre copropriétaires."
-          action={canCreate ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} showLabel /> : <UpgradeBanner />}
+          action={canWrite ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} showLabel /> : <UpgradeBanner />}
         />
       )}
 

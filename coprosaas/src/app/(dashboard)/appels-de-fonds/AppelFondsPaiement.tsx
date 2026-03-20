@@ -53,9 +53,10 @@ interface AppelFondsPaiementProps {
   appel: AppelPartiel;
   lignes: Ligne[];
   isSyndic: boolean;
+  canWrite?: boolean;
 }
 
-export default function AppelFondsPaiement({ appel, lignes, isSyndic }: AppelFondsPaiementProps) {
+export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite = true }: AppelFondsPaiementProps) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -207,7 +208,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic }: AppelFon
                 </button>
 
                 {/* Action syndic */}
-                {isSyndic && !isPaying && (
+                {isSyndic && canWrite && !isPaying && (
                   ligne.paye ? (
                     <button
                       type="button"

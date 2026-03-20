@@ -13,6 +13,7 @@ import { formatDate, LABELS_STATUT_AG } from '@/lib/utils';
 import { CalendarDays, MapPin, ChevronRight } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
+import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 
 export default async function AssembleesPage({ searchParams }: { searchParams: Promise<{ annee?: string }> }) {
   const { annee: anneeParam } = await searchParams;
@@ -43,10 +44,13 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
   };
 
   const isSyndic = userRole === 'syndic';
-  const canCreate = isSubscribed(copropriete?.plan);
+  const canWrite = isSubscribed(copropriete?.plan);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* ── Bandeau lecture seule ── */}
+      {isSyndic && !canWrite && <ReadOnlyBanner />}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Assemblées Générales</h2>
@@ -54,7 +58,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {isSyndic && (canCreate ? <AGActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
+          {isSyndic && (canWrite ? <AGActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
         </div>
       </div>
 
@@ -101,7 +105,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
           icon={<CalendarDays size={48} strokeWidth={1.5} />}
           title="Aucune assemblée générale"
           description="Planifiez vos AG, gérez les résolutions et générez les procès-verbaux."
-          action={isSyndic && (canCreate ? <AGActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />)}
+          action={isSyndic && (canWrite ? <AGActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />)}
         />
       )}
     </div>

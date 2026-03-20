@@ -57,9 +57,10 @@ const GROUPS: {
 interface IncidentGroupsProps {
   incidents: Incident[];
   isSyndic: boolean;
+  canWrite: boolean;
 }
 
-export default function IncidentGroups({ incidents, isSyndic }: IncidentGroupsProps) {
+export default function IncidentGroups({ incidents, isSyndic, canWrite }: IncidentGroupsProps) {
   // Map statut → open state
   const [open, setOpen] = useState<Record<StatutIncident, boolean>>(() =>
     Object.fromEntries(GROUPS.map(g => [g.statut, g.defaultOpen])) as Record<StatutIncident, boolean>
@@ -106,7 +107,7 @@ export default function IncidentGroups({ incidents, isSyndic }: IncidentGroupsPr
             {isOpen && (
               <div className="bg-gray-50 p-3 space-y-2">
                 {items.map(incident => (
-                  <IncidentCard key={incident.id} incident={incident} isSyndic={isSyndic} />
+                  <IncidentCard key={incident.id} incident={incident} isSyndic={isSyndic} canWrite={canWrite} />
                 ))}
               </div>
             )}

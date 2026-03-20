@@ -10,6 +10,7 @@ import IncidentGroups from './IncidentGroups';
 import { AlertTriangle } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
+import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import type { Incident } from '@/types';
 
 export default async function IncidentsPage() {
@@ -18,7 +19,7 @@ export default async function IncidentsPage() {
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const isSyndic   = userRole === 'syndic';
-  const canCreate  = isSubscribed(copropriete?.plan);
+  const canWrite   = isSubscribed(copropriete?.plan);
   const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
   const { data: incidents } = await db
@@ -37,6 +38,9 @@ export default async function IncidentsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
 
+      {/* ── Bandeau lecture seule ── */}
+      {isSyndic && !canWrite && <ReadOnlyBanner />}
+
       {/* ── Header ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -50,7 +54,7 @@ export default async function IncidentsPage() {
           </p>
         </div>
         <div>
-          {canCreate
+          {canWrite
             ? <IncidentActions coproprietes={coproprietes} />
             : <UpgradeBanner compact />}
         </div>
@@ -58,13 +62,13 @@ export default async function IncidentsPage() {
 
       {/* ── Liste groupée par statut ── */}
       {list.length > 0 ? (
-        <IncidentGroups incidents={list} isSyndic={isSyndic} />
+        <IncidentGroups incidents={list} isSyndic={isSyndic} canWrite={canWrite} />
       ) : (
         <EmptyState
           icon={<AlertTriangle size={48} strokeWidth={1.5} />}
           title="Aucun incident signalé"
           description="Signalez les problèmes et suivez leur résolution en temps réel."
-          action={canCreate ? <IncidentActions coproprietes={coproprietes} showLabel /> : <UpgradeBanner />}
+          action={canWrite ? <IncidentActions coproprietes={coproprietes} showLabel /> : <UpgradeBanner />}
         />
       )}
     </div>
