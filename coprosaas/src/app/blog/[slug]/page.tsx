@@ -126,34 +126,55 @@ export default async function ArticlePage({
       </header>
 
       {/* ── Article hero ── */}
-      <div className="max-w-3xl mx-auto px-6 pt-12 pb-4">
-        {/* Breadcrumb */}
-        <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs text-gray-500 mb-6">
-          <Link href="/" className="hover:text-gray-700 transition-colors">Accueil</Link>
-          <span className="text-gray-300" aria-hidden="true">/</span>
-          <Link href="/blog" className="hover:text-gray-700 transition-colors">Blog</Link>
-          <span className="text-gray-300" aria-hidden="true">/</span>
-          <span className="text-gray-500 truncate max-w-[200px]">{post.title}</span>
-        </nav>
-        {/* Category */}
-        <span className="inline-block text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-3 py-0.5 mb-6">
-          {post.category}
-        </span>
-
-        {/* Title */}
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-6">
-          {post.title}
-        </h1>
-
-        {/* Meta row */}
-        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 border-b border-gray-200 pb-8 mb-4">
-          <span>
-            <time dateTime={post.publishedAt}>{formatPublishedAt(post.publishedAt)}</time>
+      <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950">
+        <div className="max-w-3xl mx-auto px-6 pt-12 pb-10">
+          {/* Breadcrumb */}
+          <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs text-blue-200 mb-6">
+            <Link href="/" className="hover:text-white transition-colors">Accueil</Link>
+            <span className="text-blue-400/60" aria-hidden="true">/</span>
+            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+            <span className="text-blue-400/60" aria-hidden="true">/</span>
+            <span className="text-blue-100/80 truncate max-w-[200px]">{post.title}</span>
+          </nav>
+          {/* Category */}
+          <span className="inline-block text-xs font-medium text-blue-200 bg-white/10 border border-white/20 rounded-full px-3 py-0.5 mb-6">
+            {post.category}
           </span>
-          <span className="w-1 h-1 rounded-full bg-gray-300" aria-hidden="true" />
-          <span>{post.readingTime} min de lecture</span>
+
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight mb-6">
+            {post.title}
+          </h1>
+
+          {/* Meta row */}
+          <div className="flex flex-wrap items-center gap-4 text-sm text-blue-200 border-t border-white/20 pt-6">
+            <span>
+              <time dateTime={post.publishedAt}>{formatPublishedAt(post.publishedAt)}</time>
+            </span>
+            <span className="w-1 h-1 rounded-full bg-blue-300/60" aria-hidden="true" />
+            <span>{post.readingTime} min de lecture</span>
+          </div>
         </div>
       </div>
+
+      {/* ── Table des matières ── */}
+      {post.toc.length > 0 && (
+        <div className="max-w-3xl mx-auto px-6 mt-8 mb-2">
+          <nav aria-label="Table des matières" className="bg-blue-50 border border-blue-100 rounded-2xl px-6 py-5">
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">Table des matières</p>
+            <ol className="space-y-1.5">
+              {post.toc.map((entry, i) => (
+                <li key={entry.id} className="flex items-baseline gap-2.5 text-sm">
+                  <span className="text-blue-300 font-mono text-xs shrink-0">{i + 1}.</span>
+                  <a href={`#${entry.id}`} className="text-blue-700 hover:text-blue-900 hover:underline underline-offset-2 transition-colors leading-snug">
+                    {entry.text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        </div>
+      )}
 
       {/* ── Article body ── */}
       <main className="max-w-3xl mx-auto px-6 pb-16">

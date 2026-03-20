@@ -16,7 +16,7 @@ export default function ArticleGererCopropriete() {
       <p className={p}>La réponse longue, c&apos;est cet article.</p>
 
       {/* Section 1 */}
-      <h2 className={h2}>Ce que dit la loi (et ce qu&apos;elle ne dit pas)</h2>
+      <h2 id="ce-que-dit-la-loi" className={h2}>Ce que dit la loi (et ce qu&apos;elle ne dit pas)</h2>
       <p className={p}>
         Contrairement à ce que beaucoup croient, la loi du 10 juillet 1965 sur la copropriété{' '}
         <strong className={strong}>n&apos;impose pas de recourir à un syndic professionnel</strong>. Elle impose l&apos;existence d&apos;un syndic — personne physique ou morale — désigné par l&apos;assemblée générale. Ce syndic peut très bien être l&apos;un des copropriétaires lui-même.
@@ -33,7 +33,7 @@ export default function ArticleGererCopropriete() {
       <p className={p}>C&apos;est tout. Le reste — organisation, outils, délégation de certaines tâches — est laissé à la libre appréciation du syndicat.</p>
 
       {/* Section 2 */}
-      <h2 className={h2}>Qui choisit vraiment le syndic bénévole ?</h2>
+      <h2 id="qui-choisit" className={h2}>Qui choisit vraiment le syndic bénévole ?</h2>
       <p className={p}>
         En France, <strong className={strong}>plus de 40&nbsp;% des copropriétés sont gérées sans syndic professionnel</strong>, selon les estimations du ministère du Logement. Ce chiffre grimpe fortement pour les petites structures : dans les immeubles de moins de dix lots, la majorité fonctionne en auto-gestion.
       </p>
@@ -43,7 +43,7 @@ export default function ArticleGererCopropriete() {
       <p className={p}>Ce n&apos;est donc pas un cas marginal. C&apos;est une pratique normale, encadrée, et pour beaucoup d&apos;immeubles : la plus adaptée.</p>
 
       {/* Section 3 */}
-      <h2 className={h2}>Les vraies responsabilités du syndic bénévole</h2>
+      <h2 id="responsabilites" className={h2}>Les vraies responsabilités du syndic bénévole</h2>
       <p className={p}>Avant de se lancer, il est utile de savoir concrètement ce que ça implique. Le syndic bénévole a les mêmes obligations légales qu&apos;un syndic professionnel. Il doit :</p>
 
       <h3 className={h3}>Sur le plan administratif</h3>
@@ -73,7 +73,7 @@ export default function ArticleGererCopropriete() {
       <p className={p}>C&apos;est du boulot — soyons honnêtes. Mais c&apos;est un travail gérable, notamment parce que dans un petit immeuble, il ne se passe pas grand-chose la plupart du temps.</p>
 
       {/* Section 4 */}
-      <h2 className={h2}>Pourquoi autant de syndics bénévoles se perdent en cours de route</h2>
+      <h2 id="pourquoi-se-perdent" className={h2}>Pourquoi autant de syndics bénévoles se perdent en cours de route</h2>
       <p className={p}>La plupart des abandons ne tiennent pas à la complexité des tâches elles-mêmes, mais à <strong className={strong}>l&apos;absence d&apos;organisation</strong>.</p>
       <p className={p}>On accepte le rôle avec les meilleures intentions, et puis :</p>
       <ul className={ul}>
@@ -116,7 +116,7 @@ export default function ArticleGererCopropriete() {
       </div>
 
       {/* Section 5 */}
-      <h2 className={h2}>Les avantages concrets d&apos;une gestion sans cabinet</h2>
+      <h2 id="avantages" className={h2}>Les avantages concrets d&apos;une gestion sans cabinet</h2>
 
       <h3 className={h3}>1. L&apos;économie, d&apos;abord</h3>
       <p className={p}>
@@ -141,7 +141,7 @@ export default function ArticleGererCopropriete() {
       </p>
 
       {/* Section 6 */}
-      <h2 className={h2}>Les situations où un professionnel reste plus adapté</h2>
+      <h2 id="quand-professionnel" className={h2}>Les situations où un professionnel reste plus adapté</h2>
       <p className={p}>Ce serait partial de prétendre que le syndic bénévole convient à tout le monde. Il y a des cas où faire appel à un cabinet reste judicieux :</p>
       <ul className={ul}>
         <li className={li}><strong className={strong}>Grande copropriété (50 lots et plus)</strong> : le volume de travail et la complexité comptable justifient souvent un professionnel à plein temps.</li>
@@ -152,7 +152,7 @@ export default function ArticleGererCopropriete() {
       <p className={p}>La bonne question à se poser n&apos;est pas &ldquo;professionnel ou bénévole ?&rdquo; mais <strong className={strong}>&ldquo;quel niveau de charge de gestion représente mon immeuble, et ai-je les ressources pour l&apos;assumer correctement ?&rdquo;</strong></p>
 
       {/* Section 7 */}
-      <h2 className={h2}>Comment passer d&apos;un syndic professionnel à un syndic bénévole</h2>
+      <h2 id="comment-passer" className={h2}>Comment passer d&apos;un syndic professionnel à un syndic bénévole</h2>
       <p className={p}>La transition est plus simple qu&apos;on ne le pense, mais elle demande un minimum de méthode.</p>
       <ol className={ol}>
         <li className={li}><strong className={strong}>Décider en AG.</strong> La résolution de changement de syndic doit être inscrite à l&apos;ordre du jour. L&apos;élection du nouveau syndic se fait à la majorité de l&apos;article 25.</li>
@@ -163,7 +163,7 @@ export default function ArticleGererCopropriete() {
       </ol>
 
       {/* Section 8 */}
-      <h2 className={h2}>Ce que les copropriétaires sous-estiment souvent : le temps</h2>
+      <h2 id="le-temps" className={h2}>Ce que les copropriétaires sous-estiment souvent : le temps</h2>
       <p className={p}>L&apos;objection la plus courante contre le syndic bénévole est : &ldquo;mais qui va avoir le temps ?&rdquo;</p>
       <p className={p}>
         En pratique, pour un immeuble de taille raisonnable (5 à 20 lots), le temps réel consacré à la gestion courante se situe entre <strong className={strong}>2 et 5 heures par mois</strong> hors préparation d&apos;AG. La préparation d&apos;une AG annuelle représente 4 à 8 heures supplémentaires.
@@ -172,7 +172,7 @@ export default function ArticleGererCopropriete() {
       <p className={p}>La copropriété, au fond, c&apos;est une petite entreprise collective. Comme dans toute structure collective, la clé est la répartition des rôles et la clarté des processus.</p>
 
       {/* FAQ */}
-      <h2 className={h2}>Questions fréquentes</h2>
+      <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
 
       <h3 className={h3}>Le syndic bénévole est-il responsable en cas de problème ?</h3>
       <p className={p}>Oui, comme tout mandataire, il engage sa responsabilité civile. Il est donc prudent de vérifier que son assurance habitation ou une assurance de protection juridique couvre cette activité. Un contrat de mandat clair, voté en AG, est également recommandé.</p>
@@ -187,7 +187,7 @@ export default function ArticleGererCopropriete() {
       <p className={p}>Si aucun syndic n&apos;est élu lors de l&apos;AG, n&apos;importe quel copropriétaire peut saisir le tribunal judiciaire pour faire désigner un administrateur provisoire. Ce n&apos;est jamais une situation idéale — mieux vaut anticiper la passation de pouvoir.</p>
 
       {/* Conclusion */}
-      <h2 className={h2}>En résumé</h2>
+      <h2 id="en-resume" className={h2}>En résumé</h2>
       <p className={p}>
         Gérer sa copropriété sans syndic professionnel, c&apos;est légal, courant, et souvent très judicieux pour les immeubles de taille moyenne à petite. Les obstacles réels sont moins la compétence que l&apos;organisation et les outils.
       </p>

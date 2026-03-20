@@ -13,7 +13,7 @@ export default function ArticleFondsTravaux() {
       <p className={p}>Ce guide fait le tour complet de la question : cadre légal, calcul du montant, vote en AG, utilisation des sommes, et ce qui se passe en cas de cession d&apos;un lot.</p>
 
       {/* Section 1 */}
-      <h2 className={h2}>Pourquoi ce fonds existe : le contexte de la loi ALUR</h2>
+      <h2 id="contexte-loi-alur" className={h2}>Pourquoi ce fonds existe : le contexte de la loi ALUR</h2>
       <p className={p}>
         La loi ALUR (Accès au Logement et Urbanisme Rénové) a été adoptée en mars 2014. Parmi ses nombreuses dispositions touchant à la copropriété, l&apos;une des plus structurantes a été la création du <strong className={strong}>fonds de travaux obligatoire</strong>.
       </p>
@@ -23,7 +23,7 @@ export default function ArticleFondsTravaux() {
       <p className={p}>En imposant une épargne de précaution, le législateur a voulu briser ce cycle. Depuis le <strong className={strong}>1er janvier 2017</strong>, la constitution de ce fonds est donc obligatoire pour toutes les copropriétés concernées.</p>
 
       {/* Section 2 */}
-      <h2 className={h2}>Qui est concerné ?</h2>
+      <h2 id="qui-est-concerne" className={h2}>Qui est concerné ?</h2>
       <p className={p}>
         Toutes les copropriétés soumises à la loi du 10 juillet 1965 et comportant <strong className={strong}>plus de 10 lots</strong> sont dans le champ d&apos;application. La notion de &ldquo;lot&rdquo; inclut les lots principaux (appartements, locaux commerciaux) mais aussi les lots accessoires (caves, parkings, garages) — ce qui peut changer le décompte dans certaines configurations.
       </p>
@@ -35,7 +35,7 @@ export default function ArticleFondsTravaux() {
       </p>
 
       {/* Section 3 */}
-      <h2 className={h2}>Le montant minimum : ce que dit la loi</h2>
+      <h2 id="montant-minimum" className={h2}>Le montant minimum : ce que dit la loi</h2>
       <p className={p}>
         La loi fixe un plancher, pas un plafond. La cotisation annuelle au fonds de travaux doit être <strong className={strong}>au minimum égale à 5&nbsp;% du budget prévisionnel</strong> voté en AG pour l&apos;année concernée.
       </p>
@@ -47,7 +47,7 @@ export default function ArticleFondsTravaux() {
       </p>
 
       {/* Section 4 */}
-      <h2 className={h2}>Le vote en AG : quelle majorité ?</h2>
+      <h2 id="vote-ag" className={h2}>Le vote en AG : quelle majorité ?</h2>
       <p className={p}>
         Le montant de la cotisation annuelle est soumis au vote lors de l&apos;assemblée générale, à la <strong className={strong}>majorité de l&apos;article 24</strong> (majorité simple des voix exprimées des copropriétaires présents ou représentés). C&apos;est la majorité la plus facile à atteindre.
       </p>
@@ -59,7 +59,7 @@ export default function ArticleFondsTravaux() {
       <p className={p}>Un point souvent mal compris : l&apos;AG ne peut pas <strong className={strong}>supprimer</strong> le fonds de travaux par un vote, sauf dans les cas dérogatoires prévus par la loi. Un vote de suppression pure et simple serait nul et contraire à la loi.</p>
 
       {/* Section 5 */}
-      <h2 className={h2}>Un compte bancaire séparé : l&apos;obligation méconnue</h2>
+      <h2 id="compte-separe" className={h2}>Un compte bancaire séparé : l&apos;obligation méconnue</h2>
       <p className={p}>
         Les sommes versées au fonds de travaux <strong className={strong}>ne peuvent pas être mélangées avec la trésorerie courante</strong> de la copropriété. La loi est explicite : le fonds de travaux doit être déposé sur un compte bancaire séparé, ouvert au nom du syndicat des copropriétaires.
       </p>
@@ -69,7 +69,7 @@ export default function ArticleFondsTravaux() {
       <p className={p}>Pourquoi cette séparation ? Pour éviter que les fonds de travaux soient utilisés pour couvrir un découvert de trésorerie courante, et pour garantir leur disponibilité immédiate quand un vote de travaux intervient.</p>
 
       {/* Section 6 */}
-      <h2 className={h2}>À quoi peuvent servir ces fonds ?</h2>
+      <h2 id="utilisation" className={h2}>À quoi peuvent servir ces fonds ?</h2>
       <p className={p}>Le fonds de travaux ne peut être utilisé que pour <strong className={strong}>financer des travaux votés en assemblée générale</strong>. Il ne peut pas servir à couvrir des charges courantes, même en cas de difficultés de trésorerie.</p>
       <p className={p}>Les travaux éligibles incluent notamment :</p>
       <ul className={ul}>
@@ -82,7 +82,7 @@ export default function ArticleFondsTravaux() {
       </p>
 
       {/* Section 7 */}
-      <h2 className={h2}>Ce qui se passe lors de la vente d&apos;un lot</h2>
+      <h2 id="vente-lot" className={h2}>Ce qui se passe lors de la vente d&apos;un lot</h2>
       <p className={p}>
         C&apos;est le point le plus déstabilisant pour les copropriétaires qui découvrent la règle au moment de vendre : <strong className={strong}>les sommes versées au fonds de travaux sont définitivement acquises au syndicat des copropriétaires</strong>. Elles ne sont pas remboursables au vendeur.
       </p>
@@ -94,7 +94,7 @@ export default function ArticleFondsTravaux() {
       </p>
 
       {/* Section 8 */}
-      <h2 className={h2}>Les risques en cas de non-respect</h2>
+      <h2 id="risques" className={h2}>Les risques en cas de non-respect</h2>
       <p className={p}>Ne pas constituer le fonds de travaux, ou le gérer de façon irrégulière, expose la copropriété à plusieurs conséquences.</p>
       <p className={p}>
         <strong className={strong}>Sur le plan légal</strong>, un copropriétaire peut contester en justice les décisions prises par une AG qui n&apos;aurait pas voté ce fonds. L&apos;absence de compte séparé peut également être soulevée lors d&apos;une transaction immobilière pour bloquer la vente ou négocier une réduction de prix.
@@ -107,7 +107,7 @@ export default function ArticleFondsTravaux() {
       </p>
 
       {/* Section 9 */}
-      <h2 className={h2}>Fonds de travaux et diagnostic technique global (DTG)</h2>
+      <h2 id="dtg" className={h2}>Fonds de travaux et diagnostic technique global (DTG)</h2>
       <p className={p}>
         Depuis 2017, les copropriétés de plus de 10 ans et de plus de 200 lots ont l&apos;obligation de réaliser un <strong className={strong}>diagnostic technique global (DTG)</strong>, qui dresse un état des lieux complet de l&apos;immeuble et projette les travaux nécessaires sur dix ans. Pour les copropriétés plus petites, le DTG est facultatif mais recommandé.
       </p>
@@ -116,7 +116,7 @@ export default function ArticleFondsTravaux() {
       </p>
 
       {/* Section 10 */}
-      <h2 className={h2}>Gérer le fonds de travaux en pratique : éviter les erreurs courantes</h2>
+      <h2 id="pratique-erreurs" className={h2}>Gérer le fonds de travaux en pratique : éviter les erreurs courantes</h2>
       <p className={p}>Voici les erreurs que font le plus souvent les syndics bénévoles qui manquent d&apos;outillage :</p>
       <ul className={ul}>
         <li className={li}><strong className={strong}>Oublier de le soumettre au vote chaque année.</strong> Le montant doit être voté annuellement. Un oubli en AG ne signifie pas que la cotisation tombe à zéro, mais il est bon de le confirmer formellement chaque année.</li>
@@ -126,7 +126,7 @@ export default function ArticleFondsTravaux() {
       </ul>
 
       {/* Section 11 — Product */}
-      <h2 className={h2}>Ce que Mon Syndic Bénévole fait pour vous</h2>
+      <h2 id="notre-outil" className={h2}>Ce que Mon Syndic Bénévole fait pour vous</h2>
       <p className={p}>
         Gérés manuellement, les <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>appels de fonds travaux ALUR</a> ressemblent à tout le reste : un tableau Excel, des virements à vérifier, des soldes à recalculer. Le risque d&apos;erreur et d&apos;oubli est réel.
       </p>
@@ -154,7 +154,7 @@ export default function ArticleFondsTravaux() {
       <p className={p}>Le tout sans comptable, sans formation spécifique, et sans risque d&apos;oublier une case.</p>
 
       {/* FAQ */}
-      <h2 className={h2}>Questions fréquentes</h2>
+      <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
 
       <h3 className={h3}>Le fonds de travaux peut-il être utilisé pour une réparation urgente sans vote en AG ?</h3>
       <p className={p}>Non. Même en cas d&apos;urgence, l&apos;utilisation du fonds de travaux nécessite un vote en AG. En cas de sinistre urgent, le syndic peut engager des dépenses conservatoires sous sa propre responsabilité, couvertes par le budget courant ou un appel exceptionnel.</p>
@@ -172,7 +172,7 @@ export default function ArticleFondsTravaux() {
       <p className={p}>Oui, et les mêmes règles de bonne gestion s&apos;appliquent : vote en AG, compte séparé, traçabilité des mouvements.</p>
 
       {/* Conclusion */}
-      <h2 className={h2}>Ce qu&apos;il faut retenir</h2>
+      <h2 id="ce-quil-faut-retenir" className={h2}>Ce qu&apos;il faut retenir</h2>
       <p className={p}>
         Le fonds de travaux ALUR n&apos;est pas une contrainte administrative parmi d&apos;autres. C&apos;est un outil de gestion saine qui protège l&apos;immeuble, les copropriétaires et la valeur des biens sur le long terme. Les copropriétés qui l&apos;ont correctement constitué traversent les imprévus — tempête, vétusté soudaine, mise aux normes imposée — sans crise financière ni guerre entre voisins.
       </p>

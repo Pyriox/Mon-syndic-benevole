@@ -16,7 +16,7 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>Cet article remet les pendules à l&apos;heure.</p>
 
       {/* Section 1 */}
-      <h2 className={h2}>Qu&apos;est-ce qu&apos;un appel de fonds, exactement ?</h2>
+      <h2 id="definition" className={h2}>Qu&apos;est-ce qu&apos;un appel de fonds, exactement ?</h2>
       <p className={p}>
         Un appel de fonds est une <strong className={strong}>demande de paiement adressée à chaque copropriétaire</strong> pour couvrir les dépenses à venir (ou en cours) de la copropriété. Il ne s&apos;agit pas d&apos;une facture : c&apos;est une provision, une avance sur les frais collectifs.
       </p>
@@ -30,7 +30,7 @@ export default function ArticleAppelDeFonds() {
       </p>
 
       {/* Section 2 */}
-      <h2 className={h2}>La base de tout : les tantièmes</h2>
+      <h2 id="tantiemes" className={h2}>La base de tout : les tantièmes</h2>
       <p className={p}>
         Avant de parler de calcul, il faut comprendre le mécanisme des <strong className={strong}>tantièmes</strong> (ou millièmes), parce que tout repose dessus.
       </p>
@@ -75,7 +75,7 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>Le principe est simple. La difficulté vient de la gestion dans le temps : qui a payé quoi, qui est en retard, comment régulariser en fin d&apos;exercice.</p>
 
       {/* Section 3 */}
-      <h2 className={h2}>Les deux types de charges et leur répartition</h2>
+      <h2 id="types-charges" className={h2}>Les deux types de charges et leur répartition</h2>
       <p className={p}>Tous les tantièmes ne se valent pas — ou plutôt, ils ne s&apos;appliquent pas tous aux mêmes dépenses. La loi distingue deux catégories de charges :</p>
 
       <h3 className={h3}>Les charges générales</h3>
@@ -90,7 +90,7 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>Cette distinction est fondamentale, et c&apos;est souvent là que les erreurs se glissent dans les appels de fonds rédigés manuellement : appliquer les tantièmes généraux à des charges qui auraient dû être réparties selon des tantièmes spéciaux — ou l&apos;inverse.</p>
 
       {/* Section 4 */}
-      <h2 className={h2}>Comment calculer un appel de fonds trimestriel : la méthode pas à pas</h2>
+      <h2 id="calcul-trimestriel" className={h2}>Comment calculer un appel de fonds trimestriel : la méthode pas à pas</h2>
       <p className={p}>Voici la démarche concrète pour établir un appel de fonds de budget prévisionnel.</p>
 
       <ol className={ol}>
@@ -112,7 +112,7 @@ export default function ArticleAppelDeFonds() {
       </ol>
 
       {/* Section 5 */}
-      <h2 className={h2}>L&apos;appel de fonds exceptionnel : même logique, calendrier différent</h2>
+      <h2 id="appel-exceptionnel" className={h2}>L&apos;appel de fonds exceptionnel : même logique, calendrier différent</h2>
       <p className={p}>
         Lorsque l&apos;AG vote des travaux non prévus au budget, un appel de fonds exceptionnel est émis. Il suit la même logique de répartition par tantièmes, mais son calendrier est dicté par l&apos;avancement du chantier.
       </p>
@@ -122,7 +122,7 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>Un point souvent négligé : pour les travaux votés à une majorité spécifique (article 25), les tantièmes applicables peuvent être différents de ceux du budget courant si les travaux concernent des équipements à usage spécial. Vérifiez toujours quelle grille de tantièmes s&apos;applique avant d&apos;émettre l&apos;appel.</p>
 
       {/* Section 6 */}
-      <h2 className={h2}>Ce qui se passe quand un copropriétaire ne paie pas</h2>
+      <h2 id="impayes" className={h2}>Ce qui se passe quand un copropriétaire ne paie pas</h2>
       <p className={p}>C&apos;est une réalité avec laquelle tout syndic, bénévole ou professionnel, finit par se retrouver. La procédure légale est progressive :</p>
       <ol className={ol}>
         <li className={li}><strong className={strong}>Mise en demeure</strong> par lettre simple, puis recommandée — rappeler le montant dû et la date d&apos;échéance dépassée.</li>
@@ -133,7 +133,7 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>Il n&apos;est pas nécessaire d&apos;en arriver là dans la plupart des cas. Une communication régulière, un tableau de bord clair sur les soldes, et une relance rapide à la première défaillance suffisent généralement à éviter les situations bloquées.</p>
 
       {/* Section 7 */}
-      <h2 className={h2}>La régularisation annuelle : l&apos;étape que tout le monde redoute</h2>
+      <h2 id="regularisation" className={h2}>La régularisation annuelle : l&apos;étape que tout le monde redoute</h2>
       <p className={p}>En fin d&apos;exercice, le budget prévisionnel se confronte aux dépenses réelles. Il y a presque toujours un écart — en plus ou en moins.</p>
       <ul className={ul}>
         <li className={li}>Si les dépenses réelles ont été <strong className={strong}>supérieures</strong> au budget voté : un appel de régularisation est émis pour couvrir la différence.</li>
@@ -144,7 +144,7 @@ export default function ArticleAppelDeFonds() {
       </p>
 
       {/* Section 8 — Product */}
-      <h2 className={h2}>Le principal problème des syndics bénévoles : le suivi manuel</h2>
+      <h2 id="suivi-manuel" className={h2}>Le principal problème des syndics bénévoles : le suivi manuel</h2>
       <p className={p}>
         Calculer un appel de fonds une fois, c&apos;est faisable. Mais le faire tous les trimestres, pour chaque copropriétaire, en tenant à jour les soldes, en intégrant les régularisations, en gérant les impayés, en produisant les justificatifs pour l&apos;AG…
       </p>
@@ -177,7 +177,7 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>Plus besoin de rechercher dans vos mails quel copropriétaire a payé quoi. Tout est centralisé, daté, et exportable.</p>
 
       {/* Section 9 */}
-      <h2 className={h2}>Appel de fonds et fonds de travaux ALUR : ne pas confondre</h2>
+      <h2 id="fonds-travaux-alur" className={h2}>Appel de fonds et fonds de travaux ALUR : ne pas confondre</h2>
       <p className={p}>
         Depuis le 1er janvier 2017, les copropriétés de 10 lots et plus ont l&apos;obligation de constituer un <strong className={strong}><a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a></strong>. Ce fonds est alimenté par une cotisation annuelle votée en AG, dont le montant ne peut être inférieur à 5&nbsp;% du budget prévisionnel.
       </p>
@@ -186,7 +186,7 @@ export default function ArticleAppelDeFonds() {
       </p>
 
       {/* FAQ */}
-      <h2 className={h2}>Questions fréquentes</h2>
+      <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
 
       <h3 className={h3}>À quelle fréquence envoyer les appels de fonds ?</h3>
       <p className={p}>Pour les charges courantes : une fois par trimestre, en début de trimestre (1er janvier, 1er avril, 1er juillet, 1er octobre). Pour les travaux exceptionnels : selon le calendrier validé en AG.</p>
@@ -204,7 +204,7 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>Non. On ne peut pas appeler des fonds pour rembourser des dettes passées non couvertes par le budget voté. Il faudrait voter une dépense spécifique en AG pour régulariser.</p>
 
       {/* Conclusion */}
-      <h2 className={h2}>Ce qu&apos;il faut retenir</h2>
+      <h2 id="ce-quil-faut-retenir" className={h2}>Ce qu&apos;il faut retenir</h2>
       <p className={p}>
         L&apos;appel de fonds n&apos;est pas une science exacte, mais c&apos;est un processus qui gagne à être rigoureux, transparent et traçable. Les disputes entre voisins sur les charges viennent rarement de mauvaise volonté — elles viennent presque toujours d&apos;un manque de lisibilité.
       </p>
