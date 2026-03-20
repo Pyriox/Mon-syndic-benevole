@@ -1,5 +1,5 @@
 // ============================================================
-// Page Administration â€” tableau de bord complet
+// Page Administration — tableau de bord complet
 // Accessible uniquement pour tpn.fabien@gmail.com
 // ============================================================
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -29,11 +29,11 @@ function formatEuros(n: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 }
 function formatDate(s: string | null | undefined) {
-  if (!s) return 'â€”';
+  if (!s) return '—';
   return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 function timeAgo(s: string | null | undefined): string {
-  if (!s) return 'â€”';
+  if (!s) return '—';
   const diff = Date.now() - new Date(s).getTime();
   const d = Math.floor(diff / 86400000);
   if (d === 0) return "Aujourd'hui";
@@ -64,12 +64,12 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
     const cfg: Record<string, { label: string; cls: string }> = {
       essentiel: { label: 'Essentiel', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
       confort:   { label: 'Confort',   cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-      illimite:  { label: 'IllimitÃ©',  cls: 'bg-purple-50 text-purple-700 border-purple-200' },
+      illimite:  { label: 'Illimité',  cls: 'bg-purple-50 text-purple-700 border-purple-200' },
     };
     const c = cfg[planId ?? ''] ?? { label: planId ?? 'Actif', cls: 'bg-green-50 text-green-700 border-green-200' };
     return <span className={`inline-flex text-xs px-2 py-0.5 rounded-md font-medium border ${c.cls}`}>{c.label}</span>;
   }
-  if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">ImpayÃ©</span>;
+  if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">Impayé</span>;
   if (plan === 'inactif')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">Inactif</span>;
   return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
 }
@@ -94,7 +94,7 @@ function ProgressBar({ value, color }: { value: number; color: string }) {
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────
 export default async function AdminPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -176,7 +176,7 @@ export default async function AdminPage() {
     }));
   } catch { /* non-blocking */ }
 
-  // â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Computed ─────────────────────────────────────────────
   const totalDepenses = depensesTotales?.reduce((s, d) => s + d.montant, 0) ?? 0;
   const totalDepensesAnnee = depensesAnnee?.reduce((s, d) => s + d.montant, 0) ?? 0;
 
@@ -188,8 +188,8 @@ export default async function AdminPage() {
   const confirmedPct = nbUsers > 0 ? Math.round(((nbUsers - nbUnconfirmed) / nbUsers) * 100) : 0;
 
   const allUsers = [...authUsers].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  const syndicUsers = allUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriÃ©taire');
-  const memberUsers = allUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role === 'copropriÃ©taire');
+  const syndicUsers = allUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire');
+  const memberUsers = allUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role === 'copropriétaire');
   const recentSignins = [...authUsers]
     .filter((u) => u.last_sign_in_at)
     .sort((a, b) => new Date(b.last_sign_in_at ?? 0).getTime() - new Date(a.last_sign_in_at ?? 0).getTime())
@@ -229,7 +229,7 @@ export default async function AdminPage() {
   const arr = Object.entries(planBreakdown).reduce((sum, [id, nb]) => sum + (ARR_PRICES[id] ?? 0) * nb, 0);
   const conversionPct = nbCoproprietes > 0 ? Math.round((nbActifs / nbCoproprietes) * 100) : 0;
 
-  // Churn: copros qui avaient Stripe mais sont maintenant inactif/impayÃ©
+  // Churn: copros qui avaient Stripe mais sont maintenant inactif/impayé
   const hadStripe = coprosTyped.filter((c) => c.stripe_customer_id);
   const churned = hadStripe.filter((c) => c.plan === 'inactif' || c.plan === 'passe_du');
   const churnRate = hadStripe.length > 0 ? Math.round((churned.length / hadStripe.length) * 100) : 0;
@@ -257,14 +257,14 @@ export default async function AdminPage() {
   const abonnesActifs = coprosTyped.filter((c) => c.plan === 'actif');
   const inactifs = coprosTyped.filter((c) => c.plan !== 'actif');
 
-  // Comptes suspects: non confirmÃ©s depuis plus de 3 jours (hors admin)
+  // Comptes suspects: non confirmés depuis plus de 3 jours (hors admin)
   const startOf3Days = new Date(Date.now() - 3 * 86400000).toISOString();
   const suspiciousAccounts = authUsers.filter((u) => !u.email_confirmed_at && u.created_at < startOf3Days && u.email !== ADMIN_EMAIL);
 
   return (
     <div className="space-y-8 pb-16">
 
-      {/* â”€â”€ Hero header â”€â”€ */}
+      {/* ── Hero header ── */}
       <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 rounded-2xl px-6 py-6 text-white">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
@@ -272,7 +272,7 @@ export default async function AdminPage() {
               <ShieldCheck size={15} className="text-blue-300" />
               <span className="text-xs text-blue-200 uppercase tracking-wider font-medium">Console administrateur</span>
             </div>
-            <h1 className="text-2xl font-bold">Mon Syndic BÃ©nÃ©vole</h1>
+            <h1 className="text-2xl font-bold">Mon Syndic Bénévole</h1>
             <p className="text-blue-200 text-sm mt-1">
               {today.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
             </p>
@@ -280,7 +280,7 @@ export default async function AdminPage() {
           <div className="flex gap-3 flex-wrap">
             {[
               { val: formatEuros(mrr), lbl: 'MRR' },
-              { val: nbActifs,         lbl: 'AbonnÃ©s' },
+              { val: nbActifs,         lbl: 'Abonnés' },
               { val: nbEssai,          lbl: 'Trials' },
               { val: nbUsers,          lbl: 'Users' },
             ].map(({ val, lbl }) => (
@@ -299,15 +299,15 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      {/* â”€â”€ KPIs principaux â”€â”€ */}
+      {/* ── KPIs principaux ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="MRR" value={formatEuros(mrr)} sub={`ARR : ${formatEuros(arr)} Â· ${conversionPct} % conv.`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
-        <KpiCard label="AbonnÃ©s actifs" value={nbActifs} sub={`${nbEssai} en essai Â· ${nbPasseDu} impayÃ©s`} icon={CreditCard} color="bg-blue-100 text-blue-600" danger={nbPasseDu > 0} />
+        <KpiCard label="MRR" value={formatEuros(mrr)} sub={`ARR : ${formatEuros(arr)} · ${conversionPct} % conv.`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
+        <KpiCard label="Abonnés actifs" value={nbActifs} sub={`${nbEssai} en essai · ${nbPasseDu} impayés`} icon={CreditCard} color="bg-blue-100 text-blue-600" danger={nbPasseDu > 0} />
         <KpiCard label="Trials actifs" value={nbEssai} sub={`+${newUsers7} users cette semaine`} icon={Zap} color="bg-amber-100 text-amber-600" />
-        <KpiCard label="Churn (lifetime)" value={`${churnRate} %`} sub={`${churned.length} rÃ©siliÃ©s / ${hadStripe.length} abonnÃ©s`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
+        <KpiCard label="Churn (lifetime)" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} abonnés`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
       </div>
 
-      {/* â”€â”€ Alertes â”€â”€ */}
+      {/* ── Alertes ── */}
       {nbAlertes > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
@@ -319,7 +319,7 @@ export default async function AdminPage() {
               <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-3">
                 <CreditCard size={14} className="text-red-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-red-800">{alertPasseDu.length} abonnement{alertPasseDu.length > 1 ? 's' : ''} impayÃ©{alertPasseDu.length > 1 ? 's' : ''}</p>
+                  <p className="text-sm font-semibold text-red-800">{alertPasseDu.length} abonnement{alertPasseDu.length > 1 ? 's' : ''} impayé{alertPasseDu.length > 1 ? 's' : ''}</p>
                   <p className="text-xs text-red-600 mt-0.5 truncate">{alertPasseDu.map((c: { nom: string }) => c.nom).join(', ')}</p>
                 </div>
               </div>
@@ -328,8 +328,8 @@ export default async function AdminPage() {
               <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-3">
                 <XCircle size={14} className="text-red-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-red-800">{stripeFailures.length} paiement{stripeFailures.length > 1 ? 's' : ''} Ã©chouÃ©{stripeFailures.length > 1 ? 's' : ''}</p>
-                  <p className="text-xs text-red-600 mt-0.5">Voir onglet Paiements pour les dÃ©tails</p>
+                  <p className="text-sm font-semibold text-red-800">{stripeFailures.length} paiement{stripeFailures.length > 1 ? 's' : ''} échoué{stripeFailures.length > 1 ? 's' : ''}</p>
+                  <p className="text-xs text-red-600 mt-0.5">Voir onglet Paiements pour les détails</p>
                 </div>
               </div>
             )}
@@ -346,7 +346,7 @@ export default async function AdminPage() {
               <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
                 <Clock size={14} className="text-amber-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-amber-800">{alertNonConfirmedOld.length} compte{alertNonConfirmedOld.length > 1 ? 's' : ''} non vÃ©rifiÃ© &gt; 7j</p>
+                  <p className="text-sm font-semibold text-amber-800">{alertNonConfirmedOld.length} compte{alertNonConfirmedOld.length > 1 ? 's' : ''} non vérifié &gt; 7j</p>
                   <p className="text-xs text-amber-600 mt-0.5 truncate">{alertNonConfirmedOld.map((u) => u.email).join(', ')}</p>
                 </div>
               </div>
@@ -355,8 +355,8 @@ export default async function AdminPage() {
               <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-3">
                 <Send size={14} className="text-orange-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-orange-800">{alertInvitationsExpirees.length} invitation{alertInvitationsExpirees.length > 1 ? 's' : ''} expirÃ©e{alertInvitationsExpirees.length > 1 ? 's' : ''}</p>
-                  <p className="text-xs text-orange-600 mt-0.5">Onglet Utilisateurs â†’ Invitations</p>
+                  <p className="text-sm font-semibold text-orange-800">{alertInvitationsExpirees.length} invitation{alertInvitationsExpirees.length > 1 ? 's' : ''} expirée{alertInvitationsExpirees.length > 1 ? 's' : ''}</p>
+                  <p className="text-xs text-orange-600 mt-0.5">Onglet Utilisateurs → Invitations</p>
                 </div>
               </div>
             )}
@@ -364,7 +364,7 @@ export default async function AdminPage() {
               <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-3">
                 <DoorOpen size={14} className="text-blue-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-blue-800">{alertCoprosWithoutLots.length} copropriÃ©tÃ©{alertCoprosWithoutLots.length > 1 ? 's' : ''} sans lots</p>
+                  <p className="text-sm font-semibold text-blue-800">{alertCoprosWithoutLots.length} copropriété{alertCoprosWithoutLots.length > 1 ? 's' : ''} sans lots</p>
                   <p className="text-xs text-blue-600 mt-0.5 truncate">{alertCoprosWithoutLots.map((c: { nom: string }) => c.nom).join(', ')}</p>
                 </div>
               </div>
@@ -373,29 +373,29 @@ export default async function AdminPage() {
         </div>
       )}
 
-      {/* â”€â”€ Onglets â”€â”€ */}
+      {/* ── Onglets ── */}
       <AdminTabs panels={{
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• VUE D'ENSEMBLE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        /* ═══════════════ VUE D'ENSEMBLE ═══════════════ */
         overview: (
           <div className="space-y-8">
             <section>
               <SectionTitle icon={BarChart3} title="Plateforme en chiffres" />
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <KpiCard label="Lots gÃ©rÃ©s"               value={nbLots ?? 0}            icon={DoorOpen}     color="bg-violet-100 text-violet-600" />
-                <KpiCard label="CopropriÃ©taires"           value={nbCoproprietaires ?? 0} icon={UserCheck}    color="bg-green-100 text-green-600" />
-                <KpiCard label="AssemblÃ©es"                value={nbAG ?? 0}              icon={CalendarDays} color="bg-pink-100 text-pink-600" />
-                <KpiCard label={`DÃ©penses ${today.getFullYear()}`} value={formatEuros(totalDepensesAnnee)} sub={`Total : ${formatEuros(totalDepenses)}`} icon={Receipt} color="bg-orange-100 text-orange-600" />
+                <KpiCard label="Lots gérés"               value={nbLots ?? 0}            icon={DoorOpen}     color="bg-violet-100 text-violet-600" />
+                <KpiCard label="Copropriétaires"           value={nbCoproprietaires ?? 0} icon={UserCheck}    color="bg-green-100 text-green-600" />
+                <KpiCard label="Assemblées"                value={nbAG ?? 0}              icon={CalendarDays} color="bg-pink-100 text-pink-600" />
+                <KpiCard label={`Dépenses ${today.getFullYear()}`} value={formatEuros(totalDepensesAnnee)} sub={`Total : ${formatEuros(totalDepenses)}`} icon={Receipt} color="bg-orange-100 text-orange-600" />
                 <KpiCard label="Appels de fonds"           value={nbAppels ?? 0}          icon={Wallet}       color="bg-amber-100 text-amber-600" />
                 <KpiCard label="Syndics inscrits"          value={syndicUsers.length}     icon={UserCheck}    color="bg-indigo-100 text-indigo-600" />
                 <KpiCard label="Membres inscrits"          value={memberUsers.length}     icon={Users}        color="bg-teal-100 text-teal-600" />
-                <KpiCard label="Emails vÃ©rifiÃ©s"           value={`${confirmedPct} %`}    sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
+                <KpiCard label="Emails vérifiés"           value={`${confirmedPct} %`}    sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
               </div>
             </section>
 
             <div className="grid md:grid-cols-2 gap-6">
               <section>
-                <SectionTitle icon={AlertTriangle} title="Incidents rÃ©cents" sub="10 derniers" />
+                <SectionTitle icon={AlertTriangle} title="Incidents récents" sub="10 derniers" />
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   {(incidentsRecents ?? []).length === 0 ? (
                     <p className="text-center text-sm text-gray-400 py-8">Aucun incident</p>
@@ -413,7 +413,7 @@ export default async function AdminPage() {
                           <div key={inc.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-gray-800 font-medium truncate">{inc.titre}</p>
-                              <p className="text-xs text-gray-400">{copro?.nom ?? 'â€”'} Â· {timeAgo(inc.created_at)}</p>
+                              <p className="text-xs text-gray-400">{copro?.nom ?? '—'} · {timeAgo(inc.created_at)}</p>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
                               {priorite && <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${priorite === 'urgent' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>{priorite}</span>}
@@ -428,7 +428,7 @@ export default async function AdminPage() {
               </section>
 
               <section>
-                <SectionTitle icon={Wallet} title="Appels de fonds rÃ©cents" sub="10 derniers" />
+                <SectionTitle icon={Wallet} title="Appels de fonds récents" sub="10 derniers" />
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   {(appelsRecents ?? []).length === 0 ? (
                     <p className="text-center text-sm text-gray-400 py-8">Aucun appel de fonds</p>
@@ -441,7 +441,7 @@ export default async function AdminPage() {
                           <div key={a.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-gray-800 font-medium truncate">{a.titre}</p>
-                              <p className="text-xs text-gray-400">{copro?.nom ?? 'â€”'} Â· {timeAgo(a.created_at)}</p>
+                              <p className="text-xs text-gray-400">{copro?.nom ?? '—'} · {timeAgo(a.created_at)}</p>
                             </div>
                             <span className="text-sm font-bold text-gray-800 shrink-0">{formatEuros(a.montant_total)}</span>
                           </div>
@@ -455,7 +455,7 @@ export default async function AdminPage() {
 
             <div className="grid md:grid-cols-2 gap-6">
               <section>
-                <SectionTitle icon={TrendingUp} title="Top 5 copropriÃ©tÃ©s par dÃ©penses" />
+                <SectionTitle icon={TrendingUp} title="Top 5 copropriétés par dépenses" />
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <div className="divide-y divide-gray-100">
                     {topCopros.map((c) => {
@@ -471,7 +471,7 @@ export default async function AdminPage() {
                             <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0 ml-3">
                               <span>{lotsCount[c.id] ?? 0} lots</span>
                               <span>{agCount[c.id] ?? 0} AG</span>
-                              <span className="font-bold text-gray-800">{dep ? formatEuros(dep.total) : 'â€”'}</span>
+                              <span className="font-bold text-gray-800">{dep ? formatEuros(dep.total) : '—'}</span>
                             </div>
                           </div>
                           <ProgressBar value={pct} color="bg-indigo-400" />
@@ -483,7 +483,7 @@ export default async function AdminPage() {
               </section>
 
               <section>
-                <SectionTitle icon={TrendingUp} title="Inscriptions rÃ©centes" sub="7 derniers jours" />
+                <SectionTitle icon={TrendingUp} title="Inscriptions récentes" sub="7 derniers jours" />
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <div className="divide-y divide-gray-100">
                     {allUsers.filter((u) => u.created_at >= startOf7Days).length === 0 ? (
@@ -500,8 +500,8 @@ export default async function AdminPage() {
                             <p className="text-sm text-gray-800 truncate">{u.email}</p>
                             <p className="text-xs text-gray-400">{timeAgo(u.created_at)}</p>
                           </div>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${role === 'copropriÃ©taire' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'}`}>
-                            {role === 'copropriÃ©taire' ? 'Membre' : 'Syndic'}
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${role === 'copropriétaire' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'}`}>
+                            {role === 'copropriétaire' ? 'Membre' : 'Syndic'}
                           </span>
                         </div>
                       );
@@ -516,8 +516,8 @@ export default async function AdminPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 {[
                   { href: 'https://dashboard.stripe.com/subscriptions', label: 'Stripe', sub: 'Paiements', icon: CreditCard, color: 'bg-indigo-50 text-indigo-600' },
-                  { href: 'https://supabase.com/dashboard/project/ybhqvpnafwertoricfce', label: 'Supabase', sub: 'Base de donnÃ©es', icon: Database, color: 'bg-green-50 text-green-600' },
-                  { href: 'https://vercel.com/dashboard', label: 'Vercel', sub: 'DÃ©ploiements', icon: Activity, color: 'bg-gray-100 text-gray-600' },
+                  { href: 'https://supabase.com/dashboard/project/ybhqvpnafwertoricfce', label: 'Supabase', sub: 'Base de données', icon: Database, color: 'bg-green-50 text-green-600' },
+                  { href: 'https://vercel.com/dashboard', label: 'Vercel', sub: 'Déploiements', icon: Activity, color: 'bg-gray-100 text-gray-600' },
                   { href: 'https://resend.com/emails', label: 'Resend', sub: 'Emails', icon: Mail, color: 'bg-purple-50 text-purple-600' },
                   { href: 'https://analytics.google.com', label: 'Analytics', sub: 'GA4', icon: Search, color: 'bg-orange-50 text-orange-600' },
                   { href: 'https://search.google.com/search-console', label: 'Search Console', sub: 'SEO', icon: TrendingUp, color: 'bg-blue-50 text-blue-600' },
@@ -536,23 +536,23 @@ export default async function AdminPage() {
           </div>
         ),
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• UTILISATEURS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        /* ═══════════════ UTILISATEURS ═══════════════ */
         utilisateurs: (
           <div className="space-y-8">
             {/* Stats bar */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <KpiCard label="Total utilisateurs"  value={nbUsers}           sub={`+${newUsers30} ce mois`}    icon={Users}      color="bg-blue-100 text-blue-600" />
-              <KpiCard label="Syndics bÃ©nÃ©voles"    value={syndicUsers.length} sub={`${syndicUsers.filter(u => !!u.email_confirmed_at).length} vÃ©rifiÃ©s`} icon={UserCheck} color="bg-indigo-100 text-indigo-600" />
-              <KpiCard label="Membres"              value={memberUsers.length} sub={`${memberUsers.filter(u => !!u.email_confirmed_at).length} vÃ©rifiÃ©s`} icon={Users} color="bg-teal-100 text-teal-600" />
-              <KpiCard label="Emails vÃ©rifiÃ©s"      value={`${confirmedPct} %`} sub={`${nbUnconfirmed} en attente`} icon={CheckCircle2} color="bg-green-100 text-green-600" danger={nbUnconfirmed > 5} />
+              <KpiCard label="Syndics bénévoles"    value={syndicUsers.length} sub={`${syndicUsers.filter(u => !!u.email_confirmed_at).length} vérifiés`} icon={UserCheck} color="bg-indigo-100 text-indigo-600" />
+              <KpiCard label="Membres"              value={memberUsers.length} sub={`${memberUsers.filter(u => !!u.email_confirmed_at).length} vérifiés`} icon={Users} color="bg-teal-100 text-teal-600" />
+              <KpiCard label="Emails vérifiés"      value={`${confirmedPct} %`} sub={`${nbUnconfirmed} en attente`} icon={CheckCircle2} color="bg-green-100 text-green-600" danger={nbUnconfirmed > 5} />
             </div>
 
             {/* Syndics */}
             <section>
               <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-                <SectionTitle icon={UserCheck} title="Syndics bÃ©nÃ©voles" sub={`${syndicUsers.length} comptes`} />
+                <SectionTitle icon={UserCheck} title="Syndics bénévoles" sub={`${syndicUsers.length} comptes`} />
                 <div className="flex gap-2 text-xs -mt-4">
-                  <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">{syndicUsers.filter(u => !!u.email_confirmed_at).length} vÃ©rifiÃ©s</span>
+                  <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">{syndicUsers.filter(u => !!u.email_confirmed_at).length} vérifiés</span>
                   <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-medium">{syndicUsers.filter(u => !u.email_confirmed_at).length} en attente</span>
                 </div>
               </div>
@@ -562,7 +562,7 @@ export default async function AdminPage() {
                     <tr className="border-b border-gray-100 bg-gray-50">
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email / Nom</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Inscription</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">DerniÃ¨re activitÃ©</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Dernière activité</th>
                       <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copros / Plan</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Support</th>
@@ -588,7 +588,7 @@ export default async function AdminPage() {
                                   {u.email}
                                   {u.email === ADMIN_EMAIL && <span className="ml-1.5 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">Admin</span>}
                                 </p>
-                                <p className="text-xs text-gray-400">{meta?.full_name ?? 'â€”'} Â· <span className="font-mono text-[10px] text-gray-300">{u.id.slice(0, 8)}â€¦</span></p>
+                                <p className="text-xs text-gray-400">{meta?.full_name ?? '—'} · <span className="font-mono text-[10px] text-gray-300">{u.id.slice(0, 8)}…</span></p>
                               </div>
                             </div>
                           </td>
@@ -599,18 +599,18 @@ export default async function AdminPage() {
                               <div className="flex flex-col items-center gap-1">
                                 <span className="text-sm font-bold text-gray-800">{userCopros.length} copro{userCopros.length > 1 ? 's' : ''}</span>
                                 {hasImpayes ? (
-                                  <span className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-1.5 py-0.5 rounded font-medium">ImpayÃ©</span>
+                                  <span className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-1.5 py-0.5 rounded font-medium">Impayé</span>
                                 ) : hasActive ? (
                                   <PlanBadge plan="actif" planId={bestPlan} />
                                 ) : (
                                   <PlanBadge plan="essai" planId={null} />
                                 )}
                               </div>
-                            ) : <span className="text-xs text-gray-300">â€”</span>}
+                            ) : <span className="text-xs text-gray-300">—</span>}
                           </td>
                           <td className="px-4 py-3">
                             {u.email_confirmed_at
-                              ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500" />VÃ©rifiÃ©</span>
+                              ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500" />Vérifié</span>
                               : <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />En attente</span>
                             }
                           </td>
@@ -631,13 +631,13 @@ export default async function AdminPage() {
             {/* Membres */}
             <section>
               <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-                <SectionTitle icon={Users} title="Membres copropriÃ©taires" sub={`${memberUsers.length} comptes`} />
+                <SectionTitle icon={Users} title="Membres copropriétaires" sub={`${memberUsers.length} comptes`} />
               </div>
               <div className="grid md:grid-cols-3 gap-4 mb-4">
                 {[
-                  { label: 'Invitations envoyÃ©es', value: (invitations ?? []).length, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-100' },
-                  { label: 'AcceptÃ©es', value: (invitations ?? []).filter(i => i.statut === 'acceptee').length, color: 'text-green-700', bg: 'bg-green-50 border-green-100' },
-                  { label: 'En attente / expirÃ©es', value: (invitations ?? []).filter(i => i.statut === 'en_attente').length, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-100' },
+                  { label: 'Invitations envoyées', value: (invitations ?? []).length, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-100' },
+                  { label: 'Acceptées', value: (invitations ?? []).filter(i => i.statut === 'acceptee').length, color: 'text-green-700', bg: 'bg-green-50 border-green-100' },
+                  { label: 'En attente / expirées', value: (invitations ?? []).filter(i => i.statut === 'en_attente').length, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-100' },
                 ].map(({ label, value, color, bg }) => (
                   <div key={label} className={`rounded-xl border p-4 ${bg}`}>
                     <p className={`text-2xl font-bold ${color}`}>{value}</p>
@@ -651,7 +651,7 @@ export default async function AdminPage() {
                     <tr className="border-b border-gray-100 bg-gray-50">
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email / Nom</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Inscription</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">DerniÃ¨re activitÃ©</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Dernière activité</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Support</th>
                       <th className="px-4 py-3 w-10"></th>
@@ -672,7 +672,7 @@ export default async function AdminPage() {
                               </div>
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate text-gray-800">{u.email}</p>
-                                <p className="text-xs text-gray-400">{meta?.full_name ?? 'â€”'}</p>
+                                <p className="text-xs text-gray-400">{meta?.full_name ?? '—'}</p>
                               </div>
                             </div>
                           </td>
@@ -680,7 +680,7 @@ export default async function AdminPage() {
                           <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{timeAgo(u.last_sign_in_at)}</td>
                           <td className="px-4 py-3">
                             {u.email_confirmed_at
-                              ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500" />VÃ©rifiÃ©</span>
+                              ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500" />Vérifié</span>
                               : <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />En attente</span>
                             }
                           </td>
@@ -701,9 +701,9 @@ export default async function AdminPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email invitÃ©</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">CopropriÃ©tÃ©</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">EnvoyÃ©e</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email invité</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropriété</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Envoyée</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Expire</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
                       <th className="px-4 py-3" />
@@ -719,15 +719,15 @@ export default async function AdminPage() {
                       const statut: string = isExpired ? 'expiree' : inv.statut;
                       const statutMap: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
                         en_attente: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-200', icon: <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> },
-                        acceptee:   { label: 'AcceptÃ©e',   cls: 'bg-green-50 text-green-700 border-green-200', icon: <CheckCircle2 size={10} /> },
-                        expiree:    { label: 'ExpirÃ©e',    cls: 'bg-gray-100 text-gray-500 border-gray-200',   icon: <XCircle size={10} /> },
-                        annulee:    { label: 'AnnulÃ©e',    cls: 'bg-red-50 text-red-600 border-red-200',       icon: <XCircle size={10} /> },
+                        acceptee:   { label: 'Acceptée',   cls: 'bg-green-50 text-green-700 border-green-200', icon: <CheckCircle2 size={10} /> },
+                        expiree:    { label: 'Expirée',    cls: 'bg-gray-100 text-gray-500 border-gray-200',   icon: <XCircle size={10} /> },
+                        annulee:    { label: 'Annulée',    cls: 'bg-red-50 text-red-600 border-red-200',       icon: <XCircle size={10} /> },
                       };
                       const sc = statutMap[statut] ?? { label: statut, cls: 'bg-gray-100 text-gray-500 border-gray-200', icon: null };
                       return (
                         <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3 text-sm text-gray-800">{inv.email}</td>
-                          <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{copro?.nom ?? 'â€”'}</td>
+                          <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{copro?.nom ?? '—'}</td>
                           <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{timeAgo(inv.created_at)}</td>
                           <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{formatDate(inv.expires_at)}</td>
                           <td className="px-4 py-3">
@@ -744,31 +744,31 @@ export default async function AdminPage() {
           </div>
         ),
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• COPROPRIÃ‰TÃ‰S â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        /* ═══════════════ COPROPRIÉTÉS ═══════════════ */
         copros: (
           <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <SectionTitle icon={Building2} title="Toutes les copropriÃ©tÃ©s" sub={`${nbCoproprietes} au total`} />
+              <SectionTitle icon={Building2} title="Toutes les copropriétés" sub={`${nbCoproprietes} au total`} />
               <div className="flex gap-2 text-xs flex-wrap">
                 <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-medium border border-amber-200">{nbEssai} essai</span>
                 <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md font-medium border border-green-200">{nbActifs} actives</span>
                 <span className="bg-gray-100 text-gray-500 px-2 py-1 rounded-md font-medium border border-gray-200">{nbInactif} inactives</span>
-                {nbPasseDu > 0 && <span className="bg-red-50 text-red-600 px-2 py-1 rounded-md font-medium border border-red-200">{nbPasseDu} impayÃ©es</span>}
+                {nbPasseDu > 0 && <span className="bg-red-50 text-red-600 px-2 py-1 rounded-md font-medium border border-red-200">{nbPasseDu} impayées</span>}
               </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">CopropriÃ©tÃ©</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Copropriété</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Syndic</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Lots</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copro.</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">AG</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Inc.</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">DÃ©penses</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Dépenses</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Plan</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">CrÃ©Ã©e</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Créée</th>
                     <th className="px-4 py-3 w-10"></th>
                   </tr>
                 </thead>
@@ -785,22 +785,22 @@ export default async function AdminPage() {
                           <p className="text-xs text-gray-400">{c.ville}</p>
                         </td>
                         <td className="px-4 py-3 hidden md:table-cell">
-                          <p className="text-xs text-gray-700 truncate max-w-[120px]">{syndicProfile?.full_name ?? 'â€”'}</p>
+                          <p className="text-xs text-gray-700 truncate max-w-[120px]">{syndicProfile?.full_name ?? '—'}</p>
                           <p className="text-xs text-gray-400 truncate max-w-[120px]">{syndicProfile?.email ?? ''}</p>
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">{lotsCount[c.id] ?? 0}</span>
                         </td>
                         <td className="px-4 py-3 text-center hidden md:table-cell">
-                          <span className="text-xs text-gray-600 font-medium">{nbCopro > 0 ? nbCopro : 'â€”'}</span>
+                          <span className="text-xs text-gray-600 font-medium">{nbCopro > 0 ? nbCopro : '—'}</span>
                         </td>
                         <td className="px-4 py-3 text-center text-gray-600 hidden lg:table-cell text-xs">{agCount[c.id] ?? 0}</td>
                         <td className="px-4 py-3 text-center hidden lg:table-cell">
                           {openInc > 0
                             ? <span className="inline-flex items-center justify-center text-xs font-bold text-red-600 bg-red-50 rounded-full w-6 h-6">{openInc}</span>
-                            : <span className="text-xs text-gray-300">â€”</span>}
+                            : <span className="text-xs text-gray-300">—</span>}
                         </td>
-                        <td className="px-4 py-3 text-right text-gray-700 hidden xl:table-cell text-xs font-medium">{dep ? formatEuros(dep.total) : 'â€”'}</td>
+                        <td className="px-4 py-3 text-right text-gray-700 hidden xl:table-cell text-xs font-medium">{dep ? formatEuros(dep.total) : '—'}</td>
                         <td className="px-4 py-3 hidden md:table-cell"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
                         <td className="px-4 py-3 text-gray-400 hidden xl:table-cell text-xs">{formatDate(c.created_at)}</td>
                         <td className="px-4 py-3">
@@ -815,26 +815,26 @@ export default async function AdminPage() {
           </div>
         ),
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PAIEMENTS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        /* ═══════════════ PAIEMENTS ═══════════════ */
         paiements: (
           <div className="space-y-8">
             {/* KPIs financiers */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <KpiCard label="MRR" value={formatEuros(mrr)} sub="Mensuel rÃ©current" icon={TrendingUp} color="bg-emerald-100 text-emerald-600" />
-              <KpiCard label="ARR" value={formatEuros(arr)} sub="Annuel rÃ©current" icon={Banknote} color="bg-green-100 text-green-600" />
-              <KpiCard label="AbonnÃ©s actifs" value={nbActifs} sub={`sur ${nbCoproprietes} copropriÃ©tÃ©s`} icon={CreditCard} color="bg-blue-100 text-blue-600" />
-              <KpiCard label="Taux conversion" value={`${conversionPct} %`} sub="essai â†’ abonnement" icon={BarChart3} color="bg-indigo-100 text-indigo-600" />
+              <KpiCard label="MRR" value={formatEuros(mrr)} sub="Mensuel récurrent" icon={TrendingUp} color="bg-emerald-100 text-emerald-600" />
+              <KpiCard label="ARR" value={formatEuros(arr)} sub="Annuel récurrent" icon={Banknote} color="bg-green-100 text-green-600" />
+              <KpiCard label="Abonnés actifs" value={nbActifs} sub={`sur ${nbCoproprietes} copropriétés`} icon={CreditCard} color="bg-blue-100 text-blue-600" />
+              <KpiCard label="Taux conversion" value={`${conversionPct} %`} sub="essai → abonnement" icon={BarChart3} color="bg-indigo-100 text-indigo-600" />
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Plan breakdown */}
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                <p className="text-sm font-semibold text-gray-800 mb-4">RÃ©partition des plans</p>
+                <p className="text-sm font-semibold text-gray-800 mb-4">Répartition des plans</p>
                 <div className="space-y-4">
                   {([
-                    { id: 'essentiel', label: 'Essentiel', price: '300 â‚¬/an', color: 'bg-blue-500',   textColor: 'text-blue-700' },
-                    { id: 'confort',   label: 'Confort',   price: '360 â‚¬/an', color: 'bg-indigo-500', textColor: 'text-indigo-700' },
-                    { id: 'illimite',  label: 'IllimitÃ©',  price: '540 â‚¬/an', color: 'bg-purple-500', textColor: 'text-purple-700' },
+                    { id: 'essentiel', label: 'Essentiel', price: '300 €/an', color: 'bg-blue-500',   textColor: 'text-blue-700' },
+                    { id: 'confort',   label: 'Confort',   price: '360 €/an', color: 'bg-indigo-500', textColor: 'text-indigo-700' },
+                    { id: 'illimite',  label: 'Illimité',  price: '540 €/an', color: 'bg-purple-500', textColor: 'text-purple-700' },
                   ] as const).map(({ id, label, price, color, textColor }) => {
                     const nb = planBreakdown[id] ?? 0;
                     const pct = nbActifs > 0 ? Math.round((nb / nbActifs) * 100) : 0;
@@ -845,7 +845,7 @@ export default async function AdminPage() {
                           <div className="flex items-center gap-2">
                             <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
                             <span className={`font-semibold ${textColor}`}>{label}</span>
-                            <span className="text-gray-400 text-xs">Â· {price}</span>
+                            <span className="text-gray-400 text-xs">· {price}</span>
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-xs text-gray-400">{formatEuros(revenue)}/an</span>
@@ -861,7 +861,7 @@ export default async function AdminPage() {
                   <div><p className="font-bold text-amber-700">{nbEssai}</p><p className="text-amber-600">Essai</p></div>
                   <div><p className="font-bold text-green-700">{nbActifs}</p><p className="text-green-600">Actifs</p></div>
                   <div><p className="font-bold text-gray-500">{nbInactif}</p><p className="text-gray-400">Inactifs</p></div>
-                  <div><p className="font-bold text-red-600">{nbPasseDu}</p><p className="text-red-500">ImpayÃ©s</p></div>
+                  <div><p className="font-bold text-red-600">{nbPasseDu}</p><p className="text-red-500">Impayés</p></div>
                 </div>
               </div>
 
@@ -894,10 +894,10 @@ export default async function AdminPage() {
 
             {/* Stripe charges */}
             <section>
-              <SectionTitle icon={CreditCard} title="Derniers paiements Stripe" sub="25 les plus rÃ©cents" />
+              <SectionTitle icon={CreditCard} title="Derniers paiements Stripe" sub="25 les plus récents" />
               {stripeCharges.length === 0 ? (
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-                  <p className="text-sm text-gray-400">Aucun paiement ou Stripe non configurÃ©</p>
+                  <p className="text-sm text-gray-400">Aucun paiement ou Stripe non configuré</p>
                   <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener noreferrer"
                     className="mt-3 inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
                     Voir dans Stripe <ExternalLink size={12} />
@@ -909,7 +909,7 @@ export default async function AdminPage() {
                     <thead>
                       <tr className="border-b border-gray-100 bg-gray-50">
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">ID Stripe</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">CopropriÃ©tÃ©</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropriété</th>
                         <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Montant</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Date</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
@@ -925,11 +925,11 @@ export default async function AdminPage() {
                             <td className="px-4 py-3">
                               <a href={`https://dashboard.stripe.com/charges/${ch.id}`} target="_blank" rel="noopener noreferrer"
                                 className="text-xs font-mono text-indigo-500 hover:text-indigo-700 truncate max-w-[120px] block">
-                                {ch.id.slice(0, 18)}â€¦
+                                {ch.id.slice(0, 18)}…
                               </a>
                               {ch.description && <p className="text-[10px] text-gray-400 truncate max-w-[140px]">{ch.description}</p>}
                             </td>
-                            <td className="px-4 py-3 text-xs text-gray-600 hidden md:table-cell">{coproNom ?? <span className="text-gray-300">â€”</span>}</td>
+                            <td className="px-4 py-3 text-xs text-gray-600 hidden md:table-cell">{coproNom ?? <span className="text-gray-300">—</span>}</td>
                             <td className="px-4 py-3 text-right">
                               <span className={`text-sm font-bold ${isFailed ? 'text-red-600' : 'text-gray-800'}`}>{formatEuros(ch.amount)}</span>
                             </td>
@@ -937,8 +937,8 @@ export default async function AdminPage() {
                               {new Date(ch.created * 1000).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
                             </td>
                             <td className="px-4 py-3">
-                              {isOk   && <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><CheckCircle2 size={10} />RÃ©ussi</span>}
-                              {isFailed && <span className="inline-flex items-center gap-1 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-0.5"><XCircle size={10} />Ã‰chouÃ©</span>}
+                              {isOk   && <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><CheckCircle2 size={10} />Réussi</span>}
+                              {isFailed && <span className="inline-flex items-center gap-1 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-0.5"><XCircle size={10} />Échoué</span>}
                               {!isOk && !isFailed && <span className="text-xs text-gray-400 bg-gray-100 border border-gray-200 rounded-md px-2 py-0.5">{ch.status}</span>}
                             </td>
                           </tr>
@@ -950,40 +950,40 @@ export default async function AdminPage() {
               )}
             </section>
 
-            {/* AbonnÃ©s actifs */}
+            {/* Abonnés actifs */}
             <section>
-              <p className="text-sm font-semibold text-gray-700 mb-3">AbonnÃ©s actifs ({abonnesActifs.length})</p>
+              <p className="text-sm font-semibold text-gray-700 mb-3">Abonnés actifs ({abonnesActifs.length})</p>
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">CopropriÃ©tÃ©</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Copropriété</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Syndic</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Fin pÃ©riode</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Fin période</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Stripe Sub</th>
                       <th className="px-4 py-3 w-10"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {abonnesActifs.length === 0 && (
-                      <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">Aucun abonnÃ© actif</td></tr>
+                      <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">Aucun abonné actif</td></tr>
                     )}
                     {abonnesActifs.map((c) => {
                       const syndicProfile = c.profiles as { full_name?: string; email?: string } | null;
                       return (
                         <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3"><p className="font-medium text-gray-800">{c.nom}</p><p className="text-xs text-gray-400">{c.ville}</p></td>
-                          <td className="px-4 py-3 hidden md:table-cell"><p className="text-xs text-gray-700">{syndicProfile?.full_name ?? 'â€”'}</p><p className="text-xs text-gray-400">{syndicProfile?.email ?? ''}</p></td>
+                          <td className="px-4 py-3 hidden md:table-cell"><p className="text-xs text-gray-700">{syndicProfile?.full_name ?? '—'}</p><p className="text-xs text-gray-400">{syndicProfile?.email ?? ''}</p></td>
                           <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
                           <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{formatDate(c.plan_period_end)}</td>
                           <td className="px-4 py-3 hidden xl:table-cell">
                             {c.stripe_subscription_id ? (
                               <a href={`https://dashboard.stripe.com/subscriptions/${c.stripe_subscription_id}`} target="_blank" rel="noopener noreferrer"
                                 className="text-xs text-indigo-500 hover:text-indigo-700 font-mono truncate max-w-[140px] block">
-                                {c.stripe_subscription_id.slice(0, 20)}â€¦
+                                {c.stripe_subscription_id.slice(0, 20)}…
                               </a>
-                            ) : <span className="text-xs text-gray-300">â€”</span>}
+                            ) : <span className="text-xs text-gray-300">—</span>}
                           </td>
                           <td className="px-4 py-3">
                             <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} />
@@ -996,17 +996,17 @@ export default async function AdminPage() {
               </div>
             </section>
 
-            {/* Non abonnÃ©s */}
+            {/* Non abonnés */}
             <section>
-              <p className="text-sm font-semibold text-gray-700 mb-3">Non abonnÃ©s / trials ({inactifs.length})</p>
+              <p className="text-sm font-semibold text-gray-700 mb-3">Non abonnés / trials ({inactifs.length})</p>
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">CopropriÃ©tÃ©</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Copropriété</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Syndic</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">CrÃ©Ã©e</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Créée</th>
                       <th className="px-4 py-3 w-10"></th>
                     </tr>
                   </thead>
@@ -1016,7 +1016,7 @@ export default async function AdminPage() {
                       return (
                         <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3"><p className="font-medium text-gray-800">{c.nom}</p><p className="text-xs text-gray-400">{c.ville}</p></td>
-                          <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{syndicProfile?.full_name ?? 'â€”'}</td>
+                          <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{syndicProfile?.full_name ?? '—'}</td>
                           <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
                           <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{formatDate(c.created_at)}</td>
                           <td className="px-4 py-3"><AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} /></td>
@@ -1030,20 +1030,20 @@ export default async function AdminPage() {
           </div>
         ),
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SÃ‰CURITÃ‰ & RGPD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        /* ═══════════════ SÉCURITÉ & RGPD ═══════════════ */
         securite: (
           <div className="space-y-8">
 
-            {/* ActivitÃ© rÃ©cente */}
+            {/* Activité récente */}
             <section>
-              <SectionTitle icon={Activity} title="Connexions rÃ©centes" sub="20 derniÃ¨res authentifications" />
+              <SectionTitle icon={Activity} title="Connexions récentes" sub="20 dernières authentifications" />
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Utilisateur</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">RÃ´le</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">DerniÃ¨re connexion</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Rôle</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Dernière connexion</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Inscription</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
                     </tr>
@@ -1051,7 +1051,7 @@ export default async function AdminPage() {
                   <tbody className="divide-y divide-gray-100">
                     {recentSignins.map((u) => {
                       const meta = u.user_metadata as Record<string, string> | null;
-                      const role = meta?.role === 'copropriÃ©taire' ? 'membre' : 'syndic';
+                      const role = meta?.role === 'copropriétaire' ? 'membre' : 'syndic';
                       return (
                         <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3">
@@ -1069,7 +1069,7 @@ export default async function AdminPage() {
                           <td className="px-4 py-3 text-xs text-gray-400 hidden lg:table-cell">{timeAgo(u.created_at)}</td>
                           <td className="px-4 py-3">
                             {u.email_confirmed_at
-                              ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><CheckCircle2 size={10} />VÃ©rifiÃ©</span>
+                              ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><CheckCircle2 size={10} />Vérifié</span>
                               : <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5"><Clock size={10} />En attente</span>
                             }
                           </td>
@@ -1084,7 +1084,7 @@ export default async function AdminPage() {
             {/* Comptes suspects */}
             {suspiciousAccounts.length > 0 && (
               <section>
-                <SectionTitle icon={UserX} title={`Comptes suspects (${suspiciousAccounts.length})`} sub="Non confirmÃ©s depuis > 3 jours" />
+                <SectionTitle icon={UserX} title={`Comptes suspects (${suspiciousAccounts.length})`} sub="Non confirmés depuis > 3 jours" />
                 <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
                   <table className="w-full text-sm">
                     <thead>
@@ -1112,22 +1112,22 @@ export default async function AdminPage() {
 
             {/* RGPD */}
             <section>
-              <SectionTitle icon={Shield} title="RGPD & ConformitÃ©" />
+              <SectionTitle icon={Shield} title="RGPD & Conformité" />
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                  <p className="text-sm font-semibold text-gray-800 mb-3">DonnÃ©es stockÃ©es</p>
+                  <p className="text-sm font-semibold text-gray-800 mb-3">Données stockées</p>
                   <div className="space-y-2 text-sm text-gray-600">
                     <div className="flex justify-between"><span>Utilisateurs</span><span className="font-bold text-gray-800">{nbUsers}</span></div>
-                    <div className="flex justify-between"><span>CopropriÃ©tÃ©s</span><span className="font-bold text-gray-800">{nbCoproprietes}</span></div>
-                    <div className="flex justify-between"><span>CopropriÃ©taires</span><span className="font-bold text-gray-800">{nbCoproprietaires ?? 0}</span></div>
+                    <div className="flex justify-between"><span>Copropriétés</span><span className="font-bold text-gray-800">{nbCoproprietes}</span></div>
+                    <div className="flex justify-between"><span>Copropriétaires</span><span className="font-bold text-gray-800">{nbCoproprietaires ?? 0}</span></div>
                     <div className="flex justify-between"><span>Lots</span><span className="font-bold text-gray-800">{nbLots ?? 0}</span></div>
-                    <div className="flex justify-between"><span>Documents</span><span className="font-bold text-gray-300">â€”</span></div>
+                    <div className="flex justify-between"><span>Documents</span><span className="font-bold text-gray-300">—</span></div>
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
                     <p className="text-xs text-gray-500 font-medium">Actions RGPD disponibles :</p>
-                    <p className="text-xs text-gray-400">â€¢ Suppression compte : via onglet Utilisateurs â†’ Actions â†’ Supprimer</p>
-                    <p className="text-xs text-gray-400">â€¢ Export donnÃ©es : via Supabase Dashboard</p>
-                    <p className="text-xs text-gray-400">â€¢ Logs accÃ¨s : dans Supabase Auth</p>
+                    <p className="text-xs text-gray-400">• Suppression compte : via onglet Utilisateurs → Actions → Supprimer</p>
+                    <p className="text-xs text-gray-400">• Export données : via Supabase Dashboard</p>
+                    <p className="text-xs text-gray-400">• Logs accès : dans Supabase Auth</p>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
@@ -1135,9 +1135,9 @@ export default async function AdminPage() {
                   <div className="space-y-2">
                     {[
                       { href: 'https://supabase.com/dashboard/project/ybhqvpnafwertoricfce/auth/users', label: 'Supabase Auth logs', sub: 'Connexions & tokens', icon: Database },
-                      { href: 'https://vercel.com/dashboard', label: 'Vercel logs', sub: 'Erreurs serveur & dÃ©ploiements', icon: Activity },
-                      { href: 'https://dashboard.stripe.com/logs', label: 'Stripe API logs', sub: 'RequÃªtes & erreurs Stripe', icon: CreditCard },
-                      { href: 'https://resend.com/emails', label: 'Resend logs', sub: 'Emails envoyÃ©s & bounces', icon: Mail },
+                      { href: 'https://vercel.com/dashboard', label: 'Vercel logs', sub: 'Erreurs serveur & déploiements', icon: Activity },
+                      { href: 'https://dashboard.stripe.com/logs', label: 'Stripe API logs', sub: 'Requêtes & erreurs Stripe', icon: CreditCard },
+                      { href: 'https://resend.com/emails', label: 'Resend logs', sub: 'Emails envoyés & bounces', icon: Mail },
                     ].map(({ href, label, sub, icon: Icon }) => (
                       <a key={href} href={href} target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100">
@@ -1155,18 +1155,18 @@ export default async function AdminPage() {
 
             {/* Tokens connexion (impersonation info) */}
             <section>
-              <SectionTitle icon={LogIn} title="Connexion support (impersonation)" sub="GÃ©nÃ©rer un lien de connexion temporaire pour un utilisateur" />
+              <SectionTitle icon={LogIn} title="Connexion support (impersonation)" sub="Générer un lien de connexion temporaire pour un utilisateur" />
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                <p className="text-sm text-blue-800 font-medium mb-2">Comment Ã§a fonctionne</p>
+                <p className="text-sm text-blue-800 font-medium mb-2">Comment ça fonctionne</p>
                 <p className="text-xs text-blue-700 mb-4">
                   Dans l&apos;onglet Utilisateurs, chaque ligne dispose d&apos;un bouton <strong>Connexion</strong>.
-                  Cliquer gÃ©nÃ¨re un lien magique Ã  usage unique (valide 15 minutes) qui connecte directement au compte de l&apos;utilisateur.
-                  Copiez ce lien et ouvrez-le dans une fenÃªtre de navigation privÃ©e pour ne pas perdre votre session admin.
+                  Cliquer génère un lien magique à usage unique (valide 15 minutes) qui connecte directement au compte de l&apos;utilisateur.
+                  Copiez ce lien et ouvrez-le dans une fenêtre de navigation privée pour ne pas perdre votre session admin.
                 </p>
                 <div className="flex flex-wrap gap-4 text-xs text-blue-600">
-                  <span>âœ“ Lien usage unique (15 min)</span>
-                  <span>âœ“ Admin protÃ©gÃ© (non impersonable)</span>
-                  <span>âœ“ Aucun mot de passe exposÃ©</span>
+                  <span>✓ Lien usage unique (15 min)</span>
+                  <span>✓ Admin protégé (non impersonable)</span>
+                  <span>✓ Aucun mot de passe exposé</span>
                 </div>
               </div>
             </section>
@@ -1175,10 +1175,10 @@ export default async function AdminPage() {
 
       }} />
 
-      {/* â”€â”€ Footer â”€â”€ */}
+      {/* ── Footer ── */}
       <div className="flex items-center gap-2 text-xs text-gray-400 pt-4 border-t border-gray-200">
         <Clock size={12} />
-        <span>DonnÃ©es en temps rÃ©el â€” {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+        <span>Données en temps réel — {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
       </div>
 
     </div>
