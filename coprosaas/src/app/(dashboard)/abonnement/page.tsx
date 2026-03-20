@@ -5,6 +5,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
+import { stripe } from '@/lib/stripe';
 import CheckoutButton from './CheckoutButton';
 import SubscriptionSuccessTracker from './SubscriptionSuccessTracker';
 import { AlertCircle, CheckCircle, Lock, Settings2 } from 'lucide-react';
@@ -171,9 +172,10 @@ export default async function AbonnementPage({
     canceled?: string;
     synced?: string;
     coproId?: string;
+    error?: string;
   }>;
 }) {
-  const { success, canceled, synced, coproId } = await searchParams;
+  const { success, canceled, synced, coproId, error: pageError } = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -232,14 +234,18 @@ export default async function AbonnementPage({
       .eq('id', id)
       .eq('syndic_id', u.id)
       .single();
-    if (!copro?.stripe_customer_id) redirect('/abonnement');
-    const { getStripe } = await import('@/lib/stripe');
-    const stripeClient = getStripe();
-    const session = await stripeClient.billingPortal.sessions.create({
-      customer: copro!.stripe_customer_id!,
-      return_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr'}/abonnement`,
-    });
-    redirect(session.url);
+    if (!copro?.stripe_customer_id) redirect('/abonnement?error=no_customer');
+    let portalUrl: string;
+    try {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: copro!.stripe_customer_id!,
+        return_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr'}/abonnement`,
+      });
+      portalUrl = session.url;
+    } catch {
+      redirect('/abonnement?error=portal');
+    }
+    redirect(portalUrl!);
   }
 
   const syncedCopro = coproId
@@ -282,6 +288,24 @@ export default async function AbonnementPage({
             <AlertCircle size={16} className="text-amber-600 shrink-0" />
             <p className="text-sm text-amber-700">
               Paiement annulé. Votre abonnement n&apos;a pas été modifié.
+            </p>
+          </div>
+        )}
+
+        {pageError === 'portal' && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <AlertCircle size={16} className="text-red-500 shrink-0" />
+            <p className="text-sm text-red-700">
+              Impossible d&apos;ouvrir le portail Stripe. Vérifiez que le portail client est activé dans votre dashboard Stripe (Paramètres → Facturation → Portail client).
+            </p>
+          </div>
+        )}
+
+        {pageError === 'no_customer' && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <AlertCircle size={16} className="text-red-500 shrink-0" />
+            <p className="text-sm text-red-700">
+              Aucun client Stripe associé à cette copropriété. Contactez le support.
             </p>
           </div>
         )}

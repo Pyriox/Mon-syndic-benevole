@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
 import SiteLogo from '@/components/ui/SiteLogo';
+import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import { getPost, formatPublishedAt, posts } from '@/lib/blog';
 
 // ── Content components ───────────────────────────────────────────────────────────
@@ -200,6 +201,8 @@ export default async function ArticlePage({
           </div>
         </section>
       )}
+
+      <ScrollToTopButton />
 
       {/* ── Footer ── */}
       <footer className="bg-slate-950 border-t border-slate-800 py-10 px-4 sm:px-6">

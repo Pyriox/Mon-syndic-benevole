@@ -11,22 +11,26 @@ export const runtime = 'nodejs';
 
 /** Met à jour les champs d'abonnement sur la table coproprietes. */
 async function updateCoproSubscription(coproId: string, data: {
-  stripe_customer_id?: string;
+  stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
   plan_id?: string | null;
   plan?: 'actif' | 'inactif' | 'passe_du' | 'essai';
   plan_period_end?: string | null;
 }) {
   const supabase = createAdminClient();
+  const update: Record<string, unknown> = {
+    stripe_subscription_id: data.stripe_subscription_id,
+    plan_id:                data.plan_id,
+    plan:                   data.plan ?? 'essai',
+    plan_period_end:        data.plan_period_end,
+  };
+  // N'écraser stripe_customer_id que si explicitement fourni
+  if (data.stripe_customer_id !== undefined) {
+    update.stripe_customer_id = data.stripe_customer_id;
+  }
   await supabase
     .from('coproprietes')
-    .update({
-      stripe_customer_id:     data.stripe_customer_id,
-      stripe_subscription_id: data.stripe_subscription_id,
-      plan_id:                data.plan_id,
-      plan:                   data.plan ?? 'essai',
-      plan_period_end:        data.plan_period_end,
-    })
+    .update(update)
     .eq('id', coproId);
 }
 
@@ -81,7 +85,18 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.updated': {
         const sub = event.data.object as unknown as Record<string, unknown>;
         const subMeta = (sub['metadata'] as Record<string, string>) ?? {};
-        const coproId = subMeta?.copropriete_id;
+        let coproId = subMeta?.copropriete_id;
+
+        // Fallback : retrouver la copropriété via stripe_customer_id
+        if (!coproId && sub['customer']) {
+          const supabase = createAdminClient();
+          const { data } = await supabase
+            .from('coproprietes')
+            .select('id')
+            .eq('stripe_customer_id', sub['customer'] as string)
+            .maybeSingle();
+          if (data) coproId = data.id;
+        }
         if (!coproId) break;
 
         const subStatus = sub['status'] as string;
@@ -108,7 +123,19 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as unknown as {
           id: string; customer: string; metadata: Record<string, string>;
         };
-        const coproId = sub.metadata?.copropriete_id;
+        let coproId = sub.metadata?.copropriete_id;
+
+        // Fallback : retrouver la copropriété via stripe_customer_id
+        // (abonnements sans copropriete_id dans les métadonnées)
+        if (!coproId && sub.customer) {
+          const supabase = createAdminClient();
+          const { data } = await supabase
+            .from('coproprietes')
+            .select('id')
+            .eq('stripe_customer_id', sub.customer)
+            .maybeSingle();
+          if (data) coproId = data.id;
+        }
         if (!coproId) break;
 
         await updateCoproSubscription(coproId, {
@@ -118,6 +145,32 @@ export async function POST(req: NextRequest) {
           plan:                   'inactif',
           plan_period_end:        null,
         });
+        break;
+      }
+
+      // ── Client Stripe supprimé manuellement ──────────────────────────────
+      case 'customer.deleted': {
+        const customer = event.data.object as Stripe.Customer;
+        const supabase = createAdminClient();
+        const { data: copro } = await supabase
+          .from('coproprietes')
+          .select('id')
+          .eq('stripe_customer_id', customer.id)
+          .maybeSingle();
+        if (!copro) break;
+
+        await updateCoproSubscription(copro.id, {
+          stripe_customer_id:     undefined,
+          stripe_subscription_id: null,
+          plan_id:                null,
+          plan:                   'inactif',
+          plan_period_end:        null,
+        });
+        // Effacer le stripe_customer_id (updateCoproSubscription ne le met pas à null)
+        await supabase
+          .from('coproprietes')
+          .update({ stripe_customer_id: null })
+          .eq('id', copro.id);
         break;
       }
 

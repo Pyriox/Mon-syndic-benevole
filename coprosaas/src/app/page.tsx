@@ -14,6 +14,7 @@ import {
 import SiteLogo from '@/components/ui/SiteLogo';
 import LandingNav from './LandingNav';
 import LandingStickyCTA from './LandingStickyCTA';
+import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
@@ -1029,8 +1030,9 @@ export default function HomePage() {
       </main>
 
       <LandingStickyCTA />
+      <ScrollToTopButton />
 
-      {/* ── Footer ── */}
+      {/* ── Footer ── */
       <footer className="bg-slate-950 py-10 px-4 sm:px-6" aria-label="Pied de page">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
