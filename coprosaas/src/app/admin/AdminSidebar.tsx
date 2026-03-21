@@ -2,15 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { ElementType } from 'react';
 import { LayoutDashboard, Users, CreditCard, Building2, LifeBuoy } from 'lucide-react';
 
-const NAV = [
+type NavItem = { href: string; label: string; icon: ElementType; soon?: boolean };
+
+const NAV: NavItem[] = [
   { href: '/admin/dashboard',     label: 'Dashboard',      icon: LayoutDashboard },
   { href: '/admin/utilisateurs',  label: 'Utilisateurs',   icon: Users },
   { href: '/admin/abonnements',   label: 'Abonnements',    icon: CreditCard },
   { href: '/admin/coproprietes',  label: 'Copropriétés',   icon: Building2 },
   { href: '/admin/support',       label: 'Support',        icon: LifeBuoy, soon: true },
-] as const;
+];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
