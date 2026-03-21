@@ -1120,6 +1120,7 @@ export default function HomePage() {
             <div className="flex items-center gap-5 text-sm text-gray-500">
               <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
               <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
+              <Link href="/aide" className="hover:text-gray-300 transition-colors">Aide &amp; Contact</Link>
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
               <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
             </div>

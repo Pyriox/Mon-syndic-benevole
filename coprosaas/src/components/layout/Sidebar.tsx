@@ -38,7 +38,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.push('/');
   };
 
   // Sections dynamiques : le lien "Lots" pointe vers la copropriété sélectionnée
