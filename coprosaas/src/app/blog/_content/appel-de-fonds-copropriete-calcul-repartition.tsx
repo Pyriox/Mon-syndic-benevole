@@ -1,5 +1,5 @@
-// ============================================================
-// Article : Appel de fonds copropriété — calcul et répartition
+﻿// ============================================================
+// Article : Appel de fonds copropriété — calcul, répartition, relance
 // ============================================================
 
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
@@ -8,163 +8,243 @@ export default function ArticleAppelDeFonds() {
   return (
     <>
       <p className={p}>
-        Chaque trimestre, le même e-mail ou la même lettre dans les boîtes aux lettres : l&apos;appel de fonds. Et chaque trimestre, les mêmes questions dans l&apos;immeuble — pourquoi ce montant ? Comment c&apos;est calculé ? Pourquoi M. Dupont au rez-de-chaussée paie-t-il moins que Mme Martin au troisième ?
+        C&apos;est souvent le même scénario. Nathalie vient d&apos;être élue syndic bénévole de la Résidence du Parc — 8 lots, immeuble des années 70. Le trimestre approche. Elle sait qu&apos;il faut envoyer &ldquo;les appels de fonds&rdquo;, mais personne ne lui a expliqué comment calculer le montant de chaque copropriétaire, ce qu&apos;un avis de paiement doit contenir, ni ce qui se passe quand quelqu&apos;un ne paie pas.
       </p>
       <p className={p}>
-        Pour le <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>syndic bénévole</a>, c&apos;est souvent le sujet qui génère le plus de questions et, parfois, le plus de tensions. Non pas parce que le calcul est compliqué, mais parce qu&apos;il n&apos;est pas toujours bien expliqué ni bien documenté.
+        Ce guide répond exactement à ces questions, avec des exemples chiffrés, des modèles de documents, et la procédure complète de relance.
       </p>
-      <p className={p}>Cet article remet les pendules à l&apos;heure.</p>
 
-      {/* Section 1 */}
-      <h2 id="definition" className={h2}>Qu&apos;est-ce qu&apos;un appel de fonds, exactement ?</h2>
+      <h2 id="definition" className={h2}>Qu&apos;est-ce qu&apos;un appel de fonds — et pourquoi c&apos;est une provision, pas une facture</h2>
       <p className={p}>
-        Un appel de fonds est une <strong className={strong}>demande de paiement adressée à chaque copropriétaire</strong> pour couvrir les dépenses à venir (ou en cours) de la copropriété. Il ne s&apos;agit pas d&apos;une facture : c&apos;est une provision, une avance sur les frais collectifs.
+        Un appel de fonds est une <strong className={strong}>demande de paiement adressée à chaque copropriétaire</strong> pour couvrir les dépenses à venir de la copropriété. C&apos;est une provision — une avance sur des frais collectifs dont le total réel ne sera connu qu&apos;en fin d&apos;exercice. Ce n&apos;est pas une facture pour une prestation déjà rendue.
       </p>
-      <p className={p}>On distingue deux grandes catégories :</p>
+      <p className={p}>La distinction a une conséquence pratique : il y a toujours une régularisation en fin d&apos;année entre ce qui a été appelé et ce qui a réellement été dépensé.</p>
+      <p className={p}>On distingue trois types d&apos;appels de fonds :</p>
       <ul className={ul}>
-        <li className={li}><strong className={strong}>Les appels de fonds de budget prévisionnel</strong>, qui couvrent les charges courantes de l&apos;immeuble (entretien, assurance, eau, électricité des parties communes, prestataires habituels). Ils sont émis chaque trimestre, à date fixe.</li>
-        <li className={li}><strong className={strong}>Les appels de fonds exceptionnels</strong>, qui financent des dépenses non prévues ou des travaux votés en AG (ravalement de façade, remplacement de la chaudière, réfection de la toiture…).</li>
+        <li className={li}><strong className={strong}>Les appels de budget prévisionnel</strong> — charges courantes (entretien, assurance, espaces verts, électricité des communs…). Émis chaque trimestre à date fixe.</li>
+        <li className={li}><strong className={strong}>Les appels exceptionnels</strong> — travaux votés en AG (ravalement, toiture, remplacement chaudière). Émis selon le calendrier du chantier.</li>
+        <li className={li}><strong className={strong}>Le fonds de travaux ALUR</strong> — épargne obligatoire (copropriétés de plus de 10 lots), au moins 5 % du budget prévisionnel par an. Séparé des charges courantes, déposé sur un compte bancaire distinct.</li>
       </ul>
+
+      <h2 id="tantiemes" className={h2}>Les tantièmes : la base de tout calcul</h2>
       <p className={p}>
-        À ces deux catégories s&apos;ajoute, depuis la loi ALUR de 2014, <strong className={strong}>le fonds de travaux</strong> : une cotisation annuelle obligatoire pour les copropriétés de 10 lots et plus, destinée à anticiper les gros travaux futurs.
+        Chaque lot de la copropriété s&apos;est vu attribuer, lors de la création, une <strong className={strong}>quote-part exprimée en tantièmes</strong> (ou millièmes). Ce nombre reflète la valeur relative du lot : surface, étage, exposition, présence d&apos;un parking ou d&apos;une cave.
+      </p>
+      <p className={p}>
+        Ces tantièmes figurent dans le <strong className={strong}>règlement de copropriété</strong> et dans l&apos;état descriptif de division. Vous ne les trouvez pas ? L&apos;ancien syndic ou le notaire qui a établi le règlement peut vous les fournir.
       </p>
 
-      {/* Section 2 */}
-      <h2 id="tantiemes" className={h2}>La base de tout : les tantièmes</h2>
-      <p className={p}>
-        Avant de parler de calcul, il faut comprendre le mécanisme des <strong className={strong}>tantièmes</strong> (ou millièmes), parce que tout repose dessus.
-      </p>
-      <p className={p}>
-        Lors de la création d&apos;une copropriété, un géomètre attribue à chaque lot une quote-part exprimée en tantièmes sur un total (souvent 1&nbsp;000 ou 10&nbsp;000). Cette quote-part reflète la valeur relative du lot au sein de l&apos;ensemble immobilier : surface, étage, exposition, présence d&apos;un parking ou d&apos;une cave.
-      </p>
-      <p className={p}>Un exemple simple : prenez un immeuble de 10 appartements avec un total de 1&nbsp;000 tantièmes.</p>
-
-      {/* Table */}
-      <div className="overflow-x-auto mb-6">
+      <div className="overflow-x-auto mb-6 rounded-xl border border-gray-200">
         <table className="w-full text-sm border-collapse">
-          <thead>
+          <thead className="bg-gray-50">
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-4 text-gray-500 font-medium">Lot</th>
-              <th className="text-left py-3 px-4 text-gray-500 font-medium">Tantièmes</th>
-              <th className="text-left py-3 px-4 text-gray-500 font-medium">Quote-part</th>
+              <th className="text-left py-3 px-4 text-gray-500 font-medium">Type</th>
+              <th className="text-right py-3 px-4 text-gray-500 font-medium">Tantièmes</th>
+              <th className="text-right py-3 px-4 text-gray-500 font-medium">Quote-part</th>
+              <th className="text-right py-3 px-4 text-gray-500 font-medium">Appel T1 (budget 9 600 €/an)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             <tr>
-              <td className="py-3 px-4 text-gray-700">Appartement T3, 3e étage, avec parking</td>
-              <td className="py-3 px-4 text-gray-700">140</td>
-              <td className="py-3 px-4 text-gray-700">14,0 %</td>
+              <td className="py-3 px-4 text-gray-700">Lot 1 — T3, 3e ét. + parking</td>
+              <td className="py-3 px-4 text-gray-600">Appartement</td>
+              <td className="py-3 px-4 text-gray-700 text-right">180</td>
+              <td className="py-3 px-4 text-gray-700 text-right">18,0 %</td>
+              <td className="py-3 px-4 text-gray-800 text-right font-semibold">432,00 €</td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="py-3 px-4 text-gray-700">Lot 2 — T3, 2e étage</td>
+              <td className="py-3 px-4 text-gray-600">Appartement</td>
+              <td className="py-3 px-4 text-gray-700 text-right">155</td>
+              <td className="py-3 px-4 text-gray-700 text-right">15,5 %</td>
+              <td className="py-3 px-4 text-gray-800 text-right font-semibold">372,00 €</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 text-gray-700">Appartement T2, RDC</td>
-              <td className="py-3 px-4 text-gray-700">72</td>
-              <td className="py-3 px-4 text-gray-700">7,2 %</td>
+              <td className="py-3 px-4 text-gray-700">Lot 3 — T2, 1er étage</td>
+              <td className="py-3 px-4 text-gray-600">Appartement</td>
+              <td className="py-3 px-4 text-gray-700 text-right">105</td>
+              <td className="py-3 px-4 text-gray-700 text-right">10,5 %</td>
+              <td className="py-3 px-4 text-gray-800 text-right font-semibold">252,00 €</td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="py-3 px-4 text-gray-700">Lot 4 — Studio, RDC</td>
+              <td className="py-3 px-4 text-gray-600">Appartement</td>
+              <td className="py-3 px-4 text-gray-700 text-right">72</td>
+              <td className="py-3 px-4 text-gray-700 text-right">7,2 %</td>
+              <td className="py-3 px-4 text-gray-800 text-right font-semibold">173,00 €</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 text-gray-700">Studio, 1er étage</td>
-              <td className="py-3 px-4 text-gray-700">58</td>
-              <td className="py-3 px-4 text-gray-700">5,8 %</td>
+              <td className="py-3 px-4 text-gray-700 italic">Lots 5 à 8</td>
+              <td className="py-3 px-4 text-gray-600">—</td>
+              <td className="py-3 px-4 text-gray-700 text-right">488</td>
+              <td className="py-3 px-4 text-gray-700 text-right">48,8 %</td>
+              <td className="py-3 px-4 text-gray-800 text-right font-semibold">1 171,00 €</td>
+            </tr>
+            <tr className="bg-blue-50 font-semibold">
+              <td className="py-3 px-4 text-gray-800">Total</td>
+              <td className="py-3 px-4"></td>
+              <td className="py-3 px-4 text-gray-800 text-right">1 000</td>
+              <td className="py-3 px-4 text-gray-800 text-right">100 %</td>
+              <td className="py-3 px-4 text-blue-700 text-right">2 400,00 €</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <p className={p}>
-        Si le budget annuel s&apos;élève à 12&nbsp;000&nbsp;€, le T3 avec parking contribue à hauteur de 1&nbsp;680&nbsp;€ par an (soit 420&nbsp;€ par trimestre), le T2 du RDC à 864&nbsp;€ (216&nbsp;€ par trimestre), et le studio à 696&nbsp;€ (174&nbsp;€ par trimestre).
+        Formule appliquée pour chaque lot :{' '}
+        <strong className={strong}>(tantièmes du lot ÷ total) × (budget annuel ÷ 4)</strong>. Pour le Lot 1 : (180 ÷ 1 000) × (9 600 ÷ 4) = 0,18 × 2 400 = <strong className={strong}>432 €</strong>.
       </p>
-      <p className={p}>Le principe est simple. La difficulté vient de la gestion dans le temps : qui a payé quoi, qui est en retard, comment régulariser en fin d&apos;exercice.</p>
 
-      {/* Section 3 */}
-      <h2 id="types-charges" className={h2}>Les deux types de charges et leur répartition</h2>
-      <p className={p}>Tous les tantièmes ne se valent pas — ou plutôt, ils ne s&apos;appliquent pas tous aux mêmes dépenses. La loi distingue deux catégories de charges :</p>
+      <h2 id="types-charges" className={h2}>Charges générales vs charges spéciales : une distinction qui change tout</h2>
 
       <h3 className={h3}>Les charges générales</h3>
       <p className={p}>
-        Elles concernent <strong className={strong}>l&apos;ensemble des copropriétaires</strong> et sont réparties selon les tantièmes généraux inscrits dans le règlement de copropriété. Entrent dans cette catégorie : l&apos;assurance de l&apos;immeuble, l&apos;administration, les honoraires du syndic, l&apos;entretien des parties communes accessibles à tous.
+        Elles concernent l&apos;ensemble des copropriétaires et se répartissent selon les <strong className={strong}>tantièmes généraux</strong> : assurance de l&apos;immeuble, administration, entretien des parties communes accessibles à tous.
       </p>
 
       <h3 className={h3}>Les charges spéciales</h3>
       <p className={p}>
-        Elles s&apos;appliquent uniquement aux <strong className={strong}>copropriétaires qui bénéficient effectivement d&apos;un service</strong>. L&apos;ascenseur en est l&apos;exemple le plus courant : les habitants du rez-de-chaussée n&apos;utilisent pas l&apos;ascenseur, ils n&apos;ont donc pas à en financer l&apos;entretien (ou alors dans une proportion réduite). Même logique pour un interphone qui ne dessert que certains bâtiments, ou un parking dont seuls certains lots disposent.
+        Elles touchent <strong className={strong}>uniquement les copropriétaires qui bénéficient du service</strong>. L&apos;ascenseur est l&apos;exemple le plus courant : les habitants du RDC ne l&apos;utilisent pas, ils n&apos;en financent pas l&apos;entretien (ou une part réduite définie dans le règlement). Même logique pour un système de chauffage collectif dont certains lots se sont désolidarisés.
       </p>
-      <p className={p}>Cette distinction est fondamentale, et c&apos;est souvent là que les erreurs se glissent dans les appels de fonds rédigés manuellement : appliquer les tantièmes généraux à des charges qui auraient dû être réparties selon des tantièmes spéciaux — ou l&apos;inverse.</p>
+      <p className={p}>
+        <strong className={strong}>Erreur fréquente chez les syndics bénévoles :</strong> appliquer les tantièmes généraux à une dépense qui devrait utiliser des tantièmes spéciaux. Résultat : certains paient trop, d&apos;autres pas assez — et une contestation en AG est toujours possible si la répartition ne colle pas au règlement.
+      </p>
 
-      {/* Section 4 */}
-      <h2 id="calcul-trimestriel" className={h2}>Comment calculer un appel de fonds trimestriel : la méthode pas à pas</h2>
-      <p className={p}>Voici la démarche concrète pour établir un appel de fonds de budget prévisionnel.</p>
+      <h2 id="calcul-trimestriel" className={h2}>Calculer un appel de fonds trimestriel : la méthode complète</h2>
 
       <ol className={ol}>
         <li className={li}>
-          <strong className={strong}>Voter un budget prévisionnel en AG.</strong> Le budget prévisionnel est obligatoirement soumis au vote des copropriétaires lors de l&apos;assemblée générale (majorité simple, article 24). Il liste toutes les dépenses prévisibles pour l&apos;exercice à venir : contrats de maintenance, assurances, consommations, espaces verts, etc.
+          <strong className={strong}>Voter le budget prévisionnel en AG</strong> (majorité art. 24). Il liste toutes les dépenses prévisibles de l&apos;exercice : EDF communs, assurance MRI, contrat nettoyage, entretien ascenseur, espaces verts. Pour la Résidence du Parc 2025 : <strong className={strong}>9 600 €</strong>.
         </li>
         <li className={li}>
-          <strong className={strong}>Diviser par quatre.</strong> Les appels de fonds courants se font par quart du budget annuel, à chaque début de trimestre. Si le budget est de 14&nbsp;400&nbsp;€, chaque appel trimestriel porte sur 3&nbsp;600&nbsp;€.
+          <strong className={strong}>Diviser par quatre.</strong> 9 600 ÷ 4 = 2 400 € à appeler ce trimestre sur l&apos;ensemble des lots.
         </li>
         <li className={li}>
-          <strong className={strong}>Appliquer les tantièmes de chaque lot.</strong> Pour chaque lot, on multiplie le montant trimestriel par la quote-part du lot. Avec un lot de 120 tantièmes sur 1&nbsp;000 et un appel trimestriel de 3&nbsp;600&nbsp;€ : 120&nbsp;÷&nbsp;1&nbsp;000&nbsp;×&nbsp;3&nbsp;600&nbsp;=&nbsp;<strong className={strong}>432&nbsp;€</strong>.
+          <strong className={strong}>Appliquer les tantièmes.</strong> Pour chaque lot, (tantièmes ÷ total) × 2 400. Le tableau ci-dessus donne les montants exacts.
         </li>
         <li className={li}>
-          <strong className={strong}>Tenir compte du solde de chaque copropriétaire.</strong> Si un copropriétaire a un solde créditeur, ce montant peut venir en déduction de l&apos;appel. À l&apos;inverse, un solde débiteur peut faire l&apos;objet d&apos;une relance distincte.
+          <strong className={strong}>Identifier les charges spéciales</strong> et les ajouter selon leurs propres tantièmes pour les lots concernés.
         </li>
         <li className={li}>
-          <strong className={strong}>Notifier les copropriétaires.</strong> L&apos;appel de fonds doit être communiqué avec un délai raisonnable avant la date d&apos;échéance, en général 10 à 15 jours avant la fin du trimestre. Le document doit mentionner : le montant, la période concernée, la date d&apos;échéance, et les coordonnées bancaires.
+          <strong className={strong}>Vérifier les soldes.</strong> Un copropriétaire avec un crédit existant (régularisation précédente) peut le déduire de son appel actuel. Un débiteur se voit rappeler le montant restant.
+        </li>
+        <li className={li}>
+          <strong className={strong}>Envoyer l&apos;avis de paiement</strong> 10 à 15 jours avant la date d&apos;échéance. Voir le modèle ci-dessous.
         </li>
       </ol>
 
-      {/* Section 5 */}
+      <h2 id="template-avis" className={h2}>Modèle d&apos;avis de paiement : ce qu&apos;il faut obligatoirement mentionner</h2>
+      <p className={p}>Aucun format légal imposé, mais ces éléments permettent d&apos;éviter toute contestation :</p>
+
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8 text-sm leading-relaxed">
+        <p className="text-gray-400 text-xs mb-4 font-sans uppercase tracking-wider">— Modèle d&apos;avis de paiement —</p>
+        <p className="mb-2 text-gray-800 font-semibold">SYNDICAT DES COPROPRIÉTAIRES</p>
+        <p className="mb-1 text-gray-700">Résidence du Parc — 12 rue des Lilas, 69001 Lyon</p>
+        <p className="mb-4 text-gray-700">Syndic bénévole : Nathalie MOREL — nathalie.morel@email.fr — 06 XX XX XX XX</p>
+        <p className="mb-1 text-gray-700"><span className="font-medium">À l&apos;attention de :</span> M. et Mme BERNARD</p>
+        <p className="mb-4 text-gray-700"><span className="font-medium">Lot n° 2</span> — T3, 2e étage — 155/1000e</p>
+        <p className="mb-2 text-gray-800 font-semibold">APPEL DE FONDS PROVISIONNEL — 2e TRIMESTRE 2025</p>
+        <p className="mb-4 text-gray-600">Période : 1er avril — 30 juin 2025 &nbsp;|&nbsp; Échéance : <strong>1er avril 2025</strong></p>
+        <div className="border-t border-gray-200 pt-3 mt-3">
+          <p className="mb-1 text-gray-700">Budget annuel voté en AG du 15 mars 2025 ............... 9 600,00 €</p>
+          <p className="mb-1 text-gray-700">Votre quote-part (155/1000) ........................................ 15,5 %</p>
+          <p className="mb-1 text-gray-700">Appel trimestriel charges courantes ............................ 372,00 €</p>
+          <p className="mb-1 text-gray-700">Fonds de travaux ALUR (prorata trimestriel) ................. 0,00 € (non applicable &lt;10 lots)</p>
+          <p className="mb-1 text-gray-700">Solde précédent ........................................................... 0,00 €</p>
+          <p className="mt-2 border-t border-gray-300 pt-2 font-bold text-gray-900">TOTAL À RÉGLER : 372,00 €</p>
+        </div>
+        <div className="mt-4 text-gray-700">
+          <p className="font-medium mb-1">Coordonnées bancaires :</p>
+          <p>IBAN : FR76 XXXX XXXX XXXX XXXX XXXX XXX</p>
+          <p>Référence virement : BERNARD-LOT2-Q2-2025</p>
+        </div>
+      </div>
+
+      <p className={p}>Envoyez cet avis par <strong className={strong}>e-mail avec accusé de lecture</strong> — pas besoin de recommandé pour les appels ordinaires. Conservez une copie de chaque envoi (date + destinataire) pour le suivi en cas de litige.</p>
+
       <h2 id="appel-exceptionnel" className={h2}>L&apos;appel de fonds exceptionnel : même logique, calendrier différent</h2>
       <p className={p}>
-        Lorsque l&apos;AG vote des travaux non prévus au budget, un appel de fonds exceptionnel est émis. Il suit la même logique de répartition par tantièmes, mais son calendrier est dicté par l&apos;avancement du chantier.
+        L&apos;AG vote des travaux non prévus au budget — disons le remplacement de la porte d&apos;entrée pour 4 800 €. Un appel exceptionnel est lancé, réparti selon les mêmes tantièmes généraux.
       </p>
       <p className={p}>
-        Pour des travaux importants, il est courant de fractionner en plusieurs tranches : un premier appel au démarrage (30-40&nbsp;% du total), un deuxième en cours de chantier, un dernier à la réception. Les copropriétaires votent ce fractionnement en AG en même temps qu&apos;ils votent les travaux.
+        Pour un chantier plus lourd (ravalement : 40 000 € sur un immeuble de 8 lots), l&apos;AG vote en général un <strong className={strong}>fractionnement en 3 tranches</strong> : 40 % à la signature du devis (16 000 €), 40 % en cours de chantier (16 000 €), 20 % à la réception (8 000 €). Pour le Lot 1 (180/1000), le premier appel : 16 000 × 18 % = <strong className={strong}>2 880 €</strong>.
       </p>
-      <p className={p}>Un point souvent négligé : pour les travaux votés à une majorité spécifique (article 25), les tantièmes applicables peuvent être différents de ceux du budget courant si les travaux concernent des équipements à usage spécial. Vérifiez toujours quelle grille de tantièmes s&apos;applique avant d&apos;émettre l&apos;appel.</p>
+      <p className={p}>
+        <strong className={strong}>Point souvent manqué :</strong> pour des travaux sur un équipement à usage partiel (ascenseur, chauffage collectif d&apos;un bâtiment), ce sont les <em>tantièmes spéciaux</em> qui s&apos;appliquent. Vérifiez votre règlement de copropriété avant d&apos;émettre.
+      </p>
 
-      {/* Section 6 */}
-      <h2 id="impayes" className={h2}>Ce qui se passe quand un copropriétaire ne paie pas</h2>
-      <p className={p}>C&apos;est une réalité avec laquelle tout syndic, bénévole ou professionnel, finit par se retrouver. La procédure légale est progressive :</p>
-      <ol className={ol}>
-        <li className={li}><strong className={strong}>Mise en demeure</strong> par lettre simple, puis recommandée — rappeler le montant dû et la date d&apos;échéance dépassée.</li>
-        <li className={li}><strong className={strong}>Pénalités de retard</strong> : la loi prévoit des intérêts au taux légal à compter de la mise en demeure (article 36 du décret de 1967).</li>
-        <li className={li}><strong className={strong}>Injonction de payer</strong> : si l&apos;impayé persiste, le syndic peut saisir le tribunal judiciaire selon une procédure simplifiée. Le juge statue généralement en quelques semaines.</li>
-        <li className={li}><strong className={strong}>Hypothèque légale</strong> : le syndicat bénéficie d&apos;une hypothèque légale sur le lot du débiteur, prélevée sur le prix en cas de vente.</li>
-      </ol>
-      <p className={p}>Il n&apos;est pas nécessaire d&apos;en arriver là dans la plupart des cas. Une communication régulière, un tableau de bord clair sur les soldes, et une relance rapide à la première défaillance suffisent généralement à éviter les situations bloquées.</p>
+      <h2 id="impayes" className={h2}>Un copropriétaire ne paie pas : la procédure complète</h2>
+      <p className={p}>
+        Situation concrète : M. Léonard, Lot 5, n&apos;a pas payé son appel du 1er trimestre (295 €). Vous êtes au 20 mars. Voici la procédure étape par étape.
+      </p>
 
-      {/* Section 7 */}
-      <h2 id="regularisation" className={h2}>La régularisation annuelle : l&apos;étape que tout le monde redoute</h2>
-      <p className={p}>En fin d&apos;exercice, le budget prévisionnel se confronte aux dépenses réelles. Il y a presque toujours un écart — en plus ou en moins.</p>
+      <h3 className={h3}>Étape 1 — Relance amiable (J+15 après échéance)</h3>
+      <p className={p}>
+        Un simple e-mail ou un mot dans la boîte aux lettres. 80 % des retards se règlent ici — les gens oublient, changent de compte bancaire, ont eu un problème ponctuel. Gardez le ton neutre et factuel.
+      </p>
+
+      <h3 className={h3}>Étape 2 — Mise en demeure par recommandé (J+45)</h3>
+      <p className={p}>Si le silence persiste, envoyez une <strong className={strong}>lettre recommandée avec accusé de réception</strong>. Elle doit mentionner : le montant exact, la date d&apos;échéance, la référence à l&apos;appel de fonds, et la demande de régularisation sous 15 jours.</p>
+
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
+        <p className="font-semibold text-amber-800 mb-3 text-sm">Modèle de mise en demeure (extrait)</p>
+        <p className="text-gray-700 text-sm italic leading-relaxed">
+          &ldquo;Monsieur LÉONARD, en ma qualité de syndic bénévole du Syndicat des Copropriétaires de la Résidence du Parc (élu par l&apos;AG du [date]), je vous mets en demeure de régler sous 15 jours la somme de <strong>295,00 €</strong> correspondant à votre appel de fonds provisionnel du 1er janvier 2025 (1er trimestre), demeuré impayé à ce jour. À défaut de règlement dans ce délai, le syndicat engagera, sans nouveau préavis, les procédures légales à sa disposition, incluant une injonction de payer devant le tribunal judiciaire.&rdquo;
+        </p>
+        <p className="text-gray-600 mt-2 text-xs">Signature du syndic, date, mention &ldquo;Envoyée par LRAR n° [numéro de suivi]&rdquo;</p>
+      </div>
+
+      <h3 className={h3}>Étape 3 — Injonction de payer (J+90)</h3>
+      <p className={p}>
+        Si l&apos;impayé dépasse 3 mois et que la mise en demeure est sans effet, le syndic saisit le tribunal judiciaire par voie d&apos;<strong className={strong}>injonction de payer</strong> (formulaire Cerfa n° 12948). Procédure simplifiée, coût ~35 €, décision rendue en quelques semaines sans audience obligatoire. Le titre exécutoire obtenu permet une saisie sur compte bancaire ou sur salaire.
+      </p>
+      <p className={p}>
+        À noter : les <strong className={strong}>intérêts au taux légal</strong> courent à compter de la mise en demeure (art. 36 du décret de 1967). Sur 295 €, cela représente quelques euros — mais la mention dans la lettre a souvent un effet déclencheur immédiat.
+      </p>
+
+      <h3 className={h3}>Ce que dit la loi sur l&apos;hypothèque légale</h3>
+      <p className={p}>
+        Le syndicat bénéficie d&apos;une <strong className={strong}>hypothèque légale sur le lot du débiteur</strong>. En cas de vente de l&apos;appartement, la somme due est prélevée sur le prix de cession avant tout autre créancier (hors banque hypothécaire). Cette protection existe de plein droit — vous n&apos;avez aucune démarche à faire pour en bénéficier.
+      </p>
+
+      <h2 id="regularisation" className={h2}>La régularisation annuelle : comment la présenter en AG</h2>
+      <p className={p}>En fin d&apos;exercice, on compare les sommes appelées aux dépenses réelles. Deux scénarios :</p>
       <ul className={ul}>
-        <li className={li}>Si les dépenses réelles ont été <strong className={strong}>supérieures</strong> au budget voté : un appel de régularisation est émis pour couvrir la différence.</li>
-        <li className={li}>Si elles ont été <strong className={strong}>inférieures</strong> : un surplus a été collecté, conservé au crédit des copropriétaires et déduit du premier appel de l&apos;exercice suivant.</li>
+        <li className={li}>
+          <strong className={strong}>Dépenses réelles &gt; budget appelé :</strong> un appel de régularisation est émis pour combler l&apos;écart. Budget 2025 : 9 600 € appelés, dépenses réelles 10 350 € (chaudière réparée en urgence en janvier) → appel complémentaire de 750 € réparti entre les copropriétaires.
+        </li>
+        <li className={li}>
+          <strong className={strong}>Dépenses réelles &lt; budget appelé :</strong> les copropriétaires ont trop versé. Le surplus reste à leur crédit et vient en déduction du premier appel de l&apos;exercice suivant.
+        </li>
       </ul>
       <p className={p}>
-        Cette régularisation doit être présentée de façon lisible à l&apos;AG lors de l&apos;approbation des comptes. C&apos;est souvent là que les syndics bénévoles qui manquent d&apos;outils rencontrent des difficultés : reconstituer le détail poste par poste, expliquer chaque écart, justifier chaque dépense.
+        En AG, présentez un tableau ligne par ligne : prévisionnel vs réalisé, écart et explication. Les copropriétaires comprennent les imprévus — ce qu&apos;ils ne tolèrent pas, c&apos;est l&apos;opacité.
       </p>
 
-      {/* Section 8 — Product */}
-      <h2 id="suivi-manuel" className={h2}>Le principal problème des syndics bénévoles : le suivi manuel</h2>
-      <p className={p}>
-        Calculer un appel de fonds une fois, c&apos;est faisable. Mais le faire tous les trimestres, pour chaque copropriétaire, en tenant à jour les soldes, en intégrant les régularisations, en gérant les impayés, en produisant les justificatifs pour l&apos;AG…
-      </p>
-      <p className={p}>
-        La plupart des syndics bénévoles qui abandonnent le font à ce stade. Pas parce qu&apos;ils ne savent pas faire, mais parce qu&apos;ils font ça dans des tableaux Excel bricolés, sans historique propre, sans traçabilité claire.
-      </p>
-      <p className={p}>
-        C&apos;est exactement ce problème que résout{' '}
-        <a href="https://mon-syndic-benevole.fr" className={a}>Mon Syndic Bénévole</a>.
-      </p>
+      <h2 id="manuel-vs-outil" className={h2}>Ce que ça représente de faire ça manuellement</h2>
+      <p className={p}>Estimons le temps pour une copropriété de 8 lots sur un trimestre :</p>
+      <ul className={ul}>
+        <li className={li}>Ouvrir le tableau Excel, vérifier/recalculer les quotes-parts : 20 min</li>
+        <li className={li}>Rédiger et mettre en forme 8 avis de paiement en PDF : 45 min</li>
+        <li className={li}>Envoyer les 8 e-mails, noter les accusés de réception : 15 min</li>
+        <li className={li}>Suivre les virements entrants sur le relevé bancaire, pointer chaque paiement : 20 min/mois × 3 = 60 min</li>
+        <li className={li}>Relancer 1 à 2 retardataires (e-mail + éventuel recommandé) : 20 min</li>
+        <li className={li}>Préparer le tableau de régularisation fin d&apos;exercice : 2 h</li>
+      </ul>
+      <p className={p}>Total estimé : <strong className={strong}>~6 heures par trimestre</strong>, soit 24 heures par an rien que sur les appels de fonds. Sans compter les erreurs sur les tantièmes que personne ne détecte avant l&apos;AG.</p>
 
       <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
-        <p className="text-blue-800 font-semibold mb-3">Ce que la plateforme gère pour vous</p>
+        <p className="text-blue-800 font-semibold mb-3">Ce que Mon Syndic Bénévole automatise</p>
         <ul className="space-y-2">
           {[
-            'La répartition par tantièmes calculée instantanément, lot par lot.',
-            'Un avis de paiement individuel envoyé par e-mail en un clic, avec le montant exact de chaque copropriétaire.',
-            'Le suivi des paiements en temps réel — les soldes se mettent à jour automatiquement à chaque règlement.',
-            'Les appels en série (trimestriels sur toute une année) générés en une seule opération.',
-            'Un tableau de bord avec le taux de recouvrement, les impayés en cours et l\'état de la trésorerie.',
+            'Répartition par tantièmes calculée instantanément, lot par lot — zéro calcul manuel.',
+            '8 avis de paiement générés en PDF en 30 secondes, avec le montant exact de chaque copropriétaire.',
+            'Envoi par e-mail depuis la plateforme avec piste d\'audit (qui a reçu quoi, quand).',
+            'Tableau de bord temps réel : qui a payé, qui est en retard, solde de chaque compte.',
+            'Relances configurables (J+15, J+30) avec rappel automatique de la référence de l\'appel.',
+            'Régularisation annuelle calculée automatiquement avec export PDF pour l\'AG.',
           ].map((item) => (
             <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
@@ -172,46 +252,52 @@ export default function ArticleAppelDeFonds() {
             </li>
           ))}
         </ul>
+        <p className="text-sm text-gray-600 mt-4">
+          Résultat terrain : les appels de fonds passent de <strong className="text-gray-800">6 heures de travail par trimestre à 20 minutes</strong>.
+        </p>
       </div>
 
-      <p className={p}>Plus besoin de rechercher dans vos mails quel copropriétaire a payé quoi. Tout est centralisé, daté, et exportable.</p>
-
-      {/* Section 9 */}
-      <h2 id="fonds-travaux-alur" className={h2}>Appel de fonds et fonds de travaux ALUR : ne pas confondre</h2>
+      <h2 id="fonds-travaux-alur" className={h2}>Ne pas confondre appel courant et fonds de travaux ALUR</h2>
       <p className={p}>
-        Depuis le 1er janvier 2017, les copropriétés de 10 lots et plus ont l&apos;obligation de constituer un <strong className={strong}><a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a></strong>. Ce fonds est alimenté par une cotisation annuelle votée en AG, dont le montant ne peut être inférieur à 5&nbsp;% du budget prévisionnel.
+        Depuis le 1er janvier 2017, les copropriétés de plus de 10 lots ont l&apos;obligation de constituer un <strong className={strong}><a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a></strong> sur un compte bancaire séparé, alimenté chaque année d&apos;au moins 5 % du budget prévisionnel.
       </p>
       <p className={p}>
-        Attention : le fonds de travaux <strong className={strong}>n&apos;est pas remboursable</strong>. Quand un copropriétaire vend son lot, la somme qu&apos;il a versée dans ce fonds reste acquise à la copropriété. C&apos;est un point à bien communiquer aux nouveaux acquéreurs.
+        Point critique à communiquer à vos copropriétaires : les sommes versées au fonds de travaux <strong className={strong}>ne sont pas remboursables lors d&apos;une vente</strong>. Elles restent acquises à la copropriété. C&apos;est une des sources de confusion les plus fréquentes — et elle génère des tensions si vous ne l&apos;anticipez pas.
       </p>
 
-      {/* FAQ */}
       <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
 
-      <h3 className={h3}>À quelle fréquence envoyer les appels de fonds ?</h3>
-      <p className={p}>Pour les charges courantes : une fois par trimestre, en début de trimestre (1er janvier, 1er avril, 1er juillet, 1er octobre). Pour les travaux exceptionnels : selon le calendrier validé en AG.</p>
+      <h3 className={h3}>À quelle date exactement envoyer les appels de fonds ?</h3>
+      <p className={p}>Les appels provisionnels sont exigibles au premier jour de chaque trimestre : 1er janvier, 1er avril, 1er juillet, 1er octobre. En pratique, envoyez l&apos;avis 10 à 15 jours avant l&apos;échéance pour que les copropriétaires aient le temps de programmer leur virement.</p>
 
-      <h3 className={h3}>Les tantièmes peuvent-ils changer ?</h3>
-      <p className={p}>Oui, mais c&apos;est rare et complexe. Une modification du règlement de copropriété est nécessaire, votée à l&apos;unanimité des copropriétaires. En pratique, les tantièmes restent stables sur la durée de vie d&apos;une copropriété.</p>
+      <h3 className={h3}>Peut-on envoyer les appels par e-mail ou faut-il une lettre recommandée ?</h3>
+      <p className={p}>L&apos;e-mail suffit pour les appels ordinaires — aucune obligation légale de recommandé à ce stade. Le recommandé s&apos;impose uniquement pour les mises en demeure en cas d&apos;impayé et pour les convocations d&apos;AG.</p>
+
+      <h3 className={h3}>Comment gérer les arrondis quand les tantièmes donnent des centimes ?</h3>
+      <p className={p}>Arrondissez à l&apos;euro inférieur pour chaque lot, puis affectez l&apos;écart cumulé sur le lot de référence (généralement le plus grand). Notez la méthode d&apos;arrondi utilisée pour que la vérification en AG soit possible.</p>
+
+      <h3 className={h3}>Un immeuble avec ascenseur peut-il avoir plusieurs grilles de tantièmes ?</h3>
+      <p className={p}>Oui — c&apos;est même courant. Un immeuble avec ascenseur, gardiennage et chauffage collectif peut avoir jusqu&apos;à 4 grilles différentes (généraux, ascenseur, chauffage, eau froide…). Chaque dépense est répartie selon la grille correspondante définie dans le règlement.</p>
 
       <h3 className={h3}>Un copropriétaire peut-il contester son appel de fonds ?</h3>
-      <p className={p}>Il peut contester le montant si la répartition ne correspond pas aux tantièmes figurant dans le règlement de copropriété, ou si des charges générales ont été incorrectement affectées. La contestation doit se faire dans les deux mois suivant la notification du PV d&apos;AG pour les décisions votées.</p>
+      <p className={p}>Il peut contester si la répartition ne correspond pas aux tantièmes du règlement. La contestation d&apos;une décision votée en AG doit intervenir dans les <strong className={strong}>deux mois suivant la notification du PV</strong>. Pour une erreur de calcul pure, régularisez dès que c&apos;est identifié — pas de délai légal dans ce cas.</p>
 
-      <h3 className={h3}>Comment gérer les lots avec plusieurs propriétaires (indivision) ?</h3>
-      <p className={p}>L&apos;appel de fonds est adressé à l&apos;indivision dans son ensemble. Les propriétaires indivis désignent entre eux un représentant unique pour les relations avec le syndic.</p>
+      <h3 className={h3}>Comment gérer un lot en indivision (plusieurs propriétaires) ?</h3>
+      <p className={p}>L&apos;appel est adressé à l&apos;indivision dans son ensemble. Les co-indivisaires désignent un représentant unique vis-à-vis du syndic. Vous n&apos;avez pas à gérer la répartition interne entre eux.</p>
 
-      <h3 className={h3}>Un appel de fonds peut-il couvrir des dettes antérieures ?</h3>
-      <p className={p}>Non. On ne peut pas appeler des fonds pour rembourser des dettes passées non couvertes par le budget voté. Il faudrait voter une dépense spécifique en AG pour régulariser.</p>
+      <h3 className={h3}>Peut-on "sauter" un trimestre si la trésorerie est suffisante ?</h3>
+      <p className={p}>Les appels provisionnels sont légalement dus à date fixe, quelle que soit la trésorerie. Si la copropriété a un excédent important, l&apos;AG peut voter un budget prévisionnel réduit pour l&apos;exercice suivant. Ne sautez pas un appel sans décision formelle de l&apos;AG — cela crée des problèmes comptables en fin d&apos;exercice.</p>
 
-      {/* Conclusion */}
       <h2 id="ce-quil-faut-retenir" className={h2}>Ce qu&apos;il faut retenir</h2>
       <p className={p}>
-        L&apos;appel de fonds n&apos;est pas une science exacte, mais c&apos;est un processus qui gagne à être rigoureux, transparent et traçable. Les disputes entre voisins sur les charges viennent rarement de mauvaise volonté — elles viennent presque toujours d&apos;un manque de lisibilité.
+        L&apos;appel de fonds est la colonne vertébrale financière de votre copropriété. Le principe de calcul est simple — c&apos;est le suivi dans le temps qui crée des difficultés sans outil adapté : qui a payé, qui est en retard, comment régulariser proprement en fin d&apos;exercice.
       </p>
       <p className={p}>
-        Un copropriétaire qui comprend d&apos;où vient son montant, qui voit l&apos;état de la trésorerie, qui reçoit un avis de paiement clair avec la date d&apos;échéance : c&apos;est un copropriétaire qui paie à temps et qui fait confiance au syndic bénévole.
+        Un copropriétaire qui comprend d&apos;où vient son montant, reçoit un avis clair avec la bonne date d&apos;échéance, et peut consulter son historique de paiement est un copropriétaire qui paie à temps et qui fait confiance au syndic.
       </p>
-      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>les obligations du fonds de travaux ALUR</a> ou <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>comment gérer une copropriété sans syndic professionnel</a>.</p>
+      <p className={p}>
+        <strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur le <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a> ou les <a href="/blog/obligations-syndic-benevole" className={a}>obligations complètes du syndic bénévole</a>.
+      </p>
     </>
   );
 }

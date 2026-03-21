@@ -1,7 +1,6 @@
-// ============================================================
+﻿// ============================================================
 // Article : Comment devenir syndic bénévole
 // Target KW : "comment devenir syndic bénévole"
-// Silo : SILO 1 — Devenir syndic bénévole
 // ============================================================
 
 import Link from 'next/link';
@@ -11,86 +10,128 @@ export default function ArticleCommentDevenirSyndicBenevole() {
   return (
     <>
       <p className={p}>
-        L&apos;assemblée générale est terminée. Le cabinet professionnel a été remercié — trop cher, pas réactif. Il faut un syndic. Une main se lève. La vôtre, peut-être. Et aussitôt la question qui suit&nbsp;: <strong className={strong}>par où on commence&nbsp;?</strong>
+        Il est 21 h 15. L&apos;assemblée générale vient de se terminer. Pierre, 52 ans, comptable de profession, a levé la main quand personne d&apos;autre ne se proposait. &ldquo;D&apos;accord, je veux bien essayer.&rdquo; Le voilà syndic bénévole d&apos;un immeuble de 8 lots à Grenoble. Il rentre chez lui avec le procès-verbal sous le bras et une seule question en tête : <strong className={strong}>par où je commence demain matin ?</strong>
       </p>
       <p className={p}>
-        Bonne nouvelle&nbsp;: devenir syndic bénévole ne nécessite ni diplôme, ni agrément, ni formation certifiante. Ce qui compte, c&apos;est la méthode. Ce guide décrit les étapes dans l&apos;ordre où vous allez les rencontrer.
+        Ce guide répond à cette question dans l&apos;ordre où vous allez rencontrer les problèmes : l&apos;élection, les 30 premiers jours, les obligations récurrentes, les erreurs classiques.
       </p>
 
-      {/* Section 1 */}
-      <h2 id="conditions-legales" className={h2}>Qui peut devenir syndic bénévole&nbsp;? Ce que dit la loi</h2>
+      <h2 id="conditions-legales" className={h2}>Qui peut devenir syndic bénévole ? Ce que la loi exige — et ce qu&apos;elle n&apos;exige pas</h2>
       <p className={p}>
-        La loi du 10 juillet 1965 impose l&apos;existence d&apos;un syndic dans toute copropriété, mais elle n&apos;exige pas qu&apos;il soit professionnel. Un simple copropriétaire peut exercer ce rôle. Les seules conditions légales sont&nbsp;:
+        La loi du 10 juillet 1965 impose l&apos;existence d&apos;un syndic dans toute copropriété, mais elle n&apos;impose pas qu&apos;il soit professionnel. Les seules conditions légales sont :
       </p>
       <ul className={ul}>
-        <li className={li}>Être copropriétaire de l&apos;immeuble (ou son conjoint / partenaire de PACS),</li>
-        <li className={li}>Avoir été élu en assemblée générale à la majorité de l&apos;article 25 (majorité absolue des voix de tous les copropriétaires),</li>
-        <li className={li}>Disposer d&apos;un mandat dont la durée est fixée par l&apos;AG (en général un à trois ans).</li>
+        <li className={li}><strong className={strong}>Être copropriétaire</strong> de l&apos;immeuble (ou conjoint / partenaire de PACS d&apos;un copropriétaire),</li>
+        <li className={li}><strong className={strong}>Avoir été élu en AG</strong> à la majorité absolue de l&apos;article 25 (voix de tous les copropriétaires, présents + absents + représentés),</li>
+        <li className={li}><strong className={strong}>Disposer d&apos;un mandat</strong> dont la durée est fixée par l&apos;AG (1 à 3 ans en général).</li>
       </ul>
       <p className={p}>
-        Pas de carte professionnelle, pas d&apos;assurance obligatoire spécifique, pas de formation requise. En revanche, il est fortement conseillé de vérifier que votre assurance habitation couvre la <strong className={strong}>responsabilité civile du mandataire</strong> — certaines polices l&apos;incluent, d&apos;autres non.
+        Pas de carte professionnelle. Pas de formation certifiante. Pas d&apos;assurance obligatoire spécifique. En revanche : vérifiez que votre assurance habitation couvre la <strong className={strong}>responsabilité civile du mandataire</strong> — certaines polices l&apos;incluent automatiquement, d&apos;autres non. Une simple vérification par téléphone à votre assureur suffit.
       </p>
       <p className={p}>
-        Rappel de contexte&nbsp;: plus de 40&nbsp;% des copropriétés françaises sont gérées sans cabinet professionnel, selon les données du ministère du Logement. C&apos;est une pratique normale, légale, et souvent la plus adaptée pour les immeubles de moins de 30 lots.
+        Contexte : plus de <strong className={strong}>40 % des copropriétés françaises</strong> sont gérées sans cabinet professionnel selon les estimations du ministère du Logement. Ce chiffre monte à plus de 60 % pour les immeubles de moins de 10 lots. Ce n&apos;est pas un cas marginal — c&apos;est la norme pour les petits immeubles.
       </p>
 
-      {/* Section 2 */}
-      <h2 id="election-ag" className={h2}>L&apos;élection en AG&nbsp;: comment ça se passe et ce qu&apos;il ne faut pas rater</h2>
+      <h2 id="election-ag" className={h2}>L&apos;élection en AG : ce qui peut invalider votre mandat si vous n&apos;y faites pas attention</h2>
       <p className={p}>
-        L&apos;élection doit figurer à l&apos;ordre du jour de l&apos;AG. Un candidat &ldquo;surprise&rdquo; le jour même expose la décision à contestation. La bonne pratique est de mentionner sa candidature dans la convocation ou de la signaler par écrit au président du conseil syndical avant l&apos;envoi.
+        L&apos;élection doit figurer à l&apos;ordre du jour de la convocation. Un candidat &ldquo;surprise&rdquo; annoncé le soir même expose la décision à contestation judiciaire. La bonne pratique : signalez votre candidature par écrit au président du conseil syndical <em>avant</em> l&apos;envoi des convocations.
       </p>
-      <p className={p}>Points clés à retenir sur le vote&nbsp;:</p>
-      <ul className={ul}>
-        <li className={li}><strong className={strong}>Majorité requise&nbsp;:</strong> article 25 — majorité absolue de tous les copropriétaires, présents, représentés ou absents. Si cette majorité n&apos;est pas atteinte mais que le candidat recueille plus du tiers des voix, un second vote à la majorité simple peut être organisé immédiatement.</li>
-        <li className={li}><strong className={strong}>Durée du mandat&nbsp;:</strong> fixée dans la résolution. Un an est le standard recommandé pour un premier mandat — cela laisse une porte de sortie si ça ne convient pas.</li>
-        <li className={li}><strong className={strong}>Le PV d&apos;élection&nbsp;:</strong> conservez-en plusieurs originaux. Vous en aurez besoin pour ouvrir le compte bancaire du syndicat et pour prouver votre qualité de syndic aux prestataires.</li>
-      </ul>
 
-      {/* Section 3 */}
-      <h2 id="30-premiers-jours" className={h2}>Les 30 premiers jours&nbsp;: 5 démarches obligatoires</h2>
-
-      <h3 className={h3}>1. Récupérer les archives de l&apos;ancien syndic (délai légal&nbsp;: 15 jours)</h3>
+      <h3 className={h3}>La règle du vote en deux temps (à connaître)</h3>
       <p className={p}>
-        L&apos;ancien syndic est légalement tenu de vous remettre l&apos;intégralité des documents dans les 15 jours suivant la fin de son mandat. Ne laissez rien traîner&nbsp;: certains cabinets font volontairement durer le transfert. Une mise en demeure par recommandé peut être envoyée dès le 16e jour.
-      </p>
-      <p className={p}>La liste de ce que vous devez récupérer&nbsp;:</p>
-      <ul className={ul}>
-        <li className={li}>Règlement de copropriété + état descriptif de division</li>
-        <li className={li}>Procès-verbaux des AG (au moins les 10 dernières années)</li>
-        <li className={li}>Contrats en cours (assurance MRI, ascenseur, entretien, etc.)</li>
-        <li className={li}>Comptes de l&apos;exercice précédent et état des impayés par copropriétaire</li>
-        <li className={li}>Carnet d&apos;entretien de l&apos;immeuble</li>
-        <li className={li}>Relevés bancaires du compte courant + compte fonds de travaux</li>
-      </ul>
-
-      <h3 className={h3}>2. Ouvrir le compte bancaire séparé</h3>
-      <p className={p}>
-        <strong className={strong}>Obligation légale absolue&nbsp;:</strong> le compte doit être au nom du <em>syndicat des copropriétaires</em>, pas en votre nom propre. Apportez le PV d&apos;élection à la banque&nbsp;: c&apos;est le document officiel qui vous autorise à agir.
-      </p>
-      <p className={p}>
-        Si votre copropriété comporte plus de 10 lots, vous avez également besoin d&apos;un <strong className={strong}>second compte séparé pour le fonds de travaux ALUR</strong>. Ces sommes ne peuvent pas être mélangées avec la trésorerie courante — voir notre guide sur le <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a>.
+        L&apos;élection requiert la <strong className={strong}>majorité absolue de l&apos;article 25</strong> : plus de 50 % des voix de tous les copropriétaires. Si cette majorité n&apos;est pas atteinte mais que le candidat recueille <em>plus du tiers des voix</em>, un second vote à la majorité simple (art. 24) peut être organisé <strong className={strong}>immédiatement</strong> dans la même AG. Beaucoup de syndics bénévoles ont été élus grâce à ce second tour — ne quittez pas la salle.
       </p>
 
-      <h3 className={h3}>3. Informer les prestataires et les créanciers</h3>
+      <h3 className={h3}>Ce que doit contenir le PV d&apos;élection</h3>
       <p className={p}>
-        Impact immédiat&nbsp;: chaque prestataire doit connaître le nouveau contact syndic pour les factures, les urgences et les renouvellements. Envoyez une lettre officielle (recommandé ou e-mail avec accusé) mentionnant votre nom, vos coordonnées et le numéro du nouveau compte bancaire pour les remboursements.
+        Le procès-verbal d&apos;élection est votre document de légitimité. Il doit mentionner : votre nom complet, la durée du mandat, la date d&apos;entrée en vigueur, et le résultat précis du vote (nombre de voix). Gardez-en <strong className={strong}>plusieurs originaux signés</strong> — vous en aurez besoin pour ouvrir le compte bancaire du syndicat et prouver votre qualité aux prestataires.
       </p>
 
-      <h3 className={h3}>4. Constituer ou vérifier le registre des copropriétaires</h3>
+      <h2 id="48h" className={h2}>J+1 : ce que Pierre a fait le lendemain matin (et ce que vous devriez faire)</h2>
       <p className={p}>
-        Vous avez besoin d&apos;un annuaire complet&nbsp;: nom, adresse postale, e-mail, lot(s) et tantièmes de chaque copropriétaire. C&apos;est la base pour les convocations d&apos;AG, les appels de fonds et les relances. Si l&apos;ancien syndic ne vous a pas transmis de fichier à jour, vous devrez le reconstruire.
+        Le premier réflexe de Pierre a été de ne rien faire — &ldquo;ça peut attendre quelques jours.&rdquo; Erreur. Les délais légaux courent dès la fin du mandat de l&apos;ancien syndic. Voici les 3 choses à faire dans les 48 heures :
+      </p>
+      <ol className={ol}>
+        <li className={li}>
+          <strong className={strong}>Envoyer une lettre recommandée à l&apos;ancien syndic</strong> pour demander le transfert des archives dans le délai légal de 15 jours. N&apos;attendez pas qu&apos;il prenne l&apos;initiative — certains cabinets font traîner volontairement.
+        </li>
+        <li className={li}>
+          <strong className={strong}>Prévenir les copropriétaires</strong> de votre prise de fonction et de vos coordonnées de contact. Un simple e-mail collectif suffit.
+        </li>
+        <li className={li}>
+          <strong className={strong}>Identifier la banque</strong> du compte courant de la copropriété pour organiser le changement de signataire (ou l&apos;ouverture d&apos;un nouveau compte séparé si ce n&apos;est pas déjà fait).
+        </li>
+      </ol>
+
+      <h2 id="30-premiers-jours" className={h2}>Les 30 premiers jours : 5 démarches dans l&apos;ordre</h2>
+
+      <h3 className={h3}>1. Récupérer les archives de l&apos;ancien syndic (délai légal : 15 jours)</h3>
+      <p className={p}>
+        L&apos;ancien syndic est légalement tenu de remettre l&apos;intégralité des documents dans les <strong className={strong}>15 jours</strong> suivant la fin de son mandat (art. 18-2 de la loi de 1965). Ce délai est strict. Ne laissez pas traîner.
       </p>
 
-      <h3 className={h3}>5. Identifier les contrats à renouveler dans les 3 prochains mois</h3>
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
+        <p className="font-semibold text-amber-800 mb-2 text-sm">Liste des documents à réclamer</p>
+        <ul className="space-y-1 text-sm text-gray-700">
+          {[
+            'Règlement de copropriété + état descriptif de division (avec les tantièmes de chaque lot)',
+            'Procès-verbaux des AG des 10 dernières années',
+            'Contrats en cours : assurance MRI, ascenseur, entretien, nettoyage, espaces verts',
+            'Carnet d\'entretien de l\'immeuble',
+            'Comptes de l\'exercice précédent + état des impayés par copropriétaire',
+            'Relevés bancaires du compte courant ET du compte fonds de travaux',
+            'Fichier des copropriétaires (nom, adresse, lot, tantièmes)',
+            'Dossiers travaux et sinistres en cours',
+          ].map((item) => (
+            <li key={item} className="flex items-start gap-2">
+              <span className="text-amber-600 mt-0.5">→</span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-6 text-sm">
+        <p className="text-gray-500 text-xs mb-3 uppercase tracking-wider">Modèle e-mail/LRAR — Demande de transfert d&apos;archives</p>
+        <p className="text-gray-700 italic leading-relaxed">
+          &ldquo;Madame, Monsieur, À la suite de mon élection en qualité de syndic bénévole du Syndicat des Copropriétaires de [nom copropriété], lors de l&apos;AG du [date], je vous informe que votre mandat a pris fin à cette date. Conformément à l&apos;article 18-2 de la loi du 10 juillet 1965, je vous demande de me remettre, dans un délai de 15 jours, l&apos;ensemble des documents et archives relatifs à la copropriété. [Liste des documents]. À défaut de remise dans ce délai, je me verrai contraint d&apos;engager les voies de droit appropriées. Veuillez agréer...&rdquo;
+        </p>
+      </div>
+
+      <h3 className={h3}>2. Ouvrir le compte bancaire séparé du syndicat</h3>
       <p className={p}>
-        L&apos;assurance multirisques immeuble (MRI) et les contrats de maintenance se renouvellent souvent tacitement. Un contrat oublié peut se reconductre pour un an à des conditions défavorables. Listez les échéances dans les 90 jours et prenez les décisions qui s&apos;imposent.
+        <strong className={strong}>Obligation légale absolue</strong> (art. 18-2) : le compte doit être au nom du <em>syndicat des copropriétaires</em>, jamais en votre nom propre. Apportez à la banque : le PV d&apos;élection, votre pièce d&apos;identité, et si possible le règlement de copropriété.
+      </p>
+      <p className={p}>
+        Si votre copropriété a plus de 10 lots, vous avez également besoin d&apos;un <strong className={strong}>second compte séparé pour le fonds de travaux ALUR</strong>. Ces sommes ne peuvent légalement pas être mélangées avec la trésorerie courante.
       </p>
 
-      {/* Inline CTA */}
+      <h3 className={h3}>3. Notifier les prestataires de votre prise de fonction</h3>
+      <p className={p}>
+        Chaque prestataire doit connaître le nouveau contact syndic. Envoyez une lettre (e-mail avec accusé suffit pour la plupart) mentionnant vos coordonnées et le nouveau RIB bancaire pour les remboursements.
+      </p>
+
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-6 text-sm">
+        <p className="text-gray-500 text-xs mb-3 uppercase tracking-wider">Modèle e-mail prestataires</p>
+        <p className="text-gray-700 italic leading-relaxed">
+          &ldquo;Madame, Monsieur, Je vous informe que je viens d&apos;être élu syndic bénévole du Syndicat des Copropriétaires de [nom], en remplacement de [ancien syndic]. Mes coordonnées pour tous les échanges concernant notre contrat : [Nom, e-mail, téléphone]. Le compte bancaire du syndicat est désormais : IBAN [XXXXXXXX]. Merci de mettre à jour vos fichiers. Cordialement.&rdquo;
+        </p>
+      </div>
+
+      <h3 className={h3}>4. Constituer votre registre des copropriétaires</h3>
+      <p className={p}>
+        C&apos;est votre annuaire opérationnel. Pour chaque copropriétaire : nom, adresse postale, e-mail de contact, numéro(s) de lot, tantièmes généraux (et spéciaux si applicable). Sans ce registre à jour, vous ne pouvez rien faire proprement : ni les convocations d&apos;AG, ni les <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>appels de fonds</a>, ni les relances.
+      </p>
+
+      <h3 className={h3}>5. Identifier les échéances des 90 prochains jours</h3>
+      <p className={p}>
+        L&apos;assurance multirisques immeuble (MRI) et les contrats de maintenance se renouvellent souvent tacitement. Un oubli = reconduction automatique pour un an à des conditions parfois défavorables. Listez les dates d&apos;échéance et prenez les décisions qui s&apos;imposent dès votre première semaine.
+      </p>
+
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Vous venez d&apos;être élu syndic bénévole&nbsp;?</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Vous venez d&apos;être élu syndic bénévole ?</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole vous guide dès le premier jour&nbsp;: création guidée de votre copropriété, annuaire des copropriétaires, appels de fonds automatiques. Prêt en moins de 5 minutes, sans formation requise.
+          Mon Syndic Bénévole vous accompagne dès le premier jour : annuaire des copropriétaires, appels de fonds calculés automatiquement, convocations d&apos;AG en un clic. Opérationnel en moins de 15 minutes.
         </p>
         <Link
           href="/register"
@@ -100,77 +141,123 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         </Link>
       </div>
 
-      {/* Section 4 */}
-      <h2 id="obligations-recurrentes" className={h2}>Les obligations récurrentes une fois en poste</h2>
+      <h2 id="premier-trimestre" className={h2}>Le premier trimestre : ce qui vous attend concrètement</h2>
       <p className={p}>
-        Le syndic bénévole a les mêmes obligations légales qu&apos;un cabinet professionnel — avec la même responsabilité civile. Voici le calendrier des principales tâches&nbsp;:
+        Pierre a pris ses fonctions en mars. Voici ce qu&apos;il a eu à gérer dans ses 90 premiers jours :
       </p>
+      <ul className={ul}>
+        <li className={li}><strong className={strong}>Semaine 1 :</strong> réception des archives de l&apos;ancien syndic (partielles — il a dû relancer). Découverte d&apos;un impayé de 1 200 € d&apos;un copropriétaire. Ouverture du compte bancaire.</li>
+        <li className={li}><strong className={strong}>Semaine 2-3 :</strong> reconstitution du fichier copropriétaires (3 e-mails manquants). Mise en demeure informelle du copropriétaire en retard. Vérification du contrat d&apos;assurance MRI.</li>
+        <li className={li}><strong className={strong}>Fin de trimestre :</strong> émission de son premier appel de fonds trimestriel. 7 copropriétaires ont payé en 10 jours. 1 a mis 3 semaines (rappel téléphonique).</li>
+      </ul>
+      <p className={p}>
+        Total de temps estimé pour ce premier trimestre : <strong className={strong}>12 à 15 heures</strong> — dont 8 pour la reprise des archives et la mise en place. Les trimestres suivants : 3 à 5 heures.
+      </p>
+
+      <h2 id="obligations-recurrentes" className={h2}>Les obligations récurrentes une fois en poste</h2>
 
       <h3 className={h3}>Chaque trimestre</h3>
       <ul className={ul}>
         <li className={li}>Émettre les <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>appels de fonds provisionnels</a> à date fixe</li>
+        <li className={li}>Enregistrer les dépenses et les rattacher aux postes du budget</li>
         <li className={li}>Suivre les paiements et relancer les retardataires</li>
-        <li className={li}>Enregistrer les dépenses et les rattacher aux catégories de charges</li>
+        <li className={li}>Vérifier les soldes du compte courant et du fonds de travaux</li>
       </ul>
 
       <h3 className={h3}>Chaque année</h3>
       <ul className={ul}>
-        <li className={li}>Convoquer l&apos;AG ordinaire avec au moins 21 jours de préavis</li>
-        <li className={li}>Présenter les comptes de l&apos;exercice clôturé et le budget prévisionnel</li>
-        <li className={li}>Envoyer le procès-verbal dans le mois suivant l&apos;AG</li>
-        <li className={li}>Voter le montant du fonds de travaux ALUR (si la copropriété est concernée)</li>
+        <li className={li}>Clôturer l&apos;exercice et préparer les comptes annuels</li>
+        <li className={li}>Convoquer l&apos;AG ordinaire (21 jours de préavis minimum — délai légal strict)</li>
+        <li className={li}>Présenter les comptes de l&apos;exercice + budget prévisionnel pour vote</li>
+        <li className={li}>Envoyer le PV dans le mois suivant l&apos;AG</li>
+        <li className={li}>Voter le montant du <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a> (si applicable)</li>
         <li className={li}>Renouveler ou renégocier les contrats arrivant à échéance</li>
+        <li className={li}>Mettre à jour le carnet d&apos;entretien</li>
       </ul>
 
-      <h3 className={h3}>Dès qu&apos;un événement survient</h3>
+      <h3 className={h3}>Sur événement</h3>
       <ul className={ul}>
         <li className={li}>Déclarer les sinistres à l&apos;assurance dans les délais contractuels (souvent 5 jours ouvrés)</li>
-        <li className={li}>Mettre en demeure les copropriétaires en retard de paiement au-delà de 90 jours</li>
-        <li className={li}>Convoquer une AG extraordinaire si une décision urgente ne peut attendre l&apos;AG annuelle</li>
+        <li className={li}>Mettre en demeure les copropriétaires en retard de paiement au-delà de 45 jours</li>
+        <li className={li}>Convoquer une AG extraordinaire si une décision urgente ne peut pas attendre l&apos;AG annuelle</li>
+        <li className={li}>Délivrer l&apos;état daté lors d&apos;une vente de lot</li>
       </ul>
 
-      {/* Section 5 */}
-      <h2 id="erreurs-debut" className={h2}>Les 3 erreurs classiques en début de mandat</h2>
+      <h2 id="premieres-questions-copros" className={h2}>Les 5 premières questions que vos copropriétaires vont vous poser</h2>
 
-      <h3 className={h3}>Erreur 1 — Ne pas formaliser le mandat par écrit</h3>
+      <h3 className={h3}>&ldquo;Pourquoi je paie plus que mon voisin ?&rdquo;</h3>
       <p className={p}>
-        Le PV d&apos;élection suffit légalement, mais un <strong className={strong}>contrat de mandat complémentaire</strong> — durée, périmètre exact, conditions de rémunération éventuelle — prévient les malentendus. Les conflits en copropriété naissent souvent d&apos;attentes imprécises.
+        C&apos;est la question numéro 1. La réponse : parce que les tantièmes ne sont pas identiques pour tous les lots — ils reflètent la surface, l&apos;étage, les équipements. Montrez-leur le tableau des tantièmes du règlement de copropriété. La transparence sur les chiffres désamorce 90 % des tensions.
+      </p>
+
+      <h3 className={h3}>&ldquo;Est-ce que je peux voir les comptes ?&rdquo;</h3>
+      <p className={p}>
+        Oui — c&apos;est même un droit légal. Prévoyez un accès aux relevés bancaires et aux justificatifs de dépenses, idéalement via un espace partagé (dossier Google Drive, ou espace copropriétaires sur votre outil de gestion).
+      </p>
+
+      <h3 className={h3}>&ldquo;Quand est la prochaine AG ?&rdquo;</h3>
+      <p className={p}>
+        L&apos;AG ordinaire doit se tenir dans les 6 mois qui suivent la clôture de l&apos;exercice comptable. Si votre exercice se clôt au 31 décembre, l&apos;AG doit avoir lieu avant le 30 juin. Posez une date dès votre prise de fonction.
+      </p>
+
+      <h3 className={h3}>&ldquo;Je loue mon appartement — mon locataire a un problème avec le chauffage&rdquo;</h3>
+      <p className={p}>
+        Si ça concerne les parties commues (chaudière collective, radiateurs des couloirs), c&apos;est de votre ressort. Si c&apos;est une partie privative (robinetterie, radiateur dans l&apos;appartement), c&apos;est entre le propriétaire et son locataire. Établissez clairement cette frontière dès le départ.
+      </p>
+
+      <h3 className={h3}>&ldquo;J&apos;ai un dégât des eaux — que faire ?&rdquo;</h3>
+      <p className={p}>
+        En tant que syndic : déclarez immédiatement à l&apos;assurance MRI de la copropriété si les parties communes sont impliquées. Demandez au copropriétaire de déclarer aussi à sa propre assurance habitation. Si le dégât vient d&apos;un autre appartement, les deux assurances communiqueront entre elles via la convention IRSI (moins de 5 000 €) ou CIDE-COP (au-delà).
+      </p>
+
+      <h2 id="erreurs-debut" className={h2}>Les 4 erreurs classiques qui coûtent des heures (ou pire, des procès)</h2>
+
+      <h3 className={h3}>Erreur 1 — Oublier le délai de 21 jours pour la convocation d&apos;AG</h3>
+      <p className={p}>
+        <strong className={strong}>21 jours calendaires minimum</strong> entre la réception des convocations et la date de l&apos;AG. Ce n&apos;est pas recommandé — c&apos;est légal. Une AG convoquée à J-18 peut être annulée sur recours d&apos;un copropriétaire. Posez une alerte calendrier dès votre prise de fonction.
       </p>
 
       <h3 className={h3}>Erreur 2 — Gérer les finances dans un fichier Excel</h3>
       <p className={p}>
-        Un tableur tient six mois, parfois un an. Il montre rapidement ses limites&nbsp;: pas de génération automatique de PDF, impossible de partager les comptes en temps réel, aucune traçabilité des relances. La migration vers un outil dédié, faite trop tard, est toujours laborieuse. Mieux vaut partir du bon pied.
+        Un tableur tient 6 mois, parfois un an. Ses limites : aucune traçabilité des relances, impossibilité de partager les comptes en temps réel, risque d&apos;erreur non détectable sur les tantièmes. La migration vers un outil dédié faite trop tard est toujours laborieuse. Partez du bon pied.
       </p>
 
-      <h3 className={h3}>Erreur 3 — Oublier le délai de convocation de l&apos;AG</h3>
+      <h3 className={h3}>Erreur 3 — Mélanger les comptes fonds de travaux et charges courantes</h3>
       <p className={p}>
-        <strong className={strong}>21 jours minimum</strong> entre l&apos;envoi des convocations et la date de l&apos;AG&nbsp;: c&apos;est la loi, et ce n&apos;est pas un délai indicatif. Une AG convoquée trop tardivement peut être annulée sur recours d&apos;un copropriétaire. Posez une alerte dès votre prise de fonction.
+        Les sommes du fonds de travaux ALUR ont un compte bancaire séparé — c&apos;est la loi. Utiliser un compte unique pour tout est une irrégularité qui peut bloquer une vente lors de l&apos;état daté, ou exposer le syndic à une mise en cause.
       </p>
 
-      {/* FAQ */}
+      <h3 className={h3}>Erreur 4 — Ne pas formaliser par écrit les décisions prises hors AG</h3>
+      <p className={p}>
+        Une dépense urgente (fuite sur la toiture → 800 € de réparation en urgence) peut être engagée par le syndic sous sa seule responsabilité. Mais elle doit être <strong className={strong}>formalisée par écrit</strong> (bon de commande, mail de validation à l&apos;entreprise) et présentée à l&apos;AG suivante pour ratification. Un syndic qui dépense sans trace écrite s&apos;expose à des accusations de gestion irrégulière.
+      </p>
+
       <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
 
-      <h3 className={h3}>Faut-il une formation pour devenir syndic bénévole&nbsp;?</h3>
-      <p className={p}>Non. Aucune formation certifiante n&apos;est requise par la loi. Des associations de copropriétaires (ARC, UNARC) proposent des formations pratiques utiles pour les débutants, mais elles ne sont pas obligatoires.</p>
+      <h3 className={h3}>Faut-il une formation pour devenir syndic bénévole ?</h3>
+      <p className={p}>Non. Aucune formation certifiante n&apos;est requise. Des associations de copropriétaires (ARC, UNARC) proposent des formations pratiques utiles, mais facultatives. La plupart des syndics bénévoles apprennent sur le tas — avec un bon guide et un outil adapté.</p>
 
-      <h3 className={h3}>Un syndic bénévole peut-il être rémunéré&nbsp;?</h3>
-      <p className={p}>Oui. L&apos;AG peut voter une rémunération forfaitaire ou des défraiements. Il n&apos;y a aucune obligation légale de travailler gratuitement. Mais la plupart des syndics bénévoles opèrent à titre gratuit, en contrepartie des économies générées pour la copropriété.</p>
+      <h3 className={h3}>Un syndic bénévole peut-il être rémunéré ?</h3>
+      <p className={p}>Oui. L&apos;AG peut voter une rémunération forfaitaire ou des défraiements. Il n&apos;y a aucune obligation de travailler gratuitement. En pratique, la plupart des syndics bénévoles exercent sans rémunération, en contrepartie des économies créées pour la copropriété (2 000 à 4 000 €/an selon la taille de l&apos;immeuble).</p>
 
-      <h3 className={h3}>Que se passe-t-il si personne ne veut être syndic&nbsp;?</h3>
-      <p className={p}>Si aucun syndic n&apos;est élu lors de l&apos;AG, tout copropriétaire peut saisir le tribunal judiciaire pour faire désigner un administrateur provisoire — généralement un professionnel, aux frais de la copropriété. Ce n&apos;est pas une situation idéale. Il vaut mieux anticiper la passation.</p>
+      <h3 className={h3}>Combien de temps ça prend au quotidien, honnêtement ?</h3>
+      <p className={p}>Pour un immeuble de 5 à 20 lots : <strong className={strong}>2 à 5 heures par mois</strong> en régime de croisière. La première année (reprise d&apos;un ancien syndic, mise en place) : 8 à 12 heures par mois les 3 premiers mois. La préparation d&apos;une AG annuelle : 4 à 8 heures supplémentaires. Avec un outil adapté, ce temps est divisé par deux.</p>
 
-      <h3 className={h3}>Combien de temps prend la gestion au quotidien&nbsp;?</h3>
-      <p className={p}>Pour un immeuble de 5 à 20 lots, entre <strong className={strong}>2 et 5 heures par mois</strong> en moyenne (hors préparation d&apos;AG). La préparation d&apos;une AG annuelle représente 4 à 8 heures supplémentaires. Avec un outil adapté, ce temps peut être divisé par deux.</p>
+      <h3 className={h3}>Que se passe-t-il si personne ne veut être syndic ?</h3>
+      <p className={p}>Si aucun syndic n&apos;est élu lors de l&apos;AG, tout copropriétaire peut saisir le tribunal judiciaire pour faire désigner un administrateur provisoire — généralement un professionnel, aux frais de la copropriété. Ce n&apos;est pas idéal. Anticipez la passation de pouvoir 3 mois à l&apos;avance.</p>
 
-      <h3 className={h3}>Le syndic bénévole peut-il déléguer des missions&nbsp;?</h3>
-      <p className={p}>Oui. Il peut s&apos;appuyer sur d&apos;autres copropriétaires ou des intervenants ponctuels pour des tâches spécifiques (comptabilité, coordination de travaux). La responsabilité légale reste sur le syndic désigné par l&apos;AG.</p>
+      <h3 className={h3}>Le syndic bénévole peut-il démissionner en cours de mandat ?</h3>
+      <p className={p}>Oui, mais il doit en informer les copropriétaires et convoquer une AG pour élire son successeur dans les meilleurs délais. Il reste responsable jusqu&apos;à la passation effective. En cas d&apos;urgence sans successeur désigné, le conseil syndical peut prendre les mesures conservatoires nécessaires.</p>
 
-      {/* Conclusion */}
+      <h3 className={h3}>Un copropriétaire peut-il se présenter en étant en retard de paiement ?</h3>
+      <p className={p}>La loi ne l&apos;interdit pas explicitement. En revanche, c&apos;est une situation délicate qui peut être soulevée par d&apos;autres copropriétaires lors de l&apos;élection. Idéalement, soldez les impayés avant de vous présenter.</p>
+
       <h2 id="en-resume" className={h2}>En résumé</h2>
       <p className={p}>
-        Devenir syndic bénévole, c&apos;est accessible à n&apos;importe quel copropriétaire motivé. Les conditions légales sont minimes. Ce qui fait la différence, c&apos;est la méthode&nbsp;: bien récupérer les archives, ouvrir les bons comptes, notifier les prestataires — et s&apos;équiper d&apos;un outil qui gère les flux récurrents sans se perdre dans des tableurs.
+        Devenir syndic bénévole est accessible à tout copropriétaire motivé. Les conditions légales sont minimales. Ce qui fait la différence dans les 6 premiers mois : récupérer les archives rapidement, ouvrir les bons comptes, notifier les prestataires — et s&apos;équiper d&apos;un outil qui gère les flux récurrents sans se perdre dans des tableurs.
       </p>
-      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide complet sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a> ou sur le <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>calcul des appels de fonds</a>.</p>
+      <p className={p}>Pierre, 8 mois après sa première AG : &ldquo;Je passe environ 3 heures par mois. L&apos;appel de fonds, je le génère en 10 minutes. La partie la plus longue, c&apos;est la préparation de l&apos;AG annuelle — mais ça m&apos;a pris moins de 5 heures en tout.&rdquo;</p>
+      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a> ou sur le <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>calcul des appels de fonds</a>.</p>
     </>
   );
 }
