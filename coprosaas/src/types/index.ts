@@ -24,6 +24,7 @@ export interface Profile {
   full_name: string;
   role: Role;
   created_at: string;
+  trial_used: boolean; // true si l'utilisateur a déjà activé un essai gratuit
 }
 
 // --- Copropriété avec rôle de l'utilisateur courant ---

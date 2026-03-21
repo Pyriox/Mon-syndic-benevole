@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Rate limiting : 5 emails de sécurité par utilisateur par heure
-  if (!rateLimit(user.id, 5, 3_600_000)) {
+  if (!await rateLimit(user.id, 5, 3_600_000)) {
     return NextResponse.json({ message: 'Trop de tentatives. Réessayez dans une heure.' }, { status: 429 });
   }
 

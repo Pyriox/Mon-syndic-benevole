@@ -78,6 +78,13 @@ export async function POST(req: NextRequest) {
           plan:                   'actif',
           plan_period_end:        periodEnd,
         });
+
+        // Marquer l'essai comme utilisé pour cet utilisateur (anti-abus recréation de copropriété)
+        const userId = session.metadata?.supabase_user_id;
+        if (userId) {
+          const supabase = createAdminClient();
+          await supabase.from('profiles').update({ trial_used: true }).eq('id', userId);
+        }
         break;
       }
 
@@ -183,7 +190,7 @@ export async function POST(req: NextRequest) {
           .from('coproprietes')
           .select('id')
           .eq('stripe_customer_id', customerId)
-          .single();
+          .maybeSingle();
         if (!copro) break;
         await updateCoproSubscription(copro.id, { plan: 'passe_du' });
         break;

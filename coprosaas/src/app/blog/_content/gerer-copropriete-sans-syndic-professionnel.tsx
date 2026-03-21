@@ -111,7 +111,7 @@ export default function ArticleGererCopropriete() {
           href="https://mon-syndic-benevole.fr/register"
           className="inline-block mt-5 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
         >
-          Essayer gratuitement — 30 jours offerts →
+          Essayer gratuitement — 14 jours offerts →
         </a>
       </div>
 

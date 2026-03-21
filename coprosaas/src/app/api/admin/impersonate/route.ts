@@ -7,19 +7,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
+function getAdminEmail(): string | undefined {
+  return process.env.ADMIN_EMAIL;
+}
 
 export async function POST(request: NextRequest) {
+  const ADMIN_EMAIL = getAdminEmail();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!ADMIN_EMAIL || !user || user.email !== ADMIN_EMAIL) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
   const body = await request.json() as { email?: string };
   const { email } = body;
 
-  if (!email || typeof email !== 'string' || email === ADMIN_EMAIL) {
+  if (!email || typeof email !== 'string' || (ADMIN_EMAIL && email === ADMIN_EMAIL)) {
     return NextResponse.json({ error: 'Email invalide ou protégé' }, { status: 400 });
   }
 

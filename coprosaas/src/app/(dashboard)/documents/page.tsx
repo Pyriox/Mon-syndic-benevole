@@ -233,11 +233,11 @@ export default async function DocumentsPage({ searchParams }: Props) {
                         <td className="px-5 py-3 text-right text-gray-500">{formatTaille(doc.taille)}</td>
                         <td className="px-5 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                            <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
                               className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Ouvrir">
                               <ExternalLink size={15} />
                             </a>
-                            <a href={doc.url} download={doc.nom}
+                            <a href={`/api/documents/${doc.id}/download`} download={doc.nom}
                               className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" title="Télécharger">
                               <Download size={15} />
                             </a>
@@ -479,11 +479,11 @@ export default async function DocumentsPage({ searchParams }: Props) {
                   <td className="px-5 py-3 text-right text-gray-500">{formatTaille(doc.taille)}</td>
                   <td className="px-5 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                      <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
                         className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Ouvrir">
                         <ExternalLink size={15} />
                       </a>
-                      <a href={doc.url} download={doc.nom}
+                      <a href={`/api/documents/${doc.id}/download`} download={doc.nom}
                         className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" title="Télécharger">
                         <Download size={15} />
                       </a>

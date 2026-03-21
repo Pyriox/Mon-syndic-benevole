@@ -70,25 +70,22 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     .eq('id', coproId)
     .single();
 
-  if (coproErr) console.error('[doStripeSync] Erreur lecture copropriété:', coproErr);
+  if (coproErr) console.error('[doStripeSync] Erreur lecture copropriété');
 
   let customerId: string | undefined = coproRow?.stripe_customer_id ?? undefined;
   let customerFoundViaStripe = false;
 
   // Fallback : chercher dans Stripe par métadonnée si absent de la DB
   if (!customerId) {
-    console.log('[doStripeSync] stripe_customer_id absent de la DB — recherche Stripe...');
     const existing = await stripeClient.customers.search({
       query: `metadata['copropriete_id']:'${coproId}'`,
       limit: 1,
     });
     if (existing.data.length === 0) {
-      console.log('[doStripeSync] Aucun customer Stripe trouvé pour coproId:', coproId);
       return false;
     }
     customerId = existing.data[0].id;
     customerFoundViaStripe = true;
-    console.log('[doStripeSync] Customer trouvé via Stripe search:', customerId);
   }
 
   const subs = await stripeClient.subscriptions.list({
@@ -97,22 +94,13 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     limit: 5,
   });
 
-  console.log('[doStripeSync] Abonnements trouvés:', subs.data.map((s) => ({ id: s.id, status: s.status })));
-
   const validSub = subs.data
     .filter((s) => !['canceled', 'incomplete_expired'].includes(s.status))
     .sort((a, b) => b.created - a.created)[0];
 
   if (!validSub) {
-    console.log('[doStripeSync] Aucun abonnement valide trouvé.');
     return false;
   }
-
-  // Loguer la structure réelle pour identifier les champs disponibles
-  const rawSub = validSub as unknown as Record<string, unknown>;
-  console.log('[doStripeSync] Abonnement retenu:', rawSub['id'], 'status:', rawSub['status']);
-  console.log('[doStripeSync] Champs disponibles:', Object.keys(rawSub).join(', '));
-  console.log('[doStripeSync] current_period_end:', rawSub['current_period_end']);
 
   // trialing = abonnement payant en période d'essai → on affiche "actif"
   const plan =
@@ -122,7 +110,7 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     : 'actif';
 
   // current_period_end peut être absent ou 0 dans certaines versions de l'API Stripe
-  // On essaie plusieurs champs selon la version de l'API
+  const rawSub = validSub as unknown as Record<string, unknown>;
   const rawItems = rawSub['items'] as { data: { price: { id: string } }[] } | undefined;
   const rawMeta = (rawSub['metadata'] as Record<string, string>) ?? {};
   const subId = rawSub['id'] as string;
@@ -137,8 +125,6 @@ async function doStripeSync(coproId: string): Promise<boolean> {
       ? (() => { try { return new Date(periodEndTimestamp * 1000).toISOString(); } catch { return null; } })()
       : null;
 
-  console.log('[doStripeSync] period_end calculé:', periodEndIso);
-
   const { error: updateErr } = await admin
     .from('coproprietes')
     .update({
@@ -151,15 +137,11 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     .eq('id', coproId);
 
   if (updateErr) {
-    console.error('[doStripeSync] Erreur UPDATE coproprietes:', updateErr);
+    console.error('[doStripeSync] Erreur UPDATE coproprietes');
     return false;
   }
 
-  if (customerFoundViaStripe) {
-    console.log('[doStripeSync] stripe_customer_id persisté en DB:', customerId);
-  }
-
-  console.log('[doStripeSync] Sync réussie. plan=', plan, 'sub=', subId);
+  void customerFoundViaStripe; // stripe_customer_id persisté en DB si trouvé via Stripe search
   return true;
 }
 

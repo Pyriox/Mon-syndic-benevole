@@ -8,7 +8,7 @@ export default function ReadOnlyBanner() {
       <Lock size={15} className="shrink-0 text-amber-500" />
       <span className="flex-1">
         Ce module est en <strong>lecture seule</strong>. Abonnez-vous pour créer, modifier et supprimer des éléments.{' '}
-        <strong>30 jours gratuits</strong>, le paiement est prélevé au 31e jour.
+        <strong>14 jours gratuits</strong>, le paiement est prélevé au 15e jour.
       </span>
       <Link
         href="/abonnement"

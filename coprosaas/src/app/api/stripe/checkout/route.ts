@@ -43,6 +43,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cette copropriété possède déjà un abonnement. Utilisez le portail pour le modifier.' }, { status: 409 });
     }
 
+    // Vérifier si l'utilisateur a déjà bénéficié d'un essai gratuit
+    const adminForProfile = createAdminClient();
+    const { data: profile } = await adminForProfile
+      .from('profiles')
+      .select('trial_used')
+      .eq('id', user.id)
+      .maybeSingle();
+    const trialAlreadyUsed = profile?.trial_used === true;
+
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
     // Créer ou récupérer le customer Stripe propre à cette copropriété
@@ -96,7 +105,8 @@ export async function POST(req: NextRequest) {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card', 'sepa_debit'],
-      payment_method_collection: 'if_required',
+      // 'always' : exige la saisie d'un moyen de paiement même pendant l'essai gratuit (facture 0€)
+      payment_method_collection: 'always',
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: {
         supabase_user_id: user.id,
@@ -114,7 +124,8 @@ export async function POST(req: NextRequest) {
         },
       },
       subscription_data: {
-        trial_period_days: 30,
+        // Pas d'essai si l'utilisateur en a déjà bénéficié (anti-abus recréation de copropriété)
+        ...(trialAlreadyUsed ? {} : { trial_period_days: 14 }),
         metadata: {
           supabase_user_id: user.id,
           copropriete_id: coproprieteid,

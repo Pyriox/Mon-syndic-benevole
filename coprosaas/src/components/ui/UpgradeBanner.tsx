@@ -18,7 +18,7 @@ export default function UpgradeBanner({ compact = false }: Props) {
         className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap"
       >
         <Crown size={13} />
-        S&apos;abonner — 30j gratuits
+        S&apos;abonner — 14j gratuits
       </Link>
     );
   }
@@ -33,7 +33,7 @@ export default function UpgradeBanner({ compact = false }: Props) {
         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
       >
         <Crown size={14} />
-        Démarrer l&apos;essai gratuit 30 jours
+        Démarrer l&apos;essai gratuit 14 jours
       </Link>
     </div>
   );

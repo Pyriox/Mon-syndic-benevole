@@ -97,6 +97,9 @@ interface AppelRow {
   coproprietes: { nom: string } | null;
 }
 
+type CopRow = { nom: string; prenom: string; email: string; user_id: string | null };
+type LigneRow = { montant_du: number; coproprietaires: CopRow | CopRow[] | null };
+
 // ---- Envoi des rappels pour un appel donné ----
 async function sendRappelEmails(
   supabase: ReturnType<typeof createServerClient>,
@@ -110,19 +113,40 @@ async function sendRappelEmails(
     .eq('appel_de_fonds_id', appel.id)
     .eq('paye', false);
 
-  const coproprieteNom = appel.coproprietes?.nom ?? '';
-  let sent = 0;
+  if (!lignes?.length) return 0;
 
-  for (const l of lignes ?? []) {
+  const coproprieteNom = appel.coproprietes?.nom ?? '';
+
+  // Collecte des copropriétaires à notifier
+  const rows = (lignes as LigneRow[]).map((l) => {
     const c = Array.isArray(l.coproprietaires) ? l.coproprietaires[0] : l.coproprietaires;
-    if (!c) continue;
-    const cop = c as { nom: string; prenom: string; email: string; user_id: string | null };
-    let email = cop.email ?? '';
-    if (!email && cop.user_id) {
-      const { data: authData } = await supabase.auth.admin.getUserById(cop.user_id);
-      email = authData?.user?.email ?? '';
-    }
-    if (!email) continue;
+    return {
+      cop: c as CopRow | null,
+      montant_du: l.montant_du,
+    };
+  }).filter((r): r is { cop: CopRow; montant_du: number } => r.cop !== null);
+
+  // Résolution des emails manquants en parallèle (batch, pas de N+1)
+  const userIdsToResolve: string[] = [...new Set<string>(
+    rows.filter((r) => !r.cop.email && r.cop.user_id).map((r) => r.cop.user_id as string)
+  )];
+
+  const emailByUserId = new Map<string, string>();
+  if (userIdsToResolve.length > 0) {
+    const results = await Promise.all(
+      userIdsToResolve.map((uid) => supabase.auth.admin.getUserById(uid))
+    );
+    userIdsToResolve.forEach((uid, i) => {
+      const email = results[i].data?.user?.email ?? '';
+      if (email) emailByUserId.set(uid, email);
+    });
+  }
+
+  // Envoi des emails
+  let sent = 0;
+  await Promise.all(rows.map(async ({ cop, montant_du }) => {
+    const email = cop.email || (cop.user_id ? emailByUserId.get(cop.user_id) ?? '' : '');
+    if (!email) return;
 
     const { error } = await resend.emails.send({
       from: FROM,
@@ -134,12 +158,12 @@ async function sendRappelEmails(
         nom:            cop.nom,
         coproprieteNom,
         titre:          appel.titre,
-        montantDu:      l.montant_du,
+        montantDu:      montant_du,
         dateEcheance:   appel.date_echeance,
       }),
     });
     if (!error) sent++;
-  }
+  }));
 
   return sent;
 }

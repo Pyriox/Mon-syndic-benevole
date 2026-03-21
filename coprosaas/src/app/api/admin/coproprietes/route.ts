@@ -10,9 +10,9 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
-
 async function checkAdmin() {
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+  if (!ADMIN_EMAIL) return null;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user?.email === ADMIN_EMAIL ? user : null;

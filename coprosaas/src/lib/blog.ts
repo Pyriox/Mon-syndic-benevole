@@ -12,6 +12,7 @@ export interface BlogPost {
   category: string;
   keywords: string[];
   toc: { id: string; text: string }[];
+  faqs?: { q: string; a: string }[];
 }
 
 export const posts: BlogPost[] = [
@@ -44,6 +45,24 @@ export const posts: BlogPost[] = [
       { id: 'le-temps', text: 'Ce que les copropriétaires sous-estiment souvent : le temps' },
       { id: 'questions-frequentes', text: 'Questions fréquentes' },
       { id: 'en-resume', text: 'En résumé' },
+    ],
+    faqs: [
+      {
+        q: "Un copropriétaire sans formation peut-il être syndic bénévole ?",
+        a: "Oui. La loi du 10 juillet 1965 n'impose aucun diplôme, agrément ou formation spécifique pour devenir syndic bénévole. Il suffit d'être copropriétaire et d'être élu en assemblée générale à la majorité de l'article 25.",
+      },
+      {
+        q: "Le syndic bénévole a-t-il les mêmes obligations légales qu'un syndic professionnel ?",
+        a: "Oui. Le syndic bénévole est soumis aux mêmes obligations légales que tout syndic : convoquer l'AG, tenir les comptes, gérer le fonds de travaux, déclarer les sinistres dans les délais contractuels, archiver les documents.",
+      },
+      {
+        q: "Combien coûte une gestion en syndic bénévole par rapport à un syndic professionnel ?",
+        a: "Un syndic professionnel facture en moyenne 150 à 300 € par lot et par an. Une gestion bénévole avec un logiciel dédié revient à quelques dizaines d'euros par mois pour l'ensemble de la copropriété, quel que soit le nombre de lots.",
+      },
+      {
+        q: "Comment passer d'un syndic professionnel à un syndic bénévole ?",
+        a: "La transition nécessite un vote en AG à la majorité de l'article 25, la récupération des archives auprès de l'ancien syndic dans les 15 jours, l'ouverture d'un compte bancaire séparé au nom du syndicat, et la notification des prestataires du changement.",
+      },
     ],
   },
   {
@@ -78,6 +97,24 @@ export const posts: BlogPost[] = [
       { id: 'questions-frequentes', text: 'Questions fréquentes' },
       { id: 'ce-quil-faut-retenir', text: 'Ce qu\'il faut retenir' },
     ],
+    faqs: [
+      {
+        q: "À quelle fréquence émettre les appels de fonds en copropriété ?",
+        a: "Les appels de fonds de budget prévisionnel sont émis chaque trimestre, en début de trimestre (1er janvier, 1er avril, 1er juillet, 1er octobre). Les appels exceptionnels pour travaux suivent le calendrier voté en AG.",
+      },
+      {
+        q: "Comment calculer la part d'un copropriétaire dans un appel de fonds ?",
+        a: "La quote-part se calcule en multipliant le montant total de l'appel par les tantièmes du lot, divisés par le total des tantièmes de la copropriété. Exemple : 120 tantièmes sur 1 000, appel trimestriel de 3 600 € → 432 € pour ce lot.",
+      },
+      {
+        q: "Que faire si un copropriétaire ne paie pas ses charges ?",
+        a: "La procédure est progressive : mise en demeure, puis injonction de payer auprès du tribunal judiciaire. Le syndicat bénéficie d'une hypothèque légale sur le lot du débiteur. Une relance proactive dès le premier retard évite généralement d'en arriver là.",
+      },
+      {
+        q: "Quelle est la différence entre appel de fonds et fonds de travaux ALUR ?",
+        a: "L'appel de fonds couvre les charges courantes et les travaux votés. Le fonds de travaux ALUR est une cotisation annuelle obligatoire (5 % du budget minimum) placée sur un compte séparé pour anticiper les gros travaux futurs.",
+      },
+    ],
   },
   {
     slug: 'fonds-de-travaux-alur-obligations-montant-gestion',
@@ -110,6 +147,159 @@ export const posts: BlogPost[] = [
       { id: 'notre-outil', text: 'Ce que Mon Syndic Bénévole fait pour vous' },
       { id: 'questions-frequentes', text: 'Questions fréquentes' },
       { id: 'ce-quil-faut-retenir', text: 'Ce qu\'il faut retenir' },
+    ],
+    faqs: [
+      {
+        q: "Le fonds de travaux ALUR est-il obligatoire pour toutes les copropriétés ?",
+        a: "Il est obligatoire pour les copropriétés de 10 lots ou plus depuis le 1er janvier 2017. Les copropriétés de moins de 10 lots peuvent en constituer un volontairement.",
+      },
+      {
+        q: "Quel est le montant minimum du fonds de travaux obligatoire ?",
+        a: "Le minimum légal est de 5 % du montant du budget prévisionnel des charges courantes voté en AG. L'AG peut voter un montant supérieur selon les besoins de l'immeuble.",
+      },
+      {
+        q: "Les sommes versées au fonds de travaux sont-elles remboursables lors d'une vente ?",
+        a: "Non. Lors de la vente d'un lot, les sommes versées au fonds de travaux restent acquises à la copropriété. Elles ne sont pas remboursables au vendeur.",
+      },
+      {
+        q: "Sur quel compte bancaire doit être placé le fonds de travaux ?",
+        a: "Le fonds de travaux doit obligatoirement être placé sur un compte bancaire séparé du compte courant de la copropriété, au nom du syndicat des copropriétaires.",
+      },
+    ],
+  },
+  // ── Nouveaux articles ────────────────────────────────────────────────────────
+  {
+    slug: 'comment-devenir-syndic-benevole',
+    title: 'Comment devenir syndic bénévole : les 6 étapes indispensables',
+    description:
+      'Comment devenir syndic bénévole : conditions légales, élection en AG, démarches dans les 30 premiers jours et obligations récurrentes. Guide complet 2026.',
+    publishedAt: '2026-03-21',
+    readingTime: 10,
+    category: 'Guide pratique – Devenir syndic',
+    keywords: [
+      'comment devenir syndic bénévole',
+      'syndic bénévole',
+      'élection syndic bénévole',
+      'devenir syndic copropriété',
+      'démarches syndic bénévole',
+      'syndic non professionnel',
+    ],
+    toc: [
+      { id: 'qui-peut', text: 'Qui peut devenir syndic bénévole ?' },
+      { id: 'election', text: "L'élection en AG : comment ça se passe ?" },
+      { id: '30-premiers-jours', text: 'Les 30 premiers jours : 5 démarches indispensables' },
+      { id: 'checklist-obligations', text: 'Checklist des obligations légales permanentes' },
+      { id: 'erreurs-courantes', text: 'Les 3 erreurs les plus fréquentes en début de mandat' },
+      { id: 'questions-frequentes', text: 'Questions fréquentes' },
+      { id: 'en-resume', text: 'En résumé' },
+    ],
+    faqs: [
+      {
+        q: "Faut-il un diplôme ou une formation pour devenir syndic bénévole ?",
+        a: "Non. Aucun diplôme, agrément ou formation n'est requis. Il suffit d'être copropriétaire de l'immeuble et d'être élu en assemblée générale à la majorité de l'article 25.",
+      },
+      {
+        q: "Quelles sont les premières démarches après l'élection comme syndic bénévole ?",
+        a: "Dans les 30 premiers jours : récupérer les archives de l'ancien syndic (sous 15 jours), ouvrir un compte bancaire au nom du syndicat des copropriétaires, notifier les prestataires, constituer le registre des copropriétaires, et identifier les contrats en cours.",
+      },
+      {
+        q: "Le syndic bénévole peut-il être rémunéré ?",
+        a: "Oui, si l'assemblée générale vote une rémunération. La loi ne l'interdit pas. En pratique, beaucoup de syndics bénévoles exercent sans rémunération ou avec une compensation forfaitaire modeste.",
+      },
+      {
+        q: "Combien de temps prend la gestion d'une copropriété en syndic bénévole ?",
+        a: "Pour un immeuble de 5 à 20 lots, comptez entre 2 et 5 heures par mois en gestion courante, plus 4 à 8 heures pour la préparation de l'AG annuelle. Un logiciel dédié réduit significativement ce temps.",
+      },
+    ],
+  },
+  {
+    slug: 'obligations-syndic-benevole',
+    title: 'Obligations du syndic bénévole : la checklist légale complète',
+    description:
+      'Obligations du syndic bénévole : administratives, financières, opérationnelles et d\'information. Checklist complète avec sources légales et risques en cas de manquement.',
+    publishedAt: '2026-03-21',
+    readingTime: 9,
+    category: 'Guide pratique – Obligations légales',
+    keywords: [
+      'obligations syndic bénévole',
+      'responsabilités syndic bénévole',
+      'obligations légales copropriété',
+      'checklist syndic bénévole',
+      'loi copropriété syndic',
+      'mandat syndic obligations',
+    ],
+    toc: [
+      { id: 'cadre-legal', text: "D'où viennent ces obligations ? Le cadre légal" },
+      { id: 'obligations-administratives', text: 'Obligations administratives' },
+      { id: 'obligations-financieres', text: 'Obligations financières' },
+      { id: 'obligations-operationnelles', text: 'Obligations opérationnelles' },
+      { id: 'obligations-information', text: "Obligations d'information" },
+      { id: 'checklist', text: 'Checklist récapitulative par fréquence' },
+      { id: 'risques-manquement', text: 'Ce que vous risquez en cas de manquement' },
+      { id: 'questions-frequentes', text: 'Questions fréquentes' },
+      { id: 'en-resume', text: 'En résumé' },
+    ],
+    faqs: [
+      {
+        q: "Quelles sont les principales obligations légales du syndic bénévole ?",
+        a: "Le syndic bénévole doit : convoquer l'AG annuelle avec 21 jours de préavis, tenir les comptes, émettre les appels de fonds trimestriels, gérer le fonds de travaux ALUR, maintenir l'assurance multirisques immeuble, et archiver les documents pendant 10 ans.",
+      },
+      {
+        q: "Le syndic bénévole est-il obligé d'ouvrir un compte bancaire séparé ?",
+        a: "Oui. La loi du 10 juillet 1965 (article 18-2) impose que le compte soit ouvert au nom du syndicat des copropriétaires, distinct des comptes personnels du syndic. Un second compte séparé est requis pour le fonds de travaux.",
+      },
+      {
+        q: "Quelle est la responsabilité du syndic bénévole en cas de faute ?",
+        a: "Le syndic bénévole engage sa responsabilité civile comme tout mandataire. En cas de faute (AG non convoquée dans les délais, absence d'assurance, comptabilité irrégulière), il peut être mis en cause par les copropriétaires lésés.",
+      },
+      {
+        q: "Combien de temps faut-il conserver les documents de copropriété ?",
+        a: "Les documents doivent être conservés pendant au moins 10 ans : procès-verbaux d'AG, contrats, factures, correspondances importantes.",
+      },
+    ],
+  },
+  {
+    slug: 'logiciel-syndic-benevole',
+    title: 'Logiciel syndic bénévole : fonctionnalités indispensables en 2026',
+    description:
+      'Logiciel syndic bénévole : les 6 fonctionnalités indispensables, pourquoi Excel ne suffit plus et comment choisir le bon outil pour gérer votre copropriété en 2026.',
+    publishedAt: '2026-03-21',
+    readingTime: 9,
+    category: 'Guide pratique – Outils & Logiciels',
+    keywords: [
+      'logiciel syndic bénévole',
+      'logiciel gestion copropriété',
+      'outil syndic bénévole',
+      'application copropriété',
+      'logiciel appel de fonds copropriété',
+      'gestion copropriété sans cabinet',
+    ],
+    toc: [
+      { id: 'pourquoi-excel-ne-suffit-pas', text: "Pourquoi Excel ne suffit plus après un an" },
+      { id: 'fonctionnalites-indispensables', text: "Les 6 fonctionnalités vraiment indispensables" },
+      { id: 'ce-qui-change-concretement', text: "Ce que ça change concrètement" },
+      { id: 'syndic-professionnel-vs-logiciel', text: "Logiciel dédié vs syndic professionnel : les coûts" },
+      { id: 'criteres-de-choix', text: "Les critères qui font vraiment la différence" },
+      { id: 'questions-frequentes', text: 'Questions fréquentes' },
+      { id: 'en-resume', text: 'En résumé' },
+    ],
+    faqs: [
+      {
+        q: "Quel logiciel choisir pour gérer une copropriété en syndic bénévole ?",
+        a: "Un bon logiciel de syndic bénévole doit couvrir : la gestion des lots et tantièmes, la génération automatique des appels de fonds, le suivi des paiements, la comptabilité (compte courant + fonds de travaux séparé), la gestion des AG et l'accès des copropriétaires à leurs documents.",
+      },
+      {
+        q: "À partir de combien de lots est-il utile d'utiliser un logiciel de gestion de copropriété ?",
+        a: "Dès le deuxième lot. Même une petite copropriété de 3 ou 4 lots a besoin d'un suivi rigoureux des appels de fonds, des paiements et des AG. Le temps gagné justifie le coût dès la première année.",
+      },
+      {
+        q: "Combien coûte un logiciel de gestion pour syndic bénévole ?",
+        a: "Mon Syndic Bénévole coûte moins de 25 € par mois pour l'ensemble de la copropriété, quel que soit le nombre de lots. C'est à comparer à 1 500–5 000 € par an pour un syndic professionnel sur un immeuble de 10 à 20 lots.",
+      },
+      {
+        q: "Un logiciel de syndic bénévole est-il conforme aux obligations légales ?",
+        a: "Mon Syndic Bénévole intègre la gestion du fonds de travaux ALUR sur compte séparé, la comptabilité en parties doubles pour les copropriétés de plus de 10 lots, et les modèles de documents conformes aux obligations légales.",
+      },
     ],
   },
 ];

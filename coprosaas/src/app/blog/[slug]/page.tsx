@@ -11,11 +11,17 @@ import { getPost, formatPublishedAt, posts } from '@/lib/blog';
 import ArticleGerer from '../_content/gerer-copropriete-sans-syndic-professionnel';
 import ArticleAppel from '../_content/appel-de-fonds-copropriete-calcul-repartition';
 import ArticleFonds from '../_content/fonds-de-travaux-alur-obligations-montant-gestion';
+import ArticleCommentDevenir from '../_content/comment-devenir-syndic-benevole';
+import ArticleObligations from '../_content/obligations-syndic-benevole';
+import ArticleLogiciel from '../_content/logiciel-syndic-benevole';
 
 const contentMap: Record<string, ComponentType> = {
   'gerer-copropriete-sans-syndic-professionnel': ArticleGerer,
   'appel-de-fonds-copropriete-calcul-repartition': ArticleAppel,
   'fonds-de-travaux-alur-obligations-montant-gestion': ArticleFonds,
+  'comment-devenir-syndic-benevole': ArticleCommentDevenir,
+  'obligations-syndic-benevole': ArticleObligations,
+  'logiciel-syndic-benevole': ArticleLogiciel,
 };
 
 // ── Static params ────────────────────────────────────────────────────────────
@@ -99,6 +105,19 @@ export default async function ArticlePage({
           { '@type': 'ListItem', position: 3, name: post.title, item: `${APP_URL}/blog/${post.slug}` },
         ],
       },
+      ...(post.faqs && post.faqs.length > 0
+        ? [
+            {
+              '@type': 'FAQPage',
+              '@id': `${APP_URL}/blog/${post.slug}#faq`,
+              mainEntity: post.faqs.map(({ q, a }) => ({
+                '@type': 'Question',
+                name: q,
+                acceptedAnswer: { '@type': 'Answer', text: a },
+              })),
+            },
+          ]
+        : []),
     ],
   };
 

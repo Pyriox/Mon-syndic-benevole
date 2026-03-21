@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Rate limiting : 20 invitations par utilisateur par 10 minutes
-  if (!rateLimit(user.id, 20, 600_000)) {
+  if (!await rateLimit(user.id, 20, 600_000)) {
     return NextResponse.json({ error: "Trop d'invitations envoyées. Réessayez dans 10 minutes." }, { status: 429 });
   }
 

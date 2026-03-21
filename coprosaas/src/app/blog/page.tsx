@@ -4,13 +4,13 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import { posts, formatPublishedAt } from '@/lib/blog';
 
 export const metadata: Metadata = {
-  title: 'Blog — Conseils pour votre copropriété | Mon Syndic Bénévole',
+  title: 'Blog syndic bénévole — Guides pratiques et logiciel de gestion | Mon Syndic Bénévole',
   description:
-    'Guides pratiques, obligations légales et conseils financiers pour les syndics bénévoles. Gérez votre copropriété sereinement.',
+    'Guides pratiques pour syndic bénévole : obligations légales, appels de fonds, fonds de travaux ALUR, logiciel de gestion copropriété. Tout ce que vous devez savoir pour gérer sans cabinet professionnel.',
   openGraph: {
-    title: 'Blog — Mon Syndic Bénévole',
+    title: 'Blog syndic bénévole — Mon Syndic Bénévole',
     description:
-      'Guides pratiques et conseils pour gérer votre copropriété en tant que syndic bénévole.',
+      'Guides pratiques et conseils pour gérer votre copropriété en tant que syndic bénévole. Logiciel de gestion à partir de 25 €/mois.',
     url: 'https://mon-syndic-benevole.fr/blog',
     siteName: 'Mon Syndic Bénévole',
     locale: 'fr_FR',

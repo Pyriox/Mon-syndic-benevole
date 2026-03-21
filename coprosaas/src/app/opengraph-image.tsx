@@ -85,7 +85,7 @@ export default async function Image() {
               fontWeight: '600',
             }}
           >
-            ✓ 30 jours gratuits
+            ✓ 14 jours gratuits
           </div>
           <div
             style={{

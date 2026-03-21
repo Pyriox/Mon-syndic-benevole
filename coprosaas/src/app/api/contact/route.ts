@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   // Rate limiting : 5 messages par IP par minute
   const ip = getClientIp(req);
-  if (!rateLimit(ip, 5, 60_000)) {
+  if (!await rateLimit(ip, 5, 60_000)) {
     return NextResponse.json({ message: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 });
   }
 
