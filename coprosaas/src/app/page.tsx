@@ -210,7 +210,7 @@ export default function HomePage() {
 
           <p className="text-base sm:text-xl text-blue-100/80 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
             Remplissez vous-même le rôle de syndic bénévole — charges, assemblées générales,
-            appels de fonds. Sans connaissances juridiques requises. Opérationnel en 5 minutes.
+            appels de fonds. Sans connaissances juridiques requises. Opérationnel en moins de 30 minutes.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 sm:mb-12">
@@ -814,7 +814,7 @@ export default function HomePage() {
             {[
               {
                 step: '01', bg: 'bg-blue-600', ring: 'ring-blue-100', textColor: 'text-blue-600',
-                Icon: Building2, time: '2 min',
+                Icon: Building2, time: '5 min',
                 title: 'Créez votre copropriété',
                 desc: "Renseignez l'adresse, ajoutez chaque lot et ses tantièmes généraux et spéciaux. L'interface vous guide pas à pas.",
                 detail: ['Adresse et données de base', 'Lots et tantièmes', 'Documents fondateurs'],
@@ -828,7 +828,7 @@ export default function HomePage() {
               },
               {
                 step: '03', bg: 'bg-violet-600', ring: 'ring-violet-100', textColor: 'text-violet-600',
-                Icon: Wallet, time: '15 min',
+                Icon: Wallet, time: '10 min',
                 title: 'Configurez vos finances',
                 desc: "Saisissez votre budget prévisionnel. Mon Syndic Bénévole calcule automatiquement la quote-part de chaque copropriétaire et génère les appels de fonds.",
                 detail: ['Budget prévisionnel annuel', 'Appels de fonds trimestriels', 'Fonds de travaux ALUR séparé'],
