@@ -9,7 +9,7 @@ import {
   AlertTriangle, FileText, Wallet, ArrowRight,
   Shield, Scale, ArrowUp, BellRing, Banknote,
   LayoutDashboard, HelpCircle, UserCircle, LogOut, CreditCard,
-  X,
+  X, Clock,
 } from 'lucide-react';
 import SiteLogo from '@/components/ui/SiteLogo';
 import LandingNav from './LandingNav';
@@ -797,6 +797,84 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ══════════════════════════════ COMMENT ÇA MARCHE ══════════════════════════════ */}
+      <section aria-labelledby="howto-heading" className="bg-gray-50 border-y border-gray-100 py-14 sm:py-20 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Comment ça marche</p>
+            <h2 id="howto-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Opérationnel en moins de 30&nbsp;minutes
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Aucune formation, aucune migration. Suivez les 4 étapes et votre copropriété est en ligne.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              {
+                step: '01', bg: 'bg-blue-600', ring: 'ring-blue-100', textColor: 'text-blue-600',
+                Icon: Building2, time: '2 min',
+                title: 'Créez votre copropriété',
+                desc: "Renseignez l'adresse, ajoutez chaque lot et ses tantièmes généraux et spéciaux. L'interface vous guide pas à pas.",
+                detail: ['Adresse et données de base', 'Lots et tantièmes', 'Documents fondateurs'],
+              },
+              {
+                step: '02', bg: 'bg-indigo-600', ring: 'ring-indigo-100', textColor: 'text-indigo-600',
+                Icon: Users, time: '5 min',
+                title: 'Invitez vos copropriétaires',
+                desc: "Renseignez les coordonnées de chaque copropriétaire. Chacun reçoit une invitation et accède à son espace personnel sécurisé.",
+                detail: ['Nom, e-mail, numéro de lot', 'Invitation automatique par e-mail', 'Espace personnel dédié'],
+              },
+              {
+                step: '03', bg: 'bg-violet-600', ring: 'ring-violet-100', textColor: 'text-violet-600',
+                Icon: Wallet, time: '15 min',
+                title: 'Configurez vos finances',
+                desc: "Saisissez votre budget prévisionnel. Mon Syndic Bénévole calcule automatiquement la quote-part de chaque copropriétaire et génère les appels de fonds.",
+                detail: ['Budget prévisionnel annuel', 'Appels de fonds trimestriels', 'Fonds de travaux ALUR séparé'],
+              },
+              {
+                step: '04', bg: 'bg-purple-600', ring: 'ring-purple-100', textColor: 'text-purple-600',
+                Icon: LayoutDashboard, time: 'Au quotidien',
+                title: 'Gérez depuis votre tableau de bord',
+                desc: "Trésorerie en temps réel, relances automatiques, AG, dépôt de documents — tout au même endroit, depuis n'importe quel appareil.",
+                detail: ['Suivi des paiements et impayés', 'AG et procès-verbaux', 'Documents et incidents'],
+              },
+            ].map(({ step, bg, ring, textColor, Icon, time, title, desc, detail }) => (
+              <div key={step} className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 flex gap-5 hover:border-gray-300 hover:shadow-sm transition-all">
+                <div className="shrink-0 flex flex-col items-center gap-2">
+                  <div className={`w-12 h-12 ${bg} ring-8 ${ring} rounded-2xl flex items-center justify-center shadow-md`}>
+                    <Icon size={20} className="text-white" />
+                  </div>
+                  <span className={`text-xs font-bold ${textColor}`}>{step}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="font-bold text-gray-900 text-base">{title}</h3>
+                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium shrink-0">{time}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 leading-relaxed mb-3">{desc}</p>
+                  <ul className="space-y-1.5">
+                    {detail.map((d) => (
+                      <li key={d} className="flex items-center gap-2 text-xs text-gray-600">
+                        <CheckCircle size={11} className="text-green-500 shrink-0" /> {d}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
+              Démarrer maintenant <ArrowRight size={16} />
+            </Link>
+            <p className="mt-3 text-sm text-gray-400">Opérationnel en 30 minutes · Aucune formation requise</p>
+          </div>
+        </div>
+      </section>
+
             {/* ── Tarif ── */}
       <section id="tarif" aria-labelledby="pricing-heading" className="py-14 sm:py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-5xl mx-auto">
@@ -890,6 +968,57 @@ export default function HomePage() {
           <p className="text-center text-gray-400 text-xs mt-8">
             Un abonnement par copropriété. Facturation annuelle.
           </p>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════ PREUVES SOCIALES ══════════════════════════════ */}
+      <section aria-labelledby="preuves-sociales-heading" className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-14 sm:py-20 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-3">Ils nous font confiance</p>
+            <h2 id="preuves-sociales-heading" className="text-3xl md:text-4xl font-bold text-white">
+              Des syndics bénévoles qui gèrent mieux, pour moins cher
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+            {[
+              {
+                value: '+100',
+                label: 'copropriétés accompagnées',
+                sublabel: 'et ce chiffre grandit chaque mois',
+                Icon: Building2,
+                color: 'text-blue-400',
+              },
+              {
+                value: '2 400 €',
+                label: 'économisés par an en moyenne',
+                sublabel: 'vs un cabinet syndic professionnel',
+                Icon: Banknote,
+                color: 'text-yellow-400',
+              },
+              {
+                value: '30 min',
+                label: 'pour démarrer',
+                sublabel: 'de la création à votre premier appel de fonds',
+                Icon: Clock,
+                color: 'text-green-400',
+              },
+            ].map(({ value, label, sublabel, Icon, color }) => (
+              <div key={label} className="text-center bg-white/5 border border-white/10 rounded-2xl px-6 py-8">
+                <Icon size={28} className={`${color} mx-auto mb-4`} />
+                <p className={`text-4xl sm:text-5xl font-extrabold ${color} mb-2`}>{value}</p>
+                <p className="text-base font-semibold text-white mb-1">{label}</p>
+                <p className="text-sm text-blue-200/60">{sublabel}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link href="/register" className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30">
+              Rejoindre les 100+ copropriétés <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
       </section>
 

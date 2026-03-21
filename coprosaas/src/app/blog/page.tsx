@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SiteLogo from '@/components/ui/SiteLogo';
+import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import { posts, formatPublishedAt } from '@/lib/blog';
 
 export const metadata: Metadata = {
@@ -27,7 +28,7 @@ export default function BlogPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
             <SiteLogo size={32} />
-            <span className="font-bold text-gray-900 text-sm">Mon Syndic Bénévole</span>
+            <span className="font-bold text-gray-900 text-sm hidden sm:block">Mon Syndic Bénévole</span>
           </Link>
           <Link
             href="/register"
@@ -38,26 +39,41 @@ export default function BlogPage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 pt-14 pb-10">
-        <p className="text-blue-600 text-sm font-medium uppercase tracking-widest mb-3">Blog</p>
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 leading-tight">
-          Tout ce que doit savoir un syndic bénévole
-        </h1>
-        <p className="text-gray-500 text-base sm:text-lg max-w-2xl">
-          Guides pratiques, règles légales et conseils financiers pour gérer votre copropriété sans
-          cabinet professionnel.
-        </p>
-      </section>
+      {/* Hero — dark gradient, same as articles */}
+      <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950">
+        <div className="max-w-5xl mx-auto px-6 pt-12 pb-12">
+          {/* Breadcrumb */}
+          <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs text-blue-200 mb-6">
+            <Link href="/" className="hover:text-white transition-colors">Accueil</Link>
+            <span className="text-blue-400/60" aria-hidden="true">/</span>
+            <span className="text-blue-100/80">Blog</span>
+          </nav>
+
+          {/* Label */}
+          <span className="inline-block text-xs font-medium text-blue-200 bg-white/10 border border-white/20 rounded-full px-3 py-0.5 mb-6">
+            Guides pratiques · {posts.length} articles
+          </span>
+
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight mb-5 max-w-2xl">
+            Tout ce que doit savoir un syndic bénévole
+          </h1>
+
+          {/* Description */}
+          <p className="text-blue-200 text-base sm:text-lg max-w-2xl leading-relaxed border-t border-white/20 pt-6">
+            Obligations légales, appels de fonds, fonds de travaux, choix du bon outil&nbsp;— des guides concrets pour gérer votre copropriété sans cabinet professionnel.
+          </p>
+        </div>
+      </div>
 
       {/* Article grid */}
-      <main className="max-w-5xl mx-auto px-6 pb-20">
+      <main className="max-w-5xl mx-auto px-6 py-12 pb-20">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
-              className="group flex flex-col bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
+              className="group flex flex-col bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-blue-200 hover:shadow-md transition-all"
             >
               {/* Category */}
               <span className="inline-block text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-3 py-0.5 mb-4 self-start">
@@ -65,29 +81,32 @@ export default function BlogPage() {
               </span>
 
               {/* Title */}
-              <h2 className="text-base font-bold text-gray-900 leading-snug mb-3 group-hover:text-blue-700 transition-colors">
+              <h2 className="text-base font-bold text-gray-900 leading-snug mb-3 group-hover:text-blue-700 transition-colors flex-1">
                 {post.title}
               </h2>
 
               {/* Description */}
-              <p className="text-sm text-gray-500 leading-relaxed flex-1 mb-5">
+              <p className="text-sm text-gray-500 leading-relaxed mb-5 line-clamp-3">
                 {post.description}
               </p>
 
-              {/* Meta */}
-              <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-4">
-                <span>{formatPublishedAt(post.publishedAt)}</span>
-                <span>{post.readingTime} min de lecture</span>
-              </div>
-
-              {/* CTA */}
-              <div className="mt-4 text-sm font-medium text-blue-600 group-hover:text-blue-700 transition-colors">
-                Lire l&apos;article →
+              {/* Meta + CTA */}
+              <div className="border-t border-gray-100 pt-4 flex items-center justify-between text-xs text-gray-400">
+                <div className="flex items-center gap-3">
+                  <time dateTime={post.publishedAt}>{formatPublishedAt(post.publishedAt)}</time>
+                  <span className="w-1 h-1 rounded-full bg-gray-300" aria-hidden="true" />
+                  <span>{post.readingTime} min</span>
+                </div>
+                <span className="text-blue-600 group-hover:text-blue-700 font-semibold transition-colors">
+                  Lire →
+                </span>
               </div>
             </Link>
           ))}
         </div>
       </main>
+
+      <ScrollToTopButton />
 
       {/* Footer */}
       <footer className="bg-gray-50 border-t border-gray-200 py-10 px-4 sm:px-6">
