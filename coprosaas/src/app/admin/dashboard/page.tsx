@@ -23,11 +23,11 @@ function fmtEur(n: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 }
 function fmtDate(s: string | null | undefined): string {
-  if (!s) return '\u2014';
+  if (!s) return '—';
   return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 function timeAgo(s: string | null | undefined): string {
-  if (!s) return '\u2014';
+  if (!s) return '—';
   const d = Math.floor((Date.now() - new Date(s).getTime()) / 86400000);
   if (d === 0) return "Aujourd'hui";
   if (d === 1) return 'Hier';
@@ -169,7 +169,7 @@ export default async function AdminDashboardPage() {
   const alertPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du');
   const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertCoprosWithoutLots.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length;
 
-  const syndicUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropri\u00e9taire');
+  const syndicUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire');
 
   void fmtDate; // used below
 
@@ -188,7 +188,7 @@ export default async function AdminDashboardPage() {
           <div className="flex gap-3 flex-wrap">
             {([
               { val: fmtEur(mrr), lbl: 'MRR' },
-              { val: String(nbActifs), lbl: 'Abonn\u00e9s' },
+              { val: String(nbActifs), lbl: 'Abonnés' },
               { val: String(nbEssai), lbl: 'Trials' },
               { val: String(nbUsers), lbl: 'Users' },
             ] as { val: string; lbl: string }[]).map(({ val, lbl }) => (
@@ -209,10 +209,10 @@ export default async function AdminDashboardPage() {
 
       {/* ── KPIs principaux ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="MRR" value={fmtEur(mrr)} sub={`ARR\u00a0: ${fmtEur(arr)} \u00b7 conv. ${conversionPct}\u00a0%`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
-        <KpiCard label="Abonn\u00e9s actifs" value={nbActifs} sub={`${nbEssai} en essai \u00b7 ${nbPasseDu} impay\u00e9s`} icon={CreditCard} color="bg-blue-100 text-blue-600" danger={nbPasseDu > 0} />
+        <KpiCard label="MRR" value={fmtEur(mrr)} sub={`ARR : ${fmtEur(arr)} · conv. ${conversionPct} %`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
+        <KpiCard label="Abonnés actifs" value={nbActifs} sub={`${nbEssai} en essai · ${nbPasseDu} impayés`} icon={CreditCard} color="bg-blue-100 text-blue-600" danger={nbPasseDu > 0} />
         <KpiCard label="Trials actifs" value={nbEssai} sub={`+${newUsers7} users cette semaine`} icon={Zap} color="bg-amber-100 text-amber-600" />
-        <KpiCard label="Churn (lifetime)" value={`${churnRate}\u00a0%`} sub={`${churned.length} r\u00e9sili\u00e9s / ${hadStripe.length} abonn\u00e9s`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
+        <KpiCard label="Churn (lifetime)" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} abonnés`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
       </div>
 
       {/* ── Alertes ── */}
@@ -227,7 +227,7 @@ export default async function AdminDashboardPage() {
               <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-3">
                 <CreditCard size={14} className="text-red-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-red-800">{alertPasseDu.length} abonnement{alertPasseDu.length > 1 ? 's' : ''} impay\u00e9{alertPasseDu.length > 1 ? 's' : ''}</p>
+                  <p className="text-sm font-semibold text-red-800">{alertPasseDu.length} abonnement{alertPasseDu.length > 1 ? 's' : ''} impayé{alertPasseDu.length > 1 ? 's' : ''}</p>
                   <Link href="/admin/abonnements" className="text-xs text-red-600 mt-0.5 hover:underline">Voir abonnements</Link>
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default async function AdminDashboardPage() {
               <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-3">
                 <XCircle size={14} className="text-red-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-red-800">{stripeFailures.length} paiement{stripeFailures.length > 1 ? 's' : ''} \u00e9chou\u00e9{stripeFailures.length > 1 ? 's' : ''}</p>
+                  <p className="text-sm font-semibold text-red-800">{stripeFailures.length} paiement{stripeFailures.length > 1 ? 's' : ''} échoué{stripeFailures.length > 1 ? 's' : ''}</p>
                   <Link href="/admin/abonnements" className="text-xs text-red-600 mt-0.5 hover:underline">Voir abonnements</Link>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export default async function AdminDashboardPage() {
               <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
                 <Clock size={14} className="text-amber-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-amber-800">{alertNonConfirmedOld.length} compte{alertNonConfirmedOld.length > 1 ? 's' : ''} non v\u00e9rifi\u00e9 depuis plus de 7j</p>
+                  <p className="text-sm font-semibold text-amber-800">{alertNonConfirmedOld.length} compte{alertNonConfirmedOld.length > 1 ? 's' : ''} non vérifié depuis plus de 7j</p>
                   <Link href="/admin/utilisateurs" className="text-xs text-amber-600 mt-0.5 hover:underline">Voir utilisateurs</Link>
                 </div>
               </div>
@@ -263,7 +263,7 @@ export default async function AdminDashboardPage() {
               <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-3">
                 <Send size={14} className="text-orange-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-orange-800">{alertInvitationsExpirees.length} invitation{alertInvitationsExpirees.length > 1 ? 's' : ''} expir\u00e9e{alertInvitationsExpirees.length > 1 ? 's' : ''}</p>
+                  <p className="text-sm font-semibold text-orange-800">{alertInvitationsExpirees.length} invitation{alertInvitationsExpirees.length > 1 ? 's' : ''} expirée{alertInvitationsExpirees.length > 1 ? 's' : ''}</p>
                   <Link href="/admin/utilisateurs" className="text-xs text-orange-600 mt-0.5 hover:underline">Voir utilisateurs</Link>
                 </div>
               </div>
@@ -272,8 +272,8 @@ export default async function AdminDashboardPage() {
               <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-3">
                 <DoorOpen size={14} className="text-blue-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-blue-800">{alertCoprosWithoutLots.length} copropri\u00e9t\u00e9{alertCoprosWithoutLots.length > 1 ? 's' : ''} sans lots</p>
-                  <Link href="/admin/coproprietes" className="text-xs text-blue-600 mt-0.5 hover:underline">Voir copropri\u00e9t\u00e9s</Link>
+                  <p className="text-sm font-semibold text-blue-800">{alertCoprosWithoutLots.length} copropriété{alertCoprosWithoutLots.length > 1 ? 's' : ''} sans lots</p>
+                  <Link href="/admin/coproprietes" className="text-xs text-blue-600 mt-0.5 hover:underline">Voir copropriétés</Link>
                 </div>
               </div>
             )}
@@ -285,24 +285,24 @@ export default async function AdminDashboardPage() {
       <section>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Plateforme en chiffres</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiCard label="Lots g\u00e9r\u00e9s"       value={nbLots ?? 0}            icon={DoorOpen}     color="bg-violet-100 text-violet-600" />
-          <KpiCard label="Copropri\u00e9taires"    value={nbCoproprietaires ?? 0} icon={UserCheck}    color="bg-green-100 text-green-600" />
-          <KpiCard label="Assembl\u00e9es"         value={nbAG ?? 0}              icon={CalendarDays} color="bg-pink-100 text-pink-600" />
-          <KpiCard label={`D\u00e9penses ${today.getFullYear()}`} value={fmtEur(totalDepensesAnnee)} sub={`Total\u00a0: ${fmtEur(totalDepenses)}`} icon={Receipt} color="bg-orange-100 text-orange-600" />
+          <KpiCard label="Lots gérés"       value={nbLots ?? 0}            icon={DoorOpen}     color="bg-violet-100 text-violet-600" />
+          <KpiCard label="Copropriétaires"    value={nbCoproprietaires ?? 0} icon={UserCheck}    color="bg-green-100 text-green-600" />
+          <KpiCard label="Assemblées"         value={nbAG ?? 0}              icon={CalendarDays} color="bg-pink-100 text-pink-600" />
+          <KpiCard label={`Dépenses ${today.getFullYear()}`} value={fmtEur(totalDepensesAnnee)} sub={`Total : ${fmtEur(totalDepenses)}`} icon={Receipt} color="bg-orange-100 text-orange-600" />
           <KpiCard label="Appels de fonds"   value={nbAppels ?? 0}          icon={Wallet}       color="bg-amber-100 text-amber-600" />
           <KpiCard label="Incidents ouverts" value={nbIncidentsOuverts ?? 0} icon={AlertTriangle} color={nbIncidentsOuverts ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={!!nbIncidentsOuverts && nbIncidentsOuverts > 5} />
           <KpiCard label="Syndics inscrits"  value={syndicUsers.length}     icon={UserCheck}    color="bg-indigo-100 text-indigo-600" sub={`+${newUsers30} ce mois`} />
-          <KpiCard label="Emails v\u00e9rifi\u00e9s"    value={`${confirmedPct}\u00a0%`}    sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
+          <KpiCard label="Emails vérifiés"    value={`${confirmedPct} %`}    sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
         </div>
       </section>
 
-      {/* ── Activit\u00e9 r\u00e9cente ── */}
+      {/* ── Activité récente ── */}
       <div className="grid md:grid-cols-2 gap-6">
         <section>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Incidents r\u00e9cents</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Incidents récents</p>
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             {(incidentsRecents ?? []).length === 0 ? (
-              <p className="text-center text-sm text-gray-400 py-8">Aucun incident r\u00e9cent</p>
+              <p className="text-center text-sm text-gray-400 py-8">Aucun incident récent</p>
             ) : (
               <div className="divide-y divide-gray-100">
                 {(incidentsRecents ?? []).map((inc) => {
@@ -315,7 +315,7 @@ export default async function AdminDashboardPage() {
                     <div key={inc.id} className="flex items-center gap-3 px-4 py-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-800 font-medium truncate">{inc.titre}</p>
-                        <p className="text-xs text-gray-400">{copro?.nom ?? '\u2014'} \u00b7 {timeAgo(inc.created_at)}</p>
+                        <p className="text-xs text-gray-400">{copro?.nom ?? '—'} · {timeAgo(inc.created_at)}</p>
                       </div>
                       <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${statutCls[statut] ?? 'bg-gray-100 text-gray-500'}`}>{statut.replace('_', ' ')}</span>
                     </div>
@@ -327,7 +327,7 @@ export default async function AdminDashboardPage() {
         </section>
 
         <section>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Inscriptions r\u00e9centes (7 jours)</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Inscriptions récentes (7 jours)</p>
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             {authUsers.filter((u) => u.created_at >= startOf7Days).length === 0 ? (
               <p className="text-center text-sm text-gray-400 py-8">Aucune inscription cette semaine</p>
@@ -345,8 +345,8 @@ export default async function AdminDashboardPage() {
                         <p className="text-sm text-gray-800 truncate">{u.email}</p>
                         <p className="text-xs text-gray-400">{timeAgo(u.created_at)}</p>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${role === 'copropri\u00e9taire' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'}`}>
-                        {role === 'copropri\u00e9taire' ? 'Membre' : 'Syndic'}
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${role === 'copropriétaire' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'}`}>
+                        {role === 'copropriétaire' ? 'Membre' : 'Syndic'}
                       </span>
                     </div>
                   );
@@ -357,9 +357,9 @@ export default async function AdminDashboardPage() {
         </section>
       </div>
 
-      {/* ── Top copros par d\u00e9penses ── */}
+      {/* ── Top copros par dépenses ── */}
       <section>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Top 5 copropri\u00e9t\u00e9s par d\u00e9penses</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Top 5 copropriétés par dépenses</p>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-100">
             {topCopros.map((c) => {
@@ -373,7 +373,7 @@ export default async function AdminDashboardPage() {
                     <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0 ml-3">
                       <span>{lotsCount[c.id] ?? 0} lots</span>
                       <span>{agCount[c.id] ?? 0} AG</span>
-                      <span className="font-bold text-gray-800">{dep ? fmtEur(dep.total) : '\u2014'}</span>
+                      <span className="font-bold text-gray-800">{dep ? fmtEur(dep.total) : '—'}</span>
                     </div>
                   </div>
                   <ProgressBar value={pct} color="bg-indigo-400" />
@@ -390,8 +390,8 @@ export default async function AdminDashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           {([
             { href: 'https://dashboard.stripe.com/subscriptions',                    label: 'Stripe',         sub: 'Paiements',        icon: CreditCard, color: 'bg-indigo-50 text-indigo-600' },
-            { href: 'https://supabase.com/dashboard/project/ybhqvpnafwertoricfce', label: 'Supabase',       sub: 'Base de donn\u00e9es', icon: Database,   color: 'bg-green-50 text-green-600' },
-            { href: 'https://vercel.com/dashboard',                                  label: 'Vercel',         sub: 'D\u00e9ploiements',  icon: Activity,   color: 'bg-gray-100 text-gray-600' },
+            { href: 'https://supabase.com/dashboard/project/ybhqvpnafwertoricfce', label: 'Supabase',       sub: 'Base de données', icon: Database,   color: 'bg-green-50 text-green-600' },
+            { href: 'https://vercel.com/dashboard',                                  label: 'Vercel',         sub: 'Déploiements',  icon: Activity,   color: 'bg-gray-100 text-gray-600' },
             { href: 'https://resend.com/emails',                                     label: 'Resend',         sub: 'Emails',           icon: Mail,       color: 'bg-purple-50 text-purple-600' },
             { href: 'https://analytics.google.com',                                  label: 'Analytics',      sub: 'GA4',              icon: Search,     color: 'bg-orange-50 text-orange-600' },
             { href: 'https://search.google.com/search-console',                      label: 'Search Console', sub: 'SEO',              icon: TrendingUp, color: 'bg-blue-50 text-blue-600' },

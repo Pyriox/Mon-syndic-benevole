@@ -21,7 +21,7 @@ function fmtEur(n: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 }
 function fmtDate(s: string | null | undefined): string {
-  if (!s) return '\u2014';
+  if (!s) return '—';
   return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
@@ -30,12 +30,12 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
     const cfg: Record<string, { label: string; cls: string }> = {
       essentiel: { label: 'Essentiel', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
       confort:   { label: 'Confort',   cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-      illimite:  { label: 'Illimit\u00e9',  cls: 'bg-purple-50 text-purple-700 border-purple-200' },
+      illimite:  { label: 'Illimité',  cls: 'bg-purple-50 text-purple-700 border-purple-200' },
     };
     const c = cfg[planId ?? ''] ?? { label: 'Actif', cls: 'bg-green-50 text-green-700 border-green-200' };
     return <span className={`inline-flex text-xs px-2 py-0.5 rounded-md font-medium border ${c.cls}`}>{c.label}</span>;
   }
-  if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">Impay\u00e9</span>;
+  if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">Impayé</span>;
   if (plan === 'inactif')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">Inactif</span>;
   return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
 }
@@ -98,17 +98,17 @@ export default async function AdminAbonnementsPage() {
       <div>
         <h1 className="text-xl font-bold text-gray-900">Abonnements</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Donn\u00e9es Supabase + Stripe. Lecture seule \u2014 pour modifier un abonnement, utiliser le dashboard Stripe directement puis \u00ab\u00a0Sync depuis Stripe\u00a0\u00bb.
+          Données Supabase + Stripe. Lecture seule — pour modifier un abonnement, utiliser le dashboard Stripe directement puis « Sync depuis Stripe ».
         </p>
       </div>
 
       {/* ── KPIs ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {([
-          { label: 'MRR',              value: fmtEur(mrr),   sub: `ARR\u00a0: ${fmtEur(arr)}`,              icon: Banknote,   color: 'bg-emerald-100 text-emerald-600' },
-          { label: 'Abonn\u00e9s actifs',  value: nbActifs,      sub: `taux conv. ${conversionPct}\u00a0%`,     icon: CreditCard, color: 'bg-blue-100 text-blue-600' },
+          { label: 'MRR',              value: fmtEur(mrr),   sub: `ARR : ${fmtEur(arr)}`,              icon: Banknote,   color: 'bg-emerald-100 text-emerald-600' },
+          { label: 'Abonnés actifs',  value: nbActifs,      sub: `taux conv. ${conversionPct} %`,     icon: CreditCard, color: 'bg-blue-100 text-blue-600' },
           { label: 'Trials',           value: nbEssai,       sub: 'Essai gratuit',                         icon: TrendingUp, color: 'bg-amber-100 text-amber-600' },
-          { label: 'Impay\u00e9s/Inactifs',value: nbPasseDu + nbInactif, sub: `${nbPasseDu} impay\u00e9s \u00b7 ${nbInactif} inactifs`, icon: BarChart3, color: nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400' },
+          { label: 'Impayés/Inactifs',value: nbPasseDu + nbInactif, sub: `${nbPasseDu} impayés · ${nbInactif} inactifs`, icon: BarChart3, color: nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400' },
         ] as { label: string; value: string | number; sub: string; icon: React.ElementType; color: string }[]).map(({ label, value, sub, icon: Icon, color }) => (
           <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">
             <div className={`p-3 rounded-xl ${color} shrink-0`}><Icon size={18} /></div>
@@ -121,15 +121,15 @@ export default async function AdminAbonnementsPage() {
         ))}
       </div>
 
-      {/* ── R\u00e9partition plans + renouvellements ── */}
+      {/* ── Répartition plans + renouvellements ── */}
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-          <p className="text-sm font-semibold text-gray-800 mb-4">R\u00e9partition des plans actifs</p>
+          <p className="text-sm font-semibold text-gray-800 mb-4">Répartition des plans actifs</p>
           <div className="space-y-4">
             {([
-              { id: 'essentiel', label: 'Essentiel', price: '25\u00a0\u20ac/mois', color: 'bg-blue-500',   textColor: 'text-blue-700' },
-              { id: 'confort',   label: 'Confort',   price: '30\u00a0\u20ac/mois', color: 'bg-indigo-500', textColor: 'text-indigo-700' },
-              { id: 'illimite',  label: 'Illimit\u00e9',  price: '45\u00a0\u20ac/mois', color: 'bg-purple-500', textColor: 'text-purple-700' },
+              { id: 'essentiel', label: 'Essentiel', price: '25 €/mois', color: 'bg-blue-500',   textColor: 'text-blue-700' },
+              { id: 'confort',   label: 'Confort',   price: '30 €/mois', color: 'bg-indigo-500', textColor: 'text-indigo-700' },
+              { id: 'illimite',  label: 'Illimité',  price: '45 €/mois', color: 'bg-purple-500', textColor: 'text-purple-700' },
             ] as const).map(({ id, label, price, color, textColor }) => {
               const nb = planBreakdown[id] ?? 0;
               const pct = nbActifs > 0 ? Math.round((nb / nbActifs) * 100) : 0;
@@ -140,7 +140,7 @@ export default async function AdminAbonnementsPage() {
                     <div className="flex items-center gap-2">
                       <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
                       <span className={`font-semibold ${textColor}`}>{label}</span>
-                      <span className="text-gray-400 text-xs">\u00b7 {price}</span>
+                      <span className="text-gray-400 text-xs">· {price}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-gray-400">{fmtEur(revenue)}/an</span>
@@ -158,7 +158,7 @@ export default async function AdminAbonnementsPage() {
             <div><p className="font-bold text-amber-700">{nbEssai}</p><p className="text-amber-600">Essai</p></div>
             <div><p className="font-bold text-green-700">{nbActifs}</p><p className="text-green-600">Actifs</p></div>
             <div><p className="font-bold text-gray-500">{nbInactif}</p><p className="text-gray-400">Inactifs</p></div>
-            <div><p className="font-bold text-red-600">{nbPasseDu}</p><p className="text-red-500">Impay\u00e9s</p></div>
+            <div><p className="font-bold text-red-600">{nbPasseDu}</p><p className="text-red-500">Impayés</p></div>
           </div>
         </div>
 
@@ -194,7 +194,7 @@ export default async function AdminAbonnementsPage() {
           <div>
             <p className="text-sm font-semibold text-gray-900">Tous les abonnements</p>
             <p className="text-xs text-gray-400">
-              Modification de plan\u00a0: via le dashboard Stripe uniquement, puis \u00ab\u00a0Sync depuis Stripe\u00a0\u00bb dans les actions.
+              Modification de plan : via le dashboard Stripe uniquement, puis « Sync depuis Stripe » dans les actions.
             </p>
           </div>
           <a href="https://dashboard.stripe.com/subscriptions" target="_blank" rel="noopener noreferrer"
@@ -206,7 +206,7 @@ export default async function AdminAbonnementsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Copropri\u00e9t\u00e9</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Copropriété</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Syndic</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Renouvellement</th>
@@ -224,20 +224,20 @@ export default async function AdminAbonnementsPage() {
                       <p className="font-medium text-gray-800">{c.nom}</p>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell truncate max-w-[180px]">
-                      {profile?.email ?? '\u2014'}
+                      {profile?.email ?? '—'}
                     </td>
                     <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
                     <td className="px-4 py-3 text-xs text-gray-600 hidden lg:table-cell">
-                      {c.plan_period_end ? fmtDate(c.plan_period_end) : '\u2014'}
+                      {c.plan_period_end ? fmtDate(c.plan_period_end) : '—'}
                     </td>
                     <td className="px-4 py-3 hidden xl:table-cell">
                       {c.stripe_subscription_id ? (
                         <a href={`https://dashboard.stripe.com/subscriptions/${c.stripe_subscription_id}`}
                           target="_blank" rel="noopener noreferrer"
                           className="text-xs font-mono text-indigo-500 hover:text-indigo-700">
-                          {c.stripe_subscription_id.slice(0, 20)}\u2026
+                          {c.stripe_subscription_id.slice(0, 20)}…
                         </a>
-                      ) : <span className="text-xs text-gray-300">\u2014</span>}
+                      ) : <span className="text-xs text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} />
@@ -255,7 +255,7 @@ export default async function AdminAbonnementsPage() {
         <div className="flex items-center justify-between mb-3 gap-3">
           <div>
             <p className="text-sm font-semibold text-gray-900">Derniers paiements Stripe</p>
-            <p className="text-xs text-gray-400">50 les plus r\u00e9cents \u2014 donn\u00e9es en lecture seule.</p>
+            <p className="text-xs text-gray-400">50 les plus récents — données en lecture seule.</p>
           </div>
           <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener noreferrer"
             className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1 shrink-0">
@@ -264,7 +264,7 @@ export default async function AdminAbonnementsPage() {
         </div>
         {stripeCharges.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-            <p className="text-sm text-gray-400">Aucun paiement ou Stripe non configur\u00e9</p>
+            <p className="text-sm text-gray-400">Aucun paiement ou Stripe non configuré</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -272,7 +272,7 @@ export default async function AdminAbonnementsPage() {
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">ID Stripe</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropri\u00e9t\u00e9</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropriété</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Montant</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Date</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
@@ -288,12 +288,12 @@ export default async function AdminAbonnementsPage() {
                       <td className="px-4 py-3">
                         <a href={`https://dashboard.stripe.com/charges/${ch.id}`} target="_blank" rel="noopener noreferrer"
                           className="text-xs font-mono text-indigo-500 hover:text-indigo-700">
-                          {ch.id.slice(0, 18)}\u2026
+                          {ch.id.slice(0, 18)}…
                         </a>
                         {ch.description && <p className="text-[10px] text-gray-400 truncate max-w-[140px]">{ch.description}</p>}
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-600 hidden md:table-cell">
-                        {coproNom ?? <span className="text-gray-300">\u2014</span>}
+                        {coproNom ?? <span className="text-gray-300">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className={`text-sm font-bold ${isFailed ? 'text-red-600' : 'text-gray-800'}`}>{fmtEur(ch.amount)}</span>
@@ -304,11 +304,11 @@ export default async function AdminAbonnementsPage() {
                       <td className="px-4 py-3">
                         {isOk ? (
                           <span className="flex items-center gap-1 text-xs font-medium text-green-600">
-                            <CheckCircle2 size={12} /> R\u00e9ussi
+                            <CheckCircle2 size={12} /> Réussi
                           </span>
                         ) : isFailed ? (
                           <span className="flex items-center gap-1 text-xs font-medium text-red-600">
-                            <XCircle size={12} /> \u00c9chou\u00e9
+                            <XCircle size={12} /> Échoué
                           </span>
                         ) : (
                           <span className="text-xs text-gray-400">{ch.status}</span>
