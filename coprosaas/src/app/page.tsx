@@ -983,22 +983,31 @@ export default function HomePage() {
           </div>
 
           {/* Témoignage fondateur */}
-          <div className="bg-white/5 border border-white/15 rounded-2xl p-6 sm:p-8 mb-12 max-w-2xl mx-auto text-center">
-            <div className="text-blue-300/60 text-5xl font-serif leading-none mb-3 select-none">&ldquo;</div>
-            <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6 italic">
-              Syndic pro trop cher et inefficace, puis syndic bénévole avec Excel et Drive — toujours aussi compliqué.
-              Alors j&apos;ai créé cette solution.
+          <div className="bg-white/5 border border-white/15 rounded-2xl p-6 sm:p-8 mb-12 max-w-2xl mx-auto">
+            <div className="text-blue-300/40 text-6xl font-serif leading-none mb-2 select-none">&ldquo;</div>
+            <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6 space-y-3">
+              <p>
+                Notre copropriété a d&apos;abord eu un syndic professionnel.{' '}
+                <span className="text-white font-medium">Factures opaques, réactivité zéro, frais sur chaque email.</span>{' '}
+                On a fini par voter pour passer en syndic bénévole.
+              </p>
+              <p>
+                Sauf qu&apos;avec Excel et Google Drive, c&apos;était <span className="text-white font-medium">le bazar à chaque appel de fonds</span> : fichiers éparpillés, calculs à refaire, convocations à envoyer à la main&hellip;
+              </p>
+              <p>
+                Je n&apos;ai pas trouvé d&apos;outil pensé pour nous — alors{' '}
+                <span className="text-white font-medium">je l&apos;ai créé.</span>
+              </p>
             </blockquote>
-            <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-500/30 rounded-full flex items-center justify-center shrink-0">
                 <UserCircle size={20} className="text-blue-300" />
               </div>
-              <div className="text-left">
+              <div>
                 <p className="text-white font-semibold text-sm">Fabien</p>
                 <p className="text-blue-300/60 text-xs">Fondateur &amp; syndic bénévole</p>
               </div>
             </div>
-            <p className="text-blue-400 text-sm font-semibold">Pensé par un syndic bénévole, pour les syndics bénévoles.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
