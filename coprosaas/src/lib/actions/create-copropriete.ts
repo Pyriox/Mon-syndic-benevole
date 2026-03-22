@@ -22,6 +22,7 @@ export async function createCopropriete(formData: {
       code_postal: formData.code_postal.trim(),
       ville: formData.ville.trim(),
       syndic_id: user.id,
+      plan: 'inactif',
     })
     .select('id')
     .single();

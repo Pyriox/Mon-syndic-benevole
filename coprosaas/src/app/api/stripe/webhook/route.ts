@@ -21,7 +21,7 @@ async function updateCoproSubscription(coproId: string, data: {
   const update: Record<string, unknown> = {
     stripe_subscription_id: data.stripe_subscription_id,
     plan_id:                data.plan_id,
-    plan:                   data.plan ?? 'essai',
+    plan:                   data.plan ?? 'inactif',
     plan_period_end:        data.plan_period_end,
   };
   // N'écraser stripe_customer_id que si explicitement fourni

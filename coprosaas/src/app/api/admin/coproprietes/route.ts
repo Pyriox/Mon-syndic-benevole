@@ -2,7 +2,7 @@
 // API Admin — gestion des abonnements des copropriétés
 //
 // POST /api/admin/coproprietes  { action, coproId }
-//   → reset_subscription : remet le plan à 'essai', efface les champs Stripe
+//   → reset_subscription : remet le plan à 'inactif', efface les champs Stripe
 //   → stripe_sync        : lit l'abonnement réel depuis Stripe et met à jour Supabase
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const { error } = await admin
       .from('coproprietes')
       .update({
-        plan: 'essai',
+        plan: 'inactif',
         plan_id: null,
         stripe_subscription_id: null,
         stripe_customer_id: null,
