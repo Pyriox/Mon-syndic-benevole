@@ -196,17 +196,17 @@ export default function HomePage() {
         <div className="hidden sm:block absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-12 sm:pb-16 text-center">
-          <div className="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 text-yellow-300 text-xs sm:text-sm font-semibold px-4 py-2 rounded-full mb-6 sm:mb-8">
-            <Banknote size={14} className="shrink-0" />
-            Économisez jusqu&apos;à 3&nbsp;000&nbsp;€/an vs un syndic professionnel
-          </div>
-
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-5 sm:mb-6 tracking-tight">
             Gérez votre copropriété<br />
             <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
               sans syndic professionnel
             </span>
           </h1>
+
+          <div className="inline-flex items-center gap-2.5 bg-yellow-400/15 border border-yellow-400/40 text-yellow-300 text-sm sm:text-lg font-bold px-5 sm:px-7 py-3 rounded-full mb-6 sm:mb-10">
+            <Banknote size={18} className="shrink-0" />
+            Économisez jusqu&apos;à 3&nbsp;000&nbsp;€/an vs un syndic professionnel
+          </div>
 
           <p className="text-base sm:text-xl text-blue-100/80 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
             Remplissez vous-même le rôle de syndic bénévole — charges, assemblées générales,
@@ -233,7 +233,6 @@ export default function HomePage() {
             <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> 14 jours offerts, facturation au 15e jour</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> Sans engagement</span>
             <span className="flex items-center gap-1.5"><Shield size={14} className="text-green-400" /> Données hébergées en Europe</span>
-            <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> Conforme loi ALUR</span>
           </div>
         </div>
                 </section>
@@ -247,7 +246,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-red-500 uppercase tracking-widest mb-3">Le problème</p>
             <h2 id="probleme-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Un syndic professionnel vous coûte combien, vraiment&nbsp;?
+              Marre des syndics inefficaces et trop chers&nbsp;?
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
               Pour une copropriété de <strong className="text-gray-700">10 lots</strong>, le coût annuel
@@ -424,8 +423,8 @@ export default function HomePage() {
               <p className="text-sm text-gray-500 mt-1">d&apos;essai gratuit</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-extrabold text-blue-600">100 %</p>
-              <p className="text-sm text-gray-500 mt-1">conforme loi ALUR</p>
+              <p className="text-3xl md:text-4xl font-extrabold text-blue-600">24h/24</p>
+              <p className="text-sm text-gray-500 mt-1">accès à vos données</p>
             </div>
           </div>
 
@@ -981,6 +980,25 @@ export default function HomePage() {
             <h2 id="preuves-sociales-heading" className="text-3xl md:text-4xl font-bold text-white">
               Des syndics bénévoles qui gèrent mieux, pour moins cher
             </h2>
+          </div>
+
+          {/* Témoignage fondateur */}
+          <div className="bg-white/5 border border-white/15 rounded-2xl p-6 sm:p-8 mb-12 max-w-2xl mx-auto text-center">
+            <div className="text-blue-300/60 text-5xl font-serif leading-none mb-3 select-none">&ldquo;</div>
+            <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6 italic">
+              Syndic pro trop cher et inefficace, puis syndic bénévole avec Excel et Drive — toujours aussi compliqué.
+              Alors j&apos;ai créé cette solution.
+            </blockquote>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-blue-500/30 rounded-full flex items-center justify-center shrink-0">
+                <UserCircle size={20} className="text-blue-300" />
+              </div>
+              <div className="text-left">
+                <p className="text-white font-semibold text-sm">Fabien</p>
+                <p className="text-blue-300/60 text-xs">Fondateur &amp; syndic bénévole</p>
+              </div>
+            </div>
+            <p className="text-blue-400 text-sm font-semibold">Pensé par un syndic bénévole, pour les syndics bénévoles.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
