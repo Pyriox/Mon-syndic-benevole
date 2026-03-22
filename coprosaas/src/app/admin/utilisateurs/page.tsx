@@ -10,8 +10,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AdminUserActions from '../AdminUserActions';
 import AdminImpersonate from '../AdminImpersonate';
-import AdminInvitationDelete from '../AdminInvitationDelete';
-import { Users, UserCheck, CheckCircle2, Send, XCircle } from 'lucide-react';
+import { Users, UserCheck, CheckCircle2 } from 'lucide-react';
 
 import { ADMIN_EMAIL } from '@/lib/admin-config';
 
@@ -58,11 +57,9 @@ export default async function AdminUtilisateursPage() {
   const [
     authResult,
     { data: coproprietes },
-    { data: invitations },
   ] = await Promise.all([
     admin.auth.admin.listUsers({ perPage: 1000 }),
     admin.from('coproprietes').select('id, syndic_id, plan, plan_id'),
-    admin.from('invitations').select('id, email, statut, expires_at, created_at, coproprietes(nom)').order('created_at', { ascending: false }).limit(200),
   ]);
 
   const authUsers = authResult.data?.users ?? [];
@@ -233,63 +230,6 @@ export default async function AdminUtilisateursPage() {
                     </td>
                     <td className="px-4 py-3"><AdminImpersonate email={u.email ?? ''} /></td>
                     <td className="px-4 py-3"><AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={false} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* ── Invitations ── */}
-      <section>
-        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
-          <div>
-            <p className="text-sm font-semibold text-gray-900">Invitations copropriétaires</p>
-            <p className="text-xs text-gray-400">{(invitations ?? []).length} au total</p>
-          </div>
-          <div className="flex gap-2 text-xs">
-            <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md font-medium border border-green-200">{(invitations ?? []).filter(i => i.statut === 'acceptee').length} acceptées</span>
-            <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-medium border border-amber-200">{(invitations ?? []).filter(i => i.statut === 'en_attente').length} en attente</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email invité</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropriété</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Envoyée</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Expire</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {(invitations ?? []).length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">Aucune invitation</td></tr>
-              )}
-              {(invitations ?? []).map((inv) => {
-                const copro = (inv.coproprietes as unknown as { nom: string } | null);
-                const isExpired = inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date();
-                const statut: string = isExpired ? 'expiree' : inv.statut;
-                const statutMap: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
-                  en_attente: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-200', icon: <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> },
-                  acceptee:   { label: 'Acceptée',   cls: 'bg-green-50 text-green-700 border-green-200', icon: <CheckCircle2 size={10} /> },
-                  expiree:    { label: 'Expirée',    cls: 'bg-gray-100 text-gray-500 border-gray-200',   icon: <XCircle size={10} /> },
-                  annulee:    { label: 'Annulée',    cls: 'bg-red-50 text-red-600 border-red-200',       icon: <XCircle size={10} /> },
-                };
-                const sc = statutMap[statut] ?? { label: statut, cls: 'bg-gray-100 text-gray-500 border-gray-200', icon: null };
-                return (
-                  <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-gray-800">{inv.email}</td>
-                    <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{copro?.nom ?? '—'}</td>
-                    <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{timeAgo(inv.created_at)}</td>
-                    <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{fmtDate(inv.expires_at)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 text-xs border rounded-md px-2 py-0.5 font-medium ${sc.cls}`}>{sc.icon}{sc.label}</span>
-                    </td>
-                    <td className="px-4 py-3"><AdminInvitationDelete invitationId={inv.id} email={inv.email} /></td>
                   </tr>
                 );
               })}
