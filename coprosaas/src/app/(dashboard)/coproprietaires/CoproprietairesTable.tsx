@@ -19,7 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { createClient } from '@/lib/supabase/client';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
-import { CoproprietaireEdit, CoproprietaireDelete } from './CoproprietaireActions';
+import { CoproprietaireEdit, CoproprietaireDelete, CoproprietaireInvite } from './CoproprietaireActions';
 import { formatEuros } from '@/lib/utils';
 import { GripVertical, Mail, Phone, UserCheck } from 'lucide-react';
 
@@ -68,6 +68,7 @@ interface CoproprietairesTableProps {
   lotsForSelect?: LotForSelect[];
   totalTantiemes: number;
   readOnly?: boolean;
+  coproprieteId?: string;
 }
 
 // -------------------------------------------------------
@@ -236,7 +237,7 @@ function MobileCoproCard({
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="font-semibold text-gray-900 leading-tight truncate">{displayName}</p>
-              {cp.user_id && (
+              {cp.user_id ? (
                 <span
                   title="Compte actif"
                   className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
@@ -244,6 +245,8 @@ function MobileCoproCard({
                   <UserCheck size={11} />
                   Inscrit
                 </span>
+              ) : (
+                <CoproprietaireInvite coproprietaireId={cp.id} displayName={displayName} />
               )}
             </div>
             {cp.raison_sociale && (cp.prenom || cp.nom) && (
@@ -376,7 +379,7 @@ function SortableCoproRow({
           <div>
             <div className="flex items-center gap-2">
               <p className="font-medium text-gray-900">{displayName}</p>
-              {cp.user_id && (
+              {cp.user_id ? (
                 <span
                   title="Compte actif"
                   className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
@@ -384,6 +387,8 @@ function SortableCoproRow({
                   <UserCheck size={11} />
                   Inscrit
                 </span>
+              ) : (
+                <CoproprietaireInvite coproprietaireId={cp.id} displayName={displayName} />
               )}
             </div>
             {cp.raison_sociale && (

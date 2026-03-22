@@ -10,7 +10,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { Plus, Mail, Copy, Check, UserPlus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Mail, UserPlus, Pencil, Trash2 } from 'lucide-react';
 
 interface Copropriete {
   id: string;
@@ -27,9 +27,8 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
   const supabase = createClient();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ajouter' | 'inviter'>('ajouter');
 
-  // ---- Onglet "Ajouter directement" ----
+  // ---- Formulaire «Ajouter» ----
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lots, setLots] = useState<{ id: string; numero: string; coproprietaire_id: string | null }[]>([]);
@@ -72,12 +71,11 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
     setLoading(true);
     setError('');
 
-    // 1 — Créer la fiche copropriétaire
     const { data: cp, error: dbError } = await supabase
       .from('coproprietaires')
       .insert({
         copropriete_id: formData.copropriete_id,
-        lot_id: selectedLotIds[0] ?? null, // lot principal (rétrocompat)
+        lot_id: selectedLotIds[0] ?? null,
         nom: formData.nom.trim() || null,
         prenom: formData.prenom.trim() || null,
         raison_sociale: isSci ? formData.raison_sociale.trim() || null : null,
@@ -92,9 +90,8 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
       .select('id')
       .single();
 
-    if (dbError || !cp) { setError('Erreur : ' + (dbError?.message ?? 'inconnue')); setLoading(false); return; }
+    if (dbError || !cp) { setError('Erreur : ' + (dbError?.message ?? 'inconnue')); setLoading(false); return; }
 
-    // 2 — Assigner les lots sélectionnés à ce copropriétaire
     if (selectedLotIds.length) {
       await supabase.from('lots').update({ coproprietaire_id: cp.id }).in('id', selectedLotIds);
     }
@@ -106,248 +103,139 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
     router.refresh();
   };
 
-  // ---- Onglet "Inviter par email" ----
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviteError, setInviteError] = useState('');
-  const [inviteLink, setInviteLink] = useState('');
-  const [inviteEmailSent, setInviteEmailSent] = useState(false);
-  const [inviteEmailWarning, setInviteEmailWarning] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [inviteLots, setInviteLots] = useState<{ id: string; numero: string }[]>([]);
-  const [invite, setInvite] = useState({
-    email: '',
-    copropriete_id: coproprietes[0]?.id ?? '',
-    lot_id: '',
-  });
-
-  useEffect(() => {
-    if (!invite.copropriete_id) return;
-    supabase.from('lots').select('id, numero').eq('copropriete_id', invite.copropriete_id).order('numero')
-      .then(({ data }) => setInviteLots(data ?? []));
-  }, [invite.copropriete_id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleInviteChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setInvite((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setInviteLink('');
-  };
-
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setInviteLoading(true);
-    setInviteError('');
-    setInviteLink('');
-
-    const res = await fetch('/api/invitations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(invite),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      setInviteError(data.error ?? "Erreur lors de la création de l'invitation");
-      setInviteLoading(false);
-      return;
-    }
-
-    setInviteLink(data.link);
-    setInviteEmailSent(!!data.emailSent);
-    setInviteEmailWarning(data.emailWarning ?? '');
-    setInviteLoading(false);
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(inviteLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
-
   const handleClose = () => {
     setIsOpen(false);
-    setInviteLink('');
-    setInviteError('');
-    setInviteEmailSent(false);
-    setInviteEmailWarning('');
     setError('');
     setSelectedLotIds([]);
-    setActiveTab('ajouter');
   };
 
   return (
     <>
       <Button onClick={() => setIsOpen(true)} size={showLabel ? 'md' : 'sm'}>
-        <UserPlus size={16} /> {showLabel ? 'Ajouter / Inviter' : 'Ajouter'}
+        <UserPlus size={16} /> {showLabel ? 'Ajouter un copropriétaire' : 'Ajouter'}
       </Button>
 
-      <Modal isOpen={isOpen} onClose={handleClose} title="Copropriétaire" size="lg">
-        {/* Onglets */}
-        <div className="flex border-b border-gray-200 mb-5 -mt-1">
-          <button
-            onClick={() => setActiveTab('ajouter')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'ajouter'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Plus size={15} /> Ajouter directement
-          </button>
-          <button
-            onClick={() => setActiveTab('inviter')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'inviter'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Mail size={15} /> Inviter par email
-          </button>
-        </div>
-
-        {/* ---- Onglet : Ajouter directement ---- */}
-        {activeTab === 'ajouter' && (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-              Crée une fiche copropriétaire sans compte. L&apos;accès à l&apos;application se fait via l&apos;onglet <strong>Inviter par email</strong>.
-            </p>
-
-            {/* Sélection multi-lots par cases à cocher */}
-            {lots.length > 0 && (
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">
-                  Lots associés <span className="text-gray-400 font-normal">(optionnel — plusieurs possibles)</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
-                  {lots.map((lot) => {
-                    const isTaken = !!lot.coproprietaire_id;
-                    return (
-                      <label
-                        key={lot.id}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm ${
-                          isTaken ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50 cursor-pointer'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedLotIds.includes(lot.id)}
-                          onChange={() => !isTaken && toggleLot(lot.id)}
-                          disabled={isTaken}
-                          className="rounded text-blue-600"
-                        />
-                        <span className="text-gray-700">Lot {lot.numero}{isTaken ? ' · attribué' : ''}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+      <Modal isOpen={isOpen} onClose={handleClose} title="Ajouter un copropriétaire" size="lg">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {lots.length > 0 && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Lots associés <span className="text-gray-400 font-normal">(optionnel — plusieurs possibles)</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                {lots.map((lot) => {
+                  const isTaken = !!lot.coproprietaire_id;
+                  return (
+                    <label
+                      key={lot.id}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm ${
+                        isTaken ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50 cursor-pointer'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedLotIds.includes(lot.id)}
+                        onChange={() => !isTaken && toggleLot(lot.id)}
+                        disabled={isTaken}
+                        className="rounded text-blue-600"
+                      />
+                      <span className="text-gray-700">Lot {lot.numero}{isTaken ? ' · attribué' : ''}</span>
+                    </label>
+                  );
+                })}
               </div>
-            )}
+            </div>
+          )}
 
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" checked={isSci} onChange={(e) => setIsSci(e.target.checked)} className="rounded text-blue-600" />
-              Personne morale / SCI
-            </label>
-            {isSci ? (
-              <>
-                <Input label="Raison sociale" name="raison_sociale" value={formData.raison_sociale} onChange={handleChange} required />
-                <div className="grid grid-cols-2 gap-3">
-                  <Input label="Prénom du représentant" name="prenom" value={formData.prenom} onChange={handleChange} placeholder="Jean" />
-                  <Input label="Nom du représentant" name="nom" value={formData.nom} onChange={handleChange} placeholder="Dupont" />
-                </div>
-              </>
-            ) : (
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox" checked={isSci} onChange={(e) => setIsSci(e.target.checked)} className="rounded text-blue-600" />
+            Personne morale / SCI
+          </label>
+          {isSci ? (
+            <>
+              <Input label="Raison sociale" name="raison_sociale" value={formData.raison_sociale} onChange={handleChange} required />
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Prénom" name="prenom" value={formData.prenom} onChange={handleChange} required={!isSci} />
-                <Input label="Nom" name="nom" value={formData.nom} onChange={handleChange} required={!isSci} />
+                <Input label="Prénom du représentant" name="prenom" value={formData.prenom} onChange={handleChange} placeholder="Jean" />
+                <Input label="Nom du représentant" name="nom" value={formData.nom} onChange={handleChange} placeholder="Dupont" />
               </div>
-            )}
-            <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-            <Input label="Téléphone" name="telephone" type="tel" value={formData.telephone} onChange={handleChange} placeholder="06 12 34 56 78" />
-            <Input label="Adresse" name="adresse" value={formData.adresse} onChange={handleChange} required placeholder="12 rue de la Paix" />
+            </>
+          ) : (
             <div className="grid grid-cols-2 gap-3">
-              <Input label="Code postal" name="code_postal" value={formData.code_postal} onChange={handleChange} required placeholder="75001" />
-              <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} required />
+              <Input label="Prénom" name="prenom" value={formData.prenom} onChange={handleChange} required={!isSci} />
+              <Input label="Nom" name="nom" value={formData.nom} onChange={handleChange} required={!isSci} />
             </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <div className="flex gap-3 pt-1">
-              <Button type="submit" loading={loading}>Ajouter</Button>
-              <Button type="button" variant="secondary" onClick={handleClose}>Annuler</Button>
-            </div>
-          </form>
-        )}
-
-        {/* ---- Onglet : Inviter par email ---- */}
-        {activeTab === 'inviter' && (
-          <div className="space-y-4">
-            <p className="text-xs text-gray-500 bg-blue-50 rounded-lg px-3 py-2 text-blue-700">
-              Génère un lien unique <strong>et envoie un email automatique</strong> au copropriétaire. Il pourra créer son compte et accéder à la copropriété.
-              Le lien est valable <strong>7 jours</strong>.
-            </p>
-
-            {!inviteLink ? (
-              <form onSubmit={handleInvite} className="space-y-4">
-                <Input
-                  label="Email du copropriétaire"
-                  name="email"
-                  type="email"
-                  value={invite.email}
-                  onChange={handleInviteChange}
-                  placeholder="jean.dupont@email.fr"
-                  required
-                />
-                <Select
-                  label="Lot principal (optionnel)"
-                  name="lot_id"
-                  value={invite.lot_id}
-                  onChange={handleInviteChange}
-                  options={inviteLots.map((l) => ({ value: l.id, label: `Lot ${l.numero}` }))}
-                  placeholder="Sélectionner un lot"
-                />
-                {inviteError && <p className="text-sm text-red-600">{inviteError}</p>}
-                <div className="flex gap-3 pt-1">
-                    <Button type="submit" loading={inviteLoading}>
-                      <Mail size={15} /> Envoyer l&apos;invitation
-                    </Button>
-                    <Button type="button" variant="secondary" onClick={handleClose}>Annuler</Button>
-                  </div>
-              </form>
-            ) : (
-              <div className="space-y-4">
-                {inviteEmailSent ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-sm font-medium text-green-800 mb-1">✅ Invitation envoyée !</p>
-                    <p className="text-xs text-green-700">
-                      Un email d&apos;invitation a été envoyé à <strong>{invite.email}</strong>.
-                      Le lien est valable 7 jours.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <p className="text-sm font-medium text-amber-800 mb-1">⚠️ Lien créé (email non envoyé)</p>
-                    <p className="text-xs text-amber-700">{inviteEmailWarning || "Transmettez le lien ci-dessous manuellement à " + invite.email}</p>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <input
-                    readOnly
-                    value={inviteLink}
-                    className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-gray-600 truncate"
-                  />
-                  <button
-                    onClick={handleCopy}
-                    className="flex items-center gap-1.5 px-3 py-2.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors shrink-0"
-                  >
-                    {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
-                  </button>
-                </div>
-                <Button type="button" variant="secondary" onClick={handleClose} fullWidth>Fermer</Button>
-              </div>
-            )}
+          )}
+          <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+          <Input label="Téléphone" name="telephone" type="tel" value={formData.telephone} onChange={handleChange} placeholder="06 12 34 56 78" />
+          <Input label="Adresse" name="adresse" value={formData.adresse} onChange={handleChange} required placeholder="12 rue de la Paix" />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Code postal" name="code_postal" value={formData.code_postal} onChange={handleChange} required placeholder="75001" />
+            <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} required />
           </div>
-        )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <div className="flex gap-3 pt-1">
+            <Button type="submit" loading={loading}>Ajouter</Button>
+            <Button type="button" variant="secondary" onClick={handleClose}>Annuler</Button>
+          </div>
+        </form>
       </Modal>
     </>
   );
 }
+
+// ============================================================
+// Inviter un copropriétaire non inscrit par email
+// ============================================================
+interface CoproprietaireInviteProps {
+  coproprietaireId: string;
+  displayName: string;
+}
+
+export function CoproprietaireInvite({ coproprietaireId, displayName }: CoproprietaireInviteProps) {
+  const [state, setState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleInvite = async () => {
+    setState('loading');
+    setErrorMsg('');
+    const res = await fetch('/api/invitations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coproprietaire_id: coproprietaireId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setErrorMsg(data.error ?? "Erreur d'envoi");
+      setState('error');
+    } else {
+      setState('sent');
+    }
+  };
+
+  if (state === 'sent') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium px-2 py-1">
+        ✓ Invitation envoyée
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <button
+        onClick={handleInvite}
+        disabled={state === 'loading'}
+        title={`Inviter ${displayName} par email`}
+        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-60"
+      >
+        <Mail size={12} />
+        {state === 'loading' ? 'Envoi…' : 'Inviter'}
+      </button>
+      {state === 'error' && <p className="text-[10px] text-red-500 leading-tight max-w-[130px]">{errorMsg}</p>}
+    </div>
+  );
+}
+
 // ============================================================
 // Modifier un copropriétaire existant
 // ============================================================

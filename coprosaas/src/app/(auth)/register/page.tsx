@@ -96,6 +96,13 @@ function RegisterForm() {
       return;
     }
 
+    // Supabase renvoie identities: [] lorsque l'email est déjà utilisé (sans erreur explicite)
+    if (data.user?.identities?.length === 0) {
+      setError('Cette adresse email est déjà utilisée. Essayez de vous connecter.');
+      setLoading(false);
+      return;
+    }
+
     if (token && isCopro && data.user) {
       await fetch('/api/invitations', {
         method: 'PATCH',

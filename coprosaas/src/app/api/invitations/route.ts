@@ -45,7 +45,23 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { email, copropriete_id, lot_id } = body;
+  let { email, copropriete_id, lot_id } = body as { email?: string; copropriete_id?: string; lot_id?: string };
+  const { coproprietaire_id } = body as { coproprietaire_id?: string };
+
+  // Invitation depuis une fiche existante : on retrouve email + copropriete_id automatiquement
+  if (coproprietaire_id) {
+    const { data: cpFiche } = await supabase
+      .from('coproprietaires')
+      .select('email, copropriete_id, lot_id')
+      .eq('id', coproprietaire_id)
+      .single();
+    if (!cpFiche) {
+      return NextResponse.json({ error: 'Copropriétaire introuvable' }, { status: 404 });
+    }
+    email = cpFiche.email;
+    copropriete_id = cpFiche.copropriete_id;
+    lot_id = lot_id ?? cpFiche.lot_id ?? undefined;
+  }
 
   if (!email || !copropriete_id) {
     return NextResponse.json({ error: 'Email et copropriété requis' }, { status: 400 });
