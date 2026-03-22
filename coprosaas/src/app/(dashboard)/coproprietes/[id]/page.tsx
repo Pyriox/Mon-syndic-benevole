@@ -86,7 +86,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
         <CardHeader
           title="Lots"
           description={`${lots?.length ?? 0} lot(s) — Total tantièmes : ${totalTantiemes}`}
-          actions={<LotActions coproprieteId={id} canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} />}
+          actions={lots && lots.length > 0 ? <LotActions coproprieteId={id} canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} /> : undefined}
         />
 
         {lots && lots.length > 0 ? (
