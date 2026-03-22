@@ -86,16 +86,50 @@ function RegisterForm() {
     setLoading(true);
 
     const isCopro = mode === 'coproprietaire';
-    const emailToUse = isCopro ? invitationEmail : formData.email;
-    const role = isCopro ? 'copropriétaire' : 'syndic';
+
+    // ── Mode invitation : création compte côté serveur, email déjà vérifié ──
+    if (isCopro && token) {
+      const res = await fetch('/api/invitations/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          password: formData.password,
+          prenom: (invitationPrenom || formData.prenom).trim(),
+          nom: (invitationNom || formData.nom).trim(),
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        setError(result.error ?? 'Une erreur est survenue.');
+        setLoading(false);
+        return;
+      }
+      // Connexion directe sans email de confirmation
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: result.email,
+        password: formData.password,
+      });
+      if (signInError) {
+        setError(signInError.message);
+        setLoading(false);
+        return;
+      }
+      trackEvent('sign_up', { role: 'copropriétaire', method: 'invitation' });
+      router.push('/dashboard');
+      router.refresh();
+      return;
+    }
+
+    // ── Mode syndic : inscription standard avec email de confirmation ──
     const fullName = `${formData.prenom.trim()} ${formData.nom.trim()}`.trim();
 
     const { data, error: authError } = await supabase.auth.signUp({
-      email: emailToUse,
+      email: formData.email,
       password: formData.password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/confirm`,
-        data: { full_name: fullName, prenom: formData.prenom.trim(), nom: formData.nom.trim(), role },
+        data: { full_name: fullName, prenom: formData.prenom.trim(), nom: formData.nom.trim(), role: 'syndic' },
       },
     });
 
@@ -112,15 +146,7 @@ function RegisterForm() {
       return;
     }
 
-    if (token && isCopro && data.user) {
-      await fetch('/api/invitations', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, user_id: data.user.id, full_name: fullName }),
-      });
-    }
-
-    trackEvent('sign_up', { role, method: 'email' });
+    trackEvent('sign_up', { role: 'syndic', method: 'email' });
 
     if (data.user && !data.session) {
       setSuccess(true);
