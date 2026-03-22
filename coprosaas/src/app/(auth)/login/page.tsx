@@ -92,7 +92,7 @@ function LoginForm() {
     setResetLoading(true);
     setResetError('');
     const { error: resetErr } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth/confirm?next=/reset-password`,
+      redirectTo: `${window.location.origin}/auth/confirm`,
     });
     setResetLoading(false);
     if (resetErr) {

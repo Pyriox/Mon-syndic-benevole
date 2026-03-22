@@ -25,22 +25,28 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
-  // Supabase envoie le token dans le hash de l'URL.
-  // onAuthStateChange détecte l'événement PASSWORD_RECOVERY et établit la session.
+  // Supabase envoie le token dans le hash de l'URL (flow implicite)
+  // ou établit la session côté serveur via /auth/confirm (flow PKCE).
+  // On accepte PASSWORD_RECOVERY (implicite) OU une session existante (PKCE).
   useEffect(() => {
+    // Flow PKCE : session déjà établie par /auth/confirm avant la redirection
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
         setReady(true);
       }
     });
 
-    // Si aucun événement PASSWORD_RECOVERY après 4 s (lien déjà utilisé / expiré)
+    // Si aucune session et aucun événement après 5 s : lien invalide ou expiré
     const timer = setTimeout(() => {
       setReady((prev) => {
         if (!prev) setInvalid(true);
         return prev;
       });
-    }, 4000);
+    }, 5000);
 
     return () => {
       subscription.unsubscribe();

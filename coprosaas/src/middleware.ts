@@ -39,12 +39,12 @@ export async function middleware(request: NextRequest) {
   // Route /admin : réservée exclusivement à l'administrateur
   const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
   if (pathname.startsWith('/admin')) {
-    if (!user || !ADMIN_EMAIL) {
+    if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       return NextResponse.redirect(url);
     }
-    if (user.email !== ADMIN_EMAIL) {
+    if (!ADMIN_EMAIL || user.email !== ADMIN_EMAIL) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
