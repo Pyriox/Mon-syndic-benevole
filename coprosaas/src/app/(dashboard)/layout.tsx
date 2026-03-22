@@ -92,7 +92,11 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 
   const selectedCopro = userCoproprietes.find((c) => c.id === selectedCoproId) ?? null;
   // Utilise le rôle de la copropriété sélectionnée, ou le rôle déterminé depuis la DB en fallback
-  const accountRoleFromDb: 'syndic' | 'copropriétaire' = (syndicCopros ?? []).length > 0 ? 'syndic' : 'copropriétaire';
+  // Nouveau compte sans aucune copropriété → syndic par défaut
+  const accountRoleFromDb: 'syndic' | 'copropriétaire' =
+    (syndicCopros ?? []).length > 0 ? 'syndic' :
+    allCoproRows.length > 0 ? 'copropriétaire' :
+    'syndic';
   const userRole = selectedCopro?.role ?? accountRoleFromDb;
 
   // --- Notifications (uniquement pour le syndic sur la copropriété sélectionnée) ---
