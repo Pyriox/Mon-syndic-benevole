@@ -42,23 +42,46 @@ export async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<Co
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const admin = createAdminClient();
   const cookieStore = await cookies();
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
 
-  // Pas de cookie = premier rendu ou aucune copropriété sélectionnée.
-  // Aucun risque d'accès non autorisé puisqu'aucun ID n'est fourni.
+  // Pas de cookie : fallback sur la première copropriété accessible
+  // (même logique que le layout — évite une vue vide avant que CoproSelector pose le cookie)
   if (!selectedCoproId) {
-    // Si un rôle spécifique est requis (ex. syndic), on redirige quand même.
+    const [{ data: firstSyndic }, { data: firstCopro }] = await Promise.all([
+      admin
+        .from('coproprietes')
+        .select('id, nom, syndic_id, plan, plan_id')
+        .eq('syndic_id', user.id)
+        .order('nom')
+        .limit(1)
+        .maybeSingle(),
+      admin
+        .from('coproprietaires')
+        .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
+        .eq('user_id', user.id)
+        .order('copropriete_id')
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (firstSyndic) {
+      if (allowedRoles && !allowedRoles.includes('syndic')) redirect('/dashboard');
+      return { user, selectedCoproId: firstSyndic.id, role: 'syndic', copro: firstSyndic };
+    }
+    if (firstCopro?.coproprietes) {
+      const copro = firstCopro.coproprietes as unknown as CoproInfo;
+      if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
+      return { user, selectedCoproId: copro.id, role: 'copropriétaire', copro };
+    }
+
+    // Aucune copropriété accessible
     if (allowedRoles) redirect('/dashboard');
     return { user, selectedCoproId: null, role: null, copro: null };
   }
 
-  // Utilise le client admin pour bypasser la RLS sur coproprietes :
-  // la table peut ne pas avoir de politique SELECT pour les syndics.
-  // L'autorisation est vérifiée manuellement via syndic_id = user.id.
-  const admin = createAdminClient();
-
-  // --- Toutes les vérifications d'accès en parallèle (syndic + copropriétaire par user_id + par email) ---
+  // Cookie présent : utilise le client admin pour bypasser la RLS sur coproprietes
   const [{ data: asSyndic }, { data: asCopro }, { data: asCoproByEmail }] = await Promise.all([
     admin
       .from('coproprietes')
@@ -99,7 +122,6 @@ export async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<Co
   }
 
   // Cookie présent mais aucun accès
-  // Si un rôle spécifique est requis → redirection. Sinon on retourne null pour éviter une boucle infinie sur /dashboard.
   if (allowedRoles) redirect('/dashboard');
   return { user, selectedCoproId: null, role: null, copro: null };
 }

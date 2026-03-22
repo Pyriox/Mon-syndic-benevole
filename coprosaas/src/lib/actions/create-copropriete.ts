@@ -1,5 +1,6 @@
 'use server';
 
+import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 
@@ -27,7 +28,8 @@ export async function createCopropriete(formData: {
 
   if (error) return { error: error.message };
 
-  // Sélectionne la nouvelle copropriété en posant le cookie immédiatement
+  // Pose le cookie avant le redirect : garantit que la prochaine requête
+  // (déclenchée par le redirect) inclut déjà selected_copro_id.
   const cookieStore = await cookies();
   cookieStore.set('selected_copro_id', data.id, {
     path: '/',
@@ -36,5 +38,5 @@ export async function createCopropriete(formData: {
     secure: process.env.NODE_ENV === 'production',
   });
 
-  return { id: data.id };
+  redirect('/dashboard');
 }

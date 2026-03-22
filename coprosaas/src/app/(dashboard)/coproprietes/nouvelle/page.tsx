@@ -4,7 +4,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createCopropriete } from '@/lib/actions/create-copropriete';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
@@ -13,8 +12,6 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export default function NouvelleCopropriétéPage() {
-  const router = useRouter();
-
   const [formData, setFormData] = useState({
     nom: '',
     adresse: '',
@@ -35,16 +32,12 @@ export default function NouvelleCopropriétéPage() {
 
     const result = await createCopropriete(formData);
 
-    if (result.error) {
+    // L'action redirige automatiquement vers /dashboard après succès.
+    // On n'arrive ici qu'en cas d'erreur.
+    if (result?.error) {
       setError('Erreur lors de la création : ' + result.error);
       setLoading(false);
-      return;
     }
-
-    // Le cookie est déjà posé et le cache invalidé côté serveur.
-    // router.refresh() déclenche un re-rendu complet du layout avec les nouvelles données.
-    router.push('/dashboard');
-    router.refresh();
   };
 
   return (
