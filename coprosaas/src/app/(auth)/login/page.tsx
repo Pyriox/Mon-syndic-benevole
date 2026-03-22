@@ -91,18 +91,22 @@ function LoginForm() {
     e.preventDefault();
     setResetLoading(true);
     setResetError('');
-    const { error: resetErr } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth/confirm`,
-    });
-    setResetLoading(false);
-    if (resetErr) {
-      if (resetErr.message?.toLowerCase().includes('redirect') || resetErr.message?.toLowerCase().includes('url')) {
-        setResetError('Configuration manquante. Contactez le support.');
-      } else {
-        setResetError('Une erreur est survenue. Vérifiez l\'adresse email et réessayez.');
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { message?: string };
+        setResetError(data.message ?? 'Une erreur est survenue. Réessayez.');
+        return;
       }
-      console.error('[reset-password]', resetErr.message);
+    } catch {
+      setResetError('Une erreur réseau est survenue. Vérifiez votre connexion et réessayez.');
       return;
+    } finally {
+      setResetLoading(false);
     }
     setResetSent(true);
   };
