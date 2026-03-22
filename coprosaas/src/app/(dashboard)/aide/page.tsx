@@ -11,6 +11,7 @@ import {
   MailCheck, ChevronDown, ChevronUp, HelpCircle, MessageSquare,
   ExternalLink, Building2, Users, CalendarDays, Wallet,
   Search, ArrowRight, FileText, AlertTriangle,
+  Send, RefreshCw, User, Shield, Clock, CheckCircle, X,
 } from 'lucide-react';
 
 // ── Catégories FAQ ───────────────────────────────────────────
@@ -41,6 +42,38 @@ const SUBJECT_CHIPS = [
 ];
 
 const MAX_MESSAGE = 3000;
+
+// ── Types support ────────────────────────────────────────────
+type TicketStatus = 'ouvert' | 'en_cours' | 'resolu';
+interface Ticket {
+  id: string;
+  subject: string;
+  status: TicketStatus;
+  created_at: string;
+  updated_at: string;
+}
+interface SupportMessage {
+  id: string;
+  author: 'client' | 'admin';
+  content: string;
+  created_at: string;
+}
+
+const STATUS_CFG: Record<TicketStatus, { label: string; bg: string; text: string }> = {
+  ouvert:   { label: 'Ouvert',   bg: 'bg-blue-50',  text: 'text-blue-700'  },
+  en_cours: { label: 'En cours', bg: 'bg-amber-50', text: 'text-amber-700' },
+  resolu:   { label: 'Résolu',   bg: 'bg-green-50', text: 'text-green-700' },
+};
+
+function StatusBadge({ status }: { status: TicketStatus }) {
+  const c = STATUS_CFG[status];
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${c.bg} ${c.text}`}>
+      {status === 'resolu' ? <CheckCircle size={9} /> : <Clock size={9} />}
+      {c.label}
+    </span>
+  );
+}
 
 // ── Données FAQ ──────────────────────────────────────────────
 const FAQ: { question: string; answer: string; category: keyof typeof CATEGORIES }[] = [
@@ -148,21 +181,101 @@ export default function AidePage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent]       = useState(false);
   const [error, setError]     = useState('');
+  const [userId, setUserId]   = useState<string | null>(null);
+
+  // Tickets support
+  const [tickets, setTickets]               = useState<Ticket[]>([]);
+  const [openTicketId, setOpenTicketId]     = useState<string | null>(null);
+  const [ticketMessages, setTicketMessages] = useState<SupportMessage[]>([]);
+  const [loadingMsgs, setLoadingMsgs]       = useState(false);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [replyText, setReplyText]           = useState('');
+  const [replySending, setReplySending]     = useState(false);
+  const [replyError, setReplyError]         = useState('');
 
   // Recherche + filtre catégorie FAQ
   const [search, setSearch]       = useState('');
   const [activecat, setActivecat] = useState<string>('all');
 
-  // Pré-remplissage depuis la session
+  // Pré-remplissage depuis la session + chargement tickets
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) setEmail(user.email);
+      if (user?.id)    setUserId(user.id);
     });
     supabase.from('profiles').select('full_name').maybeSingle().then(({ data }) => {
       if (data?.full_name) setName(data.full_name);
     });
   }, []);
+
+  // Charger les tickets dès qu'on a le userId
+  useEffect(() => {
+    if (!userId) return;
+    setTicketsLoading(true);
+    const supabase = createClient();
+    supabase
+      .from('support_tickets')
+      .select('id, subject, status, created_at, updated_at')
+      .order('updated_at', { ascending: false })
+      .then(({ data }) => {
+        setTickets(data ?? []);
+        setTicketsLoading(false);
+      });
+  }, [userId]);
+
+  const loadMessages = async (ticketId: string) => {
+    setLoadingMsgs(true);
+    try {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('support_messages')
+        .select('id, author, content, created_at')
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true });
+      setTicketMessages((data as SupportMessage[]) ?? []);
+    } finally {
+      setLoadingMsgs(false);
+    }
+  };
+
+  const handleOpenTicket = async (id: string) => {
+    if (openTicketId === id) { setOpenTicketId(null); return; }
+    setOpenTicketId(id);
+    setTicketMessages([]);
+    setReplyText('');
+    setReplyError('');
+    await loadMessages(id);
+  };
+
+  const handleClientReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!openTicketId || !replyText.trim() || replySending) return;
+    setReplySending(true);
+    setReplyError('');
+    try {
+      const res = await fetch('/api/support/client-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId: openTicketId, message: replyText.trim() }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.message ?? 'Erreur');
+      }
+      setReplyText('');
+      setTicketMessages((prev) => [...prev, {
+        id: crypto.randomUUID(),
+        author: 'client',
+        content: replyText.trim(),
+        created_at: new Date().toISOString(),
+      }]);
+    } catch (err: unknown) {
+      setReplyError(err instanceof Error ? err.message : 'Erreur');
+    } finally {
+      setReplySending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,18 +285,27 @@ export default function AidePage() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, subject, message }),
+        body: JSON.stringify({ name, email, subject, message, userId }),
       });
       if (!res.ok) throw new Error();
+      const data = await res.json();
       setSent(true);
+      // Ajouter le nouveau ticket à la liste
+      if (data.ticketId) {
+        setTickets((prev) => [{
+          id: data.ticketId,
+          subject: subject.trim(),
+          status: 'ouvert',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }, ...prev]);
+      }
     } catch {
       setError('Une erreur est survenue. Veuillez réessayer ou nous contacter directement par email.');
     } finally {
       setLoading(false);
     }
   };
-
-  // FAQ filtrée
   const filteredFaq = useMemo(() => {
     const q = search.toLowerCase();
     return FAQ.filter((item) => {
@@ -224,7 +346,125 @@ export default function AidePage() {
         </div>
       </div>
 
-      {/* ── Grille : formulaire + sidebar ── */}
+      {/* ── Mes tickets support ── */}
+      {(tickets.length > 0 || ticketsLoading) && (
+        <div>
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+              <MessageSquare size={16} className="text-indigo-600" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Mes tickets support</h2>
+              <p className="text-xs text-gray-400">Historique de vos demandes</p>
+            </div>
+          </div>
+          {ticketsLoading ? (
+            <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
+              <RefreshCw size={14} className="animate-spin" /> Chargement…
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {tickets.map((ticket) => (
+                <div key={ticket.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                  {/* Header ticket */}
+                  <button
+                    type="button"
+                    onClick={() => handleOpenTicket(ticket.id)}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <MessageSquare size={14} className="text-gray-400 shrink-0" />
+                      <span className="text-sm font-medium text-gray-800 truncate">{ticket.subject}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <StatusBadge status={ticket.status} />
+                      <span className="text-xs text-gray-400">
+                        {new Date(ticket.updated_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                      </span>
+                      {openTicketId === ticket.id
+                        ? <ChevronUp size={14} className="text-gray-400" />
+                        : <ChevronDown size={14} className="text-gray-400" />}
+                    </div>
+                  </button>
+
+                  {/* Conversation */}
+                  {openTicketId === ticket.id && (
+                    <div className="border-t border-gray-100">
+                      {loadingMsgs ? (
+                        <div className="flex items-center gap-2 text-xs text-gray-400 px-4 py-4">
+                          <RefreshCw size={12} className="animate-spin" /> Chargement…
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-3 px-4 py-4 bg-gray-50/50">
+                          {ticketMessages.map((msg) => {
+                            const isAdmin = msg.author === 'admin';
+                            return (
+                              <div key={msg.id} className={`flex gap-2 ${isAdmin ? 'flex-row-reverse' : 'flex-row'}`}>
+                                <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 ${
+                                  isAdmin ? 'bg-blue-100' : 'bg-gray-200'
+                                }`}>
+                                  {isAdmin
+                                    ? <Shield size={11} className="text-blue-600" />
+                                    : <User size={11} className="text-gray-500" />}
+                                </div>
+                                <div className={`max-w-[85%] flex flex-col gap-0.5 ${isAdmin ? 'items-end' : 'items-start'}`}>
+                                  <div className={`px-3 py-2 rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
+                                    isAdmin
+                                      ? 'bg-blue-600 text-white rounded-tr-sm'
+                                      : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm'
+                                  }`}>
+                                    {msg.content}
+                                  </div>
+                                  <span className="text-[10px] text-gray-400 px-1">
+                                    {isAdmin ? 'Support · ' : 'Vous · '}
+                                    {new Date(msg.created_at).toLocaleString('fr-FR', {
+                                      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Répondre (sauf si résolu) */}
+                      {ticket.status !== 'resolu' && (
+                        <form onSubmit={handleClientReply} className="border-t border-gray-100 px-4 py-3 flex gap-2 items-end bg-white">
+                          <textarea
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Ajouter un message…"
+                            rows={2}
+                            className="flex-1 resize-none text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!replyText.trim() || replySending}
+                            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
+                          >
+                            {replySending ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}
+                            {replySending ? 'Envoi…' : 'Envoyer'}
+                          </button>
+                        </form>
+                      )}
+                      {replyError && <p className="text-xs text-red-600 px-4 pb-2">{replyError}</p>}
+                      {ticket.status === 'resolu' && (
+                        <div className="border-t border-gray-100 px-4 py-2.5 bg-green-50 flex items-center gap-2">
+                          <CheckCircle size={12} className="text-green-600" />
+                          <p className="text-xs text-green-700">Ce ticket est marqué comme résolu.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         {/* Formulaire de contact */}

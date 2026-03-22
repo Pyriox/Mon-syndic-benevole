@@ -12,7 +12,7 @@ const NAV: NavItem[] = [
   { href: '/admin/utilisateurs',  label: 'Utilisateurs',   icon: Users },
   { href: '/admin/abonnements',   label: 'Abonnements',    icon: CreditCard },
   { href: '/admin/coproprietes',  label: 'Copropriétés',   icon: Building2 },
-  { href: '/admin/support',       label: 'Support',        icon: LifeBuoy, soon: true },
+  { href: '/admin/support',       label: 'Support',        icon: LifeBuoy },
 ];
 
 export default function AdminSidebar() {

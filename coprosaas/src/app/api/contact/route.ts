@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? 'onboarding@resend.dev';
@@ -19,14 +21,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 });
   }
 
-  let body: { name?: string; email?: string; subject?: string; message?: string };
+  let body: { name?: string; email?: string; subject?: string; message?: string; userId?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { name, email, subject, message } = body;
+  const { name, email, subject, message, userId } = body;
 
   // Validation des champs obligatoires
   if (!name?.trim() || !email?.trim() || !subject?.trim() || !message?.trim()) {
@@ -88,7 +90,46 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Erreur envoi email' }, { status: 500 });
   }
 
-  return NextResponse.json({ message: 'Envoyé' });
+  // ── Persister le ticket en base (best-effort, non bloquant) ──
+  let ticketId: string | null = null;
+  try {
+    const admin = createAdminClient();
+
+    // Résoudre le user_id réel si non fourni (via session serveur)
+    let resolvedUserId: string | null = userId?.trim() || null;
+    if (!resolvedUserId) {
+      try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        resolvedUserId = user?.id ?? null;
+      } catch { /* non authentifié, pas grave */ }
+    }
+
+    const { data: ticket } = await admin
+      .from('support_tickets')
+      .insert({
+        user_id:    resolvedUserId,
+        user_email: email.trim().toLowerCase(),
+        user_name:  name.trim(),
+        subject:    subject.trim(),
+        status:     'ouvert',
+      })
+      .select('id')
+      .single();
+
+    if (ticket?.id) {
+      ticketId = ticket.id;
+      await admin.from('support_messages').insert({
+        ticket_id: ticket.id,
+        author:    'client',
+        content:   message.trim(),
+      });
+    }
+  } catch (dbErr) {
+    console.error('[contact] DB persist error:', dbErr);
+  }
+
+  return NextResponse.json({ message: 'Envoyé', ticketId });
 }
 
 /** Échappe les caractères HTML pour éviter les injections dans le corps du mail */

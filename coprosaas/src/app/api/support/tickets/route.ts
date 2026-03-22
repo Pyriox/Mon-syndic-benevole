@@ -1,27 +1,29 @@
 // ============================================================
-// Page Admin — Support tickets
-// Server Component : charge les tickets via createAdminClient()
+// GET /api/support/tickets — Liste tous les tickets
+// Réservé à l'admin
 // ============================================================
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import AdminSupportShell from './AdminSupportShell';
+import { createClient } from '@/lib/supabase/server';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
 
-export default async function AdminSupportPage() {
-  // Vérification admin
+export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email !== ADMIN_EMAIL) redirect('/login');
+  if (!user || user.email !== ADMIN_EMAIL) {
+    return NextResponse.json({ message: 'Non autorisé' }, { status: 403 });
+  }
 
   const admin = createAdminClient();
-
-  // Charger tous les tickets avec le dernier message
-  const { data: tickets } = await admin
+  const { data, error } = await admin
     .from('support_tickets')
     .select('id, user_email, user_name, subject, status, created_at, updated_at')
     .order('updated_at', { ascending: false });
 
-  return <AdminSupportShell initialTickets={tickets ?? []} />;
+  if (error) {
+    return NextResponse.json({ message: 'Erreur base de données' }, { status: 500 });
+  }
+
+  return NextResponse.json(data ?? []);
 }
