@@ -18,8 +18,6 @@ const nextConfig: NextConfig = {
   experimental: {
     // Tree-shake lucide-react : réduit significativement la taille du bundle JS
     optimizePackageImports: ['lucide-react'],
-    // Active la directive 'use cache' (Next.js 16)
-    cacheComponents: true,
   },
   // Cache HTTP pour les assets statiques Next.js
   async headers() {
