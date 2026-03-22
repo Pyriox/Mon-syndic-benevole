@@ -4,10 +4,17 @@
 // Génère un lien de réinitialisation de mot de passe via le
 // client admin Supabase (service role), puis l'envoie par Resend.
 //
-// Avantages vs supabase.auth.resetPasswordForEmail() côté client :
-//   - Contourne la validation de l'allowlist "Redirect URLs" Supabase
-//   - Permet de personnaliser le template email (Resend)
-//   - Masque les erreurs internes à l'utilisateur (anti-enum)
+// Stratégie du lien :
+//   On utilise data.properties.hashed_token (et non action_link) pour
+//   construire un lien direct vers notre app :
+//     /auth/confirm?token_hash=XXX&type=recovery
+//   Cela évite le détour par les serveurs Supabase (action_link), qui
+//   redirige en PKCE sans paramètre `type`, ce qui faisait atterrir
+//   l'utilisateur sur /dashboard au lieu de /reset-password.
+//
+//   Notre confirm route voit token_hash+type=recovery et redirige vers
+//   /reset-password?token_hash=XXX&type=recovery, où verifyOtp est
+//   appelé only au clic utilisateur (anti-scanner).
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
@@ -18,17 +25,14 @@ import { RESET_PASSWORD_SUBJECT, buildResetPasswordEmail } from '@/lib/emails/re
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'onboarding@resend.dev'}>`;
 
-// La page reset-password doit être dans l'allowlist Supabase OU on passe
-// par generateLink (admin) qui n'a pas cette restriction.
-// On utilise NEXT_PUBLIC_SITE_URL en priorité, sinon on reconstruit depuis VERCEL_URL.
-function getRedirectTo(): string {
+function getBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return `${process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')}/auth/confirm`;
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
   }
   if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}/auth/confirm`;
+    return `https://${process.env.VERCEL_URL}`;
   }
-  return 'https://mon-syndic-benevole.fr/auth/confirm';
+  return 'https://mon-syndic-benevole.fr';
 }
 
 export async function POST(req: NextRequest) {
@@ -53,25 +57,30 @@ export async function POST(req: NextRequest) {
   try {
     const admin = createAdminClient();
 
-    // generateLink avec le client admin (service role) ne valide PAS l'allowlist redirectTo
     const { data, error } = await admin.auth.admin.generateLink({
       type: 'recovery',
       email,
-      options: { redirectTo: getRedirectTo() },
     });
 
-    if (error || !data?.properties?.action_link) {
-      // On ne révèle pas si l'email existe ou non (anti-enumération)
+    if (error || !data?.properties) {
+      // Anti-enumération : on répond 200 même si le compte n'existe pas
       console.error('[reset-password] generateLink error:', error?.message);
-      // On répond 200 quand même pour ne pas révéler si le compte existe
       return NextResponse.json({ ok: true });
     }
+
+    // Construire le lien directement vers notre app avec le token_hash,
+    // en évitant le passage par les serveurs Supabase (action_link).
+    const props = data.properties as { hashed_token?: string; action_link: string };
+    const tokenHash = props.hashed_token;
+    const resetLink = tokenHash
+      ? `${getBaseUrl()}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`
+      : props.action_link; // fallback si hashed_token absent (ne devrait pas arriver)
 
     await resend.emails.send({
       from: FROM,
       to: email,
       subject: RESET_PASSWORD_SUBJECT,
-      html: buildResetPasswordEmail(data.properties.action_link),
+      html: buildResetPasswordEmail(resetLink),
     });
 
     return NextResponse.json({ ok: true });
