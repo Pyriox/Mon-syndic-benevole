@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -173,8 +174,7 @@ function FaqItem({ question, answer, category, defaultOpen = false }: {
 }
 
 // ── Page principale ──────────────────────────────────────────
-export default function AidePage() {
-  const [name, setName]       = useState('');
+export default function AidePage() {  const router = useRouter();  const [name, setName]       = useState('');
   const [email, setEmail]     = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -264,7 +264,10 @@ export default function AidePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticketId: id }),
-      }).catch(() => { /* on ignore l'erreur, non bloquant */ });
+      }).then(() => {
+        // Rafraîchit les Server Components (layout) pour vider la cloche
+        router.refresh();
+      }).catch(() => { /* non bloquant */ });
     }
     await loadMessages(id);
   };
