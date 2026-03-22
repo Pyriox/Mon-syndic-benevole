@@ -150,12 +150,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Token manquant' }, { status: 400 });
   }
 
-  const cookieStore = await cookies();
-  const supabase = makeSupabase(cookieStore);
+  // Utilise l'admin client : le visiteur n'est pas connecté, les RLS bloquent les jointures
+  const admin = createAdminClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from('invitations')
-    .select('email, statut, expires_at, copropriete_id, coproprietes(nom)')
+    .select('email, statut, expires_at, copropriete_id')
     .eq('token', token)
     .single();
 
@@ -171,11 +171,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Ce lien est invalide ou a expiré.' }, { status: 410 });
   }
 
-  const coproprietes = data.coproprietes as unknown as { nom: string } | { nom: string }[] | null;
-  const coproprieteNom = Array.isArray(coproprietes) ? coproprietes[0]?.nom : coproprietes?.nom;
+  // Nom de la copropriété
+  const { data: copro } = await admin
+    .from('coproprietes')
+    .select('nom')
+    .eq('id', data.copropriete_id)
+    .single();
 
-  // Pré-remplir prénom/nom depuis la fiche copropriétaire (non encore lié)
-  const { data: fiche } = await supabase
+  // Pré-remplir prénom/nom depuis la fiche copropriétaire (non encore liée)
+  const { data: fiche } = await admin
     .from('coproprietaires')
     .select('prenom, nom')
     .eq('email', data.email)
@@ -185,7 +189,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     email: data.email,
-    copropriete: coproprieteNom ?? '',
+    copropriete: copro?.nom ?? '',
     prenom: fiche?.prenom ?? null,
     nom: fiche?.nom ?? null,
   });

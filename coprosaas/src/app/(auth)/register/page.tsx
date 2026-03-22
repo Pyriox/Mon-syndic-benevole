@@ -74,7 +74,7 @@ function RegisterForm() {
     e.preventDefault();
     setError('');
 
-    if (mode !== 'coproprietaire' && formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError('Les mots de passe ne correspondent pas.');
       return;
     }
@@ -334,18 +334,16 @@ function RegisterForm() {
               hint="Au moins 8 caractères"
             />
 
-            {mode !== 'coproprietaire' && (
-              <Input
-                label="Confirmer le mot de passe"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="••••••••"
-                required
-              />
-            )}
+            <Input
+              label="Confirmer le mot de passe"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="••••••••"
+              required
+            />
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{error}</div>
