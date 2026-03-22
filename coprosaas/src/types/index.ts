@@ -4,7 +4,7 @@
 // ============================================================
 
 // --- Notification ---
-export type NotificationType = 'impaye' | 'incident' | 'ag' | 'appel_fonds';
+export type NotificationType = 'impaye' | 'incident' | 'ag' | 'appel_fonds' | 'support';
 
 export interface AppNotification {
   id: string;

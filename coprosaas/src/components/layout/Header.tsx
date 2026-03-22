@@ -5,7 +5,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu } from 'lucide-react';
+import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AppNotification } from '@/types';
 
@@ -21,6 +21,7 @@ const iconByType = {
   incident: AlertTriangle,
   ag: CalendarDays,
   appel_fonds: Wallet,
+  support: MessageSquare,
 };
 
 const colorBySeverity = {

@@ -192,6 +192,7 @@ export default function AidePage() {
   const [replyText, setReplyText]           = useState('');
   const [replySending, setReplySending]     = useState(false);
   const [replyError, setReplyError]         = useState('');
+  const [unreadTicketIds, setUnreadTicketIds] = useState<Set<string>>(new Set());
 
   // Recherche + filtre catégorie FAQ
   const [search, setSearch]       = useState('');
@@ -214,14 +215,21 @@ export default function AidePage() {
     if (!userId) return;
     setTicketsLoading(true);
     const supabase = createClient();
-    supabase
-      .from('support_tickets')
-      .select('id, subject, status, created_at, updated_at')
-      .order('updated_at', { ascending: false })
-      .then(({ data }) => {
-        setTickets(data ?? []);
-        setTicketsLoading(false);
-      });
+    Promise.all([
+      supabase
+        .from('support_tickets')
+        .select('id, subject, status, created_at, updated_at')
+        .order('updated_at', { ascending: false }),
+      supabase
+        .from('support_messages')
+        .select('ticket_id')
+        .eq('author', 'admin')
+        .eq('client_read', false),
+    ]).then(([{ data: ticketsData }, { data: unreadData }]) => {
+      setTickets(ticketsData ?? []);
+      setUnreadTicketIds(new Set((unreadData ?? []).map((m) => m.ticket_id)));
+      setTicketsLoading(false);
+    });
   }, [userId]);
 
   const loadMessages = async (ticketId: string) => {
@@ -245,6 +253,19 @@ export default function AidePage() {
     setTicketMessages([]);
     setReplyText('');
     setReplyError('');
+    // Marquer les messages de ce ticket comme lus (optimiste)
+    if (unreadTicketIds.has(id)) {
+      setUnreadTicketIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      fetch('/api/support/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId: id }),
+      }).catch(() => { /* on ignore l'erreur, non bloquant */ });
+    }
     await loadMessages(id);
   };
 
@@ -373,8 +394,18 @@ export default function AidePage() {
                     className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <MessageSquare size={14} className="text-gray-400 shrink-0" />
+                      <div className="relative shrink-0">
+                        <MessageSquare size={14} className="text-gray-400" />
+                        {unreadTicketIds.has(ticket.id) && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-500" />
+                        )}
+                      </div>
                       <span className="text-sm font-medium text-gray-800 truncate">{ticket.subject}</span>
+                      {unreadTicketIds.has(ticket.id) && (
+                        <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500 text-white leading-none">
+                          Nouveau
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <StatusBadge status={ticket.status} />

@@ -120,9 +120,10 @@ export async function POST(req: NextRequest) {
     if (ticket?.id) {
       ticketId = ticket.id;
       await admin.from('support_messages').insert({
-        ticket_id: ticket.id,
-        author:    'client',
-        content:   message.trim(),
+        ticket_id:   ticket.id,
+        author:      'client',
+        content:     message.trim(),
+        client_read: true,
       });
     }
   } catch (dbErr) {

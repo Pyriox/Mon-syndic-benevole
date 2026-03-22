@@ -55,9 +55,10 @@ export async function POST(req: NextRequest) {
   }
 
   const { error: msgErr } = await admin.from('support_messages').insert({
-    ticket_id: ticket.id,
-    author:    'client',
-    content:   message.trim(),
+    ticket_id:   ticket.id,
+    author:      'client',
+    content:     message.trim(),
+    client_read: true,
   });
 
   if (msgErr) {

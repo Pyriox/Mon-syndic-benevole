@@ -311,6 +311,38 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     }
   }
 
+  // --- Messages support non lus (tous les rôles) ---
+  try {
+    const { data: unreadMsgs } = await supabase
+      .from('support_messages')
+      .select('ticket_id')
+      .eq('author', 'admin')
+      .eq('client_read', false);
+
+    if (unreadMsgs && unreadMsgs.length > 0) {
+      const ticketIds = [...new Set(unreadMsgs.map((m) => m.ticket_id))];
+      const { data: ticketsWithUnread } = await supabase
+        .from('support_tickets')
+        .select('id, subject')
+        .in('id', ticketIds)
+        .limit(3);
+
+      for (const t of ticketsWithUnread ?? []) {
+        const count = unreadMsgs.filter((m) => m.ticket_id === t.id).length;
+        notifications.push({
+          id: `support-${t.id}`,
+          type: 'support',
+          label: t.subject,
+          sublabel: `${count} nouveau${count > 1 ? 'x' : ''} message${count > 1 ? 's' : ''} du support`,
+          href: '/aide',
+          severity: 'info',
+        });
+      }
+    }
+  } catch {
+    // Tables support pas encore créées ou autre erreur non bloquante
+  }
+
   return (
     <DashboardShell
       coproprietes={userCoproprietes}
