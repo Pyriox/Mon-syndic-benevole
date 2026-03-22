@@ -41,9 +41,9 @@ export default function LandingStickyCTA() {
       </div>
       <Link
         href="/register"
-        className="shrink-0 inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-colors"
+        className="shrink-0 inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold px-3.5 py-2.5 rounded-xl text-sm transition-colors"
       >
-        J'essaie gratuitement <ArrowRight size={14} />
+        Essai gratuit <ArrowRight size={14} />
       </Link>
     </div>
   );
