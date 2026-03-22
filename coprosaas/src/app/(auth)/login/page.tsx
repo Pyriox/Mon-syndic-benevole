@@ -96,7 +96,12 @@ function LoginForm() {
     });
     setResetLoading(false);
     if (resetErr) {
-      setResetError('Une erreur est survenue. Vérifiez l\'adresse email et réessayez.');
+      if (resetErr.message?.toLowerCase().includes('redirect') || resetErr.message?.toLowerCase().includes('url')) {
+        setResetError('Configuration manquante. Contactez le support.');
+      } else {
+        setResetError('Une erreur est survenue. Vérifiez l\'adresse email et réessayez.');
+      }
+      console.error('[reset-password]', resetErr.message);
       return;
     }
     setResetSent(true);
