@@ -15,6 +15,7 @@
 //   await requireCoproAccess(['syndic']);
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
@@ -52,21 +53,26 @@ export async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<Co
     return { user, selectedCoproId: null, role: null, copro: null };
   }
 
+  // Utilise le client admin pour bypasser la RLS sur coproprietes :
+  // la table peut ne pas avoir de politique SELECT pour les syndics.
+  // L'autorisation est vérifiée manuellement via syndic_id = user.id.
+  const admin = createAdminClient();
+
   // --- Toutes les vérifications d'accès en parallèle (syndic + copropriétaire par user_id + par email) ---
   const [{ data: asSyndic }, { data: asCopro }, { data: asCoproByEmail }] = await Promise.all([
-    supabase
+    admin
       .from('coproprietes')
       .select('id, nom, syndic_id, plan, plan_id')
       .eq('id', selectedCoproId)
       .eq('syndic_id', user.id)
       .maybeSingle(),
-    supabase
+    admin
       .from('coproprietaires')
       .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
       .eq('copropriete_id', selectedCoproId)
       .eq('user_id', user.id)
       .maybeSingle(),
-    supabase
+    admin
       .from('coproprietaires')
       .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
       .eq('copropriete_id', selectedCoproId)
