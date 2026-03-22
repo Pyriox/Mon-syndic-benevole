@@ -31,9 +31,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   /* Évite le zoom automatique sur les inputs iOS */
   -webkit-text-size-adjust: 100%;
-  /* Empêche le scroll horizontal sur mobile */
+  /* Empêche le scroll horizontal sur mobile (position: relative = clé iOS Safari) */
   overflow-x: hidden;
   max-width: 100%;
+  width: 100%;
+  position: relative;
   overscroll-behavior-x: none;
 }
 
