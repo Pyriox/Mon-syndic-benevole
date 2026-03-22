@@ -38,7 +38,7 @@ export async function createCopropriete(formData: {
   });
 
   // Invalide le cache du layout pour que la barre latérale se mette à jour
-  revalidateTag('dashboard-layout-data');
+  revalidateTag('dashboard-layout-data', 'seconds');
 
   return { id: data.id };
 }

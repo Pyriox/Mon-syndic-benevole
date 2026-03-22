@@ -1,5 +1,5 @@
 // ============================================================
-// Requêtes mises en cache côté serveur (Next.js unstable_cache)
+// Requêtes mises en cache côté serveur (Next.js "use cache")
 // Utilise le client service role (admin) pour ne pas dépendre des
 // cookies de session — les données sont scopées par userId / coproId.
 //
@@ -7,44 +7,43 @@
 // La fraîcheur est suffisante : un incident créé apparaîtra dans
 // les 30 secondes, ce qui est acceptable pour une cloche de notifs.
 // ============================================================
-import { unstable_cache } from 'next/cache';
+import { unstable_cache, cacheTag, cacheLife } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { AppNotification } from '@/types';
 
 // ── Profil + copropriétés (layout global) ────────────────────────────────────
-// Cache : 30 secondes par utilisateur
-// Tag : 'dashboard-layout-data' — peut être invalidé via revalidateTag()
-export const getDashboardLayoutData = unstable_cache(
-  async (userId: string, userEmail: string) => {
-    const admin = createAdminClient();
-    const [
-      { data: profile },
-      { data: syndicCopros },
-      { data: coproRows },
-      { data: coproRowsByEmail },
-    ] = await Promise.all([
-      admin.from('profiles').select('full_name').eq('id', userId).single(),
-      admin
-        .from('coproprietes')
-        .select('id, nom, adresse, ville')
-        .eq('syndic_id', userId)
-        .order('nom'),
-      admin
-        .from('coproprietaires')
-        .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
-        .eq('user_id', userId),
-      // Fallback pour les copropriétaires non encore liés (user_id non renseigné)
-      admin
-        .from('coproprietaires')
-        .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
-        .eq('email', userEmail)
-        .is('user_id', null),
-    ]);
-    return { profile, syndicCopros, coproRows, coproRowsByEmail };
-  },
-  ['dashboard-layout-data'],
-  { revalidate: 30, tags: ['dashboard-layout-data'] },
-);
+// Cache : ~30 secondes par utilisateur
+// Tag : 'dashboard-layout-data' — invalidé via revalidateTag() après création
+export async function getDashboardLayoutData(userId: string, userEmail: string) {
+  'use cache';
+  cacheTag('dashboard-layout-data');
+  cacheLife('seconds'); // stale 30s, revalidate 1s, expire 1min
+  const admin = createAdminClient();
+  const [
+    { data: profile },
+    { data: syndicCopros },
+    { data: coproRows },
+    { data: coproRowsByEmail },
+  ] = await Promise.all([
+    admin.from('profiles').select('full_name').eq('id', userId).single(),
+    admin
+      .from('coproprietes')
+      .select('id, nom, adresse, ville')
+      .eq('syndic_id', userId)
+      .order('nom'),
+    admin
+      .from('coproprietaires')
+      .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
+      .eq('user_id', userId),
+    // Fallback pour les copropriétaires non encore liés (user_id non renseigné)
+    admin
+      .from('coproprietaires')
+      .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
+      .eq('email', userEmail)
+      .is('user_id', null),
+  ]);
+  return { profile, syndicCopros, coproRows, coproRowsByEmail };
+}
 
 // ── Notifications syndic ──────────────────────────────────────────────────────
 // Cache : 30 secondes par copropriété
