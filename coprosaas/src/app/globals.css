@@ -21,6 +21,8 @@
 
 html {
   overflow-x: hidden;
+  max-width: 100%;
+  overscroll-behavior-x: none;
 }
 
 body {
@@ -31,6 +33,8 @@ body {
   -webkit-text-size-adjust: 100%;
   /* Empêche le scroll horizontal sur mobile */
   overflow-x: hidden;
+  max-width: 100%;
+  overscroll-behavior-x: none;
 }
 
 /* Support safe-area pour iPhone X et suivants (encoches, Dynamic Island) */

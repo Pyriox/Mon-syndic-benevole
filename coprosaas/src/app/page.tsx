@@ -192,8 +192,8 @@ export default function HomePage() {
       <header>
         <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white" aria-label="Présentation">
         {/* Orbs décoratifs */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-12 sm:pb-16 text-center">
           <div className="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 text-yellow-300 text-xs sm:text-sm font-semibold px-4 py-2 rounded-full mb-6 sm:mb-8">
@@ -466,8 +466,8 @@ export default function HomePage() {
       
       {/* ══════════════════════════════ DÉMO ══════════════════════════════ */}
       <section id="demo" aria-labelledby="demo-heading" className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-14 sm:py-20 px-4 sm:px-6">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-5xl mx-auto">
           <div className="text-center mb-10 sm:mb-14">
             <p className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-3">Aperçu de l&apos;interface</p>
@@ -1076,8 +1076,8 @@ export default function HomePage() {
 
       {/* ── CTA final ── */}
       <section data-cta-final className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-16 sm:py-24 px-4 sm:px-6 text-white text-center relative overflow-hidden">
-        <div className="absolute top-0 left-1/3 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute top-0 left-1/3 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute bottom-0 right-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-5 leading-tight">
             Prêt à économiser jusqu'à 3 000 €<br />
