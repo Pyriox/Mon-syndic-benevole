@@ -38,6 +38,9 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
@@ -60,15 +63,28 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setUnconfirmedEmail('');
+    setResendSent(false);
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
     if (authError) {
-      setError('Email ou mot de passe incorrect. Veuillez réessayer.');
+      if (authError.message === 'Email not confirmed') {
+        setUnconfirmedEmail(email);
+      } else {
+        setError('Email ou mot de passe incorrect. Veuillez réessayer.');
+      }
       setLoading(false);
       return;
     }
     trackEvent('login', { method: 'email' });
     router.push('/dashboard');
     router.refresh();
+  };
+
+  const handleResendConfirmation = async () => {
+    setResendLoading(true);
+    await supabase.auth.resend({ type: 'signup', email: unconfirmedEmail });
+    setResendLoading(false);
+    setResendSent(true);
   };
 
   const handleForgot = async (e: React.FormEvent) => {
@@ -194,6 +210,28 @@ function LoginForm() {
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
                     {error}
+                  </div>
+                )}
+
+                {unconfirmedEmail && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 space-y-3">
+                    <p className="font-medium">Votre compte n&apos;est pas encore activé.</p>
+                    <p className="text-amber-700 text-xs leading-relaxed">
+                      Un email de confirmation a été envoyé à <strong>{unconfirmedEmail}</strong>.
+                      Cliquez sur le lien qu&apos;il contient pour activer votre compte.
+                    </p>
+                    {resendSent ? (
+                      <p className="text-xs text-green-700 font-medium">✓ Email renvoyé ! Vérifiez votre boîte de réception.</p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendConfirmation}
+                        disabled={resendLoading}
+                        className="text-xs font-medium text-amber-900 underline hover:no-underline disabled:opacity-50"
+                      >
+                        {resendLoading ? 'Envoi en cours…' : 'Renvoyer l’email de confirmation'}
+                      </button>
+                    )}
                   </div>
                 )}
 
