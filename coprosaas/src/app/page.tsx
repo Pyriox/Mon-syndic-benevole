@@ -1126,7 +1126,7 @@ export default function HomePage() {
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> 14 jours gratuits, sans frais immédiats</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Annulation sans frais</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Données hébergées en Europe</span>
-            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Prêt en 10 minutes</span>
+            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Prêt en moins de 30 minutes</span>
           </div>
         </div>
       </section>
