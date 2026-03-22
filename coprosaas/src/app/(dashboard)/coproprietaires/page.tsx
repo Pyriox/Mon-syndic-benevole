@@ -15,7 +15,7 @@ import { Building2, UserCheck, Users } from 'lucide-react';
 export default async function CoproprietairesPage() {
   const supabase = await createClient();
   // Syndic : accès complet + actions | Copropriétaire : lecture seule (sans email/telephone/solde)
-  const { selectedCoproId, role, copro: copropriete } = await requireCoproAccess();
+  const { selectedCoproId, role, copro: copropriete, user } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
 
   // Si syndic mais pas gérant de cette copropriété → redirect (requireCoproAccess gère déjà ce cas)
@@ -99,6 +99,7 @@ export default async function CoproprietairesPage() {
             lotsForSelect={isSyndic ? lotsForSelect : undefined}
             totalTantiemes={totalTantiemes}
             readOnly={!isSyndic}
+            currentUserId={user.id}
           />
         </Card>
       ) : (

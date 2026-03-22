@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
-import { Pencil, Home, Mail, Lock } from 'lucide-react';
+import { Pencil, Home, Mail, Lock, Check, X } from 'lucide-react';
 
 interface Lot {
   id: string;
@@ -168,6 +168,186 @@ export function ProfilEditActions({
         </form>
       </Modal>
     </>
+  );
+}
+
+// ============================================================
+// Éditeur inline de l'identité copropriétaire (champ par champ)
+// ============================================================
+type EditableField =
+  | 'prenom' | 'nom' | 'raison_sociale'
+  | 'telephone' | 'adresse' | 'code_postal' | 'ville';
+
+export function ProfilIdentiteEditor({
+  fiche: initialFiche,
+  selectedCoproId,
+  selectedCoproNom,
+  userEmail,
+  fullName,
+}: {
+  fiche: FicheSelectionnee | null;
+  selectedCoproId: string | null;
+  selectedCoproNom: string;
+  userEmail: string;
+  fullName: string;
+}) {
+  const supabase = createClient();
+  const router = useRouter();
+  const [fiche, setFiche] = useState<FicheSelectionnee | null>(initialFiche);
+  const [editingField, setEditingField] = useState<EditableField | null>(null);
+  const [tempValue, setTempValue] = useState('');
+  const [saving, setSaving] = useState(false);
+  const isSci = !!fiche?.raison_sociale;
+
+  const startEdit = (field: EditableField) => {
+    setTempValue(fiche?.[field] ?? '');
+    setEditingField(field);
+  };
+
+  const saveField = async (field: EditableField) => {
+    if (!fiche) return;
+    setSaving(true);
+    const val = tempValue.trim() || null;
+    await supabase.from('coproprietaires').update({ [field]: val }).eq('id', fiche.id);
+    setFiche((prev) => (prev ? { ...prev, [field]: val } : prev));
+    setEditingField(null);
+    setSaving(false);
+    router.refresh();
+  };
+
+  const toggleSci = async () => {
+    if (!fiche) return;
+    if (isSci) {
+      setSaving(true);
+      await supabase.from('coproprietaires').update({ raison_sociale: null }).eq('id', fiche.id);
+      setFiche((prev) => (prev ? { ...prev, raison_sociale: null } : prev));
+      setSaving(false);
+      router.refresh();
+    } else {
+      setTempValue('');
+      setEditingField('raison_sociale');
+    }
+  };
+
+  const renderField = (
+    label: string,
+    field: EditableField,
+    inputType = 'text',
+    placeholder = '',
+  ) => {
+    const value = fiche?.[field] ?? '';
+    const isEditing = editingField === field;
+    return (
+      <div className="flex items-center gap-2 py-2.5 border-b border-gray-100 last:border-0">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-gray-400 mb-0.5">{label}</p>
+          {isEditing ? (
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <input
+                className="flex-1 text-sm border border-blue-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
+                type={inputType}
+                value={tempValue}
+                onChange={(e) => setTempValue(e.target.value)}
+                autoFocus
+                placeholder={placeholder}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); saveField(field); }
+                  if (e.key === 'Escape') setEditingField(null);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => saveField(field)}
+                disabled={saving}
+                className="shrink-0 flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
+                title="Enregistrer"
+              >
+                <Check size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingField(null)}
+                className="shrink-0 flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-100 rounded-lg"
+                title="Annuler"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {value || <span className="text-gray-400 italic text-sm font-normal">Non renseigné</span>}
+            </p>
+          )}
+        </div>
+        {!isEditing && fiche && (
+          <button
+            type="button"
+            onClick={() => startEdit(field)}
+            className="shrink-0 p-1.5 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+            title={`Modifier ${label}`}
+          >
+            <Pencil size={13} />
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  if (!fiche) {
+    return (
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm text-gray-400 italic leading-relaxed">
+          Aucune fiche pour cette copropriété.{' '}
+          <span className="text-gray-600">Créez-la pour apparaître dans la liste des copropriétaires.</span>
+        </p>
+        <ProfilEditActions
+          fiche={null}
+          selectedCoproId={selectedCoproId}
+          selectedCoproNom={selectedCoproNom}
+          userEmail={userEmail}
+          fullName={fullName}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Type de personne */}
+      <div className="flex items-center gap-2 py-2.5 border-b border-gray-100">
+        <div className="flex-1">
+          <p className="text-xs text-gray-400 mb-0.5">Type</p>
+          <p className="text-sm font-medium text-gray-900">
+            {isSci ? 'Personne morale / SCI' : 'Personne physique'}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={toggleSci}
+          disabled={saving}
+          className="shrink-0 p-1.5 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+          title="Changer le type"
+        >
+          <Pencil size={13} />
+        </button>
+      </div>
+      {isSci ? (
+        <>
+          {renderField('Raison sociale', 'raison_sociale')}
+          {renderField('Prénom du représentant', 'prenom')}
+          {renderField('Nom du représentant', 'nom')}
+        </>
+      ) : (
+        <>
+          {renderField('Prénom', 'prenom')}
+          {renderField('Nom', 'nom')}
+        </>
+      )}
+      {renderField('Téléphone', 'telephone', 'tel', '06 12 34 56 78')}
+      {renderField('Adresse', 'adresse', 'text', '12 rue de la Paix')}
+      {renderField('Code postal', 'code_postal', 'text', '75001')}
+      {renderField('Ville', 'ville', 'text', 'Paris')}
+    </div>
   );
 }
 

@@ -54,7 +54,7 @@ interface CoproEntry {
 
 export default async function LotsPage() {
   const supabase = await createClient();
-  const { selectedCoproId, role, copro } = await requireCoproAccess();
+  const { selectedCoproId, role, copro, user } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
   const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
@@ -76,6 +76,7 @@ export default async function LotsPage() {
   const coproMap = Object.fromEntries(
     coproprietaires.map((c) => [c.id, c])
   );
+  const myFicheId = coproprietaires.find((c) => c.user_id === user.id)?.id ?? null;
 
   const allLots = lots ?? [];
   const totalTantiemes = allLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
@@ -203,8 +204,9 @@ export default async function LotsPage() {
                 : 0;
               const cfg = getConfig(lot.type);
               const Icon = cfg.icon;
+              const isMyLot = myFicheId !== null && lot.coproprietaire_id === myFicheId;
               return (
-                <Card key={lot.id} padding="sm">
+                <Card key={lot.id} padding="sm" className={isMyLot ? 'ring-1 ring-blue-200 bg-blue-50/40' : ''}>
                   <div className="flex items-start gap-3">
                     {/* Icône type */}
                     <div className={`p-2.5 ${cfg.bgColor} rounded-xl shrink-0`}>
@@ -291,8 +293,9 @@ export default async function LotsPage() {
                     : 0;
                   const cfg = getConfig(lot.type);
                   const Icon = cfg.icon;
+                  const isMyLot = myFicheId !== null && lot.coproprietaire_id === myFicheId;
                   return (
-                    <tr key={lot.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors group">
+                    <tr key={lot.id} className={`border-b border-gray-100 last:border-0 transition-colors group ${isMyLot ? 'bg-blue-50/50 hover:bg-blue-50/80' : 'hover:bg-gray-50'}`}>
                       <td className="py-3.5 px-5">
                         <div className="flex items-center gap-2.5">
                           <div className={`p-1.5 ${cfg.bgColor} rounded-lg`}>

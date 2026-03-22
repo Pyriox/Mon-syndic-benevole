@@ -69,6 +69,7 @@ interface CoproprietairesTableProps {
   totalTantiemes: number;
   readOnly?: boolean;
   coproprieteId?: string;
+  currentUserId?: string;
 }
 
 // -------------------------------------------------------
@@ -78,10 +79,12 @@ function ReadOnlyMobileCoproCard({
   cp,
   ownedLots,
   totalTantiemes,
+  currentUserId,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
   totalTantiemes: number;
+  currentUserId?: string;
 }) {
   const cpTantiemes = ownedLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
   const cpPct = totalTantiemes > 0 ? (cpTantiemes / totalTantiemes) * 100 : 0;
@@ -91,7 +94,7 @@ function ReadOnlyMobileCoproCard({
   const address = [cp.adresse, cp.code_postal, cp.ville].filter(Boolean).join(' ');
 
   return (
-    <Card className="space-y-3">
+    <Card className={`space-y-3 ${cp.user_id === currentUserId ? 'ring-1 ring-blue-200 bg-blue-50/30' : ''}`}>
       {/* Avatar + nom */}
       <div className="flex items-center gap-3">
         <Avatar name={displayName || '?'} />
@@ -104,6 +107,9 @@ function ReadOnlyMobileCoproCard({
               <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
                 <UserCheck size={11} />Inscrit
               </span>
+            )}
+            {cp.user_id === currentUserId && (
+              <span className="inline-flex items-center bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
             )}
           </div>
           {cp.raison_sociale && (cp.prenom || cp.nom) && (
@@ -146,10 +152,12 @@ function ReadOnlyCoproRow({
   cp,
   ownedLots,
   totalTantiemes,
+  currentUserId,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
   totalTantiemes: number;
+  currentUserId?: string;
 }) {
   const cpTantiemes = ownedLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
   const cpPct = totalTantiemes > 0 ? (cpTantiemes / totalTantiemes) * 100 : 0;
@@ -159,7 +167,7 @@ function ReadOnlyCoproRow({
   const address = [cp.adresse, cp.code_postal, cp.ville].filter(Boolean).join(' ');
 
   return (
-    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+    <tr className={`border-b border-gray-100 last:border-0 transition-colors ${cp.user_id === currentUserId ? 'bg-blue-50/50 hover:bg-blue-50/70' : 'hover:bg-gray-50'}`}>
       <td className="py-3.5 px-5">
         <div className="flex items-center gap-3">
           <Avatar name={displayName || '?'} />
@@ -170,6 +178,9 @@ function ReadOnlyCoproRow({
                 <span title="Compte actif" className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
                   <UserCheck size={11} />Inscrit
                 </span>
+              )}
+              {cp.user_id === currentUserId && (
+                <span className="inline-flex items-center bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
               )}
             </div>
             {cp.raison_sociale && (
@@ -216,11 +227,13 @@ function MobileCoproCard({
   ownedLots,
   lotsForSelect,
   totalTantiemes,
+  currentUserId,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
   lotsForSelect: LotForSelect[];
   totalTantiemes: number;
+  currentUserId?: string;
 }) {
   const cpTantiemes = ownedLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
   const cpPercent = totalTantiemes > 0 ? ((cpTantiemes / totalTantiemes) * 100).toFixed(2) : '0.00';
@@ -229,7 +242,7 @@ function MobileCoproCard({
     : `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim();
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+    <div className={`border rounded-xl p-4 space-y-3 ${cp.user_id === currentUserId ? 'bg-blue-50/50 border-blue-200' : 'bg-white border-gray-200'}`}>
       {/* Ligne 1 : avatar + nom + actions */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -247,6 +260,9 @@ function MobileCoproCard({
                 </span>
               ) : (
                 <CoproprietaireInvite coproprietaireId={cp.id} displayName={displayName} />
+              )}
+              {cp.user_id === currentUserId && (
+                <span className="inline-flex items-center bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
               )}
             </div>
             {cp.raison_sociale && (cp.prenom || cp.nom) && (
@@ -327,11 +343,13 @@ function SortableCoproRow({
   ownedLots,
   lotsForSelect,
   totalTantiemes,
+  currentUserId,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
   lotsForSelect: LotForSelect[];
   totalTantiemes: number;
+  currentUserId?: string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: cp.id,
@@ -357,7 +375,7 @@ function SortableCoproRow({
       ref={setNodeRef}
       style={style}
       className={`border-b border-gray-100 last:border-0 ${
-        isDragging ? 'bg-blue-50' : 'hover:bg-gray-50'
+        isDragging ? 'bg-blue-50' : cp.user_id === currentUserId ? 'bg-indigo-50/60 hover:bg-indigo-50' : 'hover:bg-gray-50'
       }`}
     >
       {/* Poignée */}
@@ -389,6 +407,9 @@ function SortableCoproRow({
                 </span>
               ) : (
                 <CoproprietaireInvite coproprietaireId={cp.id} displayName={displayName} />
+              )}
+              {cp.user_id === currentUserId && (
+                <span className="inline-flex items-center bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
               )}
             </div>
             {cp.raison_sociale && (
@@ -480,6 +501,7 @@ export default function CoproprietairesTable({
   lotsForSelect = [],
   totalTantiemes,
   readOnly = false,
+  currentUserId,
 }: CoproprietairesTableProps) {
   const [coproprietaires, setCoproprietaires] = useState<CoproRow[]>(initialCoproprietaires);
   const supabase = createClient();
@@ -520,6 +542,7 @@ export default function CoproprietairesTable({
                 cp={cp}
                 ownedLots={lotsByOwner[cp.id] ?? []}
                 totalTantiemes={totalTantiemes}
+                currentUserId={currentUserId}
               />
             </div>
           ))}
@@ -540,6 +563,7 @@ export default function CoproprietairesTable({
                   cp={cp}
                   ownedLots={lotsByOwner[cp.id] ?? []}
                   totalTantiemes={totalTantiemes}
+                  currentUserId={currentUserId}
                 />
               ))}
             </tbody>
@@ -561,6 +585,7 @@ export default function CoproprietairesTable({
               ownedLots={lotsByOwner[cp.id] ?? []}
               lotsForSelect={lotsForSelect}
               totalTantiemes={totalTantiemes}
+              currentUserId={currentUserId}
             />
           </div>
         ))}
@@ -593,6 +618,7 @@ export default function CoproprietairesTable({
                   ownedLots={lotsByOwner[cp.id] ?? []}
                   lotsForSelect={lotsForSelect}
                   totalTantiemes={totalTantiemes}
+                  currentUserId={currentUserId}
                 />
               ))}
             </tbody>

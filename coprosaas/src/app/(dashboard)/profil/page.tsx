@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Card, { CardHeader } from '@/components/ui/Card';
-import { ProfilEditActions, LotsActions, SecurityActions } from './ProfilActions';
+import { ProfilEditActions, ProfilIdentiteEditor, LotsActions, SecurityActions } from './ProfilActions';
 import { User, Building2, Mail, ShieldCheck } from 'lucide-react';
 
 export default async function ProfilPage() {
@@ -118,40 +118,15 @@ export default async function ProfilPage() {
           <CardHeader
             title={`Mon identité — ${selectedCoproNomAffiche}`}
             description="Vos informations en tant que copropriétaire sur cette copropriété"
-            actions={
-              <ProfilEditActions
-                fiche={ficheSelectionnee}
-                selectedCoproId={selectedCoproId}
-                selectedCoproNom={selectedCoproNomAffiche ?? ''}
-                userEmail={email}
-                fullName={fullName}
-              />
-            }
           />
-          <div className="space-y-2 mt-4">
-            {ficheSelectionnee ? (
-              <div className="flex items-center gap-3 text-sm">
-                <User size={16} className="text-gray-400 shrink-0" />
-                <div>
-                  <p className="text-xs text-gray-400 leading-none mb-0.5">Identité</p>
-                  <p className="font-medium text-gray-900">
-                    {ficheSelectionnee.raison_sociale
-                      ? ficheSelectionnee.raison_sociale
-                      : `${ficheSelectionnee.prenom ?? ''} ${ficheSelectionnee.nom ?? ''}`.trim() || <span className="text-gray-400 italic">Non renseigné</span>}
-                  </p>
-                  {ficheSelectionnee.raison_sociale && (ficheSelectionnee.prenom || ficheSelectionnee.nom) && (
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      Représentant : {`${ficheSelectionnee.prenom ?? ''} ${ficheSelectionnee.nom ?? ''}`.trim()}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-400 italic">
-                Aucune fiche copropriétaire pour cette copropriété.{' '}
-                <span className="text-blue-600">Cliquez sur « Modifier » pour en créer une.</span>
-              </p>
-            )}
+          <div className="mt-4">
+            <ProfilIdentiteEditor
+              fiche={ficheSelectionnee}
+              selectedCoproId={selectedCoproId}
+              selectedCoproNom={selectedCoproNomAffiche ?? ''}
+              userEmail={email}
+              fullName={fullName}
+            />
           </div>
         </Card>
       ) : null}
