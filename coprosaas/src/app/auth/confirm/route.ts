@@ -28,6 +28,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=lien_invalide', request.url));
   }
 
+  // Cas particulier : réinitialisation du mot de passe
+  // On passe le token_hash au client (page reset-password) plutôt que de l'échanger
+  // ici côté serveur. Certains clients mail (Gmail, Outlook…) pre-fetchent les liens
+  // pour analyser le contenu — ce qui consommerait le token OTP à usage unique avant
+  // que l'utilisateur ne clique. En déléguant verifyOtp au navigateur, on évite ce problème.
+  if (type === 'recovery') {
+    const resetUrl = new URL('/reset-password', request.url);
+    resetUrl.searchParams.set('token_hash', token_hash);
+    resetUrl.searchParams.set('type', type);
+    return NextResponse.redirect(resetUrl);
+  }
+
   // Pré-création de la réponse de redirection pour pouvoir y attacher les cookies
   const successUrl  = new URL(next, request.url);
   const response    = NextResponse.redirect(successUrl);

@@ -4,8 +4,8 @@
 // ============================================================
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -14,7 +14,16 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export default function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPasswordForm />
+    </Suspense>
+  );
+}
+
+function ResetPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [ready, setReady] = useState(false);       // session PASSWORD_RECOVERY active
@@ -26,10 +35,26 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
 
   // Supabase envoie le token dans le hash de l'URL (flow implicite)
-  // ou établit la session côté serveur via /auth/confirm (flow PKCE).
-  // On accepte PASSWORD_RECOVERY (implicite) OU une session existante (PKCE).
+  // ou via /auth/confirm qui le passe en query param (flow PKCE, vérification côté client).
   useEffect(() => {
-    // Flow PKCE : session déjà établie par /auth/confirm avant la redirection
+    const token_hash = searchParams.get('token_hash');
+    const type = searchParams.get('type');
+
+    // Flow PKCE : /auth/confirm a transmis le token_hash sans l'échanger côté serveur.
+    // On appelle verifyOtp ici, dans le navigateur, pour éviter qu'un scanner de liens
+    // (Gmail, Outlook…) consomme le token OTP avant l'utilisateur.
+    if (token_hash && type === 'recovery') {
+      supabase.auth.verifyOtp({ token_hash, type: 'recovery' }).then(({ error }) => {
+        if (error) {
+          setInvalid(true);
+        } else {
+          setReady(true);
+        }
+      });
+      return;
+    }
+
+    // Flow session-cookie : session déjà établie par /auth/confirm (ancienne impl.) ou flow implicite
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setReady(true);
     });
@@ -52,7 +77,8 @@ export default function ResetPasswordPage() {
       subscription.unsubscribe();
       clearTimeout(timer);
     };
-  }, [supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
