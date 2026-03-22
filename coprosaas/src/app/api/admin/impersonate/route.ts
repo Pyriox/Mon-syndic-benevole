@@ -23,9 +23,13 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient();
+  const baseUrl = request.nextUrl.origin;
   const { data, error } = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,
+    options: {
+      redirectTo: `${baseUrl}/dashboard`,
+    },
   });
 
   if (error || !data?.properties?.action_link) {

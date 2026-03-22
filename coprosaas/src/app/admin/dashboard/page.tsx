@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { stripe } from '@/lib/stripe';
 import {
   DoorOpen, Receipt, CalendarDays,
-  AlertTriangle, Wallet, TrendingUp, UserCheck, Clock,
+  AlertTriangle, Wallet, TrendingUp, UserCheck, Users, Clock,
   Mail, ExternalLink, Activity, CheckCircle2, CreditCard,
   Banknote, BarChart3, TrendingDown, Zap, Bell, XCircle,
   Send, Database, Search,
@@ -170,6 +170,8 @@ export default async function AdminDashboardPage() {
   const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertCoprosWithoutLots.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length;
 
   const syndicUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire');
+  const memberUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role === 'copropriétaire');
+  const newSyndics30 = syndicUsers.filter((u) => u.created_at >= startOf30Days).length;
 
   void fmtDate; // used below
 
@@ -189,8 +191,8 @@ export default async function AdminDashboardPage() {
             {([
               { val: fmtEur(mrr), lbl: 'MRR' },
               { val: String(nbActifs), lbl: 'Abonnés' },
-              { val: String(nbEssai), lbl: 'Trials' },
-              { val: String(nbUsers), lbl: 'Users' },
+              { val: String(nbEssai), lbl: 'Essais' },
+              { val: String(nbUsers), lbl: 'Comptes' },
             ] as { val: string; lbl: string }[]).map(({ val, lbl }) => (
               <div key={lbl} className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-center min-w-[72px]">
                 <p className="text-lg font-bold">{val}</p>
@@ -211,8 +213,8 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard label="MRR" value={fmtEur(mrr)} sub={`ARR : ${fmtEur(arr)} · conv. ${conversionPct} %`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
         <KpiCard label="Abonnés actifs" value={nbActifs} sub={`${nbEssai} en essai · ${nbPasseDu} impayés`} icon={CreditCard} color="bg-blue-100 text-blue-600" danger={nbPasseDu > 0} />
-        <KpiCard label="Trials actifs" value={nbEssai} sub={`+${newUsers7} users cette semaine`} icon={Zap} color="bg-amber-100 text-amber-600" />
-        <KpiCard label="Churn (lifetime)" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} abonnés`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
+        <KpiCard label="Essais actifs" value={nbEssai} sub={`+${newUsers7} inscrits cette semaine`} icon={Zap} color="bg-amber-100 text-amber-600" />
+        <KpiCard label="Résiliation (total)" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} abonnés`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
       </div>
 
       {/* ── Alertes ── */}
@@ -288,10 +290,10 @@ export default async function AdminDashboardPage() {
           <KpiCard label="Lots gérés"       value={nbLots ?? 0}            icon={DoorOpen}     color="bg-violet-100 text-violet-600" />
           <KpiCard label="Copropriétaires"    value={nbCoproprietaires ?? 0} icon={UserCheck}    color="bg-green-100 text-green-600" />
           <KpiCard label="Assemblées"         value={nbAG ?? 0}              icon={CalendarDays} color="bg-pink-100 text-pink-600" />
-          <KpiCard label={`Dépenses ${today.getFullYear()}`} value={fmtEur(totalDepensesAnnee)} sub={`Total : ${fmtEur(totalDepenses)}`} icon={Receipt} color="bg-orange-100 text-orange-600" />
           <KpiCard label="Appels de fonds"   value={nbAppels ?? 0}          icon={Wallet}       color="bg-amber-100 text-amber-600" />
           <KpiCard label="Incidents ouverts" value={nbIncidentsOuverts ?? 0} icon={AlertTriangle} color={nbIncidentsOuverts ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={!!nbIncidentsOuverts && nbIncidentsOuverts > 5} />
-          <KpiCard label="Syndics inscrits"  value={syndicUsers.length}     icon={UserCheck}    color="bg-indigo-100 text-indigo-600" sub={`+${newUsers30} ce mois`} />
+          <KpiCard label="Syndics inscrits"  value={syndicUsers.length}     icon={UserCheck}    color="bg-indigo-100 text-indigo-600" sub={`+${newSyndics30} ce mois`} />
+          <KpiCard label="Membres inscrits"  value={memberUsers.length}     icon={Users}        color="bg-teal-100 text-teal-600"    sub={`${memberUsers.filter(u => !!u.email_confirmed_at).length} vérifiés`} />
           <KpiCard label="Emails vérifiés"    value={`${confirmedPct} %`}    sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
         </div>
       </section>
