@@ -61,8 +61,22 @@ export async function POST(req: NextRequest) {
 
   // 4. Upload via le client admin (bypasse la RLS du storage)
   const admin = createAdminClient();
-  const fileExt = file.name.split('.').pop();
-  const safeName = nom.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '');
+  // Extension issue du MIME type (pas du nom de fichier) pour éviter le spoofing
+  const MIME_TO_EXT: Record<string, string> = {
+    'application/pdf': 'pdf',
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+    'application/msword': 'doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+    'application/vnd.ms-excel': 'xls',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+    'text/plain': 'txt',
+    'text/csv': 'csv',
+  };
+  const fileExt = MIME_TO_EXT[file.type] ?? 'bin';
+  const safeName = (nom.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '') || 'document');
   const fileName = `${copropriete_id}/${Date.now()}-${safeName}.${fileExt}`;
   const arrayBuffer = await file.arrayBuffer();
 

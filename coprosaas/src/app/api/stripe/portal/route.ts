@@ -25,12 +25,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Aucun abonnement Stripe trouvé pour cette copropriété.' }, { status: 404 });
   }
 
-  const origin = req.headers.get('origin') ?? 'https://www.mon-syndic-benevole.fr';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
   try {
     const session = await stripe.billingPortal.sessions.create({
       customer: copro.stripe_customer_id,
-      return_url: `${origin}/abonnement`,
+      return_url: `${siteUrl}/abonnement`,
     });
     return NextResponse.json({ url: session.url });
   } catch (err) {

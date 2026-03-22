@@ -3,6 +3,7 @@
 // Nécessite SUPABASE_SERVICE_ROLE_KEY dans .env.local
 // Ne jamais importer côté client (pas de 'use client')
 // ============================================================
+import 'server-only';
 import { createClient } from '@supabase/supabase-js';
 
 export function createAdminClient() {

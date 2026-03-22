@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe, STRIPE_PRICES } from '@/lib/stripe';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,10 +13,21 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
 
+    // Rate limiting : 10 tentatives de checkout par utilisateur par minute
+    if (!await rateLimit(user.id, 10, 60_000)) {
+      return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 });
+    }
+
     const { planId, coproprieteid } = await req.json() as {
       planId: 'essentiel' | 'confort' | 'illimite';
       coproprieteid: string;
     };
+
+    // Validation runtime du planId
+    const VALID_PLANS = ['essentiel', 'confort', 'illimite'] as const;
+    if (!planId || !VALID_PLANS.includes(planId as typeof VALID_PLANS[number])) {
+      return NextResponse.json({ error: 'Plan invalide.' }, { status: 400 });
+    }
 
     if (!coproprieteid) {
       return NextResponse.json({ error: 'Copropriété manquante.' }, { status: 400 });

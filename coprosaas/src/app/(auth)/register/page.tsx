@@ -246,6 +246,7 @@ function RegisterForm() {
                 label="Prénom"
                 name="prenom"
                 type="text"
+                autoComplete="given-name"
                 value={formData.prenom}
                 onChange={handleChange}
                 placeholder="Jean"
@@ -255,6 +256,7 @@ function RegisterForm() {
                 label="Nom"
                 name="nom"
                 type="text"
+                autoComplete="family-name"
                 value={formData.nom}
                 onChange={handleChange}
                 placeholder="Dupont"
@@ -276,6 +278,7 @@ function RegisterForm() {
                 label="Adresse email"
                 name="email"
                 type="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="vous@email.fr"
@@ -287,6 +290,7 @@ function RegisterForm() {
               label="Mot de passe"
               name="password"
               type="password"
+              autoComplete="new-password"
               value={formData.password}
               onChange={handleChange}
               placeholder="Minimum 8 caractères"
@@ -298,6 +302,7 @@ function RegisterForm() {
               label="Confirmer le mot de passe"
               name="confirmPassword"
               type="password"
+              autoComplete="new-password"
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="••••••••"

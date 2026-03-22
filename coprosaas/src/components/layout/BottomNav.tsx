@@ -47,6 +47,8 @@ export default function BottomNav({ userRole, onMenuOpen }: BottomNavProps) {
             <Link
               key={href}
               href={href}
+              aria-current={active ? 'page' : undefined}
+              aria-label={label}
               className={cn(
                 'relative flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors',
                 active ? 'text-blue-600' : 'text-gray-400 active:text-gray-700'
@@ -68,6 +70,7 @@ export default function BottomNav({ userRole, onMenuOpen }: BottomNavProps) {
         {/* Bouton "Menu" — ouvre la sidebar pour les sections secondaires */}
         <button
           onClick={onMenuOpen}
+          aria-label="Ouvrir le menu de navigation"
           className="relative flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-400 active:text-gray-700 transition-colors"
         >
           <MoreHorizontal size={22} strokeWidth={1.8} className="shrink-0" />

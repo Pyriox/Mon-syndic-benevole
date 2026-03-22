@@ -8,13 +8,13 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import AdminLogout from './AdminLogout';
 import AdminSidebar from './AdminSidebar';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user || !ADMIN_EMAIL || user.email !== ADMIN_EMAIL) {
     redirect('/login');
   }
 
@@ -37,7 +37,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               ← Mon espace
             </Link>
             <span className="hidden sm:block text-gray-700 text-xs">|</span>
-            <span className="text-xs text-gray-400 hidden sm:block">{ADMIN_EMAIL}</span>
+            <span className="text-xs text-gray-400 hidden sm:block">{user.email}</span>
             <AdminLogout />
           </div>
         </div>

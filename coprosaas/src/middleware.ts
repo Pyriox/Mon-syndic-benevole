@@ -37,9 +37,9 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Route /admin : réservée exclusivement à l'administrateur
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
   if (pathname.startsWith('/admin')) {
-    if (!user) {
+    if (!user || !ADMIN_EMAIL) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       return NextResponse.redirect(url);
@@ -62,6 +62,9 @@ export async function middleware(request: NextRequest) {
     '/assemblees',
     '/incidents',
     '/lots',
+    '/profil',
+    '/abonnement',
+    '/aide',
   ];
 
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));

@@ -34,13 +34,20 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Ferme le panel si clic en dehors
+  // Ferme le panel si clic en dehors ou touche Escape
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const clickHandler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const keyHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', clickHandler);
+    document.addEventListener('keydown', keyHandler);
+    return () => {
+      document.removeEventListener('mousedown', clickHandler);
+      document.removeEventListener('keydown', keyHandler);
+    };
   }, []);
 
   const nbNotifs = notifications.length;
@@ -58,8 +65,11 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
           <div ref={ref} className="relative">
             <button
               onClick={() => setOpen((v) => !v)}
+              aria-label={nbNotifs > 0 ? `Notifications : ${nbNotifs} alerte${nbNotifs > 1 ? 's' : ''}` : 'Notifications'}
+              aria-expanded={open}
+              aria-haspopup="true"
               className={cn(
-                'relative p-2 rounded-lg transition-colors',
+                'relative p-2.5 rounded-lg transition-colors',
                 open ? 'bg-gray-100 text-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
               )}
             >

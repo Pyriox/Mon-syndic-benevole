@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (new Date(data.expires_at) < new Date()) {
-    return NextResponse.json({ error: 'Ce lien a expiré (valable 7 jours)' }, { status: 410 });
+    return NextResponse.json({ error: 'Ce lien est invalide ou a expiré.' }, { status: 410 });
   }
 
   const coproprietes = data.coproprietes as unknown as { nom: string } | { nom: string }[] | null;
