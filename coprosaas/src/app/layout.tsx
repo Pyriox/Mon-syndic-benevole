@@ -106,7 +106,7 @@ export default function RootLayout({
 
   return (
     <html lang="fr">
-      <body className={`${geist.variable} antialiased`}>
+      <body className={`${geist.variable} antialiased overflow-x-hidden`}>
         {children}
         {gaId && (
           <>

@@ -435,7 +435,7 @@ export default function HomePage() {
             <p className="text-gray-500 text-lg">Les mêmes fonctions, sans le coût ni les contraintes d&apos;un contrat.</p>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl shadow-sm">
+          <div className="w-full overflow-x-auto rounded-2xl shadow-sm">
           <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden min-w-[480px]">
             <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-200 text-sm font-semibold">
               <div className="py-4 px-5 text-gray-400" />
