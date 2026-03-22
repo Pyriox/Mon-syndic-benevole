@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const ADMIN_EMAIL = getAdminEmail();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!ADMIN_EMAIL || !user || user.email !== ADMIN_EMAIL) {
+  if (!ADMIN_EMAIL || !user || user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 

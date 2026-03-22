@@ -13,7 +13,7 @@ export default async function AdminSupportPage() {
   // Vérification admin
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email !== ADMIN_EMAIL) redirect('/login');
+  if (!user || user.email?.toLowerCase() !== ADMIN_EMAIL?.toLowerCase()) redirect('/login');
 
   const admin = createAdminClient();
 

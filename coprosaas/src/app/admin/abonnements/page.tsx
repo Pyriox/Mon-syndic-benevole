@@ -43,7 +43,7 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
 export default async function AdminAbonnementsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email !== ADMIN_EMAIL) redirect('/dashboard');
+  if (!user || user.email?.toLowerCase() !== ADMIN_EMAIL?.toLowerCase()) redirect('/dashboard');
 
   const admin = createAdminClient();
   const { data: coproprietes } = await admin

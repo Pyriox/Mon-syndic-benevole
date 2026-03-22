@@ -243,57 +243,53 @@ export function ProfilIdentiteEditor({
     const isEditing = editingField === field;
     const isRequiredEmpty = required && isEditing && !tempValue.trim();
     return (
-      <div className="flex items-center gap-2 py-2.5 border-b border-gray-100 last:border-0">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-400 mb-0.5">
-            {label}{required && <span className="text-red-400 ml-0.5">*</span>}
-          </p>
-          {isEditing ? (
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <input
-                className={`flex-1 text-sm border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 min-w-0 ${isRequiredEmpty ? 'border-red-300 focus:ring-red-300' : 'border-blue-300 focus:ring-blue-500'}`}
-                type={inputType}
-                value={tempValue}
-                onChange={(e) => setTempValue(e.target.value)}
-                autoFocus
-                placeholder={placeholder}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !isRequiredEmpty) { e.preventDefault(); saveField(field); }
-                  if (e.key === 'Escape') setEditingField(null);
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => saveField(field)}
-                disabled={saving || isRequiredEmpty}
-                className="shrink-0 flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
-                title="Enregistrer"
-              >
-                <Check size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditingField(null)}
-                className="shrink-0 flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-100 rounded-lg"
-                title="Annuler"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          ) : (
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {value || <span className="text-gray-400 italic text-sm font-normal">Non renseigné</span>}
-            </p>
-          )}
-        </div>
-        {!isEditing && fiche && (
+      <div key={field}>
+        <p className="text-xs text-gray-400 mb-1">
+          {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+        </p>
+        {isEditing ? (
+          <div className="flex items-center gap-1.5">
+            <input
+              className={`flex-1 text-sm border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 min-w-0 ${isRequiredEmpty ? 'border-red-300 focus:ring-red-300' : 'border-blue-300 focus:ring-blue-500'}`}
+              type={inputType}
+              value={tempValue}
+              onChange={(e) => setTempValue(e.target.value)}
+              autoFocus
+              placeholder={placeholder}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !isRequiredEmpty) { e.preventDefault(); saveField(field); }
+                if (e.key === 'Escape') setEditingField(null);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => saveField(field)}
+              disabled={saving || isRequiredEmpty}
+              className="shrink-0 flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
+              title="Enregistrer"
+            >
+              <Check size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditingField(null)}
+              className="shrink-0 flex items-center justify-center w-8 h-8 text-gray-400 hover:bg-gray-100 rounded-lg"
+              title="Annuler"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
           <button
             type="button"
-            onClick={() => startEdit(field)}
-            className="shrink-0 p-1.5 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+            onClick={() => fiche && startEdit(field)}
+            className="w-full text-left group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-colors"
             title={`Modifier ${label}`}
           >
-            <Pencil size={13} />
+            <span className="text-sm font-medium text-gray-900 truncate">
+              {value || <span className="text-gray-400 italic text-sm font-normal">Non renseigné</span>}
+            </span>
+            <Pencil size={12} className="shrink-0 text-gray-300 group-hover:text-blue-500 transition-colors" />
           </button>
         )}
       </div>
@@ -319,77 +315,87 @@ export function ProfilIdentiteEditor({
   }
 
   return (
-    <div>
-      {/* Type de personne */}
-      <div className="flex items-center gap-2 py-2.5 border-b border-gray-100">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-400 mb-0.5">Type</p>
-          {editingField === 'raison_sociale' && !isSci ? (
-            <div className="flex items-center gap-1.5 mt-0.5">
+    <div className="space-y-5">
+      {/* ── Type de personne ── */}
+      <div className="pb-4 border-b border-gray-100">
+        <p className="text-xs text-gray-400 mb-1">Type de personne</p>
+        {editingField === 'raison_sociale' && !isSci ? (
+          <div className="space-y-2">
+            <p className="text-xs text-gray-500">Saisissez la raison sociale pour passer en personne morale :</p>
+            <div className="flex items-center gap-1.5">
               <input
                 className="flex-1 text-sm border border-blue-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
                 type="text"
                 value={tempValue}
                 onChange={(e) => setTempValue(e.target.value)}
                 autoFocus
-                placeholder="Raison sociale / Nom SCI"
+                placeholder="Ex : SCI Les Lilas"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && tempValue.trim()) { e.preventDefault(); saveField('raison_sociale'); }
                   if (e.key === 'Escape') setEditingField(null);
                 }}
               />
-              <button
-                type="button"
-                onClick={() => saveField('raison_sociale')}
-                disabled={saving || !tempValue.trim()}
-                className="shrink-0 flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
-                title="Passer en personne morale / SCI"
-              >
+              <button type="button" onClick={() => saveField('raison_sociale')} disabled={saving || !tempValue.trim()}
+                className="shrink-0 flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50" title="Confirmer">
                 <Check size={14} />
               </button>
-              <button
-                type="button"
-                onClick={() => setEditingField(null)}
-                className="shrink-0 flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-100 rounded-lg"
-                title="Annuler"
-              >
+              <button type="button" onClick={() => setEditingField(null)}
+                className="shrink-0 flex items-center justify-center w-8 h-8 text-gray-400 hover:bg-gray-100 rounded-lg" title="Annuler">
                 <X size={14} />
               </button>
             </div>
-          ) : (
-            <p className="text-sm font-medium text-gray-900">
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${isSci ? 'bg-purple-400' : 'bg-blue-400'}`} />
               {isSci ? 'Personne morale / SCI' : 'Personne physique'}
-            </p>
-          )}
-        </div>
-        {editingField !== 'raison_sociale' && (
-          <button
-            type="button"
-            onClick={toggleSci}
-            disabled={saving}
-            className="shrink-0 p-1.5 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
-            title={isSci ? 'Passer en personne physique' : 'Passer en personne morale / SCI'}
-          >
-            <Pencil size={13} />
-          </button>
+            </span>
+            <button type="button" onClick={toggleSci} disabled={saving}
+              className="text-xs text-gray-400 hover:text-blue-600 hover:underline transition-colors disabled:opacity-50"
+              title={isSci ? 'Passer en personne physique' : 'Passer en personne morale / SCI'}>
+              Changer
+            </button>
+          </div>
         )}
       </div>
-      {isSci ? (
-        <>
-          {renderField('Raison sociale', 'raison_sociale', 'text', '', true)}
-          {renderField('Prénom du représentant', 'prenom')}
-          {renderField('Nom du représentant', 'nom')}
-        </>
-      ) : (
-        <>
-          {renderField('Prénom', 'prenom', 'text', '', true)}
-          {renderField('Nom', 'nom', 'text', '', true)}
-        </>
-      )}
-      {renderField('Téléphone', 'telephone', 'tel', '06 12 34 56 78')}
-      {renderField('Adresse', 'adresse', 'text', '12 rue de la Paix')}
-      {renderField('Code postal', 'code_postal', 'text', '75001')}
-      {renderField('Ville', 'ville', 'text', 'Paris')}
+
+      {/* ── Identité ── */}
+      <div>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Identité</p>
+        {isSci ? (
+          <div className="space-y-3">
+            {renderField('Raison sociale', 'raison_sociale', 'text', 'SCI Les Lilas', true)}
+            <div className="grid grid-cols-2 gap-3">
+              {renderField('Prénom du représentant', 'prenom', 'text', 'Jean')}
+              {renderField('Nom du représentant', 'nom', 'text', 'Dupont')}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {renderField('Prénom', 'prenom', 'text', 'Jean', true)}
+            {renderField('Nom', 'nom', 'text', 'Dupont', true)}
+          </div>
+        )}
+      </div>
+
+      {/* ── Contact ── */}
+      <div>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Contact</p>
+        {renderField('Téléphone', 'telephone', 'tel', '06 12 34 56 78')}
+      </div>
+
+      {/* ── Adresse ── */}
+      <div>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Adresse</p>
+        <div className="space-y-3">
+          {renderField('Rue', 'adresse', 'text', '12 rue de la Paix')}
+          <div className="grid grid-cols-2 gap-3">
+            {renderField('Code postal', 'code_postal', 'text', '75001')}
+            {renderField('Ville', 'ville', 'text', 'Paris')}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

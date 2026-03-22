@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   // ── Auth : seul l'admin peut répondre ──
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user || user.email?.toLowerCase() !== ADMIN_EMAIL?.toLowerCase()) {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 403 });
   }
 
