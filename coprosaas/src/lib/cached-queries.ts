@@ -12,39 +12,34 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { AppNotification } from '@/types';
 
 // ── Profil + copropriétés (layout global) ────────────────────────────────────
-// Cache : 30 secondes par utilisateur
-// Tag : 'dashboard-layout-data' — invalidé via revalidateTag() après création
-export const getDashboardLayoutData = unstable_cache(
-  async (userId: string, userEmail: string) => {
-    const admin = createAdminClient();
-    const [
-      { data: profile },
-      { data: syndicCopros },
-      { data: coproRows },
-      { data: coproRowsByEmail },
-    ] = await Promise.all([
-      admin.from('profiles').select('full_name').eq('id', userId).single(),
-      admin
-        .from('coproprietes')
-        .select('id, nom, adresse, ville')
-        .eq('syndic_id', userId)
-        .order('nom'),
-      admin
-        .from('coproprietaires')
-        .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
-        .eq('user_id', userId),
-      // Fallback pour les copropriétaires non encore liés (user_id non renseigné)
-      admin
-        .from('coproprietaires')
-        .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
-        .eq('email', userEmail)
-        .is('user_id', null),
-    ]);
-    return { profile, syndicCopros, coproRows, coproRowsByEmail };
-  },
-  ['dashboard-layout-data'],
-  { revalidate: 30, tags: ['dashboard-layout-data'] },
-);
+// Pas de cache : les données doivent être toujours fraîches (création, suppression)
+export async function getDashboardLayoutData(userId: string, userEmail: string) {
+  const admin = createAdminClient();
+  const [
+    { data: profile },
+    { data: syndicCopros },
+    { data: coproRows },
+    { data: coproRowsByEmail },
+  ] = await Promise.all([
+    admin.from('profiles').select('full_name').eq('id', userId).single(),
+    admin
+      .from('coproprietes')
+      .select('id, nom, adresse, ville')
+      .eq('syndic_id', userId)
+      .order('nom'),
+    admin
+      .from('coproprietaires')
+      .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
+      .eq('user_id', userId),
+    // Fallback pour les copropriétaires non encore liés (user_id non renseigné)
+    admin
+      .from('coproprietaires')
+      .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
+      .eq('email', userEmail)
+      .is('user_id', null),
+  ]);
+  return { profile, syndicCopros, coproRows, coproRowsByEmail };
+}
 
 // ── Notifications syndic ──────────────────────────────────────────────────────
 // Cache : 30 secondes par copropriété

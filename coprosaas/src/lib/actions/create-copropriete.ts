@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 
@@ -36,11 +35,6 @@ export async function createCopropriete(formData: {
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
   });
-
-  // Invalide le cache du layout pour que la barre latérale se mette à jour
-  // Cast nécessaire : Next.js 16 surcharge le type avec un 2e arg optionnel
-  // mais unstable_cache n'en a pas besoin à l'exécution.
-  (revalidateTag as unknown as (tag: string) => void)('dashboard-layout-data');
 
   return { id: data.id };
 }
