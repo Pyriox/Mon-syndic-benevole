@@ -8,7 +8,7 @@ import { redirect } from 'next/navigation';
 import { stripe } from '@/lib/stripe';
 import CheckoutButton from './CheckoutButton';
 import SubscriptionSuccessTracker from './SubscriptionSuccessTracker';
-import { AlertCircle, CheckCircle, Lock, Settings2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, Lock, Settings2 } from 'lucide-react';
 
 const FEATURES = [
   'Copropriétaires illimités',
@@ -102,10 +102,10 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     return false;
   }
 
-  // trialing = abonnement payant en période d'essai → on affiche "actif"
+  // trialing = essai (14j avec CB enregistrée) ; active = abonné payant
   const plan =
     validSub.status === 'active'    ? 'actif'
-    : validSub.status === 'trialing' ? 'actif'
+    : validSub.status === 'trialing' ? 'essai'
     : validSub.status === 'past_due' ? 'passe_du'
     : 'actif';
 
@@ -320,12 +320,13 @@ export default async function AbonnementPage({
         {/* ── Section par copropriété */}
         {(coproprietes ?? []).map((copro) => {
           const totalLots = lotCountByCopro[copro.id] ?? 0;
-          const planActuel: string = (copro.plan as string | undefined) ?? 'essai';
+          const planActuel: string = (copro.plan as string | undefined) ?? '';
           const hasStripeCustomer = !!copro.stripe_customer_id;
           const hasStripeSubscription = !!copro.stripe_subscription_id;
+          // 'essai' + stripe subscription = période d'essai 14j (CB enregistrée, paiement pas encore prélevé)
+          const isTrial = planActuel === 'essai' && hasStripeSubscription;
           const isSubscribed =
-            planActuel === 'actif' ||
-            (hasStripeSubscription && planActuel !== 'inactif');
+            planActuel === 'actif' || isTrial;
           const isPastDue = planActuel === 'passe_du';
           const currentPlanId = PLAN_IDS.find((p) => p === copro.plan_id);
           const recommendedPlan =
@@ -342,9 +343,14 @@ export default async function AbonnementPage({
                     {totalLots} lot{totalLots > 1 ? 's' : ''}
                   </p>
                 </div>
-                {isSubscribed && !isPastDue && (
+                {planActuel === 'actif' && (
                   <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full shrink-0">
                     <CheckCircle size={11} /> Abonné
+                  </span>
+                )}
+                {isTrial && (
+                  <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full shrink-0">
+                    <Clock size={11} /> Période d&apos;essai
                   </span>
                 )}
                 {isPastDue && (
@@ -365,13 +371,17 @@ export default async function AbonnementPage({
                   className={`rounded-2xl p-5 ${
                     isPastDue
                       ? 'bg-red-50 border border-red-200'
+                      : isTrial
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
                       : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex-1 min-w-0 space-y-1.5">
-                      <p className={`text-xs font-semibold uppercase tracking-wide ${isPastDue ? 'text-red-500' : 'text-green-100'}`}>
-                        {isPastDue ? 'Paiement en attente' : 'Abonnement actif'}
+                      <p className={`text-xs font-semibold uppercase tracking-wide ${
+                        isPastDue ? 'text-red-500' : isTrial ? 'text-amber-100' : 'text-green-100'
+                      }`}>
+                        {isPastDue ? 'Paiement en attente' : isTrial ? 'Période d’essai' : 'Abonnement actif'}
                       </p>
                       <div className="flex flex-wrap gap-x-6 gap-y-1 items-baseline">
                         {currentPlanId && (
@@ -380,8 +390,14 @@ export default async function AbonnementPage({
                           </p>
                         )}
                         {copro.plan_period_end && (
-                          <p className={`text-sm ${isPastDue ? 'text-red-600' : 'text-green-100'}`}>
-                            {planActuel === 'actif' ? 'Renouvellement le ' : 'Fin le '}
+                          <p className={`text-sm ${
+                            isPastDue ? 'text-red-600' : isTrial ? 'text-amber-100' : 'text-green-100'
+                          }`}>
+                            {isPastDue
+                              ? 'Fin le '
+                              : isTrial
+                              ? 'Fin de l’essai le '
+                              : 'Renouvellement le '}
                             <span className={`font-semibold ${isPastDue ? 'text-red-800' : 'text-white'}`}>
                               {new Date(copro.plan_period_end).toLocaleDateString('fr-FR', {
                                 day: 'numeric',

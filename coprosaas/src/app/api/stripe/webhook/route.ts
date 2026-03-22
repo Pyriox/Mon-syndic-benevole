@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
 
         let periodEnd: string | null = null;
         let subId: string | undefined;
+        let subPlan: 'actif' | 'essai' = 'actif';
         if (session.subscription) {
           const sub = await stripe.subscriptions.retrieve(
             session.subscription as string,
@@ -69,13 +70,15 @@ export async function POST(req: NextRequest) {
           subId = sub['id'] as string;
           const ts = sub['current_period_end'] as number | undefined;
           periodEnd = ts && ts > 0 ? (() => { try { return new Date(ts * 1000).toISOString(); } catch { return null; } })() : null;
+          // trialing = essai (14j) ; active = abonnement payé
+          subPlan = (sub['status'] as string) === 'trialing' ? 'essai' : 'actif';
         }
 
         await updateCoproSubscription(coproId, {
           stripe_customer_id:     session.customer as string,
           stripe_subscription_id: subId,
           plan_id:                session.metadata?.plan_id,
-          plan:                   'actif',
+          plan:                   subPlan,
           plan_period_end:        periodEnd,
         });
 
@@ -107,9 +110,9 @@ export async function POST(req: NextRequest) {
         if (!coproId) break;
 
         const subStatus = sub['status'] as string;
-        const plan = subStatus === 'active' ? 'actif'
-          : subStatus === 'past_due'  ? 'passe_du'
-          : subStatus === 'trialing'  ? 'actif'
+        const plan = subStatus === 'active'   ? 'actif'
+          : subStatus === 'past_due' ? 'passe_du'
+          : subStatus === 'trialing' ? 'essai'   // période d'essai (14j après saisie CB)
           : 'inactif';
 
         const ts = (sub['current_period_end'] as number | undefined) || 0;

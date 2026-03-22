@@ -33,10 +33,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-xs text-gray-400 hover:text-white transition-colors">
+            <Link href="/dashboard" className="hidden sm:block text-xs text-gray-400 hover:text-white transition-colors">
               ← Mon espace
             </Link>
-            <span className="text-gray-700 text-xs">|</span>
+            <span className="hidden sm:block text-gray-700 text-xs">|</span>
             <span className="text-xs text-gray-400 hidden sm:block">{ADMIN_EMAIL}</span>
             <AdminLogout />
           </div>

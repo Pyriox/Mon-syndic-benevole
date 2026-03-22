@@ -40,8 +40,10 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
     return <span className={`inline-flex text-xs px-2 py-0.5 rounded-md font-medium border ${c.cls}`}>{c.label}</span>;
   }
   if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">Impayé</span>;
+  if (plan === 'essai')    return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
   if (plan === 'inactif')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">Inactif</span>;
-  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
+  // null = aucun moyen de paiement enregistré
+  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-400 border border-gray-200">Aucun</span>;
 }
 
 export default async function AdminUtilisateursPage() {
@@ -123,7 +125,7 @@ export default async function AdminUtilisateursPage() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Dernière connexion</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copros / Plan</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Support</th>
+                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Support</th>
                 <th className="px-4 py-3 w-10" />
               </tr>
             </thead>
@@ -132,8 +134,12 @@ export default async function AdminUtilisateursPage() {
                 const meta = u.user_metadata as Record<string, string> | null;
                 const userCopros = coprosTyped.filter((c) => c.syndic_id === u.id);
                 const hasActive  = userCopros.some((c) => c.plan === 'actif');
+                const hasEssai   = userCopros.some((c) => c.plan === 'essai');
                 const hasImpayes = userCopros.some((c) => c.plan === 'passe_du');
                 const bestPlanId = userCopros.find((c) => c.plan === 'actif')?.plan_id ?? null;
+                // plan représentatif : actif > essai > passe_du > inactif > null
+                const displayPlan: string | null = hasActive ? 'actif' : hasEssai ? 'essai' : hasImpayes ? 'passe_du'
+                  : (userCopros[0]?.plan ?? null);
                 return (
                   <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
@@ -156,13 +162,7 @@ export default async function AdminUtilisateursPage() {
                       {userCopros.length > 0 ? (
                         <div className="flex flex-col items-center gap-1">
                           <span className="text-sm font-bold text-gray-800">{userCopros.length}</span>
-                          {hasImpayes ? (
-                            <PlanBadge plan="passe_du" planId={null} />
-                          ) : hasActive ? (
-                            <PlanBadge plan="actif" planId={bestPlanId} />
-                          ) : (
-                            <PlanBadge plan="essai" planId={null} />
-                          )}
+                          <PlanBadge plan={displayPlan} planId={bestPlanId} />
                         </div>
                       ) : <span className="text-xs text-gray-300">—</span>}
                     </td>
@@ -172,7 +172,7 @@ export default async function AdminUtilisateursPage() {
                         : <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />En attente</span>
                       }
                     </td>
-                    <td className="px-4 py-3 hidden lg:table-cell">
+                    <td className="px-4 py-3">
                       {u.email !== ADMIN_EMAIL && <AdminImpersonate email={u.email ?? ''} />}
                     </td>
                     <td className="px-4 py-3">
@@ -200,7 +200,7 @@ export default async function AdminUtilisateursPage() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Inscription</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Dernière connexion</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Support</th>
+                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Support</th>
                 <th className="px-4 py-3 w-10" />
               </tr>
             </thead>
@@ -231,7 +231,7 @@ export default async function AdminUtilisateursPage() {
                         : <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />En attente</span>
                       }
                     </td>
-                    <td className="px-4 py-3 hidden lg:table-cell"><AdminImpersonate email={u.email ?? ''} /></td>
+                    <td className="px-4 py-3"><AdminImpersonate email={u.email ?? ''} /></td>
                     <td className="px-4 py-3"><AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={false} /></td>
                   </tr>
                 );

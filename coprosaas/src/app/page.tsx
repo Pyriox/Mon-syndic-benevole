@@ -435,7 +435,8 @@ export default function HomePage() {
             <p className="text-gray-500 text-lg">Les mêmes fonctions, sans le coût ni les contraintes d&apos;un contrat.</p>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="overflow-x-auto rounded-2xl shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden min-w-[480px]">
             <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-200 text-sm font-semibold">
               <div className="py-4 px-5 text-gray-400" />
               <div className="py-4 px-4 text-center text-gray-600 border-l border-gray-200">Syndic professionnel</div>
@@ -457,6 +458,7 @@ export default function HomePage() {
                 <div className="py-3.5 px-4 text-center font-semibold text-blue-700 border-l border-gray-100 bg-blue-50/20">{nous}</div>
               </div>
             ))}
+          </div>
           </div>
         </div>
       </section>
@@ -1117,7 +1119,7 @@ export default function HomePage() {
             © {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés
           </p>
           <nav aria-label="Liens du pied de page">
-            <div className="flex items-center gap-5 text-sm text-gray-500">
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-gray-500">
               <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
               <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
