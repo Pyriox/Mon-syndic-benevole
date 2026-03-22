@@ -104,7 +104,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
         <EmptyState
           icon={<CalendarDays size={48} strokeWidth={1.5} />}
           title="Aucune assemblée générale"
-          description="Planifiez vos AG, gérez les résolutions et générez les procès-verbaux."
+          description={isSyndic ? "Planifiez vos AG, gérez les résolutions et générez les procès-verbaux." : undefined}
           action={isSyndic && (canWrite ? <AGActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />)}
         />
       )}
