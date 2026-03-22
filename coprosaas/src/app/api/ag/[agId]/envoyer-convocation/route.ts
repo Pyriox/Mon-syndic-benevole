@@ -6,7 +6,7 @@ import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emai
 import { createClient } from '@/lib/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
+const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ agId: string }> }) {
   const { agId } = await params;

@@ -6,7 +6,7 @@ import { wrapEmail, h, alertBanner, infoTable, infoRow, COLOR, CONTACT_EMAIL, SI
 import { rateLimit } from '@/lib/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
+const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 
 // ── Templates ────────────────────────────────────────────────
 

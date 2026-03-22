@@ -12,7 +12,7 @@ import {
 } from '@/lib/emails/support-reply';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM  = process.env.EMAIL_FROM ?? 'onboarding@resend.dev';
+const FROM  = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'onboarding@resend.dev'}>`;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mon-syndic-benevole.fr';
 

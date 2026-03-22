@@ -13,7 +13,7 @@ import { Resend } from 'resend';
 import { buildAppelEmail, buildAppelEmailSubject, type AppelEmailType } from '@/lib/emails/appel-de-fonds';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM   = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
+const FROM   = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 
 function addDays(base: Date, days: number): string {
   const d = new Date(base);

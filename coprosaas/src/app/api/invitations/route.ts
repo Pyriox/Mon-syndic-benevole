@@ -13,7 +13,7 @@ import { buildInvitationEmail, buildInvitationEmailSubject } from '@/lib/emails/
 import { rateLimit } from '@/lib/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM ?? 'onboarding@resend.dev';
+const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'onboarding@resend.dev'}>`;
 
 function makeSupabase(cookieStore: Awaited<ReturnType<typeof cookies>>) {
   return createServerClient(

@@ -6,7 +6,7 @@ import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emai
 import { createClient } from '@/lib/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr';
+const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 
 const STATUT_LABELS: Record<string, { label: string; color: string }> = {
   approuvee: { label: 'Approuvée', color: COLOR.green },
