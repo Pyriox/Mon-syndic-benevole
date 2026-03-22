@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { createCopropriete } from '@/lib/actions/create-copropriete';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -14,7 +14,6 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function NouvelleCopropriétéPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [formData, setFormData] = useState({
     nom: '',
@@ -34,29 +33,17 @@ export default function NouvelleCopropriétéPage() {
     setLoading(true);
     setError('');
 
-    // Récupération de l'utilisateur connecté
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push('/login');
-      return;
-    }
+    const result = await createCopropriete(formData);
 
-    const { error: dbError } = await supabase.from('coproprietes').insert({
-      nom: formData.nom.trim(),
-      adresse: formData.adresse.trim(),
-      code_postal: formData.code_postal.trim(),
-      ville: formData.ville.trim(),
-      syndic_id: user.id,
-    });
-
-    if (dbError) {
-      setError('Erreur lors de la création : ' + dbError.message);
+    if (result.error) {
+      setError('Erreur lors de la création : ' + result.error);
       setLoading(false);
       return;
     }
 
-    // Redirection vers la liste après création
-    router.push('/coproprietes');
+    // Le cookie est déjà posé et le cache invalidé côté serveur.
+    // router.refresh() déclenche un re-rendu complet du layout avec les nouvelles données.
+    router.push('/dashboard');
     router.refresh();
   };
 

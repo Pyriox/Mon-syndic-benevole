@@ -13,6 +13,7 @@ import type { AppNotification } from '@/types';
 
 // ── Profil + copropriétés (layout global) ────────────────────────────────────
 // Cache : 30 secondes par utilisateur
+// Tag : 'dashboard-layout-data' — peut être invalidé via revalidateTag()
 export const getDashboardLayoutData = unstable_cache(
   async (userId: string, userEmail: string) => {
     const admin = createAdminClient();
@@ -42,7 +43,7 @@ export const getDashboardLayoutData = unstable_cache(
     return { profile, syndicCopros, coproRows, coproRowsByEmail };
   },
   ['dashboard-layout-data'],
-  { revalidate: 30 },
+  { revalidate: 30, tags: ['dashboard-layout-data'] },
 );
 
 // ── Notifications syndic ──────────────────────────────────────────────────────
