@@ -6,12 +6,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
+import { ADMIN_EMAIL } from '@/lib/admin-config';
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.toLowerCase() !== ADMIN_EMAIL?.toLowerCase()) {
+  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 403 });
   }
 

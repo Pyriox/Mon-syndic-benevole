@@ -13,7 +13,7 @@ import AdminImpersonate from '../AdminImpersonate';
 import AdminInvitationDelete from '../AdminInvitationDelete';
 import { Users, UserCheck, CheckCircle2, Send, XCircle } from 'lucide-react';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
+import { ADMIN_EMAIL } from '@/lib/admin-config';
 
 function timeAgo(s: string | null | undefined): string {
   if (!s) return '—';
@@ -49,7 +49,7 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
 export default async function AdminUtilisateursPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.toLowerCase() !== ADMIN_EMAIL?.toLowerCase()) redirect('/dashboard');
+  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) redirect('/dashboard');
 
   const admin = createAdminClient();
   const startOf30Days = new Date(Date.now() - 30 * 86400000).toISOString();

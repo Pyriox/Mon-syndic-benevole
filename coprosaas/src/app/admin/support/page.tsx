@@ -7,13 +7,13 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import AdminSupportShell from './AdminSupportShell';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
+import { ADMIN_EMAIL } from '@/lib/admin-config';
 
 export default async function AdminSupportPage() {
   // Vérification admin
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.toLowerCase() !== ADMIN_EMAIL?.toLowerCase()) redirect('/login');
+  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) redirect('/login');
 
   const admin = createAdminClient();
 

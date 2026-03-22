@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/server';
 import AdminCoproActions from '../AdminCoproActions';
 import { Building2, DoorOpen, Users } from 'lucide-react';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
+import { ADMIN_EMAIL } from '@/lib/admin-config';
 
 function fmtDate(s: string | null | undefined) {
   if (!s) return '—';
@@ -38,7 +38,7 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
 export default async function AdminCopropietesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.toLowerCase() !== ADMIN_EMAIL?.toLowerCase()) redirect('/dashboard');
+  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) redirect('/dashboard');
 
   const admin = createAdminClient();
   const [

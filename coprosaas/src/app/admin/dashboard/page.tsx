@@ -15,7 +15,7 @@ import {
   Send, Database, Search,
 } from 'lucide-react';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com';
+import { ADMIN_EMAIL } from '@/lib/admin-config';
 const MRR_PRICES: Record<string, number> = { essentiel: 25, confort: 30, illimite: 45 };
 const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
 
@@ -63,7 +63,7 @@ function ProgressBar({ value, color }: { value: number; color: string }) {
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.toLowerCase() !== ADMIN_EMAIL?.toLowerCase()) redirect('/dashboard');
+  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) redirect('/dashboard');
 
   const admin = createAdminClient();
   const today = new Date();
