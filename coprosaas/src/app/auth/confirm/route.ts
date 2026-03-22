@@ -1,14 +1,22 @@
 // ============================================================
-// Route de confirmation Supabase (flux PKCE)
+// Route de confirmation Supabase
 //
 // Supabase redirige ici après que l'utilisateur a cliqué un lien
 // d'email (confirmation d'inscription, réinitialisation de MDP,
 // changement d'adresse email…).
 //
-// Params attendus (query string) :
-//   token_hash  — token opaque fourni par Supabase
-//   type        — 'signup' | 'recovery' | 'email_change' | …
-//   next        — (optionnel) URL de redirection après succès
+// Deux flux possibles selon le template email configuré :
+//
+// 1. Flux PKCE (template par défaut — {{ .ConfirmationURL }}) :
+//    Supabase vérifie le token sur ses serveurs, puis redirige ici
+//    avec ?code=AUTH_CODE&type=<type>. On échange le code contre
+//    une session via exchangeCodeForSession().
+//
+// 2. Flux token_hash (template personnalisé) :
+//    Le lien pointe directement ici avec ?token_hash=...&type=...
+//    Pour les réinitialisations de MDP, on délègue verifyOtp au
+//    navigateur (anti-scanner) ; pour les autres types, on l'effectue
+//    côté serveur.
 // ============================================================
 import { type EmailOtpType } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -19,10 +27,70 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get('token_hash');
   const type       = searchParams.get('type') as EmailOtpType | null;
+  const code       = searchParams.get('code'); // flux PKCE
 
   // Destination par défaut selon le type
   const defaultNext = type === 'recovery' ? '/reset-password' : '/dashboard';
   const next        = searchParams.get('next') ?? defaultNext;
+
+  // ── Flux PKCE : échange du code d'autorisation ──────────────────────
+  // Supabase redirige ici avec ?code=AUTH_CODE après avoir vérifié le
+  // token OTP sur ses serveurs (template {{ .ConfirmationURL }}).
+  // Le code_verifier est dans les cookies du navigateur (@supabase/ssr).
+  if (code) {
+    const successUrl = new URL(next, request.url);
+    const response   = NextResponse.redirect(successUrl);
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      console.error('[auth/confirm] exchangeCodeForSession error:', error.message);
+      return NextResponse.redirect(new URL('/login?error=lien_invalide', request.url));
+    }
+
+    // Après une confirmation d'inscription via PKCE, même auto-liaison que le flux token_hash
+    if (type === 'signup' && data.user) {
+      const { id: userId, email } = data.user;
+      if (email) {
+        try {
+          const admin = createAdminClient();
+          await admin
+            .from('coproprietaires')
+            .update({ user_id: userId })
+            .eq('email', email.toLowerCase())
+            .is('user_id', null);
+          await admin
+            .from('invitations')
+            .update({ statut: 'acceptee' })
+            .eq('email', email.toLowerCase())
+            .eq('statut', 'en_attente');
+        } catch (linkErr) {
+          console.error('[auth/confirm] PKCE auto-link error:', linkErr);
+        }
+      }
+    }
+
+    return response;
+  }
 
   if (!token_hash || !type) {
     return NextResponse.redirect(new URL('/login?error=lien_invalide', request.url));
