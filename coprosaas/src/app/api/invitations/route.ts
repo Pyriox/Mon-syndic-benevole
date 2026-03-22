@@ -174,9 +174,20 @@ export async function GET(request: NextRequest) {
   const coproprietes = data.coproprietes as unknown as { nom: string } | { nom: string }[] | null;
   const coproprieteNom = Array.isArray(coproprietes) ? coproprietes[0]?.nom : coproprietes?.nom;
 
+  // Pré-remplir prénom/nom depuis la fiche copropriétaire (non encore lié)
+  const { data: fiche } = await supabase
+    .from('coproprietaires')
+    .select('prenom, nom')
+    .eq('email', data.email)
+    .eq('copropriete_id', data.copropriete_id)
+    .is('user_id', null)
+    .maybeSingle();
+
   return NextResponse.json({
     email: data.email,
     copropriete: coproprieteNom ?? '',
+    prenom: fiche?.prenom ?? null,
+    nom: fiche?.nom ?? null,
   });
 }
 

@@ -34,6 +34,8 @@ function RegisterForm() {
   );
   const [invitationEmail, setInvitationEmail] = useState('');
   const [coproprieteNom, setCoproprieteNom] = useState('');
+  const [invitationPrenom, setInvitationPrenom] = useState('');
+  const [invitationNom, setInvitationNom] = useState('');
 
   const [formData, setFormData] = useState({ prenom: '', nom: '', email: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
@@ -51,6 +53,13 @@ function RegisterForm() {
         } else {
           setInvitationEmail(data.email);
           setCoproprieteNom(data.copropriete ?? '');
+          setInvitationPrenom(data.prenom ?? '');
+          setInvitationNom(data.nom ?? '');
+          setFormData((prev) => ({
+            ...prev,
+            prenom: data.prenom ?? '',
+            nom: data.nom ?? '',
+          }));
           setMode('coproprietaire');
         }
       })
@@ -65,7 +74,7 @@ function RegisterForm() {
     e.preventDefault();
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
+    if (mode !== 'coproprietaire' && formData.password !== formData.confirmPassword) {
       setError('Les mots de passe ne correspondent pas.');
       return;
     }
@@ -231,44 +240,64 @@ function RegisterForm() {
           </div>
 
           <div className="mb-8">
-            <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
-              {mode === 'syndic' ? 'Créer mon compte' : 'Rejoindre la copropriété'}
-            </h1>
-            {mode === 'syndic' ? (
-              <p className="text-sm text-gray-500">
-                Déjà un compte ?{' '}
-                <Link href="/login" className="text-blue-600 hover:underline font-medium">Se connecter</Link>
-              </p>
-            ) : (
-              <p className="text-sm text-gray-500">
-                Vous avez été invité à rejoindre{' '}
-                <strong className="text-gray-700">{coproprieteNom}</strong>
-              </p>
+            {mode === 'coproprietaire' && (
+              <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5">
+                <Building2 size={20} className="text-blue-500 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs text-blue-500 font-medium uppercase tracking-wide leading-none mb-0.5">Vous rejoignez</p>
+                  <p className="font-semibold text-blue-800 truncate">{coproprieteNom}</p>
+                </div>
+              </div>
             )}
+            <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Créer mon compte</h1>
+            <p className="text-sm text-gray-500">
+              Déjà un compte ?{' '}
+              <Link href="/login" className="text-blue-600 hover:underline font-medium">Se connecter</Link>
+            </p>
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Prénom"
-                name="prenom"
-                type="text"
-                autoComplete="given-name"
-                value={formData.prenom}
-                onChange={handleChange}
-                placeholder="Jean"
-                required
-              />
-              <Input
-                label="Nom"
-                name="nom"
-                type="text"
-                autoComplete="family-name"
-                value={formData.nom}
-                onChange={handleChange}
-                placeholder="Dupont"
-                required
-              />
+              {mode === 'coproprietaire' && invitationPrenom ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                  <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 text-sm">
+                    <Lock size={14} className="text-gray-400 shrink-0" />
+                    <span>{invitationPrenom}</span>
+                  </div>
+                </div>
+              ) : (
+                <Input
+                  label="Prénom"
+                  name="prenom"
+                  type="text"
+                  autoComplete="given-name"
+                  value={formData.prenom}
+                  onChange={handleChange}
+                  placeholder="Jean"
+                  required
+                />
+              )}
+              {mode === 'coproprietaire' && invitationNom ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                  <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 text-sm">
+                    <Lock size={14} className="text-gray-400 shrink-0" />
+                    <span>{invitationNom}</span>
+                  </div>
+                </div>
+              ) : (
+                <Input
+                  label="Nom"
+                  name="nom"
+                  type="text"
+                  autoComplete="family-name"
+                  value={formData.nom}
+                  onChange={handleChange}
+                  placeholder="Dupont"
+                  required
+                />
+              )}
             </div>
 
             {mode === 'coproprietaire' ? (
@@ -305,16 +334,18 @@ function RegisterForm() {
               hint="Au moins 8 caractères"
             />
 
-            <Input
-              label="Confirmer le mot de passe"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-            />
+            {mode !== 'coproprietaire' && (
+              <Input
+                label="Confirmer le mot de passe"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+              />
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{error}</div>
