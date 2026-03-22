@@ -167,7 +167,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
       </div>
 
       {/* Sélecteur de copropriété */}
-      <CoproSelector coproprietes={coproprietes} selectedId={selectedCoproId} />
+      <CoproSelector coproprietes={coproprietes} selectedId={selectedCoproId} userRole={userRole} />
 
       {/* Navigation */}
       <nav className="flex-1 px-3 pb-4 space-y-5 overflow-y-auto">

@@ -82,9 +82,9 @@ export default async function DashboardPage() {
         {!copropriete && (
           <Card className="text-center py-12">
             <Building2 size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700">Aucune copropriété sélectionnée</h3>
-            <p className="text-gray-500 text-sm mt-1">
-              Choisissez une copropriété dans le sélecteur du menu de navigation.
+            <h3 className="text-lg font-semibold text-gray-700">Vous n&apos;êtes rattaché à aucune copropriété</h3>
+            <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto">
+              Attendez l&apos;invitation de votre syndic pour accéder à votre espace copropriétaire.
             </p>
           </Card>
         )}
@@ -442,12 +442,19 @@ export default async function DashboardPage() {
 
       {/* Cas : aucune copropriété sélectionnée */}
       {!copropriete && (
-        <Card className="text-center py-12">
-          <Building2 size={48} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-700">Aucune copropriété sélectionnée</h3>
-          <p className="text-gray-500 text-sm mt-1 mb-4">
-            Choisissez une copropriété dans le sélecteur du menu de navigation.
+        <Card className="text-center py-14">
+          <Building2 size={52} className="mx-auto text-blue-200 mb-5" />
+          <h3 className="text-xl font-bold text-gray-800">Bienvenue sur Mon Syndic Bénévole !</h3>
+          <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto">
+            Commencez par créer votre première copropriété pour configurer lots, copropriétaires, finances et documents.
           </p>
+          <Link
+            href="/coproprietes/nouvelle"
+            className="inline-flex items-center gap-2 mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-sm"
+          >
+            <Building2 size={18} />
+            Créer ma première copropriété
+          </Link>
         </Card>
       )}
 

@@ -11,9 +11,10 @@ import type { UserCopropriete } from '@/types';
 interface CoproSelectorProps {
   coproprietes: UserCopropriete[];
   selectedId: string | null;
+  userRole?: 'syndic' | 'copropriétaire';
 }
 
-export default function CoproSelector({ coproprietes, selectedId }: CoproSelectorProps) {
+export default function CoproSelector({ coproprietes, selectedId, userRole }: CoproSelectorProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -43,6 +44,24 @@ export default function CoproSelector({ coproprietes, selectedId }: CoproSelecto
   };
 
   if (coproprietes.length === 0) {
+    if (userRole === 'syndic') {
+      return (
+        <div className="mx-3 mb-4">
+          <Link
+            href="/coproprietes/nouvelle"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 transition-colors group"
+          >
+            <div className="w-7 h-7 rounded-lg bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center shrink-0 transition-colors">
+              <Plus size={14} className="text-blue-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-blue-700">Créer une copropriété</p>
+              <p className="text-[10px] text-blue-500">Commencer la configuration</p>
+            </div>
+          </Link>
+        </div>
+      );
+    }
     return (
       <div className="mx-3 mb-4 px-3 py-2.5 rounded-xl border border-dashed border-gray-200 text-center">
         <p className="text-xs text-gray-400">Aucune copropriété</p>
