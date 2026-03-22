@@ -115,12 +115,14 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       { data: agImminentes },
       { data: appelsRetard },
     ] = await Promise.all([
-      // Copropriétaires avec solde négatif
+      // Copropriétaires avec solde négatif (5 plus débiteurs)
       supabase
         .from('coproprietaires')
         .select('id, nom, prenom, solde')
         .eq('copropriete_id', selectedCoproId)
-        .lt('solde', 0),
+        .lt('solde', 0)
+        .order('solde', { ascending: true })
+        .limit(5),
 
       // Incidents ouverts ou en cours
       supabase
@@ -202,6 +204,107 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
           label: appel.titre,
           sublabel: `Échu le ${d.toLocaleDateString('fr-FR')} · ${nbImpaye} impayé(s)`,
           href: '/appels-de-fonds',
+          severity: 'warning',
+        });
+      }
+    }
+  }
+
+  // --- Notifications pour les copropriétaires ---
+  if (selectedCoproId && userRole === 'copropriétaire') {
+    const today = new Date().toISOString().split('T')[0];
+    const in30days = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+
+    // Fiche copropriétaire de l'utilisateur dans cette copropriété
+    const { data: maCopro } = await supabase
+      .from('coproprietaires')
+      .select('id, solde')
+      .eq('copropriete_id', selectedCoproId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (maCopro) {
+      const [
+        { data: lignesImpayes },
+        { data: agImminentes },
+        { data: incidents },
+      ] = await Promise.all([
+        // Lignes d'appel de fonds non payées (filtrage échu en JS)
+        supabase
+          .from('lignes_appels_de_fonds')
+          .select('id, montant_du, appels_de_fonds!inner(id, titre, date_echeance)')
+          .eq('coproprietaire_id', maCopro.id)
+          .eq('paye', false),
+
+        // AG dans les 30 prochains jours
+        supabase
+          .from('assemblees_generales')
+          .select('id, titre, date_ag')
+          .eq('copropriete_id', selectedCoproId)
+          .in('statut', ['planifiee', 'en_cours'])
+          .gte('date_ag', today)
+          .lte('date_ag', in30days)
+          .order('date_ag', { ascending: true })
+          .limit(3),
+
+        // Incidents actifs sur la copropriété
+        supabase
+          .from('incidents')
+          .select('id, titre, statut, priorite')
+          .eq('copropriete_id', selectedCoproId)
+          .in('statut', ['ouvert', 'en_cours'])
+          .order('priorite', { ascending: false })
+          .limit(3),
+      ]);
+
+      // Solde débiteur
+      if (maCopro.solde < 0) {
+        notifications.push({
+          id: `solde-${maCopro.id}`,
+          type: 'impaye',
+          label: 'Votre solde est débiteur',
+          sublabel: `${maCopro.solde.toFixed(2)} €`,
+          href: '/dashboard',
+          severity: 'danger',
+        });
+      }
+
+      // Charges impayées et échues
+      for (const ligne of lignesImpayes ?? []) {
+        const appel = ligne.appels_de_fonds as unknown as { id: string; titre: string; date_echeance: string };
+        if (appel.date_echeance >= today) continue;
+        const d = new Date(appel.date_echeance);
+        notifications.push({
+          id: `appel-${appel.id}`,
+          type: 'appel_fonds',
+          label: appel.titre,
+          sublabel: `Échu le ${d.toLocaleDateString('fr-FR')} — ${ligne.montant_du.toFixed(2)} €`,
+          href: '/appels-de-fonds',
+          severity: 'warning',
+        });
+      }
+
+      // AG imminentes
+      for (const ag of agImminentes ?? []) {
+        const d = new Date(ag.date_ag);
+        notifications.push({
+          id: `ag-${ag.id}`,
+          type: 'ag',
+          label: ag.titre,
+          sublabel: d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }),
+          href: '/assemblees',
+          severity: 'info',
+        });
+      }
+
+      // Incidents actifs (informatif)
+      for (const inc of incidents ?? []) {
+        notifications.push({
+          id: `incident-${inc.id}`,
+          type: 'incident',
+          label: inc.titre,
+          sublabel: inc.statut === 'ouvert' ? 'Ouvert' : 'En cours',
+          href: '/incidents',
           severity: 'warning',
         });
       }
