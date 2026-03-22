@@ -1,6 +1,12 @@
 // ============================================================
 // Page de réinitialisation du mot de passe
 // Accessible via le lien envoyé par email (Supabase)
+//
+// Stratégie anti-scanner (Gmail, Outlook Safe Links…) :
+// verifyOtp() n'est JAMAIS appelé automatiquement au chargement
+// de la page. Il est déclenché uniquement par un clic explicite
+// de l'utilisateur. Les scanners d'email ne cliquent pas sur
+// des boutons — ils ne peuvent donc pas consommer le token.
 // ============================================================
 'use client';
 
@@ -11,7 +17,14 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, KeyRound } from 'lucide-react';
+
+type Stage =
+  | 'verify_prompt'   // token_hash présent, en attente du clic utilisateur
+  | 'verifying'       // verifyOtp en cours
+  | 'form'            // session active, formulaire de MDP
+  | 'invalid'         // token expiré ou invalide
+  | 'done';           // MDP mis à jour avec succès
 
 export default function ResetPasswordPage() {
   return (
@@ -26,59 +39,47 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  const [ready, setReady] = useState(false);       // session PASSWORD_RECOVERY active
-  const [invalid, setInvalid] = useState(false);   // lien invalide ou expiré
+  const [stage, setStage] = useState<Stage>('verifying');
+  const [tokenHash, setTokenHash] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [done, setDone] = useState(false);
 
-  // Supabase envoie le token dans le hash de l'URL (flow implicite)
-  // ou via /auth/confirm qui le passe en query param (flow PKCE, vérification côté client).
   useEffect(() => {
-    const token_hash = searchParams.get('token_hash');
+    const hash = searchParams.get('token_hash');
     const type = searchParams.get('type');
 
-    // Flow PKCE : /auth/confirm a transmis le token_hash sans l'échanger côté serveur.
-    // On appelle verifyOtp ici, dans le navigateur, pour éviter qu'un scanner de liens
-    // (Gmail, Outlook…) consomme le token OTP avant l'utilisateur.
-    if (token_hash && type === 'recovery') {
-      supabase.auth.verifyOtp({ token_hash, type: 'recovery' }).then(({ error }) => {
-        if (error) {
-          setInvalid(true);
-        } else {
-          setReady(true);
-        }
-      });
+    if (hash && type === 'recovery') {
+      // Token présent : on attend l'action explicite de l'utilisateur
+      // (ne PAS appeler verifyOtp ici — les scanners chargeraient la page sans cliquer)
+      setTokenHash(hash);
+      setStage('verify_prompt');
       return;
     }
 
-    // Flow session-cookie : session déjà établie par /auth/confirm (ancienne impl.) ou flow implicite
+    // Pas de token_hash : l'utilisateur est peut-être arrivé directement
+    // ou via un flow implicite avec une session déjà établie.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-        setReady(true);
+      if (session) {
+        setStage('form');
+      } else {
+        setStage('invalid');
       }
     });
-
-    // Si aucune session et aucun événement après 5 s : lien invalide ou expiré
-    const timer = setTimeout(() => {
-      setReady((prev) => {
-        if (!prev) setInvalid(true);
-        return prev;
-      });
-    }, 5000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timer);
-    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleVerify = async () => {
+    if (!tokenHash) return;
+    setStage('verifying');
+    const { error: otp_err } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' });
+    if (otp_err) {
+      setStage('invalid');
+    } else {
+      setStage('form');
+    }
+  };
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +103,7 @@ function ResetPasswordForm() {
       return;
     }
 
-    setDone(true);
+    setStage('done');
     setTimeout(() => router.push('/login'), 3000);
   };
 
@@ -138,7 +139,7 @@ function ResetPasswordForm() {
           <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/60 border border-gray-100 p-8">
 
             {/* ── Succès ── */}
-            {done && (
+            {stage === 'done' && (
               <div className="text-center py-4 space-y-4">
                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-100 mx-auto">
                   <ShieldCheck size={28} className="text-green-600" />
@@ -153,7 +154,7 @@ function ResetPasswordForm() {
             )}
 
             {/* ── Lien invalide / expiré ── */}
-            {!done && invalid && (
+            {stage === 'invalid' && (
               <div className="text-center py-4 space-y-4">
                 <p className="text-red-600 font-medium">Ce lien est invalide ou a expiré.</p>
                 <p className="text-sm text-gray-500">
@@ -168,15 +169,33 @@ function ResetPasswordForm() {
               </div>
             )}
 
-            {/* ── Chargement détection session ── */}
-            {!done && !invalid && !ready && (
+            {/* ── Vérification en cours ── */}
+            {stage === 'verifying' && (
               <div className="text-center py-8 text-sm text-gray-400">
                 Vérification du lien en cours…
               </div>
             )}
 
+            {/* ── Invite à cliquer (anti-scanner) ── */}
+            {stage === 'verify_prompt' && (
+              <div className="text-center space-y-5">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-100 mx-auto">
+                  <KeyRound size={28} className="text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Votre lien est prêt</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Cliquez sur le bouton ci-dessous pour choisir votre nouveau mot de passe.
+                  </p>
+                </div>
+                <Button onClick={handleVerify} fullWidth size="lg">
+                  Choisir mon nouveau mot de passe
+                </Button>
+              </div>
+            )}
+
             {/* ── Formulaire ── */}
-            {!done && !invalid && ready && (
+            {stage === 'form' && (
               <form onSubmit={handleReset} className="space-y-4">
                 <Input
                   label="Nouveau mot de passe"
@@ -218,3 +237,4 @@ function ResetPasswordForm() {
     </div>
   );
 }
+
