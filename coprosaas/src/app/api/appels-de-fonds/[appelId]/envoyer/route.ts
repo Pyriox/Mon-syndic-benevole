@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
+import { isSubscribed } from '@/lib/subscription';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -28,16 +29,21 @@ export async function POST(
   // Récupérer l'appel de fonds + copropriété
   const { data: appel } = await supabase
     .from('appels_de_fonds')
-    .select('*, coproprietes(nom, adresse, ville, code_postal, syndic_id)')
+    .select('*, coproprietes(nom, adresse, ville, code_postal, syndic_id, plan)')
     .eq('id', appelId)
     .single();
 
   if (!appel) return NextResponse.json({ message: 'Appel de fonds introuvable' }, { status: 404 });
 
   // Vérification que l'utilisateur est bien le syndic de cette copropriété
-  const copros = appel.coproprietes as { syndic_id: string } | null;
+  const copros = appel.coproprietes as { syndic_id: string; plan: string | null } | null;
   if (copros?.syndic_id !== user.id) {
     return NextResponse.json({ message: 'Accès refusé' }, { status: 403 });
+  }
+
+  // Vérification de l'abonnement actif
+  if (!isSubscribed(copros?.plan)) {
+    return NextResponse.json({ message: 'Abonnement requis pour envoyer des avis de fonds' }, { status: 403 });
   }
 
   // Récupérer les lignes avec copropriétaires (email + user_id pour fallback auth)

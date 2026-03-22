@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isSubscribed } from '@/lib/subscription';
 
 export async function POST(req: NextRequest) {
   // 1. Vérification de l'authentification
@@ -50,13 +51,18 @@ export async function POST(req: NextRequest) {
   // 3. Vérification que l'utilisateur possède bien cette copropriété
   const { data: copro } = await supabase
     .from('coproprietes')
-    .select('id')
+    .select('id, plan')
     .eq('id', copropriete_id)
     .eq('syndic_id', user.id)
     .maybeSingle();
 
   if (!copro) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+  }
+
+  // 3b. Vérification de l'abonnement actif
+  if (!isSubscribed((copro as { id: string; plan: string | null }).plan)) {
+    return NextResponse.json({ error: 'Abonnement requis pour uploader des documents' }, { status: 403 });
   }
 
   // 4. Upload via le client admin (bypasse la RLS du storage)

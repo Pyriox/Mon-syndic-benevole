@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emails/base';
 import { createClient } from '@/lib/supabase/server';
+import { isSubscribed } from '@/lib/subscription';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -32,16 +33,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
 
   const { data: ag } = await supabase
     .from('assemblees_generales')
-    .select('*, coproprietes(nom, adresse, ville, code_postal, syndic_id)')
+    .select('*, coproprietes(nom, adresse, ville, code_postal, syndic_id, plan)')
     .eq('id', agId)
     .single();
 
   if (!ag) return NextResponse.json({ message: 'AG introuvable' }, { status: 404 });
 
   // Vérification que l'utilisateur est bien le syndic de cette copropriété
-  const copros = ag.coproprietes as { syndic_id: string } | null;
+  const copros = ag.coproprietes as { syndic_id: string; plan: string | null } | null;
   if (copros?.syndic_id !== user.id) {
     return NextResponse.json({ message: 'Accès refusé' }, { status: 403 });
+  }
+
+  // Vérification de l'abonnement actif
+  if (!isSubscribed(copros?.plan)) {
+    return NextResponse.json({ message: 'Abonnement requis pour envoyer le PV' }, { status: 403 });
   }
 
   const { data: resolutions } = await supabase
