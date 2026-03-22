@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getDashboardLayoutData, getSyndicNotifications, getCoproNotifications } from '@/lib/cached-queries';
 import DashboardShell from '@/components/layout/DashboardShell';
 import type { UserCopropriete, AppNotification } from '@/types';
 
@@ -23,19 +24,11 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     redirect('/login');
   }
 
-  // Récupération du profil, copropriétés syndic et lots en parallèle
-  const [
-    { data: profile },
-    { data: syndicCopros },
-    { data: coproRows },
-    { data: coproRowsByEmail },
-  ] = await Promise.all([
-    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
-    supabase.from('coproprietes').select('id, nom, adresse, ville').eq('syndic_id', user.id).order('nom'),
-    supabase.from('coproprietaires').select('copropriete_id, coproprietes(id, nom, adresse, ville)').eq('user_id', user.id),
-    // Fallback pour les copropriétaires non encore liés (user_id non renseigné)
-    supabase.from('coproprietaires').select('copropriete_id, coproprietes(id, nom, adresse, ville)').eq('email', user.email ?? '').is('user_id', null),
-  ]);
+  // Récupération du profil et des copropriétés (mise en cache 30 s côté serveur)
+  const { profile, syndicCopros, coproRows, coproRowsByEmail } = await getDashboardLayoutData(
+    user.id,
+    user.email ?? '',
+  );
 
   const userName = profile?.full_name ?? user.email ?? '';
 
@@ -106,209 +99,12 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   const notifications: AppNotification[] = [];
 
   if (selectedCoproId && userRole === 'syndic') {
-    const today = new Date().toISOString().split('T')[0];
-    const in30days = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-
-    const [
-      { data: impayes },
-      { data: incidents },
-      { data: agImminentes },
-      { data: appelsRetard },
-    ] = await Promise.all([
-      // Copropriétaires avec solde négatif (5 plus débiteurs)
-      supabase
-        .from('coproprietaires')
-        .select('id, nom, prenom, solde')
-        .eq('copropriete_id', selectedCoproId)
-        .lt('solde', 0)
-        .order('solde', { ascending: true })
-        .limit(5),
-
-      // Incidents ouverts ou en cours
-      supabase
-        .from('incidents')
-        .select('id, titre, statut, priorite')
-        .eq('copropriete_id', selectedCoproId)
-        .in('statut', ['ouvert', 'en_cours'])
-        .order('priorite', { ascending: false })
-        .limit(5),
-
-      // AG dans les 30 prochains jours
-      supabase
-        .from('assemblees_generales')
-        .select('id, titre, date_ag')
-        .eq('copropriete_id', selectedCoproId)
-        .in('statut', ['planifiee', 'en_cours'])
-        .gte('date_ag', today)
-        .lte('date_ag', in30days)
-        .order('date_ag', { ascending: true })
-        .limit(3),
-
-      // Appels de fonds dont l'échéance est dépassée et pas entièrement payés
-      supabase
-        .from('appels_de_fonds')
-        .select('id, titre, date_echeance, lignes_appels_de_fonds(paye)')
-        .eq('copropriete_id', selectedCoproId)
-        .lt('date_echeance', today)
-        .order('date_echeance', { ascending: true })
-        .limit(5),
-    ]);
-
-    // Impayés
-    for (const cp of impayes ?? []) {
-      const nom = [cp.prenom, cp.nom].filter(Boolean).join(' ') || 'Copropriétaire';
-      notifications.push({
-        id: `impaye-${cp.id}`,
-        type: 'impaye',
-        label: `${nom} — solde débiteur`,
-        sublabel: `${cp.solde.toFixed(2)} €`,
-        href: '/coproprietaires',
-        severity: 'danger',
-      });
-    }
-
-    // Incidents ouverts
-    for (const inc of incidents ?? []) {
-      notifications.push({
-        id: `incident-${inc.id}`,
-        type: 'incident',
-        label: inc.titre,
-        sublabel: inc.statut === 'ouvert' ? 'Ouvert' : 'En cours',
-        href: '/incidents',
-        severity: inc.priorite === 'urgente' ? 'danger' : 'warning',
-      });
-    }
-
-    // AG imminentes
-    for (const ag of agImminentes ?? []) {
-      const d = new Date(ag.date_ag);
-      notifications.push({
-        id: `ag-${ag.id}`,
-        type: 'ag',
-        label: ag.titre,
-        sublabel: d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }),
-        href: '/assemblees',
-        severity: 'info',
-      });
-    }
-
-    // Appels de fonds en retard (au moins une ligne non payée)
-    for (const appel of appelsRetard ?? []) {
-      const lignes = (appel.lignes_appels_de_fonds ?? []) as { paye: boolean }[];
-      const nbImpaye = lignes.filter((l) => !l.paye).length;
-      if (nbImpaye > 0) {
-        const d = new Date(appel.date_echeance);
-        notifications.push({
-          id: `appel-${appel.id}`,
-          type: 'appel_fonds',
-          label: appel.titre,
-          sublabel: `Échu le ${d.toLocaleDateString('fr-FR')} · ${nbImpaye} impayé(s)`,
-          href: '/appels-de-fonds',
-          severity: 'warning',
-        });
-      }
-    }
+    notifications.push(...await getSyndicNotifications(selectedCoproId));
   }
 
   // --- Notifications pour les copropriétaires ---
   if (selectedCoproId && userRole === 'copropriétaire') {
-    const today = new Date().toISOString().split('T')[0];
-    const in30days = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-
-    // Fiche copropriétaire de l'utilisateur dans cette copropriété
-    const { data: maCopro } = await supabase
-      .from('coproprietaires')
-      .select('id, solde')
-      .eq('copropriete_id', selectedCoproId)
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (maCopro) {
-      const [
-        { data: lignesImpayes },
-        { data: agImminentes },
-        { data: incidents },
-      ] = await Promise.all([
-        // Lignes d'appel de fonds non payées (filtrage échu en JS)
-        supabase
-          .from('lignes_appels_de_fonds')
-          .select('id, montant_du, appels_de_fonds!inner(id, titre, date_echeance)')
-          .eq('coproprietaire_id', maCopro.id)
-          .eq('paye', false),
-
-        // AG dans les 30 prochains jours
-        supabase
-          .from('assemblees_generales')
-          .select('id, titre, date_ag')
-          .eq('copropriete_id', selectedCoproId)
-          .in('statut', ['planifiee', 'en_cours'])
-          .gte('date_ag', today)
-          .lte('date_ag', in30days)
-          .order('date_ag', { ascending: true })
-          .limit(3),
-
-        // Incidents actifs sur la copropriété
-        supabase
-          .from('incidents')
-          .select('id, titre, statut, priorite')
-          .eq('copropriete_id', selectedCoproId)
-          .in('statut', ['ouvert', 'en_cours'])
-          .order('priorite', { ascending: false })
-          .limit(3),
-      ]);
-
-      // Solde débiteur
-      if (maCopro.solde < 0) {
-        notifications.push({
-          id: `solde-${maCopro.id}`,
-          type: 'impaye',
-          label: 'Votre solde est débiteur',
-          sublabel: `${maCopro.solde.toFixed(2)} €`,
-          href: '/dashboard',
-          severity: 'danger',
-        });
-      }
-
-      // Charges impayées et échues
-      for (const ligne of lignesImpayes ?? []) {
-        const appel = ligne.appels_de_fonds as unknown as { id: string; titre: string; date_echeance: string };
-        if (appel.date_echeance >= today) continue;
-        const d = new Date(appel.date_echeance);
-        notifications.push({
-          id: `appel-${appel.id}`,
-          type: 'appel_fonds',
-          label: appel.titre,
-          sublabel: `Échu le ${d.toLocaleDateString('fr-FR')} — ${ligne.montant_du.toFixed(2)} €`,
-          href: '/appels-de-fonds',
-          severity: 'warning',
-        });
-      }
-
-      // AG imminentes
-      for (const ag of agImminentes ?? []) {
-        const d = new Date(ag.date_ag);
-        notifications.push({
-          id: `ag-${ag.id}`,
-          type: 'ag',
-          label: ag.titre,
-          sublabel: d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }),
-          href: '/assemblees',
-          severity: 'info',
-        });
-      }
-
-      // Incidents actifs (informatif)
-      for (const inc of incidents ?? []) {
-        notifications.push({
-          id: `incident-${inc.id}`,
-          type: 'incident',
-          label: inc.titre,
-          sublabel: inc.statut === 'ouvert' ? 'Ouvert' : 'En cours',
-          href: '/incidents',
-          severity: 'warning',
-        });
-      }
-    }
+    notifications.push(...await getCoproNotifications(user.id, selectedCoproId));
   }
 
   // --- Messages support non lus (tous les rôles) ---
