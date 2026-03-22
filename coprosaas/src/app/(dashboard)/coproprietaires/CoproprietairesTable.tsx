@@ -94,7 +94,7 @@ function ReadOnlyMobileCoproCard({
   const address = [cp.adresse, cp.code_postal, cp.ville].filter(Boolean).join(' ');
 
   return (
-    <Card className={`space-y-3 ${cp.user_id === currentUserId ? 'ring-1 ring-blue-200 bg-blue-50/30' : ''}`}>
+    <Card className={`space-y-3 ${cp.user_id === currentUserId ? 'ring-2 ring-blue-400' : ''}`} style={cp.user_id === currentUserId ? { backgroundColor: '#dbeafe' } : undefined}>
       {/* Avatar + nom */}
       <div className="flex items-center gap-3">
         <Avatar name={displayName || '?'} />
@@ -167,7 +167,7 @@ function ReadOnlyCoproRow({
   const address = [cp.adresse, cp.code_postal, cp.ville].filter(Boolean).join(' ');
 
   return (
-    <tr className={`border-b border-gray-100 last:border-0 transition-colors ${cp.user_id === currentUserId ? 'bg-blue-50/50 hover:bg-blue-50/70' : 'hover:bg-gray-50'}`}>
+    <tr className={`border-b border-gray-100 last:border-0 transition-colors ${cp.user_id === currentUserId ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'}`}>
       <td className="py-3.5 px-5">
         <div className="flex items-center gap-3">
           <Avatar name={displayName || '?'} />
@@ -242,7 +242,7 @@ function MobileCoproCard({
     : `${cp.prenom ?? ''} ${cp.nom ?? ''}`.trim();
 
   return (
-    <div className={`border rounded-xl p-4 space-y-3 ${cp.user_id === currentUserId ? 'bg-blue-50/50 border-blue-200' : 'bg-white border-gray-200'}`}>
+    <div className={`border rounded-xl p-4 space-y-3 ${cp.user_id === currentUserId ? 'bg-blue-100 border-blue-300' : 'bg-white border-gray-200'}`}>
       {/* Ligne 1 : avatar + nom + actions */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -375,7 +375,7 @@ function SortableCoproRow({
       ref={setNodeRef}
       style={style}
       className={`border-b border-gray-100 last:border-0 ${
-        isDragging ? 'bg-blue-50' : cp.user_id === currentUserId ? 'bg-indigo-50/60 hover:bg-indigo-50' : 'hover:bg-gray-50'
+        isDragging ? 'bg-blue-50' : cp.user_id === currentUserId ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
       }`}
     >
       {/* Poignée */}

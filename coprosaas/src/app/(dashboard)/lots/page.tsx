@@ -206,7 +206,7 @@ export default async function LotsPage() {
               const Icon = cfg.icon;
               const isMyLot = myFicheId !== null && lot.coproprietaire_id === myFicheId;
               return (
-                <Card key={lot.id} padding="sm" className={isMyLot ? 'ring-1 ring-blue-200 bg-blue-50/40' : ''}>
+                <Card key={lot.id} padding="sm" className={isMyLot ? 'ring-2 ring-blue-400' : ''} style={isMyLot ? { backgroundColor: '#dbeafe' } : undefined}>
                   <div className="flex items-start gap-3">
                     {/* Icône type */}
                     <div className={`p-2.5 ${cfg.bgColor} rounded-xl shrink-0`}>
@@ -295,7 +295,7 @@ export default async function LotsPage() {
                   const Icon = cfg.icon;
                   const isMyLot = myFicheId !== null && lot.coproprietaire_id === myFicheId;
                   return (
-                    <tr key={lot.id} className={`border-b border-gray-100 last:border-0 transition-colors group ${isMyLot ? 'bg-blue-50/50 hover:bg-blue-50/80' : 'hover:bg-gray-50'}`}>
+                    <tr key={lot.id} className={`border-b border-gray-100 last:border-0 transition-colors group ${isMyLot ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'}`}>
                       <td className="py-3.5 px-5">
                         <div className="flex items-center gap-2.5">
                           <div className={`p-1.5 ${cfg.bgColor} rounded-lg`}>
