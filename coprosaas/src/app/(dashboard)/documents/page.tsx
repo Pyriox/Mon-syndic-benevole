@@ -186,7 +186,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
                 const docCount = countByDossier[sub.id] ?? 0;
                 return (
                   <Link key={sub.id} href={`/documents?dossier=${sub.id}`} className="block">
-                    <div className="bg-white rounded-xl border-2 border-gray-200 p-5 flex items-center gap-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
+                    <div className="bg-white rounded-xl border-2 border-gray-200 p-5 h-24 flex items-center gap-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
                       <Folder size={36} className="text-blue-400 shrink-0" />
                       <div className="min-w-0">
                         <p className="font-semibold text-gray-900 text-sm leading-snug truncate">{titre}</p>
@@ -272,7 +272,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {rootDossiersCopro.map((dossier) => (
             <Link key={dossier.id} href={`/documents?dossier=${dossier.id}`} className="block">
-              <div className={`bg-white rounded-xl border-2 p-5 flex items-center gap-4 hover:shadow-md transition-all ${
+              <div className={`bg-white rounded-xl border-2 p-5 h-24 flex items-center gap-4 hover:shadow-md transition-all ${
                 dossier.is_default ? 'border-gray-200 hover:border-blue-300' : 'border-dashed border-gray-300 hover:border-amber-400'
               }`}>
                 <Folder size={36} className={`${folderColorClass(dossier)} shrink-0`} />
@@ -562,7 +562,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
               return (
                 <div key={sub.id} className="relative group">
                   <Link href={`/documents?dossier=${sub.id}`} className="block">
-                    <div className="bg-white rounded-xl border-2 border-gray-200 p-5 flex items-center gap-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
+                    <div className="bg-white rounded-xl border-2 border-gray-200 p-5 h-24 flex items-center gap-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
                       <Folder size={36} className="text-blue-400 shrink-0" aria-hidden="true" />
                       <div className="min-w-0">
                         <p className="font-semibold text-gray-900 text-sm leading-snug truncate">{titre}</p>
@@ -660,7 +660,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
           <div key={dossier.id} className="relative group">
             <Link href={`/documents?dossier=${dossier.id}`} className="block">
               <div
-                className={`bg-white rounded-xl border-2 p-5 flex items-center gap-4 hover:shadow-md transition-all ${
+                className={`bg-white rounded-xl border-2 p-5 h-24 flex items-center gap-4 hover:shadow-md transition-all ${
                   dossier.is_default
                     ? 'border-gray-200 hover:border-blue-300'
                     : 'border-dashed border-gray-300 hover:border-amber-400'
