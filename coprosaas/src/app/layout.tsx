@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import Script from "next/script";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
@@ -12,6 +12,11 @@ const geist = Geist({
 const APP_URL = "https://mon-syndic-benevole.fr";
 const TITLE   = "Mon Syndic Bénévole — La gestion de copropriété simple & abordable";
 const DESC    = "Mon Syndic Bénévole simplifie la gestion des copropriétés pour les syndics bénévoles. Charges, appels de fonds, assemblées générales, documents et plus. Essai gratuit 14 jours, puis à partir de 300 €/an.";
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
