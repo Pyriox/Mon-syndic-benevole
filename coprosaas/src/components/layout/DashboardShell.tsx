@@ -60,7 +60,7 @@ export default function DashboardShell({
         />
         {/* pb-20 sur mobile pour ne pas cacher le contenu derrière la bottom nav */}
         <main className="flex-1 min-w-0 overflow-x-hidden">
-          <div className="p-4 md:p-6 pb-24 md:pb-6">
+          <div className="p-4 md:p-6 pb-28 md:pb-6">
             {children}
           </div>
         </main>

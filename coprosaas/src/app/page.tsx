@@ -1017,7 +1017,7 @@ export default function HomePage() {
           </div>
 
           <div className="text-center">
-            <Link href="/register" className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30">
+            <Link href="/register" className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30 w-full sm:w-auto">
               Rejoindre les 100+ copropriétés <ArrowRight size={16} />
             </Link>
           </div>
