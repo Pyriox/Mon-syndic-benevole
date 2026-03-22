@@ -369,9 +369,9 @@ export default function AidePage() {
 
       {/* ── Mes tickets support ── */}
       {(tickets.length > 0 || ticketsLoading) && (
-        <div>
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
           <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
               <MessageSquare size={16} className="text-indigo-600" />
             </div>
             <div>
@@ -386,7 +386,7 @@ export default function AidePage() {
           ) : (
             <div className="flex flex-col gap-2">
               {tickets.map((ticket) => (
-                <div key={ticket.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                <div key={ticket.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                   {/* Header ticket */}
                   <button
                     type="button"
