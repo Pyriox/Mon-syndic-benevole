@@ -30,11 +30,13 @@ export default async function CopropriétésPage() {
             {coproprietes?.length ?? 0} copropriété{(coproprietes?.length ?? 0) > 1 ? 's' : ''}
           </p>
         </div>
-        <Link href="/coproprietes/nouvelle">
-          <Button>
-            <Plus size={16} /> Nouvelle copropriété
-          </Button>
-        </Link>
+        {coproprietes && coproprietes.length > 0 && (
+          <Link href="/coproprietes/nouvelle">
+            <Button>
+              <Plus size={16} /> Nouvelle copropriété
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Grille des copropriétés */}
@@ -77,6 +79,14 @@ export default async function CopropriétésPage() {
           icon={<Building2 size={48} strokeWidth={1.5} />}
           title="Aucune copropriété"
           description="Créez votre première copropriété pour commencer à gérer vos charges et copropriétaires."
+          action={
+            <Link
+              href="/coproprietes/nouvelle"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+            >
+              <Plus size={16} /> Nouvelle copropriété
+            </Link>
+          }
         />
       )}
     </div>
