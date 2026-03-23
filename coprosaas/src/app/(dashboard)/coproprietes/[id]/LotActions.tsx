@@ -13,7 +13,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { Plus, Pencil, Lock, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Lock, Trash2, AlertTriangle } from 'lucide-react';
 
 const TYPE_OPTIONS = [
   { value: 'appartement', label: 'Appartement' },
@@ -175,24 +175,63 @@ interface LotDeleteProps {
 export function LotDelete({ lotId, lotNumero, coproprieteId }: LotDeleteProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm(`Supprimer le lot "${lotNumero}" ? Cette action est irréversible.`)) return;
     setLoading(true);
     const result = await deleteLot(lotId, coproprieteId);
     if (result.error) { setLoading(false); return; }
+    setConfirmOpen(false);
     router.refresh();
   };
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={loading}
-      title="Supprimer ce lot"
-      className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
-    >
-      <Trash2 size={15} />
-    </button>
+    <>
+      <button
+        onClick={() => setConfirmOpen(true)}
+        title="Supprimer ce lot"
+        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+      >
+        <Trash2 size={15} />
+      </button>
+
+      <Modal
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Supprimer le lot"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-red-50 rounded-lg shrink-0">
+              <AlertTriangle size={18} className="text-red-500" />
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Êtes-vous sûr de vouloir supprimer le lot{' '}
+              <span className="font-semibold text-gray-900">« {lotNumero} »</span> ?
+              Cette action est irréversible.
+            </p>
+          </div>
+          <div className="flex gap-3 pt-1">
+            <Button
+              type="button"
+              variant="danger"
+              loading={loading}
+              onClick={handleDelete}
+            >
+              Supprimer
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setConfirmOpen(false)}
+              disabled={loading}
+            >
+              Annuler
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }
 

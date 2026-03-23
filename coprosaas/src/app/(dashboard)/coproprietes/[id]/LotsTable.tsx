@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -260,6 +260,11 @@ function SortableLotCard({
 export default function LotsTable({ initialLots, coproMap, coproprieteId }: LotsTableProps) {
   const [lots, setLots] = useState<LotRow[]>(initialLots);
   const supabase = createClient();
+
+  // Sync avec les données serveur après router.refresh()
+  useEffect(() => {
+    setLots(initialLots);
+  }, [initialLots]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
