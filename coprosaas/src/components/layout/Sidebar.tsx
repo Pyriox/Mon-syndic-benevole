@@ -16,6 +16,7 @@ import {
   CreditCard,
   HelpCircle,
   X,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -63,6 +64,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
         { href: '/assemblees', label: 'Assemblées Générales', icon: CalendarDays },
         { href: '/appels-de-fonds', label: 'Appels de fonds', icon: Wallet },
         { href: '/depenses', label: 'Dépenses', icon: Receipt },
+        { href: '/regularisation', label: 'Régularisation', icon: ArrowLeftRight },
       ],
     },
     {
@@ -93,6 +95,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
         { href: '/assemblees', label: 'Assemblées Générales', icon: CalendarDays },
         { href: '/appels-de-fonds', label: 'Mes charges', icon: Wallet },
         { href: '/depenses', label: 'Dépenses', icon: Receipt },
+        { href: '/regularisation', label: 'Régularisation', icon: ArrowLeftRight },
         { href: '/documents', label: 'Documents', icon: FileText },
       ],
     },
