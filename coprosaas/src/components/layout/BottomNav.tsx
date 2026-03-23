@@ -51,7 +51,7 @@ export default function BottomNav({ userRole, onMenuOpen }: BottomNavProps) {
               aria-label={label}
               className={cn(
                 'relative flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors',
-                active ? 'text-blue-600' : 'text-gray-400 active:text-gray-700'
+                active ? 'text-blue-600' : 'text-gray-600 active:text-gray-800'
               )}
             >
               {active && (
@@ -71,7 +71,7 @@ export default function BottomNav({ userRole, onMenuOpen }: BottomNavProps) {
         <button
           onClick={onMenuOpen}
           aria-label="Ouvrir le menu de navigation"
-          className="relative flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-400 active:text-gray-700 transition-colors"
+          className="relative flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-600 active:text-gray-800 transition-colors"
         >
           <MoreHorizontal size={22} strokeWidth={1.8} className="shrink-0" />
           <span className="text-[10px] font-medium leading-tight">Menu</span>

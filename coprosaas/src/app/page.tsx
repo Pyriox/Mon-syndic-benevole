@@ -392,7 +392,7 @@ export default function HomePage() {
 
           {/* Inclus également */}
           <div className="bg-white border border-gray-200 rounded-2xl px-6 py-5 flex flex-wrap gap-x-6 gap-y-2.5 items-center justify-center">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest w-full text-center mb-1">Inclus également dans tous les plans</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest w-full text-center mb-1">Inclus également dans tous les plans</span>
             {['Suivi incidents & travaux', 'Espace copropriétaire', 'Notifications automatiques', 'Fonds de travaux ALUR', 'Tableau de bord temps réel', 'Support par e-mail'].map((f) => (
               <span key={f} className="flex items-center gap-1.5 text-sm text-gray-600">
                 <CheckCircle size={13} className="text-green-500 shrink-0" /> {f}
@@ -404,7 +404,7 @@ export default function HomePage() {
             <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
               Créer ma copro gratuitement <ArrowRight size={16} />
             </Link>
-            <p className="mt-3 text-sm text-gray-400">Moyen de paiement requis — aucun débit pendant 14 jours &middot; Résiliable à tout moment</p>
+            <p className="mt-3 text-sm text-gray-500">Moyen de paiement requis — aucun débit pendant 14 jours &middot; Résiliable à tout moment</p>
           </div>
         </div>
       </section>
@@ -875,7 +875,7 @@ export default function HomePage() {
             <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
               Démarrer maintenant <ArrowRight size={16} />
             </Link>
-            <p className="mt-3 text-sm text-gray-400">Opérationnel en 30 minutes · Aucune formation requise</p>
+            <p className="mt-3 text-sm text-gray-500">Opérationnel en 30 minutes · Aucune formation requise</p>
           </div>
         </div>
       </section>
@@ -927,12 +927,12 @@ export default function HomePage() {
                 Copros moyennes
               </div>
               <p className="text-emerald-700 text-sm font-semibold mb-1">Confort</p>
-              <p className="text-gray-400 text-xs mb-4">20 lots inclus</p>
+              <p className="text-gray-500 text-xs mb-4">20 lots inclus</p>
               <div className="flex items-end gap-1.5 mb-1">
                 <span className="text-5xl font-extrabold text-gray-900">450 €</span>
-                <span className="text-gray-400 pb-1.5">/an</span>
+                <span className="text-gray-500 pb-1.5">/an</span>
               </div>
-              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">37,50 €/mois</span></p>
+              <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">37,50 €/mois</span></p>
               <Link href="/register" className="block text-center bg-emerald-600 text-white font-bold py-3.5 rounded-2xl hover:bg-emerald-700 transition-colors mt-auto">
                 Commencer gratuitement →
               </Link>
@@ -944,12 +944,12 @@ export default function HomePage() {
                 Grandes copros
               </div>
               <p className="text-violet-700 text-sm font-semibold mb-1">Illimité</p>
-              <p className="text-gray-400 text-xs mb-4">Lots illimités</p>
+              <p className="text-gray-500 text-xs mb-4">Lots illimités</p>
               <div className="flex items-end gap-1.5 mb-1">
                 <span className="text-5xl font-extrabold text-gray-900">600 €</span>
-                <span className="text-gray-400 pb-1.5">/an</span>
+                <span className="text-gray-500 pb-1.5">/an</span>
               </div>
-              <p className="text-gray-400 text-xs mb-6">soit <span className="font-semibold text-gray-700">50 €/mois</span></p>
+              <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">50 €/mois</span></p>
               <Link href="/register" className="block text-center bg-violet-600 text-white font-bold py-3.5 rounded-2xl hover:bg-violet-700 transition-colors mt-auto">
                 Commencer gratuitement →
               </Link>
@@ -959,7 +959,7 @@ export default function HomePage() {
 
           {/* Fonctionnalités incluses dans tous les plans */}
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 sm:p-8">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest text-center mb-6">Inclus dans tous les plans</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest text-center mb-6">Inclus dans tous les plans</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3">
               {planFeatures.map((f) => (
                 <div key={f} className="flex items-center gap-2.5 text-sm">
@@ -970,7 +970,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <p className="text-center text-gray-400 text-xs mt-8">
+          <p className="text-center text-gray-500 text-xs mt-8">
             Un abonnement par copropriété. Facturation annuelle.
           </p>
         </div>

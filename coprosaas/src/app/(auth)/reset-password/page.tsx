@@ -171,7 +171,7 @@ function ResetPasswordForm() {
 
             {/* ── Vérification en cours ── */}
             {stage === 'verifying' && (
-              <div className="text-center py-8 text-sm text-gray-400">
+              <div className="text-center py-8 text-sm text-gray-600">
                 Vérification du lien en cours…
               </div>
             )}
@@ -229,7 +229,7 @@ function ResetPasswordForm() {
             )}
           </div>
 
-          <p className="text-center text-xs text-gray-400 mt-6">
+          <p className="text-center text-xs text-gray-500 mt-6">
             © {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés
           </p>
         </div>

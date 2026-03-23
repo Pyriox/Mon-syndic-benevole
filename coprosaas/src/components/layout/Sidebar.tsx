@@ -129,7 +129,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
           size={17}
           className={cn(
             'shrink-0 transition-colors',
-            isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
+            isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'
           )}
         />
         <span className="truncate">{label}</span>
@@ -161,7 +161,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
           {/* Bouton fermer visible uniquement sur mobile */}
           <button
             onClick={onClose}
-            className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors shrink-0"
+            className="md:hidden p-1.5 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors shrink-0"
             aria-label="Fermer le menu"
           >
             <X size={18} />
@@ -177,7 +177,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
         {navSections.map((section, idx) => (
           <div key={idx}>
             {section.label && (
-              <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-300">
+              <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
                 {section.label}
               </p>
             )}
@@ -199,9 +199,9 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
         <button
           onClick={() => { onClose?.(); handleLogout(); }}
           className="flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-lg text-sm font-medium w-full
-                     text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all duration-150 group"
+                     text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-150 group"
         >
-          <LogOut size={17} className="shrink-0 text-gray-400 group-hover:text-red-500 transition-colors" />
+          <LogOut size={17} className="shrink-0 text-gray-500 group-hover:text-red-500 transition-colors" />
           <span>Déconnexion</span>
         </button>
       </div>

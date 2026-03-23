@@ -260,7 +260,7 @@ function RegisterForm() {
               <SiteLogo size={36} />
               <span className="font-bold text-gray-800">Mon Syndic Bénévole</span>
             </div>
-            <Link href="/" className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors ml-auto">
+            <Link href="/" className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 transition-colors ml-auto">
               ← Retour à l&apos;accueil
             </Link>
           </div>
@@ -330,10 +330,10 @@ function RegisterForm() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adresse email</label>
                 <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 text-sm">
-                  <Lock size={14} className="text-gray-400 shrink-0" />
+                  <Lock size={14} className="text-gray-500 shrink-0" />
                   <span>{invitationEmail}</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">Email défini par votre syndic, non modifiable</p>
+                <p className="text-xs text-gray-600 mt-1">Email défini par votre syndic, non modifiable</p>
               </div>
             ) : (
               <Input
@@ -383,7 +383,7 @@ function RegisterForm() {
             </div>
           </form>
 
-          <p className="text-center text-xs text-gray-400 mt-8">
+          <p className="text-center text-xs text-gray-500 mt-8">
             © {new Date().getFullYear()} Mon Syndic Bénévole
           </p>
         </div>

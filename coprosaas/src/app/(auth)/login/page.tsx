@@ -160,7 +160,7 @@ function LoginForm() {
               <SiteLogo size={36} />
               <span className="font-bold text-gray-800">Mon Syndic Bénévole</span>
             </Link>
-            <Link href="/" className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors ml-auto">
+            <Link href="/" className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 transition-colors ml-auto">
               ← Retour à l&apos;accueil
             </Link>
           </div>
@@ -252,7 +252,7 @@ function LoginForm() {
                 </div>
               </form>
 
-              <p className="text-center text-xs text-gray-400 mt-8">
+              <p className="text-center text-xs text-gray-500 mt-8">
                 © {new Date().getFullYear()} Mon Syndic Bénévole
               </p>
             </>
@@ -325,7 +325,7 @@ function LoginForm() {
                 </form>
               )}
 
-              <p className="text-center text-xs text-gray-400 mt-8">
+              <p className="text-center text-xs text-gray-500 mt-8">
                 © {new Date().getFullYear()} Mon Syndic Bénévole
               </p>
             </>

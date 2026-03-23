@@ -70,7 +70,7 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
               aria-haspopup="true"
               className={cn(
                 'relative p-2.5 rounded-lg transition-colors',
-                open ? 'bg-gray-100 text-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                open ? 'bg-gray-100 text-gray-700' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               )}
             >
               <Bell size={20} />
@@ -90,13 +90,13 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-900">Notifications</p>
                   {nbNotifs > 0 && (
-                    <span className="text-xs text-gray-400">{nbNotifs} alerte{nbNotifs > 1 ? 's' : ''}</span>
+                    <span className="text-xs text-gray-600">{nbNotifs} alerte{nbNotifs > 1 ? 's' : ''}</span>
                   )}
                 </div>
 
                 {nbNotifs === 0 ? (
                   <div className="px-4 py-8 text-center">
-                    <Bell size={28} className="mx-auto text-gray-300 mb-2" />
+                    <Bell size={28} className="mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-500">Aucune alerte en cours</p>
                   </div>
                 ) : (
@@ -116,7 +116,7 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium text-gray-800 truncate">{notif.label}</p>
                               {notif.sublabel && (
-                                <p className="text-xs text-gray-400 mt-0.5">{notif.sublabel}</p>
+                                <p className="text-xs text-gray-600 mt-0.5">{notif.sublabel}</p>
                               )}
                             </div>
                           </Link>

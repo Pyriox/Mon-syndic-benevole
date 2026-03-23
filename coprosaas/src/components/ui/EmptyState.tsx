@@ -15,7 +15,7 @@ export default function EmptyState({ title, description, action, icon }: EmptySt
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       {/* Icône */}
-      <div className="mb-4 text-gray-300">
+      <div className="mb-4 text-gray-400">
         {icon ?? <InboxIcon size={48} strokeWidth={1.5} />}
       </div>
 

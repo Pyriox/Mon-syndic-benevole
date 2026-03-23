@@ -25,7 +25,7 @@ export default function UpgradeBanner({ compact = false }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <p className="text-sm text-gray-400 text-center">
+      <p className="text-sm text-gray-600 text-center">
         Abonnez-vous pour créer et modifier des éléments dans ce module.
       </p>
       <Link
