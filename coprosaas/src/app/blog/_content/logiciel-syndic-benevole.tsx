@@ -9,6 +9,7 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleLogicielSyndicBenevole() {
   return (
     <>
+      <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
         Marc gère une copropriété de 12 lots depuis 2 ans avec Excel. En mars dernier, il a passé 6 heures à préparer son AG : reconstituer les dépenses poste par poste, vérifier qui avait payé quoi, recalculer les quotes-parts du budget prévisionnel, produire un PV lisible. &ldquo;J&apos;ai failli démissionner ce week-end-là.&rdquo;
       </p>
@@ -16,7 +17,8 @@ export default function ArticleLogicielSyndicBenevole() {
         Il a migré vers un logiciel de gestion dédié en avril. Son AG de juin a pris 2 heures de préparation. Voici la différence concrète entre les deux approches — et comment choisir le bon outil.
       </p>
 
-      <h2 id="excel-vs-logiciel" className={h2}>Excel vs logiciel dédié : la comparaison honnête</h2>
+      <h2 id="explication" className={h2}>L&apos;explication : Excel vs logiciel dédié</h2>
+      <h2 id="excel-vs-logiciel" className={h2}>La comparaison honnête</h2>
 
       <div className="overflow-x-auto mb-6 rounded-xl border border-gray-200">
         <table className="w-full text-sm border-collapse">
@@ -145,6 +147,7 @@ export default function ArticleLogicielSyndicBenevole() {
         Chaque copropriétaire accède à ses appels de fonds, son historique de paiements, les comptes de la copropriété et les documents postés par le syndic. Résultat : 60 à 80 % de demandes individuelles en moins (d&apos;après les retours d&apos;Isabelle et Sylvie).
       </p>
 
+      <h2 id="solution" className={h2}>La solution : ces 6 fonctionnalités en un seul outil</h2>
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Ces 6 fonctionnalités en un seul outil</p>
         <p className="text-sm text-gray-600 mb-4">

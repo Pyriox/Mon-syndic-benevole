@@ -7,13 +7,18 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleGererCopropriete() {
   return (
     <>
+      <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        En France, plus de <strong className={strong}>40 % des copropriétés sont gérées sans cabinet professionnel</strong>. Ce chiffre monte à 60 % pour les immeubles de moins de 10 lots. La question n&apos;est donc pas &ldquo;est-ce que c&apos;est possible ?&rdquo; — c&apos;est clairement oui. La vraie question est : <strong className={strong}>comment faire ça correctement, sans y passer sa vie ?</strong>
+        D&apos;un côté : un cabinet de syndic qui facture 4 000 € par an pour gérer douze appartements, répond au téléphone une fois sur trois, et traite votre immeuble comme le dossier n°847 de la semaine.
       </p>
       <p className={p}>
-        Ce guide n&apos;est pas une liste abstraite d&apos;obligations légales. C&apos;est une réponse concrète à cette question, avec les outils, le temps réel que ça demande, et les situations qui créent le plus de difficultés.
+        De l&apos;autre : l&apos;idée de tout gérer soi-même, qui fait peur. Comptabilité, assemblées générales, appels de fonds, travaux, impayés… Par où commencer ? Combien de temps ça prend vraiment ? Et si on rate une obligation légale, qui est responsable ?
+      </p>
+      <p className={p}>
+        La réalité : en France, <strong className={strong}>plus de 40 % des copropriétés</strong> sont gérées sans cabinet professionnel — chiffre qui monte à 60 % pour les immeubles de moins de 10 lots. Ce n&apos;est pas marginal. Ce guide n&apos;est pas une liste d&apos;obligations abstraites — c&apos;est une réponse concrète à la question : <strong className={strong}>comment faire ça correctement, sans y passer sa vie ?</strong>
       </p>
 
+      <h2 id="explication" className={h2}>L&apos;explication : ce que ça implique vraiment</h2>
       <h2 id="ce-que-dit-la-loi" className={h2}>Ce que la loi dit — en 3 lignes</h2>
       <p className={p}>
         La loi du 10 juillet 1965 impose l&apos;existence d&apos;un syndic dans toute copropriété. Elle n&apos;impose pas qu&apos;il soit professionnel. Un copropriétaire peut exercer ce rôle — c&apos;est le <strong className={strong}>syndic bénévole</strong>. Aucun diplôme, aucune carte professionnelle, aucune formation certifiante requis.
@@ -181,6 +186,7 @@ export default function ArticleGererCopropriete() {
         C&apos;est la puissance de la transparence : non seulement elle désamorce les tensions, mais elle réduit votre charge de travail.
       </p>
 
+      <h2 id="solution" className={h2}>La solution : les outils qui font toute la différence</h2>
       <h2 id="pourquoi-se-perdent" className={h2}>Pourquoi autant de syndics bénévoles abandonnent en cours de route</h2>
       <p className={p}>La plupart des abandons ne viennent pas de la complexité des tâches, mais de <strong className={strong}>l&apos;absence d&apos;organisation</strong> et d&apos;outillage. Le schéma classique :</p>
       <ul className={ul}>

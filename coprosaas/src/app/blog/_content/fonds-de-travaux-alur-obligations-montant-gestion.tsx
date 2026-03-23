@@ -7,13 +7,15 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleFondsTravaux() {
   return (
     <>
+      <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        C&apos;était un vendredi de janvier. La chaudière collective de la Résidence des Érables — 14 lots, immeuble de 1982 — a rendu l&apos;âme à 23 h. Il faisait -5 °C dehors. Le syndic bénévole, Isabelle, a passé la nuit à trouver un chauffagiste d&apos;urgence. Résultat : 6 800 € de remplacement, payés en 3 semaines grâce à... 0 € de fonds de travaux constitués. Un appel d&apos;urgence de 485 € par copropriétaire, envoyé par SMS à 7 h du matin un samedi. Trois copropriétaires ont refusé de payer.
+        C&apos;était un vendredi de janvier. La chaudière collective de la Résidence des Érables — 14 lots, immeuble de 1982 — a rendu l&apos;âme à 23 h. Il faisait -5 °C dehors. Le syndic bénévole, Isabelle, a passé la nuit à trouver un chauffagiste d&apos;urgence. Résultat : 6 800 € de remplacement, payés en 3 semaines grâce à... 0 € de fonds de travaux constitués. Un appel d&apos;urgence de 485 € par copropriétaire, envoyé par SMS à 7 h du matin un samedi. Trois copropriétaires ont refusé de payer.
       </p>
       <p className={p}>
-        C&apos;est exactement ce que le <strong className={strong}>fonds de travaux ALUR</strong>, rendu obligatoire depuis 2017, vise à éviter.
+        Ce n&apos;est pas un cas isolé — c&apos;est ce qui arrive quand une copropriété n&apos;a pas de réserve. Et pour beaucoup de syndics bénévoles, le <strong className={strong}>fonds de travaux ALUR</strong> reste mal connu, mal géré, ou carrément absent — parfois sans le savoir.
       </p>
 
+      <h2 id="explication" className={h2}>L&apos;explication : ce que la loi impose</h2>
       <h2 id="contexte-loi-alur" className={h2}>Pourquoi ce fonds existe : le problème concret qu&apos;il résout</h2>
       <p className={p}>
         Avant la loi ALUR (mars 2014), aucune obligation d&apos;épargne collective n&apos;existait dans les copropriétés. Résultat documenté : des milliers d&apos;immeubles sans réserve, incapables de financer des travaux pourtant indispensables — ravalement, toiture, ascenseur — faute d&apos;épargne collective. Les travaux d&apos;urgence, réalisés sans préparation, coûtent en moyenne <strong className={strong}>30 à 40 % plus cher</strong> que des travaux planifiés.
@@ -226,6 +228,7 @@ export default function ArticleFondsTravaux() {
         Les agences et les notaires regardent systématiquement l&apos;état du fonds de travaux. Un immeuble bien doté se vend plus vite et à meilleur prix. Un immeuble sans réserve avec des travaux en suspens peut faire baisser le prix de vente de 5 à 15 %.
       </p>
 
+      <h2 id="solution" className={h2}>La solution : un suivi propre, sans risque d&apos;oubli</h2>
       <h2 id="notre-outil" className={h2}>Gérer le fonds de travaux sans erreur : ce que l&apos;outil automatise</h2>
       <p className={p}>
         Géré manuellement, le fonds de travaux ALUR ressemble à tout le reste : un onglet de plus dans le tableau Excel, des virements à vérifier, des soldes à recalculer. Le risque d&apos;erreur (et d&apos;oubli lors du vote en AG) est réel.

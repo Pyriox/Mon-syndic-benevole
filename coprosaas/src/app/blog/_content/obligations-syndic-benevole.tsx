@@ -9,6 +9,7 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleObligationsSyndicBenevole() {
   return (
     <>
+      <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
         Juin 2023. Christophe, syndic bénévole d&apos;une résidence de 9 lots à Nantes, reçoit une mise en demeure d&apos;un copropriétaire. Motif : l&apos;assemblée générale a été convoquée 18 jours avant la réunion, au lieu des 21 jours légaux. Deux résolutions votées lors de cette AG sont potentiellement annulables. Travaux de ravalement déjà engagés pour 28 000 €.
       </p>
@@ -16,6 +17,7 @@ export default function ArticleObligationsSyndicBenevole() {
         Christophe n&apos;était pas négligent — il ne savait simplement pas. La gestion bénévole est gratuite pour la copropriété, mais elle n&apos;est pas exempte d&apos;obligations. Ce guide les répertorie toutes, avec les dates qui comptent.
       </p>
 
+      <h2 id="explication" className={h2}>L&apos;explication : le calendrier complet des obligations</h2>
       <h2 id="cadre-legal" className={h2}>Le cadre légal du syndic bénévole</h2>
       <p className={p}>
         Le syndic non-professionnel exerce dans le cadre de la <strong className={strong}>loi du 10 juillet 1965</strong> et du <strong className={strong}>décret du 17 mars 1967</strong>. Ces textes s&apos;appliquent à tous les syndics, qu&apos;ils soient professionnels ou bénévoles. Il n&apos;existe pas de régime allégé pour les bénévoles — les mêmes obligations s&apos;appliquent, les mêmes délais, les mêmes documents.
@@ -231,6 +233,7 @@ export default function ArticleObligationsSyndicBenevole() {
         Le registre national des copropriétés doit être mis à jour chaque année avec les données financières de l&apos;exercice clos. Un oubli expose le syndicat à une mise en demeure de l&apos;ANAH, qui peut désigner un administrateur provisoire.
       </p>
 
+      <h2 id="solution" className={h2}>La solution : ne manquez plus aucune échéance légale</h2>
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Suivez toutes ces obligations depuis un seul endroit</p>
         <p className="text-sm text-gray-600 mb-4">

@@ -4,195 +4,125 @@
 
 **Slug :** `/blog/appel-de-fonds-copropriete-calcul-repartition`
 **Catégorie :** Guide pratique – Finances
-**Temps de lecture estimé :** 9 min
+**Temps de lecture estimé :** 8 min
 **Cible principale :** syndic bénévole, copropriétaire, gestionnaire de petite copropriété
 
 ---
 
-Chaque trimestre, le même e-mail ou la même lettre dans les boîtes aux lettres : l'appel de fonds. Et chaque trimestre, les mêmes questions dans l'immeuble — pourquoi ce montant ? Comment c'est calculé ? Pourquoi M. Dupont au rez-de-chaussée paie-t-il moins que Mme Martin au troisième ?
+## Le problème
 
-Pour le syndic bénévole, c'est souvent le sujet qui génère le plus de questions et, parfois, le plus de tensions. Non pas parce que le calcul est compliqué, mais parce qu'il n'est pas toujours bien expliqué ni bien documenté.
+Chaque trimestre, c'est la même scène : vous ouvrez votre fichier Excel, vous recalculez les tantièmes, vous envoyez les montants un par un par mail. Quelques jours plus tard, les questions arrivent — "Pourquoi ce montant ?" "M. Dupont paye moins que moi ?" "C'est quoi cette ligne ?" Et les relances pour les impayés commencent.
 
-Cet article remet les pendules à l'heure.
+Pour un syndic bénévole qui gère ça manuellement, l'appel de fonds trimestriel représente facilement **2 à 4 heures de travail répétitif** — chaque trimestre, sans exception. Multiplié par quatre, c'est une journée entière par an passée à recalculer des chiffres qu'on avait pourtant déjà calculés.
 
----
-
-## Qu'est-ce qu'un appel de fonds, exactement ?
-
-Un appel de fonds est une **demande de paiement adressée à chaque copropriétaire** pour couvrir les dépenses à venir (ou en cours) de la copropriété. Il ne s'agit pas d'une facture : c'est une provision, une avance sur les frais collectifs.
-
-On distingue deux grandes catégories :
-
-- **Les appels de fonds de budget prévisionnel**, qui couvrent les charges courantes de l'immeuble (entretien, assurance, eau, électricité des parties communes, prestataires habituels). Ils sont émis chaque trimestre, à date fixe.
-- **Les appels de fonds exceptionnels**, qui financent des dépenses non prévues ou des travaux votés en AG (ravalement de façade, remplacement de la chaudière, réfection de la toiture…).
-
-À ces deux catégories s'ajoute, depuis la loi ALUR de 2014, **le fonds de travaux** : une cotisation annuelle obligatoire pour les copropriétés de 10 lots et plus, destinée à anticiper les gros travaux futurs.
+Ce n'est pas une question de compétence. C'est une question d'outil inadapté.
 
 ---
 
-## La base de tout : les tantièmes
+## L'explication : comment fonctionne un appel de fonds
 
-Avant de parler de calcul, il faut comprendre le mécanisme des **tantièmes** (ou millièmes), parce que tout repose dessus.
+### Qu'est-ce qu'un appel de fonds ?
 
-Lors de la création d'une copropriété, un géomètre attribue à chaque lot une quote-part exprimée en tantièmes sur un total (souvent 1 000 ou 10 000). Cette quote-part reflète la valeur relative du lot au sein de l'ensemble immobilier : surface, étage, exposition, présence d'un parking ou d'une cave.
+Un appel de fonds est une **demande de paiement adressée à chaque copropriétaire** pour couvrir les dépenses à venir de la copropriété. Ce n'est pas une facture : c'est une provision sur les frais collectifs.
 
-Un exemple simple : prenez un immeuble de 10 appartements avec un total de 1 000 tantièmes.
+Deux catégories principais :
+
+- **Appels de budget prévisionnel** : charges courantes (entretien, assurance, électricité des parties communes). Émis chaque trimestre, à date fixe.
+- **Appels exceptionnels** : travaux votés en AG non prévus au budget (ravalement, remplacement chaudière, toiture…).
+
+S'y ajoute, depuis la loi ALUR 2014, **le fonds de travaux** : cotisation annuelle obligatoire pour les copropriétés de 10 lots et plus.
+
+### La base de calcul : les tantièmes
+
+Tout repose sur les **tantièmes** (ou millièmes), attribués à chaque lot lors de la création de la copropriété. Ils reflètent la valeur relative du lot : surface, étage, exposition.
+
+Exemple sur un immeuble de 10 appartements (total : 1 000 tantièmes) :
 
 | Lot | Tantièmes | Quote-part |
 |-----|-----------|------------|
-| Appartement T3, 3e étage, avec parking | 140 | 14,0 % |
-| Appartement T2, RDC | 72 | 7,2 % |
+| T3, 3e étage, avec parking | 140 | 14,0 % |
+| T2, RDC | 72 | 7,2 % |
 | Studio, 1er étage | 58 | 5,8 % |
 
-Si le budget annuel s'élève à 12 000 €, le T3 avec parking contribue à hauteur de 1 680 € par an (soit 420 € par trimestre), le T2 du RDC à 864 € (216 € par trimestre), et le studio à 696 € (174 € par trimestre).
+Budget annuel de 12 000 € → le T3 paie 1 680 €/an (420 €/trimestre), le T2 paie 864 €/an, le studio 696 €/an.
 
-Le principe est simple. La difficulté vient de la gestion dans le temps : qui a payé quoi, qui est en retard, comment régulariser en fin d'exercice.
+Le principe est limpide. Le problème, c'est la gestion dans le temps : qui a payé quoi, qui est en retard, comment régulariser en fin d'exercice.
 
----
+### Charges générales vs charges spéciales
 
-## Les deux types de charges et leur répartition
+**Charges générales** : concernent tous les copropriétaires, réparties selon les tantièmes généraux (assurance, administration, entretien des communs).
 
-Tous les tantièmes ne se valent pas — ou plutôt, ils ne s'appliquent pas tous aux mêmes dépenses. La loi distingue deux catégories de charges :
+**Charges spéciales** : réparties uniquement entre les copropriétaires qui bénéficient du service. L'ascenseur est l'exemple type — les habitants du RDC n'ont pas à le financer. Cette distinction est source d'erreurs fréquentes dans les appels rédigés à la main.
 
-### Les charges générales
+### Le calcul pas à pas
 
-Elles concernent **l'ensemble des copropriétaires** et sont réparties selon les tantièmes généraux inscrits dans le règlement de copropriété. Entrent dans cette catégorie : l'assurance de l'immeuble, l'administration, les honoraires du syndic, l'entretien des parties communes accessibles à tous.
+1. **Voter le budget en AG** (majorité simple, article 24). Pas d'appel de fonds sans ce mandat.
+2. **Diviser par quatre** : budget de 14 400 € → 3 600 € par trimestre.
+3. **Appliquer les tantièmes** : `(Tantièmes du lot / Total) × Montant trimestriel`
+   > 120 tantièmes sur 1 000, appel de 3 600 € → **432 €**
+4. **Déduire les soldes créditeurs** issus des régularisations précédentes.
+5. **Notifier avec 10 à 15 jours d'avance** : montant, période, échéance, coordonnées bancaires.
 
-### Les charges spéciales
+### En cas d'impayé
 
-Elles s'appliquent uniquement aux **copropriétaires qui bénéficient effectivement d'un service**. L'ascenseur en est l'exemple le plus courant : les habitants du rez-de-chaussée n'utilisent pas l'ascenseur, ils n'ont donc pas à en financer l'entretien (ou alors dans une proportion réduite). Même logique pour un interphone qui ne dessert que certains bâtiments, ou un parking dont seuls certains lots disposent.
+La procédure légale est progressive : mise en demeure → pénalités de retard (article 36 du décret 1967) → injonction de payer (tribunal judiciaire) → hypothèque légale sur le lot. Dans la pratique, une relance rapide dès le premier retard suffit à éviter d'en arriver là — à condition d'avoir un suivi des soldes en temps réel.
 
-Cette distinction est fondamentale, et c'est souvent là que les erreurs se glissent dans les appels de fonds rédigés manuellement : appliquer les tantièmes généraux à des charges qui auraient dû être réparties selon des tantièmes spéciaux — ou l'inverse.
+### La régularisation annuelle
 
----
+En fin d'exercice, dépenses réelles vs budget voté. S'il y a un écart :
+- Dépenses supérieures → appel de régularisation complémentaire.
+- Dépenses inférieures → surplus reporté en crédit sur le prochain exercice.
 
-## Comment calculer un appel de fonds trimestriel : la méthode pas à pas
-
-Voici la démarche concrète pour établir un appel de fonds de budget prévisionnel.
-
-**Étape 1 : Voter un budget prévisionnel en AG**
-
-Le budget prévisionnel est obligatoirement soumis au vote des copropriétaires lors de l'assemblée générale (majorité simple, article 24 de la loi de 1965). Il liste toutes les dépenses prévisibles pour l'exercice à venir : contrats de maintenance, assurances, consommations, espaces verts, etc.
-
-C'est ce budget qui sert de base de calcul. Pas question d'appeler des fonds sans avoir obtenu ce mandat.
-
-**Étape 2 : Diviser par quatre**
-
-Les appels de fonds courants se font par quart du budget annuel, à chaque début de trimestre. Si le budget est de 14 400 €, chaque appel trimestriel porte sur 3 600 €.
-
-**Étape 3 : Appliquer les tantièmes de chaque lot**
-
-Pour chaque lot, on multiplie le montant trimestriel par la quote-part du lot :
-
-> Montant dû = (Tantièmes du lot / Total des tantièmes) × Montant trimestriel total
-
-Avec un lot de 120 tantièmes sur 1 000 et un appel trimestriel de 3 600 € :
-> 120 / 1 000 × 3 600 = **432 €**
-
-**Étape 4 : Tenir compte du solde de chaque copropriétaire**
-
-Si un copropriétaire a un solde créditeur (il a payé plus que ce qu'il devait lors d'une régularisation précédente), ce montant peut venir en déduction de l'appel. À l'inverse, un solde débiteur peut faire l'objet d'une relance distincte.
-
-**Étape 5 : Notifier les copropriétaires**
-
-L'appel de fonds doit être communiqué avec un délai raisonnable avant la date d'échéance. En pratique, 10 à 15 jours avant la fin du trimestre. Le document doit mentionner : le montant, la période concernée, la date d'échéance, et les coordonnées bancaires pour le virement.
+C'est à ce moment que les syndics bénévoles sans outils adaptés perdent du temps : reconstituer chaque poste, expliquer chaque écart, justifier chaque dépense à l'AG.
 
 ---
 
-## L'appel de fonds exceptionnel : même logique, calendrier différent
-
-Lorsque l'AG vote des travaux non prévus au budget, un appel de fonds exceptionnel est émis. Il suit la même logique de répartition par tantièmes, mais son calendrier est dicté par l'avancement du chantier.
-
-Pour des travaux importants, il est courant de fractionner en plusieurs tranches : un premier appel au démarrage (30-40 % du total), un deuxième en cours de chantier, un dernier à la réception. Les copropriétaires votent ce fractionnement en AG en même temps qu'ils votent les travaux.
-
-Un point souvent négligé : pour les travaux votés à une majorité spécifique (article 25), les tantièmes applicables peuvent être différents de ceux du budget courant si les travaux concernent des équipements à usage spécial. Vérifiez toujours quelle grille de tantièmes s'applique avant d'émettre l'appel.
+> **Vous gérez déjà votre copropriété ?** Automatisez vos appels de fonds dès aujourd'hui. → [Essai gratuit 30 jours, sans carte bancaire](https://mon-syndic-benevole.fr)
 
 ---
 
-## Ce qui se passe quand un copropriétaire ne paie pas
+## La solution : arrêtez de recalculer ce qui peut être automatique
 
-C'est une réalité avec laquelle tout syndic, bénévole ou professionnel, finit par se retrouver. Un copropriétaire ne règle pas son appel de fonds. Que faire ?
+Calculer un appel de fonds une fois, c'est faisable. Mais le refaire chaque trimestre — pour chaque copropriétaire, en tenant les soldes à jour, en gérant les impayés, en préparant les justificatifs pour l'AG — c'est là que les syndics bénévoles décrochent.
 
-**La procédure légale est progressive :**
+Pas parce que c'est compliqué. Parce qu'ils font ça dans des fichiers Excel bricolés, sans historique propre, sans traçabilité. C'est précisément ce que résout **[Mon Syndic Bénévole](https://mon-syndic-benevole.fr)**.
 
-1. **Mise en demeure** par lettre simple, puis recommandée — rappeler le montant dû et la date d'échéance dépassée.
-2. **Pénalités de retard** : la loi prévoit des intérêts au taux légal à compter de la mise en demeure (article 36 du décret de 1967).
-3. **Injonction de payer** : si l'impayé persiste, le syndic peut saisir le tribunal judiciaire selon une procédure simplifiée. Le juge statue généralement en quelques semaines.
-4. **Hypothèque légale** : le syndicat des copropriétaires bénéficie d'une hypothèque légale sur le lot du débiteur, ce qui signifie qu'en cas de vente, les sommes dues sont prélevées sur le prix.
+### Ce que la plateforme fait à votre place
 
-Il n'est pas nécessaire d'en arriver là dans la plupart des cas. Une communication régulière, un tableau de bord clair sur les soldes, et une relance rapide à la première défaillance suffisent généralement à éviter les situations bloquées.
+Vous renseignez le titre, le montant total, la date d'échéance. Le reste est automatique :
 
----
+- **Répartition par tantièmes instantanée** : chaque lot reçoit son montant exact, calculé selon les quotes-parts enregistrées dans votre copropriété.
+- **Avis de paiement individuel en un clic** : envoi par e-mail à chaque copropriétaire avec le montant, l'échéance et les coordonnées bancaires.
+- **Suivi des paiements en temps réel** : vous cochez les règlements au fur et à mesure, les soldes se mettent à jour automatiquement.
+- **Génération des appels annuels en série** : quatre trimestres créés en une opération, fractionnement 1/4 automatique.
+- **Tableau de bord trésorerie** : taux de recouvrement, impayés en cours, état des soldes — visible en permanence.
+- **Fonds de travaux ALUR séparé** : suivi distinct des charges courantes, historique complet par copropriétaire, prêt pour la présentation à l'AG.
 
-## La régularisation annuelle : l'étape que tout le monde redoute
-
-En fin d'exercice, le budget prévisionnel se confronte aux dépenses réelles. Il y a presque toujours un écart — en plus ou en moins.
-
-- Si les dépenses réelles ont été **supérieures** au budget voté : un appel de régularisation est émis pour couvrir la différence (réparti selon les tantièmes, comme d'habitude).
-- Si elles ont été **inférieures** : un surplus a été collecté. Il est en général conservé au crédit des copropriétaires et déduit du premier appel de l'exercice suivant.
-
-Cette régularisation doit être présentée de façon lisible à l'AG lors de l'approbation des comptes. C'est souvent là que les syndics bénévoles qui manquent d'outils rencontrent des difficultés : reconstituer le détail poste par poste, expliquer chaque écart, justifier chaque dépense.
-
----
-
-## Le principal problème des syndics bénévoles : le suivi manuel
-
-Calculer un appel de fonds une fois, c'est faisable. Mais le faire tous les trimestres, pour chaque copropriétaire, en tenant à jour les soldes, en intégrant les régularisations, en gérant les impayés, en produisant les justificatifs pour l'AG…
-
-La plupart des syndics bénévoles qui abandonnent le font à ce stade. Pas parce qu'ils ne savent pas faire, mais parce qu'ils font ça dans des tableaux Excel bricolés, sans historique propre, sans traçabilité claire.
-
-C'est exactement ce problème que résout **[Mon Syndic Bénévole](https://mon-syndic-benevole.fr)**.
-
-### Ce que la plateforme gère pour vous
-
-Quand vous créez un appel de fonds sur Mon Syndic Bénévole, vous renseignez le titre, le montant total et la date d'échéance. Le reste est automatique :
-
-- **La répartition par tantièmes** est calculée instantanément, lot par lot, en tenant compte des quotes-parts enregistrées dans votre copropriété.
-- **Un avis de paiement individuel** peut être envoyé par e-mail à chaque copropriétaire en un clic, avec le montant qui les concerne et les coordonnées bancaires.
-- **Le suivi des paiements** se fait en temps réel : vous cochez les règlements au fur et à mesure, les soldes de chaque copropriétaire se mettent à jour automatiquement.
-- **Les appels en série** (trimestriels sur toute une année) peuvent être générés en une seule opération, avec un fractionnement automatique 1/4 par trimestre.
-- **Le tableau de bord** vous indique en permanence le taux de recouvrement, les impayés en cours, et l'état de la trésorerie.
-
-Plus besoin de rechercher dans vos mails quel copropriétaire a payé quoi ni de reconstituer les chiffres à la main pour l'AG. Tout est centralisé, daté, et exportable.
-
----
-
-## Appel de fonds et fonds de travaux ALUR : ne pas confondre
-
-Depuis le 1er janvier 2017, les copropriétés de 10 lots et plus ont l'obligation de constituer un **fonds de travaux**. Ce fonds est alimenté par une cotisation annuelle votée en AG, dont le montant ne peut être inférieur à 5 % du budget prévisionnel.
-
-Attention : le fonds de travaux n'est **pas remboursable**. Quand un copropriétaire vend son lot, la somme qu'il a versée dans ce fonds reste acquise à la copropriété — elle n'est pas restituée ni transmissible séparément du lot. C'est un point à bien communiquer aux nouveaux acquéreurs.
-
-Sur Mon Syndic Bénévole, le fonds de travaux ALUR est géré comme un type d'appel de fonds à part entière, avec son propre suivi et son propre historique, distinct des charges courantes.
+Plus besoin de fouiller dans vos mails pour savoir qui a payé quoi. Tout est centralisé, daté, exportable.
 
 ---
 
 ## Questions fréquentes
 
 **À quelle fréquence envoyer les appels de fonds ?**
-Pour les charges courantes : une fois par trimestre, en début de trimestre (1er janvier, 1er avril, 1er juillet, 1er octobre). Pour les travaux exceptionnels : selon le calendrier validé en AG.
+Charges courantes : une fois par trimestre (1er janvier, 1er avril, 1er juillet, 1er octobre). Travaux exceptionnels : selon le calendrier voté en AG.
 
 **Les tantièmes peuvent-ils changer ?**
-Oui, mais c'est rare et complexe. Une modification du règlement de copropriété est nécessaire, votée à l'unanimité des copropriétaires. En pratique, les tantièmes restent stables sur la durée de vie d'une copropriété.
+Rarement. Une modification du règlement de copropriété votée à l'unanimité est nécessaire. En pratique, les tantièmes restent stables sur toute la durée de vie d'une copropriété.
 
-**Un copropriétaire peut-il contester son appel de fonds ?**
-Il peut contester le montant si la répartition ne correspond pas aux tantièmes figurant dans le règlement de copropriété, ou si des charges générales ont été incorrectement affectées. La contestation doit se faire dans les deux mois suivant la notification du PV d'AG pour les décisions votées.
+**Un copropriétaire peut-il contester son appel ?**
+Oui, si la répartition ne correspond pas aux tantièmes du règlement ou si les mauvais tantièmes ont été utilisés. La contestation doit intervenir dans les deux mois suivant la notification du PV d'AG.
 
-**Comment gérer les lots avec plusieurs propriétaires (indivision) ?**
-L'appel de fonds est adressé à l'indivision dans son ensemble. Les propriétaires indivis désignent entre eux un représentant unique pour les relations avec le syndic. En cas de désaccord entre eux, ça reste leur affaire — le syndic n'a pas à arbitrer.
-
-**Un appel de fonds peut-il couvrir des dettes antérieures ?**
-Non. On ne peut pas appeler des fonds pour rembourser des dettes passées non couvertes par le budget voté. Il faudrait voter une dépense spécifique en AG pour régulariser.
+**Comment gérer les lots en indivision ?**
+L'appel est adressé à l'indivision. Les propriétaires indivis désignent un représentant unique pour les relations avec le syndic.
 
 ---
 
 ## Ce qu'il faut retenir
 
-L'appel de fonds n'est pas une science exacte, mais c'est un processus qui gagne à être rigoureux, transparent et traçable. Les disputes entre voisins sur les charges viennent rarement de mauvaise volonté — elles viennent presque toujours d'un manque de lisibilité.
+Les disputes sur les charges viennent rarement de mauvaise volonté. Elles viennent d'un manque de lisibilité. Un copropriétaire qui comprend son montant, qui voit l'état de la trésorerie, qui reçoit un avis de paiement clair : c'est un copropriétaire qui paie à temps.
 
-Un copropriétaire qui comprend d'où vient son montant, qui voit l'état de la trésorerie, qui reçoit un avis de paiement clair avec la date d'échéance : c'est un copropriétaire qui paie à temps et qui fait confiance au syndic bénévole.
-
-C'est précisément l'objectif que s'est fixé [Mon Syndic Bénévole](https://mon-syndic-benevole.fr) : donner aux syndics non professionnels les mêmes outils que les cabinets, sans la complexité inutile. **Essai gratuit 30 jours, sans carte bancaire.**
+**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) donne aux syndics bénévoles les mêmes outils que les cabinets professionnels — sans la complexité, sans les honoraires. Essai gratuit 30 jours, sans carte bancaire.**
 
 ---
 
@@ -202,7 +132,5 @@ C'est précisément l'objectif que s'est fixé [Mon Syndic Bénévole](https://m
 
 ### Liens internes suggérés
 - → "Fonds de travaux ALUR : obligations, montant et gestion pratique"
-- → "Comment gérer les impayés de charges en copropriété ?"
 - → "Gérer une copropriété sans syndic professionnel : est-ce vraiment possible ?"
-- → "Tantièmes de copropriété : définition et rôle dans les charges"
 - → Page d'accueil / essai gratuit

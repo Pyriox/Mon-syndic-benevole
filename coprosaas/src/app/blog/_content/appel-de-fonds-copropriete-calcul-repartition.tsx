@@ -7,13 +7,18 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleAppelDeFonds() {
   return (
     <>
+      <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        C&apos;est souvent le même scénario. Nathalie vient d&apos;être élue syndic bénévole de la Résidence du Parc — 8 lots, immeuble des années 70. Le trimestre approche. Elle sait qu&apos;il faut envoyer &ldquo;les appels de fonds&rdquo;, mais personne ne lui a expliqué comment calculer le montant de chaque copropriétaire, ce qu&apos;un avis de paiement doit contenir, ni ce qui se passe quand quelqu&apos;un ne paie pas.
+        Chaque trimestre, c&apos;est la même scène : ouvrir le fichier Excel, retrouver les tantièmes de chacun, recalculer les quotes-parts, rédiger 8 avis de paiement un par un, les envoyer par mail. Quelques jours plus tard, les questions arrivent : &ldquo;Pourquoi ce montant ?&rdquo; Et les relances pour les impayés commencent.
       </p>
       <p className={p}>
-        Ce guide répond exactement à ces questions, avec des exemples chiffrés, des modèles de documents, et la procédure complète de relance.
+        Pour un syndic bénévole sans outil adapté, l&apos;appel de fonds trimestriel représente facilement <strong className={strong}>4 à 6 heures de travail répétitif</strong> — sans filet, sans traçabilité, et avec le risque permanent d&apos;une erreur sur les tantièmes que personne ne détecte avant l&apos;AG.
+      </p>
+      <p className={p}>
+        Ce guide explique le calcul, les modèles de documents, et la procédure de relance. Il montre aussi ce qui peut être entièrement automatisé — pour que vous ne recommenciez plus ce calcul depuis zéro chaque trimestre.
       </p>
 
+      <h2 id="explication" className={h2}>L&apos;explication : comment fonctionne un appel de fonds</h2>
       <h2 id="definition" className={h2}>Qu&apos;est-ce qu&apos;un appel de fonds — et pourquoi c&apos;est une provision, pas une facture</h2>
       <p className={p}>
         Un appel de fonds est une <strong className={strong}>demande de paiement adressée à chaque copropriétaire</strong> pour couvrir les dépenses à venir de la copropriété. C&apos;est une provision — une avance sur des frais collectifs dont le total réel ne sera connu qu&apos;en fin d&apos;exercice. Ce n&apos;est pas une facture pour une prestation déjà rendue.
@@ -223,6 +228,7 @@ export default function ArticleAppelDeFonds() {
         En AG, présentez un tableau ligne par ligne : prévisionnel vs réalisé, écart et explication. Les copropriétaires comprennent les imprévus — ce qu&apos;ils ne tolèrent pas, c&apos;est l&apos;opacité.
       </p>
 
+      <h2 id="solution" className={h2}>La solution : arrêtez de recalculer ce qui peut être automatique</h2>
       <h2 id="manuel-vs-outil" className={h2}>Ce que ça représente de faire ça manuellement</h2>
       <p className={p}>Estimons le temps pour une copropriété de 8 lots sur un trimestre :</p>
       <ul className={ul}>

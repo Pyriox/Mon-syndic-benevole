@@ -9,13 +9,18 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleCommentDevenirSyndicBenevole() {
   return (
     <>
+      <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        Il est 21 h 15. L&apos;assemblée générale vient de se terminer. Pierre, 52 ans, comptable de profession, a levé la main quand personne d&apos;autre ne se proposait. &ldquo;D&apos;accord, je veux bien essayer.&rdquo; Le voilà syndic bénévole d&apos;un immeuble de 8 lots à Grenoble. Il rentre chez lui avec le procès-verbal sous le bras et une seule question en tête : <strong className={strong}>par où je commence demain matin ?</strong>
+        Il est 21 h 15. L&apos;assemblée générale vient de se terminer. Pierre, 52 ans, a levé la main quand personne d&apos;autre ne se proposait. &ldquo;D&apos;accord, je veux bien essayer.&rdquo; Le voilà syndic bénévole d&apos;un immeuble de 8 lots. Il rentre chez lui avec le procs-verbal sous le bras et une seule question en tête : <strong className={strong}>par où je commence demain matin ?</strong>
       </p>
       <p className={p}>
-        Ce guide répond à cette question dans l&apos;ordre où vous allez rencontrer les problèmes : l&apos;élection, les 30 premiers jours, les obligations récurrentes, les erreurs classiques.
+        C&apos;est le scénario le plus courant. On accepte le rôle avec les meilleures intentions. Puis on découvre les archives en désordre, les délais légaux qu&apos;on ne connaissait pas, les copropriétaires qui posent des questions auxquelles on ne sait pas encore répondre. <strong className={strong}>Sans méthode ni outil, les 6 premiers mois peuvent être épuisants.</strong>
+      </p>
+      <p className={p}>
+        Ce guide répond à la question de Pierre dans l&apos;ordre où vous allez rencontrer les problèmes : l&apos;élection, les 30 premiers jours, les obligations récurrentes, les erreurs classiques.
       </p>
 
+      <h2 id="explication" className={h2}>L&apos;explication : conditions, démarches et obligations</h2>
       <h2 id="conditions-legales" className={h2}>Qui peut devenir syndic bénévole ? Ce que la loi exige — et ce qu&apos;elle n&apos;exige pas</h2>
       <p className={p}>
         La loi du 10 juillet 1965 impose l&apos;existence d&apos;un syndic dans toute copropriété, mais elle n&apos;impose pas qu&apos;il soit professionnel. Les seules conditions légales sont :
@@ -128,6 +133,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         L&apos;assurance multirisques immeuble (MRI) et les contrats de maintenance se renouvellent souvent tacitement. Un oubli = reconduction automatique pour un an à des conditions parfois défavorables. Listez les dates d&apos;échéance et prenez les décisions qui s&apos;imposent dès votre première semaine.
       </p>
 
+      <h2 id="solution" className={h2}>La solution : opérationnel en 15 minutes, sans formation</h2>
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Vous venez d&apos;être élu syndic bénévole ?</p>
         <p className="text-sm text-gray-600 mb-4">
