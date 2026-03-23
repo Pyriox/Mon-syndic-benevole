@@ -1,9 +1,14 @@
 // ============================================================
 // Route : GET /api/cron/rappels-appels
-// Cron quotidien (08h00) — rappels automatiques appels de fonds
+// Cron quotidien (08h00) — notifications automatiques appels de fonds
 //
+//  J-30 : avis initial aux copropriétaires (appels publiés sans email envoyé
+//         dont l'échéance est dans <= 30 jours)
 //  J-7  : rappel pré-échéance aux copropriétaires impayés
 //  J+15 : mise en demeure post-échéance aux copropriétaires impayés
+//
+// Le J-30 permet de publier tous les appels d'un coup après une AG
+// sans spammer les copropriétaires des échéances lointaines.
 //
 // Appelé par Vercel Cron (vercel.json) avec header Authorization
 // ============================================================
@@ -40,8 +45,17 @@ export async function GET(req: NextRequest) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const dateJ30 = addDays(today, 30);  // avis : appels publiés dont l'échéance est dans <= 30 jours
   const dateJ7  = addDays(today, 7);   // appels avec échéance dans 7 jours
   const dateJ15 = addDays(today, -15); // appels avec échéance il y a 15 jours
+
+  // ── Avis J-30 : appels publiés dont l'email n'a pas encore été envoyé ──
+  const { data: avisAppels } = await supabase
+    .from('appels_de_fonds')
+    .select('id, titre, montant_total, date_echeance, coproprietes(nom)')
+    .eq('statut', 'publie')
+    .is('emailed_at', null)
+    .lte('date_echeance', dateJ30);
 
   // Appels à rappeler (J-7)
   const { data: j7Appels } = await supabase
@@ -60,6 +74,17 @@ export async function GET(req: NextRequest) {
     .is('rappel_j15_at', null);
 
   let totalSent = 0;
+
+  // Traitement avis J-30 (email initial différé)
+  for (const appel of avisAppels ?? []) {
+    const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, 'avis');
+    if (sent >= 0) {
+      await supabase.from('appels_de_fonds')
+        .update({ emailed_at: new Date().toISOString() })
+        .eq('id', appel.id);
+    }
+    totalSent += sent;
+  }
 
   // Traitement J-7
   for (const appel of j7Appels ?? []) {
@@ -144,8 +169,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     date: today.toISOString().slice(0, 10),
-    j7_appels:        j7Appels?.length   ?? 0,
-    j15_appels:       j15Appels?.length  ?? 0,
+    avis_appels:       avisAppels?.length    ?? 0,
+    j7_appels:         j7Appels?.length      ?? 0,
+    j15_appels:        j15Appels?.length     ?? 0,
     brouillon_groupes: brouillonGroups.size,
     sent: totalSent,
   });
@@ -162,18 +188,22 @@ interface AppelRow {
 type CopRow = { nom: string; prenom: string; email: string; user_id: string | null };
 type LigneRow = { montant_du: number; coproprietaires: CopRow | CopRow[] | null };
 
-// ---- Envoi des rappels pour un appel donné ----
+// ---- Envoi des notifications pour un appel donné ----
 async function sendRappelEmails(
   supabase: ReturnType<typeof createServerClient>,
   appel: AppelRow,
   type: AppelEmailType
 ): Promise<number> {
-  // Récupérer uniquement les lignes impayées
-  const { data: lignes } = await supabase
+  // Pour l'avis initial (J-30), on cible toutes les lignes.
+  // Pour les rappels (J-7) et mises en demeure (J+15), uniquement les impayées.
+  const query = supabase
     .from('lignes_appels_de_fonds')
     .select('montant_du, coproprietaires(nom, prenom, email, user_id)')
-    .eq('appel_de_fonds_id', appel.id)
-    .eq('paye', false);
+    .eq('appel_de_fonds_id', appel.id);
+
+  const { data: lignes } = type === 'avis'
+    ? await query
+    : await query.eq('paye', false);
 
   if (!lignes?.length) return 0;
 

@@ -3,7 +3,10 @@
 // 1. Génère la répartition (lignes) depuis les lots à jour
 // 2. Débite les soldes des copropriétaires
 // 3. Marque l'appel "publié"
-// 4. Envoie les avis par e-mail (Resend)
+// 4. Envoie les avis par e-mail uniquement si l'échéance
+//    est dans <= 30 jours — sinon, le cron quotidien s'en charge
+//    (J-30 automatique) afin d'éviter d'envoyer un avis pour un
+//    appel exigible dans plusieurs mois.
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -118,13 +121,28 @@ export async function POST(
     }).eq('id', r.copId);
   }
 
-  // Marquer comme publié
+  // Détermine si l'avis doit être envoyé immédiatement (échéance <= J+30)
+  // ou différé au cron quotidien (J-30 avant échéance).
+  const todayMs = Date.now();
+  const echeanceMs = new Date(appel.date_echeance + 'T00:00:00').getTime();
+  const daysUntilEcheance = Math.floor((echeanceMs - todayMs) / 86_400_000);
+  const sendImmediately = daysUntilEcheance <= 30;
+
+  // Marquer comme publié (emailed_at = now seulement si envoi immédiat)
   const now = new Date().toISOString();
   await supabase.from('appels_de_fonds')
-    .update({ statut: 'publie', emailed_at: now })
+    .update({ statut: 'publie', ...(sendImmediately ? { emailed_at: now } : {}) })
     .eq('id', appelId);
 
-  // Envoyer les e-mails
+  if (!sendImmediately) {
+    return NextResponse.json({
+      message: `Appel publié · L'avis sera envoyé automatiquement 30 jours avant l'échéance.`,
+      sent: 0,
+      deferred: true,
+    });
+  }
+
+  // Envoyer les e-mails immédiatement (échéance proche)
   const { data: lignes } = await supabase
     .from('lignes_appels_de_fonds')
     .select('montant_du, coproprietaires(nom, prenom, email, user_id)')
