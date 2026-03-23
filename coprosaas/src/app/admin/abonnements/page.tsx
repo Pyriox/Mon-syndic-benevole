@@ -13,7 +13,7 @@ import {
   CheckCircle2, XCircle, ExternalLink,
 } from 'lucide-react';
 
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 const MRR_PRICES: Record<string, number> = { essentiel: 25, confort: 30, illimite: 45 };
 const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
 
@@ -43,7 +43,7 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
 export default async function AdminAbonnementsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) redirect('/dashboard');
+  if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
 
   const admin = createAdminClient();
   const { data: coproprietes } = await admin

@@ -13,14 +13,15 @@ import {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM  = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'onboarding@resend.dev'}>`;
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mon-syndic-benevole.fr';
 
 export async function POST(req: NextRequest) {
   // ── Auth : seul l'admin peut répondre ──
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) {
+  const adminClient = createAdminClient();
+  if (!user || !(await isAdminUser(user.id, adminClient))) {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 403 });
   }
 

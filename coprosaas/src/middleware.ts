@@ -4,7 +4,7 @@
 // ============================================================
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
       url.pathname = '/login';
       return NextResponse.redirect(url);
     }
-    if (!user.email || user.email.trim().toLowerCase() !== ADMIN_EMAIL) {
+    if (!(await isAdminUser(user.id, supabase))) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);

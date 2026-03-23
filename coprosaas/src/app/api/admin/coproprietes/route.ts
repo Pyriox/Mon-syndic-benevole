@@ -9,12 +9,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 
 async function checkAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  return user?.email?.trim().toLowerCase() === ADMIN_EMAIL ? user : null;
+  if (!user) return null;
+  const admin = createAdminClient();
+  return (await isAdminUser(user.id, admin)) ? user : null;
 }
 
 export async function POST(request: NextRequest) {

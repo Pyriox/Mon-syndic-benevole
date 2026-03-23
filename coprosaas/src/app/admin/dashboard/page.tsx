@@ -15,7 +15,7 @@ import {
   Send, Database, Search,
 } from 'lucide-react';
 
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 const MRR_PRICES: Record<string, number> = { essentiel: 25, confort: 30, illimite: 45 };
 const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
 
@@ -63,7 +63,7 @@ function ProgressBar({ value, color }: { value: number; color: string }) {
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) redirect('/dashboard');
+  if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
 
   const admin = createAdminClient();
   const today = new Date();
@@ -102,6 +102,9 @@ export default async function AdminDashboardPage() {
     admin.from('assemblees_generales').select('copropriete_id'),
     admin.from('depenses').select('copropriete_id, montant'),
   ]);
+
+  const { data: adminRows } = await admin.from('admin_users').select('user_id');
+  const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
 
   // Stripe (non-blocking)
   type StripeCharge = { id: string; amount: number; status: string; customerId: string | null };
@@ -163,7 +166,7 @@ export default async function AdminDashboardPage() {
   const topCopros = [...coprosTyped].sort((a, b) => (depCount[b.id]?.total ?? 0) - (depCount[a.id]?.total ?? 0)).slice(0, 5);
 
   const stripeFailures = stripeCharges.filter((c) => c.status === 'failed');
-  const alertNonConfirmedOld = authUsers.filter((u) => !u.email_confirmed_at && u.created_at < new Date(Date.now() - 7 * 86400000).toISOString() && u.email !== ADMIN_EMAIL);
+  const alertNonConfirmedOld = authUsers.filter((u) => !u.email_confirmed_at && u.created_at < new Date(Date.now() - 7 * 86400000).toISOString() && !adminUserIds.has(u.id));
   const alertInvitationsExpirees = (invitations ?? []).filter((inv) => inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date());
   const alertCoprosWithoutLots = coprosTyped.filter((c) => (lotsCount[c.id] ?? 0) === 0);
   const alertPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du');

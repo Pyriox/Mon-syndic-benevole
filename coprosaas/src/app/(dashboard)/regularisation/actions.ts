@@ -263,6 +263,10 @@ export async function updateModeLigne(
 }
 
 // ── Clôturer définitivement un exercice ──────────────────────────────────────
+// Met à jour exercices.statut puis répercute la balance de chaque ligne sur
+// coproprietaires.solde :  solde = -(montant_reel - montant_appele + solde_reprise)
+//   balance > 0 → ils doivent un complément → solde négatif (débit)
+//   balance < 0 → trop-perçu → solde positif (crédit)
 export async function cloturerExercice(exerciceId: string): Promise<RegularisationResult> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -272,12 +276,35 @@ export async function cloturerExercice(exerciceId: string): Promise<Regularisati
   if (!exercice) return { error: 'Accès non autorisé' };
   if (exercice.statut === 'cloture') return { error: 'Exercice déjà clôturé.' };
 
+  // 1. Clôturer l'exercice
   const { error } = await supabase
     .from('exercices')
     .update({ statut: 'cloture', cloture_at: new Date().toISOString() })
     .eq('id', exerciceId);
 
   if (error) return { error: error.message };
+
+  // 2. Lire les lignes de régularisation (balance est une colonne générée)
+  const { data: lignes } = await supabase
+    .from('regularisation_lignes')
+    .select('coproprietaire_id, balance')
+    .eq('exercice_id', exerciceId);
+
+  // 3. Répercuter la balance sur coproprietaires.solde
+  // balance = montant_reel - montant_appele + solde_reprise
+  // solde copro = -balance (convention : négatif = doit payer, positif = crédit)
+  if (lignes && lignes.length > 0) {
+    await Promise.all(
+      lignes.map((l) =>
+        supabase
+          .from('coproprietaires')
+          .update({ solde: Math.round(-l.balance * 100) / 100 })
+          .eq('id', l.coproprietaire_id)
+      )
+    );
+  }
+
   revalidatePath('/regularisation');
+  revalidatePath('/coproprietaires');
   return {};
 }

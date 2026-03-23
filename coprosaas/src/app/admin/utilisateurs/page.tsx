@@ -12,7 +12,7 @@ import AdminUserActions from '../AdminUserActions';
 import AdminImpersonate from '../AdminImpersonate';
 import { Users, UserCheck, CheckCircle2 } from 'lucide-react';
 
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 
 function timeAgo(s: string | null | undefined): string {
   if (!s) return '—';
@@ -48,7 +48,7 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
 export default async function AdminUtilisateursPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) redirect('/dashboard');
+  if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
 
   const admin = createAdminClient();
   const startOf30Days = new Date(Date.now() - 30 * 86400000).toISOString();
@@ -57,10 +57,14 @@ export default async function AdminUtilisateursPage() {
   const [
     authResult,
     { data: coproprietes },
+    { data: adminRows },
   ] = await Promise.all([
     admin.auth.admin.listUsers({ perPage: 1000 }),
     admin.from('coproprietes').select('id, syndic_id, plan, plan_id'),
+    admin.from('admin_users').select('user_id'),
   ]);
+
+  const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
 
   const authUsers = authResult.data?.users ?? [];
   const nbUsers = authUsers.length;
@@ -145,9 +149,9 @@ export default async function AdminUtilisateursPage() {
                           <span className="text-xs font-bold text-indigo-600">{(u.email ?? '?')[0].toUpperCase()}</span>
                         </div>
                         <div className="min-w-0">
-                          <p className={`text-sm font-medium truncate ${u.email === ADMIN_EMAIL ? 'text-blue-700' : 'text-gray-800'}`}>
+                          <p className={`text-sm font-medium truncate ${adminUserIds.has(u.id) ? 'text-blue-700' : 'text-gray-800'}`}>
                             {u.email}
-                            {u.email === ADMIN_EMAIL && <span className="ml-1.5 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">Admin</span>}
+                            {adminUserIds.has(u.id) && <span className="ml-1.5 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">Admin</span>}
                           </p>
                           <p className="text-xs text-gray-400 font-mono">{u.id.slice(0, 12)}… · {meta?.full_name ?? '—'}</p>
                         </div>
@@ -170,10 +174,10 @@ export default async function AdminUtilisateursPage() {
                       }
                     </td>
                     <td className="px-4 py-3">
-                      {u.email !== ADMIN_EMAIL && <AdminImpersonate email={u.email ?? ''} />}
+                      {!adminUserIds.has(u.id) && <AdminImpersonate email={u.email ?? ''} />}
                     </td>
                     <td className="px-4 py-3">
-                      <AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={u.email === ADMIN_EMAIL} />
+                      <AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={adminUserIds.has(u.id)} />
                     </td>
                   </tr>
                 );

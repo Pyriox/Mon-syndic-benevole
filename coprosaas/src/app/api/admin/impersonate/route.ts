@@ -6,19 +6,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !user.email || user.email.trim().toLowerCase() !== ADMIN_EMAIL) {
+  const admin = createAdminClient();
+  if (!user || !(await isAdminUser(user.id, admin))) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
   const body = await request.json() as { email?: string };
   const { email } = body;
 
-  if (!email || typeof email !== 'string' || email.trim().toLowerCase() === ADMIN_EMAIL) {
+  if (!email || typeof email !== 'string') {
+    return NextResponse.json({ error: 'Email invalide' }, { status: 400 });
+  }
+
+  // Empêcher l'impersonation d'un autre administrateur
+  const { data: { users: allUsers } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const targetUser = allUsers.find((u) => u.email?.toLowerCase() === email.trim().toLowerCase());
+  if (targetUser && await isAdminUser(targetUser.id, admin)) {
     return NextResponse.json({ error: 'Email invalide ou protégé' }, { status: 400 });
   }
 

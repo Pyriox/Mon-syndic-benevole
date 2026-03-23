@@ -3,7 +3,7 @@
 // ============================================================
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 import Link from 'next/link';
 import SiteLogo from '@/components/ui/SiteLogo';
 import AdminLogout from './AdminLogout';
@@ -13,7 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user || !user.email || user.email.trim().toLowerCase() !== ADMIN_EMAIL) {
+  if (!user || !(await isAdminUser(user.id, supabase))) {
     redirect('/login');
   }
 

@@ -1,11 +1,25 @@
 /**
- * Email administrateur — compatible Edge runtime (middleware).
+ * Helpers d'accès admin.
  *
- * Supabase / Vercel Edge ne garantit pas la disponibilité de process.env
- * pour les variables sans préfixe NEXT_PUBLIC_ dans tous les contextes.
- * La valeur de fallback est identique à celle de l'env var afin de garantir
- * l'accès admin même si la variable d'environnement n'est pas résolue au runtime.
+ * isAdminUser est compatible Edge Runtime (middleware) — reçoit en paramètre
+ * un client Supabase déjà instancié pour éviter d'importer server-only.
+ * La table admin_users est interrogée via RLS (self-read) dans le middleware
+ * et via le service role dans les pages/API.
  *
- * Déjà normalisée (trim + toLowerCase) pour simplifier toutes les comparaisons.
+ * ADMIN_EMAIL conservé pour rétrocompatibilité (seed migration).
  */
 export const ADMIN_EMAIL = (process.env.ADMIN_EMAIL ?? 'tpn.fabien@gmail.com').trim().toLowerCase();
+
+/**
+ * Vérifie qu'un userId est présent dans la table admin_users.
+ * Accepte n'importe quel client Supabase (anon ou service role).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function isAdminUser(userId: string, supabase: any): Promise<boolean> {
+  const { data } = await supabase
+    .from('admin_users')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+  return !!data;
+}

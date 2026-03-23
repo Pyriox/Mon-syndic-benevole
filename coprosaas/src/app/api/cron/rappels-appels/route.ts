@@ -45,16 +45,20 @@ export async function GET(req: NextRequest) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const todayStr = today.toISOString().slice(0, 10);
   const dateJ30 = addDays(today, 30);  // avis : appels publiés dont l'échéance est dans <= 30 jours
   const dateJ7  = addDays(today, 7);   // appels avec échéance dans 7 jours
   const dateJ15 = addDays(today, -15); // appels avec échéance il y a 15 jours
 
   // ── Avis J-30 : appels publiés dont l'email n'a pas encore été envoyé ──
+  // .gte('date_echeance', todayStr) empêche d'envoyer un "avis J-30" pour un
+  // appel dont l'échéance est déjà dépassée (publie tardif ou cron manqué).
   const { data: avisAppels } = await supabase
     .from('appels_de_fonds')
     .select('id, titre, montant_total, date_echeance, coproprietes(nom)')
     .eq('statut', 'publie')
     .is('emailed_at', null)
+    .gte('date_echeance', todayStr)
     .lte('date_echeance', dateJ30);
 
   // Appels à rappeler (J-7)
