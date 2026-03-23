@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import Script from "next/script";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import CookieBanner from "@/components/CookieBanner";
 import "./globals.css";
@@ -132,6 +133,7 @@ export default function RootLayout({
           </>
         )}
         <CookieBanner />
+        <SpeedInsights />
       </body>
     </html>
   );
