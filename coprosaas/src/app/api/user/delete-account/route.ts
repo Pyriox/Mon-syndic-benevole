@@ -16,53 +16,13 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // 1. Suppression en cascade pour chaque copropriété dont l'utilisateur est syndic
-  const { data: coproprietes } = await admin
+  // 1. Détacher le syndic de ses copropriétés (sans les supprimer — elles restent accessibles)
+  await admin
     .from('coproprietes')
-    .select('id')
+    .update({ syndic_id: null })
     .eq('syndic_id', user.id);
 
-  for (const copro of coproprietes ?? []) {
-    const coproId = copro.id;
-
-    // Répartitions des dépenses
-    const { data: depenses } = await admin
-      .from('depenses')
-      .select('id')
-      .eq('copropriete_id', coproId);
-    if ((depenses?.length ?? 0) > 0) {
-      await admin.from('repartitions_depenses').delete().in('depense_id', depenses!.map(d => d.id));
-    }
-    await admin.from('depenses').delete().eq('copropriete_id', coproId);
-
-    // Lignes des appels de fonds
-    const { data: appels } = await admin
-      .from('appels_de_fonds')
-      .select('id')
-      .eq('copropriete_id', coproId);
-    if ((appels?.length ?? 0) > 0) {
-      await admin.from('lignes_appels_de_fonds').delete().in('appel_id', appels!.map(a => a.id));
-    }
-    await admin.from('appels_de_fonds').delete().eq('copropriete_id', coproId);
-
-    // Résolutions des AGs
-    const { data: ags } = await admin
-      .from('assemblees_generales')
-      .select('id')
-      .eq('copropriete_id', coproId);
-    if ((ags?.length ?? 0) > 0) {
-      await admin.from('resolutions').delete().in('ag_id', ags!.map(a => a.id));
-    }
-    await admin.from('assemblees_generales').delete().eq('copropriete_id', coproId);
-
-    await admin.from('incidents').delete().eq('copropriete_id', coproId);
-    await admin.from('documents').delete().eq('copropriete_id', coproId);
-    await admin.from('coproprietaires').delete().eq('copropriete_id', coproId);
-    await admin.from('lots').delete().eq('copropriete_id', coproId);
-    await admin.from('coproprietes').delete().eq('id', coproId);
-  }
-
-  // 2. Détacher l'utilisateur des autres copropriétés où il est membre
+  // 2. Détacher l'utilisateur des copropriétés où il est membre (fiche coproprietaire)
   await admin
     .from('coproprietaires')
     .update({ user_id: null })

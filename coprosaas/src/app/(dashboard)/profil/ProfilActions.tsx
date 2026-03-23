@@ -725,7 +725,7 @@ export function DeleteAccountSection() {
             <div className="text-sm">
               <p className="font-semibold text-red-800 mb-1">Action irréversible — conformité RGPD</p>
               <p className="text-red-700">
-                Toutes vos données seront définitivement supprimées : copropriétés, lots, dépenses, appels de fonds, incidents, assemblées générales et documents.
+                Votre compte sera supprimé. Vos copropriétés seront conservées mais n&apos;auront plus de syndic attribué jusqu&apos;à la désignation d&apos;un nouveau syndic. Votre fiche dans les copropriétés où vous êtes membre sera détachée.
               </p>
             </div>
           </div>
