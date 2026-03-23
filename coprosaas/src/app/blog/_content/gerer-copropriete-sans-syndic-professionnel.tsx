@@ -58,7 +58,7 @@ export default function ArticleGererCopropriete() {
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Gérez comme Sylvie — sans y passer votre week-end</p>
         <p className="text-sm text-gray-600 mb-4">
-          Un outil pensé pour les syndics bénévoles : appels de fonds automatiques, AG en un clic, accès copropriétaires intégré. Essai 14 jours, sans carte bancaire.
+          Un outil pensé pour les syndics bénévoles : appels de fonds automatiques, AG en un clic, accès copropriétaires intégré. Essai gratuit 14 jours.
         </p>
         <Link
           href="/register"
@@ -148,7 +148,7 @@ export default function ArticleGererCopropriete() {
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Économisez jusqu&apos;à 3 400 € par an — sans y passer vos week-ends</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole automatise les appels de fonds, le suivi des paiements et la préparation des AG. Essai 14 jours, sans carte bancaire.
+          Mon Syndic Bénévole automatise les appels de fonds, le suivi des paiements et la préparation des AG. Essai gratuit 14 jours.
         </p>
         <Link
           href="/register"
@@ -266,7 +266,7 @@ export default function ArticleGererCopropriete() {
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Gérez votre immeuble sans vous y noyer</p>
-        <p className="text-sm text-blue-100 mb-4">Appels de fonds, AG, fonds de travaux — tout en un. Essai 14 jours, sans carte bancaire.</p>
+        <p className="text-sm text-blue-100 mb-4">Appels de fonds, AG, fonds de travaux — tout en un. Essai gratuit 14 jours.</p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"

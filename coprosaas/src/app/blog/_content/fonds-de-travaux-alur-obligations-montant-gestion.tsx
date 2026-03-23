@@ -173,7 +173,7 @@ export default function ArticleFondsTravaux() {
 
       <h2 id="vote-ag" className={h2}>Le vote en AG : quelle majorité, quelle résolution</h2>
       <p className={p}>
-        Le montant de la cotisation annuelle est soumis au vote à la <strong className={strong}>majorité de l&apos;article 24</strong> (majorité simple des voix exprimées des copropriétaires présents ou représentés) — la plus facile à obtenir.
+        Le montant de la cotisation annuelle est soumis au vote à la <strong className={strong}>majorité de l&apos;article 25</strong> (majorité des voix de tous les copropriétaires, présents, représentés ou absents).
       </p>
 
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-6 text-sm">

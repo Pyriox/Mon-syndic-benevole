@@ -20,7 +20,7 @@ export default function ArticleLogicielSyndicBenevole() {
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Marc l&apos;a fait. Vous pouvez aussi.</p>
         <p className="text-sm text-gray-600 mb-4">
-          Configurez votre copropriété en 15 minutes et émettez votre premier appel de fonds le jour même. Essai gratuit, sans carte bancaire.
+          Configurez votre copropriété en 15 minutes et émettez votre premier appel de fonds le jour même. Essai gratuit.
         </p>
         <Link
           href="/register"

@@ -77,7 +77,7 @@ C'est à ce moment que les syndics bénévoles sans outils adaptés perdent du t
 
 ---
 
-> **Vous gérez déjà votre copropriété ?** Automatisez vos appels de fonds dès aujourd'hui. → [Essai gratuit 30 jours, sans carte bancaire](https://mon-syndic-benevole.fr)
+> **Vous gérez déjà votre copropriété ?** Automatisez vos appels de fonds dès aujourd'hui. → [Essai gratuit 30 jours](https://mon-syndic-benevole.fr)
 
 ---
 
@@ -122,7 +122,7 @@ L'appel est adressé à l'indivision. Les propriétaires indivis désignent un r
 
 Les disputes sur les charges viennent rarement de mauvaise volonté. Elles viennent d'un manque de lisibilité. Un copropriétaire qui comprend son montant, qui voit l'état de la trésorerie, qui reçoit un avis de paiement clair : c'est un copropriétaire qui paie à temps.
 
-**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) donne aux syndics bénévoles les mêmes outils que les cabinets professionnels — sans la complexité, sans les honoraires. Essai gratuit 30 jours, sans carte bancaire.**
+**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) donne aux syndics bénévoles les mêmes outils que les cabinets professionnels — sans la complexité, sans les honoraires. Essai gratuit 30 jours.**
 
 ---
 

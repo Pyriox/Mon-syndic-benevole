@@ -186,7 +186,7 @@ export default function ArticleAppelDeFonds() {
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Générez vos avis de paiement en un clic</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole calcule les quotes-parts par tantièmes et génère les avis PDF pour tous vos copropriétaires en 30 secondes. Essai gratuit, sans carte bancaire.
+          Mon Syndic Bénévole calcule les quotes-parts par tantièmes et génère les avis PDF pour tous vos copropriétaires en 30 secondes. Essai gratuit.
         </p>
         <Link
           href="/register"

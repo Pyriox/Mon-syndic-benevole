@@ -524,18 +524,20 @@ export default async function DashboardPage() {
 
             {/* Écart prévisionnel provisions − dépenses */}
             <Card className="flex items-center gap-4">
-              <div className={`p-3 rounded-xl shrink-0 ${ecartPrevisionnel >= 0 ? 'bg-green-100' : 'bg-orange-100'}`}>
-                {ecartPrevisionnel >= 0
+              <div className={`p-3 rounded-xl shrink-0 ${ecartPrevisionnel > 0 ? 'bg-green-100' : ecartPrevisionnel < 0 ? 'bg-orange-100' : 'bg-gray-100'}`}>
+                {ecartPrevisionnel > 0
                   ? <TrendingUp size={24} className="text-green-600" />
-                  : <TrendingDown size={24} className="text-orange-600" />}
+                  : ecartPrevisionnel < 0
+                    ? <TrendingDown size={24} className="text-orange-600" />
+                    : <Minus size={24} className="text-gray-400" />}
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
-                <p className={`text-2xl font-bold ${ecartPrevisionnel >= 0 ? 'text-green-700' : 'text-orange-600'}`}>
-                  {ecartPrevisionnel >= 0 ? '+' : ''}{formatEuros(ecartPrevisionnel)}
+                <p className={`text-2xl font-bold ${ecartPrevisionnel > 0 ? 'text-green-700' : ecartPrevisionnel < 0 ? 'text-orange-600' : 'text-gray-700'}`}>
+                  {ecartPrevisionnel > 0 ? '+' : ''}{formatEuros(ecartPrevisionnel)}
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  {ecartPrevisionnel >= 0 ? 'Surplus (trop-perçu provisoire)' : 'Déficit à régulariser'}
+                  {ecartPrevisionnel > 0 ? 'Surplus (trop-perçu provisoire)' : ecartPrevisionnel < 0 ? 'Déficit à régulariser' : 'Provisions = dépenses'}
                 </p>
               </div>
             </Card>

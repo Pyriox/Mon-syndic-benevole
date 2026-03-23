@@ -43,7 +43,7 @@ Exemple : budget annuel de 18 000 € → cotisation minimale de 900 €/an. Ré
 
 ### Le vote en AG
 
-Le montant est soumis au vote chaque année à la **majorité simple de l'article 24**. C'est la majorité la plus facile à obtenir. L'AG ne peut pas supprimer le fonds — un vote en ce sens serait nul et contraire à la loi.
+Le montant est soumis au vote chaque année à la **majorité absolue de l'article 25** (majorité des voix de tous les copropriétaires, présents, représentés ou absents). L'AG ne peut pas supprimer le fonds — un vote en ce sens serait nul et contraire à la loi.
 
 ### Le compte bancaire séparé : une obligation méconnue
 
@@ -70,7 +70,7 @@ Le notaire doit informer l'acquéreur de l'état du fonds lors de la vente. Un f
 
 ---
 
-> **Votre fonds de travaux est-il bien géré ?** Vérifiez en quelques minutes avec Mon Syndic Bénévole. → [Essai gratuit 30 jours, sans carte bancaire](https://mon-syndic-benevole.fr)
+> **Votre fonds de travaux est-il bien géré ?** Vérifiez en quelques minutes avec Mon Syndic Bénévole. → [Essai gratuit 30 jours](https://mon-syndic-benevole.fr)
 
 ---
 

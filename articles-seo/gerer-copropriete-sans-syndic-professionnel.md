@@ -81,7 +81,7 @@ La bonne question : **quel niveau de charge représente mon immeuble, et ai-je l
 
 ---
 
-> **Prêt à reprendre la main sur votre copropriété ?** Des milliers de syndics bénévoles gèrent déjà leur immeuble avec Mon Syndic Bénévole. → [Essai gratuit 30 jours, sans carte bancaire](https://mon-syndic-benevole.fr)
+> **Prêt à reprendre la main sur votre copropriété ?** Des milliers de syndics bénévoles gèrent déjà leur immeuble avec Mon Syndic Bénévole. → [Essai gratuit 30 jours](https://mon-syndic-benevole.fr)
 
 ---
 
@@ -129,7 +129,7 @@ Gérer sa copropriété sans syndic professionnel, c'est légal, c'est courant, 
 
 Si vous lisez cet article en vous demandant si vous avez les épaules : dans la très grande majorité des cas, la réponse est oui. Ce qu'il vous faut, c'est un cadre clair, des outils adaptés, et une copropriété qui joue le jeu collectivement.
 
-**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) vous donne exactement ça — charges, appels de fonds, assemblées, documents, incidents — depuis une interface pensée pour les non-professionnels. Essai gratuit 30 jours, sans carte bancaire.**
+**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) vous donne exactement ça — charges, appels de fonds, assemblées, documents, incidents — depuis une interface pensée pour les non-professionnels. Essai gratuit 30 jours.**
 
 ---
 
