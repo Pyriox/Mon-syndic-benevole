@@ -77,11 +77,6 @@ export default async function CopropriétésPage() {
           icon={<Building2 size={48} strokeWidth={1.5} />}
           title="Aucune copropriété"
           description="Créez votre première copropriété pour commencer à gérer vos charges et copropriétaires."
-          action={
-            <Link href="/coproprietes/nouvelle">
-              <Button><Plus size={16} /> Créer une copropriété</Button>
-            </Link>
-          }
         />
       )}
     </div>

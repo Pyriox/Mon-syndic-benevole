@@ -380,10 +380,10 @@ export default async function DocumentsPage({ searchParams }: Props) {
     }
   }
 
-  // Auto-création du sous-dossier "année courante" pour Dépenses et Appels de fonds
+  // Auto-création du sous-dossier "année courante" pour Dépenses, Appels de fonds et Assemblées générales
   {
     const currentYear = new Date().getFullYear().toString();
-    const yearParentNames = ['Dépenses', 'Appels de fonds'];
+    const yearParentNames = ['Dépenses', 'Appels de fonds', 'Assemblées générales'];
     let yearFolderCreated = false;
     for (const nom of yearParentNames) {
       const parent = dossiers.find((d) => d.nom === nom && !d.parent_id);

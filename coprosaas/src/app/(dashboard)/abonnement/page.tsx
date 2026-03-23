@@ -5,6 +5,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { stripe } from '@/lib/stripe';
 import CheckoutButton from './CheckoutButton';
 import SubscriptionSuccessTracker from './SubscriptionSuccessTracker';
@@ -542,12 +543,12 @@ export default async function AbonnementPage({
         <p className="text-xs text-gray-400 text-center pb-4">
           Facturation annuelle. Sans engagement.{' '}
           Pour toute question :{' '}
-          <a
-            href="mailto:contact@mon-syndic-benevole.fr"
+          <Link
+            href="/aide"
             className="underline hover:text-gray-600"
           >
-            contact@mon-syndic-benevole.fr
-          </a>
+            contactez-nous
+          </Link>
         </p>
       </div>
     </div>

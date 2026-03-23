@@ -8,6 +8,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import LotActions from './LotActions';
 import LotsTable from './LotsTable';
 import CoproDelete from './CoproDelete';
+import CoproEdit from './CoproEdit';
 import TransfertSyndic from './TransfertSyndic';
 import { formatDate } from '@/lib/utils';
 import { getLotLimit } from '@/lib/subscription';
@@ -76,6 +77,13 @@ export default async function CopropriétéDetailPage({ params }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <CoproEdit
+            coproprieteId={copro.id}
+            initialNom={copro.nom}
+            initialAdresse={copro.adresse}
+            initialCodePostal={copro.code_postal}
+            initialVille={copro.ville}
+          />
           <TransfertSyndic coproprieteId={copro.id} coproprieteNom={copro.nom} />
           <CoproDelete coproprieteId={copro.id} coproprieteNom={copro.nom} />
         </div>

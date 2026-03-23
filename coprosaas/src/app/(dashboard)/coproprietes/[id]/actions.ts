@@ -63,3 +63,26 @@ export async function deleteLot(lotId: string, coproprieteId: string): Promise<{
   revalidatePath(`/coproprietes/${coproprieteId}`);
   return {};
 }
+
+// ---- Modifier les infos d'une copropriété ----
+export async function updateCopropriete(data: {
+  coproprieteId: string;
+  nom: string;
+  adresse: string;
+  code_postal: string;
+  ville: string;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { error } = await supabase
+    .from('coproprietes')
+    .update({ nom: data.nom, adresse: data.adresse, code_postal: data.code_postal, ville: data.ville })
+    .eq('id', data.coproprieteId)
+    .eq('syndic_id', user.id);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/coproprietes/${data.coproprieteId}`);
+  return {};
+}
