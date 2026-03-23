@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Card, { CardHeader } from '@/components/ui/Card';
-import { ProfilEditActions, ProfilIdentiteEditor, LotsActions, SecurityActions } from './ProfilActions';
+import { ProfilEditActions, ProfilIdentiteEditor, LotsActions, SecurityActions, DeleteAccountSection } from './ProfilActions';
 import { User, Building2, Mail, ShieldCheck } from 'lucide-react';
 
 export default async function ProfilPage() {
@@ -191,6 +191,16 @@ export default async function ProfilPage() {
         )}
       </Card>
       )}
+      {/* ---- Zone de danger ---- */}
+      <Card>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-red-700">Zone de danger</p>
+            <p className="text-xs text-gray-500 mt-0.5">La suppression de votre compte est irréversible et conforme au RGPD.</p>
+          </div>
+          <DeleteAccountSection />
+        </div>
+      </Card>
     </div>
   );
 }

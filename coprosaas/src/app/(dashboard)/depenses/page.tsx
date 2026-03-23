@@ -9,7 +9,8 @@ import EmptyState from '@/components/ui/EmptyState';
 import DepenseActions, { DepenseDelete } from './DepenseActions';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
-import { Receipt } from 'lucide-react';
+import { Receipt, ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
@@ -42,9 +43,11 @@ function couleurCategorie(cat: string): 'default' | 'info' | 'success' | 'warnin
   return map[cat] ?? 'default';
 }
 
-export default async function DepensesPage({ searchParams }: { searchParams: Promise<{ annee?: string }> }) {
-  const { annee: anneeParam } = await searchParams;
+export default async function DepensesPage({ searchParams }: { searchParams: Promise<{ annee?: string; page?: string }> }) {
+  const { annee: anneeParam, page: pageParam } = await searchParams;
   const annee = parseInt(anneeParam ?? String(new Date().getFullYear()));
+  const PAGE_SIZE = 25;
+  const currentPage = Math.max(1, parseInt(pageParam ?? '1') || 1);
 
   const supabase = await createClient();
   const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
@@ -344,6 +347,10 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
     })
     .sort((a, b) => b.part - a.part);
 
+  // Pagination — slice uniquement pour l'affichage (les stats utilisent toutes les dépenses)
+  const totalPages = Math.ceil((depenses?.length ?? 0) / PAGE_SIZE);
+  const depensesPage = (depenses ?? []).slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* ── Bandeau lecture seule ── */}
@@ -366,7 +373,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
         <>
           {/* Mobile cards */}
           <div className="md:hidden space-y-2">
-            {depenses.map((d) => (
+            {depensesPage.map((d) => (
               <Card key={d.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -427,7 +434,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                   </tr>
                 </thead>
                 <tbody>
-                  {depenses.map((d) => (
+                  {depensesPage.map((d) => (
                     <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDate(d.date_depense)}</td>
                       <td className="px-5 py-3">
@@ -493,6 +500,34 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
               </table>
             </div>
           </Card>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 py-2">
+              {currentPage > 1 ? (
+                <Link
+                  href={`?annee=${annee}&page=${currentPage - 1}`}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  <ChevronLeft size={16} /> Précédent
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1 text-sm text-gray-300"><ChevronLeft size={16} /> Précédent</span>
+              )}
+              <span className="text-sm text-gray-600">
+                Page <strong>{currentPage}</strong> / {totalPages}
+              </span>
+              {currentPage < totalPages ? (
+                <Link
+                  href={`?annee=${annee}&page=${currentPage + 1}`}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Suivant <ChevronRight size={16} />
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1 text-sm text-gray-300">Suivant <ChevronRight size={16} /></span>
+              )}
+            </div>
+          )}
         </>
       ) : (
         <EmptyState

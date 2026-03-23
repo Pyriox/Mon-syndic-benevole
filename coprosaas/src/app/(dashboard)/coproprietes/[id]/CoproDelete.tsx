@@ -18,7 +18,7 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
   const supabase = createClient();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [password, setPassword] = useState('');
+  const [confirmName, setConfirmName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,22 +27,17 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
     setLoading(true);
     setError('');
 
-    // Vérification du mot de passe
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.email) { setLoading(false); return; }
-
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password,
-    });
-
-    if (authError) {
-      setError('Mot de passe incorrect.');
+    // Vérification par saisie du nom de la copropriété
+    if (confirmName.trim() !== coproprieteNom) {
+      setError('Le nom saisi ne correspond pas. Vérifiez la casse et les espaces.');
       setLoading(false);
       return;
     }
 
-    // Suppression en cascade : lots, dépenses, appels, incidents, assemblées, documents, dossiers
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    // Suppression en cascade : coproprietaires, lots, dépenses, appels, incidents, assemblées, documents, dossiers
     await supabase.from('repartitions_depenses').delete().in(
       'depense_id',
       (await supabase.from('depenses').select('id').eq('copropriete_id', coproprieteId)).data?.map((d) => d.id) ?? []
@@ -66,6 +61,7 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
 
     await supabase.from('incidents').delete().eq('copropriete_id', coproprieteId);
     await supabase.from('documents').delete().eq('copropriete_id', coproprieteId);
+    await supabase.from('coproprietaires').delete().eq('copropriete_id', coproprieteId);
     await supabase.from('lots').delete().eq('copropriete_id', coproprieteId);
 
     // Suppression de la copropriété
@@ -84,7 +80,7 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
   return (
     <>
       <button
-        onClick={() => { setIsOpen(true); setPassword(''); setError(''); }}
+        onClick={() => { setIsOpen(true); setConfirmName(''); setError(''); }}
         className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg
                    text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300
                    transition-all duration-150"
@@ -108,6 +104,7 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
                 <strong>« {coproprieteNom} »</strong> ainsi que toutes les données associées :
               </p>
               <ul className="mt-2 space-y-0.5 text-red-600 list-disc list-inside">
+                <li>Tous les copropriétaires</li>
                 <li>Tous les lots</li>
                 <li>Toutes les dépenses et répartitions</li>
                 <li>Tous les appels de fonds</li>
@@ -118,14 +115,14 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
             </div>
           </div>
 
-          {/* Saisie du mot de passe */}
+          {/* Confirmation par saisie du nom */}
           <div>
             <Input
-              label="Confirmez avec votre mot de passe"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Votre mot de passe"
+              label={`Tapez le nom de la copropriété pour confirmer : « ${coproprieteNom} »`}
+              type="text"
+              value={confirmName}
+              onChange={(e) => setConfirmName(e.target.value)}
+              placeholder={coproprieteNom}
               required
               autoFocus
             />

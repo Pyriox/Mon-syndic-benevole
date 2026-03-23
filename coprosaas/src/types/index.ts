@@ -229,6 +229,7 @@ export interface Incident {
   montant_final: number | null;
   date_intervention_prevue: string | null;
   notes_internes: string | null;   // JSON array of { date, texte }
+  photo_url: string | null;
   declare_par: string;             // UUID utilisateur
   assigne_a: string | null;
   date_declaration: string;

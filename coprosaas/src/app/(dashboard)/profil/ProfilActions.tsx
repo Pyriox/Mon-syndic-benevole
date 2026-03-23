@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
-import { Pencil, Home, Mail, Lock, Check, X } from 'lucide-react';
+import { Pencil, Home, Mail, Lock, Check, X, Trash2, AlertTriangle } from 'lucide-react';
 
 interface Lot {
   id: string;
@@ -679,5 +679,85 @@ export default function ProfilActions({ fullName: _fullName, email, coproprietes
         );
       })}
     </div>
+  );
+}
+
+const CONFIRM_TEXT = 'SUPPRIMER MON COMPTE';
+
+export function DeleteAccountSection() {
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleDelete = async () => {
+    setLoading(true);
+    setError('');
+    const res = await fetch('/api/user/delete-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmText }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? 'Une erreur est survenue.');
+      setLoading(false);
+      return;
+    }
+    router.push('/login');
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => { setIsOpen(true); setConfirmText(''); setError(''); }}
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300 transition-all duration-150"
+      >
+        <Trash2 size={15} />
+        Supprimer mon compte
+      </button>
+
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Supprimer mon compte" size="md">
+        <div className="space-y-5">
+          <div className="flex gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <AlertTriangle size={20} className="text-red-500 shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-red-800 mb-1">Action irréversible — conformité RGPD</p>
+              <p className="text-red-700">
+                Toutes vos données seront définitivement supprimées : copropriétés, lots, dépenses, appels de fonds, incidents, assemblées générales et documents.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <Input
+              label={`Tapez « ${CONFIRM_TEXT} » pour confirmer`}
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={CONFIRM_TEXT}
+              autoFocus
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
+
+          <div className="flex gap-3 pt-1">
+            <Button
+              variant="danger"
+              loading={loading}
+              onClick={handleDelete}
+              disabled={confirmText !== CONFIRM_TEXT}
+            >
+              <Trash2 size={14} /> Supprimer définitivement
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
+              Annuler
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }

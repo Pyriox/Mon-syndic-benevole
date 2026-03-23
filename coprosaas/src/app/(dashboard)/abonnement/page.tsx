@@ -504,16 +504,16 @@ export default async function AbonnementPage({
                 })}
               </div>
 
-              {/* Lien discret gérer l'abonnement */}
+              {/* Lien gérer l'abonnement & factures */}
               {(isSubscribed || isPastDue) && hasStripeCustomer && (
                 <form action={portalAction} className="flex justify-end">
                   <input type="hidden" name="coproId" value={copro.id} />
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                    className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
                   >
-                    <Settings2 size={12} />
-                    Gérer l&apos;abonnement
+                    <Settings2 size={14} />
+                    Gérer l&apos;abonnement &amp; factures
                   </button>
                 </form>
               )}

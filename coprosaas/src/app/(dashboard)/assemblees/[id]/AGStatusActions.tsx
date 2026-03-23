@@ -496,6 +496,7 @@ export default function AGStatusActions({ agId, coproprieteId, currentStatut, qu
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmeNoQuorum, setConfirmeNoQuorum] = useState(false);
 
   const handleValiderPlanification = async () => {
     setLoading(true);
@@ -568,16 +569,30 @@ export default function AGStatusActions({ agId, coproprieteId, currentStatut, qu
                 : <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />}
               <p className={`text-sm ${quorumAtteint ? 'text-green-700' : 'text-amber-700'}`}>
                 {quorumAtteint
-                  ? 'Le quorum est atteint. L\'AG peut être clôturée normalement.'
-                  : 'Attention : le quorum n\'est pas atteint. La clôture sera quand même enregistrée.'}
+                  ? "Le quorum est atteint. L'AG peut être clôturée normalement."
+                  : "Attention : le quorum n'est pas atteint. La clôture sera quand même enregistrée."}
               </p>
             </div>
+            {!quorumAtteint && (
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={confirmeNoQuorum}
+                  onChange={e => setConfirmeNoQuorum(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                />
+                <span className="text-sm text-gray-700">
+                  Je confirme avoir pris connaissance du défaut de quorum et souhaite quand même clôturer
+                  (2e convocation ou décision consciente).
+                </span>
+              </label>
+            )}
             <p className="text-sm text-gray-600">Confirmer la clôture de l&apos;assemblée ? Cette action est irréversible.</p>
             <div className="flex gap-3 pt-1">
-              <Button variant="success" loading={loading} onClick={handleCloturer} disabled={!toutesResolutionsVotees}>
+              <Button variant="success" loading={loading} onClick={handleCloturer} disabled={!toutesResolutionsVotees || (!quorumAtteint && !confirmeNoQuorum)}>
                 <CheckCircle size={14} /> Clôturer définitivement
               </Button>
-              <Button variant="secondary" onClick={() => setIsConfirmOpen(false)}>Annuler</Button>
+              <Button variant="secondary" onClick={() => { setIsConfirmOpen(false); setConfirmeNoQuorum(false); }}>Annuler</Button>
             </div>
           </div>
         </Modal>

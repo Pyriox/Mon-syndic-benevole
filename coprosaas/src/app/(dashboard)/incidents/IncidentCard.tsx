@@ -14,7 +14,7 @@ import Textarea from '@/components/ui/Textarea';
 import Modal from '@/components/ui/Modal';
 import {
   ChevronDown, ChevronUp, Trash2, MapPin, User, Phone,
-  Calendar, Euro, FileText, Plus, RotateCcw,
+  Calendar, Euro, FileText, Plus, RotateCcw, Camera,
 } from 'lucide-react';
 import {
   formatDate, formatEuros,
@@ -222,6 +222,8 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
   const [deleteModal,  setDeleteModal]  = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [noteText,     setNoteText]     = useState('');
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [photoUrl,     setPhotoUrl]     = useState<string | null>(incident.photo_url ?? null);
 
   const [transitionData, setTransitionData] = useState<TransitionData>({
     montant_devis:           incident.montant_devis?.toString()           ?? '',
@@ -263,6 +265,21 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
     await supabase.from('incidents').delete().eq('id', incident.id);
     setLoading(false);
     router.refresh();
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoLoading(true);
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`/api/incidents/${incident.id}/photo`, { method: 'POST', body: form });
+    if (res.ok) {
+      const data = await res.json();
+      setPhotoUrl(data.url);
+    }
+    setPhotoLoading(false);
+    e.target.value = '';
   }
 
   // Pre-fill params for "Créer une dépense"
@@ -401,6 +418,22 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
             />
           )}
 
+          {/* Photo jointe */}
+          {photoUrl && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1.5">
+                <Camera size={12} /> Photo
+              </p>
+              <a href={photoUrl} target="_blank" rel="noopener noreferrer">
+                <img
+                  src={photoUrl}
+                  alt="Photo incident"
+                  className="max-h-48 rounded-lg border border-gray-200 object-cover hover:opacity-90 transition-opacity"
+                />
+              </a>
+            </div>
+          )}
+
           {/* Notes journal */}
           {notes.length > 0 && (
             <div>
@@ -446,6 +479,20 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
               >
                 <Plus size={12} /> Ajouter une note
               </button>
+            )}
+
+            {isSyndic && canWrite && (
+              <label className={`inline-flex items-center gap-1 text-xs font-medium cursor-pointer ${photoLoading ? 'text-gray-400' : 'text-violet-600 hover:text-violet-700'}`}>
+                <Camera size={12} />
+                {photoLoading ? 'Upload…' : photoUrl ? 'Changer la photo' : 'Joindre une photo'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  disabled={photoLoading}
+                  onChange={handlePhotoUpload}
+                />
+              </label>
             )}
 
             {canWrite && incident.statut === 'resolu' && (
