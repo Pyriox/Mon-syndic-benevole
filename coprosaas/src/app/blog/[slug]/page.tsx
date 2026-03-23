@@ -200,24 +200,6 @@ export default async function ArticlePage({
         <ContentComponent />
       </main>
 
-      {/* ── CTA ── */}
-      <section className="max-w-3xl mx-auto px-6 mb-16">
-        <div className="rounded-2xl bg-gradient-to-br from-blue-700 to-indigo-700 p-8 text-center shadow-xl">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
-            Gérez votre copropriété sans vous noyer dans les tableurs
-          </h2>
-          <p className="text-blue-100 mb-6 text-sm sm:text-base max-w-xl mx-auto">
-            Mon Syndic Bénévole automatise les appels de fonds, les relances et la comptabilité de votre copropriété. 100&nbsp;% conçu pour les syndics non-professionnels.
-          </p>
-          <Link
-            href="/register"
-            className="inline-block bg-white text-blue-700 font-bold px-6 py-3 rounded-xl hover:bg-blue-50 transition-colors text-sm sm:text-base"
-          >
-            Essayer gratuitement →
-          </Link>
-        </div>
-      </section>
-
       {/* ── Related articles ── */}
       {related.length > 0 && (
         <section className="max-w-3xl mx-auto px-6 mb-20">
@@ -245,19 +227,21 @@ export default async function ArticlePage({
       <ScrollToTopButton />
 
       {/* ── Footer ── */}
-      <footer className="bg-gray-50 border-t border-gray-200 py-10 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-          <span>© {new Date().getFullYear()} Mon Syndic Bénévole</span>
-          <nav className="flex items-center gap-5" aria-label="Liens du pied de page">
-            <Link href="/mentions-legales" className="hover:text-gray-700 transition-colors">
-              Mentions légales
-            </Link>
-            <Link href="/blog" className="hover:text-gray-700 transition-colors">
-              Blog
-            </Link>
-            <Link href="/login" className="hover:text-gray-700 transition-colors">
-              Connexion
-            </Link>
+      <footer className="bg-slate-950 py-10 px-4 sm:px-6" aria-label="Pied de page">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <SiteLogo size={32} />
+            <span className="font-bold text-white text-sm">Mon Syndic Bénévole</span>
+          </div>
+          <p className="text-gray-500 text-sm">© {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés</p>
+          <nav aria-label="Liens du pied de page">
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-gray-500">
+              <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
+              <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
+              <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
+              <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
+              <a href="mailto:contact@mon-syndic-benevole.fr" className="hover:text-gray-300 transition-colors">contact@mon-syndic-benevole.fr</a>
+            </div>
           </nav>
         </div>
       </footer>
