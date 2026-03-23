@@ -39,7 +39,7 @@ export default async function ProfilPage() {
   if (selectedCoproId) {
     const { data: f1 } = await supabase
       .from('coproprietaires')
-      .select('id, nom, prenom, raison_sociale, telephone, adresse, code_postal, ville')
+      .select('id, nom, prenom, raison_sociale, telephone, adresse, complement_adresse, code_postal, ville')
       .eq('copropriete_id', selectedCoproId)
       .eq('user_id', user.id)
       .maybeSingle();
@@ -48,7 +48,7 @@ export default async function ProfilPage() {
     } else {
       const { data: f2 } = await supabase
         .from('coproprietaires')
-        .select('id, nom, prenom, raison_sociale, telephone, adresse, code_postal, ville')
+        .select('id, nom, prenom, raison_sociale, telephone, adresse, complement_adresse, code_postal, ville')
         .eq('copropriete_id', selectedCoproId)
         .eq('email', email)
         .is('user_id', null)
@@ -85,12 +85,14 @@ export default async function ProfilPage() {
         <p className="text-gray-500 mt-1">Gérez vos informations et la sécurité de votre compte.</p>
       </div>
 
-      {/* ---- Mon compte (email + sécurité) ---- */}
+      {/* ---- Mon compte + Identité ---- */}
       <Card>
         <CardHeader
           title="Mon compte"
-          description="Informations de connexion"
+          description="Connexion et identité copropriétaire"
         />
+
+        {/* Connexion */}
         <div className="space-y-3 mt-4">
           <div className="flex items-center gap-3 text-sm">
             <Mail size={16} className="text-gray-400 shrink-0" />
@@ -110,16 +112,14 @@ export default async function ProfilPage() {
         <div className="mt-4 pt-4 border-t border-gray-100">
           <SecurityActions currentEmail={email} />
         </div>
-      </Card>
 
-      {/* ---- Identité liée à la copropriété en cours ---- */}
-      {selectedCoproNomAffiche ? (
-        <Card>
-          <CardHeader
-            title={`Mon identité — ${selectedCoproNomAffiche}`}
-            description="Vos informations en tant que copropriétaire sur cette copropriété"
-          />
-          <div className="mt-4">
+        {/* Identité copropriétaire */}
+        {selectedCoproNomAffiche ? (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mb-4">
+              <p className="text-sm font-semibold text-gray-900">Mon identité</p>
+              <p className="text-xs text-gray-500 mt-0.5">{selectedCoproNomAffiche}</p>
+            </div>
             <ProfilIdentiteEditor
               fiche={ficheSelectionnee}
               selectedCoproId={selectedCoproId}
@@ -128,8 +128,12 @@ export default async function ProfilPage() {
               fullName={fullName}
             />
           </div>
-        </Card>
-      ) : null}
+        ) : (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-sm text-gray-400 italic">Sélectionnez une copropriété pour renseigner votre identité.</p>
+          </div>
+        )}
+      </Card>
 
       {/* ---- Statut copropriétaire (lots) — syndic uniquement ---- */}
       {accountRole === 'syndic' && (

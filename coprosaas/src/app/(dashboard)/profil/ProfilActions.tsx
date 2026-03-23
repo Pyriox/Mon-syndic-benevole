@@ -42,6 +42,7 @@ interface FicheSelectionnee {
   raison_sociale: string | null;
   telephone: string | null;
   adresse: string | null;
+  complement_adresse: string | null;
   code_postal: string | null;
   ville: string | null;
 }
@@ -83,6 +84,7 @@ export function ProfilEditActions({
   const [adresse, setAdresse] = useState(fiche?.adresse ?? '');
   const [codePostal, setCodePostal] = useState(fiche?.code_postal ?? '');
   const [ville, setVille] = useState(fiche?.ville ?? '');
+  const [complementAdresse, setComplementAdresse] = useState(fiche?.complement_adresse ?? '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +105,7 @@ export function ProfilEditActions({
         raison_sociale: isSci ? raisonSociale.trim() || null : null,
         telephone: telephone.trim() || null,
         adresse: adresse.trim() || null,
+        complement_adresse: complementAdresse.trim() || null,
         code_postal: codePostal.trim() || null,
         ville: ville.trim() || null,
       }).eq('id', fiche.id);
@@ -117,6 +120,7 @@ export function ProfilEditActions({
         raison_sociale: isSci ? raisonSociale.trim() || null : null,
         telephone: telephone.trim() || null,
         adresse: adresse.trim() || null,
+        complement_adresse: complementAdresse.trim() || null,
         code_postal: codePostal.trim() || null,
         ville: ville.trim() || null,
         solde: 0,
@@ -154,11 +158,12 @@ export function ProfilEditActions({
               <Input label="Nom" value={nom} onChange={(e) => setNom(e.target.value)} required={!isSci} />
             </div>
           )}
-          <Input label="Téléphone" value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="06 12 34 56 78" type="tel" />
-          <Input label="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} placeholder="12 rue de la Paix" />
+          <Input label="Téléphone" value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="06 12 34 56 78" type="tel" required />
+          <Input label="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} placeholder="12 rue de la Paix" required />
+          <Input label="Complément d'adresse" value={complementAdresse} onChange={(e) => setComplementAdresse(e.target.value)} placeholder="Bât. A, appt. 12" />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Code postal" value={codePostal} onChange={(e) => setCodePostal(e.target.value)} placeholder="75001" />
-            <Input label="Ville" value={ville} onChange={(e) => setVille(e.target.value)} />
+            <Input label="Code postal" value={codePostal} onChange={(e) => setCodePostal(e.target.value)} placeholder="75001" required />
+            <Input label="Ville" value={ville} onChange={(e) => setVille(e.target.value)} required />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
@@ -176,7 +181,7 @@ export function ProfilEditActions({
 // ============================================================
 type EditableField =
   | 'prenom' | 'nom' | 'raison_sociale'
-  | 'telephone' | 'adresse' | 'code_postal' | 'ville';
+  | 'telephone' | 'adresse' | 'complement_adresse' | 'code_postal' | 'ville';
 
 export function ProfilIdentiteEditor({
   fiche: initialFiche,
@@ -208,7 +213,7 @@ export function ProfilIdentiteEditor({
     if (!fiche) return;
     const val = tempValue.trim() || null;
     // Champs obligatoires : empêcher de vider
-    const requiredFields: EditableField[] = ['prenom', 'nom', 'raison_sociale'];
+    const requiredFields: EditableField[] = ['prenom', 'nom', 'raison_sociale', 'telephone', 'adresse', 'code_postal', 'ville'];
     if (requiredFields.includes(field) && !val) return;
     setSaving(true);
     await supabase.from('coproprietaires').update({ [field]: val }).eq('id', fiche.id);
@@ -382,17 +387,18 @@ export function ProfilIdentiteEditor({
       {/* ── Contact ── */}
       <div>
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Contact</p>
-        {renderField('Téléphone', 'telephone', 'tel', '06 12 34 56 78')}
+        {renderField('Téléphone', 'telephone', 'tel', '06 12 34 56 78', true)}
       </div>
 
       {/* ── Adresse ── */}
       <div>
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Adresse</p>
         <div className="space-y-3">
-          {renderField('Rue', 'adresse', 'text', '12 rue de la Paix')}
+          {renderField('Rue', 'adresse', 'text', '12 rue de la Paix', true)}
+          {renderField("Complément d'adresse", 'complement_adresse', 'text', 'Bât. A, appt. 12')}
           <div className="grid grid-cols-2 gap-3">
-            {renderField('Code postal', 'code_postal', 'text', '75001')}
-            {renderField('Ville', 'ville', 'text', 'Paris')}
+            {renderField('Code postal', 'code_postal', 'text', '75001', true)}
+            {renderField('Ville', 'ville', 'text', 'Paris', true)}
           </div>
         </div>
       </div>
