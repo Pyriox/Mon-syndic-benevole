@@ -498,7 +498,7 @@ export default async function DashboardPage() {
                 ) : (
                   <>
                     <p className="text-lg font-semibold text-gray-400">&mdash;</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Aucun appel de fonds {currentYear}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Aucune provision saisie pour {currentYear}</p>
                   </>
                 )}
               </div>
