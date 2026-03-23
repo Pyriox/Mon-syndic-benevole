@@ -23,6 +23,12 @@ import { CoproprietaireEdit, CoproprietaireDelete, CoproprietaireInvite } from '
 import { formatEuros } from '@/lib/utils';
 import { GripVertical, Mail, Phone, UserCheck } from 'lucide-react';
 
+function formatPhone(phone: string | null | undefined): string {
+  if (!phone) return '';
+  const digits = phone.replace(/\D/g, '');
+  return digits.replace(/(\d{2})(?=\d)/g, '$1\u00a0').trim();
+}
+
 function Avatar({ name }: { name: string }) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const initials = parts.length >= 2
@@ -109,7 +115,7 @@ function ReadOnlyMobileCoproCard({
               </span>
             )}
             {cp.user_id === currentUserId && (
-              <span className="inline-flex items-center bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
+              <span className="inline-flex items-center bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
             )}
           </div>
           {cp.raison_sociale && (cp.prenom || cp.nom) && (
@@ -180,7 +186,7 @@ function ReadOnlyCoproRow({
                 </span>
               )}
               {cp.user_id === currentUserId && (
-                <span className="inline-flex items-center bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
+                <span className="inline-flex items-center bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
               )}
             </div>
             {cp.raison_sociale && (
@@ -262,7 +268,7 @@ function MobileCoproCard({
                 <CoproprietaireInvite coproprietaireId={cp.id} displayName={displayName} />
               )}
               {cp.user_id === currentUserId && (
-                <span className="inline-flex items-center bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
+                <span className="inline-flex items-center bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
               )}
             </div>
             {cp.raison_sociale && (cp.prenom || cp.nom) && (
@@ -323,7 +329,7 @@ function MobileCoproCard({
               className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600 transition-colors"
             >
               <Phone size={13} className="shrink-0" />
-              {cp.telephone}
+              {formatPhone(cp.telephone)}
             </a>
           )}
         </div>
@@ -465,7 +471,7 @@ function SortableCoproRow({
             className="flex items-center gap-1.5 text-gray-400 hover:text-blue-600 transition-colors mt-0.5"
           >
             <Phone size={13} className="shrink-0" />
-            {cp.telephone}
+            {formatPhone(cp.telephone)}
           </a>
         )}
       </td>
