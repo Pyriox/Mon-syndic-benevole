@@ -18,10 +18,10 @@ import {
 
 // ── Catégories FAQ ───────────────────────────────────────────
 const CATEGORIES: Record<string, { label: string; bg: string; text: string }> = {
-  legal:    { label: 'Légal',       bg: 'bg-purple-100', text: 'text-purple-700' },
-  ag:       { label: 'Assemblées',  bg: 'bg-blue-100',   text: 'text-blue-700' },
-  finances: { label: 'Finances',    bg: 'bg-green-100',  text: 'text-green-700' },
-  app:      { label: 'Application', bg: 'bg-amber-100',  text: 'text-amber-700' },
+  demarrage: { label: 'Démarrage',   bg: 'bg-blue-100',   text: 'text-blue-700' },
+  finances:  { label: 'Finances',    bg: 'bg-green-100',  text: 'text-green-700' },
+  ag:        { label: 'Assemblées',  bg: 'bg-indigo-100', text: 'text-indigo-700' },
+  app:       { label: 'Application', bg: 'bg-amber-100',  text: 'text-amber-700' },
 };
 
 // ── Guides de démarrage rapide ───────────────────────────────
@@ -80,64 +80,64 @@ function StatusBadge({ status }: { status: TicketStatus }) {
 // ── Données FAQ ──────────────────────────────────────────────
 const FAQ: { question: string; answer: string; category: keyof typeof CATEGORIES }[] = [
   {
-    category: 'legal',
-    question: "Qui peut être syndic bénévole ?",
-    answer: "Tout copropriétaire peut devenir syndic bénévole de sa propre copropriété, sans conditions de diplôme ni de carte professionnelle. La loi Hoguet exige une carte professionnelle uniquement pour les syndics professionnels. Le syndic bénévole doit simplement être élu en AG par les copropriétaires.",
+    category: 'demarrage',
+    question: "Par où commencer après la création de mon compte ?",
+    answer: "L'ordre idéal est : (1) créer votre copropriété (nom, adresse) ; (2) ajouter vos lots avec les tantièmes ; (3) ajouter vos copropriétaires et les associer à leurs lots ; (4) émettre votre premier appel de fonds. Les guides de démarrage rapide ci-dessus vous guident pas à pas.",
   },
   {
-    category: 'legal',
-    question: "Quelle est la durée du mandat d'un syndic bénévole ?",
-    answer: "Le mandat du syndic est voté en Assemblée Générale. Sa durée maximale est de 3 ans (renouvelable). En pratique, la plupart des copropriétés l'élisent pour 1 ou 2 ans afin de renouveler régulièrement la confiance.",
+    category: 'demarrage',
+    question: "Je prends la gestion en cours d'année — que faire des appels de fonds déjà émis ?",
+    answer: "Ressaisissez les appels de fonds de l'année en cours (même un seul appel global couvrant les trimestres passés) et marquez directement comme payés les versements déjà encaissés après publication. Le tableau de bord affichera ainsi les bons soldes et impayés dès le premier jour. Pour les copropriétaires qui avaient un solde sur l'ancien outil, utilisez le champ « Solde à la reprise » lors de leur ajout.",
   },
   {
-    category: 'legal',
-    question: "Le syndic bénévole peut-il être rémunéré ?",
-    answer: "Non, le syndic bénévole n'est pas rémunéré pour sa gestion courante. Il peut cependant percevoir un remboursement de frais engagés pour la copropriété (timbres, déplacements…) à condition que ces remboursements soient votés par l'AG et justifiés.",
+    category: 'demarrage',
+    question: "Comment inviter mes copropriétaires sur la plateforme ?",
+    answer: "Depuis la page Copropriétaires, cliquez sur le bouton « Inviter » en face de chaque copropriétaire. Un e-mail leur sera envoyé avec un lien d'accès à leur espace personnel (solde, documents, convocations AG). L'invitation est facultative : la plateforme fonctionne pleinement sans que les copropriétaires soient connectés.",
   },
   {
-    category: 'legal',
-    question: "Quelles sont les obligations légales d'un syndic bénévole ?",
-    answer: "Le syndic bénévole a les mêmes obligations qu'un syndic professionnel : tenir un compte séparé au nom du syndicat des copropriétaires, convoquer au minimum une AG par an, établir et soumettre le budget prévisionnel, tenir à jour le registre des copropriétaires, et souscrire une assurance responsabilité civile.",
+    category: 'demarrage',
+    question: "Comment gérer plusieurs copropriétés depuis un seul compte ?",
+    answer: "Depuis le sélecteur de copropriété en haut à gauche du tableau de bord, vous pouvez créer ou basculer d'une copropriété à l'autre. Chaque copropriété a son propre abonnement et ses propres données, entièrement cloisonnées.",
+  },
+  {
+    category: 'finances',
+    question: "Comment émettre un premier appel de fonds ?",
+    answer: "Depuis « Appels de fonds », cliquez sur « Créer ». Si vous avez déjà une AG terminée avec un budget approuvé, l'application la présélectionne automatiquement et importe le budget. Sinon, choisissez « Appel exceptionnel sans AG » pour saisir le montant et la date librement. La répartition par tantièmes est calculée automatiquement.",
+  },
+  {
+    category: 'finances',
+    question: "Comment enregistrer une dépense et la répartir entre copropriétaires ?",
+    answer: "Depuis la page « Dépenses », ajoutez la dépense avec sa catégorie et son montant. La répartition au prorata des tantièmes est calculée instantanément. Vous pouvez ensuite marquer les paiements reçus un par un ou en masse.",
+  },
+  {
+    category: 'finances',
+    question: "Comment suivre les impayés ?",
+    answer: "Le tableau de bord affiche un récapitulatif des impayés avec un indicateur d'alerte. Chaque copropriétaire dispose d'un solde mis à jour en temps réel. Depuis la page Appels de fonds, vous pouvez voir le statut de paiement de chaque ligne et envoyer un rappel si nécessaire.",
+  },
+  {
+    category: 'finances',
+    question: "Comment fonctionne la régularisation annuelle des charges ?",
+    answer: "En fin d'exercice, depuis la page « Régularisation », l'application compare les provisions appelées et les dépenses réelles pour calculer automatiquement le solde de chaque copropriétaire (complément à payer ou trop-perçu à rembourser). La régularisation est disponible à partir du 1er janvier de l'année suivante.",
   },
   {
     category: 'ag',
-    question: "Comment convoquer une Assemblée Générale ?",
-    answer: "La convocation doit être envoyée au moins 21 jours avant la date de l'AG (ou 15 jours si votre règlement de copropriété le prévoit). Elle doit contenir l'ordre du jour, les documents nécessaires aux votes (état des charges, budget…), et être envoyée par lettre recommandée ou par voie dématérialisée si les copropriétaires y ont consenti. Notre application génère automatiquement ce document.",
+    question: "Comment créer et envoyer une convocation d'AG ?",
+    answer: "Depuis « Assemblées », créez une AG (type, date, lieu) et ajoutez les résolutions à l'ordre du jour. Une fois planifiée, le bouton « Envoyer la convocation » génère un PDF et l'envoie par e-mail à tous les copropriétaires. Le délai légal est de 21 jours avant la date de l'AG.",
   },
   {
-    category: 'finances',
-    question: "Comment calculer les charges en tantièmes ?",
-    answer: "Les charges générales sont réparties au prorata des tantièmes de chaque lot, définis dans le règlement de copropriété. Par exemple, un lot disposant de 150 tantièmes sur 1 000 supportera 15 % des charges générales. L'application calcule automatiquement les quotes-parts à partir des tantièmes renseignés.",
-  },
-  {
-    category: 'finances',
-    question: "Faut-il ouvrir un compte bancaire au nom de la copropriété ?",
-    answer: "Oui, c'est obligatoire. La loi ALUR de 2014 impose au syndic d'ouvrir un compte séparé au nom du syndicat des copropriétaires dès lors que la copropriété compte plus de 15 lots. En dessous de ce seuil, une dispense peut être accordée par l'AG à l'unanimité.",
-  },
-  {
-    category: 'finances',
-    question: "Comment gérer les impayés de charges ?",
-    answer: "En cas d'impayé, le syndic doit d'abord adresser une mise en demeure par lettre recommandée. Sans réponse, il peut saisir le président du tribunal judiciaire par une procédure d'injonction de payer, sans avocat obligatoire. La créance est garantie par le privilège immobilier spécial sur le lot du débiteur.",
-  },
-  {
-    category: 'legal',
-    question: "Comment déclarer un sinistre sur les parties communes ?",
-    answer: "Le syndic doit déclarer le sinistre à l'assureur de la copropriété dans les 5 jours ouvrés suivant sa connaissance (ou 2 jours pour un vol). La déclaration mentionne la nature du sinistre, sa date approximative, les parties touchées et les premiers éléments de constat. Conservez bien tous les justificatifs et photos.",
+    category: 'ag',
+    question: "Les appels de fonds votés en AG sont-ils générés automatiquement ?",
+    answer: "Non, il faut les créer manuellement depuis « Appels de fonds » — mais c'est très rapide : l'application importe automatiquement le budget et le calendrier approuvés, pré-remplit les montants et propose le 1er janvier de l'année suivante comme date par défaut. Il suffit de vérifier et de publier.",
   },
   {
     category: 'app',
-    question: "L'application fonctionne-t-elle sur mobile ?",
-    answer: "L'interface est intégralement responsive et s'adapte aux smartphones et tablettes. Vous pouvez consulter les données, gérer les incidents et accéder aux documents depuis n'importe quel appareil connecté.",
+    question: "Comment modifier ou supprimer un élément créé par erreur ?",
+    answer: "La plupart des éléments (copropriétaires, lots, dépenses, appels de fonds en brouillon, résolutions) sont modifiables ou supprimables depuis leur liste. Les appels de fonds déjà publiés ne peuvent plus être supprimés directement pour conserver l'historique comptable : contactez le support si vous avez besoin d'une correction.",
   },
   {
     category: 'app',
-    question: "Comment exporter ou archiver mes données ?",
-    answer: "Les documents générés (convocations, PV, appels de fonds) sont au format PDF et peuvent être téléchargés à tout moment depuis chaque section. Un export global de vos données est disponible dans les paramètres de votre compte.",
-  },
-  {
-    category: 'app',
-    question: "Mes données sont-elles sécurisées ?",
-    answer: "Les données sont hébergées sur des serveurs européens (Supabase — Union Européenne), chiffrées en transit (HTTPS/TLS) et au repos (AES-256). L'accès est protégé par une authentification sécurisée. Nous ne revendons aucune donnée à des tiers.",
+    question: "Mes données sont-elles sécurisées et sauvegardées ?",
+    answer: "Les données sont hébergées sur des serveurs européens, chiffrées en transit (HTTPS) et au repos. Des sauvegardes automatiques quotidiennes sont effectuées. Vous pouvez télécharger à tout moment les PDF générés (convocations, PV, appels de fonds) depuis chaque section.",
   },
 ];
 
