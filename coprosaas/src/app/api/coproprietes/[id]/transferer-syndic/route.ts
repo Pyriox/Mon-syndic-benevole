@@ -28,10 +28,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
   const body = await request.json();
-  const { email, password } = body as { email: string; password: string };
+  const { email } = body as { email: string };
 
-  if (!email || !password) {
-    return NextResponse.json({ error: 'Email et mot de passe requis' }, { status: 400 });
+  if (!email) {
+    return NextResponse.json({ error: 'Email requis' }, { status: 400 });
   }
 
   // Vérifier que la copropriété appartient bien à l'utilisateur connecté
@@ -44,15 +44,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (!copro) {
     return NextResponse.json({ error: 'Copropriété introuvable ou accès refusé' }, { status: 403 });
-  }
-
-  // Vérifier le mot de passe de l'utilisateur actuel (confirmation)
-  const { error: authError } = await supabase.auth.signInWithPassword({
-    email: user.email!,
-    password,
-  });
-  if (authError) {
-    return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 401 });
   }
 
   // Rechercher le nouveau syndic par email via une fonction SQL dédiée

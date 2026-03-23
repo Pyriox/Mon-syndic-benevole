@@ -16,7 +16,6 @@ export default function TransfertSyndic({ coproprieteId, coproprieteNom }: Trans
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,7 +25,6 @@ export default function TransfertSyndic({ coproprieteId, coproprieteNom }: Trans
   const handleClose = () => {
     setIsOpen(false);
     setEmail('');
-    setPassword('');
     setConfirm('');
     setError('');
   };
@@ -45,7 +43,7 @@ export default function TransfertSyndic({ coproprieteId, coproprieteNom }: Trans
     const res = await fetch(`/api/coproprietes/${coproprieteId}/transferer-syndic`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: email.trim() }),
     });
 
     const data = await res.json();
@@ -123,21 +121,6 @@ export default function TransfertSyndic({ coproprieteId, coproprieteNom }: Trans
             </p>
           </div>
 
-          {/* Mot de passe de confirmation */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Votre mot de passe (confirmation)
-            </label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              autoComplete="current-password"
-            />
-          </div>
-
           {error && (
             <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
               {error}
@@ -151,7 +134,7 @@ export default function TransfertSyndic({ coproprieteId, coproprieteNom }: Trans
             <Button
               type="submit"
               loading={loading}
-              disabled={!email || !password || confirm.trim() !== CONFIRM_TEXT}
+              disabled={!email || confirm.trim() !== CONFIRM_TEXT}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
               <ArrowRightLeft size={14} /> Transférer la gestion

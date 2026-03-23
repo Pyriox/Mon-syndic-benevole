@@ -35,7 +35,7 @@ export async function createCopropriete(formData: {
   cookieStore.set('selected_copro_id', data.id, {
     path: '/',
     maxAge: 60 * 60 * 24 * 365,
-    sameSite: 'lax',
+    sameSite: 'strict',
     secure: process.env.NODE_ENV === 'production',
   });
 

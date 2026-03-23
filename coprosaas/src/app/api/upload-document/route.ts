@@ -9,6 +9,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isSubscribed } from '@/lib/subscription';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
+
+// Signatures magiques par type MIME (magic bytes)
+const MAGIC_SIGNATURES: Record<string, number[][]> = {
+  'application/pdf':         [[0x25, 0x50, 0x44, 0x46]],                                           // %PDF
+  'image/jpeg':              [[0xFF, 0xD8, 0xFF]],
+  'image/png':               [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
+  'image/gif':               [[0x47, 0x49, 0x46, 0x38, 0x37, 0x61], [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]], // GIF87a, GIF89a
+  'image/webp':              [[0x52, 0x49, 0x46, 0x46]],                                           // RIFF header
+  'application/msword':      [[0xD0, 0xCF, 0x11, 0xE0]],                                           // OLE
+  'application/vnd.ms-excel': [[0xD0, 0xCF, 0x11, 0xE0]],                                         // OLE
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [[0x50, 0x4B, 0x03, 0x04]], // ZIP
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':       [[0x50, 0x4B, 0x03, 0x04]], // ZIP
+  // text/plain, text/csv : pas de signature fiable, vérification ignorée
+};
+
+function hasMagicBytes(buffer: ArrayBuffer, mimeType: string): boolean {
+  const signatures = MAGIC_SIGNATURES[mimeType];
+  if (!signatures) return true; // texte plat — pas de vérification
+  const bytes = new Uint8Array(buffer, 0, Math.min(buffer.byteLength, 8));
+  return signatures.some(sig => sig.every((b, i) => bytes[i] === b));
+}
 
 export async function POST(req: NextRequest) {
   // 1. Vérification de l'authentification
@@ -16,6 +38,13 @@ export async function POST(req: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+  }
+
+  // 1b. Rate limiting : 10 uploads/minute par utilisateur
+  const ip = getClientIp(req);
+  const allowed = await rateLimit(`upload:${user.id}:${ip}`, 10, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: 'Trop de requêtes. Veuillez patienter.' }, { status: 429 });
   }
 
   // 2. Lecture du FormData
@@ -85,6 +114,11 @@ export async function POST(req: NextRequest) {
   const safeName = (nom.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '') || 'document');
   const fileName = `${copropriete_id}/${Date.now()}-${safeName}.${fileExt}`;
   const arrayBuffer = await file.arrayBuffer();
+
+  // 4b. Validation des magic bytes (contenu réel vs type déclaré)
+  if (!hasMagicBytes(arrayBuffer, file.type)) {
+    return NextResponse.json({ error: 'Le contenu du fichier ne correspond pas au type déclaré' }, { status: 400 });
+  }
 
   const { data: uploadData, error: uploadError } = await admin.storage
     .from('documents')
