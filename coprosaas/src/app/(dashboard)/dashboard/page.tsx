@@ -352,13 +352,12 @@ export default async function DashboardPage() {
   }
 
   // Provisions appelées (hors fonds_travaux)
-  const totalProvisions = (appelsProvisions ?? [])
-    .filter((a) => a.type_appel !== 'fonds_travaux')
-    .reduce((s, a) => s + (a.montant_total ?? 0), 0);
+  const provisionsRows = (appelsProvisions ?? []).filter((a) => a.type_appel !== 'fonds_travaux');
+  const hasProvisions = provisionsRows.length > 0;
+  const totalProvisions = provisionsRows.reduce((s, a) => s + (a.montant_total ?? 0), 0);
 
   // Écart prévisionnel : provisions − dépenses réelles
-  // positif = surplus (plus appelé que dépensé)
-  // négatif = déficit (dépenses > provisions, régularisation à prévoir)
+  // Masqué si aucun appel de fonds n'a encore été saisi (évite un faux déficit la 1ère année)
   const ecartPrevisionnel = totalProvisions - totalDepenses;
 
   type LigneEncaissee = { montant_du: number };
@@ -491,8 +490,17 @@ export default async function DashboardPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Provisions {currentYear}</p>
-                <p className="text-2xl font-bold text-gray-900">{formatEuros(totalProvisions)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Charges appelées aux copro.</p>
+                {hasProvisions ? (
+                  <>
+                    <p className="text-2xl font-bold text-gray-900">{formatEuros(totalProvisions)}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Charges appelées aux copro.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-semibold text-gray-400">&mdash;</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Aucun appel de fonds {currentYear}</p>
+                  </>
+                )}
               </div>
             </Card>
 
@@ -523,24 +531,40 @@ export default async function DashboardPage() {
             </Card>
 
             {/* Écart prévisionnel provisions − dépenses */}
-            <Card className="flex items-center gap-4">
-              <div className={`p-3 rounded-xl shrink-0 ${ecartPrevisionnel > 0 ? 'bg-green-100' : ecartPrevisionnel < 0 ? 'bg-orange-100' : 'bg-gray-100'}`}>
-                {ecartPrevisionnel > 0
-                  ? <TrendingUp size={24} className="text-green-600" />
-                  : ecartPrevisionnel < 0
-                    ? <TrendingDown size={24} className="text-orange-600" />
-                    : <Minus size={24} className="text-gray-400" />}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
-                <p className={`text-2xl font-bold ${ecartPrevisionnel > 0 ? 'text-green-700' : ecartPrevisionnel < 0 ? 'text-orange-600' : 'text-gray-700'}`}>
-                  {ecartPrevisionnel > 0 ? '+' : ''}{formatEuros(ecartPrevisionnel)}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {ecartPrevisionnel > 0 ? 'Surplus (trop-perçu provisoire)' : ecartPrevisionnel < 0 ? 'Déficit à régulariser' : 'Provisions = dépenses'}
-                </p>
-              </div>
-            </Card>
+            {hasProvisions ? (
+              <Card className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl shrink-0 ${ecartPrevisionnel > 0 ? 'bg-green-100' : ecartPrevisionnel < 0 ? 'bg-orange-100' : 'bg-gray-100'}`}>
+                  {ecartPrevisionnel > 0
+                    ? <TrendingUp size={24} className="text-green-600" />
+                    : ecartPrevisionnel < 0
+                      ? <TrendingDown size={24} className="text-orange-600" />
+                      : <Minus size={24} className="text-gray-400" />}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
+                  <p className={`text-2xl font-bold ${ecartPrevisionnel > 0 ? 'text-green-700' : ecartPrevisionnel < 0 ? 'text-orange-600' : 'text-gray-700'}`}>
+                    {ecartPrevisionnel > 0 ? '+' : ''}{formatEuros(ecartPrevisionnel)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {ecartPrevisionnel > 0 ? 'Surplus (trop-perçu provisoire)' : ecartPrevisionnel < 0 ? 'Déficit à régulariser' : 'Provisions = dépenses'}
+                  </p>
+                </div>
+              </Card>
+            ) : (
+              <Card className="flex items-center gap-4 border-dashed border-gray-200">
+                <div className="p-3 bg-gray-50 rounded-xl shrink-0">
+                  <Minus size={24} className="text-gray-300" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Écart prévisionnel</p>
+                  <p className="text-sm text-gray-400 mt-0.5 leading-snug">
+                    Créez votre premier{' '}
+                    <Link href="/appels-de-fonds" className="text-blue-600 hover:underline font-medium">appel de fonds</Link>{' '}
+                    pour voir cet indicateur.
+                  </p>
+                </div>
+              </Card>
+            )}
           </div>
 
           {/* ── Ligne 2 : 3 KPIs opérationnels ── */}
