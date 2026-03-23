@@ -557,10 +557,10 @@ export default async function DashboardPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Écart prévisionnel</p>
-                  <p className="text-sm text-gray-400 mt-0.5 leading-snug">
-                    Créez votre premier{' '}
-                    <Link href="/appels-de-fonds" className="text-blue-600 hover:underline font-medium">appel de fonds</Link>{' '}
-                    pour voir cet indicateur.
+                  <p className="text-sm text-gray-700 font-semibold mt-0.5">—</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Aucune provision saisie pour {currentYear}.{' '}
+                    <Link href="/appels-de-fonds" className="text-gray-400 hover:text-blue-600 hover:underline">Saisir un appel de fonds</Link>
                   </p>
                 </div>
               </Card>
