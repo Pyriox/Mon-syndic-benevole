@@ -159,6 +159,19 @@ export default function ArticleLogicielSyndicBenevole() {
         Chaque copropriétaire accède à ses appels de fonds, son historique de paiements, les comptes de la copropriété et les documents postés par le syndic. Résultat : 60 à 80 % de demandes individuelles en moins (d&apos;après les retours d&apos;Isabelle et Sylvie).
       </p>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Les 6 fonctionnalités indispensables — dans un seul outil</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Lots, tantièmes, appels de fonds, relances, AG, espace copropriétaires — Mon Syndic Bénévole les intègre tous. Opérationnel en moins d&apos;une heure.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester gratuitement — 14 jours offerts →
+        </Link>
+      </div>
+
       <h2 id="solution" className={h2}>La solution : ces 6 fonctionnalités en un seul outil</h2>
 
       <h2 id="migration-excel" className={h2}>Comment migrer depuis Excel en 30 minutes</h2>

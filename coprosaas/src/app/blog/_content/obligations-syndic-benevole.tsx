@@ -219,6 +219,19 @@ export default function ArticleObligationsSyndicBenevole() {
         <p>[Votre nom] — Syndic non-professionnel bénévole</p>
       </div>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Convocations, PV et mises en demeure — modèles inclus</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole intègre tous les documents légaux prêts à personnaliser : convocations d&apos;AG conformes, PV, mises en demeure. Plus aucun délai manqué.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Créer ma copropriété gratuitement →
+        </Link>
+      </div>
+
       <h2 id="5-manquements" className={h2}>Les 5 manquements les plus courants qui finissent en contentieux</h2>
 
       <h3 className={h3}>1. Le délai de convocation non respecté (comme Christophe)</h3>

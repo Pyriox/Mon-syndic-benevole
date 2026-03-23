@@ -2,6 +2,7 @@
 // Article : Gérer une copropriété sans syndic professionnel
 // ============================================================
 
+import Link from 'next/link';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleGererCopropriete() {
@@ -59,12 +60,12 @@ export default function ArticleGererCopropriete() {
         <p className="text-sm text-gray-600 mb-4">
           Un outil pensé pour les syndics bénévoles : appels de fonds automatiques, AG en un clic, accès copropriétaires intégré. Essai 14 jours, sans carte bancaire.
         </p>
-        <a
+        <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Tester gratuitement — 14 jours offerts →
-        </a>
+        </Link>
       </div>
 
       <h2 id="temps-reel" className={h2}>Combien de temps ça prend vraiment — décomposition par tâche</h2>
@@ -143,6 +144,19 @@ export default function ArticleGererCopropriete() {
       <p className={p}>
         Avec un logiciel de gestion dédié (~25 €/mois), l&apos;économie réelle pour la copropriété : <strong className={strong}>2 700 € à 3 400 € par an</strong>, soit 225 à 283 € par mois. Réparti entre les copropriétaires, ça représente 225 à 308 € d&apos;économie annuelle chacun sur un immeuble de 12 lots.
       </p>
+
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Économisez jusqu&apos;à 3 400 € par an — sans y passer vos week-ends</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole automatise les appels de fonds, le suivi des paiements et la préparation des AG. Essai 14 jours, sans carte bancaire.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Créer ma copropriété gratuitement →
+        </Link>
+      </div>
 
       <h2 id="responsabilites" className={h2}>Les vraies responsabilités — ce qui vous revient concrètement</h2>
 
@@ -253,12 +267,12 @@ export default function ArticleGererCopropriete() {
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Gérez votre immeuble sans vous y noyer</p>
         <p className="text-sm text-blue-100 mb-4">Appels de fonds, AG, fonds de travaux — tout en un. Essai 14 jours, sans carte bancaire.</p>
-        <a
+        <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
           Créer ma copropriété sur Mon Syndic Bénévole →
-        </a>
+        </Link>
       </div>
     </>
   );
