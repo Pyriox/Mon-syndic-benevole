@@ -103,6 +103,19 @@ export default function ArticleAppelDeFonds() {
         <strong className={strong}>(tantièmes du lot ÷ total) × (budget annuel ÷ 4)</strong>. Pour le Lot 1 : (180 ÷ 1 000) × (9 600 ÷ 4) = 0,18 × 2 400 = <strong className={strong}>432 €</strong>.
       </p>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Calcul automatique par tantièmes</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole répartit les charges par tantièmes en quelques secondes — zéro calcul manuel, zéro erreur de répartition.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester gratuitement — 14 jours offerts →
+        </Link>
+      </div>
+
       <h2 id="types-charges" className={h2}>Charges générales vs charges spéciales : une distinction qui change tout</h2>
 
       <h3 className={h3}>Les charges générales</h3>
@@ -254,34 +267,6 @@ export default function ArticleAppelDeFonds() {
         <li className={li}>Préparer le tableau de régularisation fin d&apos;exercice : 2 h</li>
       </ul>
       <p className={p}>Total estimé : <strong className={strong}>~6 heures par trimestre</strong>, soit 24 heures par an rien que sur les appels de fonds. Sans compter les erreurs sur les tantièmes que personne ne détecte avant l&apos;AG.</p>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
-        <p className="text-blue-800 font-semibold mb-3">Ce que Mon Syndic Bénévole automatise</p>
-        <ul className="space-y-2">
-          {[
-            'Répartition par tantièmes calculée instantanément, lot par lot — zéro calcul manuel.',
-            '8 avis de paiement générés en PDF en 30 secondes, avec le montant exact de chaque copropriétaire.',
-            'Envoi par e-mail depuis la plateforme avec piste d\'audit (qui a reçu quoi, quand).',
-            'Tableau de bord temps réel : qui a payé, qui est en retard, solde de chaque compte.',
-            'Relances configurables (J+15, J+30) avec rappel automatique de la référence de l\'appel.',
-            'Régularisation annuelle calculée automatiquement avec export PDF pour l\'AG.',
-          ].map((item) => (
-            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-              {item}
-            </li>
-          ))}
-        </ul>
-        <p className="text-sm text-gray-600 mt-4">
-          Résultat terrain : les appels de fonds passent de <strong className="text-gray-800">6 heures de travail par trimestre à 20 minutes</strong>.
-        </p>
-        <Link
-          href="/register"
-          className="inline-block mt-4 text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
-        >
-          Tester Mon Syndic Bénévole gratuitement →
-        </Link>
-      </div>
 
       <h2 id="fonds-travaux-alur" className={h2}>Ne pas confondre appel courant et fonds de travaux ALUR</h2>
       <p className={p}>

@@ -17,6 +17,19 @@ export default function ArticleLogicielSyndicBenevole() {
         Il a migré vers un logiciel de gestion dédié en avril. Son AG de juin a pris 2 heures de préparation. Voici la différence concrète entre les deux approches — et comment choisir le bon outil.
       </p>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Marc l&apos;a fait. Vous pouvez aussi.</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Configurez votre copropriété en 15 minutes et émettez votre premier appel de fonds le jour même. Essai gratuit, sans carte bancaire.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester gratuitement — 14 jours offerts →
+        </Link>
+      </div>
+
       <h2 id="explication" className={h2}>L&apos;explication : Excel vs logiciel dédié</h2>
       <h2 id="excel-vs-logiciel" className={h2}>La comparaison honnête</h2>
 
@@ -87,18 +100,6 @@ export default function ArticleLogicielSyndicBenevole() {
       <p className={p}>
         La conclusion de Marc : &ldquo;Excel me coûtait 4 heures supplémentaires par mois par rapport à l&apos;outil. À 25 € par mois, le logiciel me fait économiser du temps à un coût inférieur au salaire minimum horaire.&rdquo;
       </p>
-      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Vivez la différence dès aujourd&apos;hui</p>
-        <p className="text-sm text-gray-600 mb-4">
-          Configurez votre copropriété en 15 minutes et émettez votre premier appel de fonds le jour même. Essai gratuit, sans carte bancaire.
-        </p>
-        <Link
-          href="/register"
-          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
-        >
-          Tester Mon Syndic Bénévole gratuitement →
-        </Link>
-      </div>
       <h2 id="pourquoi-excel-ne-suffit-pas" className={h2}>Les 5 limitations concrètes d&apos;Excel en gestion de copropriété</h2>
 
       <h3 className={h3}>1. Pas de traçabilité des relances</h3>
@@ -159,18 +160,6 @@ export default function ArticleLogicielSyndicBenevole() {
       </p>
 
       <h2 id="solution" className={h2}>La solution : ces 6 fonctionnalités en un seul outil</h2>
-      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Ces 6 fonctionnalités en un seul outil</p>
-        <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole couvre l&apos;intégralité de ces besoins. Configurez votre copropriété en 15 minutes, émettez vos premiers appels de fonds le jour même. Essai gratuit, sans carte bancaire.
-        </p>
-        <Link
-          href="/register"
-          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
-        >
-          Tester Mon Syndic Bénévole gratuitement →
-        </Link>
-      </div>
 
       <h2 id="migration-excel" className={h2}>Comment migrer depuis Excel en 30 minutes</h2>
       <p className={p}>

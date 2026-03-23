@@ -247,18 +247,6 @@ export default function ArticleObligationsSyndicBenevole() {
       </p>
 
       <h2 id="solution" className={h2}>La solution : ne manquez plus aucune échéance légale</h2>
-      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Suivez toutes ces obligations depuis un seul endroit</p>
-        <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole intègre les délais légaux dans le calendrier (convocation AG, notification PV, appels de fonds trimestriels), génère les documents conformes et alerte avant chaque échéance critique.
-        </p>
-        <Link
-          href="/register"
-          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
-        >
-          Tester Mon Syndic Bénévole gratuitement →
-        </Link>
-      </div>
 
       <h2 id="checklist" className={h2}>Checklist des obligations par période</h2>
 

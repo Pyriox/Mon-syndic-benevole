@@ -179,8 +179,7 @@ export default function HomePage() {
 
   return (
     <>
-      <Script
-        id="json-ld"
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
@@ -335,7 +334,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════ SOLUTION ══════════════════════════════ */}
-      <section aria-labelledby="solution-heading" className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6 border-y border-gray-100">
+      <section id="fonctionnalites" aria-labelledby="solution-heading" className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6 border-y border-gray-100">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">La solution</p>

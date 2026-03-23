@@ -54,6 +54,19 @@ export default function ArticleGererCopropriete() {
         Organisation de Sylvie : un logiciel de gestion, des alertes automatiques sur les échéances contractuelles, un accès copropriétaires pour les questions. &ldquo;Ça a coupé de 60 % les questions par SMS.&rdquo;
       </p>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Gérez comme Sylvie — sans y passer votre week-end</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Un outil pensé pour les syndics bénévoles : appels de fonds automatiques, AG en un clic, accès copropriétaires intégré. Essai 14 jours, sans carte bancaire.
+        </p>
+        <a
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester gratuitement — 14 jours offerts →
+        </a>
+      </div>
+
       <h2 id="temps-reel" className={h2}>Combien de temps ça prend vraiment — décomposition par tâche</h2>
 
       <div className="overflow-x-auto mb-6 rounded-xl border border-gray-200">
@@ -197,30 +210,6 @@ export default function ArticleGererCopropriete() {
       <p className={p}>
         La solution n&apos;est pas de décourager — c&apos;est de s&apos;outiller dès le départ. Un outil de gestion de copropriété ne remplace pas votre jugement. Il automatise les tâches répétitives (calcul des tantièmes, envoi des appels, suivi des paiements) pour que vous puissiez vous concentrer sur ce qui demande vraiment votre attention.
       </p>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
-        <p className="text-blue-800 font-semibold mb-3">Ce que Mon Syndic Bénévole centralise pour vous</p>
-        <ul className="space-y-2">
-          {[
-            'Appels de fonds calculés automatiquement selon les tantièmes — aucun calcul manuel.',
-            'AG complètes : convocations, votes, PV et feuilles de présence en PDF.',
-            'GED documents : PV, factures et contrats accessibles par tous les copropriétaires.',
-            'Suivi des incidents et travaux : de la déclaration à la résolution.',
-            'Tableau de bord temps réel : trésorerie, dépenses, impayés et prochaine AG.',
-          ].map((item) => (
-            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-              {item}
-            </li>
-          ))}
-        </ul>
-        <a
-          href="/register"
-          className="inline-block mt-5 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
-        >
-          Essayer gratuitement — 14 jours offerts →
-        </a>
-      </div>
 
       <h2 id="quand-professionnel" className={h2}>Les 4 cas où un syndic professionnel reste plus adapté</h2>
       <ul className={ul}>

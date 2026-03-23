@@ -36,6 +36,19 @@ export default function ArticleFondsTravaux() {
         <strong className={strong}>Exception pour les immeubles neufs :</strong> una copropriété peut décider, à l&apos;unanimité, de ne pas constituer le fonds pendant les <strong className={strong}>cinq premières années</strong> suivant la réception de l&apos;immeuble. Au-delà, l&apos;obligation s&apos;applique sans exception.
       </p>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Votre fonds de travaux, géré sans risque d&apos;oubli</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole crée le compte fonds de travaux séparé et calcule les cotisations trimestrielles par lot. Alerte automatique avant chaque vote en AG.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester gratuitement — 14 jours offerts →
+        </Link>
+      </div>
+
       <h2 id="montant-minimum" className={h2}>Combien mettre de côté : le minimum légal, et ce qu&apos;il faut vraiment prévoir</h2>
 
       <h3 className={h3}>Le plancher légal</h3>
@@ -247,29 +260,6 @@ export default function ArticleFondsTravaux() {
       <p className={p}>
         Géré manuellement, le fonds de travaux ALUR ressemble à tout le reste : un onglet de plus dans le tableau Excel, des virements à vérifier, des soldes à recalculer. Le risque d&apos;erreur (et d&apos;oubli lors du vote en AG) est réel.
       </p>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
-        <ul className="space-y-2">
-          {[
-            'Fonds de travaux créé comme type d\'appel distinct des charges courantes — séparation automatique dans les comptes.',
-            'Cotisation trimestrielle calculée automatiquement par lot selon les tantièmes et le montant annuel voté.',
-            'Suivi en temps réel : combien a versé chaque copropriétaire depuis la création du fonds.',
-            'Historique complet exportable — précieux lors d\'une vente pour l\'état daté du notaire.',
-            'Alerte annuelle pour soumettre le montant au vote en AG.',
-          ].map((item) => (
-            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-              {item}
-            </li>
-          ))}
-        </ul>
-        <Link
-          href="/register"
-          className="inline-block mt-5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
-        >
-          Tester Mon Syndic Bénévole gratuitement →
-        </Link>
-      </div>
 
       <h2 id="dtg" className={h2}>Fonds de travaux et diagnostic technique global (DTG)</h2>
       <p className={p}>

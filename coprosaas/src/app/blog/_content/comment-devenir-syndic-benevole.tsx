@@ -52,6 +52,19 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         Le procès-verbal d&apos;élection est votre document de légitimité. Il doit mentionner : votre nom complet, la durée du mandat, la date d&apos;entrée en vigueur, et le résultat précis du vote (nombre de voix). Gardez-en <strong className={strong}>plusieurs originaux signés</strong> — vous en aurez besoin pour ouvrir le compte bancaire du syndicat et prouver votre qualité aux prestataires.
       </p>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Opérationnel dès le premier jour</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole vous guide dès la prise de fonctions : copropriétaires, lots, appels de fonds calculés automatiquement. Opérationnel en 15 minutes.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester gratuitement — 14 jours offerts →
+        </Link>
+      </div>
+
       <h2 id="48h" className={h2}>J+1 : ce que Pierre a fait le lendemain matin (et ce que vous devriez faire)</h2>
       <p className={p}>
         Le premier réflexe de Pierre a été de ne rien faire — &ldquo;ça peut attendre quelques jours.&rdquo; Erreur. Les délais légaux courent dès la fin du mandat de l&apos;ancien syndic. Voici les 3 choses à faire dans les 48 heures :
@@ -215,18 +228,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       <p className={p}>
         En tant que syndic : déclarez immédiatement à l&apos;assurance MRI de la copropriété si les parties communes sont impliquées. Demandez au copropriétaire de déclarer aussi à sa propre assurance habitation. Si le dégât vient d&apos;un autre appartement, les deux assurances communiqueront entre elles via la convention IRSI (moins de 5 000 €) ou CIDE-COP (au-delà).
       </p>
-      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Une question à 21 h 15 ? Votre outil a la réponse</p>
-        <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole centralise les contrats, les délais légaux et l&apos;historique des copropriétaires — tout ce dont vous avez besoin pour répondre vite et juste. Essai gratuit, sans carte bancaire.
-        </p>
-        <Link
-          href="/register"
-          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
-        >
-          Créer ma copropriété gratuitement →
-        </Link>
-      </div>
+
       <h2 id="erreurs-debut" className={h2}>Les 4 erreurs classiques qui coûtent des heures (ou pire, des procès)</h2>
 
       <h3 className={h3}>Erreur 1 — Oublier le délai de 21 jours pour la convocation d&apos;AG</h3>
