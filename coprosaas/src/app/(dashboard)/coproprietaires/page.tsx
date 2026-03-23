@@ -4,6 +4,7 @@
 // ============================================================
 export const revalidate = 60;
 
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';
@@ -18,7 +19,31 @@ export default async function CoproprietairesPage() {
   const { selectedCoproId, role, copro: copropriete, user } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
 
-  // Si syndic mais pas gérant de cette copropriété → redirect (requireCoproAccess gère déjà ce cas)
+  // Aucune copropriété accessible (nouveau compte) → inviter à en créer une
+  if (!copropriete) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Copropriétaires</h2>
+          <p className="text-gray-500 mt-1">0 copropriétaire(s)</p>
+        </div>
+        <EmptyState
+          icon={<Building2 size={48} strokeWidth={1.5} />}
+          title="Aucune copropriété"
+          description="Créez votre première copropriété pour commencer à gérer vos copropriétaires."
+          action={
+            <Link
+              href="/coproprietes/nouvelle"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+            >
+              Créer une copropriété →
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
+
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
 
   // Copropriétaires + tous les lots de la copropriété, en parallèle

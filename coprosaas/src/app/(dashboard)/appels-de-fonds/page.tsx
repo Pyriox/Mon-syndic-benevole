@@ -51,7 +51,8 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const isSyndic = userRole === 'syndic';
+  // role === null = nouveau compte sans copropriété → traité comme syndic (cohérent avec le layout)
+  const isSyndic = userRole === 'syndic' || userRole === null;
   const canWrite = isSubscribed(copropriete?.plan);
 
   // ── Calculer les stats par appel ──────────────────────────────────────────
