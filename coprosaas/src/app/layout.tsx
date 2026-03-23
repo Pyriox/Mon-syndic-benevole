@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import Script from "next/script";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import CookieBanner from "@/components/CookieBanner";
 import "./globals.css";
 
 const geist = Geist({
@@ -118,6 +119,11 @@ export default function RootLayout({
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
+                gtag('consent', 'default', {
+                  analytics_storage: 'denied',
+                  ad_storage: 'denied',
+                  wait_for_update: 500
+                });
                 gtag('js', new Date());
                 gtag('config', '${gaId}');
               `}
@@ -125,6 +131,7 @@ export default function RootLayout({
             <GoogleAnalytics />
           </>
         )}
+        <CookieBanner />
       </body>
     </html>
   );

@@ -7,6 +7,7 @@ export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? '';
 declare global {
   interface Window {
     gtag: (...args: unknown[]) => void;
+    dataLayer: unknown[];
   }
 }
 
@@ -20,4 +21,22 @@ export function pageview(url: string) {
 export function trackEvent(action: string, params?: Record<string, unknown>) {
   if (!GA_ID || typeof window === 'undefined' || !window.gtag) return;
   window.gtag('event', action, params);
+}
+
+/** Accorde le consentement analytics (appelé quand l'utilisateur accepte) */
+export function grantConsent() {
+  if (typeof window === 'undefined' || !window.gtag) return;
+  window.gtag('consent', 'update', {
+    analytics_storage: 'granted',
+    ad_storage: 'denied',
+  });
+}
+
+/** Refuse le consentement analytics (appelé quand l'utilisateur refuse) */
+export function denyConsent() {
+  if (typeof window === 'undefined' || !window.gtag) return;
+  window.gtag('consent', 'update', {
+    analytics_storage: 'denied',
+    ad_storage: 'denied',
+  });
 }
