@@ -19,6 +19,9 @@ import {
   Building2,
   BellRing,
   Banknote,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
   Scale,
 } from 'lucide-react';
 
@@ -258,6 +261,7 @@ export default async function DashboardPage() {
     { data: assemblees },
     { data: appelsEchus },
     { data: appelsEncaisses },
+    { data: appelsProvisions },
   ] = await Promise.all([
     // Dépenses de l'année en cours (5 dernières pour l'encart)
     supabase
@@ -322,6 +326,14 @@ export default async function DashboardPage() {
       .select('montant_du, appels_de_fonds!inner(copropriete_id)')
       .eq('appels_de_fonds.copropriete_id', scopeId)
       .eq('paye', true),
+
+    // Provisions appelées de l'année (hors fonds de travaux)
+    supabase
+      .from('appels_de_fonds')
+      .select('montant_total, type_appel')
+      .eq('copropriete_id', scopeId)
+      .gte('date_echeance', `${currentYear}-01-01`)
+      .lt('date_echeance', `${currentYear + 1}-01-01`),
   ]);
 
   // Calcul des KPIs
@@ -339,10 +351,19 @@ export default async function DashboardPage() {
     else tendanceDepenses = 'baisse';
   }
 
-  // Solde de trésorerie = encaissés − dépenses année courante
+  // Provisions appelées (hors fonds_travaux)
+  const totalProvisions = (appelsProvisions ?? [])
+    .filter((a) => a.type_appel !== 'fonds_travaux')
+    .reduce((s, a) => s + (a.montant_total ?? 0), 0);
+
+  // Écart prévisionnel : provisions − dépenses réelles
+  // positif = surplus (plus appelé que dépensé)
+  // négatif = déficit (dépenses > provisions, régularisation à prévoir)
+  const ecartPrevisionnel = totalProvisions - totalDepenses;
+
   type LigneEncaissee = { montant_du: number };
-  const totalEncaisses = (appelsEncaisses as LigneEncaissee[] | null)?.reduce((sum, l) => sum + l.montant_du, 0) ?? 0;
-  const soldeTresorerie = totalEncaisses - totalDepenses;
+  // appelsEncaisses conservé pour usage futur
+  void (appelsEncaisses as LigneEncaissee[] | null);
   const nbImpayés = coproprietaires?.filter((c) => c.solde < 0).length ?? 0;
   const totalMontantImpayé = coproprietaires
     ?.filter((c) => c.solde < 0)
@@ -461,29 +482,27 @@ export default async function DashboardPage() {
       {/* KPIs */}
       {copropriete && (
         <>
-          {/* ── Ligne 1 : 3 KPIs financiers ── */}
+          {/* ── Ligne 1 : 3 KPIs financiers — provisions / dépenses / écart ── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Solde de trésorerie */}
+            {/* Provisions appelées (hors fonds travaux) */}
             <Card className="flex items-center gap-4">
-              <div className={`p-3 rounded-xl shrink-0 ${soldeTresorerie >= 0 ? 'bg-indigo-100' : 'bg-orange-100'}`}>
-                <Scale size={24} className={soldeTresorerie >= 0 ? 'text-indigo-600' : 'text-orange-600'} />
+              <div className="p-3 bg-indigo-100 rounded-xl shrink-0">
+                <Wallet size={24} className="text-indigo-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Trésorerie</p>
-                <p className={`text-2xl font-bold ${soldeTresorerie >= 0 ? 'text-indigo-700' : 'text-orange-600'}`}>
-                  {soldeTresorerie >= 0 ? '+' : ''}{formatEuros(soldeTresorerie)}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">Encaissés − dépenses</p>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Provisions {currentYear}</p>
+                <p className="text-2xl font-bold text-gray-900">{formatEuros(totalProvisions)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Charges appelées aux copro.</p>
               </div>
             </Card>
 
-            {/* Dépenses totales + tendance */}
+            {/* Dépenses réelles + tendance */}
             <Card className="flex items-center gap-4">
               <div className="p-3 bg-blue-100 rounded-xl shrink-0">
                 <Receipt size={24} className="text-blue-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dépenses {currentYear}</p>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dépenses réelles {currentYear}</p>
                 <p className="text-2xl font-bold text-gray-900">{formatEuros(totalDepenses)}</p>
                 {tendanceDepenses === 'hausse' && (
                   <p className="text-xs text-red-500 flex items-center gap-0.5 mt-0.5 font-medium">
@@ -503,7 +522,28 @@ export default async function DashboardPage() {
               </div>
             </Card>
 
-            {/* Impayés */}
+            {/* Écart prévisionnel provisions − dépenses */}
+            <Card className="flex items-center gap-4">
+              <div className={`p-3 rounded-xl shrink-0 ${ecartPrevisionnel >= 0 ? 'bg-green-100' : 'bg-orange-100'}`}>
+                {ecartPrevisionnel >= 0
+                  ? <TrendingUp size={24} className="text-green-600" />
+                  : <TrendingDown size={24} className="text-orange-600" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
+                <p className={`text-2xl font-bold ${ecartPrevisionnel >= 0 ? 'text-green-700' : 'text-orange-600'}`}>
+                  {ecartPrevisionnel >= 0 ? '+' : ''}{formatEuros(ecartPrevisionnel)}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {ecartPrevisionnel >= 0 ? 'Surplus (trop-perçu provisoire)' : 'Déficit à régulariser'}
+                </p>
+              </div>
+            </Card>
+          </div>
+
+          {/* ── Ligne 2 : 3 KPIs opérationnels ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Impayés copropriétaires */}
             <Card className="flex items-center gap-4">
               <div className="p-3 bg-red-100 rounded-xl shrink-0">
                 <Banknote size={24} className="text-red-600" />
@@ -520,10 +560,7 @@ export default async function DashboardPage() {
                 )}
               </div>
             </Card>
-          </div>
 
-          {/* ── Ligne 2 : 2 KPIs opérationnels ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Incidents ouverts */}
             <Card className="flex items-center gap-4">
               <div className="p-3 bg-yellow-100 rounded-xl shrink-0">
@@ -586,11 +623,11 @@ export default async function DashboardPage() {
               )}
             </Card>
 
-            {/* Répartition des charges */}
+            {/* Répartition des dépenses réelles */}
             <Card>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Répartition des charges</h3>
-                <span className="text-xs text-gray-400">{currentYear}</span>
+                <h3 className="font-semibold text-gray-900">Répartition des dépenses</h3>
+                <span className="text-xs text-gray-400">réelles {currentYear}</span>
               </div>
               {repartition.length > 0 ? (
                 <div className="space-y-3">
