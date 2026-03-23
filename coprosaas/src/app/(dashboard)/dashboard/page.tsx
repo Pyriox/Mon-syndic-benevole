@@ -570,22 +570,35 @@ export default async function DashboardPage() {
           {/* ── Ligne 2 : 3 KPIs opérationnels ── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Impayés copropriétaires */}
-            <Card className="flex items-center gap-4">
-              <div className="p-3 bg-red-100 rounded-xl shrink-0">
-                <Banknote size={24} className="text-red-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Solde impayé</p>
-                <p className={`text-2xl font-bold ${totalMontantImpayé > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                  {formatEuros(totalMontantImpayé)}
-                </p>
-                {nbImpayés > 0 && (
-                  <p className="text-xs text-red-400 mt-0.5">
-                    {nbImpayés} copropriétaire{nbImpayés > 1 ? 's' : ''}
+            {!hasProvisions ? (
+              <Card className="flex items-center gap-4 border-dashed border-gray-200">
+                <div className="p-3 bg-gray-50 rounded-xl shrink-0">
+                  <Banknote size={24} className="text-gray-300" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Solde impayé</p>
+                  <p className="text-lg font-semibold text-gray-400">&mdash;</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Aucune provision saisie pour {currentYear}</p>
+                </div>
+              </Card>
+            ) : (
+              <Card className="flex items-center gap-4">
+                <div className="p-3 bg-red-100 rounded-xl shrink-0">
+                  <Banknote size={24} className="text-red-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Solde impayé</p>
+                  <p className={`text-2xl font-bold ${totalMontantImpayé > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                    {formatEuros(totalMontantImpayé)}
                   </p>
-                )}
-              </div>
-            </Card>
+                  {nbImpayés > 0 && (
+                    <p className="text-xs text-red-400 mt-0.5">
+                      {nbImpayés} copropriétaire{nbImpayés > 1 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
+              </Card>
+            )}
 
             {/* Incidents ouverts */}
             <Card className="flex items-center gap-4">
