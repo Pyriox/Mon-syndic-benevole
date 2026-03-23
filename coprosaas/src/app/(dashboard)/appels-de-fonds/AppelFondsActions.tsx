@@ -159,6 +159,11 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
       setAgsDisponibles(grouped);
       setLoadingAGs(false);
+
+      // Présélection automatique si une seule AG avec budget est disponible
+      if (grouped.length === 1) {
+        selectAG(grouped[0]);
+      }
     };
     fetchAGs();
   }, [isOpen, coproprieteId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -169,6 +174,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     setIsExceptionnel(false);
 
     const agDateISO = ag.ag_date.slice(0, 10); // toujours YYYY-MM-DD
+    const agYear = new Date(agDateISO + 'T00:00:00').getFullYear();
+    const nextYear = agYear + 1; // les appels de fonds votés en AG concernent le budget n+1
 
     // Construire les postes depuis toutes les résolutions budgétaires
     const newPostes: Poste[] = [];
@@ -188,7 +195,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     }
     setPostes(newPostes.length > 0 ? newPostes : [{ ...POSTE_VIDE }]);
     setResolutionLieeId(primaryResId);
-    setTitre(`Appel de fonds ${new Date(agDateISO + 'T00:00:00').getFullYear()}`);
+    setTitre(`Appel de fonds ${nextYear}`);
 
     // Échéancier voté en AG
     if (ag.votedDates.length >= 2) {
@@ -206,11 +213,12 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       setDateSingle(ag.votedDates[0]);
       setGenDateDebut(ag.votedDates[0]);
     } else {
+      const currentYearDefault = `${new Date().getFullYear()}-01-01`;
       setEditableDates([]);
       setFromAGDates(false);
       setUseEcheancier(hasBudgetPrev);
-      setDateSingle('');
-      setGenDateDebut('');
+      setDateSingle(currentYearDefault);
+      setGenDateDebut(currentYearDefault);
       setGenNb(4);
       setGenPeriodicite('trimestriel');
     }

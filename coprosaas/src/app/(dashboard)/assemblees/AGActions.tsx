@@ -162,7 +162,12 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
   // -- Navigation --
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
-    setResolutions(initResolutions(typeAG));
+    const agYear = dateVal ? new Date(dateVal + 'T00:00:00').getFullYear() : new Date().getFullYear();
+    const nextYearDefault = `${agYear + 1}-01-01`;
+    const initialized = initResolutions(typeAG).map((r) =>
+      r.hasEcheancier ? { ...r, echeancierDates: [nextYearDefault] } : r
+    );
+    setResolutions(initialized);
     setWizardStep(2);
   };
 

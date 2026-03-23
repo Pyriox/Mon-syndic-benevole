@@ -435,9 +435,9 @@ export default function AidePage() {  const router = useRouter();  const [name, 
           <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-2">
             <Info size={15} className="text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-semibold text-amber-800">Première année sur CoproSaaS ?</p>
+              <p className="text-xs font-semibold text-amber-800">Première année sur Mon Syndic Bénévole ?</p>
               <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                Les appels de fonds de l\'exercice en cours ont probablement été gérés sur une autre plateforme.
+                Les appels de fonds de l&apos;exercice en cours ont probablement été gérés sur une autre plateforme.
                 Vous pouvez les re-saisir manuellement (même pour un seul appel global annuel) pour que le dashboard
                 affiche les bonnes provisions et impayés. Les T1/T2 déjà payés peuvent être marqués payés
                 directement après publication.

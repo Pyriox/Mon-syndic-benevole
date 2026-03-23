@@ -128,18 +128,33 @@ export default function HomePage() {
         mainEntity: [
           {
             '@type': 'Question',
-            name: "Faut-il un moyen de paiement pour démarrer ?",
-            acceptedAnswer: { '@type': 'Answer', text: "Oui, un moyen de paiement est requis à la souscription. Les 14 premiers jours sont entièrement gratuits — la première facturation intervient au 15e jour, puis l'abonnement se renouvelle chaque année. Vous pouvez annuler à tout moment avant la date de renouvellement." },
+            name: "Je ne suis pas comptable — l'outil est-il vraiment accessible ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Oui. Mon Syndic Bénévole est conçu pour des non-professionnels : les calculs de répartition des charges, tantièmes et appels de fonds sont automatiques. L'interface est guidée, sans jargon comptable. La plupart de nos utilisateurs sont opérationnels en moins d'une heure." },
           },
           {
             '@type': 'Question',
-            name: "Puis-je annuler à tout moment ?",
-            acceptedAnswer: { '@type': 'Answer', text: "Oui, sans frais ni préavis. Si vous souhaitez arrêter, votre abonnement n'est pas renouvelé. Vos données restent accessibles jusqu'à la fin de la période payée." },
+            name: "Combien de temps faut-il pour configurer sa copropriété ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Comptez 20 à 30 minutes pour saisir les lots, les tantièmes et les copropriétaires. Une fois cette base en place, vous pouvez émettre votre premier appel de fonds immédiatement. Pas d'installation, pas de formation requise." },
           },
           {
             '@type': 'Question',
-            name: "Mes données sont-elles sécurisées ?",
-            acceptedAnswer: { '@type': 'Answer', text: "Vos données sont hébergées en Europe, chiffrées en transit (HTTPS) et au repos. Nous n'accédons jamais à vos données sans votre autorisation explicite." },
+            name: "Je prends la main en cours d'exercice — comment gérer les appels de fonds déjà émis ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Vous pouvez ressaisir les appels de fonds de l'année en cours (même un seul appel global) et marquer directement comme payés les versements déjà encaissés. Le tableau de bord affichera ainsi les bons soldes et impayés dès le premier jour." },
+          },
+          {
+            '@type': 'Question',
+            name: "Mes copropriétaires doivent-ils créer un compte ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Non, c'est facultatif. Vous pouvez inviter vos copropriétaires par e-mail pour qu'ils accèdent à leur espace (solde, documents, convocations) — mais l'outil fonctionne pleinement même si aucun copropriétaire ne se connecte." },
+          },
+          {
+            '@type': 'Question',
+            name: "Est-ce que ça remplace un syndic professionnel ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Mon Syndic Bénévole est un outil d'aide à la gestion pour les copropriétés qui ont choisi le syndic bénévole (ou coopératif). Il ne remplace pas un conseil juridique ni une expertise technique, mais il couvre toute la gestion administrative et comptable courante : appels de fonds, AG, charges, documents, incidents." },
+          },
+          {
+            '@type': 'Question',
+            name: "Est-ce conforme à la loi ALUR et aux obligations du syndic bénévole ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Oui. Mon Syndic Bénévole est conçu pour répondre aux obligations légales du syndic non-professionnel : fonds de travaux obligatoires (loi ALUR), appels de charges trimestriels, convocations AG avec ordre du jour, procès-verbaux, conservation des documents sur 5 ans." },
           },
           {
             '@type': 'Question',
@@ -148,18 +163,8 @@ export default function HomePage() {
           },
           {
             '@type': 'Question',
-            name: "Est-ce conforme à la loi ALUR et aux obligations du syndic bénévole ?",
-            acceptedAnswer: { '@type': 'Answer', text: "Oui. Mon Syndic Bénévole est conçu pour répondre aux obligations légales du syndic non-professionnel : fonds de travaux, appels de charges, convocations AG, procès-verbaux, conservation des documents." },
-          },
-          {
-            '@type': 'Question',
-            name: "Y a-t-il une application mobile ?",
-            acceptedAnswer: { '@type': 'Answer', text: "L'application est entièrement accessible depuis le navigateur de votre smartphone, iOS ou Android. Elle est optimisée pour mobile — aucune installation requise. Une application native est dans notre feuille de route." },
-          },
-          {
-            '@type': 'Question',
-            name: "Puis-je importer mes données existantes ?",
-            acceptedAnswer: { '@type': 'Answer', text: "Vous pouvez ajouter vos copropriétaires, lots et tantièmes directement depuis l'interface en quelques minutes. L'import automatisé (fichier Excel ou CSV) est une fonctionnalité prévue dans nos prochaines mises à jour." },
+            name: "Puis-je annuler à tout moment ? Que deviennent mes données ?",
+            acceptedAnswer: { '@type': 'Answer', text: "Oui, sans frais ni préavis. Votre abonnement n'est pas renouvelé et vos données restent accessibles jusqu'à la fin de la période payée. Nous vous recommandons d'exporter vos documents avant résiliation." },
           },
         ],
       },
@@ -1060,32 +1065,36 @@ export default function HomePage() {
           <div className="divide-y divide-gray-200">
             {[
               {
-                q: "Faut-il un moyen de paiement pour démarrer ?",
-                a: "Oui, un moyen de paiement est requis à la souscription. Les 14 premiers jours sont entièrement gratuits — la première facturation intervient au 15e jour, puis l'abonnement se renouvelle chaque année. Vous pouvez annuler à tout moment avant la date de renouvellement.",
+                q: "Je ne suis pas comptable — l'outil est-il vraiment accessible ?",
+                a: "Oui. Mon Syndic Bénévole est conçu pour des non-professionnels : les calculs de répartition des charges, tantièmes et appels de fonds sont automatiques. L'interface est guidée, sans jargon comptable. La plupart de nos utilisateurs sont opérationnels en moins d'une heure.",
               },
               {
-                q: "Puis-je annuler à tout moment ?",
-                a: "Oui, sans frais ni préavis. Si vous souhaitez arrêter, votre abonnement n'est pas renouvelé. Vos données restent accessibles jusqu'à la fin de la période payée.",
+                q: "Combien de temps faut-il pour configurer sa copropriété ?",
+                a: "Comptez 20 à 30 minutes pour saisir les lots, les tantièmes et les copropriétaires. Une fois cette base en place, vous pouvez émettre votre premier appel de fonds immédiatement. Pas de logiciel à installer, pas de formation requise.",
               },
               {
-                q: "Mes données sont-elles sécurisées ?",
-                a: "Vos données sont hébergées en Europe, chiffrées en transit (HTTPS) et au repos. Nous n'accédons jamais à vos données sans votre autorisation explicite.",
+                q: "Je prends la main en cours d'exercice — comment gérer les appels de fonds déjà émis ?",
+                a: "Vous pouvez ressaisir les appels de fonds de l'année en cours (même un seul appel global) et marquer directement comme payés les versements déjà encaissés. Le tableau de bord affichera ainsi les bons soldes et impayés dès le premier jour.",
+              },
+              {
+                q: "Mes copropriétaires doivent-ils créer un compte ?",
+                a: "Non, c'est facultatif. Vous pouvez les inviter par e-mail pour qu'ils accèdent à leur espace personnel (solde, documents, convocations) — mais l'outil fonctionne pleinement même si aucun copropriétaire ne se connecte.",
+              },
+              {
+                q: "Est-ce que ça remplace un syndic professionnel ?",
+                a: "Mon Syndic Bénévole est un outil d'aide à la gestion pour les copropriétés ayant choisi le syndic bénévole ou coopératif. Il couvre toute la gestion administrative et comptable courante : appels de fonds, AG, charges, documents, incidents. Il ne remplace pas un conseil juridique ni une expertise technique.",
+              },
+              {
+                q: "Est-ce conforme à la loi ALUR et aux obligations du syndic bénévole ?",
+                a: "Oui. Mon Syndic Bénévole est conçu pour répondre aux obligations légales : fonds de travaux obligatoires (loi ALUR), appels de charges, convocations AG avec ordre du jour, procès-verbaux, conservation des documents sur 5 ans.",
               },
               {
                 q: "Un abonnement couvre-t-il plusieurs copropriétés ?",
                 a: "Chaque abonnement est lié à une copropriété. Vous pouvez gérer plusieurs copropriétés depuis un seul compte en souscrivant un abonnement par copropriété.",
               },
               {
-                q: "Est-ce conforme à la loi ALUR et aux obligations du syndic bénévole ?",
-                a: "Oui. Mon Syndic Bénévole est conçu pour répondre aux obligations légales du syndic non-professionnel : fonds de travaux, appels de charges, convocations AG, procès-verbaux, conservation des documents. Les workflows suivent les bonnes pratiques issues de la loi du 10 juillet 1965 et de ses décrets d'application.",
-              },
-              {
-                q: "Y a-t-il une application mobile ?",
-                a: "L'application est entièrement accessible depuis le navigateur de votre smartphone, iOS ou Android. Elle est optimisée pour mobile — aucune installation requise. Une application native est dans notre feuille de route.",
-              },
-              {
-                q: "Puis-je importer mes données existantes ?",
-                a: "Vous pouvez ajouter vos copropriétaires, lots et tantièmes directement depuis l'interface en quelques minutes. L'import automatisé (fichier Excel ou CSV) est une fonctionnalité prévue dans nos prochaines mises à jour. En attendant, nos guides pas-à-pas rendent la configuration rapide même pour une grande copropriété.",
+                q: "Puis-je annuler à tout moment ? Que deviennent mes données ?",
+                a: "Oui, sans frais ni préavis. Votre abonnement n'est pas renouvelé et vos données restent accessibles jusqu'à la fin de la période payée. Nous vous recommandons d'exporter vos documents avant résiliation.",
               },
             ].map(({ q, a }) => (
               <details key={q} className="group py-5">

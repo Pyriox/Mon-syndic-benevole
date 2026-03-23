@@ -44,6 +44,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
     code_postal: '',
     ville: '',
     raison_sociale: '',
+    solde_reprise: '',
   });
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
         adresse: formData.adresse.trim() || null,
         code_postal: formData.code_postal.trim() || null,
         ville: formData.ville.trim() || null,
-        solde: 0,
+        solde: parseFloat(formData.solde_reprise) || 0,
         user_id: null,
       })
       .select('id')
@@ -97,7 +98,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
     }
 
     setIsOpen(false);
-    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', code_postal: '', ville: '', raison_sociale: '' });
+    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '' });
     setIsSci(false);
     setSelectedLotIds([]);
     router.refresh();
@@ -171,6 +172,12 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
           <div className="grid grid-cols-2 gap-3">
             <Input label="Code postal" name="code_postal" value={formData.code_postal} onChange={handleChange} required placeholder="75001" />
             <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} required />
+          </div>
+          <div>
+            <Input label="Solde à la reprise (€)" name="solde_reprise" type="number" step="0.01" value={formData.solde_reprise} onChange={handleChange} placeholder="0.00" />
+            <p className="text-xs text-gray-400 mt-1">
+              Facultatif — si vous rejoignez la plateforme en cours d'année, indiquez le solde actuel de ce copropriétaire sur votre ancien outil (positif = créditeur, négatif = débiteur).
+            </p>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
