@@ -30,7 +30,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ message: 'Données invalides' }, { status: 422 });
   }
 
-  const admin = createAdminClient();
   const { error } = await admin
     .from('support_tickets')
     .update({ status })

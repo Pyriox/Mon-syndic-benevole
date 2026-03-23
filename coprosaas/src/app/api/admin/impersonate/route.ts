@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email invalide ou protégé' }, { status: 400 });
   }
 
-  const admin = createAdminClient();
   const baseUrl = request.nextUrl.origin;
   const { data, error } = await admin.auth.admin.generateLink({
     type: 'magiclink',

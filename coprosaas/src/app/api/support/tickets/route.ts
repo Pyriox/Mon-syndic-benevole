@@ -16,7 +16,6 @@ export async function GET() {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 403 });
   }
 
-  const admin = createAdminClient();
   const { data, error } = await admin
     .from('support_tickets')
     .select('id, user_email, user_name, subject, status, created_at, updated_at')
