@@ -13,6 +13,7 @@ import {
   ExternalLink, Building2, Users, CalendarDays, Wallet,
   Search, ArrowRight, FileText, AlertTriangle,
   Send, RefreshCw, User, Shield, Clock, CheckCircle, X,
+  BookOpen, Info,
 } from 'lucide-react';
 
 // ── Catégories FAQ ───────────────────────────────────────────
@@ -367,6 +368,82 @@ export default function AidePage() {  const router = useRouter();  const [name, 
               <ArrowRight size={11} className="text-gray-300 group-hover:text-blue-400 transition-colors" />
             </Link>
           ))}
+        </div>
+      </div>
+
+      {/* ── Cycle annuel ── */}
+      <div>
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+            <BookOpen size={16} className="text-green-600" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">Comprendre le cycle annuel</h2>
+            <p className="text-xs text-gray-400">AG · Appels de fonds · Dashboard · Régularisation</p>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 space-y-0">
+          {/* Étapes */}
+          {[
+            {
+              num: '1',
+              color: 'bg-purple-100 text-purple-700',
+              title: 'L\'AG vote le budget prévisionnel',
+              body: 'Chaque année, l\'Assemblée Générale vote le budget de l\'exercice suivant. Ex : l\'AG de juin 2026 vote le budget 2027.',
+            },
+            {
+              num: '2',
+              color: 'bg-blue-100 text-blue-700',
+              title: 'Le syndic crée les appels de fonds',
+              body: 'Dans « Appels de fonds », créez une série liée à l\'AG : 4 appels trimestriels avec des échéances en 2027 (01/01, 01/04, 01/07, 01/10). Les quotes-parts sont calculées automatiquement selon les tantièmes.',
+            },
+            {
+              num: '3',
+              color: 'bg-amber-100 text-amber-700',
+              title: 'Publiez et notifiez les copropriétaires',
+              body: 'À la publication, chaque copropriétaire reçoit son avis de paiement par email. Son solde est débité automatiquement. Marquez chaque paiement reçu pour mettre à jour les soldes en temps réel.',
+            },
+            {
+              num: '4',
+              color: 'bg-green-100 text-green-700',
+              title: 'Le dashboard reflète l\'exercice en cours',
+              body: 'Les provisions 2027, les dépenses réelles et l\'écart prévisionnel s\'affichent automatiquement dès que les données sont saisies. Le solde impayé = somme des soldes négatifs des copropriétaires.',
+            },
+            {
+              num: '5',
+              color: 'bg-orange-100 text-orange-700',
+              title: 'Régularisation en fin d\'exercice',
+              body: 'En fin d\'année, comparez les provisions appelées aux dépenses réelles. Si écart positif → trop-perçu à rembourser ou reporter. Si négatif → appel complémentaire à émettre.',
+            },
+          ].map((step, i, arr) => (
+            <div key={step.num} className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${step.color}`}>
+                  {step.num}
+                </div>
+                {i < arr.length - 1 && <div className="w-px flex-1 bg-gray-100 my-1" />}
+              </div>
+              <div className={`pb-5 min-w-0 ${i === arr.length - 1 ? '' : ''}`}>
+                <p className="text-sm font-semibold text-gray-800">{step.title}</p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{step.body}</p>
+              </div>
+            </div>
+          ))}
+
+          {/* Note première année */}
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-2">
+            <Info size={15} className="text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-amber-800">Première année sur CoproSaaS ?</p>
+              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                Les appels de fonds de l\'exercice en cours ont probablement été gérés sur une autre plateforme.
+                Vous pouvez les re-saisir manuellement (même pour un seul appel global annuel) pour que le dashboard
+                affiche les bonnes provisions et impayés. Les T1/T2 déjà payés peuvent être marqués payés
+                directement après publication.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
