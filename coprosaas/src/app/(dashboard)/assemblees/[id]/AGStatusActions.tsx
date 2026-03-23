@@ -508,7 +508,11 @@ export default function AGStatusActions({ agId, coproprieteId, currentStatut, qu
   const handleCloturer = async () => {
     setLoading(true);
     setIsConfirmOpen(false);
-    await supabase.from('assemblees_generales').update({ statut: 'terminee', quorum_atteint: quorumAtteint }).eq('id', agId);
+    await fetch(`/api/ag/${agId}/terminer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quorumAtteint }),
+    });
     router.refresh();
     setLoading(false);
   };

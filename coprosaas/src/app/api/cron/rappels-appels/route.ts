@@ -11,6 +11,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 import { buildAppelEmail, buildAppelEmailSubject, type AppelEmailType } from '@/lib/emails/appel-de-fonds';
+import { buildBrouillonRappelEmail, buildBrouillonRappelSubject } from '@/lib/emails/syndic-notifications';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM   = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -80,11 +83,70 @@ export async function GET(req: NextRequest) {
     totalSent += sent;
   }
 
+  // ── Rappel brouillons non publiés (> 3 jours) ──────────────────────────────
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: brouillons } = await supabase
+    .from('appels_de_fonds')
+    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .eq('statut', 'brouillon')
+    .lt('created_at', threeDaysAgo)
+    .is('rappel_brouillon_at', null);
+
+  // Groupe par copropriété (un seul e-mail par copropriété, listant tous ses brouillons)
+  type BrouillonRow = {
+    id: string;
+    copropriete_id: string;
+    coproprietes: { nom: string; profiles: { email: string; full_name: string } | { email: string; full_name: string }[] | null } | null;
+  };
+
+  const brouillonGroups = new Map<string, { coproprieteNom: string; syndicEmail: string; syndicPrenom: string; ids: string[] }>();
+
+  for (const b of (brouillons ?? []) as unknown as BrouillonRow[]) {
+    const copro = b.coproprietes;
+    if (!copro) continue;
+    const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
+    if (!profile?.email) continue;
+
+    if (!brouillonGroups.has(b.copropriete_id)) {
+      brouillonGroups.set(b.copropriete_id, {
+        coproprieteNom: copro.nom,
+        syndicEmail: profile.email,
+        syndicPrenom: (profile.full_name ?? '').split(' ')[0] || 'Syndic',
+        ids: [],
+      });
+    }
+    brouillonGroups.get(b.copropriete_id)!.ids.push(b.id);
+  }
+
+  for (const [, group] of brouillonGroups) {
+    const n = group.ids.length;
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to: group.syndicEmail,
+      subject: buildBrouillonRappelSubject(group.coproprieteNom, n),
+      html: buildBrouillonRappelEmail({
+        syndicPrenom: group.syndicPrenom,
+        coproprieteNom: group.coproprieteNom,
+        nombreBrouillons: n,
+        appelsUrl: `${SITE_URL}/appels-de-fonds`,
+      }),
+    });
+    if (!error) {
+      await supabase
+        .from('appels_de_fonds')
+        .update({ rappel_brouillon_at: new Date().toISOString() })
+        .in('id', group.ids);
+      totalSent++;
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     date: today.toISOString().slice(0, 10),
-    j7_appels:  j7Appels?.length  ?? 0,
-    j15_appels: j15Appels?.length ?? 0,
+    j7_appels:        j7Appels?.length   ?? 0,
+    j15_appels:       j15Appels?.length  ?? 0,
+    brouillon_groupes: brouillonGroups.size,
     sent: totalSent,
   });
 }
