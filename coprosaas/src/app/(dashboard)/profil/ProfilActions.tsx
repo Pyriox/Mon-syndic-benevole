@@ -288,13 +288,13 @@ export function ProfilIdentiteEditor({
           <button
             type="button"
             onClick={() => fiche && startEdit(field)}
-            className="w-full text-left group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-colors"
+            className="w-full text-left group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-white transition-colors"
             title={`Modifier ${label}`}
           >
             <span className="text-sm font-medium text-gray-900 truncate">
               {value || <span className="text-gray-400 italic text-sm font-normal">Non renseigné</span>}
             </span>
-            <Pencil size={12} className="shrink-0 text-gray-300 group-hover:text-blue-500 transition-colors" />
+            <Pencil size={12} className="shrink-0 text-gray-400 group-hover:text-blue-500 transition-colors" />
           </button>
         )}
       </div>
