@@ -215,7 +215,18 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       <p className={p}>
         En tant que syndic : déclarez immédiatement à l&apos;assurance MRI de la copropriété si les parties communes sont impliquées. Demandez au copropriétaire de déclarer aussi à sa propre assurance habitation. Si le dégât vient d&apos;un autre appartement, les deux assurances communiqueront entre elles via la convention IRSI (moins de 5 000 €) ou CIDE-COP (au-delà).
       </p>
-
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Une question à 21 h 15 ? Votre outil a la réponse</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole centralise les contrats, les délais légaux et l&apos;historique des copropriétaires — tout ce dont vous avez besoin pour répondre vite et juste. Essai gratuit, sans carte bancaire.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Créer ma copropriété gratuitement →
+        </Link>
+      </div>
       <h2 id="erreurs-debut" className={h2}>Les 4 erreurs classiques qui coûtent des heures (ou pire, des procès)</h2>
 
       <h3 className={h3}>Erreur 1 — Oublier le délai de 21 jours pour la convocation d&apos;AG</h3>
@@ -264,6 +275,17 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       </p>
       <p className={p}>Pierre, 8 mois après sa première AG : &ldquo;Je passe environ 3 heures par mois. L&apos;appel de fonds, je le génère en 10 minutes. La partie la plus longue, c&apos;est la préparation de l&apos;AG annuelle — mais ça m&apos;a pris moins de 5 heures en tout.&rdquo;</p>
       <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a> ou sur le <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>calcul des appels de fonds</a>.</p>
+
+      <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
+        <p className="text-base font-semibold text-white mb-2">Prenez vos fonctions du bon pied</p>
+        <p className="text-sm text-blue-100 mb-4">Annuaire des copropriétaires, appels de fonds automatiques, convocations AG en un clic — opérationnel en 15 minutes.</p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
+        >
+          Créer ma copropriété sur Mon Syndic Bénévole →
+        </Link>
+      </div>
     </>
   );
 }

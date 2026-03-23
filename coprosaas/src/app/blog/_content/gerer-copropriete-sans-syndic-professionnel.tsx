@@ -260,6 +260,17 @@ export default function ArticleGererCopropriete() {
       </p>
       <p className={p}>Ce qui fait la différence entre un syndic qui tient dans la durée et un qui abandonne au bout de 2 ans : l&apos;organisation, les bons outils, et une copropriété qui joue le jeu collectivement.</p>
       <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/comment-devenir-syndic-benevole" className={a}>comment devenir syndic bénévole</a> ou sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales détaillées du syndic</a>.</p>
+
+      <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
+        <p className="text-base font-semibold text-white mb-2">Gérez votre immeuble sans vous y noyer</p>
+        <p className="text-sm text-blue-100 mb-4">Appels de fonds, AG, fonds de travaux — tout en un. Essai 14 jours, sans carte bancaire.</p>
+        <a
+          href="/register"
+          className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
+        >
+          Créer ma copropriété sur Mon Syndic Bénévole →
+        </a>
+      </div>
     </>
   );
 }

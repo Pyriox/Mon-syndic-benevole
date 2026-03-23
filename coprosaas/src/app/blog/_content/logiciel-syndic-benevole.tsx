@@ -87,7 +87,18 @@ export default function ArticleLogicielSyndicBenevole() {
       <p className={p}>
         La conclusion de Marc : &ldquo;Excel me coûtait 4 heures supplémentaires par mois par rapport à l&apos;outil. À 25 € par mois, le logiciel me fait économiser du temps à un coût inférieur au salaire minimum horaire.&rdquo;
       </p>
-
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Vivez la différence dès aujourd&apos;hui</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Configurez votre copropriété en 15 minutes et émettez votre premier appel de fonds le jour même. Essai gratuit, sans carte bancaire.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester Mon Syndic Bénévole gratuitement →
+        </Link>
+      </div>
       <h2 id="pourquoi-excel-ne-suffit-pas" className={h2}>Les 5 limitations concrètes d&apos;Excel en gestion de copropriété</h2>
 
       <h3 className={h3}>1. Pas de traçabilité des relances</h3>

@@ -102,6 +102,19 @@ export default function ArticleObligationsSyndicBenevole() {
         </table>
       </div>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Ne gérez plus ces délais à la main</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole intègre toutes ces échéances dans un calendrier partagé et vous alerte avant chaque date critique — convocation AG, notification PV, appels de fonds trimestriels.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester Mon Syndic Bénévole gratuitement →
+        </Link>
+      </div>
+
       <h2 id="convocation-ag" className={h2}>Template : convocation d&apos;AG conforme</h2>
       <p className={p}>
         La convocation doit être envoyée par <strong className={strong}>lettre recommandée avec accusé de réception</strong> (LRAR) ou par tout autre moyen permettant de justifier la date de remise (remise en main propre avec émargement, voie électronique avec accord préalable écrit des copropriétaires concernés).

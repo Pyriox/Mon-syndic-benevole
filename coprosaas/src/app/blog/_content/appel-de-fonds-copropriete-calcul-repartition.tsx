@@ -2,6 +2,7 @@
 // Article : Appel de fonds copropriété — calcul, répartition, relance
 // ============================================================
 
+import Link from 'next/link';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleAppelDeFonds() {
@@ -169,6 +170,19 @@ export default function ArticleAppelDeFonds() {
 
       <p className={p}>Envoyez cet avis par <strong className={strong}>e-mail avec accusé de lecture</strong> — pas besoin de recommandé pour les appels ordinaires. Conservez une copie de chaque envoi (date + destinataire) pour le suivi en cas de litige.</p>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Générez vos avis de paiement en un clic</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole calcule les quotes-parts par tantièmes et génère les avis PDF pour tous vos copropriétaires en 30 secondes. Essai gratuit, sans carte bancaire.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Créer ma copropriété gratuitement →
+        </Link>
+      </div>
+
       <h2 id="appel-exceptionnel" className={h2}>L&apos;appel de fonds exceptionnel : même logique, calendrier différent</h2>
       <p className={p}>
         L&apos;AG vote des travaux non prévus au budget — disons le remplacement de la porte d&apos;entrée pour 4 800 €. Un appel exceptionnel est lancé, réparti selon les mêmes tantièmes généraux.
@@ -261,6 +275,12 @@ export default function ArticleAppelDeFonds() {
         <p className="text-sm text-gray-600 mt-4">
           Résultat terrain : les appels de fonds passent de <strong className="text-gray-800">6 heures de travail par trimestre à 20 minutes</strong>.
         </p>
+        <Link
+          href="/register"
+          className="inline-block mt-4 text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester Mon Syndic Bénévole gratuitement →
+        </Link>
       </div>
 
       <h2 id="fonds-travaux-alur" className={h2}>Ne pas confondre appel courant et fonds de travaux ALUR</h2>
@@ -304,6 +324,17 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>
         <strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur le <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a> ou les <a href="/blog/obligations-syndic-benevole" className={a}>obligations complètes du syndic bénévole</a>.
       </p>
+
+      <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
+        <p className="text-base font-semibold text-white mb-2">Fini les 6 heures de calcul par trimestre</p>
+        <p className="text-sm text-blue-100 mb-4">14 jours d&apos;essai gratuit. Aucune carte bancaire requise.</p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
+        >
+          Créer ma copropriété sur Mon Syndic Bénévole →
+        </Link>
+      </div>
     </>
   );
 }

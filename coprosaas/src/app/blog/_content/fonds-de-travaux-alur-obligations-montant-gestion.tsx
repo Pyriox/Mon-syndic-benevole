@@ -2,6 +2,7 @@
 // Article : Fonds de travaux ALUR — obligations, montant, gestion
 // ============================================================
 
+import Link from 'next/link';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleFondsTravaux() {
@@ -173,6 +174,19 @@ export default function ArticleFondsTravaux() {
         </p>
       </div>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Constituez votre fonds de travaux sans vous perdre</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole gère la cotisation au fonds de travaux séparément des charges courantes, calcule les quotes-parts par lot et alerte chaque année avant le vote en AG.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester Mon Syndic Bénévole gratuitement →
+        </Link>
+      </div>
+
       <h2 id="compte-separe" className={h2}>Le compte bancaire séparé : une obligation méconnue mais contrôlable</h2>
       <p className={p}>
         Les sommes versées au fonds de travaux <strong className={strong}>ne peuvent pas être mélangées avec la trésorerie courante</strong>. La loi est explicite : le fonds de travaux doit être déposé sur un compte bancaire séparé, ouvert au nom du syndicat des copropriétaires.
@@ -249,6 +263,12 @@ export default function ArticleFondsTravaux() {
             </li>
           ))}
         </ul>
+        <Link
+          href="/register"
+          className="inline-block mt-5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester Mon Syndic Bénévole gratuitement →
+        </Link>
       </div>
 
       <h2 id="dtg" className={h2}>Fonds de travaux et diagnostic technique global (DTG)</h2>
@@ -287,6 +307,17 @@ export default function ArticleFondsTravaux() {
         Le défi du syndic bénévole n&apos;est pas de comprendre le principe — il est simple. C&apos;est de le mettre en œuvre rigoureusement, année après année, avec les bons outils et la bonne traçabilité.
       </p>
       <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>le calcul et la répartition des appels de fonds</a> ou <a href="/blog/obligations-syndic-benevole" className={a}>les obligations complètes du syndic bénévole</a>.</p>
+
+      <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
+        <p className="text-base font-semibold text-white mb-2">Gérez votre fonds de travaux sans risque d&apos;oubli</p>
+        <p className="text-sm text-blue-100 mb-4">Séparation automatique des comptes, alerte annuelle avant le vote en AG, historique complet pour l&apos;état daté.</p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
+        >
+          Créer ma copropriété sur Mon Syndic Bénévole →
+        </Link>
+      </div>
     </>
   );
 }
