@@ -33,10 +33,10 @@ export default function ArticleGererCopropriete() {
 
       <h3 className={h3}>Isabelle, 61 ans, retraitée — immeuble de 6 lots, Nantes</h3>
       <p className={p}>
-        &ldquo;Je consacre environ 2 heures par mois à la copropriété. L&apos;appel de fonds, j&apos;envoie un e-mail à tout le monde, ils virèrent en 10 jours. L&apos;AG prend une soirée de préparation et 2 heures de réunion. Le reste, c&apos;est de la réactivité — un dégât des eaux, une ampoule à changer. Rien d&apos;insurmontable.&rdquo;
+        &ldquo;Je consacre environ 2 heures par mois à la copropriété. L&apos;appel de fonds, j&apos;envoie un e-mail à tout le monde, ils ont viré en 10 jours. L&apos;AG prend une soirée de préparation et 2 heures de réunion. Le reste, c&apos;est de la réactivité — un dégât des eaux, une ampoule à changer. Rien d&apos;insurmontable.&rdquo;
       </p>
       <p className={p}>
-        Organisation d&apos;Isabelle : un classeur physique + un dossier Google Drive partagé avec les copropriétaires. Elle a commencé avec Excel, passé à un outil dédié après sa première AG &ldquo;où je n&apos;avais pas les bons chiffres sous la main&rdquo;.
+        Organisation d&apos;Isabelle : un classeur physique + un dossier Google Drive partagé avec les copropriétaires. Elle a commencé avec Excel et est passée à un outil dédié après sa première AG &ldquo;où je n&apos;avais pas les bons chiffres sous la main&rdquo;.
       </p>
 
       <h3 className={h3}>Marc, 44 ans, cadre commercial — immeuble de 12 lots, Lyon</h3>

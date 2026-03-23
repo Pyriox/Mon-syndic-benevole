@@ -11,7 +11,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
     <>
       <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        Il est 21 h 15. L&apos;assemblée générale vient de se terminer. Pierre, 52 ans, a levé la main quand personne d&apos;autre ne se proposait. &ldquo;D&apos;accord, je veux bien essayer.&rdquo; Le voilà syndic bénévole d&apos;un immeuble de 8 lots. Il rentre chez lui avec le procs-verbal sous le bras et une seule question en tête : <strong className={strong}>par où je commence demain matin ?</strong>
+        Il est 21 h 15. L&apos;assemblée générale vient de se terminer. Pierre, 52 ans, a levé la main quand personne d&apos;autre ne se proposait. &ldquo;D&apos;accord, je veux bien essayer.&rdquo; Le voilà syndic bénévole d&apos;un immeuble de 8 lots. Il rentre chez lui avec le procès-verbal sous le bras et une seule question en tête : <strong className={strong}>par où je commence demain matin ?</strong>
       </p>
       <p className={p}>
         C&apos;est le scénario le plus courant. On accepte le rôle avec les meilleures intentions. Puis on découvre les archives en désordre, les délais légaux qu&apos;on ne connaissait pas, les copropriétaires qui posent des questions auxquelles on ne sait pas encore répondre. <strong className={strong}>Sans méthode ni outil, les 6 premiers mois peuvent être épuisants.</strong>
@@ -118,7 +118,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
 
       <h3 className={h3}>2. Ouvrir le compte bancaire séparé du syndicat</h3>
       <p className={p}>
-        <strong className={strong}>Obligation légale absolue</strong> (art. 18-2) : le compte doit être au nom du <em>syndicat des copropriétaires</em>, jamais en votre nom propre. Apportez à la banque : le PV d&apos;élection, votre pièce d&apos;identité, et si possible le règlement de copropriété.
+        <strong className={strong}>Obligation légale absolue</strong> (art. 18 loi 1965) : le compte doit être au nom du <em>syndicat des copropriétaires</em>, jamais en votre nom propre. Apportez à la banque : le PV d&apos;élection, votre pièce d&apos;identité, et si possible le règlement de copropriété.
       </p>
       <p className={p}>
         Si votre copropriété a plus de 10 lots, vous avez également besoin d&apos;un <strong className={strong}>second compte séparé pour le fonds de travaux ALUR</strong>. Ces sommes ne peuvent légalement pas être mélangées avec la trésorerie courante.
@@ -221,7 +221,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
 
       <h3 className={h3}>&ldquo;Je loue mon appartement — mon locataire a un problème avec le chauffage&rdquo;</h3>
       <p className={p}>
-        Si ça concerne les parties commues (chaudière collective, radiateurs des couloirs), c&apos;est de votre ressort. Si c&apos;est une partie privative (robinetterie, radiateur dans l&apos;appartement), c&apos;est entre le propriétaire et son locataire. Établissez clairement cette frontière dès le départ.
+        Si ça concerne les parties communes (chaudière collective, radiateurs des couloirs), c&apos;est de votre ressort. Si c&apos;est une partie privative (robinetterie, radiateur dans l&apos;appartement), c&apos;est entre le propriétaire et son locataire. Établissez clairement cette frontière dès le départ.
       </p>
 
       <h3 className={h3}>&ldquo;J&apos;ai un dégât des eaux — que faire ?&rdquo;</h3>
@@ -260,7 +260,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       <p className={p}>Oui. L&apos;AG peut voter une rémunération forfaitaire ou des défraiements. Il n&apos;y a aucune obligation de travailler gratuitement. En pratique, la plupart des syndics bénévoles exercent sans rémunération, en contrepartie des économies créées pour la copropriété (2 000 à 4 000 €/an selon la taille de l&apos;immeuble).</p>
 
       <h3 className={h3}>Combien de temps ça prend au quotidien, honnêtement ?</h3>
-      <p className={p}>Pour un immeuble de 5 à 20 lots : <strong className={strong}>2 à 5 heures par mois</strong> en régime de croisière. La première année (reprise d&apos;un ancien syndic, mise en place) : 8 à 12 heures par mois les 3 premiers mois. La préparation d&apos;une AG annuelle : 4 à 8 heures supplémentaires. Avec un outil adapté, ce temps est divisé par deux.</p>
+      <p className={p}>Pour un immeuble de 5 à 20 lots : <strong className={strong}>2 à 5 heures par mois</strong> en régime de croisière. La première année (reprise d&apos;un ancien syndic, mise en place) : 4 à 6 heures par mois les 3 premiers mois. La préparation d&apos;une AG annuelle : 4 à 8 heures supplémentaires. Avec un outil adapté, ce temps est divisé par deux.</p>
 
       <h3 className={h3}>Que se passe-t-il si personne ne veut être syndic ?</h3>
       <p className={p}>Si aucun syndic n&apos;est élu lors de l&apos;AG, tout copropriétaire peut saisir le tribunal judiciaire pour faire désigner un administrateur provisoire — généralement un professionnel, aux frais de la copropriété. Ce n&apos;est pas idéal. Anticipez la passation de pouvoir 3 mois à l&apos;avance.</p>

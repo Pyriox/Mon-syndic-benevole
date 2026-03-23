@@ -134,7 +134,7 @@ export default function ArticleObligationsSyndicBenevole() {
         <p className="mb-2">L&apos;ordre du jour de cette assemblée est le suivant :</p>
         <ol className="list-decimal ml-5 mb-4 space-y-1">
           <li>Désignation du président de séance et du secrétaire</li>
-          <li>Approbation des comptes de l&apos;exercice [N-1] (art. 14-3 loi 1965)</li>
+          <li>Approbation des comptes de l&apos;exercice [N-1] (art. 18 loi 1965)</li>
           <li>Vote du budget prévisionnel [N+1]</li>
           <li>Vote de la cotisation au fonds de travaux (art. 14-2 loi 1965)</li>
           <li>[Résolution spécifique 1]</li>
@@ -298,8 +298,8 @@ export default function ArticleObligationsSyndicBenevole() {
       <h3 className={h3}>Peut-on convoquer l&apos;AG par e-mail ?</h3>
       <p className={p}>Oui, mais uniquement si le copropriétaire a donné son accord écrit préalable à ce mode de convocation. À défaut d&apos;accord, la convocation doit être faite par LRAR ou remise en main propre contre émargement. L&apos;accord peut être recueilli via un formulaire signé en AG, mention au PV.</p>
 
-      <h3 className={h3}>Que se passe-t-il si le quorum n&apos;est pas atteint ?</h3>
-      <p className={p}>Pour les résolutions à la majorité de l&apos;article 25, si le quorum (1/3 des tantièmes) n&apos;est pas atteint, une deuxième AG peut être convoquée dans les 3 mois — sans condition de quorum. Pour les articles 24 et 26, pas de condition de quorum, mais les majorités requises s&apos;appliquent.</p>
+      <h3 className={h3}>Que se passe-t-il si la majorité requise n&apos;est pas atteinte ?</h3>
+      <p className={p}>En copropriété, il n&apos;y a <strong>pas de quorum</strong> : l&apos;assemblée générale délibère valablement quel que soit le nombre de copropriétaires présents ou représentés. Ce qui joue, c&apos;est la <em>majorité</em> requise. <strong>Article 24</strong> (majorité simple) : aucun mécanisme de rattrapage — la résolution est rejetée. <strong>Article 25</strong> (majorité absolue) : si le texte n&apos;obtient pas la majorité absolue mais recueille <em>plus d&apos;un tiers</em> des voix de tous les copropriétaires, un second vote à la majorité de l&apos;article 24 peut être organisé <em>immédiatement dans la même AG</em> (art. 25-1). <strong>Article 26</strong> (double majorité) : si la double majorité n&apos;est pas atteinte, une nouvelle AG peut être convoquée dans les 3 mois pour voter la même résolution à la majorité de l&apos;article 25.</p>
 
       <h3 className={h3}>Le syndic bénévole peut-il être rémunéré ?</h3>
       <p className={p}>Oui. Depuis 2014, l&apos;AG peut voter une rémunération pour le syndic bénévole à la majorité de l&apos;article 25. Cette rémunération doit être votée explicitement — elle ne peut pas être fixée unilatéralement. Elle est soumise à imposition dans la catégorie des revenus correspondants.</p>

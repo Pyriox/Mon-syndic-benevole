@@ -33,7 +33,7 @@ export default function ArticleFondsTravaux() {
         <strong className={strong}>Facultatif mais fortement recommandé</strong> pour les copropriétés de 10 lots et moins. Avec un immeuble de 8 lots dont la toiture date de 1985, mettre volontairement de l&apos;argent de côté chaque année est simplement prudent.
       </p>
       <p className={p}>
-        <strong className={strong}>Exception pour les immeubles neufs :</strong> una copropriété peut décider, à l&apos;unanimité, de ne pas constituer le fonds pendant les <strong className={strong}>cinq premières années</strong> suivant la réception de l&apos;immeuble. Au-delà, l&apos;obligation s&apos;applique sans exception.
+        <strong className={strong}>Exception pour les immeubles neufs :</strong> une copropriété peut décider, à l&apos;unanimité, de ne pas constituer le fonds pendant les <strong className={strong}>cinq premières années</strong> suivant la réception de l&apos;immeuble. Au-delà, l&apos;obligation s&apos;applique sans exception.
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
@@ -99,7 +99,7 @@ export default function ArticleFondsTravaux() {
 
       <h2 id="planification" className={h2}>Comment calculer un plan de dotation réaliste</h2>
       <p className={p}>
-        Exemple concret : Résidence les Érables (14 lots, immeuble de 1982, budget 18 000 €/an). Isabelle, après la crise de la chaudière, a fait réaliser un diagnostic technique simplifié. Résultat :
+        Exemple concret : Résidence les Érables (14 lots, immeuble de 1982, budget 18 000 €/an). Nathalie, après la crise de la chaudière, a fait réaliser un diagnostic technique simplifié. Résultat :
       </p>
 
       <div className="overflow-x-auto mb-6 rounded-xl border border-gray-200">
@@ -261,9 +261,9 @@ export default function ArticleFondsTravaux() {
         Géré manuellement, le fonds de travaux ALUR ressemble à tout le reste : un onglet de plus dans le tableau Excel, des virements à vérifier, des soldes à recalculer. Le risque d&apos;erreur (et d&apos;oubli lors du vote en AG) est réel.
       </p>
 
-      <h2 id="dtg" className={h2}>Fonds de travaux et diagnostic technique global (DTG)</h2>
+      <h2 id="dtg" className={h2}>Fonds de travaux et plan pluriannuel de travaux (PPT)</h2>
       <p className={p}>
-        Depuis 2017, les copropriétés de plus de 10 ans et de plus de 200 lots ont l&apos;obligation de réaliser un <strong className={strong}>diagnostic technique global (DTG)</strong>. Pour les plus petites copropriétés, il est facultatif mais souvent décisif pour calibrer le fonds au-delà du minimum légal.
+        Depuis le 1er janvier 2025, toutes les copropriétés dont l&apos;immeuble a plus de <strong className={strong}>15 ans</strong> ont l&apos;obligation d&apos;élaborer un <strong className={strong}>plan pluriannuel de travaux (PPT)</strong> (loi Climat et Résilience, 2021). Cette obligation est distincte du fonds de travaux ALUR mais complémentaire : le PPT identifie et planifie les travaux sur 10 ans, tandis que le fonds en constitue la réserve financière. Le DTG (diagnostic technique global), quant à lui, reste facultatif pour la majorité des copropriétés, mais constitue l&apos;outil de diagnostic idéal pour élaborer un PPT solide ou justifier en AG une dotation supérieure au minimum légal.
       </p>
       <p className={p}>
         Un DTG coûte entre 800 et 2 500 € selon la taille de l&apos;immeuble. Il projette les travaux nécessaires sur 10 ans avec une estimation de coût. C&apos;est le meilleur outil pour présenter en AG une dotation ambitieuse mais justifiée — et obtenir l&apos;approbation des copropriétaires.
@@ -291,7 +291,7 @@ export default function ArticleFondsTravaux() {
 
       <h2 id="ce-quil-faut-retenir" className={h2}>Ce qu&apos;il faut retenir</h2>
       <p className={p}>
-        Le fonds de travaux ALUR n&apos;est pas une contrainte administrative parmi d&apos;autres. C&apos;est un outil de gestion saine qui protège l&apos;immeuble, les copropriétaires et la valeur des biens. Isabelle, après la crise de la chaudière, a obtenu en AG un vote à <strong className={strong}>unanimité</strong> pour porter le fonds à 5 500 €/an. &ldquo;Plus personne ne discute le montant depuis que j&apos;ai montré le tableau des travaux prévus sur 10 ans.&rdquo;
+        Le fonds de travaux ALUR n&apos;est pas une contrainte administrative parmi d&apos;autres. C&apos;est un outil de gestion saine qui protège l&apos;immeuble, les copropriétaires et la valeur des biens. Nathalie, après la crise de la chaudière, a obtenu en AG un vote à <strong className={strong}>unanimité</strong> pour porter le fonds à 5 500 €/an. &ldquo;Plus personne ne discute le montant depuis que j&apos;ai montré le tableau des travaux prévus sur 10 ans.&rdquo;
       </p>
       <p className={p}>
         Le défi du syndic bénévole n&apos;est pas de comprendre le principe — il est simple. C&apos;est de le mettre en œuvre rigoureusement, année après année, avec les bons outils et la bonne traçabilité.

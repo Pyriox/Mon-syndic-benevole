@@ -252,7 +252,7 @@ export default function ArticleLogicielSyndicBenevole() {
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Prêt à remplacer vos tableurs ?</p>
-        <p className="text-sm text-blue-100 mb-4">14 jours d&apos;essai gratuit. Aucune carte bancaire requise.</p>
+        <p className="text-sm text-blue-100 mb-4">14 jours d&apos;essai gratuit. Résiliable à tout moment.</p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
