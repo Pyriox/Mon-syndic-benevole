@@ -128,12 +128,26 @@ export default async function CoproprietairesPage() {
           />
         </Card>
       ) : (
-        <EmptyState
-          icon={<Users size={48} strokeWidth={1.5} />}
-          title="Aucun copropriétaire"
-          description={isSyndic ? "Ajoutez les copropriétaires en les associant à leurs lots." : "Aucun copropriétaire n'est encore enregistré pour cette copropriété."}
-          action={isSyndic ? <CoproprietaireActions coproprietes={coproprietes} showLabel /> : undefined}
-        />
+        <>
+          <EmptyState
+            icon={<Users size={48} strokeWidth={1.5} />}
+            title="Aucun copropriétaire"
+            description={isSyndic ? "Ajoutez les copropriétaires en les associant à leurs lots." : "Aucun copropriétaire n'est encore enregistré pour cette copropriété."}
+            action={isSyndic ? <CoproprietaireActions coproprietes={coproprietes} showLabel /> : undefined}
+          />
+          {isSyndic && (
+            <div className="flex items-start gap-3 max-w-lg mx-auto p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+              <span className="text-lg shrink-0">💡</span>
+              <p>
+                Vous êtes aussi copropriétaire de cet immeuble ?{' '}
+                <Link href="/profil" className="font-semibold underline hover:text-blue-900">
+                  Complétez votre profil
+                </Link>{' '}
+                — vos informations (nom, prénom, email) seront préremplies lors de l&apos;ajout.
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
