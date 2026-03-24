@@ -153,8 +153,8 @@ export function ProfilEditActions({
         <Pencil size={14} /> Modifier
       </Button>
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={`Mon identité — ${selectedCoproNom}`}>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={`Mon identité — ${selectedCoproNom}`} size="lg">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
             <input type="checkbox" checked={isSci} onChange={(e) => setIsSci(e.target.checked)} className="rounded text-blue-600" />
             Personne morale / SCI
@@ -174,8 +174,10 @@ export function ProfilEditActions({
             </div>
           )}
           <Input label="Téléphone" value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="06 12 34 56 78" type="tel" required />
-          <Input label="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} placeholder="12 rue de la Paix" required />
-          <Input label="Complément d'adresse" value={complementAdresse} onChange={(e) => setComplementAdresse(e.target.value)} placeholder="Bât. A, appt. 12" />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} placeholder="12 rue de la Paix" required />
+            <Input label="Complément" value={complementAdresse} onChange={(e) => setComplementAdresse(e.target.value)} placeholder="Bât. A, appt. 12" />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <Input label="Code postal" value={codePostal} onChange={(e) => setCodePostal(e.target.value)} placeholder="75001" required />
             <Input label="Ville" value={ville} onChange={(e) => setVille(e.target.value)} required />

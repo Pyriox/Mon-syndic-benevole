@@ -269,7 +269,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
       >
         {/* ==================== ÉTAPE 1 ==================== */}
         {wizardStep === 1 && (
-          <form onSubmit={handleNextStep} className="space-y-4">
+          <form onSubmit={handleNextStep} className="space-y-3">
 
             {/* Type d'AG */}
             <div>

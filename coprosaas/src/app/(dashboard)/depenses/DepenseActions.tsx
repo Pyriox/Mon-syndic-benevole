@@ -223,25 +223,26 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
         </Button>
       )}
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={isEdit ? 'Modifier la dépense' : 'Ajouter une dépense'} size="xl">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Select
-            label="Catégorie"
-            name="categorie"
-            value={formData.categorie}
-            onChange={handleChange}
-            options={Object.entries(LABELS_CATEGORIE).map(([v, l]) => ({ value: v, label: l }))}
-            required
-          />
-
-          <Input
-            label="Titre de la dépense"
-            name="titre"
-            value={formData.titre}
-            onChange={handleChange}
-            placeholder="Nettoyage des parties communes"
-            required
-          />
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={isEdit ? 'Modifier la dépense' : 'Ajouter une dépense'} size="lg">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Catégorie"
+              name="categorie"
+              value={formData.categorie}
+              onChange={handleChange}
+              options={Object.entries(LABELS_CATEGORIE).map(([v, l]) => ({ value: v, label: l }))}
+              required
+            />
+            <Input
+              label="Titre de la dépense"
+              name="titre"
+              value={formData.titre}
+              onChange={handleChange}
+              placeholder="Nettoyage des parties communes"
+              required
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <Input

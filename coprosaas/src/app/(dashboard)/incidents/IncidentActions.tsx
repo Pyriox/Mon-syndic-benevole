@@ -72,7 +72,7 @@ export default function IncidentActions({ coproprietes, showLabel }: IncidentAct
       </Button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Signaler un incident" size="lg">
-        <form onSubmit={handleCreate} className="space-y-4">
+        <form onSubmit={handleCreate} className="space-y-3">
           <Input
             label="Titre"
             name="titre"
@@ -127,7 +127,7 @@ export default function IncidentActions({ coproprietes, showLabel }: IncidentAct
             value={form.description}
             onChange={handle}
             placeholder="DÃ©crivez l'incident, les dommages constatÃ©s..."
-            rows={3}
+            rows={2}
           />
 
           {error && <p className="text-sm text-red-600">{error}</p>}

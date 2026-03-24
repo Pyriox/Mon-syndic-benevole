@@ -342,7 +342,36 @@ export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds }: Cop
       </button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Modifier le copropriétaire" size="lg">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {lots.length > 0 && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">
+                Lots associés <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <div className="grid grid-cols-2 gap-1.5 max-h-24 overflow-y-auto border border-gray-200 rounded-lg p-1.5">
+                {lots.map((lot) => {
+                  const takenByOther = lot.coproprietaire_id && lot.coproprietaire_id !== coproprietaire.id;
+                  return (
+                    <label
+                      key={lot.id}
+                      className={`flex items-center gap-2 px-2 py-1 rounded-lg text-sm ${
+                        takenByOther ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50 cursor-pointer'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedLotIds.includes(lot.id)}
+                        onChange={() => !takenByOther && toggleLot(lot.id)}
+                        disabled={!!takenByOther}
+                        className="rounded text-blue-600"
+                      />
+                      <span className="text-gray-700">Lot {lot.numero}{takenByOther ? ' · attribué' : ''}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
             <input type="checkbox" checked={isSci} onChange={(e) => setIsSci(e.target.checked)} className="rounded text-blue-600" />
             Personne morale / SCI
@@ -361,42 +390,16 @@ export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds }: Cop
               <Input label="Nom" name="nom" value={formData.nom} onChange={handleChange} required />
             </div>
           )}
-          <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-          <Input label="Téléphone" name="telephone" type="tel" value={formData.telephone} onChange={handleChange} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+            <Input label="Téléphone" name="telephone" type="tel" value={formData.telephone} onChange={handleChange} />
+          </div>
           <Input label="Adresse" name="adresse" value={formData.adresse} onChange={handleChange} placeholder="12 rue de la Paix" />
           <div className="grid grid-cols-2 gap-3">
             <Input label="Code postal" name="code_postal" value={formData.code_postal} onChange={handleChange} placeholder="75001" />
             <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} />
           </div>
           <Input label="Solde (€)" name="solde" type="number" step="0.01" value={String(formData.solde)} onChange={handleChange} />
-
-          {lots.length > 0 && (
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">Lots associés</label>
-              <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto border border-gray-200 rounded-lg p-2">
-                {lots.map((lot) => {
-                  const takenByOther = lot.coproprietaire_id && lot.coproprietaire_id !== coproprietaire.id;
-                  return (
-                    <label
-                      key={lot.id}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm ${
-                        takenByOther ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50 cursor-pointer'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedLotIds.includes(lot.id)}
-                        onChange={() => !takenByOther && toggleLot(lot.id)}
-                        disabled={!!takenByOther}
-                        className="rounded text-blue-600"
-                      />
-                      <span className="text-gray-700">Lot {lot.numero}{takenByOther ? ' · attribué' : ''}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">

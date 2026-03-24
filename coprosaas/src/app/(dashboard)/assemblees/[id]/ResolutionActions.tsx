@@ -157,18 +157,19 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
             )}
           </div>
 
-          <Select label="Statut" name="statut" value={formData.statut} onChange={handleChange}
-            options={[
-              { value: 'en_attente', label: 'En attente' },
-              { value: 'approuvee', label: 'Approuvée' },
-              { value: 'refusee', label: 'Refusée' },
-              { value: 'reportee', label: 'Reportée' },
-            ]}
-          />
-
           <Input label="Titre" name="titre" value={formData.titre} onChange={handleChange} placeholder="Titre de la résolution" required />
 
-          <Select label="Type de majorité" name="majorite" value={formData.majorite} onChange={handleChange} options={MAJORITE_OPTIONS} />
+          <div className="grid grid-cols-2 gap-3">
+            <Select label="Statut" name="statut" value={formData.statut} onChange={handleChange}
+              options={[
+                { value: 'en_attente', label: 'En attente' },
+                { value: 'approuvee', label: 'Approuvée' },
+                { value: 'refusee', label: 'Refusée' },
+                { value: 'reportee', label: 'Reportée' },
+              ]}
+            />
+            <Select label="Type de majorité" name="majorite" value={formData.majorite} onChange={handleChange} options={MAJORITE_OPTIONS} />
+          </div>
 
           <Textarea label="Description (optionnel)" name="description" value={formData.description} onChange={handleChange} rows={2} />
 

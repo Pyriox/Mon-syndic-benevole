@@ -128,38 +128,24 @@ export default function DocumentActions({ coproprietes, dossiers, defaultDossier
       </Button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Importer un document">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Select
-            label="Dossier"
-            name="dossier_id"
-            value={formData.dossier_id}
-            onChange={handleChange}
-            options={dossiers.map((d) => ({ value: d.id, label: d.nom }))}
-          />
-
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Zone de sélection de fichier */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Fichier <span className="text-red-500">*</span>
             </label>
             <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer
-                         hover:border-blue-400 hover:bg-blue-50 transition-colors"
+              className="border border-dashed border-gray-300 rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
             >
+              <Upload size={16} className="text-gray-400 shrink-0" />
               {selectedFile ? (
-                <div>
-                  <p className="text-sm font-medium text-gray-800">{selectedFile.name}</p>
-                  <p className="text-xs text-gray-400">
-                    {(selectedFile.size / 1024).toFixed(1)} Ko
-                  </p>
-                </div>
+                <span className="text-sm text-gray-700">
+                  {selectedFile.name}{' '}
+                  <span className="text-gray-400">({(selectedFile.size / 1024).toFixed(1)} Ko)</span>
+                </span>
               ) : (
-                <div>
-                  <Upload size={24} className="mx-auto text-gray-300 mb-2" />
-                  <p className="text-sm text-gray-500">Cliquez pour sélectionner un fichier</p>
-                  <p className="text-xs text-gray-400 mt-1">PDF, images, Word... (max 10 Mo)</p>
-                </div>
+                <span className="text-sm text-gray-400">PDF, images, Word… (max 10 Mo) — cliquez pour sélectionner</span>
               )}
               <input
                 ref={fileInputRef}
@@ -180,14 +166,23 @@ export default function DocumentActions({ coproprietes, dossiers, defaultDossier
             required
           />
 
-          <Select
-            label="Type de document"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            options={Object.entries(LABELS_TYPE_DOCUMENT).map(([v, l]) => ({ value: v, label: l }))}
-            required
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Dossier"
+              name="dossier_id"
+              value={formData.dossier_id}
+              onChange={handleChange}
+              options={dossiers.map((d) => ({ value: d.id, label: d.nom }))}
+            />
+            <Select
+              label="Type de document"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              options={Object.entries(LABELS_TYPE_DOCUMENT).map(([v, l]) => ({ value: v, label: l }))}
+              required
+            />
+          </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
