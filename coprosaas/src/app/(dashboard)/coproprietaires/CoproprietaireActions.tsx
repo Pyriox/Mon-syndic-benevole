@@ -41,6 +41,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
     email: '',
     telephone: '',
     adresse: '',
+    complement_adresse: '',
     code_postal: '',
     ville: '',
     raison_sociale: '',
@@ -83,6 +84,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
         email: formData.email.trim().toLowerCase(),
         telephone: formData.telephone.trim() || null,
         adresse: formData.adresse.trim() || null,
+        complement_adresse: formData.complement_adresse.trim() || null,
         code_postal: formData.code_postal.trim() || null,
         ville: formData.ville.trim() || null,
         solde: parseFloat(formData.solde_reprise) || 0,
@@ -98,7 +100,8 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
     }
 
     setIsOpen(false);
-    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '' });
+    setLoading(false);
+    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '' });
     setIsSci(false);
     setSelectedLotIds([]);
     router.refresh();
@@ -169,6 +172,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
           <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
           <Input label="Téléphone" name="telephone" type="tel" value={formData.telephone} onChange={handleChange} placeholder="06 12 34 56 78" />
           <Input label="Adresse" name="adresse" value={formData.adresse} onChange={handleChange} required placeholder="12 rue de la Paix" />
+          <Input label="Complément d'adresse" name="complement_adresse" value={formData.complement_adresse} onChange={handleChange} placeholder="Appartement, bât., étage…" />
           <div className="grid grid-cols-2 gap-3">
             <Input label="Code postal" name="code_postal" value={formData.code_postal} onChange={handleChange} required placeholder="75001" />
             <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} required />
