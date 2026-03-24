@@ -23,10 +23,10 @@ const LOT_TYPE_CONFIG: Record<string, {
 }> = {
   appartement:  { label: 'Appartement',  icon: Building2,    bgColor: 'bg-blue-50',   iconColor: 'text-blue-500',   badgeBg: 'bg-blue-100',   badgeText: 'text-blue-700',   barColor: 'bg-blue-400' },
   parking:      { label: 'Parking',      icon: Car,          bgColor: 'bg-slate-50',  iconColor: 'text-slate-500',  badgeBg: 'bg-slate-100',  badgeText: 'text-slate-700',  barColor: 'bg-slate-400' },
-  cave:         { label: 'Cave',         icon: Archive,      bgColor: 'bg-amber-50',  iconColor: 'text-amber-500',  badgeBg: 'bg-amber-100',  badgeText: 'text-amber-700',  barColor: 'bg-amber-400' },
-  commerce:     { label: 'Commerce',     icon: ShoppingBag,  bgColor: 'bg-green-50',  iconColor: 'text-green-500',  badgeBg: 'bg-green-100',  badgeText: 'text-green-700',  barColor: 'bg-green-400' },
+  cave:         { label: 'Cave',         icon: Archive,      bgColor: 'bg-amber-50',  iconColor: 'text-amber-600',  badgeBg: 'bg-amber-100',  badgeText: 'text-amber-700',  barColor: 'bg-amber-400' },
+  commerce:     { label: 'Commerce',     icon: ShoppingBag,  bgColor: 'bg-green-50',  iconColor: 'text-green-600',  badgeBg: 'bg-green-100',  badgeText: 'text-green-700',  barColor: 'bg-green-400' },
   bureau:       { label: 'Bureau',       icon: Briefcase,    bgColor: 'bg-purple-50', iconColor: 'text-purple-500', badgeBg: 'bg-purple-100', badgeText: 'text-purple-700', barColor: 'bg-purple-400' },
-  autre:        { label: 'Autre',        icon: LayoutGrid,   bgColor: 'bg-gray-50',   iconColor: 'text-gray-400',   badgeBg: 'bg-gray-100',   badgeText: 'text-gray-600',   barColor: 'bg-gray-300' },
+  autre:        { label: 'Autre',        icon: LayoutGrid,   bgColor: 'bg-gray-50',   iconColor: 'text-gray-500',   badgeBg: 'bg-gray-100',   badgeText: 'text-gray-600',   barColor: 'bg-gray-300' },
 };
 const defaultConfig = LOT_TYPE_CONFIG.autre;
 
@@ -158,12 +158,12 @@ export default async function LotsPage() {
             </Card>
             <Card padding="sm" className="flex items-center gap-3">
               <div className="p-2 bg-green-50 rounded-lg shrink-0">
-                <Users size={18} className="text-green-500" />
+                <Users size={18} className="text-green-600" />
               </div>
               <div>
                 <p className="text-xs text-gray-500">Assignés</p>
                 <p className="text-lg font-bold text-gray-900 leading-tight">
-                  {assignedCount} <span className="text-sm font-normal text-gray-400">/ {allLots.length}</span>
+                  {assignedCount} <span className="text-sm font-normal text-gray-500">/ {allLots.length}</span>
                 </p>
               </div>
             </Card>
@@ -173,11 +173,11 @@ export default async function LotsPage() {
                   <AlertCircle size={18} className="text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-xs text-orange-600">Non assignés</p>
+                  <p className="text-xs text-orange-700">Non assignés</p>
                   <p className="text-lg font-bold text-orange-700 leading-tight">
                     {unassignedCount}
                     {unassignedTantiemes > 0 && (
-                      <span className="text-xs font-normal text-orange-500 ml-1">· {unassignedTantiemes} t.</span>
+                      <span className="text-xs font-normal text-orange-700 ml-1">· {unassignedTantiemes} t.</span>
                     )}
                   </p>
                 </div>
@@ -278,14 +278,14 @@ export default async function LotsPage() {
                             {isSyndic && owner?.email && (
                               <a
                                 href={`mailto:${owner.email}`}
-                                className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition-colors ml-7"
+                                className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors ml-7"
                               >
                                 <Mail size={11} />{owner.email}
                               </a>
                             )}
                           </div>
                         ) : (
-                          <span className="text-xs text-orange-400 italic font-medium">Non assigné</span>
+                          <span className="text-xs text-orange-700 italic font-medium">Non assigné</span>
                         )}
                       </div>
                     </div>
@@ -368,7 +368,7 @@ export default async function LotsPage() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-orange-400 italic text-xs font-medium">Non assigné</span>
+                          <span className="text-orange-700 italic text-xs font-medium">Non assigné</span>
                         )}
                       </td>
                       {isSyndic && (
@@ -382,7 +382,7 @@ export default async function LotsPage() {
                               <span className="truncate max-w-[180px]">{owner.email}</span>
                             </a>
                           ) : (
-                            <span className="text-gray-300 text-xs">—</span>
+                            <span className="text-gray-500 text-xs">—</span>
                           )}
                         </td>
                       )}

@@ -36,10 +36,10 @@ const LOT_TYPE_CONFIG: Record<string, {
 }> = {
   appartement: { label: 'Appartement', icon: Building2,   bgColor: 'bg-blue-50',   iconColor: 'text-blue-500',   badgeBg: 'bg-blue-100',   badgeText: 'text-blue-700',   barColor: 'bg-blue-400' },
   parking:     { label: 'Parking',     icon: Car,         bgColor: 'bg-slate-50',  iconColor: 'text-slate-500',  badgeBg: 'bg-slate-100',  badgeText: 'text-slate-700',  barColor: 'bg-slate-400' },
-  cave:        { label: 'Cave',        icon: Archive,     bgColor: 'bg-amber-50',  iconColor: 'text-amber-500',  badgeBg: 'bg-amber-100',  badgeText: 'text-amber-700',  barColor: 'bg-amber-400' },
-  commerce:    { label: 'Commerce',    icon: ShoppingBag, bgColor: 'bg-green-50',  iconColor: 'text-green-500',  badgeBg: 'bg-green-100',  badgeText: 'text-green-700',  barColor: 'bg-green-400' },
+  cave:        { label: 'Cave',        icon: Archive,     bgColor: 'bg-amber-50',  iconColor: 'text-amber-600',  badgeBg: 'bg-amber-100',  badgeText: 'text-amber-700',  barColor: 'bg-amber-400' },
+  commerce:    { label: 'Commerce',    icon: ShoppingBag, bgColor: 'bg-green-50',  iconColor: 'text-green-600',  badgeBg: 'bg-green-100',  badgeText: 'text-green-700',  barColor: 'bg-green-400' },
   bureau:      { label: 'Bureau',      icon: Briefcase,   bgColor: 'bg-purple-50', iconColor: 'text-purple-500', badgeBg: 'bg-purple-100', badgeText: 'text-purple-700', barColor: 'bg-purple-400' },
-  autre:       { label: 'Autre',       icon: LayoutGrid,  bgColor: 'bg-gray-50',   iconColor: 'text-gray-400',   badgeBg: 'bg-gray-100',   badgeText: 'text-gray-600',   barColor: 'bg-gray-300' },
+  autre:       { label: 'Autre',       icon: LayoutGrid,  bgColor: 'bg-gray-50',   iconColor: 'text-gray-500',   badgeBg: 'bg-gray-100',   badgeText: 'text-gray-600',   barColor: 'bg-gray-300' },
 };
 const defaultConfig = LOT_TYPE_CONFIG.autre;
 function getConfig(type: string) { return LOT_TYPE_CONFIG[type] ?? defaultConfig; }
@@ -159,7 +159,7 @@ function SortableLotRow({
             )}
           </div>
         ) : (
-          <span className="text-orange-400 italic text-xs font-medium">Non assigné</span>
+          <span className="text-orange-700 italic text-xs font-medium">Non assigné</span>
         )}
       </td>
       {/* Actions */}
@@ -253,7 +253,7 @@ function SortableLotCard({
                   )}
                 </div>
               ) : (
-                <span className="text-xs text-orange-400 italic font-medium">Non assigné</span>
+                <span className="text-xs text-orange-700 italic font-medium">Non assigné</span>
               )}
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -328,12 +328,12 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId, curren
           {/* Assignés */}
           <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl">
             <div className="p-2 bg-green-50 rounded-lg shrink-0">
-              <Users size={16} className="text-green-500" />
+              <Users size={16} className="text-green-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">Assignés</p>
               <p className="text-lg font-bold text-gray-900 leading-tight">
-                {assignedCount} <span className="text-sm font-normal text-gray-400">/ {lots.length}</span>
+                {assignedCount} <span className="text-sm font-normal text-gray-500">/ {lots.length}</span>
               </p>
             </div>
           </div>
@@ -344,7 +344,7 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId, curren
                 <AlertCircle size={16} className="text-orange-500" />
               </div>
               <div>
-                <p className="text-xs text-orange-600">Non assignés</p>
+                <p className="text-xs text-orange-700">Non assignés</p>
                 <p className="text-lg font-bold text-orange-700 leading-tight">{unassignedCount}</p>
               </div>
             </div>
