@@ -39,7 +39,7 @@ export default async function IncidentsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
 
       {/* ── Bandeau lecture seule ── */}
-      {isSyndic && !canWrite && <ReadOnlyBanner />}
+      {!canWrite && <ReadOnlyBanner />}
 
       {/* ── Header ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
