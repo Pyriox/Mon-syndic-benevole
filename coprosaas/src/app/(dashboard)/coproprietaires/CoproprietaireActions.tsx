@@ -120,13 +120,13 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
       </Button>
 
       <Modal isOpen={isOpen} onClose={handleClose} title="Ajouter un copropriétaire" size="lg">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {lots.length > 0 && (
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">
-                Lots associés <span className="text-gray-400 font-normal">(optionnel — plusieurs possibles)</span>
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">
+                Lots associés <span className="text-gray-400 font-normal">(optionnel)</span>
               </label>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+              <div className="grid grid-cols-2 gap-1.5 max-h-24 overflow-y-auto border border-gray-200 rounded-lg p-1.5">
                 {lots.map((lot) => {
                   const isTaken = !!lot.coproprietaire_id;
                   return (
@@ -169,19 +169,18 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
               <Input label="Nom" name="nom" value={formData.nom} onChange={handleChange} required={!isSci} />
             </div>
           )}
-          <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-          <Input label="Téléphone" name="telephone" type="tel" value={formData.telephone} onChange={handleChange} placeholder="06 12 34 56 78" />
-          <Input label="Adresse" name="adresse" value={formData.adresse} onChange={handleChange} required placeholder="12 rue de la Paix" />
-          <Input label="Complément d'adresse" name="complement_adresse" value={formData.complement_adresse} onChange={handleChange} placeholder="Appartement, bât., étage…" />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Code postal" name="code_postal" value={formData.code_postal} onChange={handleChange} required placeholder="75001" />
-            <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} required />
+            <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+            <Input label="Téléphone" name="telephone" type="tel" value={formData.telephone} onChange={handleChange} placeholder="06 12 34 56 78" />
           </div>
-          <div>
-            <Input label="Solde à la reprise (€)" name="solde_reprise" type="number" step="0.01" value={formData.solde_reprise} onChange={handleChange} placeholder="0.00" />
-            <p className="text-xs text-gray-400 mt-1">
-              Facultatif — si vous rejoignez la plateforme en cours d'année, indiquez le solde actuel de ce copropriétaire sur votre ancien outil (positif = créditeur, négatif = débiteur).
-            </p>
+          <Input label="Adresse" name="adresse" value={formData.adresse} onChange={handleChange} required placeholder="12 rue de la Paix" />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Complément d'adresse" name="complement_adresse" value={formData.complement_adresse} onChange={handleChange} placeholder="Apt, bât., étage…" />
+            <Input label="Code postal" name="code_postal" value={formData.code_postal} onChange={handleChange} required placeholder="75001" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} required />
+            <Input label="Solde à la reprise (€)" name="solde_reprise" type="number" step="0.01" value={formData.solde_reprise} onChange={handleChange} placeholder="0.00 — facultatif" />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
