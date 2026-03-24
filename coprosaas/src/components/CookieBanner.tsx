@@ -36,28 +36,27 @@ export default function CookieBanner() {
     <div
       role="dialog"
       aria-label="Bandeau cookies"
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-md"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-gray-50 border-t border-gray-300 shadow-sm"
     >
-      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-3 px-4 py-3 text-sm text-gray-600">
+      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center gap-2 px-4 py-2 text-xs text-gray-500">
         <p className="flex-1 leading-snug">
-          Nous utilisons des cookies analytiques (Google Analytics) pour mesurer
-          l'audience et améliorer le service.{' '}
-          <Link href="/mentions-legales" className="underline hover:text-gray-900">
+          Ce site utilise des cookies analytiques pour mesurer son audience.{' '}
+          <Link href="/mentions-legales" className="underline hover:text-gray-700">
             En savoir plus
           </Link>
         </p>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={accept}
-            className="px-4 py-1.5 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="px-3 py-1 rounded bg-gray-700 text-white text-xs hover:bg-gray-900 transition-colors"
           >
             Accepter
           </button>
           <button
             onClick={refuse}
-            className="text-sm text-gray-500 hover:text-gray-800 transition-colors underline"
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors underline"
           >
-            Continuer sans accepter
+            Refuser
           </button>
         </div>
       </div>

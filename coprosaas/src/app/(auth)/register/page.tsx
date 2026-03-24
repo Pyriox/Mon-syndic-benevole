@@ -38,6 +38,7 @@ function RegisterForm() {
   const [invitationNom, setInvitationNom] = useState('');
 
   const [formData, setFormData] = useState({ prenom: '', nom: '', email: '', password: '', confirmPassword: '' });
+  const [acceptCgu, setAcceptCgu] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -80,6 +81,10 @@ function RegisterForm() {
     }
     if (formData.password.length < 8) {
       setError('Le mot de passe doit contenir au moins 8 caractères.');
+      return;
+    }
+    if (!acceptCgu) {
+      setError("Vous devez accepter les conditions générales d'utilisation.");
       return;
     }
 
@@ -370,6 +375,27 @@ function RegisterForm() {
               placeholder="••••••••"
               required
             />
+
+            {/* ── CGU / CGV ── */}
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptCgu}
+                onChange={(e) => setAcceptCgu(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                required
+              />
+              <span className="text-xs text-gray-500 leading-snug">
+                J&apos;ai lu et j&apos;accepte les{' '}
+                <Link href="/cgu" target="_blank" className="text-blue-600 hover:underline font-medium">
+                  Conditions Générales d&apos;Utilisation
+                </Link>{' '}
+                ainsi que la{' '}
+                <Link href="/politique-confidentialite" target="_blank" className="text-blue-600 hover:underline font-medium">
+                  Politique de Confidentialité
+                </Link>.
+              </span>
+            </label>
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{error}</div>

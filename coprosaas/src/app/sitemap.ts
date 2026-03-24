@@ -58,5 +58,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    {
+      url: `${APP_URL}/cgu`,
+      lastModified: new Date('2026-03-24'),
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
+      url: `${APP_URL}/politique-confidentialite`,
+      lastModified: new Date('2026-03-24'),
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
   ];
 }

@@ -112,11 +112,9 @@ export default function RootLayout({
         {children}
         {gaId && (
           <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">
+            {/* Définition de gtag + consent par défaut AVANT toute hydratation React
+                → garantit que window.gtag est disponible dès le premier useEffect */}
+            <Script id="gtag-consent" strategy="beforeInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
@@ -125,9 +123,15 @@ export default function RootLayout({
                   ad_storage: 'denied',
                   wait_for_update: 500
                 });
-                gtag('js', new Date());
-                gtag('config', '${gaId}');
               `}
+            </Script>
+            {/* Chargement du script GA + envoi de la page vue initiale après hydratation */}
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="gtag-init" strategy="afterInteractive">
+              {`gtag('js', new Date()); gtag('config', '${gaId}');`}
             </Script>
             <GoogleAnalytics />
           </>

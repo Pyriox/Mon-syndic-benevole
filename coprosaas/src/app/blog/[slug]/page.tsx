@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Script from 'next/script';
 import SiteLogo from '@/components/ui/SiteLogo';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
+import ArticleViewTracker from '@/components/ui/ArticleViewTracker';
 import { getPost, formatPublishedAt, posts } from '@/lib/blog';
 
 // ── Content components ───────────────────────────────────────────────────────────
@@ -128,6 +129,7 @@ export default async function ArticlePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
+      <ArticleViewTracker slug={slug} title={post.title} />
       <div className="min-h-screen bg-white text-gray-900">
 
       {/* ── Header ── */}
