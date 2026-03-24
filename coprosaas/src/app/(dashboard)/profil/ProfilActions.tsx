@@ -14,6 +14,20 @@ import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import { Pencil, Home, Mail, Lock, Check, X, Trash2, AlertTriangle } from 'lucide-react';
 
+/** Normalise un numéro de téléphone français au format XX XX XX XX XX */
+function normalizePhone(raw: string): string {
+  // Convertir +33X... → 0X...
+  let s = raw.trim().replace(/\s/g, '');
+  if (s.startsWith('+33')) s = '0' + s.slice(3);
+  // Ne garder que les chiffres
+  const digits = s.replace(/\D/g, '');
+  // Formater 10 chiffres en XX XX XX XX XX
+  if (digits.length === 10) {
+    return digits.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+  }
+  return digits || raw.trim();
+}
+
 interface Lot {
   id: string;
   numero: string;
@@ -103,7 +117,7 @@ export function ProfilEditActions({
         nom: nom.trim() || null,
         prenom: prenom.trim() || null,
         raison_sociale: isSci ? raisonSociale.trim() || null : null,
-        telephone: telephone.trim() || null,
+        telephone: normalizePhone(telephone) || null,
         adresse: adresse.trim() || null,
         complement_adresse: complementAdresse.trim() || null,
         code_postal: codePostal.trim() || null,
@@ -118,7 +132,7 @@ export function ProfilEditActions({
         nom: nom.trim() || null,
         prenom: prenom.trim() || null,
         raison_sociale: isSci ? raisonSociale.trim() || null : null,
-        telephone: telephone.trim() || null,
+        telephone: normalizePhone(telephone) || null,
         adresse: adresse.trim() || null,
         complement_adresse: complementAdresse.trim() || null,
         code_postal: codePostal.trim() || null,
@@ -129,6 +143,7 @@ export function ProfilEditActions({
     }
 
     setIsOpen(false);
+    router.push('/profil');
     router.refresh();
   };
 
@@ -211,7 +226,8 @@ export function ProfilIdentiteEditor({
 
   const saveField = async (field: EditableField) => {
     if (!fiche) return;
-    const val = tempValue.trim() || null;
+    const rawVal = tempValue.trim() || null;
+    const val = (field === 'telephone' && rawVal) ? normalizePhone(rawVal) || rawVal : rawVal;
     // Champs obligatoires : empêcher de vider
     const requiredFields: EditableField[] = ['prenom', 'nom', 'raison_sociale', 'telephone', 'adresse', 'code_postal', 'ville'];
     if (requiredFields.includes(field) && !val) return;
@@ -599,6 +615,7 @@ export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
     }
 
     setIsOpen(false);
+    router.push('/profil');
     router.refresh();
   };
 
