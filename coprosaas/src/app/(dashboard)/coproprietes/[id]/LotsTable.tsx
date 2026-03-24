@@ -65,12 +65,14 @@ interface CoproEntry {
   nom: string | null;
   prenom: string | null;
   raison_sociale: string | null;
+  user_id?: string | null;
 }
 
 interface LotsTableProps {
   initialLots: LotRow[];
   coproMap: Record<string, CoproEntry>;
   coproprieteId: string;
+  currentUserId?: string | null;
 }
 
 // ── Ligne sortable ────────────────────────────────────────────────────────────
@@ -79,11 +81,13 @@ function SortableLotRow({
   totalTantiemes,
   coproMap,
   coproprieteId,
+  currentUserId,
 }: {
   lot: LotRow;
   totalTantiemes: number;
   coproMap: Record<string, CoproEntry>;
   coproprieteId: string;
+  currentUserId?: string | null;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lot.id });
   const style = {
@@ -97,6 +101,7 @@ function SortableLotRow({
   const quotePart = totalTantiemes > 0 ? (lot.tantiemes / totalTantiemes) * 100 : 0;
   const owner = lot.coproprietaire_id ? coproMap[lot.coproprietaire_id] : null;
   const ownerName = owner ? owner.raison_sociale ?? `${owner.prenom ?? ''} ${owner.nom ?? ''}`.trim() : null;
+  const isMyLot = !!currentUserId && !!owner?.user_id && owner.user_id === currentUserId;
   const cfg = getConfig(lot.type);
   const Icon = cfg.icon;
 
@@ -104,7 +109,7 @@ function SortableLotRow({
     <tr
       ref={setNodeRef}
       style={style}
-      className={`border-b border-gray-100 last:border-0 transition-colors ${isDragging ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+      className={`border-b border-gray-100 last:border-0 transition-colors ${isDragging ? 'bg-blue-50' : isMyLot ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'}`}
     >
       {/* Grip */}
       <td className="py-3.5 px-2 w-7">
@@ -149,6 +154,9 @@ function SortableLotRow({
           <div className="flex items-center gap-2">
             <OwnerAvatar name={ownerName} />
             <span className="text-gray-700 text-sm">{ownerName}</span>
+            {isMyLot && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-600 text-white">Vous</span>
+            )}
           </div>
         ) : (
           <span className="text-orange-400 italic text-xs font-medium">Non assigné</span>
@@ -174,11 +182,13 @@ function SortableLotCard({
   totalTantiemes,
   coproMap,
   coproprieteId,
+  currentUserId,
 }: {
   lot: LotRow;
   totalTantiemes: number;
   coproMap: Record<string, CoproEntry>;
   coproprieteId: string;
+  currentUserId?: string | null;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lot.id });
   const style = {
@@ -190,6 +200,7 @@ function SortableLotCard({
   const quotePart = totalTantiemes > 0 ? (lot.tantiemes / totalTantiemes) * 100 : 0;
   const owner = lot.coproprietaire_id ? coproMap[lot.coproprietaire_id] : null;
   const ownerName = owner ? owner.raison_sociale ?? `${owner.prenom ?? ''} ${owner.nom ?? ''}`.trim() : null;
+  const isMyLot = !!currentUserId && !!owner?.user_id && owner.user_id === currentUserId;
   const cfg = getConfig(lot.type);
   const Icon = cfg.icon;
 
@@ -197,7 +208,7 @@ function SortableLotCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white border rounded-xl p-4 ${isDragging ? 'border-blue-300 shadow-md' : 'border-gray-200'}`}
+      className={`border rounded-xl p-4 ${isDragging ? 'border-blue-300 shadow-md bg-white' : isMyLot ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-white'}`}
     >
       <div className="flex items-start gap-3">
         {/* Grip */}
@@ -237,6 +248,9 @@ function SortableLotCard({
                 <div className="flex items-center gap-1.5">
                   <OwnerAvatar name={ownerName} />
                   <span className="text-sm text-gray-700 truncate">{ownerName}</span>
+                  {isMyLot && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-600 text-white shrink-0">Vous</span>
+                  )}
                 </div>
               ) : (
                 <span className="text-xs text-orange-400 italic font-medium">Non assigné</span>
@@ -257,7 +271,7 @@ function SortableLotCard({
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
-export default function LotsTable({ initialLots, coproMap, coproprieteId }: LotsTableProps) {
+export default function LotsTable({ initialLots, coproMap, coproprieteId, currentUserId }: LotsTableProps) {
   const [lots, setLots] = useState<LotRow[]>(initialLots);
   const supabase = createClient();
 
@@ -370,6 +384,7 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId }: Lots
               totalTantiemes={totalTantiemes}
               coproMap={coproMap}
               coproprieteId={coproprieteId}
+              currentUserId={currentUserId}
             />
           ))}
         </div>
@@ -396,6 +411,7 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId }: Lots
                   totalTantiemes={totalTantiemes}
                   coproMap={coproMap}
                   coproprieteId={coproprieteId}
+                  currentUserId={currentUserId}
                 />
               ))}
             </tbody>

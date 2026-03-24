@@ -44,7 +44,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
   // Copropriétaires de cette copropriété (pour afficher le nom dans le tableau)
   const { data: coproprietaires } = await supabase
     .from('coproprietaires')
-    .select('id, nom, prenom, raison_sociale')
+    .select('id, nom, prenom, raison_sociale, user_id')
     .eq('copropriete_id', id);
   const coproMap = Object.fromEntries((coproprietaires ?? []).map((c) => [c.id, c]));
 
@@ -98,7 +98,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
         />
 
         {lots && lots.length > 0 ? (
-          <LotsTable initialLots={lots} coproMap={coproMap} coproprieteId={id} />
+          <LotsTable initialLots={lots} coproMap={coproMap} coproprieteId={id} currentUserId={user.id} />
         ) : (
           <EmptyState
             title="Aucun lot"
