@@ -395,7 +395,7 @@ export default function HomePage() {
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest w-full text-center mb-1">Inclus également dans tous les plans</span>
             {['Suivi incidents & travaux', 'Espace copropriétaire', 'Notifications automatiques', 'Fonds de travaux ALUR', 'Tableau de bord temps réel', 'Support par e-mail'].map((f) => (
               <span key={f} className="flex items-center gap-1.5 text-sm text-gray-600">
-                <CheckCircle size={13} className="text-green-500 shrink-0" /> {f}
+                <CheckCircle size={13} className="text-green-600 shrink-0" /> {f}
               </span>
             ))}
           </div>
@@ -654,7 +654,7 @@ export default function HomePage() {
   
                   {/* Bannière AG urgente */}
                   <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2.5">
-                    <BellRing size={12} className="text-amber-500 shrink-0" />
+                    <BellRing size={12} className="text-amber-700 shrink-0" />
                     <p className="text-[10px] font-semibold text-amber-800 flex-1">
                       Assemblée Générale dans{' '}
                       <span className="bg-amber-100 text-amber-700 rounded px-1.5 py-0.5 text-[9px] font-bold">J−15</span>
@@ -862,7 +862,7 @@ export default function HomePage() {
                   <ul className="space-y-1.5">
                     {detail.map((d) => (
                       <li key={d} className="flex items-center gap-2 text-xs text-gray-600">
-                        <CheckCircle size={11} className="text-green-500 shrink-0" /> {d}
+                        <CheckCircle size={11} className="text-green-600 shrink-0" /> {d}
                       </li>
                     ))}
                   </ul>
@@ -963,7 +963,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3">
               {planFeatures.map((f) => (
                 <div key={f} className="flex items-center gap-2.5 text-sm">
-                  <CheckCircle size={15} className="text-green-500 shrink-0" />
+                  <CheckCircle size={15} className="text-green-600 shrink-0" />
                   <span className="text-gray-700">{f}</span>
                 </div>
               ))}
@@ -1150,11 +1150,11 @@ export default function HomePage() {
             <SiteLogo size={32} />
             <span className="font-bold text-white text-sm">Mon Syndic Bénévole</span>
           </div>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-400 text-sm">
             © {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés
           </p>
           <nav aria-label="Liens du pied de page">
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-gray-500">
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-gray-400">
               <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
               <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>

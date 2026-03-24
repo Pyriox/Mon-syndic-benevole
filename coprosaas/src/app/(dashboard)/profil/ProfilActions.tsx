@@ -267,8 +267,8 @@ export function ProfilIdentiteEditor({
     const isRequiredEmpty = required && isEditing && !tempValue.trim();
     return (
       <div key={field}>
-        <p className="text-xs text-gray-400 mb-1">
-          {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+        <p className="text-xs text-gray-500 mb-1">
+          {label}{required && <span className="text-red-600 ml-0.5">*</span>}
         </p>
         {isEditing ? (
           <div className="flex items-center gap-1.5">
@@ -296,7 +296,7 @@ export function ProfilIdentiteEditor({
             <button
               type="button"
               onClick={() => setEditingField(null)}
-              className="shrink-0 flex items-center justify-center w-8 h-8 text-gray-400 hover:bg-gray-100 rounded-lg"
+              className="shrink-0 flex items-center justify-center w-8 h-8 text-gray-500 hover:bg-gray-100 rounded-lg"
               title="Annuler"
             >
               <X size={14} />
@@ -310,9 +310,9 @@ export function ProfilIdentiteEditor({
             title={`Modifier ${label}`}
           >
             <span className="text-sm font-medium text-gray-900 truncate">
-              {value || <span className="text-gray-400 italic text-sm font-normal">Non renseigné</span>}
+              {value || <span className="text-gray-500 italic text-sm font-normal">Non renseigné</span>}
             </span>
-            <Pencil size={12} className="shrink-0 text-gray-400 group-hover:text-blue-500 transition-colors" />
+            <Pencil size={12} className="shrink-0 text-gray-500 group-hover:text-blue-600 transition-colors" />
           </button>
         )}
       </div>
@@ -322,7 +322,7 @@ export function ProfilIdentiteEditor({
   if (!fiche) {
     return (
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm text-gray-400 italic leading-relaxed">
+        <p className="text-sm text-gray-500 italic leading-relaxed">
           Aucune fiche pour cette copropriété.{' '}
           <span className="text-gray-600">Créez-la pour apparaître dans la liste des copropriétaires.</span>
         </p>
@@ -375,7 +375,7 @@ export function ProfilIdentiteEditor({
               {isSci ? 'Personne morale / SCI' : 'Personne physique'}
             </span>
             <button type="button" onClick={toggleSci} disabled={saving}
-              className="text-xs text-gray-400 hover:text-blue-600 hover:underline transition-colors disabled:opacity-50"
+              className="text-xs text-gray-500 hover:text-blue-600 hover:underline transition-colors disabled:opacity-50"
               title={isSci ? 'Passer en personne physique' : 'Passer en personne morale / SCI'}>
               Changer
             </button>

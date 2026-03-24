@@ -48,7 +48,7 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
         {loading ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
         Essai gratuit 14 jours
       </button>
-      {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+      {error && <p className="text-xs text-red-600 text-center">{error}</p>}
     </div>
   );
 }

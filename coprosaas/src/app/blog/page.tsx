@@ -115,9 +115,9 @@ export default function BlogPage() {
             <SiteLogo size={32} />
             <span className="font-bold text-white text-sm">Mon Syndic Bénévole</span>
           </div>
-          <p className="text-gray-500 text-sm">© {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés</p>
+          <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés</p>
           <nav aria-label="Liens du pied de page">
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-gray-500">
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-gray-400">
               <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
               <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>

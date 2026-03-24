@@ -76,7 +76,7 @@ export default function TransfertSyndic({ coproprieteId, coproprieteNom }: Trans
 
           {/* Avertissement */}
           <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-            <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-500" />
+            <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-700" />
             <div>
               <p className="font-semibold mb-1">Action irréversible</p>
               <p className="text-xs leading-relaxed">

@@ -120,7 +120,7 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
                     onClick={handleForceConfirm}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    <ShieldCheck size={14} className="text-green-500" />
+                    <ShieldCheck size={14} className="text-green-600" />
                     Forcer la vérification
                   </button>
                 )}

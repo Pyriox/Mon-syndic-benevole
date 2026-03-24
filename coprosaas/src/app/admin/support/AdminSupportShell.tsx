@@ -219,7 +219,7 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
             <LifeBuoy size={20} className="text-indigo-600" />
             Support
           </h1>
-          <p className="text-sm text-gray-400 mt-0.5">
+          <p className="text-sm text-gray-500 mt-0.5">
             {tickets.length} ticket{tickets.length !== 1 ? 's' : ''} au total
             {countByStatus('ouvert') > 0 && (
               <span className="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
@@ -246,7 +246,7 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
 
           {/* Recherche */}
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
             <input
               type="text"
               value={search}
@@ -280,8 +280,8 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
           <div className="flex flex-col gap-1 overflow-y-auto" style={{ maxHeight: 'calc(70vh - 80px)' }}>
             {filteredTickets.length === 0 ? (
               <div className="text-center py-10">
-                <Inbox size={28} className="mx-auto text-gray-300 mb-2" />
-                <p className="text-xs text-gray-400">Aucun ticket</p>
+                <Inbox size={28} className="mx-auto text-gray-500 mb-2" />
+                <p className="text-xs text-gray-500">Aucun ticket</p>
               </div>
             ) : filteredTickets.map((t) => (
               <button
@@ -295,7 +295,7 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
               >
                 <div className="flex items-start justify-between gap-1 mb-1">
                   <span className="text-xs font-semibold text-gray-900 truncate flex-1">{t.user_name}</span>
-                  <span className="shrink-0 text-[10px] text-gray-400">{formatDateFR(t.updated_at)}</span>
+                  <span className="shrink-0 text-[10px] text-gray-500">{formatDateFR(t.updated_at)}</span>
                 </div>
                 <p className="text-xs text-gray-600 truncate mb-1.5">{t.subject}</p>
                 <StatusBadge status={t.status} />
@@ -310,7 +310,7 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
           {!selectedTicket ? (
             <div className="flex flex-col items-center justify-center flex-1 py-16 text-center">
               <MessageSquare size={36} className="text-gray-200 mb-3" />
-              <p className="text-sm text-gray-400">Sélectionnez un ticket pour afficher la conversation</p>
+              <p className="text-sm text-gray-500">Sélectionnez un ticket pour afficher la conversation</p>
             </div>
           ) : (
             <>
@@ -337,11 +337,11 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
               <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3" style={{ minHeight: 0 }}>
                 {loadingMsgs ? (
                   <div className="flex items-center justify-center py-10">
-                    <RefreshCw size={20} className="animate-spin text-gray-300" />
+                    <RefreshCw size={20} className="animate-spin text-gray-500" />
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center py-10">
-                    <p className="text-xs text-gray-400">Aucun message dans ce ticket</p>
+                    <p className="text-xs text-gray-500">Aucun message dans ce ticket</p>
                   </div>
                 ) : (
                   messages.map((msg) => (
@@ -371,7 +371,7 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
                     <p className="text-xs text-red-600">{sendError}</p>
                   )}
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[10px] text-gray-500">
                       Un e-mail sera envoyé au client lors de votre réponse.
                     </p>
                     <button
@@ -426,7 +426,7 @@ function MessageBubble({ msg }: { msg: Message }) {
         }`}>
           {msg.content}
         </div>
-        <span className="text-[10px] text-gray-400 px-1">
+        <span className="text-[10px] text-gray-500 px-1">
           {isAdmin ? 'Admin · ' : 'Client · '}
           {new Date(msg.created_at).toLocaleString('fr-FR', {
             day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',

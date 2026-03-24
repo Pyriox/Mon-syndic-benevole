@@ -84,7 +84,7 @@ export default function CookieBanner() {
           </button>
           <button
             onClick={refuse}
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors underline"
+            className="text-xs text-gray-600 hover:text-gray-800 transition-colors underline"
           >
             Refuser
           </button>

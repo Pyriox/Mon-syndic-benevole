@@ -49,8 +49,8 @@ type Dossier = { id: string; nom: string; is_default: boolean; created_at: strin
 
 const FOLDER_COLOR_CLASS: Record<string, string> = {
   blue:   'text-blue-500',
-  amber:  'text-amber-500',
-  green:  'text-green-500',
+  amber:  'text-amber-600',
+  green:  'text-green-600',
   purple: 'text-purple-500',
   red:    'text-red-500',
   pink:   'text-pink-500',
@@ -59,7 +59,7 @@ const FOLDER_COLOR_CLASS: Record<string, string> = {
 };
 const folderColorClass = (d: Dossier) =>
   (d.couleur && FOLDER_COLOR_CLASS[d.couleur]) ??
-  (d.is_default ? 'text-blue-500' : 'text-amber-500');
+  (d.is_default ? 'text-blue-500' : 'text-amber-600');
 
 function buildBreadcrumb(dossiers: Dossier[], dossierId: string): { id: string; nom: string }[] {
   const map = new Map(dossiers.map((d) => [d.id, d]));
@@ -278,7 +278,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
                 <Folder size={36} className={`${folderColorClass(dossier)} shrink-0`} />
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900 text-sm leading-snug">{dossier.nom}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     {subCountByParent[dossier.id]
                       ? `${subCountByParent[dossier.id]} sous-dossier${subCountByParent[dossier.id] !== 1 ? 's' : ''}`
                       : `${countByDossier[dossier.id] ?? 0} document${(countByDossier[dossier.id] ?? 0) !== 1 ? 's' : ''}`}

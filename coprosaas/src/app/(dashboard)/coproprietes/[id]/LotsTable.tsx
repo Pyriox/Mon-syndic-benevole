@@ -116,7 +116,7 @@ function SortableLotRow({
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 focus:outline-none touch-none"
+          className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-700 focus:outline-none touch-none"
           aria-label="Réordonner"
         >
           <GripVertical size={16} />
@@ -215,7 +215,7 @@ function SortableLotCard({
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 focus:outline-none touch-none mt-0.5"
+          className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-700 focus:outline-none touch-none mt-0.5"
           aria-label="Réordonner"
         >
           <GripVertical size={16} />

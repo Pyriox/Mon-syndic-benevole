@@ -84,7 +84,7 @@ export default async function DashboardPage() {
 
         {!copropriete && (
           <Card className="text-center py-12">
-            <Building2 size={48} className="mx-auto text-gray-300 mb-4" />
+            <Building2 size={48} className="mx-auto text-gray-500 mb-4" />
             <h3 className="text-lg font-semibold text-gray-700">Vous n&apos;êtes rattaché à aucune copropriété</h3>
             <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto">
               Attendez l&apos;invitation de votre syndic pour accéder à votre espace copropriétaire.
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
             {/* Alerte AG imminente */}
             {prochaineAG && joursAvantAG !== null && joursAvantAG <= 30 && (
               <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                <BellRing size={18} className="text-amber-500 shrink-0 mt-0.5" />
+                <BellRing size={18} className="text-amber-700 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-amber-800">
                     Assemblée Générale dans{' '}
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
             {/* Fiche non liée */}
             {!fiche && (
               <Card className="text-center py-8">
-                <p className="text-gray-400 text-sm italic">
+                <p className="text-gray-500 text-sm italic">
                   Votre fiche copropriétaire n&apos;est pas encore associée à ce compte. Contactez votre syndic.
                 </p>
               </Card>
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
                       <p className={`text-2xl font-bold ${solde >= 0 ? 'text-green-700' : 'text-red-600'}`}>
                         {solde >= 0 ? '+' : ''}{formatEuros(solde)}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-gray-500 mt-0.5">
                         {solde >= 0 ? 'Avance de trésorerie' : 'Charges à régler'}
                       </p>
                     </div>
@@ -155,14 +155,14 @@ export default async function DashboardPage() {
                       <div className="min-w-0">
                         <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
                         <p className="font-bold text-gray-900 truncate">{prochaineAG.titre}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-gray-500 mt-0.5">
                           {new Date(prochaineAG.date_ag).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                         </p>
                       </div>
                     ) : (
                       <div>
                         <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
-                        <p className="text-sm text-gray-400 mt-1 italic">Aucune AG planifiée</p>
+                        <p className="text-sm text-gray-500 mt-1 italic">Aucune AG planifiée</p>
                       </div>
                     )}
                   </Card>
@@ -186,7 +186,7 @@ export default async function DashboardPage() {
                             <div>
                               <p className="text-sm font-medium text-gray-800">{appel?.titre ?? 'Appel de fonds'}</p>
                               {appel?.date_echeance && (
-                                <p className="text-xs text-gray-400">Échéance : {formatDate(appel.date_echeance)}</p>
+                                <p className="text-xs text-gray-500">Échéance : {formatDate(appel.date_echeance)}</p>
                               )}
                             </div>
                             <span className="text-sm font-semibold text-red-600 shrink-0 ml-3">
@@ -434,7 +434,7 @@ export default async function DashboardPage() {
       {/* Alerte : AG dans moins de 30 jours */}
       {copropriete && agUrgente && prochaineAG && (
         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <BellRing size={18} className="text-amber-500 shrink-0 mt-0.5" />
+          <BellRing size={18} className="text-amber-700 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-amber-800">
               Assemblée Générale dans{' '}
@@ -493,12 +493,12 @@ export default async function DashboardPage() {
                 {hasProvisions ? (
                   <>
                     <p className="text-2xl font-bold text-gray-900">{formatEuros(totalProvisions)}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Charges appelées aux copro.</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Charges appelées aux copro.</p>
                   </>
                 ) : (
                   <>
-                    <p className="text-lg font-semibold text-gray-400">&mdash;</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Aucune provision saisie pour {currentYear}</p>
+                    <p className="text-lg font-semibold text-gray-500">&mdash;</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Aucune provision saisie pour {currentYear}</p>
                   </>
                 )}
               </div>
@@ -513,7 +513,7 @@ export default async function DashboardPage() {
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dépenses réelles {currentYear}</p>
                 <p className="text-2xl font-bold text-gray-900">{formatEuros(totalDepenses)}</p>
                 {tendanceDepenses === 'hausse' && (
-                  <p className="text-xs text-red-500 flex items-center gap-0.5 mt-0.5 font-medium">
+                  <p className="text-xs text-red-600 flex items-center gap-0.5 mt-0.5 font-medium">
                     <ArrowUp size={11} />{pctTendance}% vs {prevYear}
                   </p>
                 )}
@@ -523,7 +523,7 @@ export default async function DashboardPage() {
                   </p>
                 )}
                 {tendanceDepenses === 'stable' && (
-                  <p className="text-xs text-gray-400 flex items-center gap-0.5 mt-0.5">
+                  <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5">
                     <Minus size={11} />Stable vs {prevYear}
                   </p>
                 )}
@@ -538,14 +538,14 @@ export default async function DashboardPage() {
                     ? <TrendingUp size={24} className="text-green-600" />
                     : ecartPrevisionnel < 0
                       ? <TrendingDown size={24} className="text-orange-600" />
-                      : <Minus size={24} className="text-gray-400" />}
+                      : <Minus size={24} className="text-gray-500" />}
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
                   <p className={`text-2xl font-bold ${ecartPrevisionnel > 0 ? 'text-green-700' : ecartPrevisionnel < 0 ? 'text-orange-600' : 'text-gray-700'}`}>
                     {ecartPrevisionnel > 0 ? '+' : ''}{formatEuros(ecartPrevisionnel)}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 mt-0.5">
                     {ecartPrevisionnel > 0 ? 'Surplus (trop-perçu provisoire)' : ecartPrevisionnel < 0 ? 'Déficit à régulariser' : 'Provisions = dépenses'}
                   </p>
                 </div>
@@ -553,14 +553,14 @@ export default async function DashboardPage() {
             ) : (
               <Card className="flex items-center gap-4 border-dashed border-gray-200">
                 <div className="p-3 bg-gray-50 rounded-xl shrink-0">
-                  <Minus size={24} className="text-gray-300" />
+                  <Minus size={24} className="text-gray-500" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Écart prévisionnel</p>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
                   <p className="text-sm text-gray-700 font-semibold mt-0.5">—</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 mt-0.5">
                     Aucune provision saisie pour {currentYear}.{' '}
-                    <Link href="/appels-de-fonds" className="text-gray-400 hover:text-blue-600 hover:underline">Saisir un appel de fonds</Link>
+                    <Link href="/appels-de-fonds" className="text-gray-600 hover:text-blue-600 hover:underline">Saisir un appel de fonds</Link>
                   </p>
                 </div>
               </Card>
@@ -573,12 +573,12 @@ export default async function DashboardPage() {
             {!hasProvisions ? (
               <Card className="flex items-center gap-4 border-dashed border-gray-200">
                 <div className="p-3 bg-gray-50 rounded-xl shrink-0">
-                  <Banknote size={24} className="text-gray-300" />
+                  <Banknote size={24} className="text-gray-500" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Solde impayé</p>
-                  <p className="text-lg font-semibold text-gray-400">&mdash;</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Aucune provision saisie pour {currentYear}</p>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Solde impayé</p>
+                  <p className="text-lg font-semibold text-gray-500">&mdash;</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Aucune provision saisie pour {currentYear}</p>
                 </div>
               </Card>
             ) : (
@@ -592,7 +592,7 @@ export default async function DashboardPage() {
                     {formatEuros(totalMontantImpayé)}
                   </p>
                   {nbImpayés > 0 && (
-                    <p className="text-xs text-red-400 mt-0.5">
+                    <p className="text-xs text-red-600 mt-0.5">
                       {nbImpayés} copropriétaire{nbImpayés > 1 ? 's' : ''}
                     </p>
                   )}
@@ -608,7 +608,7 @@ export default async function DashboardPage() {
               <div>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Incidents en cours</p>
                 <p className="text-2xl font-bold text-gray-900">{nbIncidentsOuverts}</p>
-                {nbIncidentsOuverts === 0 && <p className="text-xs text-green-500 mt-0.5">Aucun incident ouvert</p>}
+                {nbIncidentsOuverts === 0 && <p className="text-xs text-green-700 mt-0.5">Aucun incident ouvert</p>}
               </div>
             </Card>
 
@@ -620,7 +620,7 @@ export default async function DashboardPage() {
               <div>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Copropriétaires</p>
                 <p className="text-2xl font-bold text-gray-900">{nbCoproprietaires}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{nbLots ?? 0} lot{(nbLots ?? 0) > 1 ? 's' : ''}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{nbLots ?? 0} lot{(nbLots ?? 0) > 1 ? 's' : ''}</p>
               </div>
             </Card>
           </div>
@@ -645,7 +645,7 @@ export default async function DashboardPage() {
                           <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${colors.dot}`} />
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-gray-800 truncate">{d.titre}</p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-gray-500">
                               {LABELS_CATEGORIE[d.categorie] ?? d.categorie}
                               <span className="mx-1">·</span>
                               {formatDate(d.date_depense)}
@@ -658,7 +658,7 @@ export default async function DashboardPage() {
                   })}
                 </ul>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-4">Aucune dépense enregistrée</p>
+                <p className="text-sm text-gray-500 text-center py-4">Aucune dépense enregistrée</p>
               )}
             </Card>
 
@@ -666,7 +666,7 @@ export default async function DashboardPage() {
             <Card>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Répartition des dépenses</h3>
-                <span className="text-xs text-gray-400">réelles {currentYear}</span>
+                <span className="text-xs text-gray-500">réelles {currentYear}</span>
               </div>
               {repartition.length > 0 ? (
                 <div className="space-y-3">
@@ -690,12 +690,12 @@ export default async function DashboardPage() {
                       </div>
                     );
                   })}
-                  <p className="text-xs text-gray-400 pt-2 border-t border-gray-100 text-right">
+                  <p className="text-xs text-gray-500 pt-2 border-t border-gray-100 text-right">
                     Total : <span className="font-semibold text-gray-600">{formatEuros(totalRepartition)}</span>
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-4">Aucune dépense enregistrée</p>
+                <p className="text-sm text-gray-500 text-center py-4">Aucune dépense enregistrée</p>
               )}
             </Card>
           </div>
@@ -716,7 +716,7 @@ export default async function DashboardPage() {
                         <p className="text-sm font-medium text-gray-800">
                           {nbImpayes60j} ligne{nbImpayes60j > 1 ? 's' : ''} impayée{nbImpayes60j > 1 ? 's' : ''} depuis plus de 60 jours
                         </p>
-                        <p className="text-xs text-gray-400">Montant : {formatEuros(montantImpayes60j)}</p>
+                        <p className="text-xs text-gray-500">Montant : {formatEuros(montantImpayes60j)}</p>
                       </div>
                     </div>
                     <Link href="/appels-de-fonds" className="text-xs text-blue-600 hover:underline font-medium shrink-0">
@@ -732,7 +732,7 @@ export default async function DashboardPage() {
                         <p className="text-sm font-medium text-gray-800">
                           {incidentsAnciens.length} incident{incidentsAnciens.length > 1 ? 's' : ''} ouvert{incidentsAnciens.length > 1 ? 's' : ''} sans suivi depuis plus de 7 jours
                         </p>
-                        <p className="text-xs text-gray-400 truncate max-w-xs">
+                        <p className="text-xs text-gray-500 truncate max-w-xs">
                           {incidentsAnciens.map((i) => i.titre).join(', ')}
                         </p>
                       </div>

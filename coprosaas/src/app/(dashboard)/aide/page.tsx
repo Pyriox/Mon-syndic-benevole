@@ -433,7 +433,7 @@ export default function AidePage() {  const router = useRouter();  const [name, 
 
           {/* Note première année */}
           <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-2">
-            <Info size={15} className="text-amber-500 shrink-0 mt-0.5" />
+            <Info size={15} className="text-amber-700 shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-semibold text-amber-800">Première année sur Mon Syndic Bénévole ?</p>
               <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
@@ -666,7 +666,7 @@ export default function AidePage() {  const router = useRouter();  const [name, 
                     rows={5}
                     required
                   />
-                  <p className={`text-right text-xs mt-1 ${message.length > MAX_MESSAGE * 0.9 ? 'text-amber-500' : 'text-gray-400'}`}>
+                  <p className={`text-right text-xs mt-1 ${message.length > MAX_MESSAGE * 0.9 ? 'text-amber-700' : 'text-gray-500'}`}>
                     {message.length} / {MAX_MESSAGE}
                   </p>
                 </div>
@@ -703,7 +703,7 @@ export default function AidePage() {  const router = useRouter();  const [name, 
               </li>
               <li className="flex items-start gap-2.5">
                 <div className="w-7 h-7 rounded-md bg-green-50 flex items-center justify-center shrink-0 mt-0.5">
-                  <MailCheck size={13} className="text-green-500" />
+                  <MailCheck size={13} className="text-green-600" />
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-700">Délai de réponse</p>

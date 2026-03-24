@@ -79,7 +79,7 @@ export default async function RegularisationPage({
         <Card>
           <div className="flex items-start gap-3">
             <div className="p-2.5 bg-amber-50 rounded-xl shrink-0">
-              <Lock size={18} className="text-amber-500" />
+              <Lock size={18} className="text-amber-700" />
             </div>
             <div>
               <p className="font-semibold text-gray-900">Exercice {annee} en cours</p>
@@ -142,19 +142,19 @@ export default async function RegularisationPage({
               <Card>
                 <p className="text-xs text-gray-500 mb-1">Provisions appelées</p>
                 <p className="text-xl font-bold text-gray-900">{formatEuros(totalAppele)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">hors fonds de travaux</p>
+                <p className="text-xs text-gray-500 mb-1">hors fonds de travaux</p>
               </Card>
               <Card>
                 <p className="text-xs text-gray-500 mb-1">Dépenses réelles</p>
                 <p className="text-xl font-bold text-gray-900">{formatEuros(totalReel)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">hors fonds ALUR</p>
+                <p className="text-xs text-gray-500 mb-1">hors fonds ALUR</p>
               </Card>
               <Card>
                 <p className="text-xs text-gray-500 mb-1">Écart global</p>
                 <p className={`text-xl font-bold ${totalBalance > 0 ? 'text-red-600' : totalBalance < 0 ? 'text-green-600' : 'text-gray-900'}`}>
                   {totalBalance > 0 ? '+' : ''}{formatEuros(totalBalance)}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   {totalBalance > 0 ? 'à récupérer' : totalBalance < 0 ? 'à reverser / créditer' : 'équilibré'}
                 </p>
               </Card>

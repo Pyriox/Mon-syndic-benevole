@@ -345,7 +345,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
               )}
               {avertissementDelai && (
                 <div className="mt-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                  <AlertTriangle size={15} className="shrink-0 mt-0.5 text-amber-500" />
+                  <AlertTriangle size={15} className="shrink-0 mt-0.5 text-amber-700" />
                   <span>
                     <strong>Délai insuffisant :</strong> la convocation doit être envoyée au moins 21 jours avant l&apos;AG (art. 9 décret 17/03/1967).
                     Actuellement : <strong>{joursAvantAG} jour{joursAvantAG! > 1 ? 's' : ''}</strong> restant{joursAvantAG! > 1 ? 's' : ''}.

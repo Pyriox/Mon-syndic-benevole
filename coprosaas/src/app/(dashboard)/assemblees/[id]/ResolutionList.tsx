@@ -131,7 +131,7 @@ function SortableCard({
             {...attributes}
             {...listeners}
             type="button"
-            className="mt-0.5 p-0.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 touch-none"
+            className="mt-0.5 p-0.5 text-gray-500 hover:text-gray-700 cursor-grab active:cursor-grabbing shrink-0 touch-none"
             title="Déplacer"
           >
             <GripVertical size={16} />

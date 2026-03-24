@@ -418,7 +418,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
               )}
               <button type="button" onClick={startExceptionnel}
                 className="mt-4 text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2 flex items-center gap-1">
-                <AlertTriangle size={12} className="text-amber-500" />
+                <AlertTriangle size={12} className="text-amber-700" />
                 Créer un appel exceptionnel sans AG
               </button>
             </div>

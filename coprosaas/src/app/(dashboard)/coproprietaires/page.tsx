@@ -98,11 +98,11 @@ export default async function CoproprietairesPage() {
             </div>
           </Card>
           <Card padding="sm" className="flex items-center gap-3">
-            <div className="p-2 bg-green-50 rounded-lg shrink-0"><UserCheck size={18} className="text-green-500" /></div>
+            <div className="p-2 bg-green-50 rounded-lg shrink-0"><UserCheck size={18} className="text-green-600" /></div>
             <div>
               <p className="text-xs text-gray-500">Inscrits</p>
               <p className="text-lg font-bold text-gray-900 leading-tight">
-                {nbInscrits} <span className="text-sm font-normal text-gray-400">/ {coproprietaires.length}</span>
+                {nbInscrits} <span className="text-sm font-normal text-gray-500">/ {coproprietaires.length}</span>
               </p>
             </div>
           </Card>

@@ -42,7 +42,7 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
   if (plan === 'essai')    return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
   if (plan === 'inactif')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">Inactif</span>;
   // null = aucun moyen de paiement enregistré
-  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-400 border border-gray-200">Aucun</span>;
+  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-600 border border-gray-200">Aucun</span>;
 }
 
 export default async function AdminUtilisateursPage() {
@@ -99,7 +99,7 @@ export default async function AdminUtilisateursPage() {
             <div>
               <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
               <p className="text-2xl font-bold text-gray-900 mt-0.5">{value}</p>
-              <p className="text-xs text-gray-400">{sub}</p>
+              <p className="text-xs text-gray-500">{sub}</p>
             </div>
           </div>
         ))}
@@ -110,7 +110,7 @@ export default async function AdminUtilisateursPage() {
         <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
           <div>
             <p className="text-sm font-semibold text-gray-900">Syndics bénévoles</p>
-            <p className="text-xs text-gray-400">{syndicUsers.length} comptes</p>
+            <p className="text-xs text-gray-500">{syndicUsers.length} comptes</p>
           </div>
           <div className="flex gap-2 text-xs">
             <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium border border-blue-200">{syndicUsers.filter(u => !!u.email_confirmed_at).length} vérifiés</span>
@@ -153,7 +153,7 @@ export default async function AdminUtilisateursPage() {
                             {u.email}
                             {adminUserIds.has(u.id) && <span className="ml-1.5 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">Admin</span>}
                           </p>
-                          <p className="text-xs text-gray-400 font-mono">{u.id.slice(0, 12)}… · {meta?.full_name ?? '—'}</p>
+                          <p className="text-xs text-gray-500 font-mono">{u.id.slice(0, 12)}… · {meta?.full_name ?? '—'}</p>
                         </div>
                       </div>
                     </td>
@@ -165,7 +165,7 @@ export default async function AdminUtilisateursPage() {
                           <span className="text-sm font-bold text-gray-800">{userCopros.length}</span>
                           <PlanBadge plan={displayPlan} planId={bestPlanId} />
                         </div>
-                      ) : <span className="text-xs text-gray-300">—</span>}
+                      ) : <span className="text-xs text-gray-500">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       {u.email_confirmed_at
@@ -191,7 +191,7 @@ export default async function AdminUtilisateursPage() {
       <section>
         <div className="mb-3">
           <p className="text-sm font-semibold text-gray-900">Membres copropriétaires</p>
-          <p className="text-xs text-gray-400">{memberUsers.length} comptes · accès invité (lecture seule)</p>
+            <p className="text-xs text-gray-500">{memberUsers.length} comptes · accès invité (lecture seule)</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
@@ -207,7 +207,7 @@ export default async function AdminUtilisateursPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {memberUsers.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">Aucun membre inscrit</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">Aucun membre inscrit</td></tr>
               )}
               {memberUsers.map((u) => {
                 const meta = u.user_metadata as Record<string, string> | null;
@@ -220,7 +220,7 @@ export default async function AdminUtilisateursPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">{u.email}</p>
-                          <p className="text-xs text-gray-400">{meta?.full_name ?? '—'}</p>
+                          <p className="text-xs text-gray-500">{meta?.full_name ?? '—'}</p>
                         </div>
                       </div>
                     </td>

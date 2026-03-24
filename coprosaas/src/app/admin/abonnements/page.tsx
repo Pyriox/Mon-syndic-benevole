@@ -157,21 +157,21 @@ export default async function AdminAbonnementsPage() {
           <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-4 gap-2 text-center text-xs">
             <div><p className="font-bold text-amber-700">{nbEssai}</p><p className="text-amber-600">Essai</p></div>
             <div><p className="font-bold text-green-700">{nbActifs}</p><p className="text-green-600">Actifs</p></div>
-            <div><p className="font-bold text-gray-500">{nbInactif}</p><p className="text-gray-400">Inactifs</p></div>
-            <div><p className="font-bold text-red-600">{nbPasseDu}</p><p className="text-red-500">Impayés</p></div>
+            <div><p className="font-bold text-gray-500">{nbInactif}</p><p className="text-gray-500">Inactifs</p></div>
+            <div><p className="font-bold text-red-600">{nbPasseDu}</p><p className="text-red-600">Impayés</p></div>
           </div>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
           <p className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Clock size={14} className="text-amber-500" />
+            <Clock size={14} className="text-amber-700" />
             Renouvellements &lt; 14 jours
             {upcomingRenewals.length > 0 && (
               <span className="ml-auto text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 font-semibold">{upcomingRenewals.length}</span>
             )}
           </p>
           {upcomingRenewals.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">Aucun renouvellement imminent</p>
+              <p className="text-sm text-gray-500 py-4 text-center">Aucun renouvellement imminent</p>
           ) : (
             <div className="space-y-2">
               {upcomingRenewals.map((c) => (

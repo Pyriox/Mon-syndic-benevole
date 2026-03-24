@@ -102,9 +102,9 @@ export default function AppelFondsSerieCard({
           {appels.map((appel, i) => (
             <div key={appel.id} className="flex items-center gap-3 px-3 py-2 bg-white rounded-xl border border-gray-100">
               {appel.pctPaye === 100 ? (
-                <CheckCircle2 size={15} className="text-green-500 shrink-0" />
+                <CheckCircle2 size={15} className="text-green-600 shrink-0" />
               ) : (
-                <Clock size={15} className={appel.nbImpayes > 0 ? 'text-red-400 shrink-0' : 'text-gray-300 shrink-0'} />
+                <Clock size={15} className={appel.nbImpayes > 0 ? 'text-red-600 shrink-0' : 'text-gray-500 shrink-0'} />
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-800">Versement {i + 1}</p>
@@ -113,7 +113,7 @@ export default function AppelFondsSerieCard({
               <div className="text-right shrink-0">
                 <p className="text-sm font-bold text-gray-900 tabular-nums">{formatEuros(appel.montant_total)}</p>
                 <p className={`text-xs tabular-nums ${
-                  appel.pctPaye === 100 ? 'text-green-600' : appel.nbImpayes > 0 ? 'text-red-500' : 'text-gray-400'
+                  appel.pctPaye === 100 ? 'text-green-600' : appel.nbImpayes > 0 ? 'text-red-600' : 'text-gray-500'
                 }`}>
                   {appel.pctPaye === 100
                     ? 'Soldé'

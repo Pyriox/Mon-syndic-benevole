@@ -640,7 +640,7 @@ export default function VoteParCopro({
           {/* Passerelle Art. 25-1 */}
           {passerelleDisponible && !passerelleActive && (
             <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg text-xs text-amber-900 flex items-start gap-2">
-              <AlertTriangle size={13} className="shrink-0 mt-0.5 text-amber-500" />
+              <AlertTriangle size={13} className="shrink-0 mt-0.5 text-amber-700" />
               <div className="flex-1 space-y-1">
                 <p className="font-semibold">⚠️ Passerelle Art. 25-1 disponible — décision requise avant d&apos;enregistrer</p>
                 <p className="text-amber-800">

@@ -26,7 +26,7 @@ const iconByType = {
 
 const colorBySeverity = {
   danger: 'text-red-500 bg-red-50',
-  warning: 'text-amber-500 bg-amber-50',
+  warning: 'text-amber-700 bg-amber-50',
   info: 'text-blue-500 bg-blue-50',
 };
 
@@ -96,7 +96,7 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
 
                 {nbNotifs === 0 ? (
                   <div className="px-4 py-8 text-center">
-                    <Bell size={28} className="mx-auto text-gray-400 mb-2" />
+                    <Bell size={28} className="mx-auto text-gray-500 mb-2" />
                     <p className="text-sm text-gray-500">Aucune alerte en cours</p>
                   </div>
                 ) : (

@@ -56,7 +56,7 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-blue-700">Créer une copropriété</p>
-              <p className="text-[10px] text-blue-500">Commencer la configuration</p>
+              <p className="text-[10px] text-blue-700">Commencer la configuration</p>
             </div>
           </Link>
         </div>
@@ -64,7 +64,7 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
     }
     return (
       <div className="mx-3 mb-4 px-3 py-2.5 rounded-xl border border-dashed border-gray-200 text-center">
-        <p className="text-xs text-gray-400">Aucune copropriété</p>
+        <p className="text-xs text-gray-500">Aucune copropriété</p>
       </div>
     );
   }
@@ -89,21 +89,21 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
           {selected ? (
             <>
               <p className="text-xs font-semibold text-gray-800 truncate leading-tight">{selected.nom}</p>
-              <p className="text-[10px] text-gray-400 leading-tight flex items-center gap-1 mt-0.5">
+              <p className="text-[10px] text-gray-500 leading-tight flex items-center gap-1 mt-0.5">
                 {selected.role === 'syndic' ? (
-                  <><Crown size={9} className="text-amber-500" /> Syndic</>
+                  <><Crown size={9} className="text-amber-700" /> Syndic</>
                 ) : (
-                  <><User size={9} className="text-blue-500" /> Copropriétaire</>
+                  <><User size={9} className="text-blue-600" /> Copropriétaire</>
                 )}
               </p>
             </>
           ) : (
-            <p className="text-xs text-gray-400">Sélectionner…</p>
+            <p className="text-xs text-gray-500">Sélectionner…</p>
           )}
         </div>
         <ChevronDown
           size={14}
-          className={cn('text-gray-400 transition-transform flex-shrink-0', open && 'rotate-180')}
+          className={cn('text-gray-500 transition-transform flex-shrink-0', open && 'rotate-180')}
         />
       </button>
 
@@ -125,7 +125,7 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-gray-800 truncate">{copro.nom}</p>
-                <p className="text-[10px] text-gray-400 truncate">{copro.ville}</p>
+                <p className="text-[10px] text-gray-500 truncate">{copro.ville}</p>
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 {copro.role === 'syndic' ? (

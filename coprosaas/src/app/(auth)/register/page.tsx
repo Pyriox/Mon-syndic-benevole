@@ -275,7 +275,7 @@ function RegisterForm() {
               <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5">
                 <Building2 size={20} className="text-blue-500 shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs text-blue-500 font-medium uppercase tracking-wide leading-none mb-0.5">Vous rejoignez</p>
+                  <p className="text-xs text-blue-600 font-medium uppercase tracking-wide leading-none mb-0.5">Vous rejoignez</p>
                   <p className="font-semibold text-blue-800 truncate">{coproprieteNom}</p>
                 </div>
               </div>
@@ -293,7 +293,7 @@ function RegisterForm() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
                   <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 text-sm">
-                    <Lock size={14} className="text-gray-400 shrink-0" />
+                    <Lock size={14} className="text-gray-500 shrink-0" />
                     <span>{invitationPrenom}</span>
                   </div>
                 </div>
@@ -313,7 +313,7 @@ function RegisterForm() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
                   <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 text-sm">
-                    <Lock size={14} className="text-gray-400 shrink-0" />
+                    <Lock size={14} className="text-gray-500 shrink-0" />
                     <span>{invitationNom}</span>
                   </div>
                 </div>

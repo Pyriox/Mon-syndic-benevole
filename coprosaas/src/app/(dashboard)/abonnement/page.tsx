@@ -298,7 +298,7 @@ export default async function AbonnementPage({
 
         {pageError === 'no_customer' && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
-            <AlertCircle size={16} className="text-amber-500 shrink-0" />
+            <AlertCircle size={16} className="text-amber-700 shrink-0" />
             <p className="text-sm text-amber-700">
               Votre abonnement Stripe n&apos;est plus actif (compte client supprimé ou inexistant). Vos données ont été réinitialisées — vous pouvez souscrire un nouvel abonnement ci-dessous.
             </p>
@@ -532,7 +532,7 @@ export default async function AbonnementPage({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
               {FEATURES.map((f) => (
                 <div key={f} className="flex items-center gap-2.5 text-sm text-gray-700">
-                  <CheckCircle size={15} className="text-green-500 shrink-0" />
+                  <CheckCircle size={15} className="text-green-600 shrink-0" />
                   {f}
                 </div>
               ))}
@@ -540,7 +540,7 @@ export default async function AbonnementPage({
           </div>
         )}
 
-        <p className="text-xs text-gray-400 text-center pb-4">
+        <p className="text-xs text-gray-500 text-center pb-4">
           Facturation annuelle. Sans engagement.{' '}
           Pour toute question :{' '}
           <Link

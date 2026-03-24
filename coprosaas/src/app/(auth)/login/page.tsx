@@ -203,7 +203,7 @@ function LoginForm() {
                     <button
                       type="button"
                       onClick={() => { setMode('forgot'); setResetEmail(email); setResetSent(false); setResetError(''); }}
-                      className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
+                      className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
                     >
                       Mot de passe oublié ?
                     </button>

@@ -154,7 +154,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
               <div className="flex items-center gap-2 px-4 py-3">
                 {/* Icône statut */}
                 <div className="shrink-0 w-5">
-                  {statut === 'paye' && <CheckCircle size={16} className="text-green-500" />}
+                  {statut === 'paye' && <CheckCircle size={16} className="text-green-600" />}
                   {statut === 'impaye' && <XCircle size={16} className="text-red-500" />}
                   {statut === 'en_attente' && <Clock size={16} className="text-amber-400" />}
                 </div>
@@ -187,7 +187,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                     type="button"
                     onClick={() => setExpandedId(isExpanded ? null : ligne.id)}
                     title="Détail des postes"
-                    className="shrink-0 p-1 text-gray-300 hover:text-indigo-500 transition-colors"
+                    className="shrink-0 p-1 text-gray-500 hover:text-indigo-600 transition-colors"
                   >
                     <ReceiptText size={14} />
                   </button>
@@ -202,7 +202,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                     const safe = nom.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     pdf.save(`avis-appel-fonds-${safe}.pdf`);
                   }}
-                  className="shrink-0 p-1 text-gray-300 hover:text-blue-500 transition-colors"
+                  className="shrink-0 p-1 text-gray-500 hover:text-blue-600 transition-colors"
                 >
                   <FileDown size={14} />
                 </button>
