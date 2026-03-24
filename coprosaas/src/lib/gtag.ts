@@ -23,20 +23,24 @@ export function trackEvent(action: string, params?: Record<string, unknown>) {
   window.gtag('event', action, params);
 }
 
-/** Accorde le consentement analytics (appelé quand l'utilisateur accepte) */
+/** Accorde le consentement analytics + publicitaire — Consent Mode v2 (appelé quand l'utilisateur accepte) */
 export function grantConsent() {
   if (typeof window === 'undefined' || !window.gtag) return;
   window.gtag('consent', 'update', {
     analytics_storage: 'granted',
-    ad_storage: 'denied',
+    ad_storage: 'granted',
+    ad_user_data: 'granted',
+    ad_personalization: 'granted',
   });
 }
 
-/** Refuse le consentement analytics (appelé quand l'utilisateur refuse) */
+/** Refuse le consentement analytics — Consent Mode v2 (appelé quand l'utilisateur refuse) */
 export function denyConsent() {
   if (typeof window === 'undefined' || !window.gtag) return;
   window.gtag('consent', 'update', {
     analytics_storage: 'denied',
     ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
   });
 }

@@ -2,31 +2,61 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { grantConsent } from '@/lib/gtag';
+import { grantConsent, denyConsent } from '@/lib/gtag';
 
 const CONSENT_KEY = 'cookie_consent';
+// CNIL : le consentement doit être renouvelé tous les 13 mois maximum
+const CONSENT_MAX_AGE_MS = 13 * 30 * 24 * 60 * 60 * 1000;
+
+function getStoredConsent(): { value: string; timestamp: number } | null {
+  try {
+    const raw = localStorage.getItem(CONSENT_KEY);
+    if (!raw) return null;
+    // Compatibilité avec l'ancien format (chaîne simple)
+    if (raw === 'accepted' || raw === 'refused') {
+      return { value: raw, timestamp: Date.now() };
+    }
+    return JSON.parse(raw) as { value: string; timestamp: number };
+  } catch {
+    return null;
+  }
+}
+
+function saveConsent(value: 'accepted' | 'refused') {
+  localStorage.setItem(CONSENT_KEY, JSON.stringify({ value, timestamp: Date.now() }));
+}
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(CONSENT_KEY);
-    if (stored === 'accepted') {
-      grantConsent();
-    } else if (!stored) {
+    const stored = getStoredConsent();
+    if (!stored) {
       setVisible(true);
+      return;
     }
-    // 'refused' → on ne fait rien, le consentement reste denied
+    // Expiration à 13 mois : on redemande le consentement
+    const expired = Date.now() - stored.timestamp > CONSENT_MAX_AGE_MS;
+    if (expired) {
+      localStorage.removeItem(CONSENT_KEY);
+      setVisible(true);
+      return;
+    }
+    if (stored.value === 'accepted') {
+      grantConsent();
+    }
+    // 'refused' → le consentement reste denied par défaut
   }, []);
 
   function accept() {
-    localStorage.setItem(CONSENT_KEY, 'accepted');
+    saveConsent('accepted');
     grantConsent();
     setVisible(false);
   }
 
   function refuse() {
-    localStorage.setItem(CONSENT_KEY, 'refused');
+    saveConsent('refused');
+    denyConsent();
     setVisible(false);
   }
 
@@ -40,7 +70,7 @@ export default function CookieBanner() {
     >
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center gap-2 px-4 py-2 text-xs text-gray-500">
         <p className="flex-1 leading-snug">
-          Ce site utilise des cookies analytiques pour mesurer son audience.{' '}
+          Ce site utilise des cookies analytiques et publicitaires.{' '}
           <Link href="/mentions-legales" className="underline hover:text-gray-700">
             En savoir plus
           </Link>

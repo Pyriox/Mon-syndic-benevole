@@ -2,6 +2,7 @@
 // Composant Input réutilisable avec label et message d'erreur
 // ============================================================
 import { InputHTMLAttributes, forwardRef } from 'react';
+import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -12,16 +13,15 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, hint, className, id, ...props }, ref) => {
-    // Génère un id automatique si pas fourni (pour l'accessibilité)
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-');
 
     return (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         {/* Label */}
         {label && (
-          <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
+          <label htmlFor={inputId} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             {label}
-            {props.required && <span className="text-red-500 ml-1">*</span>}
+            {props.required && <span className="text-red-600 ml-1">*</span>}
           </label>
         )}
 
@@ -30,14 +30,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            'w-full rounded-lg border px-3 py-2 text-sm text-gray-900',
-            'placeholder:text-gray-400',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-            'disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed',
-            'transition-colors duration-150',
+            'w-full rounded-xl border px-3.5 py-2.5 text-sm text-gray-900',
+            'placeholder:text-gray-500',
+            'focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white',
+            'disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed',
+            'transition-all duration-150',
             error
-              ? 'border-red-500 bg-red-50'
-              : 'border-gray-300 bg-white hover:border-gray-400',
+              ? 'border-red-400 bg-red-50 focus:ring-red-500/20 focus:border-red-500'
+              : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white',
             className
           )}
           {...props}
@@ -45,8 +45,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
         {/* Message d'erreur */}
         {error && (
-          <p className="text-xs text-red-600 flex items-center gap-1">
-            <span>⚠</span> {error}
+          <p className="text-xs text-red-600 flex items-center gap-1.5">
+            <AlertCircle size={12} className="shrink-0" /> {error}
           </p>
         )}
 
