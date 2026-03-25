@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
       const customer = await stripe.customers.create({
         email: user.email,
         name: copro.nom,
+        preferred_locales: ['fr'],
         metadata: { supabase_user_id: user.id, copropriete_id: coproprieteid },
       });
       return customer.id;
