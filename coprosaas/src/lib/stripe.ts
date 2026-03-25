@@ -20,7 +20,7 @@ export const stripe = new Proxy({} as Stripe, {
 });
 
 export const STRIPE_PRICES: Record<string, string> = {
-  essentiel: process.env.STRIPE_PRICE_ESSENTIEL ?? '',
-  confort:   process.env.STRIPE_PRICE_CONFORT ?? '',
-  illimite:  process.env.STRIPE_PRICE_ILLIMITE ?? '',
+  essentiel: (process.env.STRIPE_PRICE_ESSENTIEL ?? '').trim(),
+  confort:   (process.env.STRIPE_PRICE_CONFORT ?? '').trim(),
+  illimite:  (process.env.STRIPE_PRICE_ILLIMITE ?? '').trim(),
 };
