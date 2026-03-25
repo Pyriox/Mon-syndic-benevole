@@ -11,9 +11,10 @@ interface Props {
   userEmail: string;
   isConfirmed: boolean;
   isSelf: boolean;
+  isAdmin: boolean;
 }
 
-export default function AdminUserActions({ userId, userEmail, isConfirmed, isSelf }: Props) {
+export default function AdminUserActions({ userId, userEmail, isConfirmed, isSelf, isAdmin }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
@@ -79,6 +80,25 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
     }
   };
 
+  const handleToggleAdmin = async () => {
+    if (!confirm(`${isAdmin ? 'Retirer' : 'Accorder'} les droits administrateur à ${userEmail} ?`)) return;
+    setLoading(true);
+    setOpen(false);
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'toggle_admin', userId }),
+    });
+    setLoading(false);
+    if (res.ok) {
+      setDone(isAdmin ? 'Admin retiré' : 'Admin accordé');
+      setTimeout(() => window.location.reload(), 800);
+    } else {
+      const { error } = await res.json();
+      alert('Erreur : ' + error);
+    }
+  };
+
   if (isSelf) return null;
 
   if (done) {
@@ -124,6 +144,15 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
                     Forcer la vérification
                   </button>
                 )}
+                <div className="border-t border-gray-100 my-1" />
+                <button
+                  onClick={handleToggleAdmin}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${isAdmin ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-700 hover:bg-indigo-50'}`}
+                >
+                  <ShieldCheck size={14} className={isAdmin ? 'text-amber-500' : 'text-indigo-500'} />
+                  {isAdmin ? 'Retirer admin' : 'Rôle admin'}
+                </button>
+                <div className="border-t border-gray-100 my-1" />
                 <button
                   onClick={handleDelete}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"

@@ -83,5 +83,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
+  // Accorder / retirer le rôle admin
+  if (action === 'toggle_admin') {
+    if (!userId) return NextResponse.json({ error: 'userId requis' }, { status: 400 });
+    const { data: existing } = await admin
+      .from('admin_users')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (existing) {
+      const { error } = await admin.from('admin_users').delete().eq('user_id', userId);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true, isAdmin: false });
+    } else {
+      const { error } = await admin.from('admin_users').insert({ user_id: userId });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true, isAdmin: true });
+    }
+  }
+
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 });
 }

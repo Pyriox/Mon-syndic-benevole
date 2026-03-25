@@ -8,6 +8,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AdminCoproActions from '../AdminCoproActions';
+import AdminImpersonate from '../AdminImpersonate';
+import AdminCoproFilters from '../AdminCoproFilters';
+import { Suspense } from 'react';
 import { Building2, DoorOpen, Users } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
@@ -35,10 +38,16 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
   return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
 }
 
-export default async function AdminCopropietesPage() {
+export default async function AdminCopropietesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ plan?: string }>;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
+
+  const { plan: planFilter } = await searchParams;
 
   const admin = createAdminClient();
   const [
@@ -66,6 +75,14 @@ export default async function AdminCopropietesPage() {
   const nbEssai   = coprosTyped.filter((c) => !c.plan || c.plan === 'essai').length;
   const nbInactif = coprosTyped.filter((c) => c.plan === 'inactif').length;
   const nbPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du').length;
+
+  // Apply plan filter
+  const displayedCopros = planFilter
+    ? coprosTyped.filter((c) => {
+        if (planFilter === 'essai') return !c.plan || c.plan === 'essai';
+        return c.plan === planFilter;
+      })
+    : coprosTyped;
 
   const lotsCount: Record<string, number> = {};
   for (const l of lotsParCopro ?? []) lotsCount[l.copropriete_id] = (lotsCount[l.copropriete_id] ?? 0) + 1;
@@ -110,13 +127,20 @@ export default async function AdminCopropietesPage() {
       </div>
 
       {/* ── Filtres rapides ── */}
-      <div className="flex gap-2 text-xs flex-wrap">
-        <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-medium border border-amber-200">{nbEssai} essai</span>
-        <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md font-medium border border-green-200">{nbActifs} actives</span>
-        <span className="bg-gray-100 text-gray-500 px-2 py-1 rounded-md font-medium border border-gray-200">{nbInactif} inactives</span>
-        {nbPasseDu > 0 && <span className="bg-red-50 text-red-600 px-2 py-1 rounded-md font-medium border border-red-200">{nbPasseDu} impayées</span>}
-        <span className="text-gray-400 px-2 py-1">{lotsParCopro?.length ?? 0} lots au total · {coproprietairesData?.length ?? 0} copropriétaires</span>
-      </div>
+      <Suspense>
+        <AdminCoproFilters
+          counts={{
+            essai: nbEssai,
+            actif: nbActifs,
+            inactif: nbInactif,
+            passe_du: nbPasseDu,
+            total: nbCoproprietes,
+            lots: lotsParCopro?.length ?? 0,
+            coproprietaires: coproprietairesData?.length ?? 0,
+          }}
+          activePlan={planFilter ?? ''}
+        />
+      </Suspense>
 
       {/* ── Table ── */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -140,7 +164,10 @@ export default async function AdminCopropietesPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {coprosTyped.map((c) => {
+            {displayedCopros.length === 0 && (
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-400">Aucune copropriété pour ce filtre</td></tr>
+            )}
+            {displayedCopros.map((c) => {
               const profile = c.profiles as { full_name?: string; email?: string } | null;
               const openInc = incidentCount[c.id] ?? 0;
               return (
@@ -173,7 +200,10 @@ export default async function AdminCopropietesPage() {
                   <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
                   <td className="px-4 py-3 text-xs text-gray-400 hidden xl:table-cell">{fmtDate(c.created_at)}</td>
                   <td className="px-4 py-3">
-                    <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} />
+                    <div className="flex items-center gap-1 justify-end">
+                      {profile?.email && <AdminImpersonate email={profile.email} />}
+                      <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} syndicEmail={profile?.email} />
+                    </div>
                   </td>
                 </tr>
               );

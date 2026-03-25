@@ -4,16 +4,17 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { MoreHorizontal, Loader2, RotateCcw, RefreshCw } from 'lucide-react';
+import { MoreHorizontal, Loader2, RotateCcw, RefreshCw, Mail } from 'lucide-react';
 
 interface Props {
   coproId: string;
   coproNom: string;
   currentPlan: string;
   currentPlanId: string | null;
+  syndicEmail?: string;
 }
 
-export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Props) {
+export default function AdminCoproActions({ coproId, coproNom, currentPlan, syndicEmail }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
@@ -56,6 +57,15 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Pr
     post({ action: 'stripe_sync', coproId });
   };
 
+  const handleSendEmail = (emailType: 'payment_failed' | 'trial_ending') => {
+    const labels: Record<string, string> = {
+      payment_failed: 'Envoyer un email « paiement échoué »',
+      trial_ending: 'Envoyer un rappel essai (J-3)',
+    };
+    if (!confirm(`${labels[emailType]} à ${syndicEmail ?? 'ce syndic'} ?\n\nL'email sera envoyé immédiatement via Resend.`)) return;
+    post({ action: 'send_email', coproId, emailType });
+  };
+
   if (done) return <span className="text-xs text-green-600 font-medium">✓</span>;
 
   return (
@@ -95,6 +105,25 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Pr
                 >
                   <RotateCcw size={12} className="shrink-0" />
                   Réinitialiser (essai)
+                </button>
+              </>
+            )}
+            {syndicEmail && (
+              <>
+                <div className="border-t border-gray-100 my-1" />
+                <button
+                  onClick={() => handleSendEmail('payment_failed')}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-700 hover:bg-red-50 transition-colors"
+                >
+                  <Mail size={12} className="shrink-0" />
+                  Email paiement échoué
+                </button>
+                <button
+                  onClick={() => handleSendEmail('trial_ending')}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-indigo-700 hover:bg-indigo-50 transition-colors"
+                >
+                  <Mail size={12} className="shrink-0" />
+                  Rappel essai J-3
                 </button>
               </>
             )}

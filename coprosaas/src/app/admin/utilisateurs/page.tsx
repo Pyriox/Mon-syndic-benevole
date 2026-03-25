@@ -11,6 +11,8 @@ import { createClient } from '@/lib/supabase/server';
 import AdminUserActions from '../AdminUserActions';
 import AdminImpersonate from '../AdminImpersonate';
 import AdminCopyId from '../AdminCopyId';
+import AdminSearch from '../AdminSearch';
+import { Suspense } from 'react';
 import { Users, UserCheck, CheckCircle2 } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
@@ -46,10 +48,17 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
   return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-600 border border-gray-200">Aucun</span>;
 }
 
-export default async function AdminUtilisateursPage() {
+export default async function AdminUtilisateursPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
+
+  const { q } = await searchParams;
+  const query = q?.trim().toLowerCase() ?? '';
 
   const admin = createAdminClient();
   const startOf30Days = new Date(Date.now() - 30 * 86400000).toISOString();
@@ -76,6 +85,17 @@ export default async function AdminUtilisateursPage() {
   const allUsers = [...authUsers].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   const syndicUsers = allUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire');
   const memberUsers = allUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role === 'copropriétaire');
+
+  const filteredSyndics = query
+    ? syndicUsers.filter((u) =>
+        u.email?.toLowerCase().includes(query) ||
+        ((u.user_metadata as Record<string, string> | null)?.full_name ?? '').toLowerCase().includes(query))
+    : syndicUsers;
+  const filteredMembers = query
+    ? memberUsers.filter((u) =>
+        u.email?.toLowerCase().includes(query) ||
+        ((u.user_metadata as Record<string, string> | null)?.full_name ?? '').toLowerCase().includes(query))
+    : memberUsers;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coprosTyped = (coproprietes ?? []) as any[];
@@ -111,8 +131,11 @@ export default async function AdminUtilisateursPage() {
         <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
           <div>
             <p className="text-sm font-semibold text-gray-900">Syndics bénévoles</p>
-            <p className="text-xs text-gray-500">{syndicUsers.length} comptes</p>
+            <p className="text-xs text-gray-500">
+              {query ? `${filteredSyndics.length} / ${syndicUsers.length} comptes` : `${syndicUsers.length} comptes`}
+            </p>
           </div>
+          <Suspense><AdminSearch placeholder="Rechercher par email ou nom…" defaultValue={q ?? ''} /></Suspense>
           <div className="flex gap-2 text-xs">
             <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium border border-blue-200">{syndicUsers.filter(u => !!u.email_confirmed_at).length} vérifiés</span>
             <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-medium border border-amber-200">{syndicUsers.filter(u => !u.email_confirmed_at).length} en attente</span>
@@ -132,7 +155,10 @@ export default async function AdminUtilisateursPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {syndicUsers.map((u) => {
+              {filteredSyndics.length === 0 && (
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400">Aucun résultat pour « {q} »</td></tr>
+              )}
+              {filteredSyndics.map((u) => {
                 const meta = u.user_metadata as Record<string, string> | null;
                 const userCopros = coprosTyped.filter((c) => c.syndic_id === u.id);
                 const hasActive  = userCopros.some((c) => c.plan === 'actif');
@@ -181,7 +207,7 @@ export default async function AdminUtilisateursPage() {
                       {!adminUserIds.has(u.id) && <AdminImpersonate email={u.email ?? ''} />}
                     </td>
                     <td className="px-4 py-3">
-                      <AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={adminUserIds.has(u.id)} />
+                      <AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={u.id === user.id} isAdmin={adminUserIds.has(u.id)} />
                     </td>
                   </tr>
                 );
@@ -195,7 +221,9 @@ export default async function AdminUtilisateursPage() {
       <section>
         <div className="mb-3">
           <p className="text-sm font-semibold text-gray-900">Membres copropriétaires</p>
-            <p className="text-xs text-gray-500">{memberUsers.length} comptes · accès invité (lecture seule)</p>
+            <p className="text-xs text-gray-500">
+              {query ? `${filteredMembers.length} / ${memberUsers.length} comptes` : `${memberUsers.length} comptes`} · accès invité (lecture seule)
+            </p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
@@ -210,10 +238,10 @@ export default async function AdminUtilisateursPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {memberUsers.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">Aucun membre inscrit</td></tr>
+              {filteredMembers.length === 0 && (
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">{query ? `Aucun résultat pour « ${q} »` : 'Aucun membre inscrit'}</td></tr>
               )}
-              {memberUsers.map((u) => {
+              {filteredMembers.map((u) => {
                 const meta = u.user_metadata as Record<string, string> | null;
                 return (
                   <tr key={u.id} className="hover:bg-gray-50 transition-colors">
@@ -237,7 +265,7 @@ export default async function AdminUtilisateursPage() {
                       }
                     </td>
                     <td className="px-4 py-3"><AdminImpersonate email={u.email ?? ''} /></td>
-                    <td className="px-4 py-3"><AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={false} /></td>
+                    <td className="px-4 py-3"><AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={u.id === user.id} isAdmin={false} /></td>
                   </tr>
                 );
               })}
