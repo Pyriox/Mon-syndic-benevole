@@ -5,6 +5,9 @@
 //  2. subscription_created : abonnement payant souscrit directement
 //  3. trial_to_paid        : essai terminé, passage en payant
 //  4. renewal              : renouvellement mensuel ou annuel
+//  5. payment_failed       : paiement échoué
+//  6. cancelled            : abonnement résilié
+//  7. trial_ending_j3      : rappel 3 jours avant fin d'essai
 // ============================================================
 
 import { wrapEmail, h, formatDateFR, ctaButton, COLOR } from './base';
@@ -49,7 +52,7 @@ ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.green)}
   Aucun paiement ne sera prélevé avant la fin de l'essai. À l'issue des 14 jours, votre abonnement <strong>${h(planLabel)}</strong> démarrera automatiquement.
 </p>`;
 
-  return wrapEmail(content, COLOR.green);
+  return wrapEmail(content, COLOR.green, `14 jours d'accès gratuit — aucun prélèvement avant le ${deadlineStr || "terme de l'essai"}`);
 }
 
 // ── Abonnement souscrit directement (sans essai) ──────────────────────────────
@@ -80,7 +83,7 @@ ${renewStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:
 
 ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}`;
 
-  return wrapEmail(content, COLOR.blue);
+  return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est actif${renewStr ? ` — prochain renouvellement le ${renewStr}` : ''}`);
 }
 
 // ── Essai terminé → abonnement payant ─────────────────────────────────────────
@@ -111,7 +114,7 @@ ${renewStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:
 
 ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}`;
 
-  return wrapEmail(content, COLOR.blue);
+  return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est actif${renewStr ? ` — prochain renouvellement le ${renewStr}` : ''}`);
 }
 
 // ── Renouvellement ────────────────────────────────────────────────────────────
@@ -146,5 +149,106 @@ ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}
   Pour gérer votre abonnement, rendez-vous dans votre espace membre.
 </p>`;
 
-  return wrapEmail(content, COLOR.blue);
+  return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est renouvelé${renewStr ? ` jusqu'au ${renewStr}` : ''}`);
+}
+
+// ── Paiement échoué ────────────────────────────────────────────────────────────────────────────
+
+export function buildPaymentFailedSubject(coproprieteNom: string): string {
+  return `Paiement échoué — action requise — ${coproprieteNom}`;
+}
+
+export function buildPaymentFailedEmail(params: SubscriptionEmailParams): string {
+  const { prenom, coproprieteNom, dashboardUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.red}">⚠️ Paiement échoué</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Nous n'avons pas pu débiter votre moyen de paiement pour la copropriété <strong>${h(coproprieteNom)}</strong>. Votre accès a été <strong>temporairement suspendu</strong>.
+</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca">
+  <tr>
+    <td style="padding:14px 16px;font-size:13px;color:${COLOR.red};line-height:1.6">
+      Pour réactiver votre accès, mettez à jour votre moyen de paiement dans votre espace membre. Stripe retentera automatiquement le prélèvement après mise à jour.
+    </td>
+  </tr>
+</table>
+
+${ctaButton('Mettre à jour mon paiement →', `${dashboardUrl}?tab=billing`, COLOR.red)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  En cas de problème, contactez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.blue}">contact@mon-syndic-benevole.fr</a>.
+</p>`;
+
+  return wrapEmail(content, COLOR.red, 'Action requise : votre paiement a échoué, mettez à jour votre moyen de paiement');
+}
+
+// ── Abonnement résilié ────────────────────────────────────────────────────────────────────
+
+export function buildCancelledSubject(coproprieteNom: string): string {
+  return `Votre abonnement a pris fin — ${coproprieteNom}`;
+}
+
+export function buildCancelledEmail(params: SubscriptionEmailParams): string {
+  const { prenom, coproprieteNom, dashboardUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre abonnement a pris fin</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  L'abonnement de la copropriété <strong>${h(coproprieteNom)}</strong> a été résilié. Votre accès a été désactivé.
+</p>
+<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Vos données (copropriétés, appels de fonds, documents) sont conservées. Vous pouvez souscrire un nouvel abonnement à tout moment.
+</p>
+
+${ctaButton('Se réabonner →', `${dashboardUrl}`, COLOR.blue)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Des questions ? Écrivez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.blue}">contact@mon-syndic-benevole.fr</a>.
+</p>`;
+
+  return wrapEmail(content, COLOR.muted, 'Vos données sont conservées — vous pouvez vous réabonner à tout moment');
+}
+
+// ── Rappel J-3 avant fin d'essai ─────────────────────────────────────────────────────────
+
+export function buildTrialEndingSubject(coproprieteNom: string): string {
+  return `Votre essai se termine dans 3 jours — ${coproprieteNom}`;
+}
+
+export function buildTrialEndingEmail(params: SubscriptionEmailParams): string {
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+  const deadlineStr = periodEnd ? formatDateFR(periodEnd) : '';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre essai se termine dans 3 jours</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Votre période d'essai pour la copropriété <strong>${h(coproprieteNom)}</strong> se termine${deadlineStr ? ` le <strong>${deadlineStr}</strong>` : ' dans 3 jours'}. À cette date, votre abonnement <strong>${h(planLabel)}</strong> démarrera et votre premier prélèvement sera effectué.
+</p>
+${deadlineStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;border:1px solid ${COLOR.border}">
+  <tr>
+    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Fin de l'essai</td>
+    <td style="padding:12px 16px;font-size:14px;font-weight:600;color:${COLOR.text};text-align:right">${deadlineStr}</td>
+  </tr>
+</table>` : ''}
+
+${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Vous pouvez gérer ou annuler votre abonnement à tout moment depuis votre espace membre avant la fin de l'essai.
+</p>`;
+
+  return wrapEmail(content, COLOR.amber, `Votre essai se termine le ${deadlineStr || 'dans 3 jours'} — le plan ${planLabel} démarrera automatiquement`);
 }

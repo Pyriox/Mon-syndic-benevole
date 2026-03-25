@@ -11,6 +11,8 @@ import {
   buildSubscriptionCreatedEmail, buildSubscriptionCreatedSubject,
   buildTrialToPaidEmail, buildTrialToPaidSubject,
   buildRenewalEmail, buildRenewalSubject,
+  buildPaymentFailedEmail, buildPaymentFailedSubject,
+  buildCancelledEmail, buildCancelledSubject,
   type SubscriptionEmailParams,
 } from '@/lib/emails/subscription';
 
@@ -243,6 +245,29 @@ export async function POST(req: NextRequest) {
           plan:                   'inactif',
           plan_period_end:        null,
         });
+
+        // Email : abonnement résilié
+        try {
+          const adminClient = createAdminClient();
+          const { email, prenom, coproNom } = await getSyndicInfoByCoproId(adminClient, coproId);
+          if (email && coproNom) {
+            const emailParams: SubscriptionEmailParams = {
+              prenom,
+              coproprieteNom: coproNom,
+              planLabel: getPlanLabel(sub.metadata?.plan_id),
+              periodEnd: null,
+              dashboardUrl: `${SITE_URL}/abonnement`,
+            };
+            resend.emails.send({
+              from: FROM,
+              to: email,
+              subject: buildCancelledSubject(coproNom),
+              html: buildCancelledEmail(emailParams),
+            }).catch((e) => console.error('[Stripe webhook] Email cancelled error:', e));
+          }
+        } catch (e) {
+          console.error('[Stripe webhook] Erreur email cancelled:', e);
+        }
         break;
       }
 
@@ -284,6 +309,29 @@ export async function POST(req: NextRequest) {
           .maybeSingle();
         if (!copro) break;
         await updateCoproSubscription(copro.id, { plan: 'passe_du' });
+
+        // Email : paiement échoué
+        try {
+          const adminClient = createAdminClient();
+          const { email, prenom, coproNom } = await getSyndicInfoByCoproId(adminClient, copro.id);
+          if (email && coproNom) {
+            const emailParams: SubscriptionEmailParams = {
+              prenom,
+              coproprieteNom: coproNom,
+              planLabel: getPlanLabel(null),
+              periodEnd: null,
+              dashboardUrl: `${SITE_URL}/abonnement`,
+            };
+            resend.emails.send({
+              from: FROM,
+              to: email,
+              subject: buildPaymentFailedSubject(coproNom),
+              html: buildPaymentFailedEmail(emailParams),
+            }).catch((e) => console.error('[Stripe webhook] Email payment_failed error:', e));
+          }
+        } catch (e) {
+          console.error('[Stripe webhook] Erreur email payment_failed:', e);
+        }
         break;
       }
     }

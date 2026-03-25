@@ -23,17 +23,27 @@ export const COLOR = {
 /**
  * Wraps `innerHtml` in the shared email shell.
  *
- * @param innerHtml  - The content between header and footer
+ * @param innerHtml   - The content between header and footer
  * @param accentColor - Top border accent color (hex)
+ * @param preheader   - Short text shown in inbox preview (after subject)
  */
-export function wrapEmail(innerHtml: string, accentColor: string = COLOR.blue): string {
+export function wrapEmail(innerHtml: string, accentColor: string = COLOR.blue, preheader?: string): string {
+  // The preheader padding trick hides the rest of the email body from inbox snippets
+  const preheaderHtml = preheader
+    ? `<!-- Préheader : visible dans la liste inbox avant d'ouvrir l'e-mail -->
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:${COLOR.bg}">
+  ${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+</div>`
+    : '';
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>${BRAND_NAME}</title>
 </head>
-<body style="margin:0;padding:0;background:${COLOR.bg};font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased">
+<body style="margin:0;padding:0;background:${COLOR.bg};font-family:-apple-system,BlinkMacSystemFont,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased">
+${preheaderHtml}
   <table width="100%" cellpadding="0" cellspacing="0" style="background:${COLOR.bg};padding:32px 16px">
     <tr>
       <td align="center">

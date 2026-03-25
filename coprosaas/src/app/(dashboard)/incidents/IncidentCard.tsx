@@ -238,8 +238,19 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
   // ---- Helpers ----
   async function transition(newStatut: StatutIncident, extra?: Record<string, unknown>) {
     setLoading(true);
+    // For 'resolu', use the server API route so an email is sent to the declarant.
+    if (newStatut === 'resolu') {
+      const res = await fetch(`/api/incidents/${incident.id}/statut`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statut: newStatut, ...extra }),
+      });
+      setLoading(false);
+      if (res.ok) router.refresh();
+      return;
+    }
+
     const payload: Record<string, unknown> = { statut: newStatut, ...extra };
-    if (newStatut === 'resolu') payload.date_resolution = new Date().toISOString();
     if (newStatut === 'ouvert') payload.date_resolution = null;
 
     const { error } = await supabase.from('incidents').update(payload).eq('id', incident.id);

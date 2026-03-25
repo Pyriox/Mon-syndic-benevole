@@ -17,6 +17,7 @@ import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 import { buildAppelEmail, buildAppelEmailSubject, type AppelEmailType } from '@/lib/emails/appel-de-fonds';
 import { buildBrouillonRappelEmail, buildBrouillonRappelSubject } from '@/lib/emails/syndic-notifications';
+import { buildTrialEndingEmail, buildTrialEndingSubject } from '@/lib/emails/subscription';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
@@ -170,6 +171,48 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ── Rappel J-3 fin d'essai ──────────────────────────────────────────────────
+  // On envoie un email au syndic quand plan='essai' et plan_period_end = today + 3 jours.
+  // Le cron quotidien garantit qu'il ne sera envoyé qu'une seule fois (la période est fixe).
+  const dateJ3 = addDays(today, 3);
+
+  const { data: trialsEndingJ3 } = await supabase
+    .from('coproprietes')
+    .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+    .eq('plan', 'essai')
+    .eq('plan_period_end', dateJ3);
+
+  type TrialRow = {
+    id: string;
+    nom: string;
+    plan_id: string | null;
+    plan_period_end: string | null;
+    profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null;
+  };
+
+  for (const row of (trialsEndingJ3 ?? []) as unknown as TrialRow[]) {
+    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+    if (!profile?.email) continue;
+
+    const prenom = (profile.full_name ?? '').split(' ')[0] || null;
+    const planLabel = row.plan_id === 'illimite' ? 'Illimité' : row.plan_id === 'confort' ? 'Confort' : 'Essentiel';
+
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to: profile.email,
+      subject: buildTrialEndingSubject(row.nom),
+      html: buildTrialEndingEmail({
+        prenom,
+        coproprieteNom: row.nom,
+        planLabel,
+        periodEnd: row.plan_period_end,
+        dashboardUrl: `${SITE_URL}/abonnement`,
+      }),
+    });
+    if (!error) totalSent++;
+    else console.error('[cron] Erreur email trial J-3:', error);
+  }
+
   return NextResponse.json({
     ok: true,
     date: today.toISOString().slice(0, 10),
@@ -177,6 +220,7 @@ export async function GET(req: NextRequest) {
     j7_appels:         j7Appels?.length      ?? 0,
     j15_appels:        j15Appels?.length     ?? 0,
     brouillon_groupes: brouillonGroups.size,
+    trial_j3:          trialsEndingJ3?.length ?? 0,
     sent: totalSent,
   });
 }

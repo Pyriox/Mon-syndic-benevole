@@ -22,6 +22,12 @@ import { type EmailOtpType } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { Resend } from 'resend';
+import { buildWelcomeEmail, buildWelcomeSubject } from '@/lib/emails/welcome';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -83,6 +89,15 @@ export async function GET(request: NextRequest) {
             .update({ statut: 'acceptee' })
             .eq('email', email.toLowerCase())
             .eq('statut', 'en_attente');
+
+          // E-mail de bienvenue (fire-and-forget)
+          const prenom = (data.user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
+          resend.emails.send({
+            from: FROM,
+            to: email,
+            subject: buildWelcomeSubject(),
+            html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
+          }).catch((e) => console.error('[auth/confirm] Welcome email error (PKCE):', e));
         } catch (linkErr) {
           console.error('[auth/confirm] PKCE auto-link error:', linkErr);
         }
@@ -165,6 +180,15 @@ export async function GET(request: NextRequest) {
           .update({ statut: 'acceptee' })
           .eq('email', email.toLowerCase())
           .eq('statut', 'en_attente');
+
+        // 3. E-mail de bienvenue (fire-and-forget)
+        const prenom = (data.user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
+        resend.emails.send({
+          from: FROM,
+          to: email,
+          subject: buildWelcomeSubject(),
+          html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
+        }).catch((e) => console.error('[auth/confirm] Welcome email error (token_hash):', e));
       } catch (linkErr) {
         // Non bloquant — l'utilisateur peut quand même accéder au dashboard
         console.error('[auth/confirm] auto-link error:', linkErr);
