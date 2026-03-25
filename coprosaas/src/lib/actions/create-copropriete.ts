@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { invalidateLayoutCache } from '@/lib/cached-queries';
 
 export async function createCopropriete(formData: {
   nom: string;
@@ -28,6 +29,9 @@ export async function createCopropriete(formData: {
     .single();
 
   if (error) return { error: error.message };
+
+  // Invalide le cache de navigation pour refléter la nouvelle copropriété
+  invalidateLayoutCache(user.id);
 
   // Pose le cookie avant le redirect : garantit que la prochaine requête
   // (déclenchée par le redirect) inclut déjà selected_copro_id.

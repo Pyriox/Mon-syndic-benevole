@@ -1,11 +1,12 @@
 // ============================================================
 // Page : Lots de la copropriété — lecture seule pour tous les rôles
 // (Le syndic peut gérer les lots depuis la page copropriétés)
+// Les données sont mises en cache via unstable_cache (60 s lots, 30 s copros)
+// et invalidées immédiatement par les Server Actions de mutation.
 // ============================================================
-export const revalidate = 60;
 
-import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
+import { getLots, getCoproprietaires } from '@/lib/cached-queries';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
@@ -53,7 +54,6 @@ interface CoproEntry {
 }
 
 export default async function LotsPage() {
-  const supabase = await createClient();
   const { selectedCoproId, role, copro, user } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
 
@@ -81,29 +81,21 @@ export default async function LotsPage() {
     );
   }
 
-  const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
+  const coproId = selectedCoproId ?? 'none';
 
-  const [{ data: lots }, { data: coproprietairesRaw }] = await Promise.all([
-    db
-      .from('lots')
-      .select('id, numero, type, tantiemes, coproprietaire_id')
-      .eq('copropriete_id', selectedCoproId ?? 'none')
-      .order('position', { ascending: true, nullsFirst: false }),
-    db
-      .from('coproprietaires')
-      .select('id, nom, prenom, raison_sociale, user_id, email')
-      .eq('copropriete_id', selectedCoproId ?? 'none'),
+  const [allLots, coproprietairesRaw] = await Promise.all([
+    getLots(coproId),
+    getCoproprietaires(coproId),
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const coproprietaires = (coproprietairesRaw ?? []) as any[] as CoproEntry[];
+  const coproprietaires = coproprietairesRaw as any[] as CoproEntry[];
 
   const coproMap = Object.fromEntries(
     coproprietaires.map((c) => [c.id, c])
   );
   const myFicheId = coproprietaires.find((c) => c.user_id === user.id)?.id ?? null;
 
-  const allLots = lots ?? [];
   const totalTantiemes = allLots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
   const assignedCount = allLots.filter((l) => l.coproprietaire_id).length;
   const unassignedCount = allLots.length - assignedCount;

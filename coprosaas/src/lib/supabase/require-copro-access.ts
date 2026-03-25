@@ -14,6 +14,7 @@
 // Usage (syndic uniquement, redirige si coproprietaire) :
 //   await requireCoproAccess(['syndic']);
 // ============================================================
+import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
@@ -37,7 +38,7 @@ export interface CoproAccess {
   copro: CoproInfo | null;
 }
 
-export async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<CoproAccess> {
+export const requireCoproAccess = cache(async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<CoproAccess> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -124,4 +125,4 @@ export async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<Co
   // Cookie présent mais aucun accès
   if (allowedRoles) redirect('/dashboard');
   return { user, selectedCoproId: null, role: null, copro: null };
-}
+});

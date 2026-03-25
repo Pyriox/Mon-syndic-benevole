@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard, Loader2 } from 'lucide-react';
+import { Loader2, Zap, ArrowRight } from 'lucide-react';
 import { trackEvent } from '@/lib/gtag';
 import Link from 'next/link';
 
@@ -15,10 +15,17 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [cgvAccepted, setCgvAccepted] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  };
 
   const handle = async () => {
     if (!cgvAccepted) {
       setError('Veuillez accepter les CGV avant de continuer.');
+      triggerShake();
       return;
     }
     setLoading(true);
@@ -41,6 +48,8 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
     }
   };
 
+  const isReady = cgvAccepted && !loading;
+
   return (
     <div className="space-y-2 mt-auto pt-4">
       <label className="flex items-start gap-2 cursor-pointer">
@@ -60,15 +69,50 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
       <button
         type="button"
         onClick={handle}
-        disabled={loading || !cgvAccepted}
-        className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-          isPrimary ? 'bg-white text-blue-700 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'
-        }`}
+        disabled={loading}
+        style={shake ? { animation: 'shake 0.4s ease' } : undefined}
+        className={[
+          'group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold',
+          'transition-all duration-200 select-none',
+          'active:scale-[0.97]',
+          loading && 'cursor-wait',
+          !loading && !cgvAccepted && 'opacity-60 cursor-not-allowed',
+          isReady && (isPrimary
+            ? 'hover:bg-blue-50 hover:shadow-lg hover:shadow-white/20 hover:scale-[1.02]'
+            : 'hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02]'),
+          isPrimary ? 'bg-white text-blue-700' : 'bg-blue-600 text-white',
+        ].filter(Boolean).join(' ')}
       >
-        {loading ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
-        Essai gratuit 14 jours
+        {loading ? (
+          <>
+            <Loader2 size={14} className="animate-spin shrink-0" />
+            Redirection…
+          </>
+        ) : (
+          <>
+            <Zap
+              size={14}
+              className={`shrink-0 transition-transform duration-200 ${isReady ? 'group-hover:scale-125 group-hover:rotate-12' : ''}`}
+            />
+            Essai gratuit 14 jours
+            <ArrowRight
+              size={13}
+              className={`shrink-0 transition-transform duration-200 ml-auto ${isReady ? 'group-hover:translate-x-1' : ''}`}
+            />
+          </>
+        )}
       </button>
       {error && <p className="text-xs text-red-500 text-center">{error}</p>}
+
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20%       { transform: translateX(-5px); }
+          40%       { transform: translateX(5px); }
+          60%       { transform: translateX(-4px); }
+          80%       { transform: translateX(4px); }
+        }
+      `}</style>
     </div>
   );
 }

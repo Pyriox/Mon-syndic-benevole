@@ -10,6 +10,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AdminUserActions from '../AdminUserActions';
 import AdminImpersonate from '../AdminImpersonate';
+import AdminCopyId from '../AdminCopyId';
 import { Users, UserCheck, CheckCircle2 } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
@@ -153,7 +154,10 @@ export default async function AdminUtilisateursPage() {
                             {u.email}
                             {adminUserIds.has(u.id) && <span className="ml-1.5 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">Admin</span>}
                           </p>
-                          <p className="text-xs text-gray-500 font-mono">{u.id.slice(0, 12)}… · {meta?.full_name ?? '—'}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <AdminCopyId id={u.id} />
+                            {meta?.full_name && <span className="text-xs text-gray-400">{meta.full_name}</span>}
+                          </div>
                         </div>
                       </div>
                     </td>

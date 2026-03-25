@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { invalidateCoproprietairesCache } from '@/lib/cached-queries';
 
 export interface RegularisationResult {
   error?: string;
@@ -306,5 +307,7 @@ export async function cloturerExercice(exerciceId: string): Promise<Regularisati
 
   revalidatePath('/regularisation');
   revalidatePath('/coproprietaires');
+  // La clôture modifie les soldes des copropriétaires
+  invalidateCoproprietairesCache(exercice.copropriete_id);
   return {};
 }

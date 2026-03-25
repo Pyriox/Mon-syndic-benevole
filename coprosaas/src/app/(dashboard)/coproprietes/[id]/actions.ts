@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { invalidateLayoutCache, invalidateLotsCache } from '@/lib/cached-queries';
 
 // ---- Ajouter ou modifier un lot ----
 export async function saveLot(data: {
@@ -39,6 +40,7 @@ export async function saveLot(data: {
   }
 
   revalidatePath(`/coproprietes/${data.coproprieteId}`);
+  invalidateLotsCache(data.coproprieteId);
   return {};
 }
 
@@ -61,6 +63,7 @@ export async function deleteLot(lotId: string, coproprieteId: string): Promise<{
   if (error) return { error: error.message };
 
   revalidatePath(`/coproprietes/${coproprieteId}`);
+  invalidateLotsCache(coproprieteId);
   return {};
 }
 
@@ -84,5 +87,7 @@ export async function updateCopropriete(data: {
   if (error) return { error: error.message };
 
   revalidatePath(`/coproprietes/${data.coproprieteId}`);
+  // Le nom / l'adresse de la copro apparaissent dans la sidebar du layout
+  invalidateLayoutCache(user.id);
   return {};
 }

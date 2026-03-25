@@ -6,39 +6,97 @@
 // TTL : 30 s pour les données de navigation et notifications.
 // La fraîcheur est suffisante : un incident créé apparaîtra dans
 // les 30 secondes, ce qui est acceptable pour une cloche de notifs.
+//
+// Tags d'invalidation :
+//   layout-{userId}            → getDashboardLayoutData
+//   lots-{coproId}             → getLots
+//   coproprietaires-{coproId}  → getCoproprietaires
 // ============================================================
-import { unstable_cache } from 'next/cache';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { AppNotification } from '@/types';
 
+// ── Helpers d'invalidation (à appeler depuis les Server Actions) ──────────────
+export function invalidateLayoutCache(userId: string) {
+  revalidateTag(`layout-${userId}`, 'default');
+}
+export function invalidateLotsCache(coproId: string) {
+  revalidateTag(`lots-${coproId}`, 'default');
+}
+export function invalidateCoproprietairesCache(coproId: string) {
+  revalidateTag(`coproprietaires-${coproId}`, 'default');
+}
+
 // ── Profil + copropriétés (layout global) ────────────────────────────────────
-// Pas de cache : les données doivent être toujours fraîches (création, suppression)
-export async function getDashboardLayoutData(userId: string, userEmail: string) {
-  const admin = createAdminClient();
-  const [
-    { data: profile },
-    { data: syndicCopros },
-    { data: coproRows },
-    { data: coproRowsByEmail },
-  ] = await Promise.all([
-    admin.from('profiles').select('full_name').eq('id', userId).single(),
-    admin
-      .from('coproprietes')
-      .select('id, nom, adresse, ville')
-      .eq('syndic_id', userId)
-      .order('nom'),
-    admin
-      .from('coproprietaires')
-      .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
-      .eq('user_id', userId),
-    // Fallback pour les copropriétaires non encore liés (user_id non renseigné)
-    admin
-      .from('coproprietaires')
-      .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
-      .eq('email', userEmail)
-      .is('user_id', null),
-  ]);
-  return { profile, syndicCopros, coproRows, coproRowsByEmail };
+// Cache : 30 s par utilisateur — invalider via invalidateLayoutCache(userId)
+export function getDashboardLayoutData(userId: string, userEmail: string) {
+  return unstable_cache(
+    async () => {
+      const admin = createAdminClient();
+      const [
+        { data: profile },
+        { data: syndicCopros },
+        { data: coproRows },
+        { data: coproRowsByEmail },
+      ] = await Promise.all([
+        admin.from('profiles').select('full_name').eq('id', userId).single(),
+        admin
+          .from('coproprietes')
+          .select('id, nom, adresse, ville')
+          .eq('syndic_id', userId)
+          .order('nom'),
+        admin
+          .from('coproprietaires')
+          .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
+          .eq('user_id', userId),
+        // Fallback pour les copropriétaires non encore liés (user_id non renseigné)
+        admin
+          .from('coproprietaires')
+          .select('copropriete_id, coproprietes(id, nom, adresse, ville)')
+          .eq('email', userEmail)
+          .is('user_id', null),
+      ]);
+      return { profile, syndicCopros, coproRows, coproRowsByEmail };
+    },
+    ['layout-data', userId],
+    { tags: [`layout-${userId}`], revalidate: 30 },
+  )();
+}
+
+// ── Lots d'une copropriété ────────────────────────────────────────────────────
+// Cache : 60 s — invalider via invalidateLotsCache(coproId)
+export function getLots(coproId: string) {
+  return unstable_cache(
+    async () => {
+      const admin = createAdminClient();
+      const { data } = await admin
+        .from('lots')
+        .select('id, numero, type, tantiemes, coproprietaire_id')
+        .eq('copropriete_id', coproId)
+        .order('position', { ascending: true, nullsFirst: false });
+      return data ?? [];
+    },
+    ['lots', coproId],
+    { tags: [`lots-${coproId}`], revalidate: 60 },
+  )();
+}
+
+// ── Copropriétaires d'une copropriété ─────────────────────────────────────────
+// Cache : 30 s — invalider via invalidateCoproprietairesCache(coproId)
+export function getCoproprietaires(coproId: string) {
+  return unstable_cache(
+    async () => {
+      const admin = createAdminClient();
+      const { data } = await admin
+        .from('coproprietaires')
+        .select('id, nom, prenom, raison_sociale, user_id, email')
+        .eq('copropriete_id', coproId)
+        .order('nom');
+      return data ?? [];
+    },
+    ['coproprietaires', coproId],
+    { tags: [`coproprietaires-${coproId}`], revalidate: 30 },
+  )();
 }
 
 // ── Notifications syndic ──────────────────────────────────────────────────────
