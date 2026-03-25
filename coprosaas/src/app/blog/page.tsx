@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import SiteLogo from '@/components/ui/SiteLogo';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
+import LandingNav from '@/app/LandingNav';
 import { posts, formatPublishedAt } from '@/lib/blog';
 
 export const metadata: Metadata = {
@@ -23,21 +24,9 @@ export const metadata: Metadata = {
 export default function BlogPage() {
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Header */}
-      <header className="border-b border-gray-200 py-4 px-6 sticky top-0 z-50 bg-white/95 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-            <SiteLogo size={32} />
-            <span className="font-bold text-gray-900 text-sm hidden sm:block">Mon Syndic Bénévole</span>
-          </Link>
-          <Link
-            href="/register"
-            className="text-xs sm:text-sm bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-colors"
-          >
-            Essai gratuit
-          </Link>
-        </div>
-      </header>
+      <LandingNav />
+      {/* Spacer pour compenser le fixed positioning de LandingNav */}
+      <div className="h-16" aria-hidden="true" />
 
       {/* Hero — dark gradient, same as articles */}
       <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950">
