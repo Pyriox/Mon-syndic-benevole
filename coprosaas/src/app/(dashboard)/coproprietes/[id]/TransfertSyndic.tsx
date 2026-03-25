@@ -65,7 +65,7 @@ export default function TransfertSyndic({ coproprieteId, coproprieteNom }: Trans
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-800 font-medium transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 font-medium border border-amber-300 hover:border-amber-400 bg-amber-50 hover:bg-amber-100 rounded-lg px-3 py-1.5 transition-colors"
       >
         <ArrowRightLeft size={14} />
         Transférer la gestion
