@@ -10,6 +10,7 @@ const geist = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   preload: false,
+  display: 'optional',
 });
 
 const APP_URL = "https://mon-syndic-benevole.fr";
