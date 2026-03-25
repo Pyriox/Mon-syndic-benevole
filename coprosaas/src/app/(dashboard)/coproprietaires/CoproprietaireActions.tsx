@@ -174,14 +174,12 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
             <Input label="Téléphone" name="telephone" type="tel" value={formData.telephone} onChange={handleChange} placeholder="06 12 34 56 78" />
           </div>
           <Input label="Adresse" name="adresse" value={formData.adresse} onChange={handleChange} required placeholder="12 rue de la Paix" />
+          <Input label="Complément d'adresse" name="complement_adresse" value={formData.complement_adresse} onChange={handleChange} placeholder="Apt, bât., étage…" />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Complément d'adresse" name="complement_adresse" value={formData.complement_adresse} onChange={handleChange} placeholder="Apt, bât., étage…" />
             <Input label="Code postal" name="code_postal" value={formData.code_postal} onChange={handleChange} required placeholder="75001" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
             <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} required />
-            <Input label="Solde à la reprise (€)" name="solde_reprise" type="number" step="0.01" value={formData.solde_reprise} onChange={handleChange} placeholder="0.00 — facultatif" />
           </div>
+          <Input label="Solde à la reprise (€)" name="solde_reprise" type="number" step="0.01" value={formData.solde_reprise} onChange={handleChange} placeholder="0.00 — facultatif" />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button type="submit" loading={loading}>Ajouter</Button>
