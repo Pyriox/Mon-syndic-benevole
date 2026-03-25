@@ -23,7 +23,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { RESET_PASSWORD_SUBJECT, buildResetPasswordEmail } from '@/lib/emails/reset-password';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'onboarding@resend.dev'}>`;
+const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 
 function getBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
@@ -76,12 +76,17 @@ export async function POST(req: NextRequest) {
       ? `${getBaseUrl()}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`
       : props.action_link; // fallback si hashed_token absent (ne devrait pas arriver)
 
-    await resend.emails.send({
+    const { error: sendError } = await resend.emails.send({
       from: FROM,
       to: email,
       subject: RESET_PASSWORD_SUBJECT,
       html: buildResetPasswordEmail(resetLink),
     });
+
+    if (sendError) {
+      console.error('[reset-password] Resend error:', sendError.message);
+      return NextResponse.json({ message: 'Erreur lors de l\'envoi de l\'e-mail. Réessayez.' }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

@@ -4,5 +4,8 @@
       "path": "/api/cron/rappels-appels",
       "schedule": "0 8 * * *"
     }
-  ]
+  ],
+  "_cron_notes": {
+    "rappels-appels": "Déclenché à 08:00 UTC = 09h00 heure normale / 10h00 heure d'été (Europe/Paris). Gère : avis J-30, rappels J-7, mises en demeure J+15, notification brouillons > 3 jours."
+  }
 }

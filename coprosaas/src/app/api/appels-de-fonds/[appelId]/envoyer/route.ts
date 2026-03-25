@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
 import { isSubscribed } from '@/lib/subscription';
+import { buildAppelEmail, buildAppelEmailSubject } from '@/lib/emails/appel-de-fonds';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -77,12 +78,7 @@ export async function POST(
     }, { status: 422 });
   }
 
-  const dateEcheance = new Date(appel.date_echeance).toLocaleDateString('fr-FR', {
-    day: '2-digit', month: 'long', year: 'numeric',
-  });
-
-  const formatEuros = (n: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
+  const coproprieteNom = appel.coproprietes?.nom ?? '';
 
   let sent = 0;
   const errors: string[] = [];
@@ -90,31 +86,23 @@ export async function POST(
   for (const dest of destinataires) {
     if (dest.paye) continue; // Ne pas relancer les copropriétaires ayant déjà payé
 
-    const html = `
-<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937">
-  <div style="background:#2563eb;padding:24px 32px;border-radius:12px 12px 0 0">
-    <h1 style="color:#fff;margin:0;font-size:20px">Appel de fonds</h1>
-    <p style="color:#bfdbfe;margin:6px 0 0">${appel.coproprietes?.nom ?? ''}</p>
-  </div>
-  <div style="background:#fff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-    <p>Bonjour <strong>${dest.prenom} ${dest.nom}</strong>,</p>
-    <p>Un appel de fonds a été émis pour la copropriété <strong>${appel.coproprietes?.nom}</strong>.</p>
-    <div style="background:#f0f9ff;border-left:4px solid #2563eb;padding:16px;border-radius:0 8px 8px 0;margin:20px 0">
-      <p style="margin:0"><strong>📋 Objet :</strong> ${appel.titre}</p>
-      <p style="margin:8px 0 0"><strong>💰 Montant dû :</strong> <span style="font-size:18px;font-weight:bold;color:#1d4ed8">${formatEuros(dest.montant_du)}</span></p>
-      <p style="margin:8px 0 0"><strong>📅 Date limite de paiement :</strong> ${dateEcheance}</p>
-    </div>
-    <p style="font-size:13px;color:#6b7280">Veuillez effectuer votre règlement avant la date limite indiquée. Passé ce délai, votre compte sera signalé en impayé.</p>
-    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
-    <p style="font-size:12px;color:#9ca3af">Mon Syndic Bénévole — <a href="https://www.mon-syndic-benevole.fr" style="color:#2563eb">mon-syndic-benevole.fr</a></p>
-  </div>
-</div>`;
-
     const { error } = await resend.emails.send({
       from: FROM,
       to: dest.email,
-      subject: `Appel de fonds — ${appel.coproprietes?.nom} — Échéance ${dateEcheance}`,
-      html,
+      subject: buildAppelEmailSubject({
+        type: 'avis',
+        coproprieteNom,
+        dateEcheance: appel.date_echeance,
+      }),
+      html: buildAppelEmail({
+        type: 'avis',
+        prenom: dest.prenom,
+        nom: dest.nom,
+        coproprieteNom,
+        titre: appel.titre,
+        montantDu: dest.montant_du,
+        dateEcheance: appel.date_echeance,
+      }),
     });
 
     if (error) errors.push(`${dest.email}: ${error.message}`);

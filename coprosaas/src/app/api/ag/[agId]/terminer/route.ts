@@ -87,7 +87,7 @@ export async function POST(
           appelsDeGondsUrl: `${siteUrl}/appels-de-fonds`,
         }),
       })
-      .catch(() => {});
+      .catch((e) => console.error('[ag/terminer] Erreur envoi email syndic:', e));
   }
 
   return NextResponse.json({ ok: true });
