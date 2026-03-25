@@ -731,10 +731,10 @@ export function DeleteAccountSection() {
     <>
       <button
         onClick={() => { setIsOpen(true); setConfirmText(''); setError(''); }}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300 transition-all duration-150"
+        className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-600 transition-colors duration-150 shrink-0"
       >
-        <Trash2 size={15} />
-        Supprimer mon compte
+        <Trash2 size={12} />
+        Supprimer le compte
       </button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Supprimer mon compte" size="md">

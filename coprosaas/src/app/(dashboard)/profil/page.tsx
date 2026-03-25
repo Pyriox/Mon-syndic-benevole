@@ -191,16 +191,11 @@ export default async function ProfilPage() {
         )}
       </Card>
       )}
-      {/* ---- Zone de danger ---- */}
-      <Card>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-red-700">Zone de danger</p>
-            <p className="text-xs text-gray-500 mt-0.5">La suppression de votre compte est irréversible et conforme au RGPD.</p>
-          </div>
-          <DeleteAccountSection />
-        </div>
-      </Card>
+      {/* ---- Suppression du compte ---- */}
+      <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-4">
+        <p className="text-xs text-gray-400">Supprimer définitivement votre compte et toutes vos données.</p>
+        <DeleteAccountSection />
+      </div>
     </div>
   );
 }
