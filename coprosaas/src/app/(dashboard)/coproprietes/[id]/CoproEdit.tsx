@@ -50,7 +50,7 @@ export default function CoproEdit({ coproprieteId, initialNom, initialAdresse, i
   return (
     <>
       <Button variant="secondary" onClick={() => setIsOpen(true)}>
-        <Pencil size={14} /> Modifier
+        <Pencil size={14} /> Modifier la copropriété
       </Button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Modifier la copropriété">

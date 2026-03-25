@@ -9,6 +9,7 @@ import "./globals.css";
 const geist = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  preload: false,
 });
 
 const APP_URL = "https://mon-syndic-benevole.fr";
@@ -114,7 +115,7 @@ export default function RootLayout({
           <>
             {/* Définition de gtag + consent par défaut AVANT toute hydratation React
                 → garantit que window.gtag est disponible dès le premier useEffect */}
-            <Script id="gtag-consent" strategy="beforeInteractive">
+            <Script id="gtag-consent" strategy="afterInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
