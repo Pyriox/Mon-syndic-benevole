@@ -138,6 +138,11 @@ export async function POST(req: NextRequest) {
       success_url: `${siteUrl}/abonnement?success=1&coproId=${coproprieteid}`,
       cancel_url:  `${siteUrl}/abonnement?canceled=1`,
       locale: 'fr',
+      billing_address_collection: 'required',
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
+      },
       allow_promotion_codes: true,
       payment_method_options: {
         sepa_debit: {
