@@ -10,11 +10,6 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 import { isAdminUser } from '@/lib/admin-config';
-import { Resend } from 'resend';
-import {
-  buildPaymentFailedEmail, buildPaymentFailedSubject,
-  buildTrialEndingEmail, buildTrialEndingSubject,
-} from '@/lib/emails/subscription';
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -121,54 +116,6 @@ export async function POST(request: NextRequest) {
 
     if (syncError) return NextResponse.json({ error: syncError.message }, { status: 500 });
     return NextResponse.json({ success: true, plan, planId });
-  }
-
-  if (action === 'send_email') {
-    const { emailType } = body as { action: string; coproId: string; emailType?: string };
-    if (!emailType) return NextResponse.json({ error: 'emailType requis' }, { status: 400 });
-
-    // Fetch copropriété + syndic profile
-    const { data: copro, error: coproErr } = await admin
-      .from('coproprietes')
-      .select('nom, plan, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
-      .eq('id', coproId)
-      .single();
-
-    if (!copro || coproErr) return NextResponse.json({ error: 'Copropriété introuvable' }, { status: 404 });
-
-    const profile = copro.profiles as { email?: string; full_name?: string } | null;
-    const toEmail = profile?.email;
-    if (!toEmail) return NextResponse.json({ error: 'Email syndic introuvable' }, { status: 400 });
-
-    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
-    const planLabels: Record<string, string> = { essentiel: 'Essentiel', confort: 'Confort', illimite: 'Illimité' };
-    const planLabel = planLabels[copro.plan_id ?? ''] ?? 'votre plan';
-    const params = {
-      prenom: profile?.full_name ?? null,
-      coproprieteNom: copro.nom,
-      planLabel,
-      periodEnd: copro.plan_period_end ?? null,
-      dashboardUrl: `${SITE_URL}/dashboard`,
-    };
-
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
-
-    if (emailType === 'payment_failed') {
-      const subject = buildPaymentFailedSubject(copro.nom);
-      const html = buildPaymentFailedEmail(params);
-      const { error } = await resend.emails.send({ from: FROM, to: toEmail, subject, html });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    } else if (emailType === 'trial_ending') {
-      const subject = buildTrialEndingSubject(copro.nom);
-      const html = buildTrialEndingEmail(params);
-      const { error } = await resend.emails.send({ from: FROM, to: toEmail, subject, html });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    } else {
-      return NextResponse.json({ error: 'emailType inconnu' }, { status: 400 });
-    }
-
-    return NextResponse.json({ success: true });
   }
 
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 });

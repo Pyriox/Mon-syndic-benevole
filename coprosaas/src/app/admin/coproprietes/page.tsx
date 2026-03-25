@@ -202,7 +202,7 @@ export default async function AdminCopropietesPage({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 justify-end">
                       {profile?.email && <AdminImpersonate email={profile.email} />}
-                      <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} syndicEmail={profile?.email} />
+                      <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} />
                     </div>
                   </td>
                 </tr>

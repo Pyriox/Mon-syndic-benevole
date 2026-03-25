@@ -5,21 +5,15 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { isAdminUser } from '@/lib/admin-config';
+import { Resend } from 'resend';
 import { Mail, CheckCircle2, XCircle, Clock, ExternalLink, MousePointerClick, Eye } from 'lucide-react';
 
-// Resend email object shape (v3 API)
 interface ResendEmail {
   id: string;
-  object: string;
   to: string[];
   from: string;
   created_at: string;
   subject: string;
-  html: string | null;
-  text: string | null;
-  bcc: string[];
-  cc: string[];
-  reply_to: string[];
   last_event: string;
 }
 
@@ -32,13 +26,13 @@ function fmtDate(s: string): string {
 
 function EventBadge({ event }: { event: string }) {
   const cfgs: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
-    delivered:  { label: 'Livré',      cls: 'bg-green-50 text-green-700 border-green-200',   icon: <CheckCircle2 size={11} /> },
-    opened:     { label: 'Ouvert',     cls: 'bg-blue-50 text-blue-700 border-blue-200',       icon: <Eye size={11} /> },
-    clicked:    { label: 'Cliqué',     cls: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: <MousePointerClick size={11} /> },
-    bounced:    { label: 'Rebond',     cls: 'bg-red-50 text-red-700 border-red-200',          icon: <XCircle size={11} /> },
-    complained: { label: 'Spam',       cls: 'bg-red-50 text-red-700 border-red-200',          icon: <XCircle size={11} /> },
-    failed:     { label: 'Échec',      cls: 'bg-red-50 text-red-700 border-red-200',          icon: <XCircle size={11} /> },
-    sent:       { label: 'Envoyé',     cls: 'bg-gray-100 text-gray-600 border-gray-200',      icon: <Clock size={11} /> },
+    delivered:  { label: 'Livré',   cls: 'bg-green-50 text-green-700 border-green-200',   icon: <CheckCircle2 size={11} /> },
+    opened:     { label: 'Ouvert',  cls: 'bg-blue-50 text-blue-700 border-blue-200',       icon: <Eye size={11} /> },
+    clicked:    { label: 'Cliqué',  cls: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: <MousePointerClick size={11} /> },
+    bounced:    { label: 'Rebond',  cls: 'bg-red-50 text-red-700 border-red-200',          icon: <XCircle size={11} /> },
+    complained: { label: 'Spam',    cls: 'bg-red-50 text-red-700 border-red-200',          icon: <XCircle size={11} /> },
+    failed:     { label: 'Échec',   cls: 'bg-red-50 text-red-700 border-red-200',          icon: <XCircle size={11} /> },
+    sent:       { label: 'Envoyé',  cls: 'bg-gray-100 text-gray-600 border-gray-200',      icon: <Clock size={11} /> },
   };
   const cfg = cfgs[event] ?? { label: event, cls: 'bg-gray-100 text-gray-500 border-gray-200', icon: null };
   return (
@@ -53,23 +47,15 @@ export default async function AdminEmailsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
 
-  // Fetch email list from Resend API
   let emails: ResendEmail[] = [];
   let fetchError = '';
   try {
-    const res = await fetch('https://api.resend.com/emails?limit=100', {
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY ?? ''}`,
-        'Content-Type': 'application/json',
-      },
-      // no cache — always fresh
-      cache: 'no-store',
-    });
-    if (res.ok) {
-      const json = await res.json() as { data?: ResendEmail[]; object?: string };
-      emails = json.data ?? [];
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const result = await resend.emails.list({ limit: 100 });
+    if (result.error) {
+      fetchError = result.error.message;
     } else {
-      fetchError = `Resend API ${res.status}`;
+      emails = (result.data?.data ?? []) as unknown as ResendEmail[];
     }
   } catch (e) {
     fetchError = String(e);
