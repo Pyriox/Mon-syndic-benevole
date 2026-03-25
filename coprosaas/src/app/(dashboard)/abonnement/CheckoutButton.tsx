@@ -78,8 +78,8 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
           loading && 'cursor-wait',
           !loading && !cgvAccepted && 'opacity-60 cursor-not-allowed',
           isReady && (isPrimary
-            ? 'hover:bg-blue-50 hover:shadow-lg hover:shadow-white/20 hover:scale-[1.02]'
-            : 'hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02]'),
+            ? 'hover:bg-blue-50 hover:shadow-md'
+            : 'hover:bg-blue-700 hover:shadow-md'),  
           isPrimary ? 'bg-white text-blue-700' : 'bg-blue-600 text-white',
         ].filter(Boolean).join(' ')}
       >
@@ -90,14 +90,11 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
           </>
         ) : (
           <>
-            <Zap
-              size={14}
-              className={`shrink-0 transition-transform duration-200 ${isReady ? 'group-hover:scale-125 group-hover:rotate-12' : ''}`}
-            />
+            <Zap size={14} className="shrink-0" />
             Essai gratuit 14 jours
             <ArrowRight
-              size={13}
-              className={`shrink-0 transition-transform duration-200 ml-auto ${isReady ? 'group-hover:translate-x-1' : ''}`}
+              size={14}
+              className={`shrink-0 transition-transform duration-150 ${isReady ? 'group-hover:translate-x-0.5' : ''}`}
             />
           </>
         )}
@@ -107,10 +104,8 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          20%       { transform: translateX(-5px); }
-          40%       { transform: translateX(5px); }
-          60%       { transform: translateX(-4px); }
-          80%       { transform: translateX(4px); }
+          25%       { transform: translateX(-3px); }
+          75%       { transform: translateX(3px); }
         }
       `}</style>
     </div>
