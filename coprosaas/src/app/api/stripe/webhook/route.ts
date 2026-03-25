@@ -5,6 +5,39 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
 import Stripe from 'stripe';
+import { Resend } from 'resend';
+import {
+  buildTrialStartedEmail, buildTrialStartedSubject,
+  buildSubscriptionCreatedEmail, buildSubscriptionCreatedSubject,
+  buildTrialToPaidEmail, buildTrialToPaidSubject,
+  buildRenewalEmail, buildRenewalSubject,
+  type SubscriptionEmailParams,
+} from '@/lib/emails/subscription';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
+
+function getPlanLabel(planId: string | null | undefined): string {
+  if (planId === 'illimite') return 'Illimité';
+  if (planId === 'confort') return 'Confort';
+  return 'Essentiel';
+}
+
+async function getSyndicInfoByCoproId(
+  supabase: ReturnType<typeof createAdminClient>,
+  coproId: string,
+): Promise<{ email: string | null; prenom: string | null; coproNom: string | null }> {
+  const { data: copro } = await supabase
+    .from('coproprietes')
+    .select('syndic_id, nom')
+    .eq('id', coproId)
+    .maybeSingle();
+  if (!copro?.syndic_id) return { email: null, prenom: null, coproNom: copro?.nom ?? null };
+  const { data: { user } } = await supabase.auth.admin.getUserById(copro.syndic_id);
+  const prenom = (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
+  return { email: user?.email ?? null, prenom, coproNom: copro.nom };
+}
 
 // ⚠️ Ne pas parser le body en JSON — Stripe exige le raw body pour vérifier la signature.
 export const runtime = 'nodejs';
@@ -82,11 +115,38 @@ export async function POST(req: NextRequest) {
           plan_period_end:        periodEnd,
         });
 
-        // Marquer l'essai comme utilisé pour cet utilisateur (anti-abus recréation de copropriété)
+        // Marquer l'essai comme utilisé + envoyer email de confirmation
         const userId = session.metadata?.supabase_user_id;
         if (userId) {
-          const supabase = createAdminClient();
-          await supabase.from('profiles').update({ trial_used: true }).eq('id', userId);
+          const adminClient = createAdminClient();
+          await adminClient.from('profiles').update({ trial_used: true }).eq('id', userId);
+
+          // Email de confirmation souscription
+          try {
+            const [{ data: coproData }, { data: { user: syndicUser } }] = await Promise.all([
+              adminClient.from('coproprietes').select('nom').eq('id', coproId).maybeSingle(),
+              adminClient.auth.admin.getUserById(userId),
+            ]);
+            const userEmail = syndicUser?.email;
+            if (userEmail && coproData) {
+              const prenom = (syndicUser?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
+              const emailParams: SubscriptionEmailParams = {
+                prenom,
+                coproprieteNom: coproData.nom,
+                planLabel: getPlanLabel(session.metadata?.plan_id),
+                periodEnd,
+                dashboardUrl: `${SITE_URL}/dashboard`,
+              };
+              const [subject, html] = subPlan === 'essai'
+                ? [buildTrialStartedSubject(coproData.nom), buildTrialStartedEmail(emailParams)]
+                : [buildSubscriptionCreatedSubject(coproData.nom), buildSubscriptionCreatedEmail(emailParams)];
+              resend.emails.send({ from: FROM, to: userEmail, subject, html }).catch((e) =>
+                console.error('[Stripe webhook] Email checkout error:', e),
+              );
+            }
+          } catch (e) {
+            console.error('[Stripe webhook] Erreur email checkout:', e);
+          }
         }
         break;
       }
@@ -125,6 +185,34 @@ export async function POST(req: NextRequest) {
           plan:                   plan as 'actif' | 'inactif' | 'passe_du' | 'essai',
           plan_period_end:        periodEnd,
         });
+
+        // Email : essai → payant ou renouvellement
+        const prev = (event.data.previous_attributes ?? {}) as Record<string, unknown>;
+        const isTrialToPaid = prev['status'] === 'trialing' && plan === 'actif';
+        const isRenewal = prev['current_period_end'] !== undefined && plan === 'actif' && !isTrialToPaid;
+        if (isTrialToPaid || isRenewal) {
+          try {
+            const adminClient = createAdminClient();
+            const { email, prenom, coproNom } = await getSyndicInfoByCoproId(adminClient, coproId);
+            if (email && coproNom) {
+              const emailParams: SubscriptionEmailParams = {
+                prenom,
+                coproprieteNom: coproNom,
+                planLabel: getPlanLabel(subMeta?.plan_id),
+                periodEnd,
+                dashboardUrl: `${SITE_URL}/dashboard`,
+              };
+              const [subject, html] = isTrialToPaid
+                ? [buildTrialToPaidSubject(coproNom), buildTrialToPaidEmail(emailParams)]
+                : [buildRenewalSubject(coproNom), buildRenewalEmail(emailParams)];
+              resend.emails.send({ from: FROM, to: email, subject, html }).catch((e) =>
+                console.error('[Stripe webhook] Email subscription update error:', e),
+              );
+            }
+          } catch (e) {
+            console.error('[Stripe webhook] Erreur email subscription update:', e);
+          }
+        }
         break;
       }
 
