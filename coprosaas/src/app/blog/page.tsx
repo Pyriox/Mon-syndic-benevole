@@ -119,6 +119,7 @@ export default function BlogPage() {
           <nav aria-label="Liens du pied de page">
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-gray-400">
               <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
+              <Link href="/cgu" className="hover:text-gray-300 transition-colors">CGU / CGV</Link>
               <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
               <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
