@@ -192,6 +192,7 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
       }
     }
 
+    setLoading(false);
     setIsOpen(false);
     setSelectedFile(null);
     if (!isEdit) {

@@ -292,7 +292,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
       .not('coproprietaire_id', 'is', null),
     supabase
       .from('coproprietaires')
-      .select('id, nom, prenom')
+      .select('id, nom, prenom, raison_sociale')
       .eq('copropriete_id', scopeId)
       .order('nom'),
   ]);
@@ -339,7 +339,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
       const pct = totalTantiemes > 0 ? tant / totalTantiemes : 0;
       return {
         id: c.id,
-        nom: `${c.prenom} ${c.nom}`,
+        nom: (c as unknown as { raison_sociale: string | null }).raison_sociale ?? `${c.prenom} ${c.nom}`,
         tant,
         part: totalDepenses * pct,
         pct: Math.round(pct * 100),
