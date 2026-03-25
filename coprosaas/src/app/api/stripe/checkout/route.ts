@@ -70,22 +70,30 @@ export async function POST(req: NextRequest) {
     let customerId: string;
     let needsPersist = !copro.stripe_customer_id;
 
-    const createFreshCustomer = async () => {
-      // Essaie d'abord de trouver un customer Stripe existant par métadonnée
-      const existing = await stripe.customers.search({
-        query: `metadata['copropriete_id']:'${coproprieteid}'`,
-        limit: 1,
-      });
-      if (existing.data.length > 0) return existing.data[0].id;
+    const createBrandNewCustomer = async () => {
       const customer = await stripe.customers.create({
         email: user.email,
         name: copro.nom,
-        metadata: {
-          supabase_user_id: user.id,
-          copropriete_id: coproprieteid,
-        },
+        metadata: { supabase_user_id: user.id, copropriete_id: coproprieteid },
       });
       return customer.id;
+    };
+
+    const createFreshCustomer = async () => {
+      // Essaie de trouver un customer Stripe existant et vérifiable par métadonnée
+      const searched = await stripe.customers.search({
+        query: `metadata['copropriete_id']:'${coproprieteid}'`,
+        limit: 5,
+      });
+      for (const candidate of searched.data) {
+        if (candidate.deleted) continue;
+        // Vérifier qu'il est bien récupérable dans l'environnement actuel
+        try {
+          const verified = await stripe.customers.retrieve(candidate.id);
+          if (!(verified as { deleted?: boolean }).deleted) return verified.id;
+        } catch { continue; }
+      }
+      return createBrandNewCustomer();
     };
 
     if (copro.stripe_customer_id) {
@@ -95,9 +103,9 @@ export async function POST(req: NextRequest) {
         if ((existing as { deleted?: boolean }).deleted) throw new Error('deleted');
         customerId = existing.id;
       } catch {
-        // Customer supprimé ou introuvable → en recréer un
-        customerId = await createFreshCustomer();
+        // Customer supprimé ou introuvable → effacer de la DB et en recréer un propre
         needsPersist = true;
+        customerId = await createBrandNewCustomer();
       }
     } else {
       customerId = await createFreshCustomer();
