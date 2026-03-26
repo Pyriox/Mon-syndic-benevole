@@ -991,16 +991,16 @@ export default function HomePage() {
             <div className="text-blue-300/40 text-6xl font-serif leading-none mb-2 select-none">&ldquo;</div>
             <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6 space-y-3">
               <p>
-                Notre copropriété a d&apos;abord eu un syndic professionnel.{' '}
-                <span className="text-white font-medium">Factures opaques, réactivité zéro, frais sur chaque email.</span>{' '}
-                On a fini par voter pour passer en syndic bénévole.
+                On avait un syndic professionnel.{' '}
+                <span className="text-white font-medium">Factures qu&apos;on ne comprenait pas, impossible de les joindre, un forfait de base et des frais sur tout le reste.</span>{' '}
+                En AG, on a décidé de s&apos;en passer.
               </p>
               <p>
-                Sauf qu&apos;avec Excel et Google Drive, c&apos;était <span className="text-white font-medium">le bazar à chaque appel de fonds</span> : fichiers éparpillés, calculs à refaire, convocations à envoyer à la main&hellip;
+                On a essayé avec Excel et Google Drive. <span className="text-white font-medium">Chaque trimestre, je recommençais de zéro</span> : recalculer les quotes-parts, retrouver qui avait payé, envoyer les convocations à la main&hellip; C&apos;était chronophage et stressant.
               </p>
               <p>
-                Je n&apos;ai pas trouvé d&apos;outil pensé pour nous — alors{' '}
-                <span className="text-white font-medium">je l&apos;ai créé.</span>
+                Je n&apos;ai pas trouvé d&apos;outil fait pour ça — alors{' '}
+                <span className="text-white font-medium">je l&apos;ai construit moi-même.</span>
               </p>
             </blockquote>
             <div className="flex items-center gap-3">
@@ -1019,7 +1019,7 @@ export default function HomePage() {
               {
                 value: '14 jours',
                 label: 'd’essai gratuit',
-                sublabel: 'Sans carte bancaire · Résiliable à tout moment',
+                sublabel: 'Résiliable à tout moment',
                 Icon: Building2,
                 color: 'text-blue-400',
               },
