@@ -25,6 +25,7 @@ const DEFAULT_DOSSIER_NAMES = [
   'Appels de fonds',
   'Dépenses',
   'Règlement copropriété',
+  'Contrats',
 ];
 
 // Ordre d'utilité des dossiers permanents (plus petit = en premier)
@@ -33,6 +34,7 @@ const DEFAULT_DOSSIER_ORDER: Record<string, number> = {
   'Appels de fonds':      1,
   'Dépenses':             2,
   'Règlement copropriété': 3,
+  'Contrats':             4,
 };
 
 function sortRootDossiers(dossiers: Dossier[]): Dossier[] {
