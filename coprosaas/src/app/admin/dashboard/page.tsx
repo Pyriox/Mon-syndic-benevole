@@ -290,21 +290,21 @@ export default async function AdminDashboardPage() {
             <p className="text-sm text-gray-400 text-center py-4">Aucune donnée Stripe disponible pour cette année</p>
           ) : (
             <>
-              <div className="flex items-end gap-1.5 h-28">
+              <div className="flex gap-1.5 h-28">
                 {cashParMois.map((cash, i) => {
-                  const h = Math.round((cash / maxCashMois) * 100);
+                  const pct = Math.max(Math.round((cash / maxCashMois) * 100), cash > 0 ? 4 : 0);
                   const isCurrent = i === today.getMonth();
                   return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-                      <div
-                        className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-emerald-500' : 'bg-indigo-200 group-hover:bg-indigo-400'}`}
-                        style={{ height: `${Math.max(h, cash > 0 ? 4 : 0)}%` }}
-                      />
+                    <div key={i} className="flex-1 h-full flex flex-col justify-end group relative">
                       {cash > 0 && (
                         <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                           {fmtEur(cash)}
                         </div>
                       )}
+                      <div
+                        className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-emerald-500' : 'bg-indigo-200 group-hover:bg-indigo-400'}`}
+                        style={{ height: `${pct}%` }}
+                      />
                     </div>
                   );
                 })}
