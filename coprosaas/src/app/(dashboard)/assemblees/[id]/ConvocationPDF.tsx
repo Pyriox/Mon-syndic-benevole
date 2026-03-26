@@ -46,9 +46,41 @@ const fmtEur = (n: number) =>
 function checkPage(doc: jsPDF, y: number, needed = 30): number {
   if (y + needed > doc.internal.pageSize.height - 20) {
     doc.addPage();
-    return 20;
+    addConvocationPageHeader(doc);
+    return 28;
   }
   return y;
+}
+
+function addConvocationPageHeader(doc: jsPDF): void {
+  const W = doc.internal.pageSize.width;
+  doc.setFillColor(...BLUE);
+  doc.rect(0, 0, W, 8, 'F');
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('CONVOCATION — ASSEMBLÉE GÉNÉRALE DE COPROPRIÉTÉ', W / 2, 5.5, { align: 'center' });
+}
+
+function addConvocationFooters(doc: jsPDF): void {
+  const W = doc.internal.pageSize.width;
+  const H = doc.internal.pageSize.height;
+  const total = (doc as unknown as { internal: { getNumberOfPages: () => number } }).internal.getNumberOfPages();
+  for (let i = 1; i <= total; i++) {
+    doc.setPage(i);
+    doc.setFillColor(245, 247, 250);
+    doc.rect(0, H - 12, W, 12, 'F');
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Document généré le ${new Date().toLocaleDateString('fr-FR')} via Mon Syndic Bénévole`,
+      W / 2, H - 4.5, { align: 'center' },
+    );
+    if (total > 1) {
+      doc.text(`Page ${i} / ${total}`, W - 14, H - 4.5, { align: 'right' });
+    }
+  }
 }
 
 function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[]): jsPDF {
@@ -203,17 +235,8 @@ function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[])
   doc.setDrawColor(180);
   doc.line(mL, y + 12, mL + 60, y + 12);
 
-  // ── Pied de page ────────────────────────────────────────────
-  const pH = doc.internal.pageSize.height;
-  doc.setFontSize(7);
-  doc.setTextColor(160);
-  doc.setFont('helvetica', 'normal');
-  doc.text(
-    `Document généré le ${new Date().toLocaleDateString('fr-FR')} via Mon Syndic Bénévole`,
-    W / 2,
-    pH - 8,
-    { align: 'center' }
-  );
+  // ── Pied de page (toutes les pages) ─────────────────────────
+  addConvocationFooters(doc);
 
   return doc;
 }
