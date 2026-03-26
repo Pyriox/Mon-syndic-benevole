@@ -60,10 +60,14 @@ export default async function AdminCopropietesPage({
   const admin = createAdminClient();
 
   // ── Coproprietes (toujours nécessaire) ──
-  const { data: coproprietes } = await admin
-    .from('coproprietes')
-    .select('id, nom, adresse, code_postal, ville, nombre_lots, plan, plan_id, syndic_id, stripe_customer_id, stripe_subscription_id, plan_period_end, created_at, profiles!coproprietes_syndic_id_fkey(full_name, email)')
-    .order('created_at', { ascending: false });
+  const [{ data: coproprietes }, { data: adminRows }] = await Promise.all([
+    admin
+      .from('coproprietes')
+      .select('id, nom, adresse, code_postal, ville, nombre_lots, plan, plan_id, syndic_id, stripe_customer_id, stripe_subscription_id, plan_period_end, created_at, profiles!coproprietes_syndic_id_fkey(full_name, email)')
+      .order('created_at', { ascending: false }),
+    admin.from('admin_users').select('user_id'),
+  ]);
+  const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coprosTyped = (coproprietes ?? []) as any[];
@@ -263,7 +267,7 @@ export default async function AdminCopropietesPage({
                       <td className="px-4 py-3 text-xs text-gray-400 hidden xl:table-cell">{fmtDate(c.created_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
-                          {profile?.email && <AdminImpersonate email={profile.email} />}
+                          {profile?.email && !adminUserIds.has(c.syndic_id) && <AdminImpersonate email={profile.email} />}
                           <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} isOrphaned={!c.syndic_id} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} />
                         </div>
                       </td>
