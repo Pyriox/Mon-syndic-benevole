@@ -90,9 +90,9 @@ export async function GET(request: NextRequest) {
             .eq('email', email.toLowerCase())
             .eq('statut', 'en_attente');
 
-          // E-mail de bienvenue (fire-and-forget)
+          // E-mail de bienvenue (awaité — le fire-and-forget est tué par Vercel avant complétion)
           const prenom = (data.user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
-          resend.emails.send({
+          await resend.emails.send({
             from: FROM,
             to: email,
             subject: buildWelcomeSubject(),
@@ -181,9 +181,9 @@ export async function GET(request: NextRequest) {
           .eq('email', email.toLowerCase())
           .eq('statut', 'en_attente');
 
-        // 3. E-mail de bienvenue (fire-and-forget)
+        // 3. E-mail de bienvenue (awaité — le fire-and-forget est tué par Vercel avant complétion)
         const prenom = (data.user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
-        resend.emails.send({
+        await resend.emails.send({
           from: FROM,
           to: email,
           subject: buildWelcomeSubject(),
