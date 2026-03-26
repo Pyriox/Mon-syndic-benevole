@@ -4,22 +4,53 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Trash2, Mail, MoreHorizontal, Loader2, ShieldCheck } from 'lucide-react';
+import { Trash2, Mail, MoreHorizontal, Loader2, ShieldCheck, Pencil } from 'lucide-react';
 
 interface Props {
   userId: string;
   userEmail: string;
+  fullName?: string;
   isConfirmed: boolean;
   isSelf: boolean;
   isAdmin: boolean;
 }
 
-export default function AdminUserActions({ userId, userEmail, isConfirmed, isSelf, isAdmin }: Props) {
+export default function AdminUserActions({ userId, userEmail, fullName, isConfirmed, isSelf, isAdmin }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropPos, setDropPos] = useState<{ top: number; right: number } | null>(null);
+
+  // ── Edit modal ────────────────────────────────────────────
+  const [editOpen,     setEditOpen]     = useState(false);
+  const [editEmail,    setEditEmail]    = useState(userEmail);
+  const [editFullName, setEditFullName] = useState(fullName ?? '');
+  const [editLoading,  setEditLoading]  = useState(false);
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditLoading(true);
+    const body: Record<string, unknown> = { userId };
+    if (editEmail.trim() && editEmail.trim().toLowerCase() !== userEmail.toLowerCase()) {
+      body.email = editEmail.trim().toLowerCase();
+    }
+    if (editFullName !== (fullName ?? '')) body.fullName = editFullName;
+    const res = await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    setEditLoading(false);
+    if (res.ok) {
+      setEditOpen(false);
+      setDone('Modifié');
+      setTimeout(() => window.location.reload(), 800);
+    } else {
+      const { error } = await res.json();
+      alert('Erreur : ' + error);
+    }
+  };
 
   const toggleOpen = () => {
     if (!open && buttonRef.current) {
@@ -106,17 +137,71 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
   }
 
   return (
-    <div className="relative flex items-center justify-end">
-      {loading ? (
-        <Loader2 size={15} className="text-gray-400 animate-spin" />
-      ) : (
-        <>
-          <button
-            ref={buttonRef}
-            onClick={toggleOpen}
-            className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+    <>
+      {/* ── Edit modal ──────────────────────────────────── */}
+      {editOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setEditOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 shadow-xl w-full max-w-md mx-4"
+            onClick={(e) => e.stopPropagation()}
           >
-            <MoreHorizontal size={15} />
+            <h2 className="text-sm font-bold text-gray-900 mb-4">Modifier l&apos;utilisateur</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Nom complet</label>
+                <input
+                  type="text"
+                  value={editFullName}
+                  onChange={(e) => setEditFullName(e.target.value)}
+                  placeholder="Nom complet"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(false)}
+                  className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-600 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="text-sm px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 transition-colors"
+                >
+                  {editLoading ? 'Enregistrement…' : 'Enregistrer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Row actions ─────────────────────────────────── */}
+      <div className="relative flex items-center justify-end">
+        {loading ? (
+          <Loader2 size={15} className="text-gray-400 animate-spin" />
+        ) : (
+          <>
+            <button
+              ref={buttonRef}
+              onClick={toggleOpen}
+              className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            >
+              <MoreHorizontal size={15} />
           </button>
 
           {open && (
@@ -146,6 +231,14 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
                 )}
                 <div className="border-t border-gray-100 my-1" />
                 <button
+                  onClick={() => { setOpen(false); setEditEmail(userEmail); setEditFullName(fullName ?? ''); setEditOpen(true); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-blue-700 hover:bg-blue-50 transition-colors"
+                >
+                  <Pencil size={14} />
+                  Modifier
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                <button
                   onClick={handleToggleAdmin}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${isAdmin ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-700 hover:bg-indigo-50'}`}
                 >
@@ -166,5 +259,6 @@ export default function AdminUserActions({ userId, userEmail, isConfirmed, isSel
         </>
       )}
     </div>
+    </>
   );
 }

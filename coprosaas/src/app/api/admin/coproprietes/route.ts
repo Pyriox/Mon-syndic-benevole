@@ -2,9 +2,9 @@
 // API Admin — gestion des abonnements des copropriétés
 //
 // POST /api/admin/coproprietes  { action, coproId }
-//   → reset_subscription : remet le plan à 'inactif', efface les champs Stripe
-//   → stripe_sync        : lit l'abonnement réel depuis Stripe et met à jour Supabase
-//   → reassign_syndic    : { newEmail } — réassigne syndic_id à l'utilisateur correspondant
+//   → reset_subscription, stripe_sync, reassign_syndic
+// PATCH /api/admin/coproprietes  { coproId, nom?, adresse?, code_postal?, ville?, nombre_lots? }
+//   → modifier les informations générales d’une copropriété
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -144,4 +144,41 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 });
+}
+
+// ── PATCH : modifier les infos d’une copropriété ───────────────────────
+export async function PATCH(request: NextRequest) {
+  if (!await checkAdmin()) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+  }
+
+  const body = await request.json() as {
+    coproId?: string;
+    nom?: string;
+    adresse?: string;
+    code_postal?: string;
+    ville?: string;
+    nombre_lots?: number;
+  };
+
+  const { coproId, ...fields } = body;
+  if (!coproId?.trim()) {
+    return NextResponse.json({ error: 'coproId requis' }, { status: 400 });
+  }
+
+  const updates: Record<string, unknown> = {};
+  if (fields.nom       !== undefined) updates.nom        = fields.nom.trim()       || null;
+  if (fields.adresse   !== undefined) updates.adresse    = fields.adresse.trim()   || null;
+  if (fields.code_postal !== undefined) updates.code_postal = fields.code_postal.trim() || null;
+  if (fields.ville     !== undefined) updates.ville      = fields.ville.trim()     || null;
+  if (fields.nombre_lots !== undefined) updates.nombre_lots = Number(fields.nombre_lots) || 0;
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'Aucun champ à mettre à jour' }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.from('coproprietes').update(updates).eq('id', coproId.trim());
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
 }

@@ -4,6 +4,7 @@
 //
 // DELETE /api/admin/users?userId=xxx         → supprimer un utilisateur
 // POST   /api/admin/users  { action, ... }   → actions : resend_confirmation
+// PATCH  /api/admin/users  { userId, email?, fullName? } → modifier email/nom
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -103,4 +104,38 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 });
+}
+
+// ── PATCH : modifier email et/ou nom d’un utilisateur ────────────────────
+export async function PATCH(request: NextRequest) {
+  if (!await checkAdmin()) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+  }
+
+  const body = await request.json() as { userId?: string; email?: string; fullName?: string };
+  const { userId, email, fullName } = body;
+
+  if (!userId?.trim()) {
+    return NextResponse.json({ error: 'userId requis' }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+
+  // Mettre à jour l'email dans auth.users si fourni
+  if (email?.trim()) {
+    const { error } = await admin.auth.admin.updateUserById(userId.trim(), {
+      email: email.trim().toLowerCase(),
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Mettre à jour le full_name dans profiles
+  if (fullName !== undefined) {
+    await admin.from('profiles').upsert({
+      id: userId.trim(),
+      full_name: fullName.trim() || null,
+    }, { onConflict: 'id' });
+  }
+
+  return NextResponse.json({ success: true });
 }

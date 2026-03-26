@@ -207,7 +207,7 @@ export default async function AdminUtilisateursPage({
                       {!adminUserIds.has(u.id) && <AdminImpersonate email={u.email ?? ''} />}
                     </td>
                     <td className="px-4 py-3">
-                      <AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={u.id === user.id} isAdmin={adminUserIds.has(u.id)} />
+                      <AdminUserActions userId={u.id} userEmail={u.email ?? ''} fullName={meta?.full_name ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={u.id === user.id} isAdmin={adminUserIds.has(u.id)} />
                     </td>
                   </tr>
                 );
@@ -265,7 +265,7 @@ export default async function AdminUtilisateursPage({
                       }
                     </td>
                     <td className="px-4 py-3"><AdminImpersonate email={u.email ?? ''} /></td>
-                    <td className="px-4 py-3"><AdminUserActions userId={u.id} userEmail={u.email ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={u.id === user.id} isAdmin={false} /></td>
+                    <td className="px-4 py-3"><AdminUserActions userId={u.id} userEmail={u.email ?? ''} fullName={((u.user_metadata as Record<string, string> | null)?.full_name ?? '')} isConfirmed={!!u.email_confirmed_at} isSelf={u.id === user.id} isAdmin={false} /></td>
                   </tr>
                 );
               })}
