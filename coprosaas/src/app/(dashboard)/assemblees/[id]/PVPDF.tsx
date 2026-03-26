@@ -604,15 +604,14 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
       const pH = doc.internal.pageSize.height;
-      doc.setDrawColor(200);
-      doc.setLineWidth(0.3);
-      doc.line(mL, pH - 14, W - mR, pH - 14);
+      doc.setFillColor(245, 247, 250);
+      doc.rect(0, pH - 12, W, 12, 'F');
       doc.setFontSize(7);
-      doc.setTextColor(150);
+      doc.setTextColor(150, 150, 150);
       doc.setFont('helvetica', 'normal');
-      doc.text(`PV de l'AG — ${ag.coproprietes?.nom ?? ''} — ${formatDate(ag.date_ag)}`, mL, pH - 9);
-      doc.text(`Page ${i} / ${totalPages}`, W - mR, pH - 9, { align: 'right' });
-      doc.text('Généré via Mon Syndic Bénévole', W / 2, pH - 9, { align: 'center' });
+      doc.text(`PV — ${ag.coproprietes?.nom ?? ''} — ${formatDate(ag.date_ag)}`, mL, pH - 4.5);
+      doc.text(`Page ${i} / ${totalPages}`, W - mR, pH - 4.5, { align: 'right' });
+      doc.text('Généré via Mon Syndic Bénévole', W / 2, pH - 4.5, { align: 'center' });
     }
 
     const filename = `pv-ag-${ag.titre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}.pdf`;
