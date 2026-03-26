@@ -5,6 +5,7 @@
 //                                     telephone?, email?, adresse?, complement_adresse?,
 //                                     code_postal?, ville?, solde? }
 //   → modifier les informations d'un copropriétaire
+//   → si user_id renseigné : synchronise aussi auth.users (email, full_name)
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -44,9 +45,19 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'coproprietaireId requis' }, { status: 400 });
   }
 
-  const updates: Record<string, unknown> = {};
+  const admin = createAdminClient();
+
+  // Récupérer la fiche pour connaître le user_id lié
+  const { data: existing, error: fetchErr } = await admin
+    .from('coproprietaires')
+    .select('user_id')
+    .eq('id', coproprietaireId.trim())
+    .single();
+  if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 });
+
   const trimOrNull = (v?: string) => (v !== undefined ? v.trim() || null : undefined);
 
+  const updates: Record<string, unknown> = {};
   if (fields.nom                !== undefined) updates.nom                 = trimOrNull(fields.nom);
   if (fields.prenom             !== undefined) updates.prenom              = trimOrNull(fields.prenom);
   if (fields.raison_sociale     !== undefined) updates.raison_sociale      = trimOrNull(fields.raison_sociale);
@@ -62,12 +73,44 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Aucun champ à mettre à jour' }, { status: 400 });
   }
 
-  const admin = createAdminClient();
+  // Mise à jour de la fiche coproprietaire
   const { error } = await admin
     .from('coproprietaires')
     .update(updates)
     .eq('id', coproprietaireId.trim());
-
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // ── Synchronisation du compte utilisateur lié ─────────────
+  const linkedUserId = existing?.user_id as string | null;
+  if (linkedUserId) {
+    // Email → auth.users.email
+    if (fields.email?.trim()) {
+      await admin.auth.admin.updateUserById(linkedUserId, {
+        email: fields.email.trim().toLowerCase(),
+      });
+    }
+
+    // Nom → auth.users.user_metadata.full_name (même logique que le profil)
+    const nomChanged     = fields.nom             !== undefined;
+    const prenomChanged  = fields.prenom          !== undefined;
+    const raisonChanged  = fields.raison_sociale  !== undefined;
+    if (nomChanged || prenomChanged || raisonChanged) {
+      const raisonSociale = (fields.raison_sociale ?? '').trim();
+      const newFullName = raisonSociale
+        ? raisonSociale
+        : `${(fields.prenom ?? '').trim()} ${(fields.nom ?? '').trim()}`.trim();
+      if (newFullName) {
+        await admin.auth.admin.updateUserById(linkedUserId, {
+          user_metadata: { full_name: newFullName },
+        });
+        // Mettre à jour également la table profiles
+        await admin.from('profiles').upsert(
+          { id: linkedUserId, full_name: newFullName },
+          { onConflict: 'id' },
+        );
+      }
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
