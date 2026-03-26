@@ -53,15 +53,15 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Opérationnel dès le premier jour</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Créez votre syndic en moins de 30 minutes</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole vous guide dès la prise de fonctions : copropriétaires, lots, appels de fonds calculés automatiquement. Opérationnel en 15 minutes.
+          PV en main, une seule chose à faire : créer votre copropriété sur Mon Syndic Bénévole. Lots, tantièmes, copropriétaires — tout est guidé. Votre premier appel de fonds est prêt le jour même.
         </p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
-          Tester gratuitement — 14 jours offerts →
+          Créer votre syndic en moins de 30 minutes →
         </Link>
       </div>
 
@@ -121,7 +121,10 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         <strong className={strong}>Obligation légale absolue</strong> (art. 18 loi 1965) : le compte doit être au nom du <em>syndicat des copropriétaires</em>, jamais en votre nom propre. Apportez à la banque : le PV d&apos;élection, votre pièce d&apos;identité, et si possible le règlement de copropriété.
       </p>
       <p className={p}>
-        Si votre copropriété a plus de 10 lots, vous avez également besoin d&apos;un <strong className={strong}>second compte séparé pour le fonds de travaux ALUR</strong>. Ces sommes ne peuvent légalement pas être mélangées avec la trésorerie courante.
+        Si votre copropriété a plus de 10 lots, vous avez également besoin d&apos;un <strong className={strong}>second compte séparé pour le fonds de travaux ALUR</strong>. La loi est précise sur ce point : ce compte doit être <strong className={strong}>à la fois séparé du compte courant et rémunéré</strong> (art. 18 loi 1965, modifié par la loi ALUR). Un compte courant ordinaire ne satisfait pas cette exigence légale.
+      </p>
+      <p className={p}>
+        En pratique, <strong className={strong}>un Livret A ouvert au nom du syndicat</strong> est la solution la plus simple et la plus répandue : il est rémunéré, accessible dans toutes les banques et La Poste, et aucune banque ne peut en refuser l&apos;ouverture. Un livret d&apos;épargne bancaire classique convient également. Conservez les deux RIB (compte courant + compte fonds de travaux) dûment séparés dans vos archives.
       </p>
 
       <h3 className={h3}>3. Notifier les prestataires de votre prise de fonction</h3>
@@ -146,18 +149,93 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         L&apos;assurance multirisques immeuble (MRI) et les contrats de maintenance se renouvellent souvent tacitement. Un oubli = reconduction automatique pour un an à des conditions parfois défavorables. Listez les dates d&apos;échéance et prenez les décisions qui s&apos;imposent dès votre première semaine.
       </p>
 
-      <h2 id="solution" className={h2}>La solution : opérationnel en 15 minutes, sans formation</h2>
-      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Vous venez d&apos;être élu syndic bénévole ?</p>
-        <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole vous accompagne dès le premier jour : annuaire des copropriétaires, appels de fonds calculés automatiquement, convocations d&apos;AG en un clic. Opérationnel en moins de 15 minutes.
-        </p>
-        <Link
-          href="/register"
-          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
-        >
-          Créer ma copropriété gratuitement →
-        </Link>
+      <div className="my-8 rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-5 py-4 border-b border-gray-200">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Checklist — Prise de mandat syndic bénévole</p>
+          <p className="text-xs text-gray-400 mt-0.5">À compléter dans les 30 premiers jours</p>
+        </div>
+        <div className="divide-y divide-gray-100">
+          {([
+            { delai: 'Jour J', items: [
+              'Récupérer le PV d\'élection signé (plusieurs originaux)',
+              'Noter la date de fin de mandat de l\'ancien syndic',
+            ]},
+            { delai: 'J+1 à J+2', items: [
+              'LRAR à l\'ancien syndic — transfert d\'archives (délai légal : 15 jours)',
+              'E-mail collectif aux copropriétaires — annonce de prise de fonction',
+              'Identifier la banque et organiser le changement de signataire',
+            ]},
+            { delai: 'J+3 à J+15', items: [
+              'Ouvrir le compte bancaire au nom du syndicat des copropriétaires',
+              'Ouvrir le Livret A fonds de travaux (si +10 lots)',
+              'Réceptionner et vérifier les archives de l\'ancien syndic',
+              'Constituer le registre des copropriétaires (nom, lot, tantièmes, e-mail)',
+            ]},
+            { delai: 'J+15 à J+30', items: [
+              'Notifier chaque prestataire (assurance, nettoyage, ascenseur…) + nouveau RIB',
+              'Vérifier les dates d\'échéance des contrats des 90 prochains jours',
+              'Vérifier l\'assurance multirisques immeuble (MRI) — couverture et échéance',
+              'Émettre le premier appel de fonds trimestriel si l\'échéance approche',
+              'Créer votre espace de gestion et saisir les lots + tantièmes',
+            ]},
+          ] as { delai: string; items: string[] }[]).map(({ delai, items }) => (
+            <div key={delai} className="px-5 py-4">
+              <p className="text-xs font-semibold text-blue-600 mb-2">{delai}</p>
+              <ul className="space-y-1.5">
+                {items.map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
+                    <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="bg-blue-50 border-t border-blue-100 px-5 py-4">
+          <p className="text-xs text-blue-700 font-medium">Astuce : les étapes qui demandent le plus de temps sont la récupération des archives et la constitution du registre. Avec Mon Syndic Bénévole, vous saisissez vos données une seule fois — tout le reste est automatique.</p>
+        </div>
+      </div>
+
+      <h2 id="solution" className={h2}>La solution : opérationnel en 30 minutes, sans formation</h2>
+
+      <div className="my-8 rounded-2xl border border-blue-200 overflow-hidden">
+        <div className="bg-blue-600 px-6 py-5">
+          <p className="text-base font-bold text-white mb-1">Créez votre syndic en moins de 30 minutes</p>
+          <p className="text-sm text-blue-100">Le PV d&apos;élection en main, suivez ces 3 étapes. Votre premier appel de fonds est prêt le jour même.</p>
+        </div>
+        <div className="divide-y divide-blue-100 bg-blue-50">
+          <div className="px-6 py-4 flex gap-4 items-start">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+            <div>
+              <p className="text-sm font-semibold text-gray-900 mb-0.5">Créez votre copropriété — 5 min</p>
+              <p className="text-sm text-gray-600">Renseignez le nom, l&apos;adresse et l&apos;exercice comptable. Ajoutez vos lots avec leurs tantièmes (ils sont dans le règlement de copropriété). Mon Syndic Bénévole calcule automatiquement toutes les quotes-parts.</p>
+            </div>
+          </div>
+          <div className="px-6 py-4 flex gap-4 items-start">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+            <div>
+              <p className="text-sm font-semibold text-gray-900 mb-0.5">Ajoutez vos copropriétaires — 10 min</p>
+              <p className="text-sm text-gray-600">Nom, e-mail, lot associé. C&apos;est votre registre opérationnel : ils recevront directement leurs appels de fonds et leurs convocations d&apos;AG depuis la plateforme.</p>
+            </div>
+          </div>
+          <div className="px-6 py-4 flex gap-4 items-start">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">3</span>
+            <div>
+              <p className="text-sm font-semibold text-gray-900 mb-0.5">Générez votre premier appel de fonds — 2 min</p>
+              <p className="text-sm text-gray-600">Saisissez le budget voté en AG. Mon Syndic Bénévole calcule le montant de chaque copropriétaire, génère les avis de paiement et les envoie par e-mail — avec suivi des paiements en temps réel.</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-blue-600 px-6 py-5 text-center">
+          <Link
+            href="/register"
+            className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
+          >
+            Créer votre syndic en moins de 30 minutes →
+          </Link>
+          <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire · Résiliable à tout moment</p>
+        </div>
       </div>
 
       <h2 id="premier-trimestre" className={h2}>Le premier trimestre : ce qui vous attend concrètement</h2>
@@ -279,14 +357,15 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a> ou sur le <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>calcul des appels de fonds</a>.</p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
-        <p className="text-base font-semibold text-white mb-2">Prenez vos fonctions du bon pied</p>
-        <p className="text-sm text-blue-100 mb-4">Annuaire des copropriétaires, appels de fonds automatiques, convocations AG en un clic — opérationnel en 15 minutes.</p>
+        <p className="text-base font-semibold text-white mb-1">Pierre passe 3h par mois. Son appel de fonds : 10 minutes.</p>
+        <p className="text-sm text-blue-100 mb-4">Vous venez d&apos;être élu ? Créez votre syndic en moins de 30 minutes — lots, tantièmes, premiers appels de fonds, tout est guidé étape par étape.</p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
-          Créer ma copropriété sur Mon Syndic Bénévole →
+          Créer votre syndic en moins de 30 minutes →
         </Link>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire</p>
       </div>
     </>
   );

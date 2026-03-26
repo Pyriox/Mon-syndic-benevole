@@ -17,7 +17,6 @@ export default function ArticleObligationsSyndicBenevole() {
         Christophe n&apos;était pas négligent — il ne savait simplement pas. La gestion bénévole est gratuite pour la copropriété, mais elle n&apos;est pas exempte d&apos;obligations. Ce guide les répertorie toutes, avec les dates qui comptent.
       </p>
 
-      <h2 id="explication" className={h2}>L&apos;explication : le calendrier complet des obligations</h2>
       <h2 id="cadre-legal" className={h2}>Le cadre légal du syndic bénévole</h2>
       <p className={p}>
         Le syndic non-professionnel exerce dans le cadre de la <strong className={strong}>loi du 10 juillet 1965</strong> et du <strong className={strong}>décret du 17 mars 1967</strong>. Ces textes s&apos;appliquent à tous les syndics, qu&apos;ils soient professionnels ou bénévoles. Il n&apos;existe pas de régime allégé pour les bénévoles — les mêmes obligations s&apos;appliquent, les mêmes délais, les mêmes documents.
@@ -103,15 +102,15 @@ export default function ArticleObligationsSyndicBenevole() {
       </div>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Ne gérez plus ces délais à la main</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Ces 11 échéances, gérées automatiquement</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole intègre toutes ces échéances dans un calendrier partagé et vous alerte avant chaque date critique — convocation AG, notification PV, appels de fonds trimestriels.
+          Mon Syndic Bénévole calcule vos dates critiques et vous alerte avant chaque échéance — J-21 AG, notification PV, appels de fonds trimestriels. Zéro délai manqué.
         </p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
-          Tester Mon Syndic Bénévole gratuitement →
+          Créer votre syndic en moins de 30 minutes →
         </Link>
       </div>
 
@@ -220,75 +219,151 @@ export default function ArticleObligationsSyndicBenevole() {
       </div>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Convocations, PV et mises en demeure — modèles inclus</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Convocation, PV, mise en demeure — pré-remplis en 2 clics</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole intègre tous les documents légaux prêts à personnaliser : convocations d&apos;AG conformes, PV, mises en demeure. Plus aucun délai manqué.
+          Tous ces modèles sont intégrés dans Mon Syndic Bénévole avec les données de votre copropriété. Envoyez directement depuis la plateforme, avec preuve de réception.
         </p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
-          Créer ma copropriété gratuitement →
+          Créer votre syndic en moins de 30 minutes →
         </Link>
       </div>
 
-      <h2 id="5-manquements" className={h2}>Les 5 manquements les plus courants qui finissent en contentieux</h2>
+      <h2 id="erreurs-a-eviter" className={h2}>5 erreurs qui finissent en contentieux</h2>
 
-      <h3 className={h3}>1. Le délai de convocation non respecté (comme Christophe)</h3>
-      <p className={p}>
-        18 jours au lieu de 21, c&apos;est la nullité potentielle de toutes les résolutions votées. Le délai court à partir de la première présentation de la LRAR au domicile du copropriétaire — pas de la date d&apos;envoi. Prévoyez au minimum 24 jours entre l&apos;envoi et la date de l&apos;AG pour ne jamais être au bord.
-      </p>
-
-      <h3 className={h3}>2. Des travaux engagés sans vote AG</h3>
-      <p className={p}>
-        Au-delà des actes conservatoires (fuites, sécurité immédiate), tout travail nécessite un vote en AG. Engager des travaux de 5 000 € sur décision unilatérale expose le syndic à devoir rembourser personnellement si le syndicat conteste.
-      </p>
-
-      <h3 className={h3}>3. L&apos;absence de compte séparé pour le fonds de travaux</h3>
-      <p className={p}>
-        Le fonds de travaux doit être sur un compte bancaire distinct du compte courant, au nom du syndicat. Mélanger les deux est une irrégularité sanctionnable et empêche de produire les états financiers conformes.
-      </p>
-
-      <h3 className={h3}>4. Le PV non notifié dans les délais</h3>
-      <p className={p}>
-        Le délai de recours contre une résolution d&apos;AG est de 2 mois à compter de la notification du PV. Si vous ne notifiez pas, ce délai ne court pas — ce qui laisse une fenêtre de contestation ouverte indéfiniment.
-      </p>
-
-      <h3 className={h3}>5. L&apos;absence de mise à jour de l&apos;immatriculation</h3>
-      <p className={p}>
-        Le registre national des copropriétés doit être mis à jour chaque année avec les données financières de l&apos;exercice clos. Un oubli expose le syndicat à une mise en demeure de l&apos;ANAH, qui peut désigner un administrateur provisoire.
-      </p>
-
-      <h2 id="solution" className={h2}>La solution : ne manquez plus aucune échéance légale</h2>
+      <div className="my-6 space-y-3">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-amber-500 font-mono w-6">01</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-1">Délai de convocation non respecté</p>
+            <p className="text-xs font-medium text-amber-700 mb-1">Risque — Nullité potentielle de toutes les résolutions votées</p>
+            <p className="text-xs text-gray-600">Le délai de 21 jours court à partir de la <em>première présentation</em> de la LRAR, pas de la date d&apos;envoi. Prévoyez 24 jours minimum pour ne jamais être au bord.</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-amber-500 font-mono w-6">02</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-1">Travaux engagés sans vote d&apos;AG</p>
+            <p className="text-xs font-medium text-amber-700 mb-1">Risque — Remboursement personnel si le syndicat conteste la dépense</p>
+            <p className="text-xs text-gray-600">Seuls les actes conservatoires (fuite active, sécurité immédiate) dispensent d&apos;un vote préalable. Au-delà, tout doit passer en AG, même 200 €.</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-amber-500 font-mono w-6">03</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-1">Compte fonds de travaux non séparé</p>
+            <p className="text-xs font-medium text-amber-700 mb-1">Risque — Irrégularité sanctionnable, états financiers non conformes</p>
+            <p className="text-xs text-gray-600">Le fonds doit être sur un compte distinct au nom du syndicat, sur un livret rémunéré (Livret A recommandé).</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-amber-500 font-mono w-6">04</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-1">PV non notifié dans le mois suivant l&apos;AG</p>
+            <p className="text-xs font-medium text-amber-700 mb-1">Risque — Fenêtre de contestation ouverte indéfiniment</p>
+            <p className="text-xs text-gray-600">Le délai de 2 mois pour contester une résolution ne court qu&apos;à partir de la notification du PV. Tant que vous ne notifiez pas, il ne se ferme pas.</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-amber-500 font-mono w-6">05</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-1">Immatriculation non mise à jour chaque année</p>
+            <p className="text-xs font-medium text-amber-700 mb-1">Risque — Mise en demeure ANAH, désignation d&apos;un administrateur provisoire</p>
+            <p className="text-xs text-gray-600">Le registre national des copropriétés doit être actualisé chaque année avec les données financières de l&apos;exercice clos.</p>
+          </div>
+        </div>
+      </div>
 
       <h2 id="checklist" className={h2}>Checklist des obligations par période</h2>
 
-      <h3 className={h3}>En continu (toute l&apos;année)</h3>
-      <ul className={ul}>
-        <li className={li}>Émettre les appels de fonds trimestriels sur la base du budget voté</li>
-        <li className={li}>Suivre les paiements et relancer les impayés (relance amiable, puis LRAR)</li>
-        <li className={li}>Tenir à jour le carnet d&apos;entretien (interventions, contrôles obligatoires)</li>
-        <li className={li}>Souscrire et maintenir les contrats d&apos;assurance multirisque immeuble</li>
-        <li className={li}>Répondre aux demandes d&apos;état daté en cas de vente</li>
-        <li className={li}>Conserver tous les documents (justificatifs de dépenses, contrats, courriers) 5 ans minimum</li>
-      </ul>
-
-      <h3 className={h3}>Avant l&apos;AG (J-21 minimum)</h3>
-      <ul className={ul}>
-        <li className={li}>Clôturer les comptes de l&apos;exercice N-1 et préparer le bilan</li>
-        <li className={li}>Établir le projet de budget N+1</li>
-        <li className={li}>Recueillir les demandes de résolutions des copropriétaires (délai fixé dans le règlement)</li>
-        <li className={li}>Envoyer les convocations avec PJ obligatoires (comptes, budget, devis pour travaux votés)</li>
-        <li className={li}>Joindre le formulaire de vote par correspondance</li>
-      </ul>
-
-      <h3 className={h3}>Après l&apos;AG (J+1 mois)</h3>
-      <ul className={ul}>
-        <li className={li}>Notifier le PV signé à tous les copropriétaires par LRAR (ou voie électronique acceptée)</li>
-        <li className={li}>Mettre en œuvre les décisions votées (commandes, signatures de contrats)</li>
-        <li className={li}>Appeler les fonds complémentaires si des travaux ont été votés</li>
-        <li className={li}>Mettre à jour le registre national des copropriétés</li>
-      </ul>
+      <div className="my-8 rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-5 py-4 border-b border-gray-200">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Checklist réglementaire — Syndic bénévole</p>
+          <p className="text-xs text-gray-400 mt-0.5">À parcourir tout au long de l&apos;année</p>
+        </div>
+        <div className="divide-y divide-gray-100">
+          <div className="px-5 py-4">
+            <p className="text-xs font-semibold text-blue-600 mb-2">En continu</p>
+            <ul className="space-y-1.5">
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Appels de fonds trimestriels émis sur la base du budget voté
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Suivi des paiements et relance des impayés (amiable, puis LRAR)
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Carnet d&apos;entretien à jour (interventions, contrôles obligatoires)
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Assurance multirisques immeuble (MRI) souscrite et à jour
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Répondre aux demandes d&apos;état daté en cas de vente
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Conservation des documents (justificatifs, contrats, courriers)
+              </li>
+            </ul>
+          </div>
+          <div className="px-5 py-4">
+            <p className="text-xs font-semibold text-amber-600 mb-2">J−21 avant l&apos;AG (minimum)</p>
+            <ul className="space-y-1.5">
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Clôturer les comptes N-1 et préparer le bilan
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Établir le projet de budget N+1
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Recueillir les demandes de résolutions des copropriétaires
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Envoyer les convocations avec PJ obligatoires (comptes, budget, devis)
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Joindre le formulaire de vote par correspondance
+              </li>
+            </ul>
+          </div>
+          <div className="px-5 py-4">
+            <p className="text-xs font-semibold text-green-600 mb-2">J+1 mois après l&apos;AG</p>
+            <ul className="space-y-1.5">
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Notifier le PV signé à tous les copropriétaires (LRAR ou e-mail accepté)
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Mettre en œuvre les décisions votées (commandes, contrats)
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Émettre les appels de fonds complémentaires pour les travaux votés
+              </li>
+              <li className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
+                Mettre à jour le registre national des copropriétés
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="bg-blue-50 border-t border-blue-100 px-5 py-4">
+          <p className="text-xs text-blue-700 font-medium">Astuce : Mon Syndic Bénévole intègre toutes ces échéances et vous alerte automatiquement avant chaque date critique.</p>
+        </div>
+      </div>
 
       <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
 
@@ -299,7 +374,7 @@ export default function ArticleObligationsSyndicBenevole() {
       <p className={p}>Oui, mais uniquement si le copropriétaire a donné son accord écrit préalable à ce mode de convocation. À défaut d&apos;accord, la convocation doit être faite par LRAR ou remise en main propre contre émargement. L&apos;accord peut être recueilli via un formulaire signé en AG, mention au PV.</p>
 
       <h3 className={h3}>Que se passe-t-il si la majorité requise n&apos;est pas atteinte ?</h3>
-      <p className={p}>En copropriété, il n&apos;y a <strong>pas de quorum</strong> : l&apos;assemblée générale délibère valablement quel que soit le nombre de copropriétaires présents ou représentés. Ce qui joue, c&apos;est la <em>majorité</em> requise. <strong>Article 24</strong> (majorité simple) : aucun mécanisme de rattrapage — la résolution est rejetée. <strong>Article 25</strong> (majorité absolue) : si le texte n&apos;obtient pas la majorité absolue mais recueille <em>plus d&apos;un tiers</em> des voix de tous les copropriétaires, un second vote à la majorité de l&apos;article 24 peut être organisé <em>immédiatement dans la même AG</em> (art. 25-1). <strong>Article 26</strong> (double majorité) : si la double majorité n&apos;est pas atteinte, une nouvelle AG peut être convoquée dans les 3 mois pour voter la même résolution à la majorité de l&apos;article 25.</p>
+      <p className={p}>Il n&apos;y a pas de quorum en copropriété — l&apos;AG délibère quel que soit le nombre de présents. Art. 25 : si la majorité absolue n&apos;est pas atteinte mais qu&apos;un tiers des voix a été recueilli, un second vote à l&apos;art. 24 peut se tenir dans la même AG (art. 25-1). Art. 26 : une nouvelle AG peut être convoquée dans les 3 mois pour voter à la majorité de l&apos;art. 25.</p>
 
       <h3 className={h3}>Le syndic bénévole peut-il être rémunéré ?</h3>
       <p className={p}>Oui. Depuis 2014, l&apos;AG peut voter une rémunération pour le syndic bénévole à la majorité de l&apos;article 25. Cette rémunération doit être votée explicitement — elle ne peut pas être fixée unilatéralement. Elle est soumise à imposition dans la catégorie des revenus correspondants.</p>
@@ -319,14 +394,15 @@ export default function ArticleObligationsSyndicBenevole() {
       </p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
-        <p className="text-base font-semibold text-white mb-2">Gérez vos obligations légales sans stress</p>
-        <p className="text-sm text-blue-100 mb-4">Calendrier intégré, documents conformes, alertes avant chaque échéance critique.</p>
+        <p className="text-base font-semibold text-white mb-1">Christophe a perdu 28 000 € de travaux sur un délai de 3 jours.</p>
+        <p className="text-sm text-blue-100 mb-4">Avec Mon Syndic Bénévole, chaque date critique est calculée automatiquement. Vous êtes alerté avant, pas après.</p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
-          Créer ma copropriété sur Mon Syndic Bénévole →
+          Créer votre syndic en moins de 30 minutes →
         </Link>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire</p>
       </div>
     </>
   );

@@ -18,114 +18,132 @@ export default function ArticleLogicielSyndicBenevole() {
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Marc l&apos;a fait. Vous pouvez aussi.</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Marc a économisé 4 h/mois et 2 700 €/an de frais de syndic.</p>
         <p className="text-sm text-gray-600 mb-4">
-          Configurez votre copropriété en 15 minutes et émettez votre premier appel de fonds le jour même. Essai gratuit.
+          Il a migré depuis Excel en 35 minutes. Son premier appel de fonds a été envoyé 3 heures plus tard.
         </p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
-          Tester gratuitement — 14 jours offerts →
+          Créer votre syndic en moins de 30 minutes →
         </Link>
       </div>
 
-      <h2 id="explication" className={h2}>L&apos;explication : Excel vs logiciel dédié</h2>
-      <h2 id="excel-vs-logiciel" className={h2}>La comparaison honnête</h2>
+      <h2 id="excel-vs-logiciel" className={h2}>La comparaison honnête : Excel, logiciel dédié, syndic pro</h2>
 
       <div className="overflow-x-auto mb-6 rounded-xl border border-gray-200">
-        <table className="w-full text-sm border-collapse">
-          <thead className="bg-gray-50">
+        <table className="w-full text-sm border-collapse min-w-[560px]">
+          <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 text-gray-500 font-medium">Tâche</th>
-              <th className="text-center py-3 px-4 text-gray-500 font-medium">Excel</th>
-              <th className="text-center py-3 px-4 text-gray-500 font-medium">Logiciel dédié</th>
+              <th className="text-left py-3 px-4 text-gray-500 font-medium bg-gray-50 w-2/5">Critère</th>
+              <th className="text-center py-3 px-4 text-gray-500 font-medium bg-gray-50">Excel</th>
+              <th className="text-center py-3 px-4 text-blue-700 font-semibold bg-blue-50">Mon Syndic Bénévole</th>
+              <th className="text-center py-3 px-4 text-gray-500 font-medium bg-gray-50">Syndic pro</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             <tr>
-              <td className="py-3 px-4 text-gray-700">Calcul des appels de fonds par tantièmes</td>
-              <td className="py-3 px-4 text-center text-gray-600">Manuel, risque d&apos;erreur</td>
-              <td className="py-3 px-4 text-center text-green-700 font-medium">Automatique</td>
+              <td className="py-3 px-4 text-gray-700">Appels de fonds calculés par tantièmes</td>
+              <td className="py-3 px-4 text-center text-red-600">Manuel</td>
+              <td className="py-3 px-4 text-center text-green-700 font-medium bg-blue-50/40">Automatique ✓</td>
+              <td className="py-3 px-4 text-center text-gray-600">Géré par le cabinet</td>
             </tr>
             <tr className="bg-gray-50">
-              <td className="py-3 px-4 text-gray-700">Génération des avis de paiement en PDF</td>
-              <td className="py-3 px-4 text-center text-gray-600">À la main, 1 par 1</td>
-              <td className="py-3 px-4 text-center text-green-700 font-medium">En 1 clic pour tous</td>
+              <td className="py-3 px-4 text-gray-700">Avis PDF + envoi e-mail</td>
+              <td className="py-3 px-4 text-center text-red-600">À la main, 1 par 1</td>
+              <td className="py-3 px-4 text-center text-green-700 font-medium bg-blue-50/40">1 clic pour tous ✓</td>
+              <td className="py-3 px-4 text-center text-gray-600">Inclus</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 text-gray-700">Envoi des appels par e-mail</td>
-              <td className="py-3 px-4 text-center text-gray-600">Copier/coller manuel</td>
-              <td className="py-3 px-4 text-center text-green-700 font-medium">Envoi groupé intégré</td>
+              <td className="py-3 px-4 text-gray-700">Suivi paiements + relances</td>
+              <td className="py-3 px-4 text-center text-red-600">Saisie manuelle</td>
+              <td className="py-3 px-4 text-center text-green-700 font-medium bg-blue-50/40">Suivi par lot ✓</td>
+              <td className="py-3 px-4 text-center text-gray-600">Géré par le cabinet</td>
             </tr>
             <tr className="bg-gray-50">
-              <td className="py-3 px-4 text-gray-700">Suivi des paiements reçus</td>
-              <td className="py-3 px-4 text-center text-gray-600">Saisie manuelle dans le tableur</td>
-              <td className="py-3 px-4 text-center text-green-700 font-medium">Rapprochement par lot</td>
+              <td className="py-3 px-4 text-gray-700">Documents légaux (convocation AG, PV)</td>
+              <td className="py-3 px-4 text-center text-red-600">Aucun modèle</td>
+              <td className="py-3 px-4 text-center text-green-700 font-medium bg-blue-50/40">Modèles intégrés ✓</td>
+              <td className="py-3 px-4 text-center text-gray-600">Fournis</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 text-gray-700">Relances automatiques impayés</td>
-              <td className="py-3 px-4 text-center text-red-600">Non disponible</td>
-              <td className="py-3 px-4 text-center text-green-700 font-medium">Configurable (J+15, J+30)</td>
+              <td className="py-3 px-4 text-gray-700">Fonds de travaux séparé (ALUR)</td>
+              <td className="py-3 px-4 text-center text-gray-600">Onglet séparé</td>
+              <td className="py-3 px-4 text-center text-green-700 font-medium bg-blue-50/40">Compte dédié conforme ✓</td>
+              <td className="py-3 px-4 text-center text-gray-600">Compte séparé</td>
             </tr>
             <tr className="bg-gray-50">
-              <td className="py-3 px-4 text-gray-700">Fonds de travaux séparé des charges</td>
-              <td className="py-3 px-4 text-center text-gray-600">Onglet séparé, risque de confusion</td>
-              <td className="py-3 px-4 text-center text-green-700 font-medium">Séparation comptable automatique</td>
+              <td className="py-3 px-4 text-gray-700">Espace personnel copropriétaires</td>
+              <td className="py-3 px-4 text-center text-gray-600">Drive partagé</td>
+              <td className="py-3 px-4 text-center text-green-700 font-medium bg-blue-50/40">Accès individuel ✓</td>
+              <td className="py-3 px-4 text-center text-gray-600">Portail client</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 text-gray-700">Génération convocation AG avec délai 21j</td>
-              <td className="py-3 px-4 text-center text-red-600">Manuel, délai à calculer à la main</td>
-              <td className="py-3 px-4 text-center text-green-700 font-medium">Validation automatique du délai</td>
+              <td className="py-3 px-4 text-gray-700">Contrôle de vos données</td>
+              <td className="py-3 px-4 text-center text-gray-600">Votre fichier</td>
+              <td className="py-3 px-4 text-center text-green-700 font-medium bg-blue-50/40">Votre espace ✓</td>
+              <td className="py-3 px-4 text-center text-red-600">Dépend du cabinet</td>
+            </tr>
+            <tr className="bg-blue-50 border-y-2 border-blue-200">
+              <td className="py-3 px-4 font-semibold text-gray-900">Prix / an (12 lots)</td>
+              <td className="py-3 px-4 text-center font-medium text-gray-700">Gratuit</td>
+              <td className="py-3 px-4 text-center font-bold text-blue-700 bg-blue-100">~240 €/an</td>
+              <td className="py-3 px-4 text-center font-bold text-red-600">2 400–4 200 €/an</td>
             </tr>
             <tr className="bg-gray-50">
-              <td className="py-3 px-4 text-gray-700">Accès copropriétaires aux documents</td>
-              <td className="py-3 px-4 text-center text-gray-600">Drive partagé, gestion manuelle</td>
-              <td className="py-3 px-4 text-center text-green-700 font-medium">Espace personnel par copropriétaire</td>
-            </tr>
-            <tr>
-              <td className="py-3 px-4 text-gray-700">Export comptable pour AG</td>
-              <td className="py-3 px-4 text-center text-gray-600">Mise en forme manuelle (1-2 h)</td>
-              <td className="py-3 px-4 text-center text-green-700 font-medium">PDF généré en 30 secondes</td>
-            </tr>
-            <tr className="bg-gray-50">
-              <td className="py-3 px-4 text-gray-700">Coût</td>
-              <td className="py-3 px-4 text-center text-gray-600">Gratuit (mais coûte du temps)</td>
-              <td className="py-3 px-4 text-center text-gray-700">~20-30 €/mois</td>
+              <td className="py-3 px-4 text-gray-700">Temps de gestion / mois</td>
+              <td className="py-3 px-4 text-center text-red-600">~8–10 h</td>
+              <td className="py-3 px-4 text-center text-green-700 font-medium bg-blue-50/40">~2–3 h ✓</td>
+              <td className="py-3 px-4 text-center text-gray-600">~0 h (délégué)</td>
             </tr>
           </tbody>
         </table>
       </div>
+      <h2 id="pourquoi-excel-ne-suffit-pas" className={h2}>Pourquoi Excel ne suffit plus après un an</h2>
 
-      <p className={p}>
-        La conclusion de Marc : &ldquo;Excel me coûtait 4 heures supplémentaires par mois par rapport à l&apos;outil. À 25 € par mois, le logiciel me fait économiser du temps à un coût inférieur au salaire minimum horaire.&rdquo;
-      </p>
-      <h2 id="pourquoi-excel-ne-suffit-pas" className={h2}>Les 5 limitations concrètes d&apos;Excel en gestion de copropriété</h2>
-
-      <h3 className={h3}>1. Pas de traçabilité des relances</h3>
-      <p className={p}>
-        Qui avez-vous relancé, quand, par quel canal ? Ce n&apos;est dans aucun fichier Excel — c&apos;est dans votre mémoire ou dans un e-mail introuvable. Quand un copropriétaire dit &ldquo;je n&apos;ai jamais reçu de relance&rdquo;, vous n&apos;avez aucune preuve.
-      </p>
-
-      <h3 className={h3}>2. Les erreurs de formule sont invisibles</h3>
-      <p className={p}>
-        Une référence copiée avec un décalage dans les tantièmes peut fausser tous les appels de fonds pendant des trimestres entiers — sans que personne ne s&apos;en aperçoive avant l&apos;AG. Sylvie (comptable de profession) a découvert en AG une erreur de 2 ans sur les charges ascenseur d&apos;un lot. &ldquo;Il fallait tout recalculer à rebours.&rdquo;
-      </p>
-
-      <h3 className={h3}>3. Pas de génération de documents conformes</h3>
-      <p className={p}>
-        Chaque avis de paiement, chaque convocation d&apos;AG, chaque PV doit être mis en forme à la main. Chaque trimestre, le même travail recommence. Et si vous changez un chiffre dans le tableau, le document correspondant ne se met pas à jour automatiquement.
-      </p>
-
-      <h3 className={h3}>4. Pas de partage en temps réel</h3>
-      <p className={p}>
-        Si un copropriétaire veut consulter son historique de paiement ou les justificatifs de dépenses, vous devez exporter, envoyer, espérer que la version qu&apos;il reçoit est la bonne. Ce va-et-vient représente en moyenne 20 à 30 minutes de travail supplémentaire par demande.
-      </p>
-
-      <h3 className={h3}>5. Pas d&apos;alerte calendaire intégrée</h3>
-      <p className={p}>
-        La date de l&apos;AG (21 jours avant), les contrats qui expirent, le vote annuel du fonds de travaux ALUR — tout doit être suivi manuellement. Un oubli peut avoir des conséquences légales (AG convoquée trop tard = risque d&apos;annulation).
-      </p>
+      <div className="my-6 space-y-3">
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-red-400 font-mono w-6">01</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-0.5">Pas de traçabilité des relances</p>
+            <p className="text-xs font-medium text-red-600 mb-1">Risque — Aucune preuve en cas de litige</p>
+            <p className="text-xs text-gray-600">Quand un copropriétaire dit &ldquo;je n&apos;ai jamais reçu de relance&rdquo;, vous ne pouvez pas le prouver. Ni la date, ni le canal, ni le contenu.</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-red-400 font-mono w-6">02</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-0.5">Les erreurs de formule sont invisibles</p>
+            <p className="text-xs font-medium text-red-600 mb-1">Risque — Appels de fonds faux pendant des trimestres entiers</p>
+            <p className="text-xs text-gray-600">Sylvie (comptable de profession) a découvert en AG une erreur de 2 ans sur les charges ascenseur. &ldquo;Il fallait tout recalculer à rebours.&rdquo;</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-red-400 font-mono w-6">03</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-0.5">Pas de documents légaux conformes</p>
+            <p className="text-xs font-medium text-red-600 mb-1">Risque — Modèles à refaire manuellement à chaque fois</p>
+            <p className="text-xs text-gray-600">Convocations AG, PV, avis de paiement — tout doit être mis en forme à la main chaque trimestre. Un chiffre change dans le tableur : le document correspondant ne se met pas à jour.</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-red-400 font-mono w-6">04</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-0.5">Pas de partage en temps réel</p>
+            <p className="text-xs font-medium text-red-600 mb-1">Risque — 20–30 min perdues par demande de copropriétaire</p>
+            <p className="text-xs text-gray-600">Exporter, envoyer, s&apos;assurer que la version reçue est la bonne. Ce va-et-vient se répète à chaque demande d&apos;historique de paiement ou de justificatif.</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4 flex gap-3">
+          <span className="flex-shrink-0 text-sm font-bold text-red-400 font-mono w-6">05</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-0.5">Pas d&apos;alerte calendaire intégrée</p>
+            <p className="text-xs font-medium text-red-600 mb-1">Risque — AG convoquée trop tard = nullité potentielle des résolutions</p>
+            <p className="text-xs text-gray-600">J-21 AG, contrats à renouveler, vote annuel fonds de travaux ALUR — tout doit être suivi manuellement. Un seul oubli peut avoir des conséquences légales.</p>
+          </div>
+        </div>
+      </div>
 
       <h2 id="fonctionnalites-indispensables" className={h2}>Les 6 fonctionnalités vraiment indispensables</h2>
 
@@ -160,19 +178,17 @@ export default function ArticleLogicielSyndicBenevole() {
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Les 6 fonctionnalités indispensables — dans un seul outil</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Marc a migré depuis Excel en 35 minutes. Vous pouvez faire pareil.</p>
         <p className="text-sm text-gray-600 mb-4">
-          Lots, tantièmes, appels de fonds, relances, AG, espace copropriétaires — Mon Syndic Bénévole les intègre tous. Opérationnel en moins d&apos;une heure.
+          Lots, tantièmes, appels de fonds, relances, AG, espace copropriétaires — Mon Syndic Bénévole les intègre tous.
         </p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
-          Tester gratuitement — 14 jours offerts →
+          Créer votre syndic en moins de 30 minutes →
         </Link>
       </div>
-
-      <h2 id="solution" className={h2}>La solution : ces 6 fonctionnalités en un seul outil</h2>
 
       <h2 id="migration-excel" className={h2}>Comment migrer depuis Excel en 30 minutes</h2>
       <p className={p}>
@@ -195,12 +211,43 @@ export default function ArticleLogicielSyndicBenevole() {
         L&apos;historique des 2 ou 3 exercices précédents peut rester dans votre Excel sans impact sur la gestion future. Marc a migré en 35 minutes un dimanche matin. Son premier appel de fonds avec le nouvel outil a été envoyé 3 heures plus tard.
       </p>
 
-      <h2 id="couts" className={h2}>Coût réel : logiciel vs syndic professionnel</h2>
+      <h2 id="couts" className={h2}>Le vrai coût : Excel, logiciel dédié, syndic pro</h2>
+
+      <div className="my-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl border border-gray-200 p-5 text-center">
+          <p className="text-sm font-semibold text-gray-600 mb-3">Excel</p>
+          <p className="text-3xl font-bold text-gray-900 mb-0.5">0 €</p>
+          <p className="text-xs text-gray-400 mb-4">par an</p>
+          <div className="pt-3 border-t border-gray-100 space-y-1.5">
+            <p className="text-xs text-gray-600">~8–10 h de gestion / mois</p>
+            <p className="text-xs text-red-500 font-medium">Votre temps a un coût</p>
+          </div>
+        </div>
+        <div className="rounded-xl border-2 border-blue-500 p-5 text-center bg-blue-50 relative">
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+            Recommandé
+          </span>
+          <p className="text-sm font-semibold text-blue-700 mb-3">Mon Syndic Bénévole</p>
+          <p className="text-3xl font-bold text-blue-700 mb-0.5">~240 €</p>
+          <p className="text-xs text-blue-400 mb-4">par an · tout inclus</p>
+          <div className="pt-3 border-t border-blue-200 space-y-1.5">
+            <p className="text-xs text-gray-700">~2–3 h de gestion / mois</p>
+            <p className="text-xs text-blue-600 font-medium">Essai gratuit 14 jours</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-gray-200 p-5 text-center">
+          <p className="text-sm font-semibold text-gray-600 mb-3">Syndic professionnel</p>
+          <p className="text-3xl font-bold text-red-600 mb-0.5">2 400–4 200 €</p>
+          <p className="text-xs text-gray-400 mb-4">par an (12 lots)</p>
+          <div className="pt-3 border-t border-gray-100 space-y-1.5">
+            <p className="text-xs text-gray-600">~0 h / mois (délégué)</p>
+            <p className="text-xs text-red-500 font-medium">+ frais AG, états datés</p>
+          </div>
+        </div>
+      </div>
+
       <p className={p}>
-        Un syndic professionnel facture en moyenne <strong className={strong}>150 à 250 € par lot et par an</strong> pour la gestion de base, hors frais annexes (AG, états datés, interventions spéciales). Pour 12 lots : 1 800 à 3 000 € de gestion de base + 600 à 1 200 € de frais annexes = <strong className={strong}>2 400 à 4 200 € par an</strong>.
-      </p>
-      <p className={p}>
-        Un logiciel comme Mon Syndic Bénévole : <strong className={strong}>moins de 300 € par an</strong> pour l&apos;ensemble de la copropriété quel que soit le nombre de lots. La différence revient directement aux copropriétaires sous forme de charges moins élevées.
+        Pour 12 lots, passer à Mon Syndic Bénévole représente une économie de <strong className={strong}>2 160 à 3 960 € par an</strong> par rapport à un syndic professionnel. Une économie qui revient directement aux copropriétaires sous forme de charges moins élevées.
       </p>
 
       <h2 id="criteres-de-choix" className={h2}>Les critères qui font vraiment la différence dans le choix d&apos;un outil</h2>
@@ -251,14 +298,15 @@ export default function ArticleLogicielSyndicBenevole() {
       </p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
-        <p className="text-base font-semibold text-white mb-2">Prêt à remplacer vos tableurs ?</p>
-        <p className="text-sm text-blue-100 mb-4">14 jours d&apos;essai gratuit. Résiliable à tout moment.</p>
+        <p className="text-base font-semibold text-white mb-1">Marc a économisé 4 h/mois et 2 700 €/an. En 35 minutes de migration.</p>
+        <p className="text-sm text-blue-100 mb-4">Configurez votre copropriété, ajoutez vos lots et émettez votre premier appel de fonds le jour même.</p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
-          Créer ma copropriété sur Mon Syndic Bénévole →
+          Créer votre syndic en moins de 30 minutes →
         </Link>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire · Résiliable à tout moment</p>
       </div>
     </>
   );

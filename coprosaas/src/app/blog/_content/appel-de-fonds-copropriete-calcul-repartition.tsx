@@ -98,21 +98,28 @@ export default function ArticleAppelDeFonds() {
         </table>
       </div>
 
-      <p className={p}>
-        Formule appliquée pour chaque lot :{' '}
-        <strong className={strong}>(tantièmes du lot ÷ total) × (budget annuel ÷ 4)</strong>. Pour le Lot 1 : (180 ÷ 1 000) × (9 600 ÷ 4) = 0,18 × 2 400 = <strong className={strong}>432 €</strong>.
-      </p>
+      <div className="my-6 rounded-xl bg-blue-50 border border-blue-200 p-5">
+        <p className="text-xs font-semibold text-blue-500 uppercase tracking-wider mb-2">La formule à retenir</p>
+        <p className="text-base font-semibold text-blue-900 mb-3">
+          Appel du lot = (tantièmes du lot ÷ total tantièmes) × (budget annuel ÷ 4)
+        </p>
+        <p className="text-sm text-gray-600 mb-1"><strong>Exemple — Lot 1 (180 tantièmes sur 1 000)</strong></p>
+        <p className="text-sm text-gray-700 font-mono bg-white rounded-lg px-3 py-2 border border-blue-100 inline-block">
+          (180 ÷ 1 000) × (9 600 ÷ 4) = 0,18 × 2 400 = <strong>432,00 €</strong>
+        </p>
+        <p className="text-sm text-gray-500 mt-3">Le total des appels de tous les lots doit toujours être égal au quart du budget annuel voté — ici <strong>2 400 €</strong>. Si votre total ne colle pas, il y a une erreur de tantièmes ou d&apos;arrondi.</p>
+      </div>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Calcul automatique par tantièmes</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Générez vos appels de fonds automatiquement</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole répartit les charges par tantièmes en quelques secondes — zéro calcul manuel, zéro erreur de répartition.
+          Renseignez vos lots et vos tantièmes une seule fois. Mon Syndic Bénévole calcule chaque quote-part et génère les avis pour tous vos copropriétaires en 30 secondes — sans formule, sans erreur.
         </p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
-          Tester gratuitement — 14 jours offerts →
+          Générer mes appels de fonds automatiquement →
         </Link>
       </div>
 
@@ -130,6 +137,32 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>
         <strong className={strong}>Erreur fréquente chez les syndics bénévoles :</strong> appliquer les tantièmes généraux à une dépense qui devrait utiliser des tantièmes spéciaux. Résultat : certains paient trop, d&apos;autres pas assez — et une contestation en AG est toujours possible si la répartition ne colle pas au règlement.
       </p>
+
+      <div className="my-6 rounded-xl bg-amber-50 border border-amber-200 p-5">
+        <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Exemple chiffré — ascenseur</p>
+        <p className="text-sm text-gray-700 mb-3">
+          Immeuble de 8 lots. Contrat entretien ascenseur : <strong>1 200 €/an</strong>. Le RDC (Lot 4, 72 tantièmes) n&apos;utilise pas l&apos;ascenseur.{' '}
+          Les tantièmes <em>spéciaux ascenseur</em> définis au règlement portent uniquement sur les lots 1 à 3 et 5 à 8, soit un total de <strong>928 tantièmes spéciaux</strong>.
+        </p>
+        <div className="overflow-x-auto rounded-lg border border-amber-200">
+          <table className="w-full text-sm border-collapse">
+            <thead className="bg-amber-50">
+              <tr className="border-b border-amber-200">
+                <th className="text-left py-2 px-3 text-amber-700 font-medium">Lot</th>
+                <th className="text-right py-2 px-3 text-amber-700 font-medium">Tantièmes spéciaux</th>
+                <th className="text-right py-2 px-3 text-amber-700 font-medium">Appel T1 ascenseur</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-amber-100">
+              <tr><td className="py-2 px-3 text-gray-700">Lot 1 — T3, 3e ét.</td><td className="py-2 px-3 text-right">180</td><td className="py-2 px-3 text-right font-semibold">58,62 €</td></tr>
+              <tr className="bg-amber-50/50"><td className="py-2 px-3 text-gray-700">Lot 2 — T3, 2e ét.</td><td className="py-2 px-3 text-right">155</td><td className="py-2 px-3 text-right font-semibold">50,43 €</td></tr>
+              <tr><td className="py-2 px-3 text-gray-700">Lot 4 — Studio RDC</td><td className="py-2 px-3 text-right text-gray-400 italic">0 (RDC)</td><td className="py-2 px-3 text-right text-gray-400 italic">0,00 €</td></tr>
+              <tr className="bg-amber-100 font-semibold"><td className="py-2 px-3">Total</td><td className="py-2 px-3 text-right">928</td><td className="py-2 px-3 text-right text-amber-800">300,00 €</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">Formule Lot 1 : (180 ÷ 928) × (1 200 ÷ 4) = 0,1940 × 300 = 58,62 €</p>
+      </div>
 
       <h2 id="calcul-trimestriel" className={h2}>Calculer un appel de fonds trimestriel : la méthode complète</h2>
 
@@ -184,15 +217,15 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>Envoyez cet avis par <strong className={strong}>e-mail avec accusé de lecture</strong> — pas besoin de recommandé pour les appels ordinaires. Conservez une copie de chaque envoi (date + destinataire) pour le suivi en cas de litige.</p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Générez vos avis de paiement en un clic</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Générez vos appels de fonds automatiquement — avis PDF inclus</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole calcule les quotes-parts par tantièmes et génère les avis PDF pour tous vos copropriétaires en 30 secondes. Essai gratuit.
+          Mon Syndic Bénévole calcule les quotes-parts, génère les avis de paiement et envoie les e-mails à tous vos copropriétaires en un clic — avec leur solde courant et leur historique. Essai gratuit 14 jours.
         </p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
-          Créer ma copropriété gratuitement →
+          Générer mes appels de fonds automatiquement →
         </Link>
       </div>
 
@@ -245,14 +278,51 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>En fin d&apos;exercice, on compare les sommes appelées aux dépenses réelles. Deux scénarios :</p>
       <ul className={ul}>
         <li className={li}>
-          <strong className={strong}>Dépenses réelles &gt; budget appelé :</strong> un appel de régularisation est émis pour combler l&apos;écart. Budget 2025 : 9 600 € appelés, dépenses réelles 10 350 € (chaudière réparée en urgence en janvier) → appel complémentaire de 750 € réparti entre les copropriétaires.
+          <strong className={strong}>Dépenses réelles &gt; budget appelé :</strong> un appel de régularisation est émis pour combler l&apos;écart.
         </li>
         <li className={li}>
           <strong className={strong}>Dépenses réelles &lt; budget appelé :</strong> les copropriétaires ont trop versé. Le surplus reste à leur crédit et vient en déduction du premier appel de l&apos;exercice suivant.
         </li>
       </ul>
+
+      <div className="my-6 rounded-xl border border-gray-200 overflow-x-auto">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 pt-4 mb-2">Exemple — Résidence du Parc, exercice 2025</p>
+        <table className="w-full text-sm border-collapse">
+          <thead className="bg-gray-50">
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-2 px-4 text-gray-500 font-medium">Poste de charge</th>
+              <th className="text-right py-2 px-4 text-gray-500 font-medium">Budget voté</th>
+              <th className="text-right py-2 px-4 text-gray-500 font-medium">Dépenses réelles</th>
+              <th className="text-right py-2 px-4 text-gray-500 font-medium">Écart</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            <tr><td className="py-2 px-4 text-gray-700">Assurance MRI</td><td className="py-2 px-4 text-right">1 800 €</td><td className="py-2 px-4 text-right">1 750 €</td><td className="py-2 px-4 text-right text-green-700">− 50 €</td></tr>
+            <tr className="bg-gray-50"><td className="py-2 px-4 text-gray-700">Entretien parties communes</td><td className="py-2 px-4 text-right">2 400 €</td><td className="py-2 px-4 text-right">2 400 €</td><td className="py-2 px-4 text-right text-gray-400">0 €</td></tr>
+            <tr><td className="py-2 px-4 text-gray-700">Contrat nettoyage</td><td className="py-2 px-4 text-right">1 800 €</td><td className="py-2 px-4 text-right">1 800 €</td><td className="py-2 px-4 text-right text-gray-400">0 €</td></tr>
+            <tr className="bg-gray-50"><td className="py-2 px-4 text-gray-700">Électricité parties communes</td><td className="py-2 px-4 text-right">1 200 €</td><td className="py-2 px-4 text-right">1 250 €</td><td className="py-2 px-4 text-right text-red-600">+ 50 €</td></tr>
+            <tr><td className="py-2 px-4 text-gray-700">Entretien espaces verts</td><td className="py-2 px-4 text-right">1 200 €</td><td className="py-2 px-4 text-right">1 200 €</td><td className="py-2 px-4 text-right text-gray-400">0 €</td></tr>
+            <tr className="bg-gray-50"><td className="py-2 px-4 text-gray-700">Divers administration</td><td className="py-2 px-4 text-right">600 €</td><td className="py-2 px-4 text-right">600 €</td><td className="py-2 px-4 text-right text-gray-400">0 €</td></tr>
+            <tr><td className="py-2 px-4 text-gray-700 font-medium">Réparation chaudière (urgence)</td><td className="py-2 px-4 text-right font-medium">0 €</td><td className="py-2 px-4 text-right font-medium">750 €</td><td className="py-2 px-4 text-right text-red-600 font-medium">+ 750 €</td></tr>
+            <tr className="bg-blue-50 font-semibold border-t border-gray-200">
+              <td className="py-3 px-4 text-gray-800">Total exercice</td>
+              <td className="py-3 px-4 text-right">9 600 €</td>
+              <td className="py-3 px-4 text-right">10 350 €</td>
+              <td className="py-3 px-4 text-right text-red-600">+ 750 €</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="px-4 py-3 bg-red-50 border-t border-red-100">
+          <p className="text-sm text-red-800">
+            <strong>Appel de régularisation à émettre :</strong> 750 € répartis par tantièmes.{' '}
+            Lot 1 (180/1 000) : 750 × 18 % = <strong>135 €</strong>.{' '}
+            Lot 4 (72/1 000) : 750 × 7,2 % = <strong>54 €</strong>.
+          </p>
+        </div>
+      </div>
+
       <p className={p}>
-        En AG, présentez un tableau ligne par ligne : prévisionnel vs réalisé, écart et explication. Les copropriétaires comprennent les imprévus — ce qu&apos;ils ne tolèrent pas, c&apos;est l&apos;opacité.
+        En AG, présentez ce tableau ligne par ligne. Les copropriétaires comprennent les imprévus — ce qu&apos;ils ne tolèrent pas, c&apos;est l&apos;opacité. Le poste &ldquo;réparation chaudière&rdquo; avec une date et un devis en annexe désamorce 100 % des questions.
       </p>
 
       <h2 id="solution" className={h2}>La solution : arrêtez de recalculer ce qui peut être automatique</h2>
@@ -311,13 +381,13 @@ export default function ArticleAppelDeFonds() {
       </p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
-        <p className="text-base font-semibold text-white mb-2">Fini les 6 heures de calcul par trimestre</p>
-        <p className="text-sm text-blue-100 mb-4">14 jours d&apos;essai gratuit. Résiliable à tout moment.</p>
+        <p className="text-base font-semibold text-white mb-2">Générez vos appels de fonds automatiquement — en 30 secondes</p>
+        <p className="text-sm text-blue-100 mb-4">Tantièmes, quotes-parts, avis de paiement, suivi des virements — tout en un. 14 jours d&apos;essai gratuit, sans carte bancaire.</p>
         <Link
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
-          Créer ma copropriété sur Mon Syndic Bénévole →
+          Générer mes appels de fonds automatiquement →
         </Link>
       </div>
     </>

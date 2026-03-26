@@ -97,9 +97,53 @@ export default function ArticleFondsTravaux() {
         La vraie question à se poser n&apos;est pas &ldquo;quel est le minimum légal ?&rdquo; mais <strong className={strong}>&ldquo;quel sera le coût des travaux prévisibles dans les 10 ans, et combien faut-il mettre de côté chaque année pour y faire face ?&rdquo;</strong>
       </p>
 
+      <div className="my-6 rounded-xl bg-green-50 border border-green-200 p-5">
+        <p className="text-xs font-semibold text-green-700 uppercase tracking-wider mb-3">Cas concret — ce que ça représente par copropriétaire</p>
+        <p className="text-sm text-gray-700 mb-3">Résidence les Érables — 14 lots, budget annuel <strong>18 000 €</strong>.</p>
+        <div className="overflow-x-auto rounded-lg border border-green-200 mb-3">
+          <table className="w-full text-sm border-collapse">
+            <thead className="bg-green-50">
+              <tr className="border-b border-green-200">
+                <th className="text-left py-2 px-3 text-green-700 font-medium">Scénario</th>
+                <th className="text-right py-2 px-3 text-green-700 font-medium">Total/an</th>
+                <th className="text-right py-2 px-3 text-green-700 font-medium">Lot moyen (100/1 000)</th>
+                <th className="text-right py-2 px-3 text-green-700 font-medium">Par trimestre</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-green-100">
+              <tr>
+                <td className="py-2 px-3 text-gray-700">Minimum légal (5 %)</td>
+                <td className="py-2 px-3 text-right text-gray-700">900 €</td>
+                <td className="py-2 px-3 text-right text-gray-700">90 €</td>
+                <td className="py-2 px-3 text-right font-semibold text-gray-800">22,50 €</td>
+              </tr>
+              <tr className="bg-green-50/60">
+                <td className="py-2 px-3 text-gray-700">Recommandé (10 %)</td>
+                <td className="py-2 px-3 text-right text-gray-700">1 800 €</td>
+                <td className="py-2 px-3 text-right text-gray-700">180 €</td>
+                <td className="py-2 px-3 text-right font-semibold text-gray-800">45 €</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 text-gray-700">Voté en AG (30 %)</td>
+                <td className="py-2 px-3 text-right text-gray-700">5 400 €</td>
+                <td className="py-2 px-3 text-right text-gray-700">540 €</td>
+                <td className="py-2 px-3 text-right font-semibold text-gray-800">135 €</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-gray-500">
+          Formule : cotisation annuelle votée × (tantièmes du lot ÷ 1 000) ÷ 4.{' '}
+          Exemple lot à 100/1 000 au minimum légal : 900 × 0,10 ÷ 4 = <strong>22,50 €/trimestre</strong>. C&apos;est une ligne supplémentaire dans l&apos;appel de fonds ordinaire — pas un appel séparé.
+        </p>
+      </div>
+
       <h2 id="planification" className={h2}>Comment calculer un plan de dotation réaliste</h2>
       <p className={p}>
-        Exemple concret : Résidence les Érables (14 lots, immeuble de 1982, budget 18 000 €/an). Nathalie, après la crise de la chaudière, a fait réaliser un diagnostic technique simplifié. Résultat :
+        Le minimum légal (5 %) donne la conformité. Le bon montant, c&apos;est celui qui correspond à ce que l&apos;immeuble va réellement coûter dans les 10 prochaines années. La méthode : lister les gros équipements, estimer leur durée de vie restante et le coût de remplacement, puis diviser par le nombre d&apos;années restantes.
+      </p>
+      <p className={p}>
+        Exemple : Nathalie, après la crise de la chaudière, a fait réaliser un diagnostic technique simplifié sur la Résidence les Érables (14 lots, immeuble de 1982). Résultat :
       </p>
 
       <div className="overflow-x-auto mb-6 rounded-xl border border-gray-200">
@@ -171,6 +215,16 @@ export default function ArticleFondsTravaux() {
         Le minimum légal (900 €/an) représente moins de 9 % de ce que cet immeuble devrait réellement mettre de côté. L&apos;AG d&apos;Isabelle a voté un fonds de travaux à <strong className={strong}>5 500 €/an</strong> — un compromis entre le minimum légal et les besoins réels. C&apos;est toujours mieux que 900 €.
       </p>
 
+      <div className="my-6 rounded-xl bg-blue-50 border border-blue-200 p-5">
+        <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-3">À retenir — la grille de lecture rapide</p>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li className="flex items-start gap-2"><span className="text-blue-400 font-bold mt-0.5">5 %</span><span>Minimum légal. Conforme à la loi, mais insuffisant pour un immeuble de plus de 20 ans.</span></li>
+          <li className="flex items-start gap-2"><span className="text-blue-600 font-bold mt-0.5">10 %</span><span>Recommandé pour un immeuble en bon état sans gros travaux à horizon 5 ans.</span></li>
+          <li className="flex items-start gap-2"><span className="text-blue-800 font-bold mt-0.5">20–30 %</span><span>Adapté si un équipement majeur (toiture, chaudière, ascenseur) arrive en fin de vie dans les 5 ans.</span></li>
+        </ul>
+        <p className="text-xs text-gray-500 mt-3">Le bon niveau se décide en AG, sur la base d&apos;un diagnostic ou d&apos;un PPT. Montrez le tableau des travaux prévus — les copropriétaires votent plus facilement un taux élevé quand ils comprennent pourquoi.</p>
+      </div>
+
       <h2 id="vote-ag" className={h2}>Le vote en AG : quelle majorité, quelle résolution</h2>
       <p className={p}>
         Le montant de la cotisation annuelle est soumis au vote à la <strong className={strong}>majorité de l&apos;article 25</strong> (majorité des voix de tous les copropriétaires, présents, représentés ou absents).
@@ -198,6 +252,40 @@ export default function ArticleFondsTravaux() {
         >
           Tester Mon Syndic Bénévole gratuitement →
         </Link>
+      </div>
+
+      <div className="my-6 rounded-xl border border-gray-200 p-5">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Quand vote-t-on ? Quand paie-t-on ?</p>
+        <ol className="space-y-4">
+          <li className="flex gap-3 items-start text-sm">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">1</span>
+            <div>
+              <p className="font-semibold text-gray-800">AG annuelle — vote du montant</p>
+              <p className="text-gray-600">L&apos;AG vote chaque année la cotisation pour l&apos;exercice (à la majorité art. 25). En pratique : à l&apos;AG ordinaire, en même temps que le budget prévisionnel. Le montant minimum légal doit figurer dans la convocation.</p>
+            </div>
+          </li>
+          <li className="flex gap-3 items-start text-sm">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">2</span>
+            <div>
+              <p className="font-semibold text-gray-800">Trimestre suivant — premier appel</p>
+              <p className="text-gray-600">La cotisation apparaît <strong>en ligne séparée dans l&apos;appel de fonds trimestriel ordinaire</strong>. Pas d&apos;appel spécifique à créer : c&apos;est simplement une ligne de plus sur l&apos;avis de paiement, répartie par tantièmes.</p>
+            </div>
+          </li>
+          <li className="flex gap-3 items-start text-sm">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">3</span>
+            <div>
+              <p className="font-semibold text-gray-800">À chaque appel — virement sur le compte séparé</p>
+              <p className="text-gray-600">Dès réception des paiements, virez le montant collecté sur le <strong>Livret A du syndicat dédié au fonds de travaux</strong>. Ne le laissez pas stationner sur le compte courant.</p>
+            </div>
+          </li>
+          <li className="flex gap-3 items-start text-sm">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">4</span>
+            <div>
+              <p className="font-semibold text-gray-800">AG suivante — communiquer le solde</p>
+              <p className="text-gray-600">Présentez chaque année le solde du fonds de travaux : montant constitué, utilisation éventuelle, solde restant. C&apos;est une obligation d&apos;information et un argument qui légitime l&apos;effort d&apos;épargne.</p>
+            </div>
+          </li>
+        </ol>
       </div>
 
       <h2 id="compte-separe" className={h2}>Le compte bancaire séparé : une obligation méconnue mais contrôlable</h2>

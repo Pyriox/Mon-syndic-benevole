@@ -1017,9 +1017,9 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
             {[
               {
-                value: '+100',
-                label: 'copropriétés accompagnées',
-                sublabel: 'et ce chiffre grandit chaque mois',
+                value: '14 jours',
+                label: 'd’essai gratuit',
+                sublabel: 'Sans carte bancaire · Résiliable à tout moment',
                 Icon: Building2,
                 color: 'text-blue-400',
               },
@@ -1049,7 +1049,7 @@ export default function HomePage() {
 
           <div className="text-center">
             <Link href="/register" className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30 w-full sm:w-auto">
-              Rejoindre les 100+ copropriétés <ArrowRight size={16} />
+              Créer votre syndic en moins de 30 minutes <ArrowRight size={16} />
             </Link>
           </div>
         </div>

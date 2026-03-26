@@ -56,9 +56,9 @@ export default function ArticleGererCopropriete() {
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Gérez comme Sylvie — sans y passer votre week-end</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Ce qui différencie ceux qui tiennent de ceux qui abandonnent</p>
         <p className="text-sm text-gray-600 mb-4">
-          Un outil pensé pour les syndics bénévoles : appels de fonds automatiques, AG en un clic, accès copropriétaires intégré. Essai gratuit 14 jours.
+          Isabelle, Marc et Sylvie ont tous le même point commun : un outil qui calcule les tantièmes, suit les paiements et prépare les documents AG à leur place. Sans ça, la gestion manuelle finit par peser. Essai gratuit 14 jours, sans carte bancaire.
         </p>
         <Link
           href="/register"
@@ -146,9 +146,9 @@ export default function ArticleGererCopropriete() {
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
-        <p className="text-sm font-semibold text-blue-700 mb-1">Économisez jusqu&apos;à 3 400 € par an — sans y passer vos week-ends</p>
+        <p className="text-sm font-semibold text-blue-700 mb-1">Un syndic professionnel coûte 150 à 250 € par lot et par an</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole automatise les appels de fonds, le suivi des paiements et la préparation des AG. Essai gratuit 14 jours.
+          Mon Syndic Bénévole revient à moins de 25 €/mois pour toute la copropriété — quel que soit le nombre de lots. Appels de fonds calculés automatiquement, suivi des paiements, AG préparée en un clic. 14 jours gratuits, sans engagement.
         </p>
         <Link
           href="/register"
@@ -225,6 +225,19 @@ export default function ArticleGererCopropriete() {
         La solution n&apos;est pas de décourager — c&apos;est de s&apos;outiller dès le départ. Un outil de gestion de copropriété ne remplace pas votre jugement. Il automatise les tâches répétitives (calcul des tantièmes, envoi des appels, suivi des paiements) pour que vous puissiez vous concentrer sur ce qui demande vraiment votre attention.
       </p>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Excel, c&apos;est le problème — pas vous</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole remplace le tableur par un outil pensé pour la copropriété : historique complet des paiements, calcul automatique par tantièmes, alertes sur les échéances légales. Opérationnel en 15 minutes.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester Mon Syndic Bénévole gratuitement →
+        </Link>
+      </div>
+
       <h2 id="quand-professionnel" className={h2}>Les 4 cas où un syndic professionnel reste plus adapté</h2>
       <ul className={ul}>
         <li className={li}><strong className={strong}>Copropriété de 50 lots et plus</strong> : le volume de travail et la complexité comptable justifient souvent un professionnel à temps partiel ou plein.</li>
@@ -243,6 +256,19 @@ export default function ArticleGererCopropriete() {
         <li className={li}><strong className={strong}>Informer résidents et prestataires</strong> de vos nouvelles coordonnées et du nouveau RIB.</li>
       </ol>
 
+      <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Prenez vos fonctions du bon pied — dès le premier jour</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Créez votre copropriété sur Mon Syndic Bénévole en 15 minutes : lots, tantièmes, copropriétaires. Votre premier appel de fonds est calculé et prêt à envoyer le jour même de votre prise de mandat.
+        </p>
+        <Link
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Créer ma copropriété gratuitement →
+        </Link>
+      </div>
+
       <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
 
       <h3 className={h3}>Le syndic bénévole est-il responsable sur ses biens personnels ?</h3>
@@ -256,6 +282,12 @@ export default function ArticleGererCopropriete() {
 
       <h3 className={h3}>Peut-on partager le rôle de syndic entre plusieurs copropriétaires ?</h3>
       <p className={p}>Légalement, il n&apos;y a qu&apos;un seul syndic. Mais le travail peut parfaitement être réparti : un copropriétaire gère les finances, un autre les prestataires, un troisième les relations avec les résidents. La responsabilité légale reste sur la personne élue syndic — les autres sont des collaborateurs bénévoles.</p>
+
+      <h3 className={h3}>Peut-on ne pas avoir de syndic dans une copropriété ?</h3>
+      <p className={p}>Non. La loi du 10 juillet 1965 (art. 17) impose l&apos;existence d&apos;un syndic dans <strong className={strong}>toute copropriété, sans exception</strong>. Ce qui est libre, c&apos;est la <em>nature</em> du syndic : professionnel ou bénévole. &ldquo;Gérer sans syndic professionnel&rdquo; signifie confier la gestion à un copropriétaire élu — pas supprimer toute organisation. Une copropriété sans syndic est en situation irrégulière : tout copropriétaire peut saisir le tribunal pour faire désigner un administrateur provisoire, aux frais de la copropriété.</p>
+
+      <h3 className={h3}>Quelles sont les obligations légales d&apos;une copropriété gérée en bénévole ?</h3>
+      <p className={p}>Elles sont <strong className={strong}>identiques</strong> à celles d&apos;une copropriété gérée par un professionnel. Le syndic bénévole doit : convoquer l&apos;AG annuelle avec au moins 21 jours de préavis, émettre les appels de fonds trimestriels, tenir une comptabilité séparée, ouvrir un compte bancaire au nom du syndicat, gérer le fonds de travaux ALUR sur un compte rémunéré séparé (si plus de 10 lots), maintenir l&apos;assurance multirisques immeuble, et archiver les documents pendant 10 ans. Le bénévolat concerne la personne qui exerce — pas le niveau d&apos;exigence légale.</p>
 
       <h2 id="en-resume" className={h2}>En résumé</h2>
       <p className={p}>

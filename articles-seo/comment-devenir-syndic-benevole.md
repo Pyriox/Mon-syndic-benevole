@@ -98,6 +98,8 @@ Ne laissez rien passer. Une archive manquante peut poser problème des années p
 **2. Ouvrir le compte bancaire séparé**
 Obligation légale : le compte de la copropriété doit être ouvert **au nom du syndicat des copropriétaires**, pas au nom du bénévole lui-même. Les comptes du fonds de travaux ALUR et des charges courantes doivent être distincts.
 
+Pour le compte fonds de travaux ALUR, la loi est précise : ce compte doit être **à la fois séparé du compte courant ET rémunéré** (art. 18 loi 1965 modifié par la loi ALUR). Un compte courant ordinaire ne suffit pas légalement. En pratique, **un Livret A ouvert au nom du syndicat** est la solution la plus courante : rémunéré, accessible dans toutes les banques et La Poste, et aucune banque ne peut en refuser l'ouverture. Un livret d'épargne bancaire classique convient également.
+
 **3. Vérifier les contrats en cours**
 Assurance immeuble, contrat d'entretien de l'ascenseur, nettoyage des parties communes, contrat de chaudière… Vérifiez les dates d'échéance, les préavis de résiliation, et l'adéquation des prestations aux besoins réels.
 
