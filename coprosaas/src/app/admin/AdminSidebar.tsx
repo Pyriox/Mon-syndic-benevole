@@ -15,12 +15,13 @@ const NAV: NavItem[] = [
   { href: '/admin/support',       label: 'Support',        icon: LifeBuoy },
 ];
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ badges = {} }: { badges?: Record<string, number> }) {
   const pathname = usePathname();
   return (
     <nav className="w-52 shrink-0 flex flex-col gap-0.5 pt-1">
       {NAV.map(({ href, label, icon: Icon, soon }) => {
         const active = pathname === href || pathname.startsWith(href + '/');
+        const badge = badges[href] ?? 0;
         return (
           <Link
             key={href}
@@ -34,6 +35,11 @@ export default function AdminSidebar() {
           >
             <Icon size={15} className={active ? 'text-indigo-600' : 'text-gray-400'} />
             <span className="flex-1">{label}</span>
+            {badge > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                {badge > 99 ? '99+' : badge}
+              </span>
+            )}
             {soon && (
               <span className="text-[9px] font-semibold bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded uppercase tracking-wide">
                 Bientôt

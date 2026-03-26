@@ -4,6 +4,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isAdminUser } from '@/lib/admin-config';
+import { createAdminClient } from '@/lib/supabase/admin';
 import Link from 'next/link';
 import SiteLogo from '@/components/ui/SiteLogo';
 import AdminLogout from './AdminLogout';
@@ -16,6 +17,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user || !(await isAdminUser(user.id, supabase))) {
     redirect('/login');
   }
+
+  const admin = createAdminClient();
+  const { count: nbTicketsOuverts } = await admin
+    .from('support_tickets')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'ouvert');
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -44,7 +51,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       {/* Corps : sidebar + contenu */}
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6 flex gap-6 items-start">
-        <AdminSidebar />
+        <AdminSidebar badges={{ '/admin/support': nbTicketsOuverts ?? 0 }} />
         <main className="flex-1 min-w-0">
           {children}
         </main>
