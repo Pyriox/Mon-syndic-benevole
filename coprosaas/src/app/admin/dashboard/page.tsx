@@ -12,12 +12,12 @@ import {
   AlertTriangle, Wallet, TrendingUp, UserCheck, Users, Clock,
   Mail, ExternalLink, Activity, CheckCircle2, CreditCard,
   Banknote, BarChart3, TrendingDown, Zap, Bell, XCircle,
-  Send, Database, Search,
+  Send, Database, Search, LifeBuoy,
 } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
-const MRR_PRICES: Record<string, number> = { essentiel: 25, confort: 30, illimite: 45 };
 const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 function fmtEur(n: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
     { data: coproprietes },
     authResult,
     { data: invitations },
-    { data: incidentsRecents },
+    { data: ticketsSupport },
     { data: lotsParCopro },
     { data: agParCopro },
     { data: depParCopro },
@@ -97,7 +97,7 @@ export default async function AdminDashboardPage() {
     admin.from('coproprietes').select('id, nom, plan, plan_id, stripe_customer_id, plan_period_end, created_at').order('created_at', { ascending: false }),
     admin.auth.admin.listUsers({ perPage: 1000 }),
     admin.from('invitations').select('id, email, statut, expires_at, created_at').order('created_at', { ascending: false }).limit(100),
-    admin.from('incidents').select('id, titre, statut, created_at, coproprietes(nom)').order('created_at', { ascending: false }).limit(10),
+    admin.from('support_tickets').select('id, user_name, user_email, subject, status, updated_at').in('status', ['ouvert', 'en_cours']).order('updated_at', { ascending: false }).limit(8),
     admin.from('lots').select('copropriete_id'),
     admin.from('assemblees_generales').select('copropriete_id'),
     admin.from('depenses').select('copropriete_id, montant'),
@@ -107,15 +107,29 @@ export default async function AdminDashboardPage() {
   const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
 
   // Stripe (non-blocking)
-  type StripeCharge = { id: string; amount: number; status: string; customerId: string | null };
+  type StripeCharge = { id: string; amount: number; status: string; customerId: string | null; created: number };
+  type StripeInvoice = { id: string; amount_paid: number; status: string; customerId: string | null; created: number; billingReason: string | null };
   let stripeCharges: StripeCharge[] = [];
+  let stripeInvoices: StripeInvoice[] = [];
   try {
-    const list = await stripe.charges.list({ limit: 50 });
-    stripeCharges = list.data.map((c) => ({
+    const [chargesList, invoicesList] = await Promise.all([
+      stripe.charges.list({ limit: 100 }),
+      stripe.invoices.list({ limit: 100, status: 'paid' }),
+    ]);
+    stripeCharges = chargesList.data.map((c) => ({
       id: c.id,
       amount: c.amount / 100,
       status: c.status,
       customerId: typeof c.customer === 'string' ? c.customer : null,
+      created: c.created,
+    }));
+    stripeInvoices = invoicesList.data.map((inv) => ({
+      id: inv.id,
+      amount_paid: inv.amount_paid / 100,
+      status: inv.status ?? 'paid',
+      customerId: typeof inv.customer === 'string' ? inv.customer : null,
+      created: inv.created,
+      billingReason: inv.billing_reason ?? null,
     }));
   } catch { /* non-blocking */ }
 
@@ -140,7 +154,6 @@ export default async function AdminDashboardPage() {
   for (const c of coprosTyped) {
     if (c.plan === 'actif' && c.plan_id) planBreakdown[c.plan_id] = (planBreakdown[c.plan_id] ?? 0) + 1;
   }
-  const mrr = Object.entries(planBreakdown).reduce((sum, [id, nb]) => sum + (MRR_PRICES[id] ?? 0) * nb, 0);
   const arr = Object.entries(planBreakdown).reduce((sum, [id, nb]) => sum + (ARR_PRICES[id] ?? 0) * nb, 0);
   const conversionPct = nbCoproprietes > 0 ? Math.round((nbActifs / nbCoproprietes) * 100) : 0;
 
@@ -152,6 +165,45 @@ export default async function AdminDashboardPage() {
   const upcomingRenewals = coprosTyped.filter((c) =>
     c.plan === 'actif' && c.plan_period_end && c.plan_period_end >= new Date().toISOString() && c.plan_period_end <= in14d
   );
+
+  // ── KPIs financiers avancés ──
+  // Cash réel du mois en cours (factures Stripe payées ce mois)
+  const nowTs = today.getTime() / 1000;
+  const startOfMonthTs = new Date(today.getFullYear(), today.getMonth(), 1).getTime() / 1000;
+  const cashCeMois = stripeInvoices
+    .filter((inv) => inv.created >= startOfMonthTs && inv.created <= nowTs)
+    .reduce((s, inv) => s + inv.amount_paid, 0);
+
+  // Renouvellements effectifs cette année (billing_reason = 'subscription_cycle')
+  const startOfYearTs = new Date(today.getFullYear(), 0, 1).getTime() / 1000;
+  const renouvellements = stripeInvoices.filter(
+    (inv) => inv.billingReason === 'subscription_cycle' && inv.created >= startOfYearTs
+  );
+  const nbRenouvellements = renouvellements.length;
+  const cashRenouvellements = renouvellements.reduce((s, inv) => s + inv.amount_paid, 0);
+
+  // Nouveaux abonnements cette année (subscription_create)
+  const newSubsAnnee = stripeInvoices.filter(
+    (inv) => inv.billingReason === 'subscription_create' && inv.created >= startOfYearTs
+  );
+  const cashNewSubsAnnee = newSubsAnnee.reduce((s, inv) => s + inv.amount_paid, 0);
+
+  // Total cash encaissé cette année
+  const cashTotalAnnee = stripeInvoices
+    .filter((inv) => inv.created >= startOfYearTs)
+    .reduce((s, inv) => s + inv.amount_paid, 0);
+
+  // Répartition mensuelle des paiements sur l'année en cours
+  const cashParMois: number[] = Array(12).fill(0);
+  const subsParMois: number[] = Array(12).fill(0);
+  for (const inv of stripeInvoices) {
+    const d = new Date(inv.created * 1000);
+    if (d.getFullYear() === today.getFullYear()) {
+      cashParMois[d.getMonth()] += inv.amount_paid;
+      subsParMois[d.getMonth()]++;
+    }
+  }
+  const maxCashMois = Math.max(...cashParMois, 1);
 
   const lotsCount: Record<string, number> = {};
   for (const l of lotsParCopro ?? []) lotsCount[l.copropriete_id] = (lotsCount[l.copropriete_id] ?? 0) + 1;
@@ -170,7 +222,8 @@ export default async function AdminDashboardPage() {
   const alertInvitationsExpirees = (invitations ?? []).filter((inv) => inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date());
   const alertCoprosWithoutLots = coprosTyped.filter((c) => (lotsCount[c.id] ?? 0) === 0);
   const alertPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du');
-  const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertCoprosWithoutLots.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length;
+  const nbTicketsOuverts = (ticketsSupport ?? []).filter((t) => (t as { status: string }).status === 'ouvert').length;
+  const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertCoprosWithoutLots.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length + nbTicketsOuverts;
 
   const syndicUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire');
   const memberUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role === 'copropriétaire');
@@ -192,10 +245,10 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="flex gap-3 flex-wrap">
             {([
-              { val: fmtEur(mrr), lbl: 'MRR' },
+              { val: fmtEur(arr), lbl: 'ARR' },
+              { val: fmtEur(cashCeMois), lbl: 'Cash mois' },
               { val: String(nbActifs), lbl: 'Abonnés' },
               { val: String(nbEssai), lbl: 'Essais' },
-              { val: String(nbUsers), lbl: 'Comptes' },
             ] as { val: string; lbl: string }[]).map(({ val, lbl }) => (
               <div key={lbl} className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-center min-w-[72px]">
                 <p className="text-lg font-bold">{val}</p>
@@ -212,13 +265,72 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* ── KPIs principaux ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="MRR" value={fmtEur(mrr)} sub={`ARR : ${fmtEur(arr)} · conv. ${conversionPct} %`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
-        <KpiCard label="Abonnés actifs" value={nbActifs} sub={`${nbEssai} en essai · ${nbPasseDu} impayés`} icon={CreditCard} color="bg-blue-100 text-blue-600" danger={nbPasseDu > 0} />
-        <KpiCard label="Essais actifs" value={nbEssai} sub={`+${newUsers7} inscrits cette semaine`} icon={Zap} color="bg-amber-100 text-amber-600" />
-        <KpiCard label="Résiliation (total)" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} abonnés`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
-      </div>
+      {/* ── KPIs financiers principaux ── */}
+      <section>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Revenus &amp; abonnements</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard label="ARR" value={fmtEur(arr)} sub={`Conv. ${conversionPct} % · ${nbActifs} abonnés actifs`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
+          <KpiCard label="Cash encaissé (mois)" value={fmtEur(cashCeMois)} sub={`${today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`} icon={Receipt} color="bg-blue-100 text-blue-600" />
+          <KpiCard label="Cash encaissé (année)" value={fmtEur(cashTotalAnnee)} sub={`Dont ${fmtEur(cashNewSubsAnnee)} nouveaux · ${fmtEur(cashRenouvellements)} renouv.`} icon={BarChart3} color="bg-violet-100 text-violet-600" />
+          <KpiCard label="Renouvellements (année)" value={nbRenouvellements} sub={`${fmtEur(cashRenouvellements)} encaissés · ${newSubsAnnee.length} nouveaux abonnés`} icon={TrendingUp} color="bg-teal-100 text-teal-600" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          <KpiCard label="Abonnés actifs" value={nbActifs} sub={`Essentiel ${planBreakdown.essentiel} · Confort ${planBreakdown.confort} · Illimité ${planBreakdown.illimite}`} icon={CreditCard} color="bg-blue-100 text-blue-600" />
+          <KpiCard label="Essais actifs" value={nbEssai} sub={`+${newUsers7} inscrits cette semaine`} icon={Zap} color="bg-amber-100 text-amber-600" />
+          <KpiCard label="Impayés" value={nbPasseDu} sub={nbPasseDu > 0 ? 'Action requise' : 'Aucun impayé'} icon={XCircle} color={nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={nbPasseDu > 0} />
+          <KpiCard label="Taux de résiliation" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} ayant eu un abonnement`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
+        </div>
+      </section>
+
+      {/* ── Répartition mensuelle des encaissements ── */}
+      <section>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Encaissements mensuels — {today.getFullYear()}</p>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          {cashTotalAnnee === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">Aucune donnée Stripe disponible pour cette année</p>
+          ) : (
+            <>
+              <div className="flex items-end gap-1.5 h-28">
+                {cashParMois.map((cash, i) => {
+                  const h = Math.round((cash / maxCashMois) * 100);
+                  const isCurrent = i === today.getMonth();
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+                      <div
+                        className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-emerald-500' : 'bg-indigo-200 group-hover:bg-indigo-400'}`}
+                        style={{ height: `${Math.max(h, cash > 0 ? 4 : 0)}%` }}
+                      />
+                      {cash > 0 && (
+                        <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                          {fmtEur(cash)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex gap-1.5 mt-1.5">
+                {MONTH_LABELS.map((lbl, i) => (
+                  <div key={i} className={`flex-1 text-center text-[10px] font-medium ${i === today.getMonth() ? 'text-emerald-600' : 'text-gray-400'}`}>{lbl}</div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 flex-wrap gap-2">
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-emerald-500 inline-block" /> Mois en cours</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-indigo-200 inline-block" /> Autres mois</span>
+                </div>
+                <div className="flex gap-4 text-xs">
+                  {cashParMois.map((cash, i) => cash > 0 && (
+                    <span key={i} className={`font-medium ${i === today.getMonth() ? 'text-emerald-600' : 'text-gray-600'}`}>
+                      {MONTH_LABELS[i]} : {fmtEur(cash)} ({subsParMois[i]} sub{subsParMois[i] > 1 ? 's' : ''})
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
 
       {/* ── Alertes ── */}
       {nbAlertes > 0 && (
@@ -228,6 +340,15 @@ export default async function AdminDashboardPage() {
             {nbAlertes} alerte{nbAlertes > 1 ? 's' : ''}
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
+            {nbTicketsOuverts > 0 && (
+              <div className="flex items-start gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                <LifeBuoy size={14} className="text-indigo-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-indigo-800">{nbTicketsOuverts} ticket{nbTicketsOuverts > 1 ? 's' : ''} support en attente</p>
+                  <Link href="/admin/support" className="text-xs text-indigo-600 mt-0.5 hover:underline">Voir les tickets</Link>
+                </div>
+              </div>
+            )}
             {alertPasseDu.length > 0 && (
               <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-3">
                 <CreditCard size={14} className="text-red-600 mt-0.5 shrink-0" />
@@ -304,30 +425,38 @@ export default async function AdminDashboardPage() {
       {/* ── Activité récente ── */}
       <div className="grid md:grid-cols-2 gap-6">
         <section>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Incidents récents</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+            <LifeBuoy size={12} />
+            Tickets support
+            {nbTicketsOuverts > 0 && (
+              <span className="ml-1 bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{nbTicketsOuverts}</span>
+            )}
+          </p>
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            {(incidentsRecents ?? []).length === 0 ? (
-              <p className="text-center text-sm text-gray-400 py-8">Aucun incident récent</p>
+            {(ticketsSupport ?? []).length === 0 ? (
+              <p className="text-center text-sm text-gray-400 py-8">Aucun ticket en cours</p>
             ) : (
               <div className="divide-y divide-gray-100">
-                {(incidentsRecents ?? []).map((inc) => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const copro = (inc as any).coproprietes as { nom: string } | null;
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const statut = (inc as any).statut as string;
-                  const statutCls: Record<string, string> = { ouvert: 'bg-red-50 text-red-600', en_cours: 'bg-amber-50 text-amber-600', resolu: 'bg-green-50 text-green-600' };
+                {(ticketsSupport ?? []).map((t) => {
+                  const status = (t as { id: string; user_name: string; subject: string; status: string; updated_at: string }).status;
+                  const statusCls: Record<string, string> = { ouvert: 'bg-blue-50 text-blue-700', en_cours: 'bg-amber-50 text-amber-700' };
+                  const statusLabel: Record<string, string> = { ouvert: 'Ouvert', en_cours: 'En cours' };
+                  const ticket = t as { id: string; user_name: string; subject: string; status: string; updated_at: string };
                   return (
-                    <div key={inc.id} className="flex items-center gap-3 px-4 py-3">
+                    <Link key={ticket.id} href={`/admin/support?ticket=${ticket.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-800 font-medium truncate">{inc.titre}</p>
-                        <p className="text-xs text-gray-400">{copro?.nom ?? '—'} · {timeAgo(inc.created_at)}</p>
+                        <p className="text-sm text-gray-800 font-medium truncate">{ticket.subject}</p>
+                        <p className="text-xs text-gray-400">{ticket.user_name} · {timeAgo(ticket.updated_at)}</p>
                       </div>
-                      <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${statutCls[statut] ?? 'bg-gray-100 text-gray-500'}`}>{statut.replace('_', ' ')}</span>
-                    </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-md font-medium whitespace-nowrap ${statusCls[status] ?? 'bg-gray-100 text-gray-500'}`}>{statusLabel[status] ?? status}</span>
+                    </Link>
                   );
                 })}
               </div>
             )}
+            <div className="px-4 py-2.5 border-t border-gray-100 bg-gray-50">
+              <Link href="/admin/support" className="text-xs text-indigo-600 hover:underline font-medium">Voir tous les tickets →</Link>
+            </div>
           </div>
         </section>
 
