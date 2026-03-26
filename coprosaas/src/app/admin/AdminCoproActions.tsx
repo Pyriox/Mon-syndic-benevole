@@ -4,16 +4,17 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { MoreHorizontal, Loader2, RotateCcw, RefreshCw } from 'lucide-react';
+import { MoreHorizontal, Loader2, RotateCcw, RefreshCw, UserCog } from 'lucide-react';
 
 interface Props {
   coproId: string;
   coproNom: string;
   currentPlan: string;
   currentPlanId: string | null;
+  isOrphaned?: boolean;
 }
 
-export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Props) {
+export default function AdminCoproActions({ coproId, coproNom, currentPlan, isOrphaned }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
@@ -56,10 +57,24 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Pr
     post({ action: 'stripe_sync', coproId });
   };
 
+  const handleReassign = () => {
+    const email = window.prompt(
+      `Réassigner le syndic de « ${coproNom} »\n\nEntrez l\'adresse email du nouveau syndic :`,
+    );
+    if (!email?.trim()) return;
+    if (!confirm(`Confirmer la réassignation de « ${coproNom} » à ${email.trim()} ?`)) return;
+    post({ action: 'reassign_syndic', coproId, newEmail: email.trim() } as Record<string, unknown>);
+  };
+
   if (done) return <span className="text-xs text-green-600 font-medium">✓</span>;
 
   return (
-    <div className="relative flex items-center justify-end">
+    <div className="relative flex items-center justify-end gap-1">
+      {isOrphaned && (
+        <span title="Copropriété sans syndic" className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600">
+          <UserCog size={11} />
+        </span>
+      )}
       {loading ? (
         <Loader2 size={15} className="animate-spin text-gray-400" />
       ) : (
@@ -85,6 +100,14 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan }: Pr
             >
               <RefreshCw size={12} className="shrink-0" />
               Sync depuis Stripe
+            </button>
+            <div className="border-t border-gray-100 my-1" />
+            <button
+              onClick={handleReassign}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-violet-700 hover:bg-violet-50 transition-colors"
+            >
+              <UserCog size={12} className="shrink-0" />
+              Réassigner le syndic
             </button>
             {currentPlan !== 'essai' && (
               <>

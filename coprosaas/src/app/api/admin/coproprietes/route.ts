@@ -4,6 +4,7 @@
 // POST /api/admin/coproprietes  { action, coproId }
 //   → reset_subscription : remet le plan à 'inactif', efface les champs Stripe
 //   → stripe_sync        : lit l'abonnement réel depuis Stripe et met à jour Supabase
+//   → reassign_syndic    : { newEmail } — réassigne syndic_id à l'utilisateur correspondant
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -116,6 +117,30 @@ export async function POST(request: NextRequest) {
 
     if (syncError) return NextResponse.json({ error: syncError.message }, { status: 500 });
     return NextResponse.json({ success: true, plan, planId });
+  }
+
+  if (action === 'reassign_syndic') {
+    const { newEmail } = body as { newEmail?: string };
+    if (!newEmail?.trim()) {
+      return NextResponse.json({ error: 'newEmail requis' }, { status: 400 });
+    }
+
+    // Trouver l'utilisateur par email
+    const { data: { users }, error: listErr } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    if (listErr) return NextResponse.json({ error: listErr.message }, { status: 500 });
+
+    const target = users.find((u) => u.email?.toLowerCase() === newEmail.trim().toLowerCase());
+    if (!target) {
+      return NextResponse.json({ error: `Aucun compte trouvé pour ${newEmail.trim()}` }, { status: 404 });
+    }
+
+    const { error: updErr } = await admin
+      .from('coproprietes')
+      .update({ syndic_id: target.id })
+      .eq('id', coproId);
+
+    if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
+    return NextResponse.json({ success: true, newSyndicId: target.id });
   }
 
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 });
