@@ -195,7 +195,17 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     }
     setPostes(newPostes.length > 0 ? newPostes : [{ ...POSTE_VIDE }]);
     setResolutionLieeId(primaryResId);
-    setTitre(`Appel de fonds ${nextYear}`);
+
+    // Extraire l'année depuis le titre de la résolution budget (ex : "Budget prévisionnel 2026" → 2026)
+    // Fallback sur agYear+1 si aucune année trouvée dans le titre
+    let budgetYear = nextYear;
+    for (const res of ag.resolutions) {
+      if (res.type_resolution === 'budget_previsionnel' || res.type_resolution === 'revision_budget') {
+        const match = res.titre.match(/\b(20\d{2})\b/);
+        if (match) { budgetYear = parseInt(match[1], 10); break; }
+      }
+    }
+    setTitre(`Calendrier de financement du budget prévisionnel et du fonds travaux ${budgetYear}`);
 
     // Échéancier voté en AG
     if (ag.votedDates.length >= 2) {

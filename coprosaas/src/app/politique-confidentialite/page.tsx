@@ -171,7 +171,7 @@ export default function PolitiqueConfidentialitePage() {
             </li>
             <li>
               <strong className="text-gray-300">Stripe Inc.</strong> — traitement des paiements, certifié
-              PCI-DSS niveau 1/
+              PCI-DSS niveau 1.
             </li>
             <li>
               <strong className="text-gray-300">Google LLC</strong> — mesure d{"'"}audience via Google Analytics
@@ -265,15 +265,9 @@ export default function PolitiqueConfidentialitePage() {
 
         <Section title="9. Cookies">
           <p>
-            Les modalités d{"'"}utilisation des cookies sont détaillées dans les{" "}
-            <Link
-              href="/mentions-legales#cookies"
-              className="text-blue-400 hover:text-blue-300 transition-colors underline"
-            >
-              Mentions légales — section Cookies
-            </Link>
-            . Vous pouvez gérer votre consentement aux cookies analytiques via le bandeau affiché lors de
-            votre première visite.
+            Les cookies analytiques (Google Analytics 4) ne sont déposés qu{"'"}avec votre consentement,
+            recueilli via le bandeau affiché lors de votre première visite. Vous pouvez retirer ce consentement
+            à tout moment en cliquant sur «&nbsp;Gérer les cookies&nbsp;» en bas de page.
           </p>
         </Section>
 

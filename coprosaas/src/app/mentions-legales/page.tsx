@@ -26,7 +26,7 @@ export default function MentionsLegalesPage() {
       <main className="max-w-4xl mx-auto px-6 py-16">
 
         <h1 className="text-3xl font-bold text-white mb-2">Mentions légales</h1>
-        <p className="text-gray-500 text-sm mb-12">Dernière mise à jour : {new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
+        <p className="text-gray-500 text-sm mb-12">Dernière mise à jour : 26 mars 2026</p>
 
         {/* 1. Éditeur */}
         <Section title="1. Éditeur du site">
