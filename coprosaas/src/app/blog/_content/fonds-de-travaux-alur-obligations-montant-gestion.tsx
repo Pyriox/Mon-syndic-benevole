@@ -25,15 +25,15 @@ export default function ArticleFondsTravaux() {
         Depuis le <strong className={strong}>1er janvier 2017</strong>, la constitution d&apos;un fonds de travaux est obligatoire pour toutes les copropriétés concernées. Ce n&apos;est plus optionnel.
       </p>
 
-      <h2 id="qui-est-concerne" className={h2}>Qui est concerné — et qui peut choisir de ne pas l&apos;être</h2>
+      <h2 id="qui-est-concerne" className={h2}>Qui est concerné</h2>
       <p className={p}>
-        <strong className={strong}>Obligatoire</strong> pour toutes les copropriétés soumises à la loi du 10 juillet 1965 et comportant <strong className={strong}>plus de 10 lots</strong>. La notion de &ldquo;lot&rdquo; inclut les lots principaux (appartements, locaux) ET les lots accessoires (caves, parkings, garages). Un immeuble de 8 appartements + 4 caves + 4 parkings = 16 lots → obligation.
+        Depuis le <strong className={strong}>1er janvier 2025</strong> (loi Habitat dégradé du 9 avril 2024), le fonds de travaux est <strong className={strong}>obligatoire pour toutes les copropriétés</strong> soumises à la loi du 10 juillet 1965, quelle que soit leur taille. La dérogation dont bénéficiaient les copropriétés de 10 lots et moins est supprimée.
       </p>
       <p className={p}>
-        <strong className={strong}>Facultatif mais fortement recommandé</strong> pour les copropriétés de 10 lots et moins. Avec un immeuble de 8 lots dont la toiture date de 1985, mettre volontairement de l&apos;argent de côté chaque année est simplement prudent.
+        La notion de &ldquo;lot&rdquo; inclut les lots principaux (appartements, locaux) ET les lots accessoires (caves, parkings, garages). Un immeuble de 8 appartements + 4 caves + 4 parkings = 16 lots — mais même une petite copropriété de 3 appartements est désormais concernée.
       </p>
       <p className={p}>
-        <strong className={strong}>Exception pour les immeubles neufs :</strong> une copropriété peut décider, à l&apos;unanimité, de ne pas constituer le fonds pendant les <strong className={strong}>cinq premières années</strong> suivant la réception de l&apos;immeuble. Au-delà, l&apos;obligation s&apos;applique sans exception.
+        <strong className={strong}>Seule exception maintenue :</strong> une copropriété peut décider, à l&apos;unanimité, de ne pas constituer le fonds pendant les <strong className={strong}>cinq premières années</strong> suivant la réception de l&apos;immeuble. Au-delà, l&apos;obligation s&apos;applique sans exception.
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
@@ -375,7 +375,7 @@ export default function ArticleFondsTravaux() {
       <p className={p}>Oui. L&apos;AG peut voter un montant différent chaque année — à condition de rester au-dessus du plancher légal (5 %). Si de gros travaux approchent, il est judicieux d&apos;augmenter la dotation 2 à 3 ans à l&apos;avance pour éviter un appel exceptionnel massif.</p>
 
       <h3 className={h3}>L&apos;AG peut-elle supprimer le fonds de travaux par un vote ?</h3>
-      <p className={p}>Non pour les copropriétés de plus de 10 lots. Un vote de suppression pure et simple serait nul et contraire à la loi. Seule une modification du nombre de lots (en dessous de 10) permettrait d&apos;y déroger.</p>
+      <p className={p}>Non. Depuis le 1er janvier 2025, l&apos;obligation s&apos;applique à toutes les copropriétés sans condition de taille. Un vote de suppression serait nul et contraire à la loi. La seule dérogation encore possible concerne les immeubles neufs (5 premières années après réception, à l&apos;unanimité).</p>
 
       <h2 id="ce-quil-faut-retenir" className={h2}>Ce qu&apos;il faut retenir</h2>
       <p className={p}>

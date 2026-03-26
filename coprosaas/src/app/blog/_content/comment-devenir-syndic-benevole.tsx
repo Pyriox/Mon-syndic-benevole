@@ -121,7 +121,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         <strong className={strong}>Obligation légale absolue</strong> (art. 18 loi 1965) : le compte doit être au nom du <em>syndicat des copropriétaires</em>, jamais en votre nom propre. Apportez à la banque : le PV d&apos;élection, votre pièce d&apos;identité, et si possible le règlement de copropriété.
       </p>
       <p className={p}>
-        Si votre copropriété a plus de 10 lots, vous avez également besoin d&apos;un <strong className={strong}>second compte séparé pour le fonds de travaux ALUR</strong>. La loi est précise sur ce point : ce compte doit être <strong className={strong}>à la fois séparé du compte courant et rémunéré</strong> (art. 18 loi 1965, modifié par la loi ALUR). Un compte courant ordinaire ne satisfait pas cette exigence légale.
+        Vous avez également besoin d&apos;un <strong className={strong}>second compte séparé pour le fonds de travaux ALUR</strong>. Depuis le 1er janvier 2025, cette obligation s&apos;applique à <strong className={strong}>toutes les copropriétés</strong> quelle que soit leur taille (loi Habitat dégradé du 9 avril 2024). Ce compte doit être <strong className={strong}>à la fois séparé du compte courant et rémunéré</strong> (art. 18 loi 1965, modifié par la loi ALUR). Un compte courant ordinaire ne satisfait pas cette exigence légale.
       </p>
       <p className={p}>
         En pratique, <strong className={strong}>un Livret A ouvert au nom du syndicat</strong> est la solution la plus simple et la plus répandue : il est rémunéré, accessible dans toutes les banques et La Poste, et aucune banque ne peut en refuser l&apos;ouverture. Un livret d&apos;épargne bancaire classique convient également. Conservez les deux RIB (compte courant + compte fonds de travaux) dûment séparés dans vos archives.
@@ -167,7 +167,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
             ]},
             { delai: 'J+3 à J+15', items: [
               'Ouvrir le compte bancaire au nom du syndicat des copropriétaires',
-              'Ouvrir le Livret A fonds de travaux (si +10 lots)',
+              'Ouvrir le Livret A fonds de travaux (obligatoire depuis 2025 pour toutes les copropriétés)',
               'Réceptionner et vérifier les archives de l\'ancien syndic',
               'Constituer le registre des copropriétaires (nom, lot, tantièmes, e-mail)',
             ]},

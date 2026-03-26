@@ -29,7 +29,7 @@ export default function ArticleAppelDeFonds() {
       <ul className={ul}>
         <li className={li}><strong className={strong}>Les appels de budget prévisionnel</strong> — charges courantes (entretien, assurance, espaces verts, électricité des communs…). Émis chaque trimestre à date fixe.</li>
         <li className={li}><strong className={strong}>Les appels exceptionnels</strong> — travaux votés en AG (ravalement, toiture, remplacement chaudière). Émis selon le calendrier du chantier.</li>
-        <li className={li}><strong className={strong}>Le fonds de travaux ALUR</strong> — épargne obligatoire (copropriétés de plus de 10 lots), au moins 5 % du budget prévisionnel par an. Séparé des charges courantes, déposé sur un compte bancaire distinct.</li>
+        <li className={li}><strong className={strong}>Le fonds de travaux ALUR</strong> — épargne obligatoire pour <strong className={strong}>toutes les copropriétés depuis 2025</strong>, au moins 5 % du budget prévisionnel par an. Séparé des charges courantes, déposé sur un compte bancaire distinct.</li>
       </ul>
 
       <h2 id="tantiemes" className={h2}>Les tantièmes : la base de tout calcul</h2>
@@ -203,9 +203,9 @@ export default function ArticleAppelDeFonds() {
           <p className="mb-1 text-gray-700">Budget annuel voté en AG du 15 mars 2025 ............... 9 600,00 €</p>
           <p className="mb-1 text-gray-700">Votre quote-part (155/1000) ........................................ 15,5 %</p>
           <p className="mb-1 text-gray-700">Appel trimestriel charges courantes ............................ 372,00 €</p>
-          <p className="mb-1 text-gray-700">Fonds de travaux ALUR (prorata trimestriel) ................. 0,00 € (non applicable &lt;10 lots)</p>
+          <p className="mb-1 text-gray-700">Fonds de travaux ALUR (prorata trimestriel) ................. 18,60 € (5 % budget ÷ 4 × tantièmes)</p>
           <p className="mb-1 text-gray-700">Solde précédent ........................................................... 0,00 €</p>
-          <p className="mt-2 border-t border-gray-300 pt-2 font-bold text-gray-900">TOTAL À RÉGLER : 372,00 €</p>
+          <p className="mt-2 border-t border-gray-300 pt-2 font-bold text-gray-900">TOTAL À RÉGLER : 390,60 €</p>
         </div>
         <div className="mt-4 text-gray-700">
           <p className="font-medium mb-1">Coordonnées bancaires :</p>
@@ -340,7 +340,7 @@ export default function ArticleAppelDeFonds() {
 
       <h2 id="fonds-travaux-alur" className={h2}>Ne pas confondre appel courant et fonds de travaux ALUR</h2>
       <p className={p}>
-        Depuis le 1er janvier 2017, les copropriétés de plus de 10 lots ont l&apos;obligation de constituer un <strong className={strong}><a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a></strong> sur un compte bancaire séparé, alimenté chaque année d&apos;au moins 5 % du budget prévisionnel.
+        Depuis le <strong className={strong}>1er janvier 2025</strong> (loi Habitat dégradé du 9 avril 2024), <strong className={strong}>toutes les copropriétés</strong> ont l&apos;obligation de constituer un <strong className={strong}><a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a></strong> sur un compte bancaire séparé, alimenté chaque année d&apos;au moins 5 % du budget prévisionnel. Cette obligation existait depuis 2017 pour les copropriétés de plus de 10 lots — elle s&apos;étend désormais aux petites structures sans exception.
       </p>
       <p className={p}>
         Point critique à communiquer à vos copropriétaires : les sommes versées au fonds de travaux <strong className={strong}>ne sont pas remboursables lors d&apos;une vente</strong>. Elles restent acquises à la copropriété. C&apos;est une des sources de confusion les plus fréquentes — et elle génère des tensions si vous ne l&apos;anticipez pas.
