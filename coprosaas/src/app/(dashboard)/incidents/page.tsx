@@ -54,9 +54,9 @@ export default async function IncidentsPage() {
           </p>
         </div>
         <div>
-          {canWrite
+          {list.length > 0 && (canWrite
             ? <IncidentActions coproprietes={coproprietes} />
-            : <UpgradeBanner compact />}
+            : <UpgradeBanner compact />)}
         </div>
       </div>
 

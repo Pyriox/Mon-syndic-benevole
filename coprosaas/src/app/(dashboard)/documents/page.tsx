@@ -46,21 +46,9 @@ function sortRootDossiers(dossiers: Dossier[]): Dossier[] {
   return [...defaults, ...customs];
 }
 
-type Dossier = { id: string; nom: string; is_default: boolean; created_at: string; parent_id?: string | null; couleur?: string | null };
+type Dossier = { id: string; nom: string; is_default: boolean; created_at: string; parent_id?: string | null };
 
-const FOLDER_COLOR_CLASS: Record<string, string> = {
-  blue:   'text-blue-500',
-  amber:  'text-amber-600',
-  green:  'text-green-600',
-  purple: 'text-purple-500',
-  red:    'text-red-500',
-  pink:   'text-pink-500',
-  cyan:   'text-cyan-500',
-  gray:   'text-gray-400',
-};
-const folderColorClass = (d: Dossier) =>
-  (d.couleur && FOLDER_COLOR_CLASS[d.couleur]) ??
-  (d.is_default ? 'text-blue-500' : 'text-amber-600');
+const folderColorClass = (d: Dossier) => d.is_default ? 'text-blue-500' : 'text-amber-600';
 
 function buildBreadcrumb(dossiers: Dossier[], dossierId: string): { id: string; nom: string }[] {
   const map = new Map(dossiers.map((d) => [d.id, d]));
@@ -112,7 +100,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
 
     const { data: rawDossiers } = await supabase
       .from('document_dossiers')
-      .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
+      .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
       .eq('syndic_id', syndicId)
       .order('is_default', { ascending: false })
       .order('created_at');
@@ -265,7 +253,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   // ---- Initialisation des dossiers par défaut si absents ----
   const { data: rawDossiers } = await supabase
     .from('document_dossiers')
-    .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
+    .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
     .eq('syndic_id', user.id)
     .order('is_default', { ascending: false })
     .order('created_at');
@@ -303,7 +291,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
     );
     const { data: refreshed2 } = await supabase
       .from('document_dossiers')
-      .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
+      .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
       .eq('syndic_id', user.id)
       .order('is_default', { ascending: false })
       .order('created_at');
@@ -362,7 +350,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
     if (yearFolderCreated) {
       const { data: refreshedYears } = await supabase
         .from('document_dossiers')
-        .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
+        .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
         .eq('syndic_id', user.id)
         .order('is_default', { ascending: false })
         .order('created_at');
@@ -522,14 +510,14 @@ export default async function DocumentsPage({ searchParams }: Props) {
                             {!dossierId ? (
                               // Dossiers racine : renommer + supprimer (custom seulement)
                               <>
-                                <DossierRename
-                                  dossierId={d.id}
-                                  dossierNom={d.nom}
-                                  dossierCouleur={d.couleur}
-                                  colorOnly={d.is_default}
-                                />
                                 {!d.is_default && (
-                                  <DossierDelete dossierId={d.id} dossierNom={d.nom} />
+                                  <>
+                                    <DossierRename
+                                      dossierId={d.id}
+                                      dossierNom={d.nom}
+                                    />
+                                    <DossierDelete dossierId={d.id} dossierNom={d.nom} />
+                                  </>
                                 )}
                               </>
                             ) : (

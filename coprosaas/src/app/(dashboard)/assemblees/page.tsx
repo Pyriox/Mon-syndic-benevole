@@ -59,7 +59,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {isSyndic && (canWrite ? <AGActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
+          {isSyndic && (assemblees?.length ?? 0) > 0 && (canWrite ? <AGActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
         </div>
       </div>
 
