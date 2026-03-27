@@ -86,6 +86,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   const [resolutionLieeId, setResolutionLieeId] = useState('');
   // Part fonds travaux ALUR dans cet appel (0 si non applicable)
   const [montantFondsTravaux, setMontantFondsTravaux] = useState(0);
+  // Champ libre "dont fonds travaux" pour les appels sans AG
+  const [montantFTManuel, setMontantFTManuel] = useState('');
 
   // Étape 2 : données du formulaire
   const [titre, setTitre] = useState('');
@@ -255,6 +257,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     setTypeAppelExceptionnel('budget_previsionnel');
     setResolutionLieeId('');
     setMontantFondsTravaux(0);
+    setMontantFTManuel('');
     setPostes([{ ...POSTE_VIDE }]);
     setEditableVersements([]);
     setFromAGDates(false);
@@ -270,6 +273,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     resetAG();
     setIsExceptionnel(true);
     setTypeAppelExceptionnel('budget_previsionnel');
+    setMontantFTManuel('');
     setTitre('');
     setPostesExpanded(true);
   };
@@ -346,6 +350,9 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       return;
     }
 
+    // Pour les appels sans AG (migration), le montant FT vient du champ manuel
+    const ftEffectif = agImportee ? montantFondsTravaux : (parseFloat(montantFTManuel) || 0);
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -364,8 +371,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
             copropriete_id: coproprieteId,
             titre: `${titre.trim()} — ${i + 1}/${finalVersements.length}`,
             montant_total: versAmount,
-            montant_fonds_travaux: montantFondsTravaux > 0
-              ? Math.round((montantFondsTravaux * shareRatio) * 100) / 100
+            montant_fonds_travaux: ftEffectif > 0
+              ? Math.round((ftEffectif * shareRatio) * 100) / 100
               : 0,
             date_echeance: vers.date,
             description: JSON.stringify(postesValides.map((p) => ({
@@ -393,7 +400,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           copropriete_id: coproprieteId,
           titre: titre.trim(),
           montant_total: montantTotal,
-          montant_fonds_travaux: montantFondsTravaux,
+          montant_fonds_travaux: ftEffectif,
           date_echeance: finalVersements[0].date,
           description: JSON.stringify(postesValides),
           ag_resolution_id: resolutionLieeId || null,
@@ -519,12 +526,11 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                     <p className="text-xs font-medium text-amber-800 mb-1.5">Type d&apos;appel</p>
                     <div className="flex flex-wrap gap-2">
                       {([
-                        { value: 'budget_previsionnel', label: 'Provisions ordinaires' },
-                        { value: 'fonds_travaux',       label: 'Fonds de travaux (ALUR)' },
+                        { value: 'budget_previsionnel', label: 'Provisions (budget + FT)' },
                         { value: 'exceptionnel',        label: 'Exceptionnel' },
                       ] as const).map((opt) => (
                         <button key={opt.value} type="button"
-                          onClick={() => setTypeAppelExceptionnel(opt.value)}
+                          onClick={() => { setTypeAppelExceptionnel(opt.value); setMontantFTManuel(''); }}
                           className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                             typeAppelExceptionnel === opt.value
                               ? 'bg-amber-600 text-white border-amber-600'
@@ -535,8 +541,23 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                       ))}
                     </div>
                   </div>
-                  {/* Note : les appels avec une échéance passée seront automatiquement
-                      confirmés avec paiements validés (sans envoi d'e-mails). */}
+                  {/* Champ "dont fonds travaux" visible uniquement pour type provisions */}
+                  {typeAppelExceptionnel === 'budget_previsionnel' && (
+                    <div>
+                      <label className="block text-xs font-medium text-amber-800 mb-1">
+                        Dont fonds travaux ALUR <span className="font-normal text-amber-600">(optionnel)</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number" min="0" step="0.01" placeholder="0,00"
+                          value={montantFTManuel}
+                          onChange={(e) => setMontantFTManuel(e.target.value)}
+                          className="w-36 rounded-lg border border-amber-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        />
+                        <span className="text-xs text-amber-700">€ &mdash; part épargne (compte 103)</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
