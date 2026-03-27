@@ -45,6 +45,9 @@ function addMonths(dateStr: string, months: number): string {
 const PERIODICITE_MOIS: Record<string, number> = {
   mensuel: 1, trimestriel: 3, semestriel: 6, annuel: 12,
 };
+const PERIODICITE_NB: Record<string, number> = {
+  mensuel: 12, trimestriel: 4, semestriel: 2, annuel: 1,
+};
 
 function detectPeriodicite(dates: string[]): 'mensuel' | 'trimestriel' | 'semestriel' | 'annuel' {
   if (dates.length < 2) return 'trimestriel';
@@ -79,6 +82,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   // Étape 1 : AG choisie (null = pas encore sélectionnée)
   const [agImportee, setAgImportee] = useState<AGWithBudgets | null>(null);
   const [isExceptionnel, setIsExceptionnel] = useState(false);
+  const [typeAppelExceptionnel, setTypeAppelExceptionnel] = useState<'budget_previsionnel' | 'fonds_travaux' | 'exceptionnel'>('budget_previsionnel');
   const [resolutionLieeId, setResolutionLieeId] = useState('');
 
   // Étape 2 : données du formulaire
@@ -94,7 +98,6 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   const [fromAGDates, setFromAGDates] = useState(false);
   // Générateur automatique
   const [genDateDebut, setGenDateDebut] = useState('');
-  const [genNb, setGenNb] = useState(4);
   const [genPeriodicite, setGenPeriodicite] = useState<'mensuel' | 'trimestriel' | 'semestriel' | 'annuel'>('trimestriel');
 
   // -- Charger les lots ----------------------------------------
@@ -221,7 +224,6 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       setUseEcheancier(true);
       setDateSingle(ag.votedDates[0]);
       setGenDateDebut(ag.votedDates[0]);
-      setGenNb(ag.votedDates.length);
       setGenPeriodicite(detectPeriodicite(ag.votedDates));
     } else if (ag.votedDates.length === 1) {
       setEditableVersements([]);
@@ -236,7 +238,6 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       setUseEcheancier(hasBudgetPrev);
       setDateSingle(currentYearDefault);
       setGenDateDebut(currentYearDefault);
-      setGenNb(4);
       setGenPeriodicite('trimestriel');
     }
     setPostesExpanded(false);
@@ -246,6 +247,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   const resetAG = () => {
     setAgImportee(null);
     setIsExceptionnel(false);
+    setTypeAppelExceptionnel('budget_previsionnel');
     setResolutionLieeId('');
     setPostes([{ ...POSTE_VIDE }]);
     setEditableVersements([]);
@@ -253,7 +255,6 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     setDateSingle('');
     setUseEcheancier(false);
     setGenDateDebut('');
-    setGenNb(4);
     setGenPeriodicite('trimestriel');
     setTitre('');
     setPostesExpanded(false);
@@ -262,15 +263,17 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   const startExceptionnel = () => {
     resetAG();
     setIsExceptionnel(true);
-    setTitre('Appel de fonds exceptionnel');
+    setTypeAppelExceptionnel('budget_previsionnel');
+    setTitre('');
     setPostesExpanded(true);
   };
 
   // -- Générer l'échéancier depuis les contrôles ---------------
   const genererEcheancier = () => {
     if (!genDateDebut) return;
-    const baseAmount = montantTotal > 0 ? Math.round((montantTotal / genNb) * 100) / 100 : 0;
-    setEditableVersements(Array.from({ length: genNb }, (_, i) => ({
+    const nb = PERIODICITE_NB[genPeriodicite] ?? 4;
+    const baseAmount = montantTotal > 0 ? Math.round((montantTotal / nb) * 100) / 100 : 0;
+    setEditableVersements(Array.from({ length: nb }, (_, i) => ({
       date: addMonths(genDateDebut, i * PERIODICITE_MOIS[genPeriodicite]),
       montant: String(baseAmount),
     })));
@@ -304,7 +307,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     }));
   }, [lots, montantTotal, totalTantiemsVal]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const typeAppel = isExceptionnel ? 'exceptionnel'
+  const typeAppel = isExceptionnel ? typeAppelExceptionnel
     : agImportee?.resolutions.find((r) => r.id === resolutionLieeId)?.type_resolution ?? 'exceptionnel';
 
   const finalDatesCount = useEcheancier ? editableVersements.length : 1;
@@ -340,13 +343,16 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    const today = new Date().toISOString().slice(0, 10);
+    const isPast = (date: string) => date < today;
+
     if (finalVersements.length > 1) {
       const totalPlan = finalVersements.reduce((s, v) => s + (parseFloat(v.montant) || 0), 0);
       for (let i = 0; i < finalVersements.length; i++) {
         const vers = finalVersements[i];
         const versAmount = parseFloat(vers.montant) || 0;
         const shareRatio = totalPlan > 0 ? versAmount / totalPlan : 1 / finalVersements.length;
-        const { error: err } = await supabase
+        const { error: err, data: inserted } = await supabase
           .from('appels_de_fonds')
           .insert({
             copropriete_id: coproprieteId,
@@ -360,12 +366,19 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
             type_appel: typeAppel,
             statut: 'brouillon',
             created_by: user.id,
-          });
+          })
+          .select('id')
+          .single();
 
         if (err) { setError(`Erreur versement ${i + 1} : ${err.message}`); setLoading(false); return; }
+
+        // Appel dans le passé → import automatique (lignes payées, sans e-mail)
+        if (inserted?.id && isPast(vers.date)) {
+          await fetch(`/api/appels-de-fonds/${inserted.id}/importer`, { method: 'POST' });
+        }
       }
     } else {
-      const { error: err } = await supabase
+      const { error: err, data: inserted } = await supabase
         .from('appels_de_fonds')
         .insert({
           copropriete_id: coproprieteId,
@@ -377,9 +390,16 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           type_appel: typeAppel,
           statut: 'brouillon',
           created_by: user.id,
-        });
+        })
+        .select('id')
+        .single();
 
       if (err) { setError('Erreur : ' + err.message); setLoading(false); return; }
+
+      // Appel dans le passé → import automatique (lignes payées, sans e-mail)
+      if (inserted?.id && isPast(finalVersements[0].date)) {
+        await fetch(`/api/appels-de-fonds/${inserted.id}/importer`, { method: 'POST' });
+      }
     }
 
     close();
@@ -390,6 +410,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     setIsOpen(false);
     resetAG();
     setIsExceptionnel(false);
+    setTypeAppelExceptionnel('budget_previsionnel');
     setError('');
     setRepartitionExpanded(false);
     setPostesExpanded(false);
@@ -474,13 +495,38 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                  <AlertTriangle size={15} className="text-amber-600 shrink-0" />
-                  <span className="text-xs text-amber-800 flex-1">Appel exceptionnel — non lié à une résolution AG</span>
-                  <button type="button" onClick={resetAG}
-                    className="text-xs text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0">
-                    Annuler
-                  </button>
+                <div className="flex flex-col gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+                    <span className="text-xs text-amber-800 flex-1">Appel sans AG — saisie manuelle ou migration de données</span>
+                    <button type="button" onClick={resetAG}
+                      className="text-xs text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0">
+                      Annuler
+                    </button>
+                  </div>
+                  {/* Sélecteur de type */}
+                  <div>
+                    <p className="text-xs font-medium text-amber-800 mb-1.5">Type d&apos;appel</p>
+                    <div className="flex flex-wrap gap-2">
+                      {([
+                        { value: 'budget_previsionnel', label: 'Provisions ordinaires' },
+                        { value: 'fonds_travaux',       label: 'Fonds de travaux (ALUR)' },
+                        { value: 'exceptionnel',        label: 'Exceptionnel' },
+                      ] as const).map((opt) => (
+                        <button key={opt.value} type="button"
+                          onClick={() => setTypeAppelExceptionnel(opt.value)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                            typeAppelExceptionnel === opt.value
+                              ? 'bg-amber-600 text-white border-amber-600'
+                              : 'bg-white text-amber-700 border-amber-300 hover:border-amber-500'
+                          }`}>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Note : les appels avec une échéance passée seront automatiquement
+                      confirmés avec paiements validés (sans envoi d'e-mails). */}
                 </div>
               )}
 
@@ -598,7 +644,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                                 className="w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 placeholder="0,00"
                               />
-                              {editableVersements.length > 2 && (
+                              {editableVersements.length > 1 && (
                                 <button type="button"
                                   onClick={() => setEditableVersements((prev) => prev.filter((_, j) => j !== i))}
                                   className="p-1 text-gray-400 hover:text-red-500 transition-colors">
@@ -631,7 +677,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                         /* Générateur automatique */
                         <div className="bg-gray-50 rounded-xl p-3 space-y-3">
                           <p className="text-xs text-gray-500">Définissez l&apos;échéancier automatiquement, puis modifiez les dates si besoin.</p>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <div>
                               <label className="block text-xs font-medium text-gray-600 mb-1">1er versement</label>
                               <input type="date" value={genDateDebut}
@@ -639,20 +685,14 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                             </div>
                             <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
-                              <input type="number" min="2" max="12" value={genNb}
-                                onChange={(e) => setGenNb(Math.max(2, Math.min(12, parseInt(e.target.value) || 2)))}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                            </div>
-                            <div>
                               <label className="block text-xs font-medium text-gray-600 mb-1">Périodicité</label>
                               <select value={genPeriodicite}
                                 onChange={(e) => setGenPeriodicite(e.target.value as typeof genPeriodicite)}
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                <option value="mensuel">Mensuel</option>
-                                <option value="trimestriel">Trimestriel</option>
-                                <option value="semestriel">Semestriel</option>
-                                <option value="annuel">Annuel</option>
+                                <option value="mensuel">Mensuel (12×)</option>
+                                <option value="trimestriel">Trimestriel (4×)</option>
+                                <option value="semestriel">Semestriel (2×)</option>
+                                <option value="annuel">Annuel (1×)</option>
                               </select>
                             </div>
                           </div>
@@ -704,9 +744,31 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
               {error && <p className="text-sm text-red-600">{error}</p>}
 
+              {/* Bandeau appels passés */}
+              {(() => {
+                const today = new Date().toISOString().slice(0, 10);
+                const finalDates = useEcheancier
+                  ? editableVersements.map((v) => v.date)
+                  : dateSingle ? [dateSingle] : [];
+                const pastCount = finalDates.filter((d) => d && d < today).length;
+                if (pastCount === 0) return null;
+                return (
+                  <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-800">
+                    <CheckCircle size={14} className="text-blue-500 shrink-0 mt-0.5" />
+                    <span>
+                      {pastCount === finalDates.length
+                        ? 'Tous les versements sont dans le passé'
+                        : `${pastCount} versement${pastCount > 1 ? 's' : ''} dans le passé`}
+                      {' '}— les paiements seront automatiquement validés (sans notification).
+                      Vous pourrez décocher les copropriétaires qui n&apos;ont pas encore payé.
+                    </span>
+                  </div>
+                );
+              })()}
+
               <div className="flex gap-3 pt-1">
                 <Button type="submit" loading={loading}>
-                  {finalDatesCount > 1 ? `Enregistrer ${finalDatesCount} brouillons` : 'Enregistrer en brouillon'}
+                  {finalDatesCount > 1 ? `Enregistrer ${finalDatesCount} appels` : 'Enregistrer'}
                 </Button>
                 <Button type="button" variant="secondary" onClick={close}>Annuler</Button>
               </div>

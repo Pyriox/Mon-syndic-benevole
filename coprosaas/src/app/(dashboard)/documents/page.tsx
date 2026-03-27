@@ -432,19 +432,21 @@ export default async function DocumentsPage({ searchParams }: Props) {
         <div className="flex gap-2">
           {/* Actions dossier (vue racine uniquement) */}
           {!dossierId && canWrite && <DossierActions />}
-          {/* Créer sous-dossier (dans un dossier avec sous-dossiers) */}
-          {dossierId && hasSubs && canWrite && (
+          {/* Créer sous-dossier (dans n'importe quel dossier) */}
+          {dossierId && canWrite && (
             <SubDossierActions mode="create" parentId={dossierId} />
           )}
-          {/* Importer un document */}
-          {canWrite ? (
-            <DocumentActions
-              coproprietes={coproprietes}
-              dossiers={dossiers}
-              defaultDossierId={dossierId}
-            />
-          ) : (
-            <UpgradeBanner compact />
+          {/* Importer un document — masqué si dossier vide (bouton centré suffit) */}
+          {totalItems > 0 && (
+            canWrite ? (
+              <DocumentActions
+                coproprietes={coproprietes}
+                dossiers={dossiers}
+                defaultDossierId={dossierId}
+              />
+            ) : (
+              <UpgradeBanner compact />
+            )
           )}
         </div>
       </div>
