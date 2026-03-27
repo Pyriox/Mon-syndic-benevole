@@ -423,8 +423,8 @@ export default function HomePage() {
           <div className="text-center mb-10 sm:mb-14">
             <p className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-3">Aperçu de l&apos;interface</p>
             <h2 id="demo-heading" className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Votre copropriété, vue d&apos;ensemble,{' '}
-              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">en temps réel</span>
+              Gestion de copropriété en temps réel :{' '}
+              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">tout centraliser en un seul outil</span>
             </h2>
             <p className="text-blue-200/70 text-lg max-w-xl mx-auto">
               Tableau de bord, appels de fonds, AG, dépenses et incidents — tout au même endroit, depuis n&apos;importe quel appareil.
@@ -834,7 +834,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-3">L&apos;histoire derrière le projet</p>
             <h2 id="histoire-heading" className="text-3xl md:text-4xl font-bold text-white">
-              Pourquoi j&apos;ai créé Mon Syndic Bénévole
+              Le problème que rencontrent tous les syndics bénévoles
             </h2>
           </div>
 
@@ -892,7 +892,7 @@ export default function HomePage() {
             ].map(({ value, label, sublabel, Icon, color }) => (
               <div key={label} className="text-center bg-white/5 border border-white/10 rounded-2xl px-6 py-8">
                 <Icon size={28} className={`${color} mx-auto mb-4`} />
-                <p className={`text-4xl sm:text-5xl font-extrabold ${color} mb-2`}>{value}</p>
+                <p className={`text-3xl sm:text-4xl font-extrabold ${color} mb-2 whitespace-nowrap`}>{value}</p>
                 <p className="text-base font-semibold text-white mb-1">{label}</p>
                 <p className="text-sm text-blue-200/60">{sublabel}</p>
               </div>
