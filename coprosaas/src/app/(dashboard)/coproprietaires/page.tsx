@@ -22,7 +22,7 @@ export default async function CoproprietairesPage() {
   // Aucune copropriété accessible (nouveau compte) → inviter à en créer une
   if (!copropriete) {
     return (
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Copropriétaires</h2>
           <p className="text-gray-500 mt-1">0 copropriétaire(s)</p>
@@ -78,7 +78,7 @@ export default async function CoproprietairesPage() {
   const nbInscrits = (coproprietaires ?? []).filter((c: any) => c.user_id).length;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Copropriétaires</h2>

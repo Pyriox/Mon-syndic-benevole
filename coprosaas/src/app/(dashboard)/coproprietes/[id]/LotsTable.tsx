@@ -21,7 +21,6 @@ import LotActions, { LotDelete } from './LotActions';
 import {
   GripVertical,
   Building2, Car, Archive, ShoppingBag, Briefcase, LayoutGrid,
-  Users, AlertCircle,
 } from 'lucide-react';
 
 // ── Config par type ───────────────────────────────────────────────────────────
@@ -285,15 +284,6 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId, curren
   );
 
   const totalTantiemes = lots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
-  const assignedCount = lots.filter((l) => l.coproprietaire_id).length;
-  const unassignedCount = lots.length - assignedCount;
-
-  // Répartition par type (top 1 pour la 4e stat card)
-  const countByType = lots.reduce<Record<string, number>>((acc, l) => {
-    acc[l.type] = (acc[l.type] ?? 0) + 1;
-    return acc;
-  }, {});
-  const topType = Object.entries(countByType).sort((a, b) => b[1] - a[1])[0];
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -312,69 +302,6 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId, curren
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={lots.map((l) => l.id)} strategy={verticalListSortingStrategy}>
-
-        {/* ── Bande de stats ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          {/* Total */}
-          <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl">
-            <div className="p-2 bg-blue-50 rounded-lg shrink-0">
-              <Building2 size={16} className="text-blue-500" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Total lots</p>
-              <p className="text-lg font-bold text-gray-900 leading-tight">{lots.length}</p>
-            </div>
-          </div>
-          {/* Assignés */}
-          <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl">
-            <div className="p-2 bg-green-50 rounded-lg shrink-0">
-              <Users size={16} className="text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Assignés</p>
-              <p className="text-lg font-bold text-gray-900 leading-tight">
-                {assignedCount} <span className="text-sm font-normal text-gray-500">/ {lots.length}</span>
-              </p>
-            </div>
-          </div>
-          {/* Non assignés ou top type */}
-          {unassignedCount > 0 ? (
-            <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-xl">
-              <div className="p-2 bg-orange-100 rounded-lg shrink-0">
-                <AlertCircle size={16} className="text-orange-500" />
-              </div>
-              <div>
-                <p className="text-xs text-orange-700">Non assignés</p>
-                <p className="text-lg font-bold text-orange-700 leading-tight">{unassignedCount}</p>
-              </div>
-            </div>
-          ) : topType ? (() => {
-            const cfg = getConfig(topType[0]);
-            const Icon = cfg.icon;
-            return (
-              <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl">
-                <div className={`p-2 ${cfg.bgColor} rounded-lg shrink-0`}>
-                  <Icon size={16} className={cfg.iconColor} />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">{cfg.label}s</p>
-                  <p className="text-lg font-bold text-gray-900 leading-tight">{topType[1]}</p>
-                </div>
-              </div>
-            );
-          })() : <div />}
-          {/* Tantièmes */}
-          <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl">
-            <div className="p-2 bg-indigo-50 rounded-lg shrink-0">
-              <LayoutGrid size={16} className="text-indigo-500" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Tantièmes</p>
-              <p className="text-lg font-bold text-gray-900 leading-tight">{totalTantiemes}</p>
-            </div>
-          </div>
-        </div>
-
         {/* ── Vue cartes : mobile ── */}
         <div className="md:hidden space-y-3">
           {lots.map((lot) => (

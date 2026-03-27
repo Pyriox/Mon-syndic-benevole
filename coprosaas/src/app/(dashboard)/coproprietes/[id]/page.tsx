@@ -3,7 +3,7 @@
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
-import Card, { CardHeader } from '@/components/ui/Card';
+import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
 import LotActions from './LotActions';
 import LotsTable from './LotsTable';
@@ -12,7 +12,7 @@ import CoproEdit from './CoproEdit';
 import TransfertSyndic from './TransfertSyndic';
 import { formatDate } from '@/lib/utils';
 import { getLotLimit } from '@/lib/subscription';
-import { MapPin, Hash, CalendarDays } from 'lucide-react';
+import { MapPin, Hash, CalendarDays, Layers, UserCheck, Building2 } from 'lucide-react';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -53,6 +53,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
 
   // Limite de lots selon le plan d'abonnement
   const lotCount = lots?.length ?? 0;
+  const nbAttribues = (lots ?? []).filter(l => l.coproprietaire_id).length;
   const lotLimit = getLotLimit(copro.plan, copro.plan_id);
   const canAddLot = lotCount < lotLimit;
 
@@ -89,24 +90,56 @@ export default async function CopropriétéDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Carte des lots */}
-      <Card>
-        <CardHeader
-          title="Lots"
-          description={`${lots?.length ?? 0} lot(s) — Total tantièmes : ${totalTantiemes}`}
-          actions={lots && lots.length > 0 ? <LotActions coproprieteId={id} canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} /> : undefined}
-        />
+      {/* Section Lots — titre + bouton */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900">Lots</h3>
+          <p className="text-gray-500 mt-1">{lotCount} lot(s)</p>
+        </div>
+        {lots && lots.length > 0 && <LotActions coproprieteId={id} canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} />}
+      </div>
 
-        {lots && lots.length > 0 ? (
+      {/* Stats lots */}
+      {lots && lots.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <Card padding="sm" className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg shrink-0"><Layers size={18} className="text-blue-500" /></div>
+            <div>
+              <p className="text-xs text-gray-500">Lots</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">{lotCount}</p>
+            </div>
+          </Card>
+          <Card padding="sm" className="flex items-center gap-3">
+            <div className="p-2 bg-green-50 rounded-lg shrink-0"><UserCheck size={18} className="text-green-600" /></div>
+            <div>
+              <p className="text-xs text-gray-500">Attribués</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">
+                {nbAttribues} <span className="text-sm font-normal text-gray-500">/ {lotCount}</span>
+              </p>
+            </div>
+          </Card>
+          <Card padding="sm" className="flex items-center gap-3 col-span-2 sm:col-span-1">
+            <div className="p-2 bg-purple-50 rounded-lg shrink-0"><Building2 size={18} className="text-purple-500" /></div>
+            <div>
+              <p className="text-xs text-gray-500">Tantièmes totaux</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">{totalTantiemes}</p>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Tableau des lots */}
+      {lots && lots.length > 0 ? (
+        <Card>
           <LotsTable initialLots={lots} coproMap={coproMap} coproprieteId={id} currentUserId={user.id} />
-        ) : (
-          <EmptyState
-            title="Aucun lot"
-            description="Ajoutez les lots de cette copropriété (appartements, parkings, caves...)."
-            action={<LotActions coproprieteId={id} showLabel canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} />}
-          />
-        )}
-      </Card>
+        </Card>
+      ) : (
+        <EmptyState
+          title="Aucun lot"
+          description="Ajoutez les lots de cette copropriété (appartements, parkings, caves...)."
+          action={<LotActions coproprieteId={id} showLabel canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} />}
+        />
+      )}
 
 
     </div>
