@@ -384,7 +384,7 @@ export default function HomePage() {
               { Icon: Wallet, bg: 'bg-blue-100', fg: 'text-blue-600', title: 'Appels de fonds', desc: 'Génération auto, répartition par tantièmes, export PDF & e-mail.' },
               { Icon: CalendarDays, bg: 'bg-indigo-100', fg: 'text-indigo-600', title: 'Assemblées générales', desc: 'Convocations légales, votes, procès-verbal en un clic.' },
               { Icon: Receipt, bg: 'bg-violet-100', fg: 'text-violet-600', title: 'Dépenses & charges', desc: 'Suivi des factures, répartition copropriétaire, tableau de bord.' },
-              { Icon: FileText, bg: 'bg-purple-100', fg: 'text-purple-600', title: 'Documents & GED', desc: "Archivage centralisé, dossiers par catégorie, accès partagé." },
+              { Icon: FileText, bg: 'bg-purple-100', fg: 'text-purple-600', title: 'Gestion documentaire', desc: "Archivage centralisé, dossiers par catégorie, accès partagé." },
             ].map(({ Icon, bg, fg, title, desc }) => (
               <div key={title} className="bg-white border border-gray-200 rounded-2xl p-5">
                 <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center mb-3`}>
@@ -782,7 +782,7 @@ export default function HomePage() {
               {
                 step: '03', bg: 'bg-violet-600', ring: 'ring-violet-100', textColor: 'text-violet-600',
                 Icon: Wallet, time: '10 min',
-                title: 'Configurez vos finances',
+                title: 'Configurez appels de fonds et charges',
                 desc: "Saisissez votre budget prévisionnel. Mon Syndic Bénévole calcule automatiquement la quote-part de chaque copropriétaire et génère les appels de fonds.",
                 detail: ['Budget prévisionnel annuel', 'Appels de fonds trimestriels', 'Fonds de travaux ALUR séparé'],
               },
