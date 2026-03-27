@@ -234,7 +234,7 @@ export default function HomePage() {
 
           {/* Badges rassurants */}
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-blue-200/70">
-            <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> 14 jours offerts, facturation au 15e jour</span>
+            <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> 14 jours offerts</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> Sans engagement</span>
             <span className="flex items-center gap-1.5"><Shield size={14} className="text-green-400" /> Données hébergées en Europe</span>
             <span className="flex items-center gap-1.5"><Users size={14} className="text-blue-300" /> Développé avec des syndics bénévoles</span>
