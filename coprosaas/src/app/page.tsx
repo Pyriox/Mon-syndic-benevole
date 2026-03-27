@@ -82,7 +82,6 @@ export default function HomePage() {
         url: 'https://mon-syndic-benevole.fr',
         logo: 'https://mon-syndic-benevole.fr/logo.png',
         description: 'Logiciel de gestion de copropriété pour syndics bénévoles.',
-        sameAs: [],
       },
       {
         '@type': 'SoftwareApplication',
@@ -879,6 +878,85 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── L'histoire derrière le projet ── */}
+      <section aria-labelledby="histoire-heading" className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-14 sm:py-20 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-3">L&apos;histoire derrière le projet</p>
+            <h2 id="histoire-heading" className="text-3xl md:text-4xl font-bold text-white">
+              Pourquoi j&apos;ai créé Mon Syndic Bénévole
+            </h2>
+          </div>
+
+          {/* Témoignage fondateur */}
+          <div className="bg-white/5 border border-white/15 rounded-2xl p-6 sm:p-8 mb-12 max-w-2xl mx-auto">
+            <div className="text-blue-300/40 text-6xl font-serif leading-none mb-2 select-none">&ldquo;</div>
+            <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6 space-y-3">
+              <p>
+                On avait un syndic professionnel.{' '}
+                <span className="text-white font-medium">Factures qu&apos;on ne comprenait pas, impossible de les joindre, un forfait de base et des frais sur tout le reste.</span>{' '}
+                En AG, on a décidé de s&apos;en passer.
+              </p>
+              <p>
+                On a essayé avec Excel et Google Drive. <span className="text-white font-medium">Chaque trimestre, je recommençais de zéro</span> : recalculer les quotes-parts, retrouver qui avait payé, envoyer les convocations à la main&hellip; C&apos;était chronophage et stressant.
+              </p>
+              <p>
+                Je n&apos;ai pas trouvé d&apos;outil fait pour ça — alors{' '}
+                <span className="text-white font-medium">je l&apos;ai construit moi-même.</span>
+              </p>
+            </blockquote>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-500/30 rounded-full flex items-center justify-center shrink-0">
+                <UserCircle size={20} className="text-blue-300" />
+              </div>
+              <div>
+                <p className="text-white font-semibold text-sm">Fabien</p>
+                <p className="text-blue-300/60 text-xs">Fondateur &amp; syndic bénévole</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+            {[
+              {
+                value: '14 jours',
+                label: 'd’essai gratuit',
+                sublabel: 'Résiliable à tout moment',
+                Icon: Building2,
+                color: 'text-blue-400',
+              },
+              {
+                value: "jusqu'à 2 700 €",
+                label: 'économisés par an',
+                sublabel: 'vs un cabinet syndic professionnel',
+                Icon: Banknote,
+                color: 'text-yellow-400',
+              },
+              {
+                value: '30 min',
+                label: 'pour démarrer',
+                sublabel: 'de la création à votre premier appel de fonds',
+                Icon: Clock,
+                color: 'text-green-400',
+              },
+            ].map(({ value, label, sublabel, Icon, color }) => (
+              <div key={label} className="text-center bg-white/5 border border-white/10 rounded-2xl px-6 py-8">
+                <Icon size={28} className={`${color} mx-auto mb-4`} />
+                <p className={`text-4xl sm:text-5xl font-extrabold ${color} mb-2`}>{value}</p>
+                <p className="text-base font-semibold text-white mb-1">{label}</p>
+                <p className="text-sm text-blue-200/60">{sublabel}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link href="/register" className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30 w-full sm:w-auto">
+              Créer votre syndic en moins de 30 minutes <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
             {/* ── Tarif ── */}
       <section id="tarif" aria-labelledby="pricing-heading" className="py-14 sm:py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-5xl mx-auto">
@@ -956,6 +1034,7 @@ export default function HomePage() {
 
           </div>
 
+          <p className="text-center text-gray-500 text-sm mb-6">Les 3 plans offrent exactement les mêmes fonctionnalités — seule différence&nbsp;: le nombre de lots inclus.</p>
           {/* Fonctionnalités incluses dans tous les plans */}
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 sm:p-8">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest text-center mb-6">Inclus dans tous les plans</p>
@@ -972,85 +1051,6 @@ export default function HomePage() {
           <p className="text-center text-gray-500 text-xs mt-8">
             Un abonnement par copropriété. Facturation annuelle.
           </p>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════ PREUVES SOCIALES ══════════════════════════════ */}
-      <section aria-labelledby="preuves-sociales-heading" className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-14 sm:py-20 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-3">Ils nous font confiance</p>
-            <h2 id="preuves-sociales-heading" className="text-3xl md:text-4xl font-bold text-white">
-              Des syndics bénévoles qui gèrent mieux, pour moins cher
-            </h2>
-          </div>
-
-          {/* Témoignage fondateur */}
-          <div className="bg-white/5 border border-white/15 rounded-2xl p-6 sm:p-8 mb-12 max-w-2xl mx-auto">
-            <div className="text-blue-300/40 text-6xl font-serif leading-none mb-2 select-none">&ldquo;</div>
-            <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6 space-y-3">
-              <p>
-                On avait un syndic professionnel.{' '}
-                <span className="text-white font-medium">Factures qu&apos;on ne comprenait pas, impossible de les joindre, un forfait de base et des frais sur tout le reste.</span>{' '}
-                En AG, on a décidé de s&apos;en passer.
-              </p>
-              <p>
-                On a essayé avec Excel et Google Drive. <span className="text-white font-medium">Chaque trimestre, je recommençais de zéro</span> : recalculer les quotes-parts, retrouver qui avait payé, envoyer les convocations à la main&hellip; C&apos;était chronophage et stressant.
-              </p>
-              <p>
-                Je n&apos;ai pas trouvé d&apos;outil fait pour ça — alors{' '}
-                <span className="text-white font-medium">je l&apos;ai construit moi-même.</span>
-              </p>
-            </blockquote>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500/30 rounded-full flex items-center justify-center shrink-0">
-                <UserCircle size={20} className="text-blue-300" />
-              </div>
-              <div>
-                <p className="text-white font-semibold text-sm">Fabien</p>
-                <p className="text-blue-300/60 text-xs">Fondateur &amp; syndic bénévole</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-            {[
-              {
-                value: '14 jours',
-                label: 'd’essai gratuit',
-                sublabel: 'Résiliable à tout moment',
-                Icon: Building2,
-                color: 'text-blue-400',
-              },
-              {
-                value: '2 400 €',
-                label: 'économisés par an en moyenne',
-                sublabel: 'vs un cabinet syndic professionnel',
-                Icon: Banknote,
-                color: 'text-yellow-400',
-              },
-              {
-                value: '30 min',
-                label: 'pour démarrer',
-                sublabel: 'de la création à votre premier appel de fonds',
-                Icon: Clock,
-                color: 'text-green-400',
-              },
-            ].map(({ value, label, sublabel, Icon, color }) => (
-              <div key={label} className="text-center bg-white/5 border border-white/10 rounded-2xl px-6 py-8">
-                <Icon size={28} className={`${color} mx-auto mb-4`} />
-                <p className={`text-4xl sm:text-5xl font-extrabold ${color} mb-2`}>{value}</p>
-                <p className="text-base font-semibold text-white mb-1">{label}</p>
-                <p className="text-sm text-blue-200/60">{sublabel}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <Link href="/register" className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30 w-full sm:w-auto">
-              Créer votre syndic en moins de 30 minutes <ArrowRight size={16} />
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -1141,6 +1141,21 @@ export default function HomePage() {
 
       <LandingStickyCTA />
       <ScrollToTopButton />
+
+      {/* ── Guides SEO ── */}
+      <div className="bg-slate-900 border-t border-white/5 py-6 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto text-center">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Nos guides</p>
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-xs text-gray-500">
+            <Link href="/blog/comment-devenir-syndic-benevole" className="hover:text-gray-400 transition-colors">Comment devenir syndic bénévole</Link>
+            <Link href="/blog/obligations-syndic-benevole" className="hover:text-gray-400 transition-colors">Obligations du syndic bénévole</Link>
+            <Link href="/blog/appel-de-fonds-copropriete-calcul-repartition" className="hover:text-gray-400 transition-colors">Appels de fonds — calcul et répartition</Link>
+            <Link href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className="hover:text-gray-400 transition-colors">Fonds de travaux ALUR</Link>
+            <Link href="/blog/gerer-copropriete-sans-syndic-professionnel" className="hover:text-gray-400 transition-colors">Gérer sa copropriété sans syndic professionnel</Link>
+            <Link href="/blog/logiciel-syndic-benevole" className="hover:text-gray-400 transition-colors">Logiciel syndic bénévole</Link>
+          </div>
+        </div>
+      </div>
 
       {/* ── Footer ── */}
       <footer className="bg-slate-950 py-10 px-4 sm:px-6" aria-label="Pied de page">
