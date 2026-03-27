@@ -285,23 +285,38 @@ export async function cloturerExercice(exerciceId: string): Promise<Regularisati
 
   if (error) return { error: error.message };
 
-  // 2. Lire les lignes de régularisation (balance est une colonne générée)
+  // 2. Lire les lignes de régularisation + solde actuel de chaque copropriétaire
   const { data: lignes } = await supabase
     .from('regularisation_lignes')
     .select('coproprietaire_id, balance')
     .eq('exercice_id', exerciceId);
 
-  // 3. Répercuter la balance sur coproprietaires.solde
-  // balance = montant_reel - montant_appele + solde_reprise
-  // solde copro = -balance (convention : négatif = doit payer, positif = crédit)
+  // 3. Répercuter la balance sur coproprietaires.solde (additif)
+  // balance = montant_reel − montant_appele + solde_reprise
+  // On ADDITIONNE la balance à l’existant pour ne pas écraser les impayés d’autres exercices.
+  // Convention : balance > 0 → complément dû → débit (−) ; balance < 0 → trop-perçu → crédit (+)
   if (lignes && lignes.length > 0) {
+    // Lire les soldes actuels en une seule requête
+    const copIds = lignes.map((l) => l.coproprietaire_id);
+    const { data: copros } = await supabase
+      .from('coproprietaires')
+      .select('id, solde')
+      .in('id', copIds);
+
+    const soldeActuel: Record<string, number> = Object.fromEntries(
+      (copros ?? []).map((c) => [c.id, c.solde ?? 0])
+    );
+
     await Promise.all(
-      lignes.map((l) =>
-        supabase
+      lignes.map((l) => {
+        const nouveauSolde = Math.round(
+          ((soldeActuel[l.coproprietaire_id] ?? 0) + (-l.balance)) * 100
+        ) / 100;
+        return supabase
           .from('coproprietaires')
-          .update({ solde: Math.round(-l.balance * 100) / 100 })
-          .eq('id', l.coproprietaire_id)
-      )
+          .update({ solde: nouveauSolde })
+          .eq('id', l.coproprietaire_id);
+      })
     );
   }
 

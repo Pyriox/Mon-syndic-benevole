@@ -45,8 +45,8 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
     .from('appels_de_fonds')
     .select('*, coproprietes(nom), lignes_appels_de_fonds(id, montant_du, paye, date_paiement, coproprietaires(id, nom, prenom))')
     .eq('copropriete_id', selectedCoproId ?? 'none')
-    .gte('created_at', `${annee}-01-01`)
-    .lt('created_at', `${annee + 1}-01-01`)
+    .gte('date_echeance', `${annee}-01-01`)
+    .lt('date_echeance', `${annee + 1}-01-01`)
     .order('date_echeance', { ascending: true });
 
   const today = new Date();
