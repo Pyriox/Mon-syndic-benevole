@@ -84,6 +84,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   const [isExceptionnel, setIsExceptionnel] = useState(false);
   const [typeAppelExceptionnel, setTypeAppelExceptionnel] = useState<'budget_previsionnel' | 'fonds_travaux' | 'exceptionnel'>('budget_previsionnel');
   const [resolutionLieeId, setResolutionLieeId] = useState('');
+  // Part fonds travaux ALUR dans cet appel (0 si non applicable)
+  const [montantFondsTravaux, setMontantFondsTravaux] = useState(0);
 
   // Étape 2 : données du formulaire
   const [titre, setTitre] = useState('');
@@ -184,6 +186,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     const newPostes: Poste[] = [];
     let primaryResId = '';
     let hasBudgetPrev = false;
+    let fondsTravauxTotal = 0;
     for (const res of ag.resolutions) {
       if (!primaryResId) primaryResId = res.id;
       if (res.type_resolution === 'budget_previsionnel' || res.type_resolution === 'revision_budget') {
@@ -194,8 +197,10 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       }
       if (res.type_resolution === 'fonds_travaux' && res.fonds_travaux_montant) {
         newPostes.push({ libelle: 'Fonds de travaux (ALUR)', categorie: 'fonds_travaux_alur', montant: String(res.fonds_travaux_montant) });
+        fondsTravauxTotal += res.fonds_travaux_montant;
       }
     }
+    setMontantFondsTravaux(fondsTravauxTotal);
     setPostes(newPostes.length > 0 ? newPostes : [{ ...POSTE_VIDE }]);
     setResolutionLieeId(primaryResId);
 
@@ -249,6 +254,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     setIsExceptionnel(false);
     setTypeAppelExceptionnel('budget_previsionnel');
     setResolutionLieeId('');
+    setMontantFondsTravaux(0);
     setPostes([{ ...POSTE_VIDE }]);
     setEditableVersements([]);
     setFromAGDates(false);
@@ -358,6 +364,9 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
             copropriete_id: coproprieteId,
             titre: `${titre.trim()} — ${i + 1}/${finalVersements.length}`,
             montant_total: versAmount,
+            montant_fonds_travaux: montantFondsTravaux > 0
+              ? Math.round((montantFondsTravaux * shareRatio) * 100) / 100
+              : 0,
             date_echeance: vers.date,
             description: JSON.stringify(postesValides.map((p) => ({
               ...p, montant: String(Math.round(parseFloat(p.montant) * shareRatio * 100) / 100),
@@ -384,6 +393,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           copropriete_id: coproprieteId,
           titre: titre.trim(),
           montant_total: montantTotal,
+          montant_fonds_travaux: montantFondsTravaux,
           date_echeance: finalVersements[0].date,
           description: JSON.stringify(postesValides),
           ag_resolution_id: resolutionLieeId || null,

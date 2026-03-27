@@ -327,10 +327,10 @@ export default async function DashboardPage() {
       .eq('appels_de_fonds.copropriete_id', scopeId)
       .eq('paye', true),
 
-    // Provisions appelées de l'année (hors fonds de travaux)
+    // Provisions appelées de l'année (budget_previsionnel + fonds_travaux)
     supabase
       .from('appels_de_fonds')
-      .select('montant_total, type_appel')
+      .select('montant_total, type_appel, montant_fonds_travaux')
       .eq('copropriete_id', scopeId)
       .gte('date_echeance', `${currentYear}-01-01`)
       .lt('date_echeance', `${currentYear + 1}-01-01`),
@@ -351,10 +351,18 @@ export default async function DashboardPage() {
     else tendanceDepenses = 'baisse';
   }
 
-  // Provisions appelées (hors fonds_travaux)
-  const provisionsRows = (appelsProvisions ?? []).filter((a) => a.type_appel !== 'fonds_travaux');
+  // Provisions appelées (budget_previsionnel + revision_budget + fonds_travaux standalone)
+  const provisionsRows = (appelsProvisions ?? []).filter(
+    (a) => a.type_appel === 'budget_previsionnel' || a.type_appel === 'revision_budget' || a.type_appel === 'fonds_travaux'
+  );
   const hasProvisions = provisionsRows.length > 0;
   const totalProvisions = provisionsRows.reduce((s, a) => s + (a.montant_total ?? 0), 0);
+
+  // Part fonds travaux dans les provisions (champ dédié pour BP + total pour standalone)
+  const totalFondsTravaux = provisionsRows.reduce((s, a) => {
+    if (a.type_appel === 'fonds_travaux') return s + (a.montant_total ?? 0);
+    return s + ((a as { montant_fonds_travaux?: number }).montant_fonds_travaux ?? 0);
+  }, 0);
 
   // Écart prévisionnel : provisions − dépenses réelles
   // Masqué si aucun appel de fonds n'a encore été saisi (évite un faux déficit la 1ère année)
@@ -495,6 +503,9 @@ export default async function DashboardPage() {
                   <>
                     <p className="text-2xl font-bold text-gray-900">{formatEuros(totalProvisions)}</p>
                     <p className="text-xs text-gray-500 mt-0.5">Charges appelées aux copro.</p>
+                    {totalFondsTravaux > 0 && (
+                      <p className="text-xs text-amber-600 font-medium">dont {formatEuros(totalFondsTravaux)} fonds travaux</p>
+                    )}
                   </>
                 ) : (
                   <>

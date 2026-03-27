@@ -31,6 +31,7 @@ interface AppelCardProps {
     emailed_at?: string | null;
     statut?: string | null;
     coproprietes?: { nom: string } | null;
+    montant_fonds_travaux?: number | null;
   };
   lignes: Ligne[];
   postes: Poste[] | null;
@@ -236,8 +237,11 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
 
             {/* Montant + échéance sur une ligne */}
             <div className="flex items-center gap-3 text-sm flex-wrap">
-              <span className="font-bold text-gray-900">{formatEuros(appel.montant_total)}</span>
-              <span className="text-gray-300">·</span>
+              <span className="font-bold text-gray-900">{formatEuros(appel.montant_total)}</span>              {(appel.montant_fonds_travaux ?? 0) > 0 && (
+                <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded shrink-0">
+                  dont {formatEuros(appel.montant_fonds_travaux!)} FT ALUR
+                </span>
+              )}              <span className="text-gray-300">·</span>
               <span className="text-gray-500">Échéance <span className="text-gray-700 font-medium">{formatDate(appel.date_echeance)}</span></span>
               {lignes.length > 0 && (
                 <>

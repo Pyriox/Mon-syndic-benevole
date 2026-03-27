@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { LABELS_TYPE_DOCUMENT } from '@/lib/utils';
+import { insertDocument } from '@/lib/actions/documents';
 import {
   Upload, Pencil, File, FileText, FileSpreadsheet, Image as ImageIcon,
   X, CheckCircle2, CloudUpload,
@@ -151,7 +152,7 @@ export default function DocumentActions({ coproprietes, dossiers, defaultDossier
 
     const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(up.path);
 
-    const { error: dbErr } = await supabase.from('documents').insert({
+    const { error: dbErr } = await insertDocument({
       copropriete_id: form.copropriete_id,
       dossier_id:     form.dossier_id || null,
       nom:            form.nom.trim(),
@@ -161,7 +162,7 @@ export default function DocumentActions({ coproprietes, dossiers, defaultDossier
       uploaded_by:    user.id,
     });
 
-    if (dbErr) { setError(dbErr.message); setLoading(false); return; }
+    if (dbErr) { setError(dbErr); setLoading(false); return; }
 
     setLoading(false);
     setDone(true);
