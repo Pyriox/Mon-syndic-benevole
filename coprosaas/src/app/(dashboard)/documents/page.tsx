@@ -650,7 +650,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
         <div className="flex gap-2">
           {canWrite && <DossierActions />}
           {canWrite ? (
-            <DocumentActions coproprietes={coproprietes ?? []} dossiers={rootDossiers} />
+            <DocumentActions coproprietes={coproprietes ?? []} dossiers={dossiers} />
           ) : (
             <UpgradeBanner compact />
           )}
