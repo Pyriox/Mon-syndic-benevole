@@ -4,7 +4,7 @@
 // ============================================================
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { getAuthUser } from '@/lib/supabase/server';
+import { createClient, getAuthUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getDashboardLayoutData, getSyndicNotifications, getCoproNotifications } from '@/lib/cached-queries';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -24,6 +24,9 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   if (!user) {
     redirect('/login');
   }
+
+  // Client Supabase (même instance React.cache que getAuthUser — 0 overhead)
+  const supabase = await createClient();
 
   // Récupération du profil et des copropriétés (mise en cache 30 s côté serveur)
   const { profile, syndicCopros, coproRows, coproRowsByEmail } = await getDashboardLayoutData(
