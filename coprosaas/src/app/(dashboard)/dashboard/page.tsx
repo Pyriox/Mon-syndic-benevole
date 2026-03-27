@@ -351,9 +351,13 @@ export default async function DashboardPage() {
     else tendanceDepenses = 'baisse';
   }
 
-  // Provisions appelées (budget_previsionnel + revision_budget + fonds_travaux standalone)
+  // Appels budget prévisionnel seulement (base pour l'écart prévisionnel)
+  const provisionsBP = (appelsProvisions ?? []).filter(
+    (a) => a.type_appel === 'budget_previsionnel' || a.type_appel === 'revision_budget' || a.type_appel == null
+  );
+  // Tous les appels (BP + FT standalone) pour le KPI "total appelé"
   const provisionsRows = (appelsProvisions ?? []).filter(
-    (a) => a.type_appel === 'budget_previsionnel' || a.type_appel === 'revision_budget' || a.type_appel === 'fonds_travaux'
+    (a) => a.type_appel === 'budget_previsionnel' || a.type_appel === 'revision_budget' || a.type_appel === 'fonds_travaux' || a.type_appel == null
   );
   const hasProvisions = provisionsRows.length > 0;
   const totalProvisions = provisionsRows.reduce((s, a) => s + (a.montant_total ?? 0), 0);
@@ -364,9 +368,10 @@ export default async function DashboardPage() {
     return s + ((a as { montant_fonds_travaux?: number }).montant_fonds_travaux ?? 0);
   }, 0);
 
-  // Écart prévisionnel : provisions − dépenses réelles
-  // Masqué si aucun appel de fonds n'a encore été saisi (évite un faux déficit la 1ère année)
-  const ecartPrevisionnel = totalProvisions - totalDepenses;
+  // Écart prévisionnel : BP uniquement vs dépenses réelles
+  // Le fonds travaux est exclu : c'est une épargne (compte 103), pas une dépense à régulariser
+  const totalProvisionsBP = provisionsBP.reduce((s, a) => s + (a.montant_total ?? 0), 0);
+  const ecartPrevisionnel = totalProvisionsBP - totalDepenses;
 
   type LigneEncaissee = { montant_du: number };
   // appelsEncaisses conservé pour usage futur
@@ -492,19 +497,20 @@ export default async function DashboardPage() {
         <>
           {/* ── Ligne 1 : 3 KPIs financiers — provisions / dépenses / écart ── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Provisions appelées (hors fonds travaux) */}
+            {/* Provisions appelées (BP + FT) */}
             <Card className="flex items-center gap-4">
               <div className="p-3 bg-indigo-100 rounded-xl shrink-0">
                 <Wallet size={24} className="text-indigo-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Provisions {currentYear}</p>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Appels {currentYear}</p>
                 {hasProvisions ? (
                   <>
                     <p className="text-2xl font-bold text-gray-900">{formatEuros(totalProvisions)}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Charges appelées aux copro.</p>
-                    {totalFondsTravaux > 0 && (
-                      <p className="text-xs text-amber-600 font-medium">dont {formatEuros(totalFondsTravaux)} fonds travaux</p>
+                    {totalFondsTravaux > 0 ? (
+                      <p className="text-xs text-amber-600 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux</p>
+                    ) : (
+                      <p className="text-xs text-gray-500 mt-0.5">Charges appelées aux copro.</p>
                     )}
                   </>
                 ) : (
@@ -560,6 +566,9 @@ export default async function DashboardPage() {
                   <p className="text-xs text-gray-500 mt-0.5">
                     {ecartPrevisionnel > 0 ? 'Surplus (trop-perçu provisoire)' : ecartPrevisionnel < 0 ? 'Déficit à régulariser' : 'Provisions = dépenses'}
                   </p>
+                  {totalFondsTravaux > 0 && (
+                    <p className="text-xs text-gray-400 mt-0.5">Hors {formatEuros(totalFondsTravaux)} FT (non régularisable)</p>
+                  )}
                 </div>
               </Card>
             ) : (

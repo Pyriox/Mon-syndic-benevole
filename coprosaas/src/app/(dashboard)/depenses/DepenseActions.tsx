@@ -232,7 +232,12 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
               name="categorie"
               value={formData.categorie}
               onChange={handleChange}
-              options={Object.entries(LABELS_CATEGORIE).map(([v, l]) => ({ value: v, label: l }))}
+              options={Object.entries(LABELS_CATEGORIE)
+                // Le fonds travaux ALUR n'est pas une dépense de gestion : c'est une épargne
+                // réglementaire (compte 103, compte bancaire séparé). Il est exclu ici pour
+                // éviter toute confusion avec les dépenses réelles régularisables.
+                .filter(([v]) => v !== 'fonds_travaux_alur')
+                .map(([v, l]) => ({ value: v, label: l }))}
               required
             />
             <Input
