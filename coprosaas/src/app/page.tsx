@@ -3,7 +3,6 @@
 // ============================================================
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Script from 'next/script';
 import {
   Building2, CheckCircle, Users, Receipt, CalendarDays,
   AlertTriangle, FileText, Wallet, ArrowRight,
@@ -171,11 +170,12 @@ export default function HomePage() {
         '@type': 'HowTo',
         '@id': 'https://mon-syndic-benevole.fr/#howto',
         name: 'Comment gérer sa copropriété avec Mon Syndic Bénévole',
-        description: "Gérez votre copropriété en 3 étapes simples, sans formation ni migration.",
+        description: "Gérez votre copropriété en 4 étapes simples, sans formation ni migration.",
         step: [
           { '@type': 'HowToStep', position: 1, name: 'Créez votre copropriété', text: "Renseignez l'adresse, ajoutez vos lots et les tantièmes. Tout est guidé, pas à pas." },
           { '@type': 'HowToStep', position: 2, name: 'Invitez vos copropriétaires', text: "Chaque copropriétaire reçoit un e-mail et accède à son espace personnel sécurisé." },
-          { '@type': 'HowToStep', position: 3, name: 'Gérez au quotidien', text: "Charges, appels de fonds, AG, documents — tout centralisé, rien à oublier." },
+          { '@type': 'HowToStep', position: 3, name: 'Configurez appels de fonds et charges', text: "Saisissez votre budget prévisionnel. Mon Syndic Bénévole calcule automatiquement la quote-part de chaque copropriétaire et génère les appels de fonds." },
+          { '@type': 'HowToStep', position: 4, name: 'Gérez depuis votre tableau de bord', text: "Trésorerie en temps réel, relances automatiques, AG, dépôt de documents — tout au même endroit." },
         ],
       },
     ],
@@ -208,7 +208,7 @@ export default function HomePage() {
 
           <div className="inline-flex items-center gap-2.5 bg-yellow-400/15 border border-yellow-400/40 text-yellow-300 text-sm sm:text-lg font-bold px-5 sm:px-7 py-3 rounded-full mb-6 sm:mb-10">
             <Banknote size={18} className="shrink-0" />
-            Économisez jusqu&apos;à 3&nbsp;000&nbsp;€/an vs un syndic professionnel
+            Économisez jusqu&apos;à 2&nbsp;700&nbsp;€/an vs un syndic professionnel
           </div>
 
           <p className="text-base sm:text-xl text-blue-100/80 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
@@ -306,7 +306,7 @@ export default function HomePage() {
                     'Résiliable à tout moment, sans frais ni préavis',
                     "Toutes les fonctionnalités incluses d'office",
                     'Accès à vos données en temps réel, 24h/24',
-                    'Interface intuitive, opérationnel en 5 minutes',
+                    'Interface intuitive, opérationnel en 30 minutes',
                     'Comptabilité transparente, partageable',
                   ].map((benefit) => (
                     <li key={benefit} className="flex items-start gap-2 text-sm text-blue-100">
@@ -411,6 +411,84 @@ export default function HomePage() {
               Créer ma copro gratuitement <ArrowRight size={16} />
             </Link>
             <p className="mt-3 text-sm text-gray-500">Moyen de paiement requis — aucun débit pendant 14 jours &middot; Résiliable à tout moment</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════ COMMENT ÇA MARCHE ══════════════════════════════ */}
+      <section aria-labelledby="howto-heading" className="bg-gray-50 border-y border-gray-100 py-14 sm:py-20 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Comment ça marche</p>
+            <h2 id="howto-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Opérationnel en moins de 30&nbsp;minutes
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Aucune formation, aucune migration. Suivez les 4 étapes et votre copropriété est en ligne.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              {
+                step: '01', bg: 'bg-blue-600', ring: 'ring-blue-100', textColor: 'text-blue-600',
+                Icon: Building2, time: '5 min',
+                title: 'Créez votre copropriété',
+                desc: "Renseignez l'adresse, ajoutez chaque lot et ses tantièmes généraux et spéciaux. L'interface vous guide pas à pas.",
+                detail: ['Adresse et données de base', 'Lots et tantièmes', 'Documents fondateurs'],
+              },
+              {
+                step: '02', bg: 'bg-indigo-600', ring: 'ring-indigo-100', textColor: 'text-indigo-600',
+                Icon: Users, time: '5 min',
+                title: 'Invitez vos copropriétaires',
+                desc: "Renseignez les coordonnées de chaque copropriétaire. Chacun reçoit une invitation et accède à son espace personnel sécurisé.",
+                detail: ['Nom, e-mail, numéro de lot', 'Invitation automatique par e-mail', 'Espace personnel dédié'],
+              },
+              {
+                step: '03', bg: 'bg-violet-600', ring: 'ring-violet-100', textColor: 'text-violet-600',
+                Icon: Wallet, time: '10 min',
+                title: 'Configurez appels de fonds et charges',
+                desc: "Saisissez votre budget prévisionnel. Mon Syndic Bénévole calcule automatiquement la quote-part de chaque copropriétaire et génère les appels de fonds.",
+                detail: ['Budget prévisionnel annuel', 'Appels de fonds trimestriels', 'Fonds de travaux ALUR séparé'],
+              },
+              {
+                step: '04', bg: 'bg-purple-600', ring: 'ring-purple-100', textColor: 'text-purple-600',
+                Icon: LayoutDashboard, time: 'Au quotidien',
+                title: 'Gérez depuis votre tableau de bord',
+                desc: "Trésorerie en temps réel, relances automatiques, AG, dépôt de documents — tout au même endroit, depuis n'importe quel appareil.",
+                detail: ['Suivi des paiements et impayés', 'AG et procès-verbaux', 'Documents et incidents'],
+              },
+            ].map(({ step, bg, ring, textColor, Icon, time, title, desc, detail }) => (
+              <div key={step} className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 flex gap-5 hover:border-gray-300 hover:shadow-sm transition-all">
+                <div className="shrink-0 flex flex-col items-center gap-2">
+                  <div className={`w-12 h-12 ${bg} ring-8 ${ring} rounded-2xl flex items-center justify-center shadow-md`}>
+                    <Icon size={20} className="text-white" />
+                  </div>
+                  <span className={`text-xs font-bold ${textColor}`}>{step}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="font-bold text-gray-900 text-base">{title}</h3>
+                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium shrink-0">{time}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 leading-relaxed mb-3">{desc}</p>
+                  <ul className="space-y-1.5">
+                    {detail.map((d) => (
+                      <li key={d} className="flex items-center gap-2 text-xs text-gray-600">
+                        <CheckCircle size={11} className="text-green-600 shrink-0" /> {d}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
+              Démarrer maintenant <ArrowRight size={16} />
+            </Link>
+            <p className="mt-3 text-sm text-gray-500">Opérationnel en 30 minutes · Aucune formation requise</p>
           </div>
         </div>
       </section>
@@ -745,85 +823,7 @@ export default function HomePage() {
             <Link href="/register" className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg shadow-lg shadow-blue-900/30">
               Tester pendant 14 jours <ArrowRight size={18} />
             </Link>
-            <p className="mt-3 text-blue-300/50 text-sm">14 jours gratuits · Annulation sans frais</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════ COMMENT ÇA MARCHE ══════════════════════════════ */}
-      <section aria-labelledby="howto-heading" className="bg-gray-50 border-y border-gray-100 py-14 sm:py-20 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Comment ça marche</p>
-            <h2 id="howto-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Opérationnel en moins de 30&nbsp;minutes
-            </h2>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              Aucune formation, aucune migration. Suivez les 4 étapes et votre copropriété est en ligne.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              {
-                step: '01', bg: 'bg-blue-600', ring: 'ring-blue-100', textColor: 'text-blue-600',
-                Icon: Building2, time: '5 min',
-                title: 'Créez votre copropriété',
-                desc: "Renseignez l'adresse, ajoutez chaque lot et ses tantièmes généraux et spéciaux. L'interface vous guide pas à pas.",
-                detail: ['Adresse et données de base', 'Lots et tantièmes', 'Documents fondateurs'],
-              },
-              {
-                step: '02', bg: 'bg-indigo-600', ring: 'ring-indigo-100', textColor: 'text-indigo-600',
-                Icon: Users, time: '5 min',
-                title: 'Invitez vos copropriétaires',
-                desc: "Renseignez les coordonnées de chaque copropriétaire. Chacun reçoit une invitation et accède à son espace personnel sécurisé.",
-                detail: ['Nom, e-mail, numéro de lot', 'Invitation automatique par e-mail', 'Espace personnel dédié'],
-              },
-              {
-                step: '03', bg: 'bg-violet-600', ring: 'ring-violet-100', textColor: 'text-violet-600',
-                Icon: Wallet, time: '10 min',
-                title: 'Configurez appels de fonds et charges',
-                desc: "Saisissez votre budget prévisionnel. Mon Syndic Bénévole calcule automatiquement la quote-part de chaque copropriétaire et génère les appels de fonds.",
-                detail: ['Budget prévisionnel annuel', 'Appels de fonds trimestriels', 'Fonds de travaux ALUR séparé'],
-              },
-              {
-                step: '04', bg: 'bg-purple-600', ring: 'ring-purple-100', textColor: 'text-purple-600',
-                Icon: LayoutDashboard, time: 'Au quotidien',
-                title: 'Gérez depuis votre tableau de bord',
-                desc: "Trésorerie en temps réel, relances automatiques, AG, dépôt de documents — tout au même endroit, depuis n'importe quel appareil.",
-                detail: ['Suivi des paiements et impayés', 'AG et procès-verbaux', 'Documents et incidents'],
-              },
-            ].map(({ step, bg, ring, textColor, Icon, time, title, desc, detail }) => (
-              <div key={step} className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 flex gap-5 hover:border-gray-300 hover:shadow-sm transition-all">
-                <div className="shrink-0 flex flex-col items-center gap-2">
-                  <div className={`w-12 h-12 ${bg} ring-8 ${ring} rounded-2xl flex items-center justify-center shadow-md`}>
-                    <Icon size={20} className="text-white" />
-                  </div>
-                  <span className={`text-xs font-bold ${textColor}`}>{step}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <h3 className="font-bold text-gray-900 text-base">{title}</h3>
-                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium shrink-0">{time}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 leading-relaxed mb-3">{desc}</p>
-                  <ul className="space-y-1.5">
-                    {detail.map((d) => (
-                      <li key={d} className="flex items-center gap-2 text-xs text-gray-600">
-                        <CheckCircle size={11} className="text-green-600 shrink-0" /> {d}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 text-center">
-            <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
-              Démarrer maintenant <ArrowRight size={16} />
-            </Link>
-            <p className="mt-3 text-sm text-gray-500">Opérationnel en 30 minutes · Aucune formation requise</p>
+            <p className="mt-3 text-blue-300/50 text-sm">14 jours offerts · Annulation sans frais</p>
           </div>
         </div>
       </section>
@@ -1064,7 +1064,7 @@ export default function HomePage() {
         <div className="hidden sm:block absolute bottom-0 right-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-5 leading-tight">
-            Prêt à économiser jusqu'à 3 000 €<br />
+            Prêt à économiser jusqu'à 2 700 €<br />
             <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
               sur votre copropriété ?
             </span>
@@ -1080,7 +1080,7 @@ export default function HomePage() {
           </Link>
           <p className="mt-4 text-blue-300/50 text-sm">Facturation annuelle · Sans engagement · Résiliez à tout moment</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-blue-300/60">
-            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> 14 jours gratuits, sans frais immédiats</span>
+            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> 14 jours offerts</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Annulation sans frais</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Données hébergées en Europe</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> Prêt en moins de 30 minutes</span>
