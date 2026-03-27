@@ -211,46 +211,48 @@ export default function DocumentActions({ coproprietes, dossiers, defaultDossier
             required
           />
 
-          {/* Sélection du dossier — hiérarchique à 2 niveaux */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1.5">Dossier</label>
-            {/* Niveau 1 : dossiers racine */}
-            <div className="flex flex-wrap gap-1.5">
-              {rootDossiers.map((d) => (
-                <button
-                  key={d.id}
-                  type="button"
-                  onClick={() => handleRootChange(d.id)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    selectedRootId === d.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {d.nom}
-                </button>
-              ))}
-            </div>
-            {/* Niveau 2 : sous-dossiers du dossier racine sélectionné */}
-            {currentSubs.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2 pl-2 border-l-2 border-blue-100">
-                {currentSubs.map((sub) => (
+          {/* Sélection du dossier — uniquement depuis la vue racine */}
+          {!defaultDossierId && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">Dossier</label>
+              {/* Niveau 1 : dossiers racine */}
+              <div className="flex flex-wrap gap-1.5">
+                {rootDossiers.map((d) => (
                   <button
-                    key={sub.id}
+                    key={d.id}
                     type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, dossier_id: sub.id }))}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      formData.dossier_id === sub.id
-                        ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    onClick={() => handleRootChange(d.id)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      selectedRootId === d.id
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {sub.nom}
+                    {d.nom}
                   </button>
                 ))}
               </div>
-            )}
-          </div>
+              {/* Niveau 2 : sous-dossiers du dossier racine sélectionné */}
+              {currentSubs.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2 pl-2 border-l-2 border-blue-100">
+                  {currentSubs.map((sub) => (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, dossier_id: sub.id }))}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                        formData.dossier_id === sub.id
+                          ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                      }`}
+                    >
+                      {sub.nom}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Type de document — pill buttons */}
           <div>
