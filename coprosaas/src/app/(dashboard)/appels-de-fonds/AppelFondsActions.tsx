@@ -90,7 +90,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   // Échéancier
   const [useEcheancier, setUseEcheancier] = useState(false);
   const [dateSingle, setDateSingle] = useState('');             // versement unique
-  const [editableDates, setEditableDates] = useState<string[]>([]); // versements multiples (éditables)
+  const [editableVersements, setEditableVersements] = useState<{ date: string; montant: string }[]>([]); // versements multiples (éditables)
   const [fromAGDates, setFromAGDates] = useState(false);
   // Générateur automatique
   const [genDateDebut, setGenDateDebut] = useState('');
@@ -207,9 +207,16 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     }
     setTitre(`Calendrier de financement du budget prévisionnel et du fonds travaux ${budgetYear}`);
 
+    // Montant local pour initialiser les montants par versement avant la mise à jour du state postes
+    const localMontantTotal = (newPostes.length > 0 ? newPostes : [{ ...POSTE_VIDE }])
+      .reduce((s, p) => s + (parseFloat(p.montant) || 0), 0);
+
     // Échéancier voté en AG
     if (ag.votedDates.length >= 2) {
-      setEditableDates([...ag.votedDates]);
+      const montantParVersAG = localMontantTotal > 0
+        ? Math.round((localMontantTotal / ag.votedDates.length) * 100) / 100
+        : 0;
+      setEditableVersements(ag.votedDates.map((d) => ({ date: d, montant: String(montantParVersAG) })));
       setFromAGDates(true);
       setUseEcheancier(true);
       setDateSingle(ag.votedDates[0]);
@@ -217,14 +224,14 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       setGenNb(ag.votedDates.length);
       setGenPeriodicite(detectPeriodicite(ag.votedDates));
     } else if (ag.votedDates.length === 1) {
-      setEditableDates([]);
+      setEditableVersements([]);
       setFromAGDates(false);
       setUseEcheancier(false);
       setDateSingle(ag.votedDates[0]);
       setGenDateDebut(ag.votedDates[0]);
     } else {
       const currentYearDefault = `${new Date().getFullYear()}-01-01`;
-      setEditableDates([]);
+      setEditableVersements([]);
       setFromAGDates(false);
       setUseEcheancier(hasBudgetPrev);
       setDateSingle(currentYearDefault);
@@ -241,7 +248,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     setIsExceptionnel(false);
     setResolutionLieeId('');
     setPostes([{ ...POSTE_VIDE }]);
-    setEditableDates([]);
+    setEditableVersements([]);
     setFromAGDates(false);
     setDateSingle('');
     setUseEcheancier(false);
@@ -262,7 +269,11 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   // -- Générer l'échéancier depuis les contrôles ---------------
   const genererEcheancier = () => {
     if (!genDateDebut) return;
-    setEditableDates(Array.from({ length: genNb }, (_, i) => addMonths(genDateDebut, i * PERIODICITE_MOIS[genPeriodicite])));
+    const baseAmount = montantTotal > 0 ? Math.round((montantTotal / genNb) * 100) / 100 : 0;
+    setEditableVersements(Array.from({ length: genNb }, (_, i) => ({
+      date: addMonths(genDateDebut, i * PERIODICITE_MOIS[genPeriodicite]),
+      montant: String(baseAmount),
+    })));
     setFromAGDates(false);
   };
 
@@ -293,14 +304,10 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     }));
   }, [lots, montantTotal, totalTantiemsVal]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const montantParVers = useEcheancier && editableDates.length > 0
-    ? Math.round((montantTotal / editableDates.length) * 100) / 100
-    : montantTotal;
-
   const typeAppel = isExceptionnel ? 'exceptionnel'
     : agImportee?.resolutions.find((r) => r.id === resolutionLieeId)?.type_resolution ?? 'exceptionnel';
 
-  const finalDatesCount = useEcheancier ? editableDates.length : 1;
+  const finalDatesCount = useEcheancier ? editableVersements.length : 1;
 
   // -- Soumission ----------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
@@ -315,9 +322,17 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       return;
     }
 
-    const finalDates = useEcheancier ? editableDates : (dateSingle ? [dateSingle] : []);
-    if (finalDates.length === 0 || finalDates.some((d) => !d)) {
+    const finalVersements = useEcheancier
+      ? editableVersements
+      : (dateSingle ? [{ date: dateSingle, montant: String(montantTotal) }] : []);
+
+    if (finalVersements.length === 0 || finalVersements.some((v) => !v.date)) {
       setError("Renseignez toutes les dates de versement.");
+      setLoading(false);
+      return;
+    }
+    if (useEcheancier && finalVersements.some((v) => !(parseFloat(v.montant) > 0))) {
+      setError("Renseignez un montant positif pour chaque versement.");
       setLoading(false);
       return;
     }
@@ -325,17 +340,21 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    if (finalDates.length > 1) {
-      for (let i = 0; i < finalDates.length; i++) {
+    if (finalVersements.length > 1) {
+      const totalPlan = finalVersements.reduce((s, v) => s + (parseFloat(v.montant) || 0), 0);
+      for (let i = 0; i < finalVersements.length; i++) {
+        const vers = finalVersements[i];
+        const versAmount = parseFloat(vers.montant) || 0;
+        const shareRatio = totalPlan > 0 ? versAmount / totalPlan : 1 / finalVersements.length;
         const { error: err } = await supabase
           .from('appels_de_fonds')
           .insert({
             copropriete_id: coproprieteId,
-            titre: `${titre.trim()} — ${i + 1}/${finalDates.length}`,
-            montant_total: montantParVers,
-            date_echeance: finalDates[i],
+            titre: `${titre.trim()} — ${i + 1}/${finalVersements.length}`,
+            montant_total: versAmount,
+            date_echeance: vers.date,
             description: JSON.stringify(postesValides.map((p) => ({
-              ...p, montant: String(Math.round((parseFloat(p.montant) / finalDates.length) * 100) / 100),
+              ...p, montant: String(Math.round(parseFloat(p.montant) * shareRatio * 100) / 100),
             }))),
             ag_resolution_id: resolutionLieeId || null,
             type_appel: typeAppel,
@@ -352,7 +371,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
           copropriete_id: coproprieteId,
           titre: titre.trim(),
           montant_total: montantTotal,
-          date_echeance: finalDates[0],
+          date_echeance: finalVersements[0].date,
           description: JSON.stringify(postesValides),
           ag_resolution_id: resolutionLieeId || null,
           type_appel: typeAppel,
@@ -525,7 +544,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                   <div className="flex items-center gap-2 flex-wrap">
                     <Calendar size={15} className="text-indigo-600" />
                     <span className="text-sm font-semibold text-gray-700">Échéancier</span>
-                    {fromAGDates && editableDates.length > 0 && (
+                    {fromAGDates && editableVersements.length > 0 && (
                       <span className="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full font-medium">
                         importé de l&apos;AG · modifiable
                       </span>
@@ -535,7 +554,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                     <input type="checkbox" checked={useEcheancier}
                       onChange={(e) => {
                         setUseEcheancier(e.target.checked);
-                        if (!e.target.checked) setEditableDates([]);
+                        if (!e.target.checked) setEditableVersements([]);
                       }}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                     <span className="text-xs text-gray-600">Plusieurs versements</span>
@@ -555,38 +574,58 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                   ) : (
                     /* ── Plusieurs versements ── */
                     <>
-                      {editableDates.length > 0 ? (
+                      {editableVersements.length > 0 ? (
                         /* Liste éditable des versements */
                         <div className="space-y-2">
-                          {editableDates.map((d, i) => (
+                          <div className="hidden sm:grid grid-cols-[6rem_1fr_7rem_1.5rem] gap-2 text-xs text-gray-400 px-1">
+                            <span /><span>Date</span><span className="text-right">Montant (€)</span><span />
+                          </div>
+                          {editableVersements.map((v, i) => (
                             <div key={i} className="flex items-center gap-2">
                               <span className="text-xs text-gray-500 shrink-0 w-24">Versement {i + 1}</span>
                               <input
                                 type="date"
-                                value={d}
-                                onChange={(e) => setEditableDates((prev) => prev.map((x, j) => j === i ? e.target.value : x))}
+                                value={v.date}
+                                onChange={(e) => setEditableVersements((prev) => prev.map((x, j) => j === i ? { ...x, date: e.target.value } : x))}
                                 className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                               />
-                              {montantTotal > 0 && (
-                                <span className="text-xs font-bold text-indigo-700 shrink-0 w-20 text-right">{formatEuros(montantParVers)}</span>
-                              )}
-                              {editableDates.length > 2 && (
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={v.montant}
+                                onChange={(e) => setEditableVersements((prev) => prev.map((x, j) => j === i ? { ...x, montant: e.target.value } : x))}
+                                className="w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="0,00"
+                              />
+                              {editableVersements.length > 2 && (
                                 <button type="button"
-                                  onClick={() => setEditableDates((prev) => prev.filter((_, j) => j !== i))}
+                                  onClick={() => setEditableVersements((prev) => prev.filter((_, j) => j !== i))}
                                   className="p-1 text-gray-400 hover:text-red-500 transition-colors">
                                   <Trash2 size={14} />
                                 </button>
                               )}
                             </div>
                           ))}
-                          <button type="button"
-                            onClick={() => {
-                              const last = editableDates[editableDates.length - 1] || genDateDebut || '';
-                              setEditableDates((prev) => [...prev, last ? addMonths(last, PERIODICITE_MOIS[genPeriodicite]) : '']);
-                            }}
-                            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 pt-1">
-                            <Plus size={13} /> Ajouter un versement
-                          </button>
+                          <div className="flex items-center justify-between pt-1">
+                            <button type="button"
+                              onClick={() => {
+                                const last = editableVersements[editableVersements.length - 1];
+                                const lastDate = last?.date || genDateDebut || '';
+                                setEditableVersements((prev) => [...prev, {
+                                  date: lastDate ? addMonths(lastDate, PERIODICITE_MOIS[genPeriodicite]) : '',
+                                  montant: last?.montant ?? '',
+                                }]);
+                              }}
+                              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                              <Plus size={13} /> Ajouter un versement
+                            </button>
+                            {editableVersements.length > 1 && (
+                              <span className="text-xs text-gray-500 tabular-nums">
+                                Total : <span className="font-semibold text-gray-700">{formatEuros(editableVersements.reduce((s, v) => s + (parseFloat(v.montant) || 0), 0))}</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         /* Générateur automatique */
@@ -637,7 +676,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500">
                         {repartition.length} copropriétaire{repartition.length > 1 ? 's' : ''}
-                        {finalDatesCount > 1 && ` · ${formatEuros(montantParVers)}/versement`}
+                        {finalDatesCount > 1 && ` · ${finalDatesCount} versements`}
                       </span>
                       {repartitionExpanded
                         ? <ChevronUp size={16} className="text-gray-400" />
@@ -653,9 +692,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                               {r.cop.prenom} {r.cop.nom}
                             </td>
                             <td className="px-4 py-2 text-right font-bold text-gray-800 tabular-nums">
-                              {formatEuros(finalDatesCount > 1
-                                ? Math.round((r.montant / finalDatesCount) * 100) / 100
-                                : r.montant)}
+                              {formatEuros(r.montant)}
                             </td>
                           </tr>
                         ))}
