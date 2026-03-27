@@ -512,52 +512,61 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle size={15} className="text-amber-600 shrink-0" />
-                    <span className="text-xs text-amber-800 flex-1">Appel sans AG — saisie manuelle ou migration de données</span>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-3">
+                  {/* En-tête */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <AlertTriangle size={14} className="text-amber-600 shrink-0" />
+                      <span className="text-xs font-medium text-amber-800">Appel sans AG</span>
+                    </div>
                     <button type="button" onClick={resetAG}
-                      className="text-xs text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0">
+                      className="text-xs text-amber-600 hover:text-amber-900 underline underline-offset-2">
                       Annuler
                     </button>
                   </div>
-                  {/* Sélecteur de type */}
-                  <div>
-                    <p className="text-xs font-medium text-amber-800 mb-1.5">Type d&apos;appel</p>
-                    <div className="flex flex-wrap gap-2">
-                      {([
-                        { value: 'budget_previsionnel', label: 'Provisions (budget + FT)' },
-                        { value: 'exceptionnel',        label: 'Exceptionnel' },
-                      ] as const).map((opt) => (
-                        <button key={opt.value} type="button"
-                          onClick={() => { setTypeAppelExceptionnel(opt.value); setMontantFTManuel(''); }}
-                          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                            typeAppelExceptionnel === opt.value
-                              ? 'bg-amber-600 text-white border-amber-600'
-                              : 'bg-white text-amber-700 border-amber-300 hover:border-amber-500'
-                          }`}>
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Champ "dont fonds travaux" visible uniquement pour type provisions */}
-                  {typeAppelExceptionnel === 'budget_previsionnel' && (
-                    <div>
-                      <label className="block text-xs font-medium text-amber-800 mb-1">
-                        Dont fonds travaux ALUR <span className="font-normal text-amber-600">(optionnel)</span>
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number" min="0" step="0.01" placeholder="0,00"
-                          value={montantFTManuel}
-                          onChange={(e) => setMontantFTManuel(e.target.value)}
-                          className="w-36 rounded-lg border border-amber-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-                        />
-                        <span className="text-xs text-amber-700">€ &mdash; part épargne (compte 103)</span>
+
+                  {/* Type + champ FT sur la même ligne */}
+                  <div className="flex flex-wrap items-end gap-3">
+                    {/* Sélecteur de type */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-amber-700">Type</span>
+                      <div className="flex gap-1.5">
+                        {([
+                          { value: 'budget_previsionnel', label: 'Provisions' },
+                          { value: 'exceptionnel',        label: 'Exceptionnel' },
+                        ] as const).map((opt) => (
+                          <button key={opt.value} type="button"
+                            onClick={() => { setTypeAppelExceptionnel(opt.value); setMontantFTManuel(''); }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                              typeAppelExceptionnel === opt.value
+                                ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                                : 'bg-white text-amber-700 border-amber-300 hover:border-amber-500'
+                            }`}>
+                            {opt.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  )}
+
+                    {/* Champ FT inline — uniquement pour provisions */}
+                    {typeAppelExceptionnel === 'budget_previsionnel' && (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-amber-700">
+                          Dont fonds travaux ALUR
+                          <span className="font-normal text-amber-500 ml-1">(optionnel)</span>
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number" min="0" step="0.01" placeholder="0,00"
+                            value={montantFTManuel}
+                            onChange={(e) => setMontantFTManuel(e.target.value)}
+                            className="w-28 rounded-lg border border-amber-200 bg-white px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                          />
+                          <span className="text-xs text-amber-600">€</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
