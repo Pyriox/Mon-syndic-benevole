@@ -537,7 +537,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
             {canWrite && subDossiers.length > 0 && (
               <SubDossierActions mode="create" parentId={dossierId} />
             )}
-            {subDossiers.length === 0 && (
+            {subDossiers.length === 0 && (documents?.length ?? 0) > 0 && (
               canWrite ? (
                 <DocumentActions
                   coproprietes={coproprietes ?? []}
