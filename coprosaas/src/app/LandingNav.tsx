@@ -6,9 +6,9 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import { Menu, X } from 'lucide-react';
 
 const navLinks = [
-  { href: '#fonctionnalites', label: 'Fonctionnalités' },
-  { href: '#tarif', label: 'Tarifs' },
-  { href: '#faq', label: 'FAQ' },
+  { href: '/#fonctionnalites', label: 'Fonctionnalités' },
+  { href: '/#tarif', label: 'Tarifs' },
+  { href: '/#faq', label: 'FAQ' },
   { href: '/blog', label: 'Blog' },
 ];
 
