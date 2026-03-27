@@ -18,13 +18,13 @@ import type { AppNotification } from '@/types';
 
 // ── Helpers d'invalidation (à appeler depuis les Server Actions) ──────────────
 export function invalidateLayoutCache(userId: string) {
-  revalidateTag(`layout-${userId}`, 'default');
+  revalidateTag(`layout-${userId}`);
 }
 export function invalidateLotsCache(coproId: string) {
-  revalidateTag(`lots-${coproId}`, 'default');
+  revalidateTag(`lots-${coproId}`);
 }
 export function invalidateCoproprietairesCache(coproId: string) {
-  revalidateTag(`coproprietaires-${coproId}`, 'default');
+  revalidateTag(`coproprietaires-${coproId}`);
 }
 
 // ── Profil + copropriétés (layout global) ────────────────────────────────────

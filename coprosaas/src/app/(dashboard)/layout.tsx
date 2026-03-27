@@ -3,6 +3,7 @@
 // Contient la Sidebar + Header + zone de contenu principale
 // ============================================================
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient, getAuthUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -41,18 +42,22 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   const unlinkedRows = (coproRowsByEmail ?? []).filter((r) => !linkedCoproIds.has(r.copropriete_id));
   const allCoproRows = [...(coproRows ?? []), ...unlinkedRows];
 
-  // Auto-liaison : si des fiches sont trouvées par email sans user_id, on les lie maintenant
+  // Auto-liaison : si des fiches sont trouvées par email sans user_id, on les lie après la réponse
   if (unlinkedRows.length > 0 && user.email) {
-    try {
-      const admin = createAdminClient();
-      await admin
-        .from('coproprietaires')
-        .update({ user_id: user.id })
-        .eq('email', user.email.toLowerCase())
-        .is('user_id', null);
-    } catch {
-      // Non bloquant
-    }
+    const userId = user.id;
+    const userEmail = user.email.toLowerCase();
+    after(async () => {
+      try {
+        const admin = createAdminClient();
+        await admin
+          .from('coproprietaires')
+          .update({ user_id: userId })
+          .eq('email', userEmail)
+          .is('user_id', null);
+      } catch {
+        // Silencieux — non critique
+      }
+    });
   }
 
   // Déduplique et fusionne les deux listes avec le rôle associé

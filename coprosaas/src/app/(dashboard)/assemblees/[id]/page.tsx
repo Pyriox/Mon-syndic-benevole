@@ -5,6 +5,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { notFound } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Card, { CardHeader } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -13,13 +14,15 @@ import ResolutionActions from './ResolutionActions';
 import ResolutionList from './ResolutionList';
 import AGStatusActions from './AGStatusActions';
 import { AGDelete, AGAnnuler, AGEnvoyerPV, AGEnvoyerConvocation, AGEditInfos } from './AGStatusActions';
-import PVPDF from './PVPDF';
-import ConvocationPDF from './ConvocationPDF';
 import PresencePanel from './PresencePanel';
 import { LABELS_STATUT_AG } from '@/lib/utils';
 import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
+
+// Chargement différé des composants PDF (jsPDF ~250 KB) — hors bundle initial
+const PVPDF = dynamic(() => import('./PVPDF'), { ssr: false });
+const ConvocationPDF = dynamic(() => import('./ConvocationPDF'), { ssr: false });
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -41,25 +44,37 @@ export default async function AGDetailPage({ params }: Props) {
 
   if (!ag || ag.copropriete_id !== selectedCoproId) notFound();
 
-  const { data: resolutions } = await db
-    .from('resolutions')
-    .select('*')
-    .eq('ag_id', id)
-    .order('numero', { ascending: true });
+  // Toutes les données liées chargées en parallèle
+  const [
+    { data: resolutions },
+    { data: coproprietaires },
+    { data: lotsData },
+    { data: presences },
+  ] = await Promise.all([
+    db
+      .from('resolutions')
+      .select('*')
+      .eq('ag_id', id)
+      .order('numero', { ascending: true }),
+    // Copropriétaires de la copropriété (pour présences, votes et PV)
+    db
+      .from('coproprietaires')
+      .select('id, nom, prenom')
+      .eq('copropriete_id', ag.copropriete_id)
+      .order('nom'),
+    // Lots et tantièmes de la copropriété (pour le calcul légal des votes)
+    db
+      .from('lots')
+      .select('tantiemes, coproprietaire_id')
+      .eq('copropriete_id', ag.copropriete_id),
+    // Feuille de présence pour cette AG
+    db
+      .from('ag_presences')
+      .select('*')
+      .eq('ag_id', id),
+  ]);
 
-  // Copropriétaires de la copropriété (pour présences, votes et PV)
-  const { data: coproprietaires } = await db
-    .from('coproprietaires')
-    .select('id, nom, prenom')
-    .eq('copropriete_id', ag.copropriete_id)
-    .order('nom');
-
-  // Lots et tantièmes de la copropriété (pour le calcul légal des votes)
-  const { data: lotsData } = await db
-    .from('lots')
-    .select('tantiemes, coproprietaire_id')
-    .eq('copropriete_id', ag.copropriete_id);
-
+  // Calcul des tantièmes (utilisé pour quorum et votes)
   const totalTantiemes = (lotsData ?? []).reduce((s, l) => s + (l.tantiemes ?? 0), 0);
   const tantiemesMap: Record<string, number> = {};
   for (const lot of lotsData ?? []) {
@@ -68,13 +83,7 @@ export default async function AGDetailPage({ params }: Props) {
     }
   }
 
-  // Feuille de présence pour cette AG
-  const { data: presences } = await db
-    .from('ag_presences')
-    .select('*')
-    .eq('ag_id', id);
-
-  // Votes individuels par copropriétaire pour toutes les résolutions
+  // Votes individuels — chargés après les résolutions (dépend de leurs IDs)
   const resolutionIds = (resolutions ?? []).map((r) => r.id);
   let votesCopro: { resolution_id: string; coproprietaire_id: string; vote: string }[] = [];
   if (resolutionIds.length > 0) {
