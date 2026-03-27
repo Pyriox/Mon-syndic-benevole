@@ -326,7 +326,33 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="mt-10 w-full overflow-x-auto rounded-2xl shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden min-w-[480px]">
+              <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-200 text-sm font-semibold">
+                <div className="py-4 px-5 text-gray-400" />
+                <div className="py-4 px-4 text-center text-gray-600 border-l border-gray-200">Syndic professionnel</div>
+                <div className="py-4 px-4 text-center text-blue-700 border-l border-gray-200 bg-blue-50/60">Mon Syndic Bénévole</div>
+              </div>
+              {[
+                ['Coût annuel (10 lots)', '1 500 – 3 000 €', 'À partir de 300 €'],
+                ['Engagement', 'Contrat 1–3 ans', 'Résiliable à tout moment'],
+                ['Accès à vos données', 'Sur demande', 'Temps réel, 24h/24'],
+                ['Délai de réponse', 'Plusieurs jours', 'Immédiat'],
+                ['Convocations & PV AG', 'Souvent en supplément', '✓ Incluses'],
+                ['GED Documents en ligne', '✗ Rarement', '✓ Incluse'],
+                ['Tableau de bord live', '✗', '✓'],
+                ['Transparence des comptes', 'Partielle', '✓ Totale'],
+              ].map(([label, pro, nous], i) => (
+                <div key={label} className={`grid grid-cols-3 text-sm border-b border-gray-100 last:border-0 ${i % 2 === 1 ? 'bg-gray-50/40' : ''}`}>
+                  <div className="py-3.5 px-5 text-gray-700 font-medium">{label}</div>
+                  <div className="py-3.5 px-4 text-center text-gray-500 border-l border-gray-100">{pro}</div>
+                  <div className="py-3.5 px-4 text-center font-semibold text-blue-700 border-l border-gray-100 bg-blue-50/20">{nous}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
             <p className="text-gray-500 text-base mb-4">
               C&apos;est votre copropriété. La loi vous autorise à la gérer vous-même — syndic bénévole, sans agrémentation requise.
             </p>
@@ -351,26 +377,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* 3 étapes */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative mb-14">
-            <div className="hidden md:block absolute top-10 left-[calc(33.33%+0.5rem)] right-[calc(33.33%+0.5rem)] h-px bg-gradient-to-r from-blue-200 to-violet-200" />
-            {[
-              { step: '1', bg: 'bg-blue-600', ring: 'ring-blue-100', Icon: Building2, title: 'Créez votre copropriété', desc: "Renseignez l'adresse, ajoutez vos lots et les tantièmes. Tout est guidé, pas à pas." },
-              { step: '2', bg: 'bg-indigo-600', ring: 'ring-indigo-100', Icon: Users, title: 'Invitez vos copropriétaires', desc: "Chaque copropriétaire reçoit un e-mail et accède à son espace personnel sécurisé." },
-              { step: '3', bg: 'bg-violet-600', ring: 'ring-violet-100', Icon: LayoutDashboard, title: 'Gérez au quotidien', desc: "Charges, appels de fonds, AG, documents — tout centralisé, rien à oublier." },
-            ].map(({ step, bg, ring, Icon, title, desc }) => (
-              <div key={step} className="flex flex-col items-center text-center">
-                <div className={`relative w-20 h-20 ${bg} ring-8 ${ring} rounded-3xl flex items-center justify-center mb-5 shadow-lg`}>
-                  <Icon size={32} className="text-white" />
-                  <span className={`absolute -top-2 -right-2 w-6 h-6 ${bg} border-2 border-white rounded-full text-white text-[11px] font-bold flex items-center justify-center`}>{step}</span>
-                </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed max-w-xs">{desc}</p>
-              </div>
-            ))}
-          </div>
-
           {/* 4 modules clés */}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
               { Icon: Wallet, bg: 'bg-blue-100', fg: 'text-blue-600', title: 'Appels de fonds', desc: 'Génération auto, répartition par tantièmes, export PDF & e-mail.' },
@@ -407,64 +415,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════ PREUVES ══════════════════════════════ */}
-      <section aria-labelledby="preuves-heading" className="bg-white py-14 sm:py-20 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 text-center mb-16 border-b border-gray-100 pb-16">
-            <div>
-              <p className="text-3xl md:text-4xl font-extrabold text-blue-600">25 €</p>
-              <p className="text-sm text-gray-500 mt-1">par mois seulement</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-extrabold text-blue-600">8</p>
-              <p className="text-sm text-gray-500 mt-1">modules inclus</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-extrabold text-blue-600">14 j</p>
-              <p className="text-sm text-gray-500 mt-1">d&apos;essai gratuit</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-extrabold text-blue-600">24h/24</p>
-              <p className="text-sm text-gray-500 mt-1">accès à vos données</p>
-            </div>
-          </div>
-
-          <div className="text-center mb-10">
-            <p className="text-sm font-semibold text-amber-600 uppercase tracking-widest mb-3">Comparaison objective</p>
-            <h2 id="preuves-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Mon Syndic Bénévole vs cabinet professionnel</h2>
-            <p className="text-gray-500 text-lg">Les mêmes fonctions, sans le coût ni les contraintes d&apos;un contrat.</p>
-          </div>
-
-          <div className="w-full overflow-x-auto rounded-2xl shadow-sm">
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden min-w-[480px]">
-            <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-200 text-sm font-semibold">
-              <div className="py-4 px-5 text-gray-400" />
-              <div className="py-4 px-4 text-center text-gray-600 border-l border-gray-200">Syndic professionnel</div>
-              <div className="py-4 px-4 text-center text-blue-700 border-l border-gray-200 bg-blue-50/60">Mon Syndic Bénévole</div>
-            </div>
-            {[
-              ['Coût annuel (10 lots)', '1 500 – 3 000 €', 'À partir de 300 €'],
-              ['Engagement', 'Contrat 1–3 ans', 'Résiliable à tout moment'],
-              ['Accès à vos données', 'Sur demande', 'Temps réel, 24h/24'],
-              ['Délai de réponse', 'Plusieurs jours', 'Immédiat'],
-              ['Convocations & PV AG', 'Souvent en supplément', '✓ Incluses'],
-              ['GED Documents en ligne', '✗ Rarement', '✓ Incluse'],
-              ['Tableau de bord live', '✗', '✓'],
-              ['Transparence des comptes', 'Partielle', '✓ Totale'],
-            ].map(([label, pro, nous], i) => (
-              <div key={label} className={`grid grid-cols-3 text-sm border-b border-gray-100 last:border-0 ${i % 2 === 1 ? 'bg-gray-50/40' : ''}`}>
-                <div className="py-3.5 px-5 text-gray-700 font-medium">{label}</div>
-                <div className="py-3.5 px-4 text-center text-gray-500 border-l border-gray-100">{pro}</div>
-                <div className="py-3.5 px-4 text-center font-semibold text-blue-700 border-l border-gray-100 bg-blue-50/20">{nous}</div>
-              </div>
-            ))}
-          </div>
-          </div>
-        </div>
-      </section>
-
-      
       {/* ══════════════════════════════ DÉMO ══════════════════════════════ */}
       <section id="demo" aria-labelledby="demo-heading" className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-14 sm:py-20 px-4 sm:px-6">
         <div className="hidden sm:block absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
