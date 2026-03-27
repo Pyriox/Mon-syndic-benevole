@@ -5,7 +5,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { notFound } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Card, { CardHeader } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -19,10 +18,7 @@ import { LABELS_STATUT_AG } from '@/lib/utils';
 import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
-
-// Chargement différé des composants PDF (jsPDF ~250 KB) — hors bundle initial
-const PVPDF = dynamic(() => import('./PVPDF'), { ssr: false });
-const ConvocationPDF = dynamic(() => import('./ConvocationPDF'), { ssr: false });
+import { PVPDF, ConvocationPDF } from './PDFButtons';
 
 interface Props {
   params: Promise<{ id: string }>;
