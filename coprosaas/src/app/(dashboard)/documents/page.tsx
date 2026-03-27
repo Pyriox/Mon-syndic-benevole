@@ -1,7 +1,6 @@
 ﻿// ============================================================
-// Page : Gestion des documents par dossiers
-// - Vue principale : grille de dossiers
-// - Vue dossier (?dossier=<id>) : liste des documents du dossier
+// Page : Gestion des documents — vue gestionnaire de fichiers
+// Table unifiée dossiers + fichiers, navigation par breadcrumb
 // ============================================================
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
@@ -14,7 +13,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import DocumentActions, { DocumentRename } from './DocumentActions';
 import DossierActions, { DossierDelete, DossierRename, SubDossierActions } from './DossierActions';
 import { formatDate, LABELS_TYPE_DOCUMENT } from '@/lib/utils';
-import { FileText, Download, ExternalLink, Folder, ChevronRight } from 'lucide-react';
+import { FileText, Download, ExternalLink, Folder, ChevronRight, FolderOpen } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
@@ -87,11 +86,14 @@ function couleurType(type: string): 'default' | 'info' | 'success' | 'warning' |
 }
 
 const formatTaille = (bytes: number | null) => {
-  if (!bytes) return 'N/A';
+  if (!bytes) return '—';
   if (bytes < 1024) return `${bytes} o`;
   if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} Ko`;
   return `${(bytes / 1048576).toFixed(1)} Mo`;
 };
+
+// ── Colonnes de la table partagée ──────────────────────────
+//   col-span sur 4 colonnes : Nom | Type | Date | Taille | Actions
 
 interface Props {
   searchParams: Promise<{ dossier?: string }>;
@@ -107,9 +109,8 @@ export default async function DocumentsPage({ searchParams }: Props) {
   // ================================================================
   if (userRole === 'copropriétaire') {
     const syndicId = copropriete?.syndic_id ?? 'none';
-    const admin = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
-    const { data: rawDossiers } = await admin
+    const { data: rawDossiers } = await supabase
       .from('document_dossiers')
       .select('id, nom, is_default, created_at, parent_id, couleur' as 'id, nom, is_default, created_at')
       .eq('syndic_id', syndicId)
@@ -117,7 +118,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
       .order('created_at');
     const dossiers: Dossier[] = (rawDossiers ?? []) as unknown as Dossier[];
 
-    const { data: docCounts } = await admin
+    const { data: docCounts } = await supabase
       .from('documents')
       .select('dossier_id')
       .eq('copropriete_id', selectedCoproId ?? 'none');
@@ -126,170 +127,131 @@ export default async function DocumentsPage({ searchParams }: Props) {
       return acc;
     }, {});
 
-    const subCountByParent = dossiers.reduce<Record<string, number>>((acc, d) => {
-      if (d.parent_id) acc[d.parent_id] = (acc[d.parent_id] ?? 0) + 1;
-      return acc;
-    }, {});
+    // Dossiers visibles dans la vue courante
+    const parentId = dossierId ?? null;
+    const visibleDossiers = parentId
+      ? dossiers.filter((d) => d.parent_id === parentId)
+      : sortRootDossiers(dossiers.filter((d) => !d.parent_id));
 
-    const rootDossiersCopro = sortRootDossiers(dossiers.filter((d) => !d.parent_id));
+    // Documents du dossier courant (uniquement si on est dans un dossier terminal)
+    const hasSubs = dossierId
+      ? dossiers.some((d) => d.parent_id === dossierId)
+      : false;
 
-    // ── Vue dossier spécifique ──
-    if (dossierId) {
-      const currentDossier = dossiers.find((d) => d.id === dossierId);
-      if (!currentDossier) redirect('/documents');
+    const { data: documents } = dossierId && !hasSubs
+      ? await supabase
+          .from('documents')
+          .select('id, nom, type, taille, created_at')
+          .eq('copropriete_id', selectedCoproId ?? 'none')
+          .eq('dossier_id', dossierId)
+          .order('created_at', { ascending: false })
+      : { data: null };
 
-      const isYearClassified = ['Dépenses', 'Appels de fonds'].includes(currentDossier.nom);
-      const subDossiers = isYearClassified
-        ? dossiers.filter((d) => d.parent_id === dossierId).sort((a, b) => b.nom.localeCompare(a.nom))
-        : dossiers.filter((d) => d.parent_id === dossierId);
+    const breadcrumb = dossierId ? buildBreadcrumb(dossiers, dossierId) : [];
+    const currentDossier = dossierId ? dossiers.find((d) => d.id === dossierId) : null;
+    if (dossierId && !currentDossier) redirect('/documents');
 
-      const { data: documents } = await admin
-        .from('documents')
-        .select('*, coproprietes(nom)')
-        .eq('copropriete_id', selectedCoproId ?? 'none')
-        .eq('dossier_id', dossierId)
-        .order('created_at', { ascending: false });
+    const totalItems = visibleDossiers.length + (documents?.length ?? 0);
 
-      const breadcrumb = buildBreadcrumb(dossiers, dossierId);
-
-      return (
-        <div className="max-w-5xl mx-auto space-y-6">
-          {/* Fil d'Ariane */}
-          <div className="flex items-center gap-1 text-sm flex-wrap">
-            <Link href="/documents" className="text-gray-500 hover:text-gray-700 transition-colors">Documents</Link>
-            {breadcrumb.map((b, i) => (
-              <Fragment key={b.id}>
-                <ChevronRight size={14} className="text-gray-400 shrink-0" />
-                {i < breadcrumb.length - 1 ? (
-                  <Link href={`/documents?dossier=${b.id}`} className="text-gray-500 hover:text-gray-700 transition-colors">{b.nom}</Link>
-                ) : (
-                  <span className="font-semibold text-gray-900">{b.nom}</span>
-                )}
-              </Fragment>
-            ))}
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{currentDossier.nom}</h2>
-            <p className="text-gray-500 mt-1">
-              {subDossiers.length > 0
-                ? `${subDossiers.length} sous-dossier${subDossiers.length !== 1 ? 's' : ''}`
-                : `${documents?.length ?? 0} document${(documents?.length ?? 0) !== 1 ? 's' : ''}`}
-            </p>
-          </div>
-          {/* Sous-dossiers */}
-          {subDossiers.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {subDossiers.map((sub) => {
-                const sepIdx = sub.nom.indexOf(' — ');
-                const hasDate = sepIdx !== -1;
-                const titre = hasDate ? sub.nom.slice(0, sepIdx) : sub.nom;
-                const date  = hasDate ? sub.nom.slice(sepIdx + 3) : null;
-                const subCount = dossiers.filter((d) => d.parent_id === sub.id).length;
-                const docCount = countByDossier[sub.id] ?? 0;
-                return (
-                  <Link key={sub.id} href={`/documents?dossier=${sub.id}`} className="block h-full">
-                    <div className="bg-white rounded-xl border-2 border-gray-200 p-5 h-full flex items-center gap-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
-                      <Folder size={36} className="text-blue-400 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm leading-snug truncate">{titre}</p>
-                        {date && <p className="text-xs font-medium text-blue-600 mt-0.5">{date}</p>}
-                        <p className="text-xs text-gray-400 mt-1">
-                          {subCount > 0 ? `${subCount} sous-dossier(s)` : `${docCount} document${docCount !== 1 ? 's' : ''}`}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-          {/* Documents */}
-          {subDossiers.length === 0 && documents && documents.length > 0 && (
-            <Card padding="none">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left px-5 py-3 font-medium text-gray-500">Nom</th>
-                      <th className="text-left px-5 py-3 font-medium text-gray-500">Type</th>
-                      <th className="text-left px-5 py-3 font-medium text-gray-500">Date</th>
-                      <th className="text-right px-5 py-3 font-medium text-gray-500">Taille</th>
-                      <th className="text-center px-5 py-3 font-medium text-gray-500">Télécharger</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {documents.map((doc) => (
-                      <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-2">
-                            <FileText size={16} className="text-gray-400 shrink-0" />
-                            <span className="font-medium text-gray-900">{doc.nom}</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3">
-                          <Badge variant={couleurType(doc.type)}>
-                            {LABELS_TYPE_DOCUMENT[doc.type] ?? doc.type}
-                          </Badge>
-                        </td>
-                        <td className="px-5 py-3 text-gray-500">{formatDate(doc.created_at)}</td>
-                        <td className="px-5 py-3 text-right text-gray-500">{formatTaille(doc.taille)}</td>
-                        <td className="px-5 py-3 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Ouvrir">
-                              <ExternalLink size={15} />
-                            </a>
-                            <a href={`/api/documents/${doc.id}/download`} download={doc.nom}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" title="Télécharger">
-                              <Download size={15} />
-                            </a>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          )}
-          {/* État vide */}
-          {subDossiers.length === 0 && !documents?.length && (
-            <EmptyState
-              icon={<FileText size={48} strokeWidth={1.5} />}
-              title="Dossier vide"
-              description={`Aucun document dans « ${currentDossier.nom} » pour le moment.`}
-            />
-          )}
-        </div>
-      );
-    }
-
-    // ── Vue grille racine ──
     return (
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
-          <p className="text-gray-500 mt-1">{rootDossiersCopro.length} dossier(s)</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {rootDossiersCopro.map((dossier) => (
-            <Link key={dossier.id} href={`/documents?dossier=${dossier.id}`} className="block h-full">
-              <div className={`bg-white rounded-xl border-2 p-5 h-full flex items-center gap-4 hover:shadow-md transition-all ${
-                dossier.is_default ? 'border-gray-200 hover:border-blue-300' : 'border-dashed border-gray-300 hover:border-amber-400'
-              }`}>
-                <Folder size={36} className={`${folderColorClass(dossier)} shrink-0`} />
-                <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 text-sm leading-snug">{dossier.nom}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {subCountByParent[dossier.id]
-                      ? `${subCountByParent[dossier.id]} sous-dossier${subCountByParent[dossier.id] !== 1 ? 's' : ''}`
-                      : `${countByDossier[dossier.id] ?? 0} document${(countByDossier[dossier.id] ?? 0) !== 1 ? 's' : ''}`}
-                  </p>
-                </div>
-              </div>
-            </Link>
+      <div className="max-w-5xl mx-auto space-y-4">
+        {/* Fil d'Ariane */}
+        <div className="flex items-center gap-1 text-sm flex-wrap">
+          <Link href="/documents" className="text-gray-500 hover:text-gray-700 transition-colors">Documents</Link>
+          {breadcrumb.map((b, i) => (
+            <Fragment key={b.id}>
+              <ChevronRight size={14} className="text-gray-400 shrink-0" />
+              {i < breadcrumb.length - 1 ? (
+                <Link href={`/documents?dossier=${b.id}`} className="text-gray-500 hover:text-gray-700 transition-colors">{b.nom}</Link>
+              ) : (
+                <span className="font-semibold text-gray-900">{b.nom}</span>
+              )}
+            </Fragment>
           ))}
         </div>
+
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">{currentDossier?.nom ?? 'Documents'}</h2>
+          <p className="text-gray-500 mt-1">{totalItems} élément{totalItems !== 1 ? 's' : ''}</p>
+        </div>
+
+        {totalItems === 0 ? (
+          <EmptyState
+            icon={<FolderOpen size={48} strokeWidth={1.5} />}
+            title="Dossier vide"
+            description="Aucun document partagé pour le moment."
+          />
+        ) : (
+          <Card padding="none">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">Nom</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">Type</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Date</th>
+                    <th className="text-right px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Taille</th>
+                    <th className="text-center px-4 py-3 font-medium text-gray-500 w-20"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Dossiers en premier */}
+                  {visibleDossiers.map((d) => {
+                    const subCount = dossiers.filter((x) => x.parent_id === d.id).length;
+                    const docCount = countByDossier[d.id] ?? 0;
+                    const count = subCount > 0 ? subCount : docCount;
+                    const countLabel = subCount > 0
+                      ? `${count} dossier${count !== 1 ? 's' : ''}`
+                      : `${count} document${count !== 1 ? 's' : ''}`;
+                    return (
+                      <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <Link href={`/documents?dossier=${d.id}`} className="flex items-center gap-3 group/row">
+                            <Folder size={18} className={`${folderColorClass(d)} shrink-0`} />
+                            <span className="font-medium text-gray-900 group-hover/row:text-blue-600 transition-colors">{d.nom}</span>
+                            <span className="text-xs text-gray-400 ml-1">({countLabel})</span>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">Dossier</td>
+                        <td className="px-4 py-3 text-gray-400 hidden md:table-cell">—</td>
+                        <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">—</td>
+                        <td className="px-4 py-3"></td>
+                      </tr>
+                    );
+                  })}
+                  {/* Fichiers ensuite */}
+                  {documents?.map((doc) => (
+                    <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <FileText size={18} className="text-gray-400 shrink-0" />
+                          <span className="font-medium text-gray-900">{doc.nom}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        <Badge variant={couleurType(doc.type)}>{LABELS_TYPE_DOCUMENT[doc.type] ?? doc.type}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
+                      <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Ouvrir">
+                            <ExternalLink size={14} />
+                          </a>
+                          <a href={`/api/documents/${doc.id}/download`} download={doc.nom}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" title="Télécharger">
+                            <Download size={14} />
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
       </div>
     );
   }
@@ -318,7 +280,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   }
 
   // Auto-nettoyage des doublons de dossiers racine (garde le plus ancien)
-  const rootByName = new Map<string, string>(); // nom → id du plus ancien
+  const rootByName = new Map<string, string>();
   const toDelete: string[] = [];
   for (const d of dossiers.filter((x) => !x.parent_id).sort((a, b) => a.created_at.localeCompare(b.created_at))) {
     if (rootByName.has(d.nom)) {
@@ -332,7 +294,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
     dossiers = dossiers.filter((d) => !toDelete.includes(d.id));
   }
 
-  // Création des dossiers racine manquants (vérifie uniquement les dossiers racine)
+  // Création des dossiers racine manquants
   const existingRootNames = dossiers.filter((d) => !d.parent_id).map((d) => d.nom);
   const missing = DEFAULT_DOSSIER_NAMES.filter((n) => !existingRootNames.includes(n));
   if (missing.length) {
@@ -349,13 +311,10 @@ export default async function DocumentsPage({ searchParams }: Props) {
   }
 
   // Migration : supprime le dossier "Convocations AG" devenu obsolète
-  // (les convocations sont désormais rangées dans Assemblées Générales / Année / AG)
   const convDossiers = dossiers.filter((d) => d.nom === 'Convocations AG');
   if (convDossiers.length > 0) {
     const convIds = convDossiers.map((d) => d.id);
-    // Supprime les documents contenus dans ces dossiers
     await supabase.from('documents').delete().in('dossier_id', convIds);
-    // Supprime les sous-dossiers éventuels
     const subConvIds = dossiers.filter((d) => d.parent_id && convIds.includes(d.parent_id)).map((d) => d.id);
     if (subConvIds.length > 0) {
       await supabase.from('documents').delete().in('dossier_id', subConvIds);
@@ -365,14 +324,13 @@ export default async function DocumentsPage({ searchParams }: Props) {
     dossiers = dossiers.filter((d) => !convIds.includes(d.id) && !(d.parent_id && convIds.includes(d.parent_id)));
   }
 
-  // Migration : déplace les documents directement dans "Dépenses" vers son sous-dossier de l'année courante
+  // Migration : déplace les documents directement dans "Dépenses" vers le sous-dossier année courante
   {
     const currentYear = new Date().getFullYear().toString();
     const depensesRoot = dossiers.find((d) => d.nom === 'Dépenses' && !d.parent_id);
     if (depensesRoot && selectedCoproId) {
       const yearSub = dossiers.find((d) => d.parent_id === depensesRoot.id && d.nom === currentYear);
       if (yearSub) {
-        // Déplace les docs directement dans "Dépenses" (pas dans un sous-dossier) vers le sous-dossier année
         await supabase
           .from('documents')
           .update({ dossier_id: yearSub.id })
@@ -382,7 +340,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
     }
   }
 
-  // Auto-création du sous-dossier "année courante" pour Dépenses, Appels de fonds et Assemblées générales
+  // Auto-création du sous-dossier "année courante"
   {
     const currentYear = new Date().getFullYear().toString();
     const yearParentNames = ['Dépenses', 'Appels de fonds', 'Assemblées générales'];
@@ -412,9 +370,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
     }
   }
 
-  // ================================================================
-  // Comptage documents par dossier (utilisé dans les deux vues)
-  // ================================================================
+  // Comptage documents par dossier
   const { data: docCounts } = await supabase
     .from('documents')
     .select('dossier_id')
@@ -426,278 +382,218 @@ export default async function DocumentsPage({ searchParams }: Props) {
   }, {});
 
   // ================================================================
-  // VUE DOSSIER SPÉCIFIQUE (sous-dossiers + documents)
+  // Données de la vue courante
   // ================================================================
-  if (dossierId) {
-    const currentDossier = dossiers.find((d) => d.id === dossierId);
-    if (!currentDossier) redirect('/documents');
+  const currentDossier = dossierId ? dossiers.find((d) => d.id === dossierId) : null;
+  if (dossierId && !currentDossier) redirect('/documents');
 
-    // Sous-dossiers directs — triés par nom décroissant pour les dossiers classés par année
-    const isYearClassified = ['Dépenses', 'Appels de fonds'].includes(currentDossier.nom);
-    const subDossiers = isYearClassified
-      ? dossiers.filter((d) => d.parent_id === dossierId).sort((a, b) => b.nom.localeCompare(a.nom))
-      : dossiers.filter((d) => d.parent_id === dossierId);
+  const parentId = dossierId ?? null;
+  const visibleDossiers = parentId
+    ? (() => {
+        const isYearClassified = currentDossier && ['Dépenses', 'Appels de fonds'].includes(currentDossier.nom);
+        const subs = dossiers.filter((d) => d.parent_id === parentId);
+        return isYearClassified
+          ? subs.sort((a, b) => b.nom.localeCompare(a.nom))
+          : subs;
+      })()
+    : sortRootDossiers(dossiers.filter((d) => !d.parent_id));
 
-    // Documents au niveau de ce dossier
-    const { data: documents } = await supabase
-      .from('documents')
-      .select('*, coproprietes(nom)')
-      .eq('copropriete_id', selectedCoproId ?? 'none')
-      .eq('dossier_id', dossierId)
-      .order('created_at', { ascending: false });
+  const hasSubs = dossierId ? dossiers.some((d) => d.parent_id === dossierId) : false;
 
-    // Fil d'Ariane
-    const breadcrumb = buildBreadcrumb(dossiers, dossierId);
+  const { data: documents } = dossierId && !hasSubs
+    ? await supabase
+        .from('documents')
+        .select('*, coproprietes(nom)')
+        .eq('copropriete_id', selectedCoproId ?? 'none')
+        .eq('dossier_id', dossierId)
+        .order('created_at', { ascending: false })
+    : { data: null };
 
-    const docTable = documents && documents.length > 0 ? (
-      <Card padding="none">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">Nom</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">Type</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">Date</th>
-                <th className="text-right px-5 py-3 font-medium text-gray-500">Taille</th>
-                <th className="text-center px-5 py-3 font-medium text-gray-500">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documents.map((doc) => (
-                <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      <FileText size={16} className="text-gray-400 shrink-0" />
-                      <span className="font-medium text-gray-900">{doc.nom}</span>
-                      {canWrite && <DocumentRename documentId={doc.id} nomActuel={doc.nom} />}
-                    </div>
-                  </td>
-                  <td className="px-5 py-3">
-                    <Badge variant={couleurType(doc.type)}>
-                      {LABELS_TYPE_DOCUMENT[doc.type] ?? doc.type}
-                    </Badge>
-                  </td>
-                  <td className="px-5 py-3 text-gray-500">{formatDate(doc.created_at)}</td>
-                  <td className="px-5 py-3 text-right text-gray-500">{formatTaille(doc.taille)}</td>
-                  <td className="px-5 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Ouvrir">
-                        <ExternalLink size={15} />
-                      </a>
-                      <a href={`/api/documents/${doc.id}/download`} download={doc.nom}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" title="Télécharger">
-                        <Download size={15} />
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    ) : null;
-
-    return (
-      <div className="max-w-5xl mx-auto space-y-6">
-        {/* ── Bandeau lecture seule ── */}
-        {!canWrite && <ReadOnlyBanner />}
-
-        {/* Fil d'Ariane */}
-        <div className="flex items-center gap-1 text-sm flex-wrap">
-          <Link href="/documents" className="text-gray-500 hover:text-gray-700 transition-colors">
-            Documents
-          </Link>
-          {breadcrumb.map((b, i) => (
-            <Fragment key={b.id}>
-              <ChevronRight size={14} className="text-gray-400 shrink-0" />
-              {i < breadcrumb.length - 1 ? (
-                <Link href={`/documents?dossier=${b.id}`} className="text-gray-500 hover:text-gray-700 transition-colors">
-                  {b.nom}
-                </Link>
-              ) : (
-                <span className="font-semibold text-gray-900">{b.nom}</span>
-              )}
-            </Fragment>
-          ))}
-        </div>
-
-        {/* En-tête */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{currentDossier.nom}</h2>
-            <p className="text-gray-500 mt-1">
-              {subDossiers.length > 0
-                ? `${subDossiers.length} sous-dossier${subDossiers.length !== 1 ? 's' : ''}`
-                : `${documents?.length ?? 0} document${(documents?.length ?? 0) !== 1 ? 's' : ''}`}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {canWrite && subDossiers.length > 0 && (
-              <SubDossierActions mode="create" parentId={dossierId} />
-            )}
-            {subDossiers.length === 0 && (documents?.length ?? 0) > 0 && (
-              canWrite ? (
-                <DocumentActions
-                  coproprietes={coproprietes ?? []}
-                  dossiers={dossiers}
-                  defaultDossierId={dossierId}
-                />
-              ) : (
-                <UpgradeBanner compact />
-              )
-            )}
-          </div>
-        </div>
-
-        {/* Sous-dossiers */}
-        {subDossiers.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {subDossiers.map((sub) => {
-              const sepIdx = sub.nom.indexOf(' — ');
-              const hasDate = sepIdx !== -1;
-              const titre = hasDate ? sub.nom.slice(0, sepIdx) : sub.nom;
-              const date  = hasDate ? sub.nom.slice(sepIdx + 3) : null;
-              const subCount = dossiers.filter((d) => d.parent_id === sub.id).length;
-              const docCount = countByDossier[sub.id] ?? 0;
-              return (
-                <div key={sub.id} className="relative group">
-                  <Link href={`/documents?dossier=${sub.id}`} className="block h-full">
-                    <div className="bg-white rounded-xl border-2 border-gray-200 p-5 h-full flex items-center gap-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
-                      <Folder size={36} className="text-blue-400 shrink-0" aria-hidden="true" />
-                      <div className="min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm leading-snug truncate">{titre}</p>
-                        {date && (
-                          <p className="text-xs font-medium text-blue-600 mt-0.5">{date}</p>
-                        )}
-                        <p className="text-xs text-gray-400 mt-1">
-                          {subCount > 0 ? `${subCount} sous-dossier(s)` : `${docCount} document${docCount !== 1 ? 's' : ''}`}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                  {/* Boutons renommer / supprimer au survol */}
-                  {canWrite && (
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <SubDossierActions
-                        mode="rename"
-                        parentId={dossierId}
-                        dossier={{ id: sub.id, nom: sub.nom }}
-                      />
-                      <SubDossierActions
-                        mode="delete"
-                        parentId={dossierId}
-                        dossier={{ id: sub.id, nom: sub.nom }}
-                        hasDocuments={docCount > 0}
-                        hasSubs={subCount > 0}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Documents */}
-        {docTable}
-
-        {/* État vide */}
-        {subDossiers.length === 0 && !documents?.length && (
-          <EmptyState
-            icon={<FileText size={48} strokeWidth={1.5} />}
-            title="Dossier vide"
-            description={`Aucun document dans « ${currentDossier.nom} » pour le moment.`}
-            action={
-              canWrite ? (
-                <DocumentActions
-                  coproprietes={coproprietes ?? []}
-                  dossiers={dossiers}
-                  defaultDossierId={dossierId}
-                  showLabel
-                />
-              ) : (
-                <UpgradeBanner />
-              )
-            }
-          />
-        )}
-      </div>
-    );
-  }
+  const breadcrumb = dossierId ? buildBreadcrumb(dossiers, dossierId) : [];
+  const totalItems = visibleDossiers.length + (documents?.length ?? 0);
 
   // ================================================================
-  // VUE PRINCIPALE : grille des dossiers racine
+  // RENDU — vue Drive unifiée
   // ================================================================
-  const rootDossiers = sortRootDossiers(dossiers.filter((d) => !d.parent_id));
-
-  const subCountByParent = dossiers.reduce<Record<string, number>>((acc, d) => {
-    if (d.parent_id) acc[d.parent_id] = (acc[d.parent_id] ?? 0) + 1;
-    return acc;
-  }, {});
-
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      {/* ── Bandeau lecture seule ── */}
+    <div className="max-w-5xl mx-auto space-y-4">
+      {/* Bandeau lecture seule */}
       {!canWrite && <ReadOnlyBanner />}
 
+      {/* Fil d'Ariane */}
+      <div className="flex items-center gap-1 text-sm flex-wrap">
+        <Link href="/documents" className="text-gray-500 hover:text-gray-700 transition-colors">Documents</Link>
+        {breadcrumb.map((b, i) => (
+          <Fragment key={b.id}>
+            <ChevronRight size={14} className="text-gray-400 shrink-0" />
+            {i < breadcrumb.length - 1 ? (
+              <Link href={`/documents?dossier=${b.id}`} className="text-gray-500 hover:text-gray-700 transition-colors">{b.nom}</Link>
+            ) : (
+              <span className="font-semibold text-gray-900">{b.nom}</span>
+            )}
+          </Fragment>
+        ))}
+      </div>
+
+      {/* En-tête */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
-          <p className="text-gray-500 mt-1">{rootDossiers.length} dossier(s)</p>
+          <h2 className="text-2xl font-bold text-gray-900">{currentDossier?.nom ?? 'Documents'}</h2>
+          <p className="text-gray-500 mt-1">{totalItems} élément{totalItems !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-2">
-          {canWrite && <DossierActions />}
+          {/* Actions dossier (vue racine uniquement) */}
+          {!dossierId && canWrite && <DossierActions />}
+          {/* Créer sous-dossier (dans un dossier avec sous-dossiers) */}
+          {dossierId && hasSubs && canWrite && (
+            <SubDossierActions mode="create" parentId={dossierId} />
+          )}
+          {/* Importer un document */}
           {canWrite ? (
-            <DocumentActions coproprietes={coproprietes ?? []} dossiers={dossiers} />
+            <DocumentActions
+              coproprietes={coproprietes}
+              dossiers={dossiers}
+              defaultDossierId={dossierId}
+            />
           ) : (
             <UpgradeBanner compact />
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {rootDossiers.map((dossier) => (
-          <div key={dossier.id} className="relative group">
-            <Link href={`/documents?dossier=${dossier.id}`} className="block h-full">
-              <div
-                className={`bg-white rounded-xl border-2 p-5 h-full flex items-center gap-4 hover:shadow-md transition-all ${
-                  dossier.is_default
-                    ? 'border-gray-200 hover:border-blue-300'
-                    : 'border-dashed border-gray-300 hover:border-amber-400'
-                }`}
-              >
-                <Folder
-                  size={36}
-                  className={`${folderColorClass(dossier)} shrink-0`}
-                />
-                <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 text-sm leading-snug">{dossier.nom}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {subCountByParent[dossier.id]
-                      ? `${subCountByParent[dossier.id]} sous-dossier${subCountByParent[dossier.id] !== 1 ? 's' : ''}`
-                      : `${countByDossier[dossier.id] ?? 0} document${(countByDossier[dossier.id] ?? 0) !== 1 ? 's' : ''}`}
-                  </p>
-                </div>
-              </div>
-            </Link>
-            <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              {canWrite && (
-                <DossierRename
-                  dossierId={dossier.id}
-                  dossierNom={dossier.nom}
-                  dossierCouleur={dossier.couleur}
-                  colorOnly={dossier.is_default}
-                />
-              )}
-              {canWrite && !dossier.is_default && (
-                <DossierDelete dossierId={dossier.id} dossierNom={dossier.nom} />
-              )}
-            </div>
+      {/* Table Drive */}
+      {totalItems === 0 ? (
+        <EmptyState
+          icon={<FolderOpen size={48} strokeWidth={1.5} />}
+          title="Dossier vide"
+          description={currentDossier
+            ? `Aucun document dans « ${currentDossier.nom} » pour le moment.`
+            : 'Aucun document pour le moment.'}
+          action={
+            canWrite ? (
+              <DocumentActions
+                coproprietes={coproprietes}
+                dossiers={dossiers}
+                defaultDossierId={dossierId}
+                showLabel
+              />
+            ) : (
+              <UpgradeBanner />
+            )
+          }
+        />
+      ) : (
+        <Card padding="none">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium text-gray-500">Nom</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">Type</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Date</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Taille</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-500 w-24">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* ── Dossiers en premier ── */}
+                {visibleDossiers.map((d) => {
+                  const subCount = dossiers.filter((x) => x.parent_id === d.id).length;
+                  const docCount = countByDossier[d.id] ?? 0;
+                  const count = subCount > 0 ? subCount : docCount;
+                  const countLabel = subCount > 0
+                    ? `${count} dossier${count !== 1 ? 's' : ''}`
+                    : `${count} document${count !== 1 ? 's' : ''}`;
+                  return (
+                    <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors group">
+                      <td className="px-4 py-3">
+                        <Link href={`/documents?dossier=${d.id}`} className="flex items-center gap-3 group/link">
+                          <Folder size={18} className={`${folderColorClass(d)} shrink-0`} />
+                          <span className="font-medium text-gray-900 group-hover/link:text-blue-600 transition-colors">{d.nom}</span>
+                          <span className="text-xs text-gray-400">({countLabel})</span>
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">Dossier</td>
+                      <td className="px-4 py-3 text-gray-400 hidden md:table-cell">—</td>
+                      <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">—</td>
+                      <td className="px-4 py-3">
+                        {canWrite && (
+                          <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {!dossierId ? (
+                              // Dossiers racine : renommer + supprimer (custom seulement)
+                              <>
+                                <DossierRename
+                                  dossierId={d.id}
+                                  dossierNom={d.nom}
+                                  dossierCouleur={d.couleur}
+                                  colorOnly={d.is_default}
+                                />
+                                {!d.is_default && (
+                                  <DossierDelete dossierId={d.id} dossierNom={d.nom} />
+                                )}
+                              </>
+                            ) : (
+                              // Sous-dossiers : renommer + supprimer
+                              <>
+                                <SubDossierActions
+                                  mode="rename"
+                                  parentId={dossierId}
+                                  dossier={{ id: d.id, nom: d.nom }}
+                                />
+                                <SubDossierActions
+                                  mode="delete"
+                                  parentId={dossierId}
+                                  dossier={{ id: d.id, nom: d.nom }}
+                                  hasDocuments={docCount > 0}
+                                  hasSubs={subCount > 0}
+                                />
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {/* ── Fichiers ensuite ── */}
+                {documents?.map((doc) => (
+                  <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors group">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <FileText size={18} className="text-gray-400 shrink-0" />
+                        <span className="font-medium text-gray-900">{doc.nom}</span>
+                        {canWrite && (
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <DocumentRename documentId={doc.id} nomActuel={doc.nom} />
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      <Badge variant={couleurType(doc.type)}>{LABELS_TYPE_DOCUMENT[doc.type] ?? doc.type}</Badge>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
+                    <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-1">
+                        <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Ouvrir">
+                          <ExternalLink size={14} />
+                        </a>
+                        <a href={`/api/documents/${doc.id}/download`} download={doc.nom}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" title="Télécharger">
+                          <Download size={14} />
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ))}
-      </div>
+        </Card>
+      )}
     </div>
   );
 }
