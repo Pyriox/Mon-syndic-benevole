@@ -15,7 +15,7 @@
 //   await requireCoproAccess(['syndic']);
 // ============================================================
 import { cache } from 'react';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -39,8 +39,8 @@ export interface CoproAccess {
 }
 
 export const requireCoproAccess = cache(async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<CoproAccess> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // getAuthUser() est React.cache → résultat partagé avec le layout, 0 appel réseau supplémentaire
+  const user = await getAuthUser();
   if (!user) redirect('/login');
 
   const admin = createAdminClient();

@@ -36,3 +36,14 @@ export const createClient = cache(async () => {
     }
   );
 });
+
+/**
+ * Retourne l'utilisateur authentifié courant.
+ * Wrappé avec React cache() : layout + toutes les pages partagent UN SEUL appel
+ * auth.getUser() (réseau) par request, évitant les aller-retours redondants.
+ */
+export const getAuthUser = cache(async () => {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+});

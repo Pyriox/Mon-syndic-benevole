@@ -4,7 +4,7 @@
 // ============================================================
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getDashboardLayoutData, getSyndicNotifications, getCoproNotifications } from '@/lib/cached-queries';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -16,8 +16,9 @@ interface DashboardLayoutProps {
 
 export default async function DashboardLayout({ children }: DashboardLayoutProps) {
   // Vérification de la session côté serveur
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // getAuthUser() est wrappé avec React.cache → partagé avec requireCoproAccess dans les pages
+  // → 1 seul appel auth.getUser() (réseau) par request au lieu de 2
+  const user = await getAuthUser();
 
   // Redirection si non connecté
   if (!user) {
