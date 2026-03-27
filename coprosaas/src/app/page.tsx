@@ -237,6 +237,7 @@ export default function HomePage() {
             <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> 14 jours offerts, facturation au 15e jour</span>
             <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-400" /> Sans engagement</span>
             <span className="flex items-center gap-1.5"><Shield size={14} className="text-green-400" /> Données hébergées en Europe</span>
+            <span className="flex items-center gap-1.5"><Users size={14} className="text-blue-300" /> Développé avec des syndics bénévoles</span>
           </div>
         </div>
                 </section>
@@ -248,7 +249,6 @@ export default function HomePage() {
       <section aria-labelledby="probleme-heading" className="bg-white py-14 sm:py-20 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-red-500 uppercase tracking-widest mb-3">Le problème</p>
             <h2 id="probleme-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Marre des syndics inefficaces et trop chers&nbsp;?
             </h2>
@@ -342,7 +342,6 @@ export default function HomePage() {
       <section id="fonctionnalites" aria-labelledby="solution-heading" className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6 border-y border-gray-100">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">La solution</p>
             <h2 id="solution-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Tout ce que fait un syndic professionnel —{' '}
               <span className="text-blue-600">pour 300&nbsp;€/an</span>
