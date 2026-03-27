@@ -26,6 +26,7 @@ const catColorMap: Record<string, string> = {
   administration:     'bg-gray-400',
   travaux:            'bg-yellow-400',
   fonds_travaux_alur: 'bg-amber-500',
+  syndic_benevole:    'bg-blue-600',
   autre:              'bg-slate-300',
 };
 
@@ -34,6 +35,7 @@ function couleurCategorie(cat: string): 'default' | 'info' | 'success' | 'warnin
   const map: Record<string, 'default' | 'info' | 'success' | 'warning' | 'purple'> = {
     travaux: 'warning',
     fonds_travaux_alur: 'warning',
+    syndic_benevole: 'info',
     assurance: 'info',
     eau: 'info',
     electricite: 'purple',

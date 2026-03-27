@@ -91,6 +91,7 @@ export const LABELS_CATEGORIE: Record<string, string> = {
   administration: 'Administration',
   travaux: 'Travaux',
   fonds_travaux_alur: 'Fonds travaux ALUR',
+  syndic_benevole: 'Mon Syndic Bénévole',
   autre: 'Autre',
 };
 

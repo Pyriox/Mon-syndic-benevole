@@ -403,6 +403,7 @@ export default async function DashboardPage() {
     administration:     { bar: 'bg-gray-400',    dot: 'bg-gray-400' },
     travaux:            { bar: 'bg-yellow-400',  dot: 'bg-yellow-400' },
     fonds_travaux_alur: { bar: 'bg-amber-500',   dot: 'bg-amber-500' },
+    syndic_benevole:    { bar: 'bg-blue-600',    dot: 'bg-blue-600' },
     autre:              { bar: 'bg-slate-300',   dot: 'bg-slate-300' },
   };
   const repartitionRaw: Record<string, number> = {};
