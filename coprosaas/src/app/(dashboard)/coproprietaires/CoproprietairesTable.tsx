@@ -29,13 +29,15 @@ function formatPhone(phone: string | null | undefined): string {
   return digits.replace(/(\d{2})(?=\d)/g, '$1\u00a0').trim();
 }
 
-function Avatar({ name }: { name: string }) {
+function Avatar({ name, highlighted = false }: { name: string; highlighted?: boolean }) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const initials = parts.length >= 2
     ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
     : name.slice(0, 2).toUpperCase();
   return (
-    <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-100 text-blue-700 text-sm font-bold shrink-0">
+    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold shrink-0 ${
+      highlighted ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'
+    }`}>
       {initials || '?'}
     </span>
   );
@@ -103,9 +105,10 @@ function IdentityBlock({
   inviteButton?: React.ReactNode;
 }) {
   const displayName = computeDisplayName(cp);
+  const isCurrentUser = cp.user_id !== null && cp.user_id === currentUserId;
   return (
     <div className="flex items-center gap-2.5 min-w-0">
-      <Avatar name={displayName || '?'} />
+      <Avatar name={displayName || '?'} highlighted={isCurrentUser} />
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-medium text-gray-900 leading-tight truncate">
@@ -245,14 +248,14 @@ function ReadOnlyCoproRow({
 }) {
   const { cpTantiemes, cpPercent } = computeTantiemes(ownedLots, totalTantiemes);
   return (
-    <tr className={`border-b border-gray-100 last:border-0 transition-colors ${cp.user_id === currentUserId ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'}`}>
-      <td className="py-3.5 px-5">
+    <tr className={`border-b border-gray-100 last:border-0 transition-colors ${cp.user_id === currentUserId ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}`}>
+      <td className="py-4 px-5">
         <IdentityBlock cp={cp} currentUserId={currentUserId} />
       </td>
-      <td className="py-3.5 px-5">
+      <td className="py-4 px-5">
         <LotProgressBlock ownedLots={ownedLots} cpTantiemes={cpTantiemes} cpPercent={cpPercent} />
       </td>
-      <td className="py-3.5 px-5">
+      <td className="py-4 px-5">
         {/* Adresse masquée — donnée personnelle non visible par les copropriétaires */}
       </td>
     </tr>
@@ -277,7 +280,7 @@ function MobileCoproCard({
   const displayName = computeDisplayName(cp);
 
   return (
-    <div className={`border rounded-xl p-4 space-y-3 ${cp.user_id === currentUserId ? 'bg-blue-100 border-blue-300' : 'bg-white border-gray-200'}`}>
+    <div className={`border rounded-xl p-4 space-y-3 ${cp.user_id === currentUserId ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
       {/* Identité + actions */}
       <div className="flex items-start justify-between gap-2">
         <IdentityBlock
@@ -342,11 +345,11 @@ function SortableCoproRow({
       ref={setNodeRef}
       style={style}
       className={`border-b border-gray-100 last:border-0 ${
-        isDragging ? 'bg-blue-50' : cp.user_id === currentUserId ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+        isDragging ? 'bg-blue-50' : cp.user_id === currentUserId ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'
       }`}
     >
       {/* Poignée */}
-      <td className="py-3 px-2">
+      <td className="py-4 px-2">
         <button
           {...attributes}
           {...listeners}
@@ -358,7 +361,7 @@ function SortableCoproRow({
       </td>
 
       {/* Nom */}
-      <td className="py-3 px-4">
+      <td className="py-4 px-5">
         <IdentityBlock
           cp={cp}
           currentUserId={currentUserId}
@@ -367,24 +370,24 @@ function SortableCoproRow({
       </td>
 
       {/* Lots */}
-      <td className="py-3 px-4">
+      <td className="py-4 px-5 min-w-[200px]">
         <LotProgressBlock ownedLots={ownedLots} cpTantiemes={cpTantiemes} cpPercent={cpPercent} />
       </td>
 
       {/* Contact */}
-      <td className="py-3 px-4">
+      <td className="py-4 px-5">
         <ContactBlock email={cp.email} telephone={cp.telephone} />
       </td>
 
       {/* Solde */}
-      <td className="py-3 px-4 text-right">
+      <td className="py-4 px-5 text-right">
         <Badge variant={(cp.solde ?? 0) < 0 ? 'danger' : (cp.solde ?? 0) > 0 ? 'success' : 'default'}>
           {formatEuros(cp.solde ?? 0)}
         </Badge>
       </td>
 
       {/* Actions */}
-      <td className="py-3 px-4">
+      <td className="py-4 px-5">
         <div className="flex items-center justify-end gap-0.5">
           <CoproprietaireEdit
             coproprietaire={{ ...cp, email: cp.email ?? '', telephone: cp.telephone ?? null, solde: cp.solde ?? 0 }}
@@ -458,8 +461,8 @@ export default function CoproprietairesTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left py-3 px-5 font-medium text-gray-500">Copropriétaire</th>
-                <th className="text-left py-3 px-5 font-medium text-gray-500">Lots &amp; quote-part</th>
+                <th className="text-left py-3.5 px-5 font-medium text-gray-500">Copropriétaire</th>
+                <th className="text-left py-3.5 px-5 font-medium text-gray-500">Lots &amp; quote-part</th>
               </tr>
             </thead>
             <tbody>
@@ -508,12 +511,12 @@ export default function CoproprietairesTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="py-3 px-2 w-6"></th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Copropriétaire</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Lots &amp; tantièmes</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Contact</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-500">Solde</th>
-                <th className="py-3 px-4"></th>
+                <th className="py-3.5 px-2 w-6"></th>
+                <th className="text-left py-3.5 px-5 font-medium text-gray-500">Copropriétaire</th>
+                <th className="text-left py-3.5 px-5 font-medium text-gray-500 min-w-[200px]">Lots &amp; tantièmes</th>
+                <th className="text-left py-3.5 px-5 font-medium text-gray-500">Contact</th>
+                <th className="text-right py-3.5 px-5 font-medium text-gray-500">Solde</th>
+                <th className="py-3.5 px-5"></th>
               </tr>
             </thead>
             <tbody>
