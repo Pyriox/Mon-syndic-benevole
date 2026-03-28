@@ -316,6 +316,60 @@ export const posts: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: 'migrer-vers-mon-syndic-benevole',
+    title: 'Migrer vers Mon Syndic Bénévole : guide complet en 8 étapes',
+    description:
+      'Comment migrer vers Mon Syndic Bénévole depuis Excel ou un syndic professionnel : lots, tantièmes, soldes de départ, fonds de travaux, premier appel de fonds — opérationnel en une demi-journée.',
+    // 196 chars
+    publishedAt: '2026-03-28',
+    readingTime: 10,
+    category: 'Guide pratique – Migration & Prise en main',
+    keywords: [
+      'migrer logiciel syndic bénévole',
+      'reprendre gestion copropriété',
+      'passer syndic professionnel bénévole logiciel',
+      'migration données copropriété',
+      'démarrer syndic bénévole logiciel',
+      'importer copropriété logiciel gestion',
+    ],
+    toc: [
+      { id: 'avant-de-commencer', text: 'Ce que vous devez rassembler avant de commencer' },
+      { id: 'etape-1', text: 'Étape 1 — Créer la copropriété' },
+      { id: 'etape-2', text: 'Étape 2 — Saisir les lots et les tantièmes' },
+      { id: 'etape-3', text: 'Étape 3 — Inviter les copropriétaires' },
+      { id: 'etape-4', text: 'Étape 4 — Reprendre le solde comptable de départ' },
+      { id: 'etape-5', text: 'Étape 5 — Déclarer le fonds de travaux existant' },
+      { id: 'etape-6', text: 'Étape 6 — Créer le premier appel de fonds' },
+      { id: 'etape-7', text: 'Étape 7 — Importer les documents clés' },
+      { id: 'etape-8', text: 'Étape 8 — Vérification avant le premier envoi' },
+      { id: 'ce-que-vous-gagnez', text: 'Ce que vous gagnez concrètement le premier mois' },
+      { id: 'questions-frequentes', text: 'Questions fréquentes' },
+      { id: 'en-resume', text: 'En résumé' },
+    ],
+    faqs: [
+      {
+        q: 'Combien de temps faut-il pour migrer depuis un syndic professionnel ?',
+        a: "Pour une copropriété de 10 à 20 lots, comptez entre 3 et 5 heures si vous avez tous vos documents en main. La majorité du temps est consacrée à la saisie des tantièmes et des données copropriétaires.",
+      },
+      {
+        q: "Faut-il ressaisir tout l'historique comptable des années précédentes ?",
+        a: "Non. Seul le solde de départ à la date de migration est nécessaire. L'historique des exercices précédents peut rester dans vos archives — il n'impacte pas la gestion courante sur Mon Syndic Bénévole.",
+      },
+      {
+        q: "Peut-on migrer en cours d'année, sans attendre le 1er janvier ?",
+        a: "Oui. La migration est indépendante du calendrier de l'exercice. Si vous démarrez en cours de trimestre, renseignez le solde à la date exacte de migration. L'exercice en cours se poursuit normalement depuis cette date.",
+      },
+      {
+        q: "Les données sont-elles sécurisées lors de la migration ?",
+        a: "Mon Syndic Bénévole est hébergé sur infrastructure européenne conforme au RGPD, avec chiffrement en transit et au repos. Des sauvegardes automatiques quotidiennes protègent contre toute perte accidentelle.",
+      },
+      {
+        q: "Que se passe-t-il si je souhaite arrêter Mon Syndic Bénévole plus tard ?",
+        a: "Vous pouvez exporter vos données à tout moment — copropriétaires, lots, historique des appels. Aucun engagement de durée minimum au-delà de chaque mois souscrit.",
+      },
+    ],
+  },
 ];
 
 export function getPost(slug: string): BlogPost | undefined {

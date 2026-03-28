@@ -53,6 +53,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${APP_URL}/blog/migrer-vers-mon-syndic-benevole`,
+      lastModified: new Date('2026-03-28'),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
       url: `${APP_URL}/mentions-legales`,
       lastModified: new Date('2026-01-01'),
       changeFrequency: 'yearly',

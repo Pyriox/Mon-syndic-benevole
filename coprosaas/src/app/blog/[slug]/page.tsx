@@ -16,6 +16,7 @@ import ArticleFonds from '../_content/fonds-de-travaux-alur-obligations-montant-
 import ArticleCommentDevenir from '../_content/comment-devenir-syndic-benevole';
 import ArticleObligations from '../_content/obligations-syndic-benevole';
 import ArticleLogiciel from '../_content/logiciel-syndic-benevole';
+import ArticleMigrer from '../_content/migrer-vers-mon-syndic-benevole';
 
 const contentMap: Record<string, ComponentType> = {
   'gerer-copropriete-sans-syndic-professionnel': ArticleGerer,
@@ -24,6 +25,7 @@ const contentMap: Record<string, ComponentType> = {
   'comment-devenir-syndic-benevole': ArticleCommentDevenir,
   'obligations-syndic-benevole': ArticleObligations,
   'logiciel-syndic-benevole': ArticleLogiciel,
+  'migrer-vers-mon-syndic-benevole': ArticleMigrer,
 };
 
 // ── Static params ────────────────────────────────────────────────────────────
