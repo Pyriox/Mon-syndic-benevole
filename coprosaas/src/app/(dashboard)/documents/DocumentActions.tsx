@@ -4,7 +4,7 @@
 // ============================================================
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -14,6 +14,7 @@ import Input from '@/components/ui/Input';
 import {
   Upload, Pencil, File, FileText, FileSpreadsheet, Image as ImageIcon,
   X, CheckCircle2, CloudUpload, MoreVertical, Eye, Download, FolderInput, Trash2, AlertTriangle,
+  Folder, ChevronRight,
 } from 'lucide-react';
 
 interface Copropriete { id: string; nom: string }
@@ -204,7 +205,119 @@ export default function DocumentActions({ coproprietes, defaultDossierId, showLa
   );
 }
 
-// ── Menu actions document (⋮) ──────────────────────────────────────────────────
+// ── Composant sélecteur de dossier style Drive ───────────────────
+function FolderPicker({
+  dossiers,
+  value,
+  onChange,
+}: {
+  dossiers: { id: string; nom: string; parent_id?: string | null }[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [browserId, setBrowserId] = useState<string | null>(null);
+
+  const childrenOf = (pid: string | null) =>
+    dossiers.filter((d) => (d.parent_id ?? null) === pid);
+  const hasChildren = (id: string) =>
+    dossiers.some((d) => d.parent_id === id);
+
+  const buildCrumbs = (id: string | null): { id: string; nom: string }[] => {
+    if (!id) return [];
+    const map = new Map(dossiers.map((d) => [d.id, d]));
+    const chain: { id: string; nom: string }[] = [];
+    let cur = map.get(id);
+    while (cur) {
+      chain.unshift({ id: cur.id, nom: cur.nom });
+      cur = cur.parent_id ? map.get(cur.parent_id) : undefined;
+    }
+    return chain;
+  };
+
+  const crumbs = buildCrumbs(browserId);
+  const current = childrenOf(browserId);
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-b border-gray-200 text-xs flex-wrap min-h-[36px]">
+        <button
+          type="button"
+          onClick={() => setBrowserId(null)}
+          className={`font-medium transition-colors ${
+            browserId === null ? 'text-blue-700' : 'text-gray-600 hover:text-blue-600'
+          }`}
+        >
+          Tous les dossiers
+        </button>
+        {crumbs.map((c) => (
+          <Fragment key={c.id}>
+            <ChevronRight size={11} className="text-gray-400 shrink-0" />
+            <button
+              type="button"
+              onClick={() => setBrowserId(c.id)}
+              className={`font-medium transition-colors ${
+                browserId === c.id ? 'text-blue-700' : 'text-gray-600 hover:text-blue-600'
+              }`}
+            >
+              {c.nom}
+            </button>
+          </Fragment>
+        ))}
+      </div>
+
+      {/* Liste de dossiers */}
+      <div className="max-h-52 overflow-y-auto divide-y divide-gray-50">
+        {current.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-gray-400 text-center">Aucun sous-dossier</p>
+        ) : (
+          current.map((d) => {
+            const isLeaf = !hasChildren(d.id);
+            const isSelected = value === d.id;
+            return (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => {
+                  if (isLeaf) {
+                    onChange(d.id);
+                  } else {
+                    setBrowserId(d.id);
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${
+                  isSelected
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'hover:bg-gray-50 text-gray-800'
+                }`}
+              >
+                <Folder
+                  size={16}
+                  className={`shrink-0 ${
+                    isSelected ? 'text-blue-500' : isLeaf ? 'text-amber-500' : 'text-blue-500'
+                  }`}
+                />
+                <span className="flex-1 font-medium truncate">{d.nom}</span>
+                {isSelected && <CheckCircle2 size={14} className="text-blue-500 shrink-0" />}
+                {!isLeaf && !isSelected && <ChevronRight size={14} className="text-gray-400 shrink-0" />}
+              </button>
+            );
+          })
+        )}
+      </div>
+
+      {/* Destination sélectionnée */}
+      {value && (
+        <div className="px-4 py-2 bg-blue-50 border-t border-blue-100 text-xs text-blue-700 flex items-center gap-1.5">
+          <CheckCircle2 size={12} className="shrink-0" />
+          <span>Destination : <strong>{dossiers.find((d) => d.id === value)?.nom}</strong></span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Menu actions document (inline buttons) ────────────────────────
 export function DocumentMenu({
   doc,
   dossiers,
@@ -233,8 +346,7 @@ export function DocumentMenu({
     close(); router.refresh();
   };
 
-  const handleMove = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleMove = async () => {
     if (!targetId) return;
     setLoading(true);
     const { error: err } = await supabase.from('documents').update({ dossier_id: targetId }).eq('id', doc.id);
@@ -247,9 +359,6 @@ export function DocumentMenu({
     await supabase.from('documents').delete().eq('id', doc.id);
     close(); router.refresh();
   };
-
-  // Dossiers terminaux (sans sous-dossiers) = seuls endroits où on peut mettre un fichier
-  const leafDossiers = dossiers.filter((d) => !dossiers.some((x) => x.parent_id === d.id));
 
   const btnCls = 'p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors';
 
@@ -298,32 +407,18 @@ export function DocumentMenu({
 
       {/* Modal Déplacer */}
       <Modal isOpen={action === 'move'} onClose={close} title="Déplacer le document">
-        <form onSubmit={handleMove} className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1.5">Dossier de destination</label>
-            <select
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={targetId}
-              onChange={(e) => setTargetId(e.target.value)}
-              required
-            >
-              <option value="">— Choisir un dossier —</option>
-              {leafDossiers.map((d) => {
-                const parent = d.parent_id ? dossiers.find((x) => x.id === d.parent_id) : null;
-                return (
-                  <option key={d.id} value={d.id}>
-                    {parent ? `${parent.nom} / ${d.nom}` : d.nom}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Choisissez le dossier de destination pour{' '}
+            <strong>&ldquo;{doc.nom}&rdquo;</strong>.
+          </p>
+          <FolderPicker dossiers={dossiers} value={targetId} onChange={setTargetId} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
-            <Button type="submit" loading={loading} disabled={!targetId}>Déplacer</Button>
+            <Button onClick={handleMove} loading={loading} disabled={!targetId}>Déplacer ici</Button>
             <Button type="button" variant="secondary" onClick={close}>Annuler</Button>
           </div>
-        </form>
+        </div>
       </Modal>
 
       {/* Modal Supprimer */}
