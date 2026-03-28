@@ -23,6 +23,7 @@ import {
   TrendingUp,
   TrendingDown,
   Scale,
+  PiggyBank,
 } from 'lucide-react';
 
 export default async function DashboardPage() {
@@ -433,6 +434,18 @@ export default async function DashboardPage() {
       pct: totalRepartition > 0 ? Math.round((total / totalRepartition) * 100) : 0,
     }));
 
+  // Répartition du budget = dépenses réelles + fonds travaux ALUR
+  const totalBudget = totalRepartition + totalFondsTravaux;
+  const repartitionBudget = [
+    ...(totalFondsTravaux > 0
+      ? [{ cat: 'fonds_travaux_alur', total: totalFondsTravaux, pct: totalBudget > 0 ? Math.round((totalFondsTravaux / totalBudget) * 100) : 0 }]
+      : []),
+    ...repartition.map((r) => ({
+      ...r,
+      pct: totalBudget > 0 ? Math.round((r.total / totalBudget) * 100) : 0,
+    })),
+  ];
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Titre de bienvenue */}
@@ -495,8 +508,8 @@ export default async function DashboardPage() {
       {/* KPIs */}
       {copropriete && (
         <>
-          {/* ── Ligne 1 : 3 KPIs financiers — provisions / dépenses / écart ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* ── Ligne 1 : 4 KPIs financiers — provisions / dépenses / fonds travaux / écart ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {/* Provisions appelées (BP + FT) */}
             <Card className="flex items-center gap-4">
               <div className="p-3 bg-indigo-100 rounded-xl shrink-0">
@@ -586,6 +599,27 @@ export default async function DashboardPage() {
                 </div>
               </Card>
             )}
+
+            {/* Fonds travaux ALUR */}
+            <Card className="flex items-center gap-4">
+              <div className="p-3 bg-amber-100 rounded-xl shrink-0">
+                <PiggyBank size={24} className="text-amber-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Fonds travaux ALUR {currentYear}</p>
+                {totalFondsTravaux > 0 ? (
+                  <>
+                    <p className="text-2xl font-bold text-gray-900">{formatEuros(totalFondsTravaux)}</p>
+                    <p className="text-xs text-amber-600 font-medium mt-0.5">Art. 14-2 loi ALUR</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-semibold text-gray-500">&mdash;</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Aucun appel FT saisi</p>
+                  </>
+                )}
+              </div>
+            </Card>
           </div>
 
           {/* ── Ligne 2 : 3 KPIs opérationnels ── */}
@@ -683,15 +717,15 @@ export default async function DashboardPage() {
               )}
             </Card>
 
-            {/* Répartition des dépenses réelles */}
+            {/* Répartition du budget */}
             <Card>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Répartition des dépenses</h3>
-                <span className="text-xs text-gray-500">réelles {currentYear}</span>
+                <h3 className="font-semibold text-gray-900">Répartition du budget</h3>
+                <span className="text-xs text-gray-500">dépenses + FT {currentYear}</span>
               </div>
-              {repartition.length > 0 ? (
+              {repartitionBudget.length > 0 ? (
                 <div className="space-y-3">
-                  {repartition.map(({ cat, total, pct }) => {
+                  {repartitionBudget.map(({ cat, total, pct }) => {
                     const colors = catColorMap[cat] ?? { bar: 'bg-gray-300', dot: 'bg-gray-300' };
                     return (
                       <div key={cat}>
@@ -712,7 +746,7 @@ export default async function DashboardPage() {
                     );
                   })}
                   <p className="text-xs text-gray-500 pt-2 border-t border-gray-100 text-right">
-                    Total : <span className="font-semibold text-gray-600">{formatEuros(totalRepartition)}</span>
+                    Total : <span className="font-semibold text-gray-600">{formatEuros(totalBudget)}</span>
                   </p>
                 </div>
               ) : (

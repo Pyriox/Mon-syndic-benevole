@@ -356,13 +356,12 @@ export function FolderMenu({ dossier, hasDocuments, hasSubs }: FolderMenuProps) 
   const router   = useRouter();
   const supabase = createClient();
 
-  const [menuOpen,     setMenuOpen]     = useState(false);
   const [action,       setAction]       = useState<'rename' | 'delete' | null>(null);
   const [nom,          setNom]          = useState(dossier.nom);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState('');
 
-  const open  = (a: typeof action) => { setMenuOpen(false); setAction(a); setError(''); };
+  const open  = (a: typeof action) => { setAction(a); setError(''); };
   const close = () => { setAction(null); setError(''); setLoading(false); setNom(dossier.nom); };
 
   const handleRename = async (e: React.FormEvent) => {
@@ -391,34 +390,17 @@ export function FolderMenu({ dossier, hasDocuments, hasSubs }: FolderMenuProps) 
   };
 
   const hasContent = hasDocuments || hasSubs;
-  const menuItemCls = 'flex items-center gap-2.5 w-full px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors';
+  const btnCls = 'p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors';
 
   return (
     <>
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setMenuOpen((v) => !v)}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-          title="Actions"
-        >
-          <MoreVertical size={15} />
+      <div className="flex items-center gap-0.5">
+        <button type="button" onClick={() => open('rename')} className={`${btnCls} hover:text-blue-600`} title="Renommer">
+          <Pencil size={14} />
         </button>
-
-        {menuOpen && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-gray-200 bg-white shadow-lg py-1 overflow-hidden">
-              <button type="button" onClick={() => open('rename')} className={menuItemCls}>
-                <Pencil size={14} className="text-gray-400" /> Renommer
-              </button>
-              <div className="my-1 border-t border-gray-100" />
-              <button type="button" onClick={() => open('delete')} className={`${menuItemCls} text-red-600 hover:bg-red-50`}>
-                <Trash2 size={14} className="text-red-500" /> Supprimer
-              </button>
-            </div>
-          </>
-        )}
+        <button type="button" onClick={() => open('delete')} className={`${btnCls} hover:text-red-600`} title="Supprimer">
+          <Trash2 size={14} />
+        </button>
       </div>
 
       {/* Modal Renommer */}

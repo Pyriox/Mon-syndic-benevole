@@ -475,7 +475,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
                   <th className="text-left px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">Type</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Date</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Taille</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-500 w-24">Actions</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-500 w-32">Actions</th>
                 </tr>
               </thead>
               <tbody>

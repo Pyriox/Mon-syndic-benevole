@@ -46,7 +46,7 @@ const formatSize = (bytes: number) => {
   return `${(bytes / 1048576).toFixed(1)} Mo`;
 };
 
-export default function DocumentActions({ coproprietes, showLabel }: Omit<DocumentActionsProps, 'dossiers' | 'defaultDossierId'> & { dossiers?: Dossier[]; defaultDossierId?: string }) {
+export default function DocumentActions({ coproprietes, defaultDossierId, showLabel }: Omit<DocumentActionsProps, 'dossiers'> & { dossiers?: Dossier[] }) {
   const router   = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -101,6 +101,7 @@ export default function DocumentActions({ coproprietes, showLabel }: Omit<Docume
     fd.append('copropriete_id', form.copropriete_id);
     fd.append('nom', form.nom.trim());
     fd.append('type', 'autre');
+    if (defaultDossierId) fd.append('dossier_id', defaultDossierId);
 
     const res = await fetch('/api/upload-document', { method: 'POST', body: fd });
     const json = await res.json();
@@ -214,14 +215,13 @@ export function DocumentMenu({
   const router   = useRouter();
   const supabase = createClient();
 
-  const [menuOpen, setMenuOpen] = useState(false);
   const [action,   setAction]   = useState<'rename' | 'move' | 'delete' | null>(null);
   const [nom,      setNom]      = useState(doc.nom);
   const [targetId, setTargetId] = useState('');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
 
-  const open  = (a: typeof action) => { setMenuOpen(false); setAction(a); setError(''); };
+  const open  = (a: typeof action) => { setAction(a); setError(''); };
   const close = () => { setAction(null); setError(''); setLoading(false); setNom(doc.nom); };
 
   const handleRename = async (e: React.FormEvent) => {
@@ -251,55 +251,37 @@ export function DocumentMenu({
   // Dossiers terminaux (sans sous-dossiers) = seuls endroits où on peut mettre un fichier
   const leafDossiers = dossiers.filter((d) => !dossiers.some((x) => x.parent_id === d.id));
 
-  const menuItemCls = 'flex items-center gap-2.5 w-full px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors';
+  const btnCls = 'p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors';
 
   return (
     <>
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setMenuOpen((v) => !v)}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-          title="Actions"
+      <div className="flex items-center gap-0.5">
+        <a
+          href={`/api/documents/${doc.id}/download`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${btnCls} hover:text-blue-600`}
+          title="Voir"
         >
-          <MoreVertical size={15} />
+          <Eye size={14} />
+        </a>
+        <a
+          href={`/api/documents/${doc.id}/download`}
+          download={doc.nom}
+          className={`${btnCls} hover:text-green-600`}
+          title="Télécharger"
+        >
+          <Download size={14} />
+        </a>
+        <button type="button" onClick={() => open('rename')} className={`${btnCls} hover:text-blue-600`} title="Renommer">
+          <Pencil size={14} />
         </button>
-
-        {menuOpen && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-gray-200 bg-white shadow-lg py-1 overflow-hidden">
-              <a
-                href={`/api/documents/${doc.id}/download`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setMenuOpen(false)}
-                className={menuItemCls}
-              >
-                <Eye size={14} className="text-gray-400" /> Voir
-              </a>
-              <a
-                href={`/api/documents/${doc.id}/download`}
-                download={doc.nom}
-                onClick={() => setMenuOpen(false)}
-                className={menuItemCls}
-              >
-                <Download size={14} className="text-gray-400" /> Télécharger
-              </a>
-              <div className="my-1 border-t border-gray-100" />
-              <button type="button" onClick={() => open('rename')} className={menuItemCls}>
-                <Pencil size={14} className="text-gray-400" /> Renommer
-              </button>
-              <button type="button" onClick={() => open('move')} className={menuItemCls}>
-                <FolderInput size={14} className="text-gray-400" /> Déplacer
-              </button>
-              <div className="my-1 border-t border-gray-100" />
-              <button type="button" onClick={() => open('delete')} className={`${menuItemCls} text-red-600 hover:bg-red-50`}>
-                <Trash2 size={14} className="text-red-500" /> Supprimer
-              </button>
-            </div>
-          </>
-        )}
+        <button type="button" onClick={() => open('move')} className={`${btnCls} hover:text-amber-600`} title="Déplacer">
+          <FolderInput size={14} />
+        </button>
+        <button type="button" onClick={() => open('delete')} className={`${btnCls} hover:text-red-600`} title="Supprimer">
+          <Trash2 size={14} />
+        </button>
       </div>
 
       {/* Modal Renommer */}
