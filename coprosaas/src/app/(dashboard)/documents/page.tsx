@@ -10,8 +10,8 @@ import { Fragment } from 'react';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
-import DocumentActions, { DocumentRename } from './DocumentActions';
-import DossierActions, { DossierDelete, DossierRename, SubDossierActions } from './DossierActions';
+import DocumentActions, { DocumentMenu } from './DocumentActions';
+import DossierActions, { FolderMenu, SubDossierActions } from './DossierActions';
 import { formatDate, LABELS_TYPE_DOCUMENT } from '@/lib/utils';
 import { FileText, Download, ExternalLink, Folder, ChevronRight, FolderOpen } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
@@ -222,15 +222,8 @@ export default async function DocumentsPage({ searchParams }: Props) {
                       <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
                       <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
-                          <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Ouvrir">
-                            <ExternalLink size={14} />
-                          </a>
-                          <a href={`/api/documents/${doc.id}/download`} download={doc.nom}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" title="Télécharger">
-                            <Download size={14} />
-                          </a>
+                        <div className="flex items-center justify-center">
+                          <DocumentMenu doc={{ id: doc.id, nom: doc.nom }} dossiers={dossiers} />
                         </div>
                       </td>
                     </tr>
@@ -507,38 +500,13 @@ export default async function DocumentsPage({ searchParams }: Props) {
                       <td className="px-4 py-3 text-gray-400 hidden md:table-cell">—</td>
                       <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">—</td>
                       <td className="px-4 py-3">
-                        {canWrite && (
-                          <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {!dossierId ? (
-                              // Dossiers racine : renommer + supprimer (custom seulement)
-                              <>
-                                {!d.is_default && (
-                                  <>
-                                    <DossierRename
-                                      dossierId={d.id}
-                                      dossierNom={d.nom}
-                                    />
-                                    <DossierDelete dossierId={d.id} dossierNom={d.nom} />
-                                  </>
-                                )}
-                              </>
-                            ) : (
-                              // Sous-dossiers : renommer + supprimer
-                              <>
-                                <SubDossierActions
-                                  mode="rename"
-                                  parentId={dossierId}
-                                  dossier={{ id: d.id, nom: d.nom }}
-                                />
-                                <SubDossierActions
-                                  mode="delete"
-                                  parentId={dossierId}
-                                  dossier={{ id: d.id, nom: d.nom }}
-                                  hasDocuments={docCount > 0}
-                                  hasSubs={subCount > 0}
-                                />
-                              </>
-                            )}
+                        {canWrite && !d.is_default && (
+                          <div className="flex items-center justify-center">
+                            <FolderMenu
+                              dossier={{ id: d.id, nom: d.nom, parent_id: d.parent_id }}
+                              hasDocuments={docCount > 0}
+                              hasSubs={subCount > 0}
+                            />
                           </div>
                         )}
                       </td>
@@ -548,16 +516,11 @@ export default async function DocumentsPage({ searchParams }: Props) {
 
                 {/* ── Fichiers ensuite ── */}
                 {documents?.map((doc) => (
-                  <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors group">
+                  <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <FileText size={18} className="text-gray-400 shrink-0" />
                         <span className="font-medium text-gray-900">{doc.nom}</span>
-                        {canWrite && (
-                          <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <DocumentRename documentId={doc.id} nomActuel={doc.nom} />
-                          </span>
-                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
@@ -566,15 +529,16 @@ export default async function DocumentsPage({ searchParams }: Props) {
                     <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
                     <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1">
-                        <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Ouvrir">
-                          <ExternalLink size={14} />
-                        </a>
-                        <a href={`/api/documents/${doc.id}/download`} download={doc.nom}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" title="Télécharger">
-                          <Download size={14} />
-                        </a>
+                      <div className="flex items-center justify-center">
+                        {canWrite
+                          ? <DocumentMenu doc={{ id: doc.id, nom: doc.nom }} dossiers={dossiers} />
+                          : (
+                            <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Voir">
+                              <ExternalLink size={14} />
+                            </a>
+                          )
+                        }
                       </div>
                     </td>
                   </tr>

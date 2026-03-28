@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import { FolderPlus, Trash2, Pencil, Plus, AlertTriangle } from 'lucide-react';
+import { FolderPlus, Trash2, Pencil, Plus, AlertTriangle, MoreVertical } from 'lucide-react';
 
 
 
@@ -341,3 +341,115 @@ export function DossierDelete({ dossierId, dossierNom }: DossierDeleteProps) {
     </>
   );
 }
+
+// ─────────────────────────────────────────────
+// Menu ⋮ unifié — dossier non permanent
+// Renommer + Supprimer en un seul endroit
+// ─────────────────────────────────────────────
+interface FolderMenuProps {
+  dossier: { id: string; nom: string; parent_id?: string | null };
+  hasDocuments?: boolean;
+  hasSubs?: boolean;
+}
+
+export function FolderMenu({ dossier, hasDocuments, hasSubs }: FolderMenuProps) {
+  const router   = useRouter();
+  const supabase = createClient();
+
+  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [action,       setAction]       = useState<'rename' | 'delete' | null>(null);
+  const [nom,          setNom]          = useState(dossier.nom);
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState('');
+
+  const open  = (a: typeof action) => { setMenuOpen(false); setAction(a); setError(''); };
+  const close = () => { setAction(null); setError(''); setLoading(false); setNom(dossier.nom); };
+
+  const handleRename = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nom.trim()) return;
+    setLoading(true);
+    const { error: err } = await supabase.from('document_dossiers').update({ nom: nom.trim() }).eq('id', dossier.id);
+    if (err) { setError(err.message); setLoading(false); return; }
+    close(); router.refresh();
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    // Si sous-dossier, cascade les documents et sous-sous-dossiers
+    if (dossier.parent_id) {
+      const { data: subs } = await supabase.from('document_dossiers').select('id').eq('parent_id', dossier.id);
+      const subIds = (subs ?? []).map((s) => s.id);
+      if (subIds.length > 0) {
+        await supabase.from('documents').delete().in('dossier_id', subIds);
+        await supabase.from('document_dossiers').delete().in('id', subIds);
+      }
+      await supabase.from('documents').delete().eq('dossier_id', dossier.id);
+    }
+    await supabase.from('document_dossiers').delete().eq('id', dossier.id);
+    close(); router.refresh();
+  };
+
+  const hasContent = hasDocuments || hasSubs;
+  const menuItemCls = 'flex items-center gap-2.5 w-full px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors';
+
+  return (
+    <>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          title="Actions"
+        >
+          <MoreVertical size={15} />
+        </button>
+
+        {menuOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+            <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-gray-200 bg-white shadow-lg py-1 overflow-hidden">
+              <button type="button" onClick={() => open('rename')} className={menuItemCls}>
+                <Pencil size={14} className="text-gray-400" /> Renommer
+              </button>
+              <div className="my-1 border-t border-gray-100" />
+              <button type="button" onClick={() => open('delete')} className={`${menuItemCls} text-red-600 hover:bg-red-50`}>
+                <Trash2 size={14} className="text-red-500" /> Supprimer
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Modal Renommer */}
+      <Modal isOpen={action === 'rename'} onClose={close} title="Renommer le dossier">
+        <form onSubmit={handleRename} className="space-y-4">
+          <Input label="Nom" value={nom} onChange={(e) => setNom(e.target.value)} required autoFocus />
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <div className="flex gap-3 pt-1">
+            <Button type="submit" loading={loading}>Enregistrer</Button>
+            <Button type="button" variant="secondary" onClick={close}>Annuler</Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Supprimer */}
+      <Modal isOpen={action === 'delete'} onClose={close} title="Supprimer le dossier">
+        <div className="space-y-4">
+          {hasContent && (
+            <div className="flex gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
+              <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+              <p className="text-sm">Ce dossier contient des fichiers ou sous-dossiers qui seront <strong>définitivement supprimés</strong>.</p>
+            </div>
+          )}
+          <p className="text-sm text-gray-700">Supprimer <strong>&ldquo;{dossier.nom}&rdquo;</strong> ?</p>
+          <div className="flex gap-3 pt-1">
+            <Button onClick={handleDelete} loading={loading} className="bg-red-600 hover:bg-red-700 text-white border-red-600">Supprimer</Button>
+            <Button type="button" variant="secondary" onClick={close}>Annuler</Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
