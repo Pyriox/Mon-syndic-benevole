@@ -9,17 +9,6 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleMigrer() {
   return (
     <>
-      <h2 id="probleme" className={h2}>Le problème</h2>
-      <p className={p}>
-        Sophie gère la copropriété de son immeuble depuis 3 ans — jusqu&apos;ici avec le cabinet Gesti-Immo. En février, elle a reçu la facture annuelle : <strong className={strong}>3 480 € pour 14 lots</strong>. &ldquo;Je me suis dit que je pouvais le faire moi-même. Mais je ne savais pas par où commencer.&rdquo;
-      </p>
-      <p className={p}>
-        Elle a finalement migré sur Mon Syndic Bénévole un samedi matin. À 14 h, tout était en place : les 14 lots saisis avec leurs tantièmes, les 12 copropriétaires invités, le premier appel de fonds trimestriel prêt à l&apos;envoi. <strong className={strong}>4 heures pour reprendre le contrôle de sa copropriété.</strong>
-      </p>
-      <p className={p}>
-        Ce guide détaille exactement ce qu&apos;elle a fait, dans l&apos;ordre, avec les informations dont vous avez besoin à chaque étape.
-      </p>
-
       <h2 id="avant-de-commencer" className={h2}>Ce que vous devez rassembler avant de commencer</h2>
       <p className={p}>
         La migration est rapide si vous avez les bonnes pièces sous la main. Voici ce dont vous aurez besoin — la plupart de ces documents sont dans les archives remises par votre ancien syndic, ou dans vos propres classeurs.
@@ -39,15 +28,11 @@ export default function ArticleMigrer() {
             },
             {
               label: 'Relevés bancaires récents',
-              detail: 'Compte courant ET compte fonds de travaux. Vous en aurez besoin pour saisir les soldes de départ.',
+              detail: 'Le solde du compte courant à la date de migration, pour renseigner les soldes de départ des copropriétaires.',
             },
             {
               label: 'Dernier budget prévisionnel voté en AG',
               detail: 'C\'est la base du premier appel de fonds. Si vous n\'en avez pas, vous pourrez saisir manuellement le montant de chaque poste de charges.',
-            },
-            {
-              label: 'Montant du fonds de travaux existant',
-              detail: 'Le solde actuel sur le compte fonds de travaux ALUR, à reprendre à la date de migration.',
             },
             {
               label: 'Documents importants à archiver',
@@ -105,8 +90,7 @@ export default function ArticleMigrer() {
       <ul className={ul}>
         <li className={li}><strong className={strong}>Le numéro de lot</strong> tel qu&apos;il figure au règlement de copropriété</li>
         <li className={li}><strong className={strong}>La désignation</strong> (appartement, cave, parking, local commercial…)</li>
-        <li className={li}><strong className={strong}>Les tantièmes généraux</strong> — utilisés pour la répartition des charges communes générales</li>
-        <li className={li}><strong className={strong}>Les tantièmes spéciaux</strong> si votre règlement en prévoit (ascenseur, eau froide, chauffage collectif…)</li>
+        <li className={li}><strong className={strong}>Les tantièmes</strong> — la quote-part de chaque lot, tels qu&apos;ils figurent au règlement de copropriété (exprimés sur 1 000 ou 10 000 selon l&apos;immeuble)</li>
       </ul>
       <p className={p}>
         La source de référence est toujours le <strong className={strong}>règlement de copropriété et son état descriptif de division</strong> — pas le tableau de votre ancien syndic, qui peut contenir des erreurs historiques non corrigées.
@@ -153,8 +137,7 @@ export default function ArticleMigrer() {
         Depuis la section <strong className={strong}>&ldquo;Copropriétaires&rdquo;</strong>, ajoutez chaque copropriétaire en saisissant son nom, son adresse postale et son e-mail. Associez-le à son ou ses lots.
       </p>
       <p className={p}>
-        Chaque copropriétaire reçoit alors une invitation par e-mail pour accéder à <strong className={strong}>son espace personnel</strong> : il peut y consulter ses appels de fonds, son historique de paiement, les comptes de la copropriété et les documents que vous y déposez. L&apos;invitation est optionnelle — vous pouvez très bien gérer la copropriété seul et envoyer les documents par e-mail sans que vos copropriétaires aient à créer un compte.
-      </p>
+        Une fois le copropriétaire créé, vous pouvez lui envoyer une invitation par e-mail via le bouton <strong className={strong}>&ldquo;Inviter&rdquo;</strong>. Il accède alors à <strong className={strong}>son espace personnel</strong> : il peut y consulter ses appels de fonds, son historique de paiement, les comptes de la copropriété et les documents que vous y déposez. L&apos;invitation reste optionnelle — vous pouvez très bien gérer la copropriété seul et envoyer les documents par e-mail sans que vos copropriétaires aient à créer un compte.</p>
 
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6 text-sm">
         <p className="font-semibold text-blue-800 mb-1">Ce que voient les copropriétaires depuis leur espace</p>
@@ -195,7 +178,7 @@ export default function ArticleMigrer() {
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">À ce stade, votre copropriété est déjà structurée.</p>
         <p className="text-sm text-gray-600 mb-4">
-          Lots, tantièmes, copropriétaires, soldes de départ — Sophie avait tout saisi en 2h30. Elle a pu envoyer son premier appel de fonds le jour même.
+          Lots, tantièmes, copropriétaires, soldes de départ — la structure de base est en place. Vous pouvez envoyer votre premier appel de fonds le jour même.
         </p>
         <Link
           href="/register"
@@ -205,29 +188,7 @@ export default function ArticleMigrer() {
         </Link>
       </div>
 
-      <h2 id="etape-5" className={h2}>Étape 5 — Déclarer le fonds de travaux existant</h2>
-      <p className={p}>
-        Si votre copropriété a déjà constitué un <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a>, saisissez son montant actuel dans la section dédiée. Ce montant représente l&apos;encours sur le compte bancaire séparé du fonds de travaux à la date de votre migration.
-      </p>
-      <p className={p}>
-        Mon Syndic Bénévole gère les deux comptes de manière distincte et conforme à la loi ALUR :
-      </p>
-      <ul className={ul}>
-        <li className={li}><strong className={strong}>Compte courant de charges</strong> — appels de fonds courants, dépenses d&apos;entretien, régularisation annuelle</li>
-        <li className={li}><strong className={strong}>Compte fonds de travaux</strong> — dotation annuelle obligatoire (5 % minimum), utilisation votée en AG</li>
-      </ul>
-      <p className={p}>
-        Les deux comptes sont suivis séparément dans la comptabilité de la copropriété. Les états financiers présentés en AG distinguent automatiquement les deux masses.
-      </p>
-
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-sm">
-        <p className="font-semibold text-gray-700 mb-1">Depuis le 1er janvier 2025</p>
-        <p className="text-gray-600">
-          Le fonds de travaux sur compte bancaire séparé est obligatoire pour <strong>toutes les copropriétés</strong>, quelle que soit leur taille (loi Habitat dégradé du 9 avril 2024). Si votre copropriété de moins de 10 lots n&apos;a pas encore ouvert ce compte, c&apos;est le moment d&apos;y remédier.
-        </p>
-      </div>
-
-      <h2 id="etape-6" className={h2}>Étape 6 — Créer le premier appel de fonds</h2>
+      <h2 id="etape-5" className={h2}>Étape 5 — Créer le premier appel de fonds</h2>
       <p className={p}>
         C&apos;est souvent l&apos;étape la plus redoutée — et la plus simple une fois la structure en place. Depuis la section <strong className={strong}>&ldquo;Appels de fonds&rdquo;</strong>, cliquez sur <strong className={strong}>&ldquo;Créer&rdquo;</strong>. La plateforme vous propose deux options :
       </p>
@@ -252,7 +213,7 @@ export default function ArticleMigrer() {
         Depuis la liste des appels de fonds, vous visualisez en temps réel quel copropriétaire a payé, lequel est en attente, lequel est en retard. Le tableau de bord affiche un récapitulatif des impayés avec un indicateur d&apos;alerte. À partir d&apos;un certain délai, un bouton <strong className={strong}>&ldquo;Envoyer un rappel&rdquo;</strong> génère un e-mail de relance directement depuis l&apos;interface — sans avoir à ouvrir votre messagerie.
       </p>
 
-      <h2 id="etape-7" className={h2}>Étape 7 — Importer les documents clés</h2>
+      <h2 id="etape-6" className={h2}>Étape 6 — Importer les documents clés</h2>
       <p className={p}>
         La section <strong className={strong}>&ldquo;Documents&rdquo;</strong> centralise tous les fichiers de la copropriété : PV d&apos;AG, contrats prestataires, diagnostics, attestations d&apos;assurance, règlement de copropriété. Ils sont accessibles depuis le tableau de bord du syndic et, selon les droits que vous configurez, depuis l&apos;espace personnel de chaque copropriétaire.
       </p>
@@ -269,7 +230,7 @@ export default function ArticleMigrer() {
         L&apos;obligation légale d&apos;archivage couvre <strong className={strong}>10 ans</strong> pour les PV d&apos;AG, contrats et factures. Centraliser progressivement dans l&apos;outil évite le classeur physique difficile à retrouver.
       </p>
 
-      <h2 id="etape-8" className={h2}>Étape 8 — Vérification avant le premier envoi</h2>
+      <h2 id="etape-7" className={h2}>Étape 7 — Vérification avant le premier envoi</h2>
       <p className={p}>
         Avant d&apos;envoyer votre premier appel de fonds ou votre première convocation d&apos;AG, prenez 10 minutes pour vérifier :
       </p>
@@ -299,7 +260,6 @@ export default function ArticleMigrer() {
               category: 'Finances',
               items: [
                 'Le solde de départ de chaque copropriétaire correspond à l\'état des impayés de l\'ancien syndic',
-                'Le montant du fonds de travaux correspond au relevé bancaire',
               ],
             },
             {
@@ -407,11 +367,11 @@ export default function ArticleMigrer() {
         Migrer vers Mon Syndic Bénévole ne demande pas de jours de configuration ni de formation technique. Avec vos documents en main — règlement de copropriété, liste des copropriétaires, relevés bancaires, dernier budget — vous pouvez être opérationnel en une demi-journée.
       </p>
       <p className={p}>
-        L&apos;investissement de départ (4 à 5 heures de saisie) se rentabilise dès le premier trimestre : plus aucun calcul manuel, plus aucune heure passée à reconstituer les comptes avant l&apos;AG, plus aucune demande de solde à traiter à la main. Sophie l&apos;a formulé clairement six mois après : &ldquo;<strong className={strong}>Je ne comprends pas pourquoi j&apos;ai attendu aussi longtemps.&rdquo;</strong>
+        L&apos;investissement de départ (4 à 5 heures de saisie) se rentabilise dès le premier trimestre : plus aucun calcul manuel, plus aucune heure passée à reconstituer les comptes avant l&apos;AG, plus aucune demande de solde à traiter à la main.
       </p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
-        <p className="text-base font-semibold text-white mb-1">Sophie a économisé 3 480 €/an. En 4 heures de migration.</p>
+        <p className="text-base font-semibold text-white mb-1">Opérationnel en une demi-journée.</p>
         <p className="text-sm text-blue-100 mb-4">Lots, tantièmes, appels de fonds, relances, AG, espace copropriétaires — tout est prêt le jour même.</p>
         <Link
           href="/register"

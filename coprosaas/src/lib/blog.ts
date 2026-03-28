@@ -318,7 +318,7 @@ export const posts: BlogPost[] = [
   },
   {
     slug: 'migrer-vers-mon-syndic-benevole',
-    title: 'Migrer vers Mon Syndic Bénévole : guide complet en 8 étapes',
+    title: 'Migrer vers Mon Syndic Bénévole : guide complet en 7 étapes',
     description:
       'Comment migrer vers Mon Syndic Bénévole depuis Excel ou un syndic professionnel : lots, tantièmes, soldes de départ, fonds de travaux, premier appel de fonds — opérationnel en une demi-journée.',
     // 196 chars
@@ -339,10 +339,9 @@ export const posts: BlogPost[] = [
       { id: 'etape-2', text: 'Étape 2 — Saisir les lots et les tantièmes' },
       { id: 'etape-3', text: 'Étape 3 — Inviter les copropriétaires' },
       { id: 'etape-4', text: 'Étape 4 — Reprendre le solde comptable de départ' },
-      { id: 'etape-5', text: 'Étape 5 — Déclarer le fonds de travaux existant' },
-      { id: 'etape-6', text: 'Étape 6 — Créer le premier appel de fonds' },
-      { id: 'etape-7', text: 'Étape 7 — Importer les documents clés' },
-      { id: 'etape-8', text: 'Étape 8 — Vérification avant le premier envoi' },
+      { id: 'etape-5', text: 'Étape 5 — Créer le premier appel de fonds' },
+      { id: 'etape-6', text: 'Étape 6 — Importer les documents clés' },
+      { id: 'etape-7', text: 'Étape 7 — Vérification avant le premier envoi' },
       { id: 'ce-que-vous-gagnez', text: 'Ce que vous gagnez concrètement le premier mois' },
       { id: 'questions-frequentes', text: 'Questions fréquentes' },
       { id: 'en-resume', text: 'En résumé' },
