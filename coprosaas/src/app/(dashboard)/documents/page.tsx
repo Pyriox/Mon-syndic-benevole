@@ -8,12 +8,11 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Fragment } from 'react';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import DocumentActions, { DocumentMenu } from './DocumentActions';
 import DossierActions, { FolderMenu, SubDossierActions } from './DossierActions';
-import { formatDate, LABELS_TYPE_DOCUMENT } from '@/lib/utils';
-import { FileText, Download, ExternalLink, Folder, ChevronRight, FolderOpen } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
+import { FileText, Download, ExternalLink, Folder, ChevronRight, FolderOpen, ArrowUp, ArrowDown } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
@@ -61,18 +60,6 @@ function buildBreadcrumb(dossiers: Dossier[], dossierId: string): { id: string; 
   return chain;
 }
 
-function couleurType(type: string): 'default' | 'info' | 'success' | 'warning' | 'purple' {
-  const map: Record<string, 'default' | 'info' | 'success' | 'warning' | 'purple'> = {
-    pv_ag: 'purple',
-    facture: 'warning',
-    contrat: 'info',
-    assurance: 'success',
-    reglement: 'default',
-    autre: 'default',
-  };
-  return map[type] ?? 'default';
-}
-
 const formatTaille = (bytes: number | null) => {
   if (!bytes) return '—';
   if (bytes < 1024) return `${bytes} o`;
@@ -81,14 +68,35 @@ const formatTaille = (bytes: number | null) => {
 };
 
 // ── Colonnes de la table partagée ──────────────────────────
-//   col-span sur 4 colonnes : Nom | Type | Date | Taille | Actions
+//   colonnes : Nom | Date | Taille | Actions
 
 interface Props {
-  searchParams: Promise<{ dossier?: string }>;
+  searchParams: Promise<{ dossier?: string; sort?: string; dir?: string }>;
+}
+
+function buildSortUrl(dossierId: string | undefined, sort: string, currentSort: string, currentDir: string) {
+  const params = new URLSearchParams();
+  if (dossierId) params.set('dossier', dossierId);
+  params.set('sort', sort);
+  params.set('dir', currentSort === sort && currentDir === 'asc' ? 'desc' : 'asc');
+  return `/documents?${params.toString()}`;
+}
+
+type Doc = { id: string; nom: string; type: string; taille: number | null; created_at: string };
+
+function sortDocs(docs: Doc[], sort: string, dir: string): Doc[] {
+  return [...docs].sort((a, b) => {
+    const cmp = sort === 'nom'
+      ? a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' })
+      : a.created_at.localeCompare(b.created_at);
+    return dir === 'asc' ? cmp : -cmp;
+  });
 }
 
 export default async function DocumentsPage({ searchParams }: Props) {
-  const { dossier: dossierId } = await searchParams;
+  const { dossier: dossierId, sort: sortParam, dir: dirParam } = await searchParams;
+  const sort = sortParam ?? 'date';
+  const dir = dirParam ?? 'desc';
   const supabase = await createClient();
   const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
@@ -175,9 +183,18 @@ export default async function DocumentsPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500">Nom</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">Type</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Date</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">
+                      <Link href={buildSortUrl(dossierId, 'nom', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                        Nom
+                        {sort === 'nom' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
+                      </Link>
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">
+                      <Link href={buildSortUrl(dossierId, 'date', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                        Date
+                        {sort === 'date' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
+                      </Link>
+                    </th>
                     <th className="text-right px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Taille</th>
                     <th className="text-center px-4 py-3 font-medium text-gray-500 w-20"></th>
                   </tr>
@@ -200,7 +217,6 @@ export default async function DocumentsPage({ searchParams }: Props) {
                             <span className="text-xs text-gray-400 ml-1">({countLabel})</span>
                           </Link>
                         </td>
-                        <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">Dossier</td>
                         <td className="px-4 py-3 text-gray-400 hidden md:table-cell">—</td>
                         <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">—</td>
                         <td className="px-4 py-3"></td>
@@ -208,16 +224,13 @@ export default async function DocumentsPage({ searchParams }: Props) {
                     );
                   })}
                   {/* Fichiers ensuite */}
-                  {documents?.map((doc) => (
+                  {sortDocs((documents ?? []) as Doc[], sort, dir).map((doc) => (
                     <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <FileText size={18} className="text-gray-400 shrink-0" />
                           <span className="font-medium text-gray-900">{doc.nom}</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 hidden sm:table-cell">
-                        <Badge variant={couleurType(doc.type)}>{LABELS_TYPE_DOCUMENT[doc.type] ?? doc.type}</Badge>
                       </td>
                       <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
                       <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
@@ -471,9 +484,18 @@ export default async function DocumentsPage({ searchParams }: Props) {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Nom</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">Type</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Date</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-500">
+                    <Link href={buildSortUrl(dossierId, 'nom', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                      Nom
+                      {sort === 'nom' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
+                    </Link>
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">
+                    <Link href={buildSortUrl(dossierId, 'date', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                      Date
+                      {sort === 'date' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
+                    </Link>
+                  </th>
                   <th className="text-right px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Taille</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-500 w-32">Actions</th>
                 </tr>
@@ -496,7 +518,6 @@ export default async function DocumentsPage({ searchParams }: Props) {
                           <span className="text-xs text-gray-400">({countLabel})</span>
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">Dossier</td>
                       <td className="px-4 py-3 text-gray-400 hidden md:table-cell">—</td>
                       <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">—</td>
                       <td className="px-4 py-3">
@@ -515,16 +536,13 @@ export default async function DocumentsPage({ searchParams }: Props) {
                 })}
 
                 {/* ── Fichiers ensuite ── */}
-                {documents?.map((doc) => (
+                {sortDocs((documents ?? []) as Doc[], sort, dir).map((doc) => (
                   <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <FileText size={18} className="text-gray-400 shrink-0" />
                         <span className="font-medium text-gray-900">{doc.nom}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <Badge variant={couleurType(doc.type)}>{LABELS_TYPE_DOCUMENT[doc.type] ?? doc.type}</Badge>
                     </td>
                     <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
                     <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
