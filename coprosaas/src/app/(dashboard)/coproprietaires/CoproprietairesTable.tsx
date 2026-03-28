@@ -225,6 +225,7 @@ function ReadOnlyMobileCoproCard({
   const { cpTantiemes, cpPercent } = computeTantiemes(ownedLots, totalTantiemes);
   return (
     <Card
+      padding="sm"
       className={`space-y-3 ${cp.user_id === currentUserId ? 'ring-2 ring-blue-400' : ''}`}
       style={cp.user_id === currentUserId ? { backgroundColor: '#dbeafe' } : undefined}
     >
@@ -280,7 +281,11 @@ function MobileCoproCard({
   const displayName = computeDisplayName(cp);
 
   return (
-    <div className={`border rounded-xl p-4 space-y-3 ${cp.user_id === currentUserId ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
+    <Card
+      padding="sm"
+      className={`space-y-3 ${cp.user_id === currentUserId ? 'ring-2 ring-blue-400' : ''}`}
+      style={cp.user_id === currentUserId ? { backgroundColor: '#dbeafe' } : undefined}
+    >
       {/* Identité + actions */}
       <div className="flex items-start justify-between gap-2">
         <IdentityBlock
@@ -307,7 +312,7 @@ function MobileCoproCard({
           {formatEuros(cp.solde ?? 0)}
         </Badge>
       </div>
-    </div>
+      </Card>
   );
 }
 
@@ -444,16 +449,15 @@ export default function CoproprietairesTable({
     return (
       <>
         {/* Cartes mobile */}
-        <div className="md:hidden divide-y divide-gray-100">
+        <div className="md:hidden space-y-3 p-4">
           {coproprietaires.map((cp) => (
-            <div key={cp.id} className="p-3">
-              <ReadOnlyMobileCoproCard
-                cp={cp}
-                ownedLots={lotsByOwner[cp.id] ?? []}
-                totalTantiemes={totalTantiemes}
-                currentUserId={currentUserId}
-              />
-            </div>
+            <ReadOnlyMobileCoproCard
+              key={cp.id}
+              cp={cp}
+              ownedLots={lotsByOwner[cp.id] ?? []}
+              totalTantiemes={totalTantiemes}
+              currentUserId={currentUserId}
+            />
           ))}
         </div>
         {/* Tableau desktop */}
@@ -461,8 +465,8 @@ export default function CoproprietairesTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left py-3.5 px-5 font-medium text-gray-500">Copropriétaire</th>
-                <th className="text-left py-3.5 px-5 font-medium text-gray-500">Lots &amp; quote-part</th>
+                <th className="text-left py-3 px-5 font-medium text-gray-500">Copropriétaire</th>
+                <th className="text-left py-3 px-5 font-medium text-gray-500">Lots &amp; quote-part</th>
               </tr>
             </thead>
             <tbody>
@@ -486,17 +490,16 @@ export default function CoproprietairesTable({
   return (
     <>
       {/* ── Vue cartes : mobile uniquement ── */}
-      <div className="md:hidden divide-y divide-gray-100">
+      <div className="md:hidden space-y-3 p-4">
         {coproprietaires.map((cp) => (
-          <div key={cp.id} className="p-3">
-            <MobileCoproCard
-              cp={cp}
-              ownedLots={lotsByOwner[cp.id] ?? []}
-              lotsForSelect={lotsForSelect}
-              totalTantiemes={totalTantiemes}
-              currentUserId={currentUserId}
-            />
-          </div>
+          <MobileCoproCard
+            key={cp.id}
+            cp={cp}
+            ownedLots={lotsByOwner[cp.id] ?? []}
+            lotsForSelect={lotsForSelect}
+            totalTantiemes={totalTantiemes}
+            currentUserId={currentUserId}
+          />
         ))}
       </div>
 
@@ -511,12 +514,12 @@ export default function CoproprietairesTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="py-3.5 px-2 w-6"></th>
-                <th className="text-left py-3.5 px-5 font-medium text-gray-500">Copropriétaire</th>
-                <th className="text-left py-3.5 px-5 font-medium text-gray-500 min-w-[200px]">Lots &amp; tantièmes</th>
-                <th className="text-left py-3.5 px-5 font-medium text-gray-500">Contact</th>
-                <th className="text-right py-3.5 px-5 font-medium text-gray-500">Solde</th>
-                <th className="py-3.5 px-5"></th>
+                <th className="py-3 px-2 w-6"></th>
+                <th className="text-left py-3 px-5 font-medium text-gray-500">Copropriétaire</th>
+                <th className="text-left py-3 px-5 font-medium text-gray-500 min-w-[200px]">Lots &amp; tantièmes</th>
+                <th className="text-left py-3 px-5 font-medium text-gray-500">Contact</th>
+                <th className="text-right py-3 px-5 font-medium text-gray-500">Solde</th>
+                <th className="py-3 px-5"></th>
               </tr>
             </thead>
             <tbody>

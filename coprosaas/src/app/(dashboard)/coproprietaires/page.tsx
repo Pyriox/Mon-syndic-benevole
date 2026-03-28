@@ -117,7 +117,7 @@ export default async function CoproprietairesPage() {
       )}
 
       {coproprietaires && coproprietaires.length > 0 ? (
-        <Card>
+        <Card padding="none">
           <CoproprietairesTable
             initialCoproprietaires={coproprietaires}
             lotsByOwner={lotsByOwner}
