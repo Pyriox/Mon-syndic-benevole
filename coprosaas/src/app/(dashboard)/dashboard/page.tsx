@@ -23,7 +23,6 @@ import {
   TrendingUp,
   TrendingDown,
   Scale,
-  PiggyBank,
 } from 'lucide-react';
 
 export default async function DashboardPage() {
@@ -508,8 +507,8 @@ export default async function DashboardPage() {
       {/* KPIs */}
       {copropriete && (
         <>
-          {/* ── Ligne 1 : 4 KPIs financiers — provisions / dépenses / fonds travaux / écart ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* ── Ligne 1 : 3 KPIs financiers — provisions / dépenses / écart ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Provisions appelées (BP + FT) */}
             <Card className="flex items-center gap-4">
               <div className="p-3 bg-indigo-100 rounded-xl shrink-0">
@@ -600,26 +599,6 @@ export default async function DashboardPage() {
               </Card>
             )}
 
-            {/* Fonds travaux ALUR */}
-            <Card className="flex items-center gap-4">
-              <div className="p-3 bg-amber-100 rounded-xl shrink-0">
-                <PiggyBank size={24} className="text-amber-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Fonds travaux ALUR {currentYear}</p>
-                {totalFondsTravaux > 0 ? (
-                  <>
-                    <p className="text-2xl font-bold text-gray-900">{formatEuros(totalFondsTravaux)}</p>
-                    <p className="text-xs text-amber-600 font-medium mt-0.5">Art. 14-2 loi ALUR</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-lg font-semibold text-gray-500">&mdash;</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Aucun appel FT saisi</p>
-                  </>
-                )}
-              </div>
-            </Card>
           </div>
 
           {/* ── Ligne 2 : 3 KPIs opérationnels ── */}
