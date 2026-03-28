@@ -324,7 +324,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   // Auto-création du sous-dossier "année courante"
   {
     const currentYear = new Date().getFullYear().toString();
-    const yearParentNames = ['Dépenses', 'Appels de fonds', 'Assemblées générales'];
+    const yearParentNames = ['Dépenses', 'Appels de fonds', 'Assemblées Générales'];
     let yearFolderCreated = false;
     for (const nom of yearParentNames) {
       const parent = dossiers.find((d) => d.nom === nom && !d.parent_id);
