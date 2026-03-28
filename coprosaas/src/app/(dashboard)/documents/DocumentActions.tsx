@@ -11,7 +11,6 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { LABELS_TYPE_DOCUMENT } from '@/lib/utils';
-import { insertDocument } from '@/lib/actions/documents';
 import {
   Upload, Pencil, File, FileText, FileSpreadsheet, Image as ImageIcon,
   X, CheckCircle2, CloudUpload,
@@ -49,7 +48,6 @@ const formatSize = (bytes: number) => {
 
 export default function DocumentActions({ coproprietes, dossiers, defaultDossierId, showLabel }: DocumentActionsProps) {
   const router    = useRouter();
-  const supabase  = createClient();
   const inputRef  = useRef<HTMLInputElement>(null);
 
   // ── Hiérarchie de dossiers ───────────────────────────────
@@ -138,31 +136,17 @@ export default function DocumentActions({ coproprietes, dossiers, defaultDossier
     setLoading(true);
     setError('');
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('copropriete_id', form.copropriete_id);
+    fd.append('nom', form.nom.trim());
+    fd.append('type', form.type);
+    if (form.dossier_id) fd.append('dossier_id', form.dossier_id);
 
-    const ext      = file.name.split('.').pop();
-    const fileName = `${form.copropriete_id}/${Date.now()}-${form.nom.replace(/\s+/g, '-')}.${ext}`;
+    const res = await fetch('/api/upload-document', { method: 'POST', body: fd });
+    const json = await res.json();
 
-    const { data: up, error: upErr } = await supabase.storage
-      .from('documents')
-      .upload(fileName, file, { cacheControl: '3600', upsert: false });
-
-    if (upErr) { setError(upErr.message); setLoading(false); return; }
-
-    const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(up.path);
-
-    const { error: dbErr } = await insertDocument({
-      copropriete_id: form.copropriete_id,
-      dossier_id:     form.dossier_id || null,
-      nom:            form.nom.trim(),
-      type:           form.type,
-      url:            publicUrl,
-      taille:         file.size,
-      uploaded_by:    user.id,
-    });
-
-    if (dbErr) { setError(dbErr); setLoading(false); return; }
+    if (!res.ok) { setError(json.error ?? 'Erreur lors de l\'import'); setLoading(false); return; }
 
     setLoading(false);
     setDone(true);

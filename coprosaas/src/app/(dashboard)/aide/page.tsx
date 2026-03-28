@@ -442,6 +442,14 @@ export default function AidePage() {  const router = useRouter();  const [name, 
                 affiche les bonnes provisions et impayés. Les T1/T2 déjà payés peuvent être marqués payés
                 directement après publication.
               </p>
+              <a
+                href="/blog/migrer-vers-mon-syndic-benevole"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
+              >
+                Lire le guide de migration complet →
+              </a>
             </div>
           </div>
         </div>

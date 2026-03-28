@@ -349,7 +349,7 @@ export const posts: BlogPost[] = [
     faqs: [
       {
         q: 'Combien de temps faut-il pour migrer depuis un syndic professionnel ?',
-        a: "Pour une copropriété de 10 à 20 lots, comptez entre 3 et 5 heures si vous avez tous vos documents en main. La majorité du temps est consacrée à la saisie des tantièmes et des données copropriétaires.",
+        a: "Pour une copropriété de 10 à 20 lots, comptez environ 2 heures si vous avez tous vos documents en main. La majorité du temps est consacrée à la saisie des tantièmes et des données copropriétaires.",
       },
       {
         q: "Faut-il ressaisir tout l'historique comptable des années précédentes ?",
@@ -365,7 +365,7 @@ export const posts: BlogPost[] = [
       },
       {
         q: "Que se passe-t-il si je souhaite arrêter Mon Syndic Bénévole plus tard ?",
-        a: "Vous pouvez exporter vos données à tout moment — copropriétaires, lots, historique des appels. Aucun engagement de durée minimum au-delà de chaque mois souscrit.",
+        a: "Vos données restent accessibles tant que votre compte est actif. Les PDF générés (avis d'appel de fonds, convocations, PV) sont téléchargeables depuis chaque section et peuvent être archivés avant de quitter. Aucun engagement de durée minimum au-delà de chaque mois souscrit.",
       },
     ],
   },

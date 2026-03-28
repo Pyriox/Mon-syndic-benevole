@@ -22,6 +22,7 @@ BEGIN
     WHERE tc.constraint_type = 'FOREIGN KEY'
       AND tc.table_name      = 'coproprietes'
       AND kcu.column_name    = 'syndic_id';
+  
 
   IF constraint_name IS NOT NULL THEN
     EXECUTE format(

@@ -1103,6 +1103,7 @@ export default function HomePage() {
             <Link href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className="hover:text-gray-400 transition-colors">Fonds de travaux ALUR</Link>
             <Link href="/blog/gerer-copropriete-sans-syndic-professionnel" className="hover:text-gray-400 transition-colors">Gérer sa copropriété sans syndic professionnel</Link>
             <Link href="/blog/logiciel-syndic-benevole" className="hover:text-gray-400 transition-colors">Logiciel syndic bénévole</Link>
+            <Link href="/blog/migrer-vers-mon-syndic-benevole" className="hover:text-gray-400 transition-colors">Migrer vers Mon Syndic Bénévole</Link>
           </div>
         </div>
       </div>

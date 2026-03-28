@@ -51,7 +51,7 @@ export default function ArticleMigrer() {
       </div>
 
       <p className={p}>
-        Si vous migrez depuis Excel, ces informations sont probablement dispersées dans plusieurs fichiers. Si vous venez d&apos;un syndic professionnel, elles doivent figurer dans les archives qu&apos;il est légalement tenu de vous remettre dans les 15 jours suivant la fin de son mandat (art. 18-2 de la loi du 10 juillet 1965). <a href="/blog/comment-devenir-syndic-benevole" className={a}>Consultez notre guide sur les 30 premiers jours du syndic bénévole</a> si vous venez de reprendre le mandat.
+        Si vous migrez depuis Excel, ces informations sont probablement dispersées dans plusieurs fichiers. Si vous venez d&apos;un syndic professionnel, elles doivent figurer dans les archives qu&apos;il est légalement tenu de vous remettre dans les 15 jours suivant la fin de son mandat (art. 18-2 de la loi du 10 juillet 1965). Consultez notre <a href="/blog/comment-devenir-syndic-benevole" className={a}>guide sur les 30 premiers jours du syndic bénévole</a> si vous venez de reprendre le mandat, ou notre <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>guide complet pour gérer sa copropriété sans syndic professionnel</a> si vous êtes dans la phase de réflexion.
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
@@ -82,7 +82,7 @@ export default function ArticleMigrer() {
 
       <h2 id="etape-2" className={h2}>Étape 2 — Saisir les lots et les tantièmes</h2>
       <p className={p}>
-        C&apos;est l&apos;étape la plus importante de la migration : <strong className={strong}>toute la répartition des charges repose sur cette base</strong>. Chaque erreur sur les tantièmes se répercutera automatiquement sur tous les appels de fonds futurs.
+        C&apos;est l&apos;étape la plus importante de la migration : <strong className={strong}>toute la répartition des charges repose sur cette base</strong>. Chaque erreur sur les tantièmes se répercutera automatiquement sur tous les <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>appels de fonds</a> futurs.
       </p>
       <p className={p}>
         Pour chaque lot, saisissez :
@@ -190,7 +190,7 @@ export default function ArticleMigrer() {
 
       <h2 id="etape-5" className={h2}>Étape 5 — Créer le premier appel de fonds</h2>
       <p className={p}>
-        C&apos;est souvent l&apos;étape la plus redoutée — et la plus simple une fois la structure en place. Depuis la section <strong className={strong}>&ldquo;Appels de fonds&rdquo;</strong>, cliquez sur <strong className={strong}>&ldquo;Créer&rdquo;</strong>. La plateforme vous propose deux options :
+        C&apos;est souvent l&apos;étape la plus redoutée — et la plus simple une fois la structure en place. Pour comprendre en détail comment fonctionne le calcul et la répartition, consultez notre <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>guide complet sur les appels de fonds en copropriété</a>. Depuis la section <strong className={strong}>&ldquo;Appels de fonds&rdquo;</strong>, cliquez sur <strong className={strong}>&ldquo;Créer&rdquo;</strong>. La plateforme vous propose deux options :
       </p>
 
       <div className="my-6 grid gap-4 sm:grid-cols-2">
@@ -227,7 +227,7 @@ export default function ArticleMigrer() {
         <li className={li}>Carnet d&apos;entretien de l&apos;immeuble (état des travaux réalisés)</li>
       </ul>
       <p className={p}>
-        L&apos;obligation légale d&apos;archivage couvre <strong className={strong}>10 ans</strong> pour les PV d&apos;AG, contrats et factures. Centraliser progressivement dans l&apos;outil évite le classeur physique difficile à retrouver.
+        L&apos;obligation légale d&apos;archivage couvre <strong className={strong}>10 ans</strong> pour les PV d&apos;AG, contrats et factures — c&apos;est l&apos;une des <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a>. Centraliser progressivement dans l&apos;outil évite le classeur physique difficile à retrouver.
       </p>
 
       <h2 id="etape-7" className={h2}>Étape 7 — Vérification avant le premier envoi</h2>
@@ -325,7 +325,7 @@ export default function ArticleMigrer() {
           <span className="flex-shrink-0 text-base text-green-500 mt-0.5">✓</span>
           <div>
             <p className="text-sm font-semibold text-gray-900 mb-0.5">Régularisation annuelle automatisée</p>
-            <p className="text-xs text-gray-600">En fin d&apos;exercice, la plateforme compare les provisions appelées aux dépenses réelles et calcule automatiquement le solde de chaque copropriétaire — complément à payer ou trop-perçu à rembourser.</p>
+            <p className="text-xs text-gray-600">En fin d&apos;exercice, la plateforme compare les provisions appelées aux dépenses réelles et calcule automatiquement le solde de chaque copropriétaire — complément à payer ou trop-perçu à rembourser. Le <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a> est suivi séparément, conformément à la loi.</p>
           </div>
         </div>
       </div>
@@ -334,7 +334,7 @@ export default function ArticleMigrer() {
 
       <h3 className={h3}>Combien de temps faut-il pour migrer depuis un syndic professionnel ?</h3>
       <p className={p}>
-        Pour une copropriété de 10 à 20 lots, comptez entre 3 et 5 heures si vous avez tous vos documents en main. La majorité du temps est consacrée à la saisie des tantièmes et des données copropriétaires. Une fois fait, vous ne recommencez pas.
+        Pour une copropriété de 10 à 20 lots, comptez environ 2 heures si vous avez tous vos documents en main. La majorité du temps est consacrée à la saisie des tantièmes et des données copropriétaires. Une fois fait, vous ne recommencez pas. Si vous venez de décider de gérer vous-même, lisez d&apos;abord notre <a href="/blog/comment-devenir-syndic-benevole" className={a}>guide sur les démarches pour devenir syndic bénévole</a>.
       </p>
 
       <h3 className={h3}>Faut-il ressaisir tout l&apos;historique comptable des années précédentes ?</h3>
@@ -359,15 +359,15 @@ export default function ArticleMigrer() {
 
       <h3 className={h3}>Que se passe-t-il si je souhaite arrêter Mon Syndic Bénévole plus tard ?</h3>
       <p className={p}>
-        Vous pouvez exporter vos données à tout moment — copropriétaires, lots, historique des appels. Aucun engagement de durée minimum au-delà de chaque mois souscrit. Si vous décidez de reprendre avec un cabinet professionnel, votre historique vous appartient.
+        Vos données (copropriétaires, lots, appels de fonds, documents) restent accessibles tant que votre compte est actif. En cas de résiliation, les PDF générés — avis d&apos;appel de fonds, convocations, PV — sont téléchargeables depuis chaque section et peuvent être archivés avant de quitter. Aucun engagement de durée minimum au-delà de chaque mois souscrit.
       </p>
 
       <h2 id="en-resume" className={h2}>En résumé</h2>
       <p className={p}>
-        Migrer vers Mon Syndic Bénévole ne demande pas de jours de configuration ni de formation technique. Avec vos documents en main — règlement de copropriété, liste des copropriétaires, relevés bancaires, dernier budget — vous pouvez être opérationnel en une demi-journée.
+        Migrer vers Mon Syndic Bénévole ne demande pas de jours de configuration ni de formation technique. Avec vos documents en main — règlement de copropriété, liste des copropriétaires, relevés bancaires, dernier budget — vous pouvez être opérationnel en une demi-journée. Si vous hésitez encore sur le choix de l&apos;outil, notre <a href="/blog/logiciel-syndic-benevole" className={a}>comparatif des logiciels pour syndic bénévole</a> vous aidera à trancher.
       </p>
       <p className={p}>
-        L&apos;investissement de départ (4 à 5 heures de saisie) se rentabilise dès le premier trimestre : plus aucun calcul manuel, plus aucune heure passée à reconstituer les comptes avant l&apos;AG, plus aucune demande de solde à traiter à la main.
+        L&apos;investissement de départ (2 heures de saisie) se rentabilise dès le premier trimestre : plus aucun calcul manuel, plus aucune heure passée à reconstituer les comptes avant l&apos;AG, plus aucune demande de solde à traiter à la main.
       </p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">

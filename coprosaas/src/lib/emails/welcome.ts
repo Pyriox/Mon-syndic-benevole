@@ -51,6 +51,12 @@ export function buildWelcomeEmail(params: WelcomeEmailParams): string {
 
 ${ctaButton('Démarrer →', dashboardUrl, COLOR.green)}
 
+<div style="margin:20px 0;padding:14px 16px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#92400e">Nouveau syndic bénévole&nbsp;?</p>
+  <p style="margin:0 0 8px;font-size:13px;color:#78350f;line-height:1.5">Consultez notre guide de migration pour être opérationnel en une demi-journée&nbsp;: lots, copropriétaires, premier appel de fonds.</p>
+  <a href="${SITE_URL}/blog/migrer-vers-mon-syndic-benevole" style="font-size:13px;font-weight:600;color:#92400e">Lire le guide →</a>
+</div>
+
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
   Une question ? Consultez notre <a href="${SITE_URL}/aide" style="color:${COLOR.blue}">aide en ligne</a> ou écrivez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.blue}">contact@mon-syndic-benevole.fr</a>.
 </p>`;
