@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw, Send } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw, Send, Trash2 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -54,9 +54,31 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
   const [publishMsg, setPublishMsg] = useState('');
   const [publishOk, setPublishOk] = useState<boolean | null>(null);
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteMsg, setDeleteMsg] = useState('');
   const autoRegenRef = useRef(false);
   const router = useRouter();
   const supabase = createClient();
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteMsg('');
+    try {
+      const res = await fetch(`/api/appels-de-fonds/${appel.id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (res.ok) {
+        router.refresh();
+      } else {
+        setDeleteMsg(json.message ?? 'Erreur lors de la suppression.');
+        setShowDeleteConfirm(false);
+      }
+    } catch {
+      setDeleteMsg('Erreur réseau.');
+      setShowDeleteConfirm(false);
+    }
+    setDeleting(false);
+  };
 
   const handlePublish = async () => {
     setPublishing(true);
@@ -296,6 +318,16 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
               ) : null
             )}
             <AppelFondsPDF appel={appel} />
+            {isSyndic && canWrite && (
+              <button
+                type="button"
+                onClick={() => { setShowDeleteConfirm(true); setDeleteMsg(''); }}
+                title="Supprimer cet appel de fonds"
+                className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 size={15} />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
@@ -307,6 +339,45 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           </div>
         </div>
       </div>
+
+      {/* ── Confirmation suppression ──────────────────────── */}
+      {showDeleteConfirm && (
+        <div className="mx-5 mb-3 flex flex-wrap items-center justify-between gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-red-800">
+            <Trash2 size={15} className="shrink-0 text-red-500" />
+            <span>
+              {appel.statut === 'publie'
+                ? <>Supprimer « <strong>{appel.titre}</strong> » ? Les soldes des copropriétaires non payés seront rétablis.</>
+                : <>Supprimer le brouillon « <strong>{appel.titre}</strong> » ? Cette action est irréversible.</>
+              }
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {deleting ? <Loader2 size={11} className="animate-spin inline" /> : 'Supprimer'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(false)}
+              className="text-xs font-medium text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Erreur suppression ───────────────────────────────── */}
+      {deleteMsg && (
+        <div className="mx-5 mb-3 text-xs rounded-lg px-3 py-2 border bg-red-50 text-red-700 border-red-200">
+          {deleteMsg}
+        </div>
+      )}
 
       {/* ── Feedback publication ─────────────────────────────── */}
       {publishMsg && (
