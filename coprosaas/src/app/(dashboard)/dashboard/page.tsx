@@ -23,7 +23,6 @@ import {
   TrendingUp,
   TrendingDown,
   Scale,
-  PiggyBank,
 } from 'lucide-react';
 
 export default async function DashboardPage() {
@@ -387,7 +386,7 @@ export default async function DashboardPage() {
   const totalProvisionsBP = provisionsBP.reduce((s, a) => s + (a.montant_total ?? 0), 0);
   const totalProvisionsBPHorsFT = totalProvisionsBP - totalFondsTravauxBP;
   const ecartPrevisionnel = totalProvisionsBPHorsFT - totalDepenses;
-  const totalChargesHorsFT = totalProvisions - totalFondsTravaux;
+  const totalDepensesAvecFT = totalDepenses + totalFondsTravaux;
 
   type LigneEncaissee = { montant_du: number };
   // appelsEncaisses conservé pour usage futur
@@ -525,69 +524,55 @@ export default async function DashboardPage() {
       {/* KPIs */}
       {copropriete && (
         <>
-          {/* ── Ligne 1 : 4 KPIs financiers — charges / FT / dépenses / écart ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Charges appelées hors FT */}
-            <Card className="flex items-center gap-3">
+          {/* ── Ligne 1 : 3 KPIs financiers — provisions / dépenses / écart ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Provisions appelées (charges + FT) */}
+            <Card className="flex items-center gap-4">
               <div className="p-3 bg-indigo-100 rounded-xl shrink-0">
-                <Wallet size={22} className="text-indigo-600" />
+                <Wallet size={24} className="text-indigo-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Charges {currentYear}</p>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Provisions {currentYear}</p>
                 {hasProvisions ? (
                   <>
-                    <p className="text-xl font-bold text-gray-900">{formatEuros(totalChargesHorsFT)}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Hors fonds travaux</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatEuros(totalProvisions)}</p>
+                    {totalFondsTravaux > 0 ? (
+                      <p className="text-xs text-amber-600 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux</p>
+                    ) : (
+                      <p className="text-xs text-gray-500 mt-0.5">Charges appelées aux copro.</p>
+                    )}
                   </>
                 ) : (
                   <>
                     <p className="text-lg font-semibold text-gray-500">&mdash;</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Aucun appel pour {currentYear}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Aucune provision saisie pour {currentYear}</p>
                   </>
                 )}
               </div>
             </Card>
 
-            {/* Fonds travaux ALUR */}
-            <Card className="flex items-center gap-3">
-              <div className="p-3 bg-amber-100 rounded-xl shrink-0">
-                <PiggyBank size={22} className="text-amber-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Fonds travaux {currentYear}</p>
-                {hasProvisions && totalFondsTravaux > 0 ? (
-                  <>
-                    <p className="text-xl font-bold text-gray-900">{formatEuros(totalFondsTravaux)}</p>
-                    <p className="text-xs text-amber-600 mt-0.5">ALUR — non régularisable</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-lg font-semibold text-gray-500">&mdash;</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Non appelé cette année</p>
-                  </>
-                )}
-              </div>
-            </Card>
-
-            {/* Dépenses réelles + tendance */}
-            <Card className="flex items-center gap-3">
+            {/* Dépenses réelles + FT + tendance */}
+            <Card className="flex items-center gap-4">
               <div className="p-3 bg-blue-100 rounded-xl shrink-0">
-                <Receipt size={22} className="text-blue-600" />
+                <Receipt size={24} className="text-blue-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dépenses {currentYear}</p>
-                <p className="text-xl font-bold text-gray-900">{formatEuros(totalDepenses)}</p>
-                {tendanceDepenses === 'hausse' && (
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dépenses réelles {currentYear}</p>
+                <p className="text-2xl font-bold text-gray-900">{formatEuros(totalDepensesAvecFT)}</p>
+                {totalFondsTravaux > 0 && (
+                  <p className="text-xs text-amber-600 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux</p>
+                )}
+                {totalFondsTravaux === 0 && tendanceDepenses === 'hausse' && (
                   <p className="text-xs text-red-600 flex items-center gap-0.5 mt-0.5 font-medium">
                     <ArrowUp size={11} />{pctTendance}% vs {prevYear}
                   </p>
                 )}
-                {tendanceDepenses === 'baisse' && (
+                {totalFondsTravaux === 0 && tendanceDepenses === 'baisse' && (
                   <p className="text-xs text-green-600 flex items-center gap-0.5 mt-0.5 font-medium">
                     <ArrowDown size={11} />{Math.abs(pctTendance)}% vs {prevYear}
                   </p>
                 )}
-                {tendanceDepenses === 'stable' && (
+                {totalFondsTravaux === 0 && tendanceDepenses === 'stable' && (
                   <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5">
                     <Minus size={11} />Stable vs {prevYear}
                   </p>
@@ -595,35 +580,36 @@ export default async function DashboardPage() {
               </div>
             </Card>
 
-            {/* Écart prévisionnel charges − dépenses */}
+            {/* Écart prévisionnel provisions − dépenses (symétrique : FT s'annule des deux côtés) */}
             {hasProvisions ? (
-              <Card className="flex items-center gap-3">
+              <Card className="flex items-center gap-4">
                 <div className={`p-3 rounded-xl shrink-0 ${ecartPrevisionnel > 0 ? 'bg-green-100' : ecartPrevisionnel < 0 ? 'bg-orange-100' : 'bg-gray-100'}`}>
                   {ecartPrevisionnel > 0
-                    ? <TrendingUp size={22} className="text-green-600" />
+                    ? <TrendingUp size={24} className="text-green-600" />
                     : ecartPrevisionnel < 0
-                      ? <TrendingDown size={22} className="text-orange-600" />
-                      : <Minus size={22} className="text-gray-500" />}
+                      ? <TrendingDown size={24} className="text-orange-600" />
+                      : <Minus size={24} className="text-gray-500" />}
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
-                  <p className={`text-xl font-bold ${ecartPrevisionnel > 0 ? 'text-green-700' : ecartPrevisionnel < 0 ? 'text-orange-600' : 'text-gray-700'}`}>
+                  <p className={`text-2xl font-bold ${ecartPrevisionnel > 0 ? 'text-green-700' : ecartPrevisionnel < 0 ? 'text-orange-600' : 'text-gray-700'}`}>
                     {ecartPrevisionnel > 0 ? '+' : ''}{formatEuros(ecartPrevisionnel)}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {ecartPrevisionnel > 0 ? 'Surplus provisoire' : ecartPrevisionnel < 0 ? 'Déficit à régulariser' : 'Charges = dépenses'}
+                    {ecartPrevisionnel > 0 ? 'Surplus (trop-perçu provisoire)' : ecartPrevisionnel < 0 ? 'Déficit à régulariser' : 'Provisions = dépenses'}
                   </p>
                 </div>
               </Card>
             ) : (
-              <Card className="flex items-center gap-3 border-dashed border-gray-200">
+              <Card className="flex items-center gap-4 border-dashed border-gray-200">
                 <div className="p-3 bg-gray-50 rounded-xl shrink-0">
-                  <Minus size={22} className="text-gray-500" />
+                  <Minus size={24} className="text-gray-500" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
                   <p className="text-sm text-gray-700 font-semibold mt-0.5">—</p>
                   <p className="text-xs text-gray-500 mt-0.5">
+                    Aucune provision saisie pour {currentYear}.{' '}
                     <Link href="/appels-de-fonds" className="text-gray-600 hover:text-blue-600 hover:underline">Saisir un appel de fonds</Link>
                   </p>
                 </div>
