@@ -352,9 +352,12 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       return;
     }
 
+    // Pour les appels sans AG (migration), le montant FT vient du champ manuel
+    const ftEffectif = agImportee ? montantFondsTravaux : (parseFloat(montantFTManuel) || 0);
+
     const finalVersements = useEcheancier
       ? editableVersements
-      : (dateSingle ? [{ date: dateSingle, montant: String(montantTotal) }] : []);
+      : (dateSingle ? [{ date: dateSingle, montant: String(montantTotal + ftEffectif) }] : []);
 
     if (finalVersements.length === 0 || finalVersements.some((v) => !v.date)) {
       setError("Renseignez toutes les dates de versement.");
@@ -366,9 +369,6 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       setLoading(false);
       return;
     }
-
-    // Pour les appels sans AG (migration), le montant FT vient du champ manuel
-    const ftEffectif = agImportee ? montantFondsTravaux : (parseFloat(montantFTManuel) || 0);
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -416,7 +416,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         .insert({
           copropriete_id: coproprieteId,
           titre: titre.trim(),
-          montant_total: montantTotal,
+          montant_total: montantTotal + ftEffectif,
           montant_fonds_travaux: ftEffectif,
           date_echeance: finalVersements[0].date,
           description: JSON.stringify(postesValides),
