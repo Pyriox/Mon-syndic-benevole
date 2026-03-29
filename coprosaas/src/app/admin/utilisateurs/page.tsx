@@ -12,7 +12,7 @@ import AdminImpersonate from '../AdminImpersonate';
 import AdminCopyId from '../AdminCopyId';
 import AdminSearch from '../AdminSearch';
 import { Suspense } from 'react';
-import { Users, UserCheck, CheckCircle2, LifeBuoy } from 'lucide-react';
+import { Users, UserCheck, CheckCircle2, LifeBuoy, LogIn } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
 
@@ -94,7 +94,7 @@ export default async function AdminUtilisateursPage({
     admin.from('user_events')
       .select('user_email, event_type, created_at')
       .order('created_at', { ascending: false })
-      .limit(300),
+      .limit(3000),
   ]);
 
   const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
@@ -126,12 +126,13 @@ export default async function AdminUtilisateursPage({
     if (email) ticketCount[email] = (ticketCount[email] ?? 0) + 1;
   }
 
-  // email → last event (already sorted desc, first = latest)
-  const lastEventByEmail: Record<string, { event_type: string; created_at: string }> = {};
+  // email → last 3 events (already sorted desc)
+  const eventsByEmail: Record<string, Array<{ event_type: string; created_at: string }>> = {};
   for (const e of recentEvents ?? []) {
     const typed = e as { user_email: string; event_type: string; created_at: string };
     const email = typed.user_email.toLowerCase();
-    if (!lastEventByEmail[email]) lastEventByEmail[email] = typed;
+    eventsByEmail[email] ??= [];
+    if (eventsByEmail[email].length < 3) eventsByEmail[email].push(typed);
   }
 
   const authUsers    = authResult.data?.users ?? [];
@@ -209,7 +210,7 @@ export default async function AdminUtilisateursPage({
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Utilisateur</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Rôle</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Inscrit</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Connexion</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell"><LogIn size={13} /></th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropriété</th>
               <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Support</th>
@@ -246,7 +247,7 @@ export default async function AdminUtilisateursPage({
                               : role === 'syndic' ? 'bg-indigo-100 text-indigo-700'
                               : 'bg-teal-100 text-teal-700';
 
-              const ev      = lastEventByEmail[emailKey];
+              const evs     = eventsByEmail[emailKey] ?? [];
               const tickets = ticketCount[emailKey] ?? 0;
 
               return (
@@ -279,35 +280,23 @@ export default async function AdminUtilisateursPage({
                   </td>
 
                   {/* Dernière connexion */}
-                  <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">
-                    {timeAgo(u.last_sign_in_at)}
+                  <td className="px-4 py-3 text-center hidden lg:table-cell">
+                    <span
+                      title={u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : 'Jamais connecté'}
+                      className="inline-flex items-center justify-center text-gray-400 hover:text-indigo-500 transition-colors cursor-default"
+                    >
+                      <LogIn size={13} />
+                    </span>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{timeAgo(u.last_sign_in_at)}</p>
                   </td>
 
                   {/* Copropriété */}
                   <td className="px-4 py-3 hidden md:table-cell">
-                    {role === 'admin' ? (
-                      <span className="text-xs text-gray-400">—</span>
-                    ) : isMember ? (
-                      memberCopros.length > 0 ? (
-                        <div className="flex flex-col gap-0.5">
-                          {memberCopros.slice(0, 2).map((nom) => (
-                            <span key={nom} className="text-xs text-gray-700 font-medium truncate max-w-[140px]">{nom}</span>
-                          ))}
-                          {memberCopros.length > 2 && (
-                            <span className="text-[10px] text-gray-400">+{memberCopros.length - 2} autres</span>
-                          )}
-                        </div>
-                      ) : <span className="text-xs text-gray-400">—</span>
-                    ) : (
-                      userCopros.length > 0 ? (
-                        <div className="flex flex-col items-start gap-1">
-                          <span className="text-xs font-semibold text-gray-800">
-                            {userCopros.length} copro{userCopros.length > 1 ? 's' : ''}
-                          </span>
-                          <PlanBadge plan={displayPlan} planId={bestPlanId} />
-                        </div>
-                      ) : <span className="text-xs text-gray-400">—</span>
-                    )}
+                    {(() => {
+                      const count = isMember ? memberCopros.length : userCopros.length;
+                      if (count === 0) return <span className="text-xs text-gray-400">—</span>;
+                      return <span className="text-xs font-semibold text-gray-700">{count} copro{count > 1 ? 's' : ''}</span>;
+                    })()}
                   </td>
 
                   {/* Email vérifié */}
@@ -329,10 +318,14 @@ export default async function AdminUtilisateursPage({
                         </span>
                       )}
                     </div>
-                    {ev && (
-                      <p className="text-[10px] text-gray-400 mt-1 leading-tight">
-                        {EVENT_LABELS[ev.event_type] ?? ev.event_type} · {timeAgo(ev.created_at)}
-                      </p>
+                    {evs.length > 0 && (
+                      <div className="mt-1 flex flex-col gap-0.5">
+                        {evs.map((ev, i) => (
+                          <p key={i} className="text-[10px] text-gray-400 leading-tight">
+                            {EVENT_LABELS[ev.event_type] ?? ev.event_type} · {timeAgo(ev.created_at)}
+                          </p>
+                        ))}
+                      </div>
                     )}
                   </td>
 
