@@ -10,6 +10,7 @@ import type { ElementType } from 'react';
 import AdminUserActions from '../AdminUserActions';
 import AdminImpersonate from '../AdminImpersonate';
 import AdminCopyId from '../AdminCopyId';
+import AdminUserLogs from '../AdminUserLogs';
 import AdminSearch from '../AdminSearch';
 import { Suspense } from 'react';
 import { Users, UserCheck, CheckCircle2, LifeBuoy } from 'lucide-react';
@@ -53,15 +54,6 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
   return null;
 }
 
-const EVENT_LABELS: Record<string, string> = {
-  account_confirmed:      '✓ Compte vérifié',
-  trial_started:          '↗ Essai démarré',
-  subscription_created:   '↑ Abonnement activé',
-  subscription_cancelled: '↓ Résiliation',
-  payment_failed:         '✗ Paiement échoué',
-  ticket_created:         '✉ Ticket ouvert',
-};
-
 export default async function AdminUtilisateursPage({
   searchParams,
 }: {
@@ -84,17 +76,12 @@ export default async function AdminUtilisateursPage({
     { data: adminRows },
     { data: coproprietairesData },
     { data: supportTicketsData },
-    { data: recentEvents },
   ] = await Promise.all([
     admin.auth.admin.listUsers({ perPage: 1000 }),
     admin.from('coproprietes').select('id, nom, syndic_id, plan, plan_id'),
     admin.from('admin_users').select('user_id'),
     admin.from('coproprietaires').select('email, copropriete_id'),
     admin.from('support_tickets').select('user_email'),
-    admin.from('user_events')
-      .select('user_email, event_type, created_at')
-      .order('created_at', { ascending: false })
-      .limit(3000),
   ]);
 
   const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
@@ -124,15 +111,6 @@ export default async function AdminUtilisateursPage({
   for (const t of supportTicketsData ?? []) {
     const email = ((t as { user_email: string | null }).user_email ?? '').toLowerCase();
     if (email) ticketCount[email] = (ticketCount[email] ?? 0) + 1;
-  }
-
-  // email → last 3 events (already sorted desc)
-  const eventsByEmail: Record<string, Array<{ event_type: string; created_at: string }>> = {};
-  for (const e of recentEvents ?? []) {
-    const typed = e as { user_email: string; event_type: string; created_at: string };
-    const email = typed.user_email.toLowerCase();
-    eventsByEmail[email] ??= [];
-    if (eventsByEmail[email].length < 3) eventsByEmail[email].push(typed);
   }
 
   const authUsers    = authResult.data?.users ?? [];
@@ -247,7 +225,6 @@ export default async function AdminUtilisateursPage({
                               : role === 'syndic' ? 'bg-indigo-100 text-indigo-700'
                               : 'bg-teal-100 text-teal-700';
 
-              const evs     = eventsByEmail[emailKey] ?? [];
               const tickets = ticketCount[emailKey] ?? 0;
 
               return (
@@ -307,21 +284,13 @@ export default async function AdminUtilisateursPage({
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <AdminCopyId id={u.id} iconOnly />
                       {!isAdmin && <AdminImpersonate email={u.email ?? ''} iconOnly />}
+                      <AdminUserLogs email={u.email ?? ''} />
                       {tickets > 0 && (
                         <span className="inline-flex items-center gap-1 text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 rounded px-1.5 py-0.5">
                           <LifeBuoy size={10} />{tickets}
                         </span>
                       )}
                     </div>
-                    {evs.length > 0 && (
-                      <div className="mt-1 flex flex-col gap-0.5">
-                        {evs.map((ev, i) => (
-                          <p key={i} className="text-[10px] text-gray-400 leading-tight">
-                            {EVENT_LABELS[ev.event_type] ?? ev.event_type} · {timeAgo(ev.created_at)}
-                          </p>
-                        ))}
-                      </div>
-                    )}
                   </td>
 
                   {/* Actions */}
