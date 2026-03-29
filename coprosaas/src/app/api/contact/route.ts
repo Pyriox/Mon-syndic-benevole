@@ -125,6 +125,13 @@ export async function POST(req: NextRequest) {
         content:     message.trim(),
         client_read: true,
       });
+      await Promise.resolve(
+        admin.from('user_events').insert({
+          user_email: email.trim().toLowerCase(),
+          event_type: 'ticket_created',
+          label:      `Ticket ouvert — ${subject.trim()}`,
+        }),
+      ).catch((e: Error) => console.warn('[contact] logUserEvent error:', e?.message));
     }
   } catch (dbErr) {
     console.error('[contact] DB persist error:', dbErr);
