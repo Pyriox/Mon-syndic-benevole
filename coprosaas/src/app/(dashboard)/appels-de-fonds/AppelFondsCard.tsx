@@ -385,6 +385,15 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                     <span className="font-semibold text-gray-900 tabular-nums shrink-0 ml-3">{formatEuros(p.montant)}</span>
                   </div>
                 ))}
+                {(appel.montant_fonds_travaux ?? 0) > 0 && (
+                  <div className="flex items-center justify-between px-3 py-2 text-xs border-t border-amber-100 bg-amber-50">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-medium text-amber-800">Fonds travaux ALUR</span>
+                      <span className="text-amber-500 shrink-0">Fonds travaux</span>
+                    </div>
+                    <span className="font-semibold text-amber-700 tabular-nums shrink-0 ml-3">{formatEuros(appel.montant_fonds_travaux!)}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between px-3 py-2 text-xs border-t border-gray-200 bg-gray-50 font-semibold">
                   <span className="text-gray-600">Total</span>
                   <span className="text-blue-700 tabular-nums">{formatEuros(appel.montant_total)}</span>

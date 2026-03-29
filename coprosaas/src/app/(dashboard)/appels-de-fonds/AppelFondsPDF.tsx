@@ -29,6 +29,7 @@ export interface AppelForPDF {
   copropriete_id?: string;
   type_appel?: string | null;
   ag_resolution_id?: string | null;
+  montant_fonds_travaux?: number | null;
 }
 
 interface AppelFondsPDFProps {
@@ -162,14 +163,21 @@ export function buildAppelFondsPDF(appel: AppelForPDF): jsPDF {
   const postes = parsePostes(appel.description);
   if (postes && postes.length > 0) {
     y = pdfSectionTitle(doc, 'Détail des postes de charges', y, PDF_INDIGO);
+    const ftAlurRow: [string, string, string][] =
+      (appel.montant_fonds_travaux ?? 0) > 0
+        ? [['Fonds travaux ALUR', 'Fonds travaux', fmtEurPDF(appel.montant_fonds_travaux!)]]
+        : [];
     autoTable(doc, {
       startY: y,
       head: [['Libellé', 'Catégorie', 'Montant (€)']],
-      body: postes.map((p) => [
-        p.libelle,
-        LABELS_CATEGORIE[p.categorie as keyof typeof LABELS_CATEGORIE] ?? p.categorie,
-        fmtEurPDF(p.montant),
-      ]),
+      body: [
+        ...postes.map((p) => [
+          p.libelle,
+          LABELS_CATEGORIE[p.categorie as keyof typeof LABELS_CATEGORIE] ?? p.categorie,
+          fmtEurPDF(p.montant),
+        ] as [string, string, string]),
+        ...ftAlurRow,
+      ],
       foot: [['TOTAL', '', fmtEurPDF(appel.montant_total)]],
       headStyles: { fillColor: PDF_INDIGO, fontSize: 9, fontStyle: 'bold' },
       footStyles: { fillColor: PDF_MGRAY, textColor: [17, 24, 39], fontStyle: 'bold', fontSize: 9 },
@@ -219,6 +227,7 @@ export interface AvisPersonnelInput {
   date_echeance: string;
   coproprietes?: { nom: string } | null;
   description?: string | null;
+  montant_fonds_travaux?: number | null;
 }
 
 export function buildAvisPersonnelPDF(
@@ -308,19 +317,27 @@ export function buildAvisPersonnelPDF(
   y += 10;
 
   // ── Postes ────────────────────────────────────────────────
-  if (postes.length > 0) {
+  const ftAlurTotal = appel.montant_fonds_travaux ?? 0;
+  if (postes.length > 0 || ftAlurTotal > 0) {
     y = pdfSectionTitle(doc, 'Détail de votre quote-part par poste', y, PDF_INDIGO);
+    const ftAvisRow: [string, string, string][] =
+      ftAlurTotal > 0
+        ? [['Fonds travaux ALUR', 'Fonds travaux', fmtEurPDF(Math.round(ftAlurTotal * ratio * 100) / 100)]]
+        : [];
     autoTable(doc, {
       startY: y,
       head: [['Poste de charge', 'Catégorie', 'Votre part (€)']],
-      body: postes.map((p) => {
-        const part = Math.round(p.montant * ratio * 100) / 100;
-        return [
-          p.libelle,
-          LABELS_CATEGORIE[p.categorie as keyof typeof LABELS_CATEGORIE] ?? p.categorie,
-          fmtEurPDF(part),
-        ];
-      }),
+      body: [
+        ...postes.map((p) => {
+          const part = Math.round(p.montant * ratio * 100) / 100;
+          return [
+            p.libelle,
+            LABELS_CATEGORIE[p.categorie as keyof typeof LABELS_CATEGORIE] ?? p.categorie,
+            fmtEurPDF(part),
+          ] as [string, string, string];
+        }),
+        ...ftAvisRow,
+      ],
       foot: [['TOTAL À RÉGLER', '', fmtEurPDF(ligne.montant_du)]],
       headStyles: { fillColor: PDF_INDIGO, fontSize: 9, fontStyle: 'bold' },
       footStyles: { fillColor: PDF_MGRAY, textColor: [17, 24, 39], fontStyle: 'bold', fontSize: 9 },

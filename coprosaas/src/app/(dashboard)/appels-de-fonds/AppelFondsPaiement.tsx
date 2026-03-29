@@ -47,6 +47,7 @@ interface AppelPartiel {
   type_appel?: string | null;
   ag_resolution_id?: string | null;
   emailed_at?: string | null;
+  montant_fonds_travaux?: number | null;
 }
 
 interface AppelFondsPaiementProps {
@@ -73,7 +74,8 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const postes = parsePostes(appel.description);
-  const hasPostes = postes.length > 0;
+  const ftAlur = appel.montant_fonds_travaux ?? 0;
+  const hasPostes = postes.length > 0 || ftAlur > 0;
 
   const getStatut = (l: Ligne): 'paye' | 'impaye' | 'en_attente' => {
     if (l.paye) return 'paye';
@@ -225,7 +227,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                       disabled={isToggling}
                       className="shrink-0 text-xs px-2.5 py-1 rounded-lg font-medium bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors disabled:opacity-50"
                     >
-                      {isToggling ? <Loader2 size={11} className="animate-spin inline" /> : '✓ Payé'}
+                      {isToggling ? <Loader2 size={11} className="animate-spin inline" /> : 'Marquer payé'}
                     </button>
                   )
                 )}
@@ -280,6 +282,17 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                         </div>
                       );
                     })}
+                    {ftAlur > 0 && (
+                      <div className="flex items-center justify-between text-xs bg-amber-50 rounded-lg px-3 py-1.5 border border-amber-100">
+                        <div>
+                          <span className="font-medium text-amber-800">Fonds travaux ALUR</span>
+                          <span className="ml-2 text-amber-500">Fonds travaux</span>
+                        </div>
+                        <span className="font-bold text-amber-700 tabular-nums">
+                          {formatEuros(Math.round(ftAlur * (ligne.montant_du / appel.montant_total) * 100) / 100)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between text-xs font-bold px-3 pt-1">
                       <span className="text-gray-600">Total</span>
                       <span className="text-indigo-800 tabular-nums">{formatEuros(ligne.montant_du)}</span>
