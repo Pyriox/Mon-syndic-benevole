@@ -12,7 +12,7 @@ import AdminImpersonate from '../AdminImpersonate';
 import AdminCopyId from '../AdminCopyId';
 import AdminSearch from '../AdminSearch';
 import { Suspense } from 'react';
-import { Users, UserCheck, CheckCircle2, LifeBuoy, LogIn } from 'lucide-react';
+import { Users, UserCheck, CheckCircle2, LifeBuoy } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
 
@@ -164,7 +164,7 @@ export default async function AdminUtilisateursPage({
 
   const kpis: Array<{ label: string; value: string | number; sub: string; color: string; Icon: ElementType }> = [
     { label: 'Total',    value: nbUsers,     sub: `+${newUsers30} ce mois`,   color: 'bg-blue-100 text-blue-600',    Icon: Users },
-    { label: 'Syndics',  value: syndicCount, sub: `${authUsers.filter((u) => !adminUserIds.has(u.id) && (u.user_metadata as Record<string,string>|null)?.role !== 'copropriétaire' && !!u.email_confirmed_at).length} vérifiés`, color: 'bg-indigo-100 text-indigo-600', Icon: UserCheck },
+    { label: 'Syndics',  value: syndicCount, sub: `${authUsers.filter((u) => (u.user_metadata as Record<string,string>|null)?.role !== 'copropriétaire' && !!u.email_confirmed_at).length} vérifiés`, color: 'bg-indigo-100 text-indigo-600', Icon: UserCheck },
     { label: 'Membres',  value: memberCount, sub: `${authUsers.filter((u) => (u.user_metadata as Record<string,string>|null)?.role === 'copropriétaire' && !!u.email_confirmed_at).length} vérifiés`, color: 'bg-teal-100 text-teal-600', Icon: Users },
     { label: 'Vérifiés', value: `${confirmedPct} %`, sub: `${nbUnconfirmed} en attente`, color: 'bg-green-100 text-green-600', Icon: CheckCircle2 },
   ];
@@ -210,7 +210,7 @@ export default async function AdminUtilisateursPage({
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Utilisateur</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Rôle</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Inscrit</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell"><LogIn size={13} /></th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Connexion</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropriété</th>
               <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Support</th>
@@ -280,14 +280,9 @@ export default async function AdminUtilisateursPage({
                   </td>
 
                   {/* Dernière connexion */}
-                  <td className="px-4 py-3 text-center hidden lg:table-cell">
-                    <span
-                      title={u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : 'Jamais connecté'}
-                      className="inline-flex items-center justify-center text-gray-400 hover:text-indigo-500 transition-colors cursor-default"
-                    >
-                      <LogIn size={13} />
-                    </span>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{timeAgo(u.last_sign_in_at)}</p>
+                  <td className="px-4 py-3 hidden lg:table-cell">
+                    <p className="text-xs font-medium text-gray-700 leading-tight">{timeAgo(u.last_sign_in_at)}</p>
+                    <p className="text-[11px] text-gray-400 leading-tight">{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : '—'}</p>
                   </td>
 
                   {/* Copropriété */}
@@ -311,7 +306,7 @@ export default async function AdminUtilisateursPage({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <AdminCopyId id={u.id} iconOnly />
-                      {!isAdmin && <AdminImpersonate email={u.email ?? ''} />}
+                      {!isAdmin && <AdminImpersonate email={u.email ?? ''} iconOnly />}
                       {tickets > 0 && (
                         <span className="inline-flex items-center gap-1 text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 rounded px-1.5 py-0.5">
                           <LifeBuoy size={10} />{tickets}
