@@ -219,7 +219,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
     // Montant local pour initialiser les montants par versement avant la mise à jour du state postes
     const localMontantTotal = (newPostes.length > 0 ? newPostes : [{ ...POSTE_VIDE }])
-      .reduce((s, p) => s + (parseFloat(p.montant) || 0), 0);
+      .reduce((s, p) => p.categorie === 'fonds_travaux_alur' ? s : s + (parseFloat(p.montant) || 0), 0);
 
     // Échéancier voté en AG
     if (ag.votedDates.length >= 2) {
@@ -240,7 +240,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       setGenDateDebut(ag.votedDates[0]);
     } else {
       // Pas de calendrier_financement voté : génération automatique d'un échéancier trimestriel
-      // en utilisant localMontantTotal (budget + fonds travaux ALUR) et l'année du budget voté.
+      // en utilisant localMontantTotal (budget hors fonds travaux ALUR) et l'année du budget voté.
       const yearStart = `${budgetYear}-01-01`;
       if (localMontantTotal > 0 && (hasBudgetPrev || fondsTravauxTotal > 0)) {
         const nb = PERIODICITE_NB['trimestriel'];
@@ -307,7 +307,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
   // -- Calculs -------------------------------------------------
   const totalTantiemsVal = lots.reduce((s, l) => s + (l.tantiemes ?? 0), 0);
-  const montantTotal = postes.reduce((s, p) => s + (parseFloat(p.montant) || 0), 0);
+  const montantTotal = postes.reduce((s, p) => p.categorie === 'fonds_travaux_alur' ? s : s + (parseFloat(p.montant) || 0), 0);
 
   // Regrouper les lots par copropriétaire (cumul des tantièmes si multi-lots)
   const repartition = useMemo(() => {
