@@ -239,12 +239,27 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       setDateSingle(ag.votedDates[0]);
       setGenDateDebut(ag.votedDates[0]);
     } else {
-      const currentYearDefault = `${new Date().getFullYear()}-01-01`;
-      setEditableVersements([]);
-      setFromAGDates(false);
-      setUseEcheancier(hasBudgetPrev);
-      setDateSingle(currentYearDefault);
-      setGenDateDebut(currentYearDefault);
+      // Pas de calendrier_financement voté : génération automatique d'un échéancier trimestriel
+      // en utilisant localMontantTotal (budget + fonds travaux ALUR) et l'année du budget voté.
+      const yearStart = `${budgetYear}-01-01`;
+      if (localMontantTotal > 0 && (hasBudgetPrev || fondsTravauxTotal > 0)) {
+        const nb = PERIODICITE_NB['trimestriel'];
+        const baseAmount = Math.round((localMontantTotal / nb) * 100) / 100;
+        setEditableVersements(
+          Array.from({ length: nb }, (_, i) => ({
+            date: addMonths(yearStart, i * PERIODICITE_MOIS['trimestriel']),
+            montant: String(baseAmount),
+          }))
+        );
+        setFromAGDates(false);
+        setUseEcheancier(true);
+      } else {
+        setEditableVersements([]);
+        setFromAGDates(false);
+        setUseEcheancier(hasBudgetPrev || fondsTravauxTotal > 0);
+      }
+      setDateSingle(yearStart);
+      setGenDateDebut(yearStart);
       setGenPeriodicite('trimestriel');
     }
     setPostesExpanded(false);

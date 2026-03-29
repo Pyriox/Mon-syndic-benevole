@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       </tr>
     </table>
     <h3 style="font-size:13px;font-weight:600;color:#6b7280;margin:0 0 10px;text-transform:uppercase;letter-spacing:.05em">Message</h3>
-    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;font-size:14px;color:#374151;line-height:1.7;white-space:pre-wrap">${h(message.trim())}</div>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;font-size:14px;color:#374151;line-height:1.7">${h(message.trim()).replace(/\n/g, '<br>')}</div>
     <div style="margin-top:24px">
       <a href="${ticketUrl}" style="display:inline-block;background:#1d4ed8;color:#ffffff;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;text-decoration:none">Voir le ticket</a>
     </div>

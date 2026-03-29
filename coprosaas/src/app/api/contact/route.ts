@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       </tr>
     </table>
     <h3 style="font-size:13px;font-weight:600;color:#6b7280;margin:0 0 10px;text-transform:uppercase;letter-spacing:.05em">Message</h3>
-    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;font-size:14px;color:#374151;line-height:1.7;white-space:pre-wrap">${escapeHtml(message)}</div>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;font-size:14px;color:#374151;line-height:1.7">${escapeHtml(message).replace(/\n/g, '<br>')}</div>
     <p style="margin-top:24px;font-size:12px;color:#9ca3af">
       Ce message a été envoyé depuis la page Aide &amp; Contact de Mon Syndic Bénévole.
     </p>
