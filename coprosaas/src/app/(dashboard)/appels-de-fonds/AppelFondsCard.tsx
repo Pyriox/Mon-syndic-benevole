@@ -474,6 +474,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                   <Loader2 size={14} className="animate-spin" />
                   <span>Génération de la répartition…</span>
                 </div>
+              ) : appel.statut === 'brouillon' ? (
+                <p className="text-sm text-gray-400">
+                  La répartition sera générée automatiquement lors de la publication.
+                </p>
               ) : (
                 <>
                   <p className="text-sm text-gray-400">
@@ -487,7 +491,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                       className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50 transition-colors"
                     >
                       <RefreshCw size={14} />
-                      Réessayer
+                      Régénérer
                     </button>
                   )}
                 </>
