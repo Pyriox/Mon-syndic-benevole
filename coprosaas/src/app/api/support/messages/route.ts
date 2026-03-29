@@ -5,13 +5,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.trim().toLowerCase() !== ADMIN_EMAIL) {
+  const admin = createAdminClient();
+  if (!user || !(await isAdminUser(user.id, admin))) {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 403 });
   }
 
@@ -20,7 +20,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: 'ticketId requis' }, { status: 400 });
   }
 
-  const admin = createAdminClient();
   const { data, error } = await admin
     .from('support_messages')
     .select('id, ticket_id, author, content, created_at')

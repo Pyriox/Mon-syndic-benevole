@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Loader2, RotateCcw, RefreshCw, UserCog, Pencil, Users } from 'lucide-react';
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function AdminCoproActions({ coproId, coproNom, currentPlan, isOrphaned, adresse, codePostal, ville, nombreLots }: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
@@ -63,7 +65,7 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan, isOr
     if (res.ok) {
       setEditOpen(false);
       setDone('Modifié');
-      setTimeout(() => window.location.reload(), 800);
+      setTimeout(() => router.refresh(), 800);
     } else {
       const { error } = await res.json();
       alert('Erreur : ' + error);
@@ -89,7 +91,7 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan, isOr
     setLoading(false);
     if (res.ok) {
       setDone('OK');
-      setTimeout(() => window.location.reload(), 800);
+      setTimeout(() => router.refresh(), 800);
     } else {
       const { error } = await res.json();
       alert('Erreur : ' + error);
@@ -97,7 +99,7 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan, isOr
   };
 
   const handleReset = () => {
-    if (!confirm(`Réinitialiser l'abonnement de « ${coproNom} » ?\n\nLe plan sera remis à « essai » et les données Stripe effacées (stripe_subscription_id, stripe_customer_id, plan_period_end).`)) return;
+    if (!confirm(`Réinitialiser l'abonnement de « ${coproNom} » ?\n\nLe plan sera remis à « inactif » et les données Stripe effacées (stripe_subscription_id, stripe_customer_id, plan_period_end).`)) return;
     post({ action: 'reset_subscription', coproId });
   };
 
@@ -265,7 +267,7 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan, isOr
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 transition-colors"
                   >
                     <RotateCcw size={12} className="shrink-0" />
-                    Réinitialiser (essai)
+                    Réinitialiser (inactif)
                   </button>
                 </>
               )}

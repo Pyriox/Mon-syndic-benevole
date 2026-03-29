@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminUser } from '@/lib/admin-config';
+import { logAdminAction } from '@/lib/actions/log-user-event';
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -21,7 +22,8 @@ async function checkAdmin() {
 
 // ── DELETE : supprimer un utilisateur ────────────────────────
 export async function DELETE(request: NextRequest) {
-  if (!await checkAdmin()) {
+  const requester = await checkAdmin();
+  if (!requester) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
@@ -30,22 +32,48 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'userId requis' }, { status: 400 });
   }
 
+  if (userId === requester.id) {
+    return NextResponse.json({ error: 'Suppression de votre propre compte interdite' }, { status: 400 });
+  }
+
   const admin = createAdminClient();
+
+  const [{ data: targetAdmin }, { count: adminCount }] = await Promise.all([
+    admin.from('admin_users').select('user_id').eq('user_id', userId).maybeSingle(),
+    admin.from('admin_users').select('user_id', { count: 'exact', head: true }),
+  ]);
+
+  if (targetAdmin && (adminCount ?? 0) <= 1) {
+    return NextResponse.json({ error: 'Impossible de supprimer le dernier administrateur' }, { status: 400 });
+  }
 
   // Délier les fiches coproprietaires avant suppression
   await admin.from('coproprietaires').update({ user_id: null }).eq('user_id', userId);
+
+  if (targetAdmin) {
+    await admin.from('admin_users').delete().eq('user_id', userId);
+  }
 
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  void logAdminAction({
+    adminEmail: requester.email ?? '',
+    eventType: 'admin_user_deleted',
+    label: `Compte supprimé — ${userId}`,
+    severity: 'warning',
+    metadata: { targetUserId: userId, targetWasAdmin: !!targetAdmin },
+  });
+
   return NextResponse.json({ success: true });
 }
 
 // ── POST : actions sur un utilisateur ────────────────────────
 export async function POST(request: NextRequest) {
-  if (!await checkAdmin()) {
+  const requester = await checkAdmin();
+  if (!requester) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
@@ -62,6 +90,12 @@ export async function POST(request: NextRequest) {
       email,
     });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_resend_confirmation',
+      label: `Email de confirmation renvoyé — ${email}`,
+      metadata: { targetEmail: email.toLowerCase() },
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -70,6 +104,12 @@ export async function POST(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'userId requis' }, { status: 400 });
     const { error } = await admin.auth.admin.updateUserById(userId, { email_confirm: true });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_force_confirm',
+      label: `Compte vérifié manuellement — ${userId}`,
+      metadata: { targetUserId: userId },
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -81,24 +121,53 @@ export async function POST(request: NextRequest) {
       .update({ statut: 'annulee' })
       .eq('id', userId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_invitation_cancelled',
+      label: `Invitation annulée — ${userId}`,
+      metadata: { invitationId: userId },
+    });
     return NextResponse.json({ success: true });
   }
 
   // Accorder / retirer le rôle admin
   if (action === 'toggle_admin') {
     if (!userId) return NextResponse.json({ error: 'userId requis' }, { status: 400 });
+
+    if (userId === requester.id) {
+      return NextResponse.json({ error: 'Modification de votre propre rôle admin interdite' }, { status: 400 });
+    }
+
     const { data: existing } = await admin
       .from('admin_users')
       .select('user_id')
       .eq('user_id', userId)
       .maybeSingle();
+
     if (existing) {
+      const { count: adminCount } = await admin.from('admin_users').select('user_id', { count: 'exact', head: true });
+      if ((adminCount ?? 0) <= 1) {
+        return NextResponse.json({ error: 'Impossible de retirer le dernier administrateur' }, { status: 400 });
+      }
       const { error } = await admin.from('admin_users').delete().eq('user_id', userId);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      void logAdminAction({
+        adminEmail: requester.email ?? '',
+        eventType: 'admin_role_revoked',
+        label: `Droits admin retirés — ${userId}`,
+        severity: 'warning',
+        metadata: { targetUserId: userId },
+      });
       return NextResponse.json({ success: true, isAdmin: false });
     } else {
       const { error } = await admin.from('admin_users').insert({ user_id: userId });
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      void logAdminAction({
+        adminEmail: requester.email ?? '',
+        eventType: 'admin_role_granted',
+        label: `Droits admin accordés — ${userId}`,
+        metadata: { targetUserId: userId },
+      });
       return NextResponse.json({ success: true, isAdmin: true });
     }
   }
@@ -108,7 +177,8 @@ export async function POST(request: NextRequest) {
 
 // ── PATCH : modifier email et/ou nom d’un utilisateur ────────────────────
 export async function PATCH(request: NextRequest) {
-  if (!await checkAdmin()) {
+  const requester = await checkAdmin();
+  if (!requester) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
@@ -136,6 +206,17 @@ export async function PATCH(request: NextRequest) {
       full_name: fullName.trim() || null,
     }, { onConflict: 'id' });
   }
+
+  void logAdminAction({
+    adminEmail: requester.email ?? '',
+    eventType: 'admin_user_updated',
+    label: `Utilisateur modifié — ${userId.trim()}`,
+    metadata: {
+      targetUserId: userId.trim(),
+      emailUpdated: !!email?.trim(),
+      fullNameUpdated: fullName !== undefined,
+    },
+  });
 
   return NextResponse.json({ success: true });
 }

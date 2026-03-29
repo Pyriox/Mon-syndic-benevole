@@ -84,8 +84,8 @@ export default async function AdminDashboardPage() {
     { data: invitations },
     { data: ticketsSupport },
     { data: lotsParCopro },
+    { data: coproprietairesParCopro },
     { data: agParCopro },
-    { data: depParCopro },
   ] = await Promise.all([
     admin.from('lots').select('id', { count: 'exact', head: true }),
     admin.from('coproprietaires').select('id', { count: 'exact', head: true }),
@@ -99,8 +99,8 @@ export default async function AdminDashboardPage() {
     admin.from('invitations').select('id, email, statut, expires_at, created_at').order('created_at', { ascending: false }).limit(100),
     admin.from('support_tickets').select('id, user_name, user_email, subject, status, updated_at').in('status', ['ouvert', 'en_cours']).order('updated_at', { ascending: false }).limit(8),
     admin.from('lots').select('copropriete_id'),
+    admin.from('coproprietaires').select('copropriete_id'),
     admin.from('assemblees_generales').select('copropriete_id'),
-    admin.from('depenses').select('copropriete_id, montant'),
   ]);
 
   const { data: adminRows } = await admin.from('admin_users').select('user_id');
@@ -207,15 +207,19 @@ export default async function AdminDashboardPage() {
 
   const lotsCount: Record<string, number> = {};
   for (const l of lotsParCopro ?? []) lotsCount[l.copropriete_id] = (lotsCount[l.copropriete_id] ?? 0) + 1;
+  const coproCount: Record<string, number> = {};
+  for (const c of coproprietairesParCopro ?? []) coproCount[c.copropriete_id] = (coproCount[c.copropriete_id] ?? 0) + 1;
   const agCount: Record<string, number> = {};
   for (const a of agParCopro ?? []) agCount[a.copropriete_id] = (agCount[a.copropriete_id] ?? 0) + 1;
-  const depCount: Record<string, { nb: number; total: number }> = {};
-  for (const d of depParCopro ?? []) {
-    if (!depCount[d.copropriete_id]) depCount[d.copropriete_id] = { nb: 0, total: 0 };
-    depCount[d.copropriete_id].nb++;
-    depCount[d.copropriete_id].total += d.montant;
-  }
-  const topCopros = [...coprosTyped].sort((a, b) => (depCount[b.id]?.total ?? 0) - (depCount[a.id]?.total ?? 0)).slice(0, 5);
+  const topCopros = [...coprosTyped]
+    .sort((a, b) => {
+      const byMembers = (coproCount[b.id] ?? 0) - (coproCount[a.id] ?? 0);
+      if (byMembers !== 0) return byMembers;
+      const byLots = (lotsCount[b.id] ?? 0) - (lotsCount[a.id] ?? 0);
+      if (byLots !== 0) return byLots;
+      return (agCount[b.id] ?? 0) - (agCount[a.id] ?? 0);
+    })
+    .slice(0, 5);
 
   const stripeFailures = stripeCharges.filter((c) => c.status === 'failed');
   const alertNonConfirmedOld = authUsers.filter((u) => !u.email_confirmed_at && u.created_at < new Date(Date.now() - 7 * 86400000).toISOString() && !adminUserIds.has(u.id));
@@ -491,26 +495,26 @@ export default async function AdminDashboardPage() {
         </section>
       </div>
 
-      {/* ── Top copros par dépenses ── */}
+      {/* ── Top copros par taille (copropriétaires) ── */}
       <section>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Top 5 copropriétés par dépenses</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Top 5 copropriétés par taille</p>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-100">
             {topCopros.map((c) => {
-              const dep = depCount[c.id];
-              const maxDep = depCount[topCopros[0]?.id]?.total ?? 1;
-              const pct = dep ? Math.round((dep.total / maxDep) * 100) : 0;
+              const nbCopro = coproCount[c.id] ?? 0;
+              const maxCopro = coproCount[topCopros[0]?.id] ?? 1;
+              const pct = Math.round((nbCopro / maxCopro) * 100);
               return (
                 <div key={c.id} className="px-4 py-3">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-sm font-medium text-gray-800 truncate">{c.nom}</span>
                     <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0 ml-3">
+                      <span>{nbCopro} copro</span>
                       <span>{lotsCount[c.id] ?? 0} lots</span>
                       <span>{agCount[c.id] ?? 0} AG</span>
-                      <span className="font-bold text-gray-800">{dep ? fmtEur(dep.total) : '—'}</span>
                     </div>
                   </div>
-                  <ProgressBar value={pct} color="bg-indigo-400" />
+                  <ProgressBar value={pct} color="bg-emerald-400" />
                 </div>
               );
             })}

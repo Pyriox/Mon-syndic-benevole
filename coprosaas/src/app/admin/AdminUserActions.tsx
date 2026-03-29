@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Trash2, Mail, MoreHorizontal, Loader2, ShieldCheck, Pencil } from 'lucide-react';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function AdminUserActions({ userId, userEmail, fullName, isConfirmed, isSelf, isAdmin }: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
@@ -45,7 +47,7 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
     if (res.ok) {
       setEditOpen(false);
       setDone('Modifié');
-      setTimeout(() => window.location.reload(), 800);
+      setTimeout(() => router.refresh(), 800);
     } else {
       const { error } = await res.json();
       alert('Erreur : ' + error);
@@ -66,7 +68,7 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
     setOpen(false);
     const res = await fetch(`/api/admin/users?userId=${userId}`, { method: 'DELETE' });
     if (res.ok) {
-      window.location.reload();
+      router.refresh();
     } else {
       const { error } = await res.json();
       alert('Erreur : ' + error);
@@ -104,7 +106,7 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
     setLoading(false);
     if (res.ok) {
       setDone('Compte vérifié');
-      setTimeout(() => window.location.reload(), 1000);
+      setTimeout(() => router.refresh(), 1000);
     } else {
       const { error } = await res.json();
       alert('Erreur : ' + error);
@@ -123,7 +125,7 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
     setLoading(false);
     if (res.ok) {
       setDone(isAdmin ? 'Admin retiré' : 'Admin accordé');
-      setTimeout(() => window.location.reload(), 800);
+      setTimeout(() => router.refresh(), 800);
     } else {
       const { error } = await res.json();
       alert('Erreur : ' + error);

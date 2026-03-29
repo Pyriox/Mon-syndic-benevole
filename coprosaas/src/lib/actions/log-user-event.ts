@@ -61,3 +61,31 @@ export async function logEventForEmail({
     // Journal non bloquant
   }
 }
+
+/** Variante dédiée aux actions admin sensibles. */
+export async function logAdminAction({
+  adminEmail,
+  eventType,
+  label = '',
+  severity = 'info',
+  metadata,
+}: LogUserEventInput & { adminEmail: string }): Promise<void> {
+  try {
+    const normalizedEmail = adminEmail.trim().toLowerCase();
+    if (!normalizedEmail || !eventType.trim()) return;
+
+    const admin = createAdminClient();
+    await admin.from('user_events').insert({
+      user_email: normalizedEmail,
+      event_type: eventType.trim(),
+      label: label.trim(),
+      severity,
+      metadata: {
+        scope: 'admin',
+        ...(metadata ?? {}),
+      },
+    });
+  } catch {
+    // Journal non bloquant
+  }
+}

@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { ElementType } from 'react';
+import Link from 'next/link';
 import AdminUserActions from '../AdminUserActions';
 import AdminImpersonate from '../AdminImpersonate';
 import AdminCopyId from '../AdminCopyId';
@@ -246,9 +247,19 @@ export default async function AdminUtilisateursPage({
                         <span className="text-xs font-bold">{(u.email ?? '?')[0].toUpperCase()}</span>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate leading-tight">{u.email}</p>
+                        <Link
+                          href={`/admin/utilisateurs/${u.id}`}
+                          className="text-sm font-medium text-gray-800 truncate leading-tight hover:text-indigo-700 hover:underline"
+                        >
+                          {u.email}
+                        </Link>
                         {meta?.full_name && (
-                          <p className="text-xs text-gray-400 truncate leading-tight">{meta.full_name}</p>
+                          <Link
+                            href={`/admin/utilisateurs/${u.id}`}
+                            className="block text-xs text-gray-400 truncate leading-tight hover:text-indigo-600 hover:underline"
+                          >
+                            {meta.full_name}
+                          </Link>
                         )}
                       </div>
                     </div>

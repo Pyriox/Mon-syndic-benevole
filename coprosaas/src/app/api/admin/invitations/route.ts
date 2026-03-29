@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 import { isAdminUser } from '@/lib/admin-config';
+import { logAdminAction } from '@/lib/actions/log-user-event';
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -15,7 +16,8 @@ async function checkAdmin() {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!await checkAdmin()) {
+  const requester = await checkAdmin();
+  if (!requester) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
@@ -31,5 +33,12 @@ export async function DELETE(request: NextRequest) {
     .eq('id', invitationId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  void logAdminAction({
+    adminEmail: requester.email ?? '',
+    eventType: 'admin_invitation_deleted',
+    label: `Invitation supprimée — ${invitationId}`,
+    severity: 'warning',
+    metadata: { invitationId },
+  });
   return NextResponse.json({ success: true });
 }

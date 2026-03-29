@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 import { isAdminUser } from '@/lib/admin-config';
+import { logAdminAction } from '@/lib/actions/log-user-event';
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -21,7 +22,8 @@ async function checkAdmin() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!await checkAdmin()) {
+  const requester = await checkAdmin();
+  if (!requester) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
@@ -47,6 +49,13 @@ export async function POST(request: NextRequest) {
       .eq('id', coproId);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_subscription_reset',
+      label: `Abonnement réinitialisé — ${coproId}`,
+      severity: 'warning',
+      metadata: { coproId },
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -100,7 +109,7 @@ export async function POST(request: NextRequest) {
     const status = sub['status'] as string;
     const plan = status === 'active' ? 'actif'
       : status === 'past_due' ? 'passe_du'
-      : status === 'trialing' ? 'actif'
+      : status === 'trialing' ? 'essai'
       : 'inactif';
     const subMeta = (sub['metadata'] as Record<string, string>) ?? {};
     const planId = subMeta?.plan_id ?? null;
@@ -116,6 +125,12 @@ export async function POST(request: NextRequest) {
     }).eq('id', coproId);
 
     if (syncError) return NextResponse.json({ error: syncError.message }, { status: 500 });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_stripe_sync',
+      label: `Synchronisation Stripe — ${coproId}`,
+      metadata: { coproId, plan, planId },
+    });
     return NextResponse.json({ success: true, plan, planId });
   }
 
@@ -140,6 +155,13 @@ export async function POST(request: NextRequest) {
       .eq('id', coproId);
 
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_syndic_reassigned',
+      label: `Syndic réassigné — ${coproId}`,
+      severity: 'warning',
+      metadata: { coproId, newSyndicId: target.id, newSyndicEmail: newEmail.trim().toLowerCase() },
+    });
     return NextResponse.json({ success: true, newSyndicId: target.id });
   }
 
@@ -148,7 +170,8 @@ export async function POST(request: NextRequest) {
 
 // ── PATCH : modifier les infos d’une copropriété ───────────────────────
 export async function PATCH(request: NextRequest) {
-  if (!await checkAdmin()) {
+  const requester = await checkAdmin();
+  if (!requester) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
@@ -171,7 +194,13 @@ export async function PATCH(request: NextRequest) {
   if (fields.adresse   !== undefined) updates.adresse    = fields.adresse.trim()   || null;
   if (fields.code_postal !== undefined) updates.code_postal = fields.code_postal.trim() || null;
   if (fields.ville     !== undefined) updates.ville      = fields.ville.trim()     || null;
-  if (fields.nombre_lots !== undefined) updates.nombre_lots = Number(fields.nombre_lots) || 0;
+  if (fields.nombre_lots !== undefined) {
+    const parsedLots = Number(fields.nombre_lots);
+    if (!Number.isFinite(parsedLots) || parsedLots < 0) {
+      return NextResponse.json({ error: 'nombre_lots invalide' }, { status: 422 });
+    }
+    updates.nombre_lots = Math.trunc(parsedLots);
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'Aucun champ à mettre à jour' }, { status: 400 });
@@ -180,5 +209,12 @@ export async function PATCH(request: NextRequest) {
   const admin = createAdminClient();
   const { error } = await admin.from('coproprietes').update(updates).eq('id', coproId.trim());
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  void logAdminAction({
+    adminEmail: requester.email ?? '',
+    eventType: 'admin_copro_updated',
+    label: `Copropriété modifiée — ${coproId.trim()}`,
+    metadata: { coproId: coproId.trim(), updatedFields: Object.keys(updates) },
+  });
   return NextResponse.json({ success: true });
 }

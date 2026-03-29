@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminUser } from '@/lib/admin-config';
+import { logAdminAction } from '@/lib/actions/log-user-event';
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -22,7 +23,8 @@ async function checkAdmin() {
 
 // ── PATCH : modifier un copropriétaire ────────────────────────
 export async function PATCH(request: NextRequest) {
-  if (!await checkAdmin()) {
+  const requester = await checkAdmin();
+  if (!requester) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
@@ -50,7 +52,7 @@ export async function PATCH(request: NextRequest) {
   // Récupérer la fiche pour connaître le user_id lié
   const { data: existing, error: fetchErr } = await admin
     .from('coproprietaires')
-    .select('user_id')
+    .select('user_id, nom, prenom, raison_sociale')
     .eq('id', coproprietaireId.trim())
     .single();
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 });
@@ -95,13 +97,17 @@ export async function PATCH(request: NextRequest) {
     const prenomChanged  = fields.prenom          !== undefined;
     const raisonChanged  = fields.raison_sociale  !== undefined;
     if (nomChanged || prenomChanged || raisonChanged) {
-      const raisonSociale = (fields.raison_sociale ?? '').trim();
+      const raisonSociale = (fields.raison_sociale ?? existing?.raison_sociale ?? '').trim();
+      const prenom = (fields.prenom ?? existing?.prenom ?? '').trim();
+      const nom = (fields.nom ?? existing?.nom ?? '').trim();
       const newFullName = raisonSociale
         ? raisonSociale
-        : `${(fields.prenom ?? '').trim()} ${(fields.nom ?? '').trim()}`.trim();
+        : `${prenom} ${nom}`.trim();
       if (newFullName) {
+        const { data: authUser } = await admin.auth.admin.getUserById(linkedUserId);
+        const existingMetadata = (authUser.user?.user_metadata ?? {}) as Record<string, unknown>;
         await admin.auth.admin.updateUserById(linkedUserId, {
-          user_metadata: { full_name: newFullName },
+          user_metadata: { ...existingMetadata, full_name: newFullName },
         });
         // Mettre à jour également la table profiles
         await admin.from('profiles').upsert(
@@ -111,6 +117,17 @@ export async function PATCH(request: NextRequest) {
       }
     }
   }
+
+  void logAdminAction({
+    adminEmail: requester.email ?? '',
+    eventType: 'admin_coproprietaire_updated',
+    label: `Copropriétaire modifié — ${coproprietaireId.trim()}`,
+    metadata: {
+      coproprietaireId: coproprietaireId.trim(),
+      linkedUserId,
+      updatedFields: Object.keys(updates),
+    },
+  });
 
   return NextResponse.json({ success: true });
 }

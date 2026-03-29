@@ -4,6 +4,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Pencil, Loader2 } from 'lucide-react';
 
 interface Coproprietaire {
@@ -21,6 +22,7 @@ interface Coproprietaire {
 }
 
 export default function AdminCoproprietaireActions({ cp }: { cp: Coproprietaire }) {
+  const router = useRouter();
   const [editOpen,  setEditOpen]  = useState(false);
   const [loading,   setLoading]   = useState(false);
   const [done,      setDone]      = useState(false);
@@ -76,7 +78,7 @@ export default function AdminCoproprietaireActions({ cp }: { cp: Coproprietaire 
     if (res.ok) {
       setEditOpen(false);
       setDone(true);
-      setTimeout(() => window.location.reload(), 700);
+      setTimeout(() => router.refresh(), 700);
     } else {
       const { error } = await res.json();
       alert('Erreur : ' + error);
