@@ -689,9 +689,9 @@ export default async function DashboardPage() {
                   Voir tout <ArrowRight size={14} />
                 </Link>
               </div>
-              {depenses && depenses.length > 0 ? (
+              {(depenses && depenses.length > 0) || totalFondsTravaux > 0 ? (
                 <ul className="divide-y divide-gray-100">
-                  {depenses.map((d) => {
+                  {depenses?.map((d) => {
                     const colors = catColorMap[d.categorie] ?? { bar: 'bg-gray-300', dot: 'bg-gray-300' };
                     return (
                       <li key={d.id} className="flex items-center justify-between py-2.5">
@@ -710,6 +710,18 @@ export default async function DashboardPage() {
                       </li>
                     );
                   })}
+                  {totalFondsTravaux > 0 && (
+                    <li className="flex items-center justify-between py-2.5">
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <span className="w-2 h-2 rounded-full shrink-0 mt-1.5 bg-amber-500" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-800">Fonds travaux ALUR</p>
+                          <p className="text-xs text-amber-600">Épargne obligatoire · {currentYear}</p>
+                        </div>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 shrink-0 ml-3">{formatEuros(totalFondsTravaux)}</span>
+                    </li>
+                  )}
                 </ul>
               ) : (
                 <p className="text-sm text-gray-500 text-center py-4">Aucune dépense enregistrée</p>
