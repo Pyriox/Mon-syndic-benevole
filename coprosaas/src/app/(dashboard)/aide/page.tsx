@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Card from '@/components/ui/Card';
@@ -10,9 +9,8 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import {
   MailCheck, ChevronDown, ChevronUp, HelpCircle, MessageSquare,
-  ExternalLink, Building2, Users, CalendarDays, Wallet,
-  Search, ArrowRight, FileText, AlertTriangle,
-  Send, RefreshCw, User, Shield, Clock, CheckCircle, X,
+  ExternalLink, Search,
+  Send, RefreshCw, User, Shield, Clock, CheckCircle,
   BookOpen, Info,
 } from 'lucide-react';
 
@@ -23,16 +21,6 @@ const CATEGORIES: Record<string, { label: string; bg: string; text: string }> = 
   ag:        { label: 'Assemblées',  bg: 'bg-indigo-100', text: 'text-indigo-700' },
   app:       { label: 'Application', bg: 'bg-amber-100',  text: 'text-amber-700' },
 };
-
-// ── Guides de démarrage rapide ───────────────────────────────
-const GUIDES = [
-  { icon: Building2,     label: 'Créer une copropriété',       href: '/coproprietes/nouvelle', color: 'bg-blue-50 text-blue-600' },
-  { icon: Users,         label: 'Inviter des copropriétaires', href: '/coproprietaires',       color: 'bg-purple-50 text-purple-600' },
-  { icon: CalendarDays,  label: 'Planifier une AG',            href: '/assemblees',            color: 'bg-green-50 text-green-600' },
-  { icon: Wallet,        label: 'Émettre un appel de fonds',   href: '/appels-de-fonds',       color: 'bg-amber-50 text-amber-600' },
-  { icon: FileText,      label: 'Gérer les documents',         href: '/documents',             color: 'bg-teal-50 text-teal-600' },
-  { icon: AlertTriangle, label: 'Signaler un incident',        href: '/incidents',             color: 'bg-red-50 text-red-600' },
-];
 
 // ── Sujets prédéfinis ────────────────────────────────────────
 const SUBJECT_CHIPS = [
@@ -82,7 +70,7 @@ const FAQ: { question: string; answer: string; category: keyof typeof CATEGORIES
   {
     category: 'demarrage',
     question: "Par où commencer après la création de mon compte ?",
-    answer: "L'ordre idéal est : (1) créer votre copropriété (nom, adresse) ; (2) ajouter vos lots avec les tantièmes ; (3) ajouter vos copropriétaires et les associer à leurs lots ; (4) émettre votre premier appel de fonds. Les guides de démarrage rapide ci-dessus vous guident pas à pas.",
+    answer: "L'ordre idéal est : (1) créer votre copropriété (nom, adresse) ; (2) ajouter vos lots avec les tantièmes ; (3) ajouter vos copropriétaires et les associer à leurs lots ; (4) émettre votre premier appel de fonds.",
   },
   {
     category: 'demarrage',
@@ -175,7 +163,8 @@ function FaqItem({ question, answer, category, defaultOpen = false }: {
 }
 
 // ── Page principale ──────────────────────────────────────────
-export default function AidePage() {  const router = useRouter();  const [name, setName]       = useState('');
+export default function AidePage() {
+  const router = useRouter();  const [name, setName]       = useState('');
   const [email, setEmail]     = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -347,403 +336,8 @@ export default function AidePage() {  const router = useRouter();  const [name, 
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Aide & Contact</h1>
         <p className="text-gray-500 mt-1 text-sm">
-          Guides de démarrage, questions fréquentes et formulaire de contact.
+          Questions fréquentes, support et comprendre le fonctionnement annuel.
         </p>
-      </div>
-
-      {/* ── Raccourcis rapides ── */}
-      <div>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Démarrage rapide</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-          {GUIDES.map(({ icon: Icon, label, href, color }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl border border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm transition-all text-center group"
-            >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
-                <Icon size={16} />
-              </div>
-              <span className="text-xs font-medium text-gray-700 group-hover:text-blue-700 leading-tight">{label}</span>
-              <ArrowRight size={11} className="text-gray-300 group-hover:text-blue-400 transition-colors" />
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Cycle annuel ── */}
-      <div>
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
-            <BookOpen size={16} className="text-green-600" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-gray-900">Comprendre le cycle annuel</h2>
-            <p className="text-xs text-gray-400">AG · Appels de fonds · Dashboard · Régularisation</p>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 space-y-0">
-          {/* Étapes */}
-          {[
-            {
-              num: '1',
-              color: 'bg-purple-100 text-purple-700',
-              title: 'L\'AG vote le budget prévisionnel',
-              body: 'Chaque année, l\'Assemblée Générale vote le budget de l\'exercice suivant. Ex : l\'AG de juin 2026 vote le budget 2027.',
-            },
-            {
-              num: '2',
-              color: 'bg-blue-100 text-blue-700',
-              title: 'Le syndic crée les appels de fonds',
-              body: 'Dans « Appels de fonds », créez une série liée à l\'AG : 4 appels trimestriels avec des échéances en 2027 (01/01, 01/04, 01/07, 01/10). Les quotes-parts sont calculées automatiquement selon les tantièmes.',
-            },
-            {
-              num: '3',
-              color: 'bg-amber-100 text-amber-700',
-              title: 'Publiez et notifiez les copropriétaires',
-              body: 'À la publication, chaque copropriétaire reçoit son avis de paiement par email. Son solde est débité automatiquement. Marquez chaque paiement reçu pour mettre à jour les soldes en temps réel.',
-            },
-            {
-              num: '4',
-              color: 'bg-green-100 text-green-700',
-              title: 'Le dashboard reflète l\'exercice en cours',
-              body: 'Les provisions 2027, les dépenses réelles et l\'écart prévisionnel s\'affichent automatiquement dès que les données sont saisies. Le solde impayé = somme des soldes négatifs des copropriétaires.',
-            },
-            {
-              num: '5',
-              color: 'bg-orange-100 text-orange-700',
-              title: 'Régularisation en fin d\'exercice',
-              body: 'En fin d\'année, comparez les provisions appelées aux dépenses réelles. Si écart positif → trop-perçu à rembourser ou reporter. Si négatif → appel complémentaire à émettre.',
-            },
-          ].map((step, i, arr) => (
-            <div key={step.num} className="flex gap-4">
-              <div className="flex flex-col items-center">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${step.color}`}>
-                  {step.num}
-                </div>
-                {i < arr.length - 1 && <div className="w-px flex-1 bg-gray-100 my-1" />}
-              </div>
-              <div className={`pb-5 min-w-0 ${i === arr.length - 1 ? '' : ''}`}>
-                <p className="text-sm font-semibold text-gray-800">{step.title}</p>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{step.body}</p>
-              </div>
-            </div>
-          ))}
-
-          {/* Note première année */}
-          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-2">
-            <Info size={15} className="text-amber-700 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-semibold text-amber-800">Première année sur Mon Syndic Bénévole ?</p>
-              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                Les appels de fonds de l&apos;exercice en cours ont probablement été gérés sur une autre plateforme.
-                Vous pouvez les re-saisir manuellement (même pour un seul appel global annuel) pour que le dashboard
-                affiche les bonnes provisions et impayés. Les T1/T2 déjà payés peuvent être marqués payés
-                directement après publication.
-              </p>
-              <a
-                href="/blog/migrer-vers-mon-syndic-benevole"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
-              >
-                Lire le guide de migration complet →
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Mes tickets support ── */}
-      {(tickets.length > 0 || ticketsLoading) && (
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-              <MessageSquare size={16} className="text-indigo-600" />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">Mes tickets support</h2>
-              <p className="text-xs text-gray-400">Historique de vos demandes</p>
-            </div>
-          </div>
-          {ticketsLoading ? (
-            <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
-              <RefreshCw size={14} className="animate-spin" /> Chargement…
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {tickets.map((ticket) => (
-                <div key={ticket.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                  {/* Header ticket */}
-                  <button
-                    type="button"
-                    onClick={() => handleOpenTicket(ticket.id)}
-                    className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <div className="relative shrink-0">
-                        <MessageSquare size={14} className="text-gray-400" />
-                        {unreadTicketIds.has(ticket.id) && (
-                          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-500" />
-                        )}
-                      </div>
-                      <span className="text-sm font-medium text-gray-800 truncate">{ticket.subject}</span>
-                      {unreadTicketIds.has(ticket.id) && (
-                        <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500 text-white leading-none">
-                          Nouveau
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <StatusBadge status={ticket.status} />
-                      <span className="text-xs text-gray-400">
-                        {new Date(ticket.updated_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                      </span>
-                      {openTicketId === ticket.id
-                        ? <ChevronUp size={14} className="text-gray-400" />
-                        : <ChevronDown size={14} className="text-gray-400" />}
-                    </div>
-                  </button>
-
-                  {/* Conversation */}
-                  {openTicketId === ticket.id && (
-                    <div className="border-t border-gray-100">
-                      {loadingMsgs ? (
-                        <div className="flex items-center gap-2 text-xs text-gray-400 px-4 py-4">
-                          <RefreshCw size={12} className="animate-spin" /> Chargement…
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-3 px-4 py-4 bg-gray-50/50">
-                          {ticketMessages.map((msg) => {
-                            const isAdmin = msg.author === 'admin';
-                            return (
-                              <div key={msg.id} className={`flex gap-2 ${isAdmin ? 'flex-row-reverse' : 'flex-row'}`}>
-                                <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 ${
-                                  isAdmin ? 'bg-blue-100' : 'bg-gray-200'
-                                }`}>
-                                  {isAdmin
-                                    ? <Shield size={11} className="text-blue-600" />
-                                    : <User size={11} className="text-gray-500" />}
-                                </div>
-                                <div className={`max-w-[85%] flex flex-col gap-0.5 ${isAdmin ? 'items-end' : 'items-start'}`}>
-                                  <div className={`px-3 py-2 rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
-                                    isAdmin
-                                      ? 'bg-blue-600 text-white rounded-tr-sm'
-                                      : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm'
-                                  }`}>
-                                    {msg.content}
-                                  </div>
-                                  <span className="text-[10px] text-gray-400 px-1">
-                                    {isAdmin ? 'Support · ' : 'Vous · '}
-                                    {new Date(msg.created_at).toLocaleString('fr-FR', {
-                                      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-                                    })}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Répondre (sauf si résolu) */}
-                      {ticket.status !== 'resolu' && (
-                        <form onSubmit={handleClientReply} className="border-t border-gray-100 px-4 py-3 flex gap-2 items-end bg-white">
-                          <textarea
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            placeholder="Ajouter un message…"
-                            rows={2}
-                            className="flex-1 resize-none text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          />
-                          <button
-                            type="submit"
-                            disabled={!replyText.trim() || replySending}
-                            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
-                          >
-                            {replySending ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}
-                            {replySending ? 'Envoi…' : 'Envoyer'}
-                          </button>
-                        </form>
-                      )}
-                      {replyError && <p className="text-xs text-red-600 px-4 pb-2">{replyError}</p>}
-                      {ticket.status === 'resolu' && (
-                        <div className="border-t border-gray-100 px-4 py-2.5 bg-green-50 flex items-center gap-2">
-                          <CheckCircle size={12} className="text-green-600" />
-                          <p className="text-xs text-green-700">Ce ticket est marqué comme résolu.</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        {/* Formulaire de contact */}
-        <div className="md:col-span-2">
-          <Card padding="lg">
-            <div className="flex items-center gap-2.5 mb-5">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                <MessageSquare size={16} className="text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-gray-900">Envoyer un message</h2>
-                <p className="text-xs text-gray-400">Nous répondons sous 24 h (jours ouvrés)</p>
-              </div>
-            </div>
-
-            {sent ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
-                <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-                  <MailCheck size={28} className="text-green-600" />
-                </div>
-                <p className="font-semibold text-gray-900">Message envoyé !</p>
-                <p className="text-sm text-gray-500 max-w-xs">
-                  Merci pour votre message. Notre équipe vous répondra dans les meilleurs délais.
-                </p>
-                <button
-                  onClick={() => { setSent(false); setSubject(''); setMessage(''); }}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
-                >
-                  Envoyer un autre message
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label="Votre nom"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Jean Dupont"
-                    required
-                  />
-                  <Input
-                    label="Adresse email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="jean@copropriete.fr"
-                    required
-                  />
-                </div>
-
-                {/* Chips de sujets rapides */}
-                <div>
-                  <p className="text-xs font-medium text-gray-600 mb-2">Sujet rapide</p>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {SUBJECT_CHIPS.map((chip) => (
-                      <button
-                        key={chip}
-                        type="button"
-                        onClick={() => setSubject(chip)}
-                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                          subject === chip
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
-                        }`}
-                      >
-                        {chip}
-                      </button>
-                    ))}
-                  </div>
-                  <Input
-                    label="Ou saisissez votre sujet"
-                    type="text"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Ex : Question sur les appels de fonds"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Textarea
-                    label="Votre message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE))}
-                    placeholder="Décrivez votre question ou problème en détail…"
-                    rows={5}
-                    required
-                  />
-                  <p className={`text-right text-xs mt-1 ${message.length > MAX_MESSAGE * 0.9 ? 'text-amber-700' : 'text-gray-500'}`}>
-                    {message.length} / {MAX_MESSAGE}
-                  </p>
-                </div>
-
-                {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-                    {error}
-                  </div>
-                )}
-
-                <Button type="submit" loading={loading}>
-                  Envoyer le message
-                </Button>
-              </form>
-            )}
-          </Card>
-        </div>
-
-        {/* Colonne droite */}
-        <div className="space-y-4">
-          <Card padding="md">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Contact direct</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-2.5">
-                <div className="w-7 h-7 rounded-md bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
-                  <MessageSquare size={13} className="text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-700">Email support</p>
-                  <a href="mailto:contact@mon-syndic-benevole.fr" className="text-xs text-blue-600 hover:underline">
-                    contact@mon-syndic-benevole.fr
-                  </a>
-                </div>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <div className="w-7 h-7 rounded-md bg-green-50 flex items-center justify-center shrink-0 mt-0.5">
-                  <MailCheck size={13} className="text-green-600" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-700">Délai de réponse</p>
-                  <p className="text-xs text-gray-500">Sous 24 h, lun – ven 9 h – 18 h</p>
-                </div>
-              </li>
-            </ul>
-          </Card>
-
-          <Card padding="md">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Ressources officielles</h3>
-            <ul className="space-y-2">
-              {[
-                { label: 'Legifrance – loi du 10 juillet 1965', url: 'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000508853' },
-                { label: 'ANIL – fiche syndic bénévole',        url: 'https://www.anil.org/votre-projet/vous-etes-proprietaire/syndic-benevole/' },
-                { label: 'Service-public.fr – copropriété',     url: 'https://www.service-public.fr/particuliers/vosdroits/N31337' },
-              ].map(({ label, url }) => (
-                <li key={url}>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    <ExternalLink size={11} className="shrink-0" />
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </div>
       </div>
 
       {/* ── FAQ ── */}
@@ -810,6 +404,385 @@ export default function AidePage() {  const router = useRouter();  const [name, 
             </Card>
           </div>
         )}
+      </div>
+
+      {/* ── Support : tickets + formulaire ── */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+            <MessageSquare size={16} className="text-blue-600" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">Support</h2>
+            <p className="text-xs text-gray-400">Vos demandes et notre formulaire de contact</p>
+          </div>
+        </div>
+
+        {/* Mes tickets support */}
+        {(tickets.length > 0 || ticketsLoading) && (
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+            <p className="text-sm font-semibold text-gray-700 mb-3">Mes tickets</p>
+            {ticketsLoading ? (
+              <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
+                <RefreshCw size={14} className="animate-spin" /> Chargement…
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {tickets.map((ticket) => (
+                  <div key={ticket.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    {/* Header ticket */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenTicket(ticket.id)}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="relative shrink-0">
+                          <MessageSquare size={14} className="text-gray-400" />
+                          {unreadTicketIds.has(ticket.id) && (
+                            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-500" />
+                          )}
+                        </div>
+                        <span className="text-sm font-medium text-gray-800 truncate">{ticket.subject}</span>
+                        {unreadTicketIds.has(ticket.id) && (
+                          <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500 text-white leading-none">
+                            Nouveau
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <StatusBadge status={ticket.status} />
+                        <span className="text-xs text-gray-400">
+                          {new Date(ticket.updated_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                        </span>
+                        {openTicketId === ticket.id
+                          ? <ChevronUp size={14} className="text-gray-400" />
+                          : <ChevronDown size={14} className="text-gray-400" />}
+                      </div>
+                    </button>
+
+                    {/* Conversation */}
+                    {openTicketId === ticket.id && (
+                      <div className="border-t border-gray-100">
+                        {loadingMsgs ? (
+                          <div className="flex items-center gap-2 text-xs text-gray-400 px-4 py-4">
+                            <RefreshCw size={12} className="animate-spin" /> Chargement…
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-3 px-4 py-4 bg-gray-50/50">
+                            {ticketMessages.map((msg) => {
+                              const isAdmin = msg.author === 'admin';
+                              return (
+                                <div key={msg.id} className={`flex gap-2 ${isAdmin ? 'flex-row-reverse' : 'flex-row'}`}>
+                                  <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 ${
+                                    isAdmin ? 'bg-blue-100' : 'bg-gray-200'
+                                  }`}>
+                                    {isAdmin
+                                      ? <Shield size={11} className="text-blue-600" />
+                                      : <User size={11} className="text-gray-500" />}
+                                  </div>
+                                  <div className={`max-w-[85%] flex flex-col gap-0.5 ${isAdmin ? 'items-end' : 'items-start'}`}>
+                                    <div className={`px-3 py-2 rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
+                                      isAdmin
+                                        ? 'bg-blue-600 text-white rounded-tr-sm'
+                                        : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm'
+                                    }`}>
+                                      {msg.content}
+                                    </div>
+                                    <span className="text-[10px] text-gray-400 px-1">
+                                      {isAdmin ? 'Support · ' : 'Vous · '}
+                                      {new Date(msg.created_at).toLocaleString('fr-FR', {
+                                        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Répondre (sauf si résolu) */}
+                        {ticket.status !== 'resolu' && (
+                          <form onSubmit={handleClientReply} className="border-t border-gray-100 px-4 py-3 flex gap-2 items-end bg-white">
+                            <textarea
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              placeholder="Ajouter un message…"
+                              rows={2}
+                              className="flex-1 resize-none text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            <button
+                              type="submit"
+                              disabled={!replyText.trim() || replySending}
+                              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
+                            >
+                              {replySending ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}
+                              {replySending ? 'Envoi…' : 'Envoyer'}
+                            </button>
+                          </form>
+                        )}
+                        {replyError && <p className="text-xs text-red-600 px-4 pb-2">{replyError}</p>}
+                        {ticket.status === 'resolu' && (
+                          <div className="border-t border-gray-100 px-4 py-2.5 bg-green-50 flex items-center gap-2">
+                            <CheckCircle size={12} className="text-green-600" />
+                            <p className="text-xs text-green-700">Ce ticket est marqué comme résolu.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Formulaire + sidebar */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          {/* Formulaire de contact */}
+          <div className="md:col-span-2">
+            <Card padding="lg">
+              <div className="flex items-center gap-2.5 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <MessageSquare size={16} className="text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900">Envoyer un message</h3>
+                  <p className="text-xs text-gray-400">Nous répondons sous 24 h (jours ouvrés)</p>
+                </div>
+              </div>
+
+              {sent ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+                    <MailCheck size={28} className="text-green-600" />
+                  </div>
+                  <p className="font-semibold text-gray-900">Message envoyé !</p>
+                  <p className="text-sm text-gray-500 max-w-xs">
+                    Merci pour votre message. Notre équipe vous répondra dans les meilleurs délais.
+                  </p>
+                  <button
+                    onClick={() => { setSent(false); setSubject(''); setMessage(''); }}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
+                  >
+                    Envoyer un autre message
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Votre nom"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Jean Dupont"
+                      required
+                    />
+                    <Input
+                      label="Adresse email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="jean@copropriete.fr"
+                      required
+                    />
+                  </div>
+
+                  {/* Chips de sujets rapides */}
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-2">Sujet rapide</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {SUBJECT_CHIPS.map((chip) => (
+                        <button
+                          key={chip}
+                          type="button"
+                          onClick={() => setSubject(chip)}
+                          className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                            subject === chip
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                          }`}
+                        >
+                          {chip}
+                        </button>
+                      ))}
+                    </div>
+                    <Input
+                      label="Ou saisissez votre sujet"
+                      type="text"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      placeholder="Ex : Question sur les appels de fonds"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Textarea
+                      label="Votre message"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE))}
+                      placeholder="Décrivez votre question ou problème en détail…"
+                      rows={5}
+                      required
+                    />
+                    <p className={`text-right text-xs mt-1 ${message.length > MAX_MESSAGE * 0.9 ? 'text-amber-700' : 'text-gray-500'}`}>
+                      {message.length} / {MAX_MESSAGE}
+                    </p>
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                      {error}
+                    </div>
+                  )}
+
+                  <Button type="submit" loading={loading}>
+                    Envoyer le message
+                  </Button>
+                </form>
+              )}
+            </Card>
+          </div>
+
+          {/* Colonne droite */}
+          <div className="space-y-4">
+            <Card padding="md">
+              <h3 className="text-sm font-semibold text-gray-800 mb-3">Contact direct</h3>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+                    <MessageSquare size={13} className="text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-700">Email support</p>
+                    <a href="mailto:contact@mon-syndic-benevole.fr" className="text-xs text-blue-600 hover:underline">
+                      contact@mon-syndic-benevole.fr
+                    </a>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-green-50 flex items-center justify-center shrink-0 mt-0.5">
+                    <MailCheck size={13} className="text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-700">Délai de réponse</p>
+                    <p className="text-xs text-gray-500">Sous 24 h, lun – ven 9 h – 18 h</p>
+                  </div>
+                </li>
+              </ul>
+            </Card>
+
+            <Card padding="md">
+              <h3 className="text-sm font-semibold text-gray-800 mb-3">Ressources officielles</h3>
+              <ul className="space-y-2">
+                {[
+                  { label: 'Legifrance – loi du 10 juillet 1965', url: 'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000508853' },
+                  { label: 'ANIL – fiche syndic bénévole',        url: 'https://www.anil.org/votre-projet/vous-etes-proprietaire/syndic-benevole/' },
+                  { label: 'Service-public.fr – copropriété',     url: 'https://www.service-public.fr/particuliers/vosdroits/N31337' },
+                ].map(({ label, url }) => (
+                  <li key={url}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      <ExternalLink size={11} className="shrink-0" />
+                      {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Cycle annuel ── */}
+      <div>
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+            <BookOpen size={16} className="text-green-600" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">Comprendre le cycle annuel</h2>
+            <p className="text-xs text-gray-400">AG · Appels de fonds · Dashboard · Régularisation</p>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 space-y-0">
+          {[
+            {
+              num: '1',
+              color: 'bg-purple-100 text-purple-700',
+              title: "L'AG vote le budget prévisionnel",
+              body: "Chaque année, l'Assemblée Générale vote le budget de l'exercice suivant. Ex : l'AG de juin 2026 vote le budget 2027.",
+            },
+            {
+              num: '2',
+              color: 'bg-blue-100 text-blue-700',
+              title: 'Le syndic crée les appels de fonds',
+              body: "Dans « Appels de fonds », créez une série liée à l'AG : 4 appels trimestriels avec des échéances en 2027 (01/01, 01/04, 01/07, 01/10). Les quotes-parts sont calculées automatiquement selon les tantièmes.",
+            },
+            {
+              num: '3',
+              color: 'bg-amber-100 text-amber-700',
+              title: 'Publiez et notifiez les copropriétaires',
+              body: "À la publication, chaque copropriétaire reçoit son avis de paiement par email. Son solde est débité automatiquement. Marquez chaque paiement reçu pour mettre à jour les soldes en temps réel.",
+            },
+            {
+              num: '4',
+              color: 'bg-green-100 text-green-700',
+              title: "Le dashboard reflète l'exercice en cours",
+              body: "Les provisions 2027, les dépenses réelles et l'écart prévisionnel s'affichent automatiquement dès que les données sont saisies. Le solde impayé = somme des soldes négatifs des copropriétaires.",
+            },
+            {
+              num: '5',
+              color: 'bg-orange-100 text-orange-700',
+              title: "Régularisation en fin d'exercice",
+              body: "En fin d'année, comparez les provisions appelées aux dépenses réelles. Si écart positif → trop-perçu à rembourser ou reporter. Si négatif → appel complémentaire à émettre.",
+            },
+          ].map((step, i, arr) => (
+            <div key={step.num} className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${step.color}`}>
+                  {step.num}
+                </div>
+                {i < arr.length - 1 && <div className="w-px flex-1 bg-gray-100 my-1" />}
+              </div>
+              <div className="pb-5 min-w-0">
+                <p className="text-sm font-semibold text-gray-800">{step.title}</p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{step.body}</p>
+              </div>
+            </div>
+          ))}
+
+          {/* Note première année */}
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-2">
+            <Info size={15} className="text-amber-700 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-amber-800">Première année sur Mon Syndic Bénévole ?</p>
+              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                Les appels de fonds de l&apos;exercice en cours ont probablement été gérés sur une autre plateforme.
+                Vous pouvez les re-saisir manuellement (même pour un seul appel global annuel) pour que le dashboard
+                affiche les bonnes provisions et impayés. Les T1/T2 déjà payés peuvent être marqués payés
+                directement après publication.
+              </p>
+              <a
+                href="/blog/migrer-vers-mon-syndic-benevole"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
+              >
+                Lire le guide de migration complet →
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>

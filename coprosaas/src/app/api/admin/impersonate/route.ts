@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     type: 'magiclink',
     email,
     options: {
-      redirectTo: `${baseUrl}/dashboard`,
+      redirectTo: `${baseUrl}/auth/confirm?next=/dashboard`,
     },
   });
 

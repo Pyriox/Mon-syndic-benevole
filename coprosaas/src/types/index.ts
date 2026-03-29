@@ -49,10 +49,11 @@ export interface Copropriete {
   // Abonnement (1 abonnement Stripe par copropriété)
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
-  plan?: string | null;             // null     = aucun moyen de paiement enregistré (accès gratuit)
-                                    // 'essai'  = période d'essai 14j (CB enregistrée, paiement non encore prélevé)
-                                    // 'actif'  = abonnement payant actif
-                                    // 'inactif'= abonnement résilié
+  plan?: string | null;             // null      = aucun moyen de paiement enregistré (accès gratuit)
+                                    // 'essai'   = période d'essai 14j (CB enregistrée, paiement non encore prélevé)
+                                    // 'actif'   = abonnement payant actif
+                                    // 'inactif' = n'a jamais souscrit ou réinitialisé par admin
+                                    // 'resilie' = abonnement résilié ET période d'accès terminée
                                     // 'passe_du'= paiement en retard
   plan_id?: string | null;          // 'essentiel' | 'confort' | 'illimite'
   plan_period_end?: string | null;  // ISO date string

@@ -41,6 +41,7 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
     return <span className={`inline-flex text-xs px-2 py-0.5 rounded-md font-medium border ${c.cls}`}>{c.label}</span>;
   }
   if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">Impayé</span>;
+  if (plan === 'resilie')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-orange-50 text-orange-600 border border-orange-200">Résilié</span>;
   if (plan === 'inactif')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">Inactif</span>;
   return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
 }
@@ -75,6 +76,7 @@ export default async function AdminCopropietesPage({
   const nbActifs  = coprosTyped.filter((c) => c.plan === 'actif').length;
   const nbEssai   = coprosTyped.filter((c) => !c.plan || c.plan === 'essai').length;
   const nbInactif = coprosTyped.filter((c) => c.plan === 'inactif').length;
+  const nbResilie = coprosTyped.filter((c) => c.plan === 'resilie').length;
   const nbPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du').length;
 
   // ── Données opérationnelles (onglet coproprietes uniquement) ──
@@ -180,7 +182,7 @@ export default async function AdminCopropietesPage({
               { label: 'Total copropriétés',   value: nbCoproprietes,          icon: Building2, color: 'bg-blue-100 text-blue-600' },
               { label: 'Abonnées actives',      value: nbActifs,                icon: Building2, color: 'bg-green-100 text-green-600' },
               { label: 'En essai',              value: nbEssai,                 icon: Building2, color: 'bg-amber-100 text-amber-600' },
-              { label: 'Inactives / impayées',  value: nbInactif + nbPasseDu,  icon: Building2, color: nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400' },
+              { label: 'Inactives / résiliées / impayées',  value: nbInactif + nbResilie + nbPasseDu,  icon: Building2, color: nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400' },
             ].map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">
                 <div className={`p-3 rounded-xl ${color} shrink-0`}><Icon size={18} /></div>
@@ -199,6 +201,7 @@ export default async function AdminCopropietesPage({
                 essai: nbEssai,
                 actif: nbActifs,
                 inactif: nbInactif,
+                resilie: nbResilie,
                 passe_du: nbPasseDu,
                 total: nbCoproprietes,
                 lots: lotsParCopro.length,

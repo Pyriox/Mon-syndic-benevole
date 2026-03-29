@@ -7,6 +7,7 @@ interface Props {
     essai: number;
     actif: number;
     inactif: number;
+    resilie: number;
     passe_du: number;
     total: number;
     lots: number;
@@ -16,10 +17,11 @@ interface Props {
 }
 
 const FILTERS = [
-  { key: 'essai',    label: 'essai',      cls: 'bg-amber-50 text-amber-700 border-amber-200',  activeCls: 'bg-amber-200 text-amber-900 border-amber-400' },
-  { key: 'actif',   label: 'actives',    cls: 'bg-green-50 text-green-700 border-green-200',  activeCls: 'bg-green-200 text-green-900 border-green-400' },
-  { key: 'inactif', label: 'inactives',  cls: 'bg-gray-100 text-gray-500 border-gray-200',    activeCls: 'bg-gray-300 text-gray-800 border-gray-400' },
-  { key: 'passe_du',label: 'impayées',   cls: 'bg-red-50 text-red-600 border-red-200',        activeCls: 'bg-red-200 text-red-800 border-red-400' },
+  { key: 'essai',    label: 'essai',      cls: 'bg-amber-50 text-amber-700 border-amber-200',   activeCls: 'bg-amber-200 text-amber-900 border-amber-400' },
+  { key: 'actif',   label: 'actives',    cls: 'bg-green-50 text-green-700 border-green-200',   activeCls: 'bg-green-200 text-green-900 border-green-400' },
+  { key: 'inactif', label: 'inactives',  cls: 'bg-gray-100 text-gray-500 border-gray-200',     activeCls: 'bg-gray-300 text-gray-800 border-gray-400' },
+  { key: 'resilie', label: 'résiliées',  cls: 'bg-orange-50 text-orange-600 border-orange-200', activeCls: 'bg-orange-200 text-orange-800 border-orange-400' },
+  { key: 'passe_du',label: 'impayées',   cls: 'bg-red-50 text-red-600 border-red-200',          activeCls: 'bg-red-200 text-red-800 border-red-400' },
 ] as const;
 
 export default function AdminCoproFilters({ counts, activePlan }: Props) {

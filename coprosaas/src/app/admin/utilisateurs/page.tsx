@@ -1,19 +1,18 @@
 // ============================================================
 // Admin — Gestion des utilisateurs
-// Actions disponibles : voir profil (impersonate), renvoyer confirmation,
-// forcer vérification, supprimer compte.
-// PAS de modification de plan (synchronisation Stripe requise).
-// PAS de "désactiver" (pas d'API dédiée, seul "supprimer" existe).
+// Table unifiée syndics + membres, avec rôle, copropriétés,
+// journal d'activité et raccourcis support.
 // ============================================================
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import type { ElementType } from 'react';
 import AdminUserActions from '../AdminUserActions';
 import AdminImpersonate from '../AdminImpersonate';
 import AdminCopyId from '../AdminCopyId';
 import AdminSearch from '../AdminSearch';
 import { Suspense } from 'react';
-import { Users, UserCheck, CheckCircle2 } from 'lucide-react';
+import { Users, UserCheck, CheckCircle2, LifeBuoy } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
 
@@ -31,6 +30,12 @@ function fmtDate(s: string | null | undefined) {
   return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function RoleBadge({ role }: { role: 'admin' | 'syndic' | 'membre' }) {
+  if (role === 'admin')  return <span className="inline-flex text-xs px-1.5 py-0.5 rounded font-semibold bg-blue-100 text-blue-700">Admin</span>;
+  if (role === 'syndic') return <span className="inline-flex text-xs px-1.5 py-0.5 rounded font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">Syndic</span>;
+  return <span className="inline-flex text-xs px-1.5 py-0.5 rounded font-semibold bg-teal-50 text-teal-700 border border-teal-200">Membre</span>;
+}
+
 function PlanBadge({ plan, planId }: { plan: string | null; planId: string | null }) {
   if (plan === 'actif') {
     const cfg: Record<string, { label: string; cls: string }> = {
@@ -42,11 +47,20 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
     return <span className={`inline-flex text-xs px-2 py-0.5 rounded-md font-medium border ${c.cls}`}>{c.label}</span>;
   }
   if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">Impayé</span>;
+  if (plan === 'resilie')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-orange-50 text-orange-600 border border-orange-200">Résilié</span>;
   if (plan === 'essai')    return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
   if (plan === 'inactif')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">Inactif</span>;
-  // null = aucun moyen de paiement enregistré
-  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-600 border border-gray-200">Aucun</span>;
+  return null;
 }
+
+const EVENT_LABELS: Record<string, string> = {
+  account_confirmed:      '✓ Compte vérifié',
+  trial_started:          '↗ Essai démarré',
+  subscription_created:   '↑ Abonnement activé',
+  subscription_cancelled: '↓ Résiliation',
+  payment_failed:         '✗ Paiement échoué',
+  ticket_created:         '✉ Ticket ouvert',
+};
 
 export default async function AdminUtilisateursPage({
   searchParams,
@@ -68,53 +82,109 @@ export default async function AdminUtilisateursPage({
     authResult,
     { data: coproprietes },
     { data: adminRows },
+    { data: coproprietairesData },
+    { data: supportTicketsData },
+    { data: recentEvents },
   ] = await Promise.all([
     admin.auth.admin.listUsers({ perPage: 1000 }),
-    admin.from('coproprietes').select('id, syndic_id, plan, plan_id'),
+    admin.from('coproprietes').select('id, nom, syndic_id, plan, plan_id'),
     admin.from('admin_users').select('user_id'),
+    admin.from('coproprietaires').select('email, copropriete_id'),
+    admin.from('support_tickets').select('user_email'),
+    admin.from('user_events')
+      .select('user_email, event_type, created_at')
+      .order('created_at', { ascending: false })
+      .limit(300),
   ]);
 
   const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
 
-  const authUsers = authResult.data?.users ?? [];
-  const nbUsers = authUsers.length;
+  // copropriete_id → nom
+  const coproprieteById: Record<string, string> = {};
+  for (const c of coproprietes ?? []) {
+    const typed = c as { id: string; nom: string };
+    coproprieteById[typed.id] = typed.nom;
+  }
+
+  // member email → [copro names]
+  const memberCoproNames: Record<string, string[]> = {};
+  for (const cp of coproprietairesData ?? []) {
+    const typed = cp as { email: string; copropriete_id: string };
+    const email = typed.email?.toLowerCase();
+    if (!email) continue;
+    const nom = coproprieteById[typed.copropriete_id];
+    if (nom) {
+      memberCoproNames[email] ??= [];
+      if (!memberCoproNames[email].includes(nom)) memberCoproNames[email].push(nom);
+    }
+  }
+
+  // email → ticket count
+  const ticketCount: Record<string, number> = {};
+  for (const t of supportTicketsData ?? []) {
+    const email = ((t as { user_email: string | null }).user_email ?? '').toLowerCase();
+    if (email) ticketCount[email] = (ticketCount[email] ?? 0) + 1;
+  }
+
+  // email → last event (already sorted desc, first = latest)
+  const lastEventByEmail: Record<string, { event_type: string; created_at: string }> = {};
+  for (const e of recentEvents ?? []) {
+    const typed = e as { user_email: string; event_type: string; created_at: string };
+    const email = typed.user_email.toLowerCase();
+    if (!lastEventByEmail[email]) lastEventByEmail[email] = typed;
+  }
+
+  const authUsers    = authResult.data?.users ?? [];
+  const nbUsers      = authUsers.length;
   const nbUnconfirmed = authUsers.filter((u) => !u.email_confirmed_at).length;
-  const confirmedPct = nbUsers > 0 ? Math.round(((nbUsers - nbUnconfirmed) / nbUsers) * 100) : 0;
-  const newUsers30 = authUsers.filter((u) => u.created_at >= startOf30Days).length;
+  const confirmedPct  = nbUsers > 0 ? Math.round(((nbUsers - nbUnconfirmed) / nbUsers) * 100) : 0;
+  const newUsers30   = authUsers.filter((u) => u.created_at >= startOf30Days).length;
+  const newUsers7    = authUsers.filter((u) => u.created_at >= startOf7Days).length;
 
-  const allUsers = [...authUsers].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  const syndicUsers = allUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire');
-  const memberUsers = allUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role === 'copropriétaire');
-
-  const filteredSyndics = query
-    ? syndicUsers.filter((u) =>
-        u.email?.toLowerCase().includes(query) ||
-        ((u.user_metadata as Record<string, string> | null)?.full_name ?? '').toLowerCase().includes(query))
-    : syndicUsers;
-  const filteredMembers = query
-    ? memberUsers.filter((u) =>
-        u.email?.toLowerCase().includes(query) ||
-        ((u.user_metadata as Record<string, string> | null)?.full_name ?? '').toLowerCase().includes(query))
-    : memberUsers;
+  const syndicCount = authUsers.filter(
+    (u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire',
+  ).length;
+  const memberCount = nbUsers - syndicCount;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coprosTyped = (coproprietes ?? []) as any[];
 
+  const allUsersSorted = [...authUsers].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+
+  const filtered = query
+    ? allUsersSorted.filter(
+        (u) =>
+          u.email?.toLowerCase().includes(query) ||
+          ((u.user_metadata as Record<string, string> | null)?.full_name ?? '').toLowerCase().includes(query),
+      )
+    : allUsersSorted;
+
+  const kpis: Array<{ label: string; value: string | number; sub: string; color: string; Icon: ElementType }> = [
+    { label: 'Total',    value: nbUsers,     sub: `+${newUsers30} ce mois`,   color: 'bg-blue-100 text-blue-600',    Icon: Users },
+    { label: 'Syndics',  value: syndicCount, sub: `${authUsers.filter((u) => !adminUserIds.has(u.id) && (u.user_metadata as Record<string,string>|null)?.role !== 'copropriétaire' && !!u.email_confirmed_at).length} vérifiés`, color: 'bg-indigo-100 text-indigo-600', Icon: UserCheck },
+    { label: 'Membres',  value: memberCount, sub: `${authUsers.filter((u) => (u.user_metadata as Record<string,string>|null)?.role === 'copropriétaire' && !!u.email_confirmed_at).length} vérifiés`, color: 'bg-teal-100 text-teal-600', Icon: Users },
+    { label: 'Vérifiés', value: `${confirmedPct} %`, sub: `${nbUnconfirmed} en attente`, color: 'bg-green-100 text-green-600', Icon: CheckCircle2 },
+  ];
+
   return (
     <div className="space-y-8 pb-16">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">Utilisateurs</h1>
-        <p className="text-sm text-gray-500 mt-1">Syndics bénévoles et membres copropriétaires inscrits.</p>
+
+      {/* ── En-tête + recherche ── */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Utilisateurs</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {nbUsers} comptes · {syndicCount} syndics · {memberCount} membres · +{newUsers7} cette semaine
+          </p>
+        </div>
+        <Suspense><AdminSearch placeholder="Rechercher par email ou nom…" defaultValue={q ?? ''} /></Suspense>
       </div>
 
-      {/* ── Stats ── */}
+      {/* ── KPIs ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Total utilisateurs',  value: nbUsers,           sub: `+${newUsers30} ce mois`,       color: 'bg-blue-100 text-blue-600',    icon: Users },
-          { label: 'Syndics',             value: syndicUsers.length, sub: `${syndicUsers.filter(u => !!u.email_confirmed_at).length} vérifiés`, color: 'bg-indigo-100 text-indigo-600', icon: UserCheck },
-          { label: 'Membres',             value: memberUsers.length, sub: `${memberUsers.filter(u => !!u.email_confirmed_at).length} vérifiés`, color: 'bg-teal-100 text-teal-600',     icon: Users },
-          { label: 'Emails vérifiés',     value: `${confirmedPct} %`, sub: `${nbUnconfirmed} en attente`,  color: 'bg-green-100 text-green-600',   icon: CheckCircle2 },
-        ].map(({ label, value, sub, color, icon: Icon }) => (
+        {kpis.map(({ label, value, sub, color, Icon }) => (
           <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">
             <div className={`p-3 rounded-xl ${color} shrink-0`}><Icon size={18} /></div>
             <div>
@@ -126,153 +196,164 @@ export default async function AdminUtilisateursPage({
         ))}
       </div>
 
-      {/* ── Syndics ── */}
-      <section>
-        <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
-          <div>
-            <p className="text-sm font-semibold text-gray-900">Syndics bénévoles</p>
-            <p className="text-xs text-gray-500">
-              {query ? `${filteredSyndics.length} / ${syndicUsers.length} comptes` : `${syndicUsers.length} comptes`}
-            </p>
-          </div>
-          <Suspense><AdminSearch placeholder="Rechercher par email ou nom…" defaultValue={q ?? ''} /></Suspense>
-          <div className="flex gap-2 text-xs">
-            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium border border-blue-200">{syndicUsers.filter(u => !!u.email_confirmed_at).length} vérifiés</span>
-            <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-medium border border-amber-200">{syndicUsers.filter(u => !u.email_confirmed_at).length} en attente</span>
-          </div>
+      {/* ── Table unifiée ── */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+          <p className="text-sm font-semibold text-gray-700">
+            {query ? `${filtered.length} / ${nbUsers} utilisateurs` : `${nbUsers} utilisateurs`}
+          </p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email / ID</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Inscription</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Dernière connexion</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copros / Plan</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Support</th>
-                <th className="px-4 py-3 w-10" />
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-100">
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Utilisateur</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Rôle</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Inscrit</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Connexion</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropriété</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Support</th>
+              <th className="px-4 py-3 w-10" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-400">
+                  Aucun résultat pour « {q} »
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredSyndics.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400">Aucun résultat pour « {q} »</td></tr>
-              )}
-              {filteredSyndics.map((u) => {
-                const meta = u.user_metadata as Record<string, string> | null;
-                const userCopros = coprosTyped.filter((c) => c.syndic_id === u.id);
-                const hasActive  = userCopros.some((c) => c.plan === 'actif');
-                const hasEssai   = userCopros.some((c) => c.plan === 'essai');
-                const hasImpayes = userCopros.some((c) => c.plan === 'passe_du');
-                const bestPlanId = userCopros.find((c) => c.plan === 'actif')?.plan_id ?? null;
-                // plan représentatif : actif > essai > passe_du > inactif > null
-                const displayPlan: string | null = hasActive ? 'actif' : hasEssai ? 'essai' : hasImpayes ? 'passe_du'
-                  : (userCopros[0]?.plan ?? null);
-                return (
-                  <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-indigo-600">{(u.email ?? '?')[0].toUpperCase()}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className={`text-sm font-medium truncate ${adminUserIds.has(u.id) ? 'text-blue-700' : 'text-gray-800'}`}>
-                            {u.email}
-                            {adminUserIds.has(u.id) && <span className="ml-1.5 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">Admin</span>}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <AdminCopyId id={u.id} />
-                            {meta?.full_name && <span className="text-xs text-gray-400">{meta.full_name}</span>}
-                          </div>
-                        </div>
+            )}
+            {filtered.map((u) => {
+              const meta     = u.user_metadata as Record<string, string> | null;
+              const emailKey = u.email?.toLowerCase() ?? '';
+              const isMember = meta?.role === 'copropriétaire';
+              const isAdmin  = adminUserIds.has(u.id);
+              const role: 'admin' | 'syndic' | 'membre' = isAdmin ? 'admin' : isMember ? 'membre' : 'syndic';
+
+              // Copros du syndic
+              const userCopros  = isMember ? [] : coprosTyped.filter((c) => c.syndic_id === u.id);
+              const hasActive   = userCopros.some((c) => c.plan === 'actif');
+              const hasEssai    = userCopros.some((c) => c.plan === 'essai');
+              const hasImpayes  = userCopros.some((c) => c.plan === 'passe_du');
+              const bestPlanId  = userCopros.find((c) => c.plan === 'actif')?.plan_id ?? null;
+              const displayPlan = hasActive ? 'actif' : hasEssai ? 'essai' : hasImpayes ? 'passe_du' : (userCopros[0]?.plan ?? null);
+
+              // Copros du membre
+              const memberCopros = isMember ? (memberCoproNames[emailKey] ?? []) : [];
+
+              const avatarCls = role === 'admin'  ? 'bg-blue-100 text-blue-700'
+                              : role === 'syndic' ? 'bg-indigo-100 text-indigo-700'
+                              : 'bg-teal-100 text-teal-700';
+
+              const ev      = lastEventByEmail[emailKey];
+              const tickets = ticketCount[emailKey] ?? 0;
+
+              return (
+                <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+
+                  {/* Utilisateur */}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${avatarCls}`}>
+                        <span className="text-xs font-bold">{(u.email ?? '?')[0].toUpperCase()}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{timeAgo(u.created_at)}</td>
-                    <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{timeAgo(u.last_sign_in_at)}</td>
-                    <td className="px-4 py-3 text-center hidden md:table-cell">
-                      {userCopros.length > 0 ? (
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-sm font-bold text-gray-800">{userCopros.length}</span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate leading-tight">{u.email}</p>
+                        {meta?.full_name && (
+                          <p className="text-xs text-gray-400 truncate leading-tight">{meta.full_name}</p>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Rôle */}
+                  <td className="px-4 py-3 hidden sm:table-cell">
+                    <RoleBadge role={role} />
+                  </td>
+
+                  {/* Inscrit */}
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <p className="text-xs font-medium text-gray-700 leading-tight">{timeAgo(u.created_at)}</p>
+                    <p className="text-[11px] text-gray-400 leading-tight">{fmtDate(u.created_at)}</p>
+                  </td>
+
+                  {/* Dernière connexion */}
+                  <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">
+                    {timeAgo(u.last_sign_in_at)}
+                  </td>
+
+                  {/* Copropriété */}
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    {role === 'admin' ? (
+                      <span className="text-xs text-gray-400">—</span>
+                    ) : isMember ? (
+                      memberCopros.length > 0 ? (
+                        <div className="flex flex-col gap-0.5">
+                          {memberCopros.slice(0, 2).map((nom) => (
+                            <span key={nom} className="text-xs text-gray-700 font-medium truncate max-w-[140px]">{nom}</span>
+                          ))}
+                          {memberCopros.length > 2 && (
+                            <span className="text-[10px] text-gray-400">+{memberCopros.length - 2} autres</span>
+                          )}
+                        </div>
+                      ) : <span className="text-xs text-gray-400">—</span>
+                    ) : (
+                      userCopros.length > 0 ? (
+                        <div className="flex flex-col items-start gap-1">
+                          <span className="text-xs font-semibold text-gray-800">
+                            {userCopros.length} copro{userCopros.length > 1 ? 's' : ''}
+                          </span>
                           <PlanBadge plan={displayPlan} planId={bestPlanId} />
                         </div>
-                      ) : <span className="text-xs text-gray-500">—</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      {u.email_confirmed_at
-                        ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500" />Vérifié</span>
-                        : <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />En attente</span>
-                      }
-                    </td>
-                    <td className="px-4 py-3">
-                      {!adminUserIds.has(u.id) && <AdminImpersonate email={u.email ?? ''} />}
-                    </td>
-                    <td className="px-4 py-3">
-                      <AdminUserActions userId={u.id} userEmail={u.email ?? ''} fullName={meta?.full_name ?? ''} isConfirmed={!!u.email_confirmed_at} isSelf={u.id === user.id} isAdmin={adminUserIds.has(u.id)} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                      ) : <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </td>
 
-      {/* ── Membres ── */}
-      <section>
-        <div className="mb-3">
-          <p className="text-sm font-semibold text-gray-900">Membres copropriétaires</p>
-            <p className="text-xs text-gray-500">
-              {query ? `${filteredMembers.length} / ${memberUsers.length} comptes` : `${memberUsers.length} comptes`} · accès invité (lecture seule)
-            </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Inscription</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Dernière connexion</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Support</th>
-                <th className="px-4 py-3 w-10" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredMembers.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">{query ? `Aucun résultat pour « ${q} »` : 'Aucun membre inscrit'}</td></tr>
-              )}
-              {filteredMembers.map((u) => {
-                const meta = u.user_metadata as Record<string, string> | null;
-                return (
-                  <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-green-600">{(u.email ?? '?')[0].toUpperCase()}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{u.email}</p>
-                          <p className="text-xs text-gray-500">{meta?.full_name ?? '—'}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{timeAgo(u.created_at)}</td>
-                    <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{timeAgo(u.last_sign_in_at)}</td>
-                    <td className="px-4 py-3">
-                      {u.email_confirmed_at
-                        ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500" />Vérifié</span>
-                        : <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />En attente</span>
-                      }
-                    </td>
-                    <td className="px-4 py-3"><AdminImpersonate email={u.email ?? ''} /></td>
-                    <td className="px-4 py-3"><AdminUserActions userId={u.id} userEmail={u.email ?? ''} fullName={((u.user_metadata as Record<string, string> | null)?.full_name ?? '')} isConfirmed={!!u.email_confirmed_at} isSelf={u.id === user.id} isAdmin={false} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                  {/* Email vérifié */}
+                  <td className="px-4 py-3 text-center">
+                    {u.email_confirmed_at
+                      ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500" />OK</span>
+                      : <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />Attente</span>
+                    }
+                  </td>
+
+                  {/* Support */}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <AdminCopyId id={u.id} iconOnly />
+                      {!isAdmin && <AdminImpersonate email={u.email ?? ''} />}
+                      {tickets > 0 && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 rounded px-1.5 py-0.5">
+                          <LifeBuoy size={10} />{tickets}
+                        </span>
+                      )}
+                    </div>
+                    {ev && (
+                      <p className="text-[10px] text-gray-400 mt-1 leading-tight">
+                        {EVENT_LABELS[ev.event_type] ?? ev.event_type} · {timeAgo(ev.created_at)}
+                      </p>
+                    )}
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-4 py-3">
+                    <AdminUserActions
+                      userId={u.id}
+                      userEmail={u.email ?? ''}
+                      fullName={meta?.full_name ?? ''}
+                      isConfirmed={!!u.email_confirmed_at}
+                      isSelf={u.id === user.id}
+                      isAdmin={isAdmin}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
     </div>
   );
 }

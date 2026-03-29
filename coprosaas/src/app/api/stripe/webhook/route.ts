@@ -41,6 +41,21 @@ async function getSyndicInfoByCoproId(
   return { email: user?.email ?? null, prenom, coproNom: copro.nom };
 }
 
+/** Enregistre un événement dans user_events (non bloquant). */
+async function logUserEvent(
+  adminClient: ReturnType<typeof createAdminClient>,
+  email: string,
+  event_type: string,
+  label: string,
+): Promise<void> {
+  if (!email) return;
+  await Promise.resolve(
+    adminClient
+      .from('user_events')
+      .insert({ user_email: email.toLowerCase(), event_type, label }),
+  ).catch((e: Error) => console.warn('[logUserEvent]', e?.message));
+}
+
 // ⚠️ Ne pas parser le body en JSON — Stripe exige le raw body pour vérifier la signature.
 export const runtime = 'nodejs';
 
@@ -49,7 +64,7 @@ async function updateCoproSubscription(coproId: string, data: {
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
   plan_id?: string | null;
-  plan?: 'actif' | 'inactif' | 'passe_du' | 'essai';
+  plan?: 'actif' | 'inactif' | 'passe_du' | 'essai' | 'resilie';
   plan_period_end?: string | null;
 }) {
   const supabase = createAdminClient();
@@ -145,6 +160,14 @@ export async function POST(req: NextRequest) {
               resend.emails.send({ from: FROM, to: userEmail, subject, html }).catch((e) =>
                 console.error('[Stripe webhook] Email checkout error:', e),
               );
+              await logUserEvent(
+                adminClient,
+                userEmail,
+                subPlan === 'essai' ? 'trial_started' : 'subscription_created',
+                subPlan === 'essai'
+                  ? `Essai démarré — ${coproData.nom}`
+                  : `Abonnement activé — ${coproData.nom} (${getPlanLabel(session.metadata?.plan_id)})`,
+              );
             }
           } catch (e) {
             console.error('[Stripe webhook] Erreur email checkout:', e);
@@ -184,7 +207,7 @@ export async function POST(req: NextRequest) {
           stripe_customer_id:     sub['customer'] as string,
           stripe_subscription_id: sub['id'] as string,
           plan_id:                subMeta?.plan_id ?? null,
-          plan:                   plan as 'actif' | 'inactif' | 'passe_du' | 'essai',
+          plan:                   plan as 'actif' | 'inactif' | 'passe_du' | 'essai' | 'resilie',
           plan_period_end:        periodEnd,
         });
 
@@ -219,6 +242,9 @@ export async function POST(req: NextRequest) {
       }
 
       // ── Abonnement résilié ────────────────────────────────────────────────
+      // Stripe déclenche cet événement quand la période d'accès est terminée
+      // (annulation immédiate ou en fin de période). On passe à 'resilie' pour
+      // distinguer d'un compte qui n'a jamais souscrit ('inactif').
       case 'customer.subscription.deleted': {
         const sub = event.data.object as unknown as {
           id: string; customer: string; metadata: Record<string, string>;
@@ -242,7 +268,7 @@ export async function POST(req: NextRequest) {
           stripe_customer_id:     sub.customer as string,
           stripe_subscription_id: null,
           plan_id:                null,
-          plan:                   'inactif',
+          plan:                   'resilie',
           plan_period_end:        null,
         });
 
@@ -264,6 +290,12 @@ export async function POST(req: NextRequest) {
               subject: buildCancelledSubject(coproNom),
               html: buildCancelledEmail(emailParams),
             }).catch((e) => console.error('[Stripe webhook] Email cancelled error:', e));
+            await logUserEvent(
+              adminClient,
+              email,
+              'subscription_cancelled',
+              `Abonnement résilié — ${coproNom}`,
+            );
           }
         } catch (e) {
           console.error('[Stripe webhook] Erreur email cancelled:', e);
@@ -328,6 +360,7 @@ export async function POST(req: NextRequest) {
               subject: buildPaymentFailedSubject(coproNom),
               html: buildPaymentFailedEmail(emailParams),
             }).catch((e) => console.error('[Stripe webhook] Email payment_failed error:', e));
+            await logUserEvent(adminClient, email, 'payment_failed', `Paiement échoué — ${coproNom}`);
           }
         } catch (e) {
           console.error('[Stripe webhook] Erreur email payment_failed:', e);

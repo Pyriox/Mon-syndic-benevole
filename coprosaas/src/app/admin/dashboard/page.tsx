@@ -158,7 +158,7 @@ export default async function AdminDashboardPage() {
   const conversionPct = nbCoproprietes > 0 ? Math.round((nbActifs / nbCoproprietes) * 100) : 0;
 
   const hadStripe = coprosTyped.filter((c) => c.stripe_customer_id);
-  const churned   = hadStripe.filter((c) => c.plan === 'inactif' || c.plan === 'passe_du');
+  const churned   = hadStripe.filter((c) => c.plan === 'resilie');
   const churnRate = hadStripe.length > 0 ? Math.round((churned.length / hadStripe.length) * 100) : 0;
 
   const in14d = new Date(Date.now() + 14 * 86400000).toISOString();

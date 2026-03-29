@@ -73,8 +73,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=lien_invalide', request.url));
     }
 
-    // Après une confirmation d'inscription via PKCE, même auto-liaison que le flux token_hash
-    if (type === 'signup' && data.user) {
+    // Après une confirmation d'inscription via PKCE, même auto-liaison que le flux token_hash.
+    // En mode PKCE, Supabase ne transmet PAS le paramètre type= dans la redirection finale :
+    // seul ?code= est présent. On détecte donc un nouveau compte en vérifiant que
+    // email_confirmed_at vient d'être posé (< 2 minutes).
+    const justConfirmed = data.user.email_confirmed_at
+      && (Date.now() - new Date(data.user.email_confirmed_at).getTime()) < 120_000;
+    if (justConfirmed && data.user) {
       const { id: userId, email } = data.user;
       if (email) {
         try {
@@ -98,6 +103,10 @@ export async function GET(request: NextRequest) {
             subject: buildWelcomeSubject(),
             html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
           }).catch((e) => console.error('[auth/confirm] Welcome email error (PKCE):', e));
+          const adminLog = createAdminClient();
+          await Promise.resolve(
+            adminLog.from('user_events').insert({ user_email: email.toLowerCase(), event_type: 'account_confirmed', label: 'Compte confirmé' }),
+          ).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
         } catch (linkErr) {
           console.error('[auth/confirm] PKCE auto-link error:', linkErr);
         }
@@ -189,6 +198,10 @@ export async function GET(request: NextRequest) {
           subject: buildWelcomeSubject(),
           html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
         }).catch((e) => console.error('[auth/confirm] Welcome email error (token_hash):', e));
+        const adminLog = createAdminClient();
+        await Promise.resolve(
+          adminLog.from('user_events').insert({ user_email: email.toLowerCase(), event_type: 'account_confirmed', label: 'Compte confirmé' }),
+        ).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
       } catch (linkErr) {
         // Non bloquant — l'utilisateur peut quand même accéder au dashboard
         console.error('[auth/confirm] auto-link error:', linkErr);
