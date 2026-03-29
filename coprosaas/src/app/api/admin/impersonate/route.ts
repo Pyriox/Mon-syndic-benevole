@@ -39,12 +39,19 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  if (error || !data?.properties?.action_link) {
+  if (error || !data?.properties?.hashed_token) {
     return NextResponse.json(
       { error: error?.message ?? 'Impossible de générer le lien' },
       { status: 500 }
     );
   }
 
-  return NextResponse.json({ link: data.properties.action_link });
+  // On contourne le flux PKCE en pointant directement vers /auth/confirm
+  // avec le token_hash. L'action_link passe par supabase.co/auth/v1/verify
+  // qui redirige ensuite avec ?code= (PKCE) — mais ce code nécessite un
+  // code_verifier dans les cookies du navigateur, absent ici (lien serveur).
+  const confirmLink =
+    `${baseUrl}/auth/confirm?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=magiclink&next=/dashboard`;
+
+  return NextResponse.json({ link: confirmLink });
 }
