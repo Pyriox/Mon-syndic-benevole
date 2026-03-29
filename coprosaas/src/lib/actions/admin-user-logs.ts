@@ -8,10 +8,27 @@ export type UserEvent = {
   id: string;
   event_type: string;
   label: string;
+  severity: 'info' | 'warning' | 'error';
+  metadata: Record<string, unknown> | null;
   created_at: string;
 };
 
-export async function getUserLogs(email: string): Promise<{ events?: UserEvent[]; error?: string }> {
+export type GetUserLogsFilters = {
+  severity?: 'info' | 'warning' | 'error';
+  category?: 'billing' | 'account' | 'activity';
+  search?: string;
+};
+
+const CATEGORY_EVENTS: Record<'billing' | 'account' | 'activity', string[]> = {
+  billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_failed', 'subscription_renewed', 'subscription_upgraded'],
+  account: ['account_confirmed', 'password_reset_requested', 'login_success'],
+  activity: ['copropriete_created', 'appel_fonds_created', 'ag_created', 'coproprietaire_added', 'ticket_created', 'document_uploaded', 'coproprietaire_deleted', 'appel_fonds_sent'],
+};
+
+export async function getUserLogs(
+  email: string,
+  filters?: GetUserLogsFilters,
+): Promise<{ events?: UserEvent[]; error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !(await isAdminUser(user.id, supabase))) {
@@ -19,13 +36,31 @@ export async function getUserLogs(email: string): Promise<{ events?: UserEvent[]
   }
 
   const admin = createAdminClient();
-  const { data, error } = await admin
+  let query = admin
     .from('user_events')
-    .select('id, event_type, label, created_at')
+    .select('id, event_type, label, severity, metadata, created_at')
     .eq('user_email', email.toLowerCase())
     .order('created_at', { ascending: false })
-    .limit(100);
+    .limit(200);
 
+  if (filters?.severity) {
+    query = query.eq('severity', filters.severity);
+  }
+  if (filters?.category) {
+    query = query.in('event_type', CATEGORY_EVENTS[filters.category]);
+  }
+
+  const { data, error } = await query;
   if (error) return { error: error.message };
-  return { events: (data ?? []) as UserEvent[] };
+
+  let events = (data ?? []) as UserEvent[];
+  if (filters?.search) {
+    const needle = filters.search.toLowerCase();
+    events = events.filter((ev) =>
+      ev.label.toLowerCase().includes(needle) ||
+      ev.event_type.toLowerCase().includes(needle),
+    );
+  }
+
+  return { events };
 }

@@ -21,6 +21,7 @@ import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { RESET_PASSWORD_SUBJECT, buildResetPasswordEmail } from '@/lib/emails/reset-password';
+import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -87,6 +88,13 @@ export async function POST(req: NextRequest) {
       console.error('[reset-password] Resend error:', sendError.message);
       return NextResponse.json({ message: 'Erreur lors de l\'envoi de l\'e-mail. Réessayez.' }, { status: 500 });
     }
+
+    // Log événement (après envoi réussi, fire-and-forget)
+    void logEventForEmail({
+      email,
+      eventType: 'password_reset_requested',
+      label: 'Réinitialisation de mot de passe demandée',
+    }).catch(() => undefined);
 
     return NextResponse.json({ ok: true });
   } catch (err) {

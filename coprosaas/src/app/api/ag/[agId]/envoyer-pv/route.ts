@@ -151,9 +151,20 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
     else sent++;
   }
 
+  // Marquer la date du dernier envoi (côté serveur — le client fait la même chose en parallèle)
+  if (sent > 0) {
+    await supabase
+      .from('assemblees_generales')
+      .update({ pv_envoye_le: new Date().toISOString() } as Record<string, unknown>)
+      .eq('id', agId);
+  }
+
+  const wasAlreadySent = !!(ag as Record<string, unknown>).pv_envoye_le;
+
   return NextResponse.json({
     message: errors.length
       ? `${sent} email(s) envoyé(s), ${errors.length} échec(s) : ${errors.join('; ')}`
       : `PV envoyé à ${sent} copropriétaire(s) avec succès.`,
+    alreadySentAt: wasAlreadySent ? (ag as Record<string, unknown>).pv_envoye_le : null,
   });
 }

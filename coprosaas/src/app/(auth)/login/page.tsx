@@ -12,6 +12,7 @@ import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
 import { ArrowRight, MailCheck, Shield, Clock, TrendingUp } from 'lucide-react';
 import { trackEvent } from '@/lib/gtag';
+import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 const REASSURANCES = [
   { icon: Shield,      text: 'Données sécurisées et hébergées en Europe' },
@@ -76,6 +77,7 @@ function LoginForm() {
       return;
     }
     trackEvent('login', { method: 'email' });
+    void logEventForEmail({ email, eventType: 'login_success', label: 'Connexion réussie' }).catch(() => undefined);
     router.push('/dashboard');
     router.refresh();
   };

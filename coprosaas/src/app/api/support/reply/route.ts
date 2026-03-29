@@ -91,7 +91,8 @@ export async function POST(req: NextRequest) {
 
   if (mailErr) {
     console.error('[support/reply] Resend error:', mailErr);
-    // On continue — le message est sauvegardé même si l'email échoue
+    // Le message est sauvegardé — on signale l'échec d'email à l'admin
+    return NextResponse.json({ message: 'Réponse enregistrée (email non envoyé)', emailWarning: true });
   }
 
   return NextResponse.json({ message: 'Réponse envoyée' });

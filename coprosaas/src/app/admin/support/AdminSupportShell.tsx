@@ -77,6 +77,7 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
   const [reply, setReply]           = useState('');
   const [sending, setSending]       = useState(false);
   const [sendError, setSendError]   = useState('');
+  const [sendEmailWarning, setSendEmailWarning] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
   const [search, setSearch]         = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | TicketStatus>('all');
@@ -106,6 +107,7 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
       setMessages([]);
       setReply('');
       setSendError('');
+      setSendEmailWarning(false);
       loadMessages(selectedId);
     }
   }, [selectedId, loadMessages]);
@@ -134,16 +136,18 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
     if (!selectedId || !reply.trim() || sending) return;
     setSending(true);
     setSendError('');
+    setSendEmailWarning(false);
     try {
       const res = await fetch('/api/support/reply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticketId: selectedId, message: reply.trim() }),
       });
+      const d = await res.json();
       if (!res.ok) {
-        const d = await res.json();
         throw new Error(d.message ?? 'Erreur');
       }
+      if (d.emailWarning) setSendEmailWarning(true);
       setReply('');
       // Optimistic update
       setMessages((prev) => [
@@ -369,6 +373,9 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
                   />
                   {sendError && (
                     <p className="text-xs text-red-600">{sendError}</p>
+                  )}
+                  {sendEmailWarning && (
+                    <p className="text-xs text-amber-600">Réponse enregistrée mais l&apos;email n&apos;a pas pu être envoyé au client (Resend).</p>
                   )}
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] text-gray-500">

@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import { formatEuros, calculerPart, repartirMontant } from '@/lib/utils';
 import { Plus, Trash2, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 
@@ -42,12 +43,17 @@ function addMonths(dateStr: string, months: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+function roundToCents(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 const PERIODICITE_MOIS: Record<string, number> = {
   mensuel: 1, trimestriel: 3, semestriel: 6, annuel: 12,
 };
 const PERIODICITE_NB: Record<string, number> = {
   mensuel: 12, trimestriel: 4, semestriel: 2, annuel: 1,
 };
+const MAX_AUTO_SNAP_DIFF = 0.2; // Tolérance max (en €) pour corriger automatiquement l'arrondi.
 
 function detectPeriodicite(dates: string[]): 'mensuel' | 'trimestriel' | 'semestriel' | 'annuel' {
   if (dates.length < 2) return 'trimestriel';
@@ -310,6 +316,33 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   // -- Calculs -------------------------------------------------
   const totalTantiemsVal = lots.reduce((s, l) => s + (l.tantiemes ?? 0), 0);
   const montantTotal = postes.reduce((s, p) => p.categorie === 'fonds_travaux_alur' ? s : s + (parseFloat(p.montant) || 0), 0);
+  const montantFTEffectif = agImportee ? montantFondsTravaux : (parseFloat(montantFTManuel) || 0);
+  const totalBudgetAvecFT = roundToCents(montantTotal + montantFTEffectif);
+  const totalEcheancier = useEcheancier
+    ? roundToCents(editableVersements.reduce((s, v) => s + (parseFloat(v.montant) || 0), 0))
+    : totalBudgetAvecFT;
+  const ecartEcheancier = roundToCents(totalEcheancier - totalBudgetAvecFT);
+  const hasEcheancierMismatch = useEcheancier
+    && editableVersements.length > 0
+    && Math.abs(ecartEcheancier) >= 0.01;
+  const canAutoSnapEcheancier = hasEcheancierMismatch && Math.abs(ecartEcheancier) <= MAX_AUTO_SNAP_DIFF;
+  const hasHardEcheancierMismatch = hasEcheancierMismatch && !canAutoSnapEcheancier;
+
+  const snapLastVersementIfPossible = () => {
+    if (!useEcheancier || editableVersements.length === 0) return;
+    const currentTotal = roundToCents(editableVersements.reduce((s, v) => s + (parseFloat(v.montant) || 0), 0));
+    const ecartToApply = roundToCents(totalBudgetAvecFT - currentTotal);
+    if (Math.abs(ecartToApply) < 0.01 || Math.abs(ecartToApply) > MAX_AUTO_SNAP_DIFF) return;
+
+    const lastIndex = editableVersements.length - 1;
+    const lastAmount = parseFloat(editableVersements[lastIndex]?.montant) || 0;
+    const snappedLastAmount = roundToCents(lastAmount + ecartToApply);
+    if (snappedLastAmount <= 0) return;
+
+    setEditableVersements((prev) => prev.map((v, i) => (
+      i === prev.length - 1 ? { ...v, montant: String(snappedLastAmount) } : v
+    )));
+  };
 
   // Regrouper les lots par copropriétaire (cumul des tantièmes si multi-lots)
   const repartition = useMemo(() => {
@@ -346,12 +379,9 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       return;
     }
 
-    // Pour les appels sans AG (migration), le montant FT vient du champ manuel
-    const ftEffectif = agImportee ? montantFondsTravaux : (parseFloat(montantFTManuel) || 0);
-
-    const finalVersements = useEcheancier
+    let finalVersements = useEcheancier
       ? editableVersements
-      : (dateSingle ? [{ date: dateSingle, montant: String(montantTotal + ftEffectif) }] : []);
+      : (dateSingle ? [{ date: dateSingle, montant: String(totalBudgetAvecFT) }] : []);
 
     if (finalVersements.length === 0 || finalVersements.some((v) => !v.date)) {
       setError("Renseignez toutes les dates de versement.");
@@ -360,6 +390,24 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     }
     if (useEcheancier && finalVersements.some((v) => !(parseFloat(v.montant) > 0))) {
       setError("Renseignez un montant positif pour chaque versement.");
+      setLoading(false);
+      return;
+    }
+    if (useEcheancier && canAutoSnapEcheancier) {
+      const ecartToApply = roundToCents(totalBudgetAvecFT - totalEcheancier);
+      const lastIndex = finalVersements.length - 1;
+      const lastAmount = parseFloat(finalVersements[lastIndex]?.montant) || 0;
+      const snappedLastAmount = roundToCents(lastAmount + ecartToApply);
+      if (snappedLastAmount <= 0) {
+        setError("Impossible d'appliquer la correction automatique : le dernier versement deviendrait nul ou négatif.");
+        setLoading(false);
+        return;
+      }
+      finalVersements = finalVersements.map((v, i) => i === lastIndex ? { ...v, montant: String(snappedLastAmount) } : v);
+      setEditableVersements(finalVersements);
+    }
+    if (useEcheancier && hasHardEcheancierMismatch) {
+      setError(`Le total de l'échéancier (${formatEuros(totalEcheancier)}) doit être égal au budget total (${formatEuros(totalBudgetAvecFT)}).`);
       setLoading(false);
       return;
     }
@@ -382,8 +430,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
             copropriete_id: coproprieteId,
             titre: `${titre.trim()} — ${i + 1}/${finalVersements.length}`,
             montant_total: versAmount,
-            montant_fonds_travaux: ftEffectif > 0
-              ? Math.round((ftEffectif * shareRatio) * 100) / 100
+            montant_fonds_travaux: montantFTEffectif > 0
+              ? Math.round((montantFTEffectif * shareRatio) * 100) / 100
               : 0,
             date_echeance: vers.date,
             description: JSON.stringify(postesValides.map((p) => ({
@@ -410,8 +458,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         .insert({
           copropriete_id: coproprieteId,
           titre: titre.trim(),
-          montant_total: montantTotal + ftEffectif,
-          montant_fonds_travaux: ftEffectif,
+          montant_total: totalBudgetAvecFT,
+          montant_fonds_travaux: montantFTEffectif,
           date_echeance: finalVersements[0].date,
           description: JSON.stringify(postesValides),
           ag_resolution_id: resolutionLieeId || null,
@@ -431,17 +479,12 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     }
 
     close();
-    // Log événement (fire-and-forget, politique RLS INSERT authés)
-    if (user.email) {
-      const nb = finalVersements.length;
-      void Promise.resolve(
-        supabase.from('user_events').insert({
-          user_email: user.email.toLowerCase(),
-          event_type: 'appel_fonds_created',
-          label: `${nb} appel${nb > 1 ? 's' : ''} de fonds créé${nb > 1 ? 's' : ''} — ${titre.trim()}`,
-        }),
-      ).catch(() => undefined);
-    }
+    // Log événement (fire-and-forget via action serveur)
+    const nb = finalVersements.length;
+    void logCurrentUserEvent({
+      eventType: 'appel_fonds_created',
+      label: `${nb} appel${nb > 1 ? 's' : ''} de fonds créé${nb > 1 ? 's' : ''} — ${titre.trim()}`,
+    }).catch(() => undefined);
     router.refresh();
   };
 
@@ -703,6 +746,9 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                                 step="0.01"
                                 value={v.montant}
                                 onChange={(e) => setEditableVersements((prev) => prev.map((x, j) => j === i ? { ...x, montant: e.target.value } : x))}
+                                onBlur={() => {
+                                  if (i === editableVersements.length - 1) snapLastVersementIfPossible();
+                                }}
                                 className="w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 placeholder="0,00"
                               />
@@ -729,8 +775,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                               <Plus size={13} /> Ajouter un versement
                             </button>
                             {editableVersements.length > 1 && (
-                              <span className="text-xs text-gray-500 tabular-nums">
-                                Total : <span className="font-semibold text-gray-700">{formatEuros(editableVersements.reduce((s, v) => s + (parseFloat(v.montant) || 0), 0))}</span>
+                              <span className={`text-xs tabular-nums ${hasHardEcheancierMismatch ? 'text-red-600' : canAutoSnapEcheancier ? 'text-amber-700' : 'text-gray-500'}`}>
+                                Total : <span className={`font-semibold ${hasHardEcheancierMismatch ? 'text-red-700' : canAutoSnapEcheancier ? 'text-amber-800' : 'text-gray-700'}`}>{formatEuros(totalEcheancier)}</span>
                               </span>
                             )}
                           </div>
@@ -768,6 +814,23 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                   )}
                 </div>
               </div>
+
+              {useEcheancier && editableVersements.length > 0 && (
+                <div className={`rounded-xl border px-4 py-3 text-xs ${hasHardEcheancierMismatch ? 'bg-red-50 border-red-200 text-red-800' : canAutoSnapEcheancier ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
+                  <p className="font-semibold">
+                    {hasHardEcheancierMismatch
+                      ? "Le total de l'échéancier doit être égal au budget."
+                      : canAutoSnapEcheancier
+                        ? "Un écart de centimes sera corrigé automatiquement sur le dernier versement (à la sortie du champ montant, sinon à l'enregistrement)."
+                        : 'Le total de l\'échéancier correspond au budget.'}
+                  </p>
+                  <p className="mt-1 tabular-nums">
+                    Budget total : <span className="font-semibold">{formatEuros(totalBudgetAvecFT)}</span>
+                    {' '}· Échéancier : <span className="font-semibold">{formatEuros(totalEcheancier)}</span>
+                    {' '}· Écart : <span className="font-semibold">{formatEuros(ecartEcheancier)}</span>
+                  </p>
+                </div>
+              )}
 
               {/* ── Aperçu répartition ──────────────────────── */}
               {montantTotal > 0 && repartition.length > 0 && (
@@ -829,7 +892,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
               })()}
 
               <div className="flex gap-3 pt-1">
-                <Button type="submit" loading={loading}>
+                <Button type="submit" loading={loading} disabled={hasHardEcheancierMismatch}>
                   {finalDatesCount > 1 ? `Enregistrer ${finalDatesCount} appels` : 'Enregistrer'}
                 </Button>
                 <Button type="button" variant="secondary" onClick={close}>Annuler</Button>

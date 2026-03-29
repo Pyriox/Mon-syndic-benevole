@@ -188,6 +188,8 @@ export interface AssembleeGenerale {
   notes: string | null;
   created_by: string;
   created_at: string;
+  convocation_envoyee_le: string | null;
+  pv_envoye_le: string | null;
   // Relations
   resolutions?: Resolution[];
 }

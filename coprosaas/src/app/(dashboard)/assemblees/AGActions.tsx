@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import { formatEuros } from '@/lib/utils';
 import {
   Plus, AlertTriangle, Video, Calendar, Zap,
@@ -232,16 +233,11 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
       await supabase.from('resolutions').insert(toInsert);
     }
 
-    // Log événement (fire-and-forget)
-    if (user.email) {
-      void Promise.resolve(
-        supabase.from('user_events').insert({
-          user_email: user.email.toLowerCase(),
-          event_type: 'ag_created',
-          label: `AG créée — ${titreFinal}`,
-        }),
-      ).catch(() => undefined);
-    }
+    // Log événement (fire-and-forget via action serveur)
+    void logCurrentUserEvent({
+      eventType: 'ag_created',
+      label: `AG créée — ${titreFinal}`,
+    }).catch(() => undefined);
 
     resetAndClose();
     router.refresh();

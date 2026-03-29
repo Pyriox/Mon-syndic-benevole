@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
@@ -98,18 +99,12 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
     if (selectedLotIds.length) {
       await supabase.from('lots').update({ coproprietaire_id: cp.id }).in('id', selectedLotIds);
     }
-    // Log événement (fire-and-forget)
-    const { data: { user: cu } } = await supabase.auth.getUser();
-    if (cu?.email) {
-      const nom = [formData.prenom?.trim(), formData.nom?.trim()].filter(Boolean).join(' ') || formData.raison_sociale?.trim() || formData.email;
-      void Promise.resolve(
-        supabase.from('user_events').insert({
-          user_email: cu.email.toLowerCase(),
-          event_type: 'coproprietaire_added',
-          label: `Copropriétaire ajouté — ${nom}`,
-        }),
-      ).catch(() => undefined);
-    }
+    // Log événement (fire-and-forget via action serveur)
+    const nom = [formData.prenom?.trim(), formData.nom?.trim()].filter(Boolean).join(' ') || formData.raison_sociale?.trim() || formData.email;
+    void logCurrentUserEvent({
+      eventType: 'coproprietaire_added',
+      label: `Copropriétaire ajouté — ${nom}`,
+    }).catch(() => undefined);
     setIsOpen(false);
     setLoading(false);
     setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '' });
