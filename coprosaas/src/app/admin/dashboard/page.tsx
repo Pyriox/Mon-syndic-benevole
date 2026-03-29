@@ -417,7 +417,7 @@ export default async function AdminDashboardPage() {
           <KpiCard label="Appels de fonds"   value={nbAppels ?? 0}          icon={Wallet}       color="bg-amber-100 text-amber-600" />
           <KpiCard label="Incidents ouverts" value={nbIncidentsOuverts ?? 0} icon={AlertTriangle} color={nbIncidentsOuverts ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={!!nbIncidentsOuverts && nbIncidentsOuverts > 5} />
           <KpiCard label="Utilisateurs inscrits" value={nbUsers} sub={`${syndicUsers.length} syndics · ${memberUsers.length} membres`} icon={Users} color="bg-indigo-100 text-indigo-600" />
-          <KpiCard label="Copropriétés"           value={nbCoproprietes} sub={`${nbActifs} actives · ${nbEssai} en essai`} icon={Building2} color="bg-teal-100 text-teal-600" />
+          <KpiCard label="Copropriétés"           value={nbCoproprietes} icon={Building2} color="bg-teal-100 text-teal-600" />
           <KpiCard label="Emails vérifiés"         value={`${confirmedPct} %`} sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
         </div>
       </section>
