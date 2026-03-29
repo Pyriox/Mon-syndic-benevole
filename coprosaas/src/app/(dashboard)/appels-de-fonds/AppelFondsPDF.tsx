@@ -5,7 +5,6 @@
 
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import Button from '@/components/ui/Button';
 import { FileDown } from 'lucide-react';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 
@@ -388,10 +387,15 @@ export default function AppelFondsPDF({ appel }: AppelFondsPDFProps) {
   };
 
   return (
-    <div className="ml-4 shrink-0">
-      <Button size="sm" variant="secondary" onClick={handleExport}>
-        <FileDown size={14} /> Exporter PDF
-      </Button>
+    <div className="shrink-0">
+      <button
+        type="button"
+        onClick={handleExport}
+        title="Télécharger le PDF"
+        className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+      >
+        <FileDown size={15} />
+      </button>
     </div>
   );
 }
