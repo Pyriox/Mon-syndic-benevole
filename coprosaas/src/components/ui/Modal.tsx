@@ -4,7 +4,7 @@
 // ============================================================
 'use client';
 
-import { useEffect, ReactNode } from 'react';
+import { useEffect, ReactNode, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +24,9 @@ const desktopSizeClasses = {
 };
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
+  const pointerStartedOnBackdrop = useRef(false);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+
   // Fermer avec la touche Échap
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -42,11 +45,35 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
 
   if (!isOpen) return null;
 
+  const handleOverlayPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const isBackdrop = e.target === e.currentTarget;
+    pointerStartedOnBackdrop.current = isBackdrop;
+    pointerStart.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleOverlayPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const endedOnBackdrop = e.target === e.currentTarget;
+    const started = pointerStart.current;
+    pointerStart.current = null;
+
+    if (!pointerStartedOnBackdrop.current || !endedOnBackdrop || !started) {
+      pointerStartedOnBackdrop.current = false;
+      return;
+    }
+
+    const moved = Math.hypot(e.clientX - started.x, e.clientY - started.y);
+    pointerStartedOnBackdrop.current = false;
+
+    // Ne ferme que sur un clic volontaire (sans glisser-déposer notable).
+    if (moved <= 4) onClose();
+  };
+
   return (
     // Overlay — mobile : aligne en bas | desktop : centre
     <div
       className="fixed inset-0 z-50 flex items-end md:items-center md:justify-center md:p-4"
-      onClick={onClose}
+      onPointerDown={handleOverlayPointerDown}
+      onPointerUp={handleOverlayPointerUp}
     >
       {/* Fond semi-transparent */}
       <div className="absolute inset-0 bg-black/50" />
