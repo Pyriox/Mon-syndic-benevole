@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import { formatEuros, calculerPart } from '@/lib/utils';
+import { formatEuros, calculerPart, repartirMontant } from '@/lib/utils';
 import { Plus, Trash2, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 
 interface Copropriete { id: string; nom: string; }
@@ -325,13 +325,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
         map.set(copId, { copId, cop: lot.coproprietaire, tantiemes: lot.tantiemes ?? 0, lotId: lot.id });
       }
     }
-    return Array.from(map.values()).map((e) => ({
-      copId: e.copId,
-      cop: e.cop,
-      tantiemes: e.tantiemes,
-      lotId: e.lotId,
-      montant: calculerPart(montantTotal, e.tantiemes, totalTantiemsVal),
-    }));
+    return repartirMontant(montantTotal, Array.from(map.values()));
   }, [lots, montantTotal, totalTantiemsVal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const typeAppel = isExceptionnel ? typeAppelExceptionnel

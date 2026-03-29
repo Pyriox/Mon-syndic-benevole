@@ -36,6 +36,41 @@ export function calculerPart(
   return Math.round((montantTotal * tantieme) / totalTantiemes * 100) / 100;
 }
 
+/**
+ * Répartit un montant total entre copropriétaires selon leurs tantièmes.
+ * Règle d'arrondi : floor à la dizaine de centime inférieure (0,10 €) pour chaque lot ;
+ * l'écart cumulé est affecté au lot de référence (celui qui a le plus de tantièmes).
+ */
+export function repartirMontant<T extends { tantiemes: number }>(
+  montantTotal: number,
+  groupes: T[]
+): (T & { montant: number })[] {
+  const totalTant = groupes.reduce((s, g) => s + g.tantiemes, 0);
+  if (totalTant === 0) return groupes.map((g) => ({ ...g, montant: 0 }));
+
+  // Arrondi à la dizaine de centime inférieure pour chaque lot
+  const result = groupes.map((g) => ({
+    ...g,
+    montant: Math.floor((montantTotal * g.tantiemes / totalTant) * 10) / 10,
+  }));
+
+  // Écart cumulé → affecté au lot de référence (plus grand tantième)
+  const somme = result.reduce((s, r) => s + r.montant, 0);
+  const ecart = Math.round((montantTotal - somme) * 100) / 100;
+  if (ecart !== 0) {
+    let refIdx = 0;
+    for (let i = 1; i < result.length; i++) {
+      if (result[i].tantiemes > result[refIdx].tantiemes) refIdx = i;
+    }
+    result[refIdx] = {
+      ...result[refIdx],
+      montant: Math.round((result[refIdx].montant + ecart) * 100) / 100,
+    };
+  }
+
+  return result;
+}
+
 // ---- Calcul du total des tantièmes d'une copropriété ----
 export function totalTantiemes(lots: { tantiemes: number }[]): number {
   return lots.reduce((sum, lot) => sum + lot.tantiemes, 0);

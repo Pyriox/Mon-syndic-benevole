@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { repartirMontant } from '@/lib/utils';
 import { Resend } from 'resend';
 import { buildAppelEmail, buildAppelEmailSubject } from '@/lib/emails/appel-de-fonds';
 import { isSubscribed } from '@/lib/subscription';
@@ -89,11 +90,10 @@ export async function POST(
       coprMap.set(copId, { tantiemes: lot.tantiemes ?? 0, lotId: lot.id });
     }
   }
-  const repartition = Array.from(coprMap.entries()).map(([copId, e]) => ({
-    copId,
-    lotId: e.lotId,
-    montant: Math.round((appel.montant_total * e.tantiemes / totalTantiemes) * 100) / 100,
-  }));
+  const repartition = repartirMontant(
+    appel.montant_total,
+    Array.from(coprMap.entries()).map(([copId, e]) => ({ copId, lotId: e.lotId, tantiemes: e.tantiemes }))
+  );
 
   // Supprimer les lignes existantes si réémission
   await supabase.from('lignes_appels_de_fonds').delete().eq('appel_de_fonds_id', appelId);

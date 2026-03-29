@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw, Send, Trash2 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
-import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
+import { formatEuros, formatDate, LABELS_CATEGORIE, repartirMontant } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import AppelFondsPDF, { buildAppelFondsPDF, type AppelForPDF } from './AppelFondsPDF';
 import AppelFondsPaiement, { type Ligne } from './AppelFondsPaiement';
@@ -146,13 +146,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           coprMap.set(copId, { tantiemes: lot.tantiemes ?? 0, lotId: lot.id });
         }
       }
-      const grouped = Array.from(coprMap.entries()).map(([copId, e]) => ({
-        copId,
-        lotId: e.lotId,
-        montant: totalTantiemes > 0
-          ? Math.round((appel.montant_total * e.tantiemes / totalTantiemes) * 100) / 100
-          : 0,
-      }));
+      const grouped = repartirMontant(
+        appel.montant_total,
+        Array.from(coprMap.entries()).map(([copId, e]) => ({ copId, lotId: e.lotId, tantiemes: e.tantiemes }))
+      );
 
       const { error } = await supabase.from('lignes_appels_de_fonds').insert(
         grouped.map((g) => ({
