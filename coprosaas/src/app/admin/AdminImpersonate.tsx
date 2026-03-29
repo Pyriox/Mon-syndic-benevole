@@ -9,9 +9,10 @@ import { LogIn, ClipboardCopy, Check, Loader2 } from 'lucide-react';
 
 interface Props {
   email: string;
+  iconOnly?: boolean;
 }
 
-export default function AdminImpersonate({ email }: Props) {
+export default function AdminImpersonate({ email, iconOnly = false }: Props) {
   const [loading, setLoading] = useState(false);
   const [link, setLink] = useState('');
   const [copied, setCopied] = useState(false);
@@ -72,7 +73,7 @@ export default function AdminImpersonate({ email }: Props) {
       title="Générer un lien de connexion pour ce compte (support)"
     >
       {loading ? <Loader2 size={11} className="animate-spin" /> : <LogIn size={11} />}
-      Connexion
+      {!iconOnly && 'Connexion'}
     </button>
   );
 }

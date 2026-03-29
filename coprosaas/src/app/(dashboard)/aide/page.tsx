@@ -680,8 +680,8 @@ export default function AidePage() {
               <h3 className="text-sm font-semibold text-gray-800 mb-3">Ressources officielles</h3>
               <ul className="space-y-2">
                 {[
-                  { label: 'Legifrance – loi du 10 juillet 1965', url: 'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000508853' },
-                  { label: 'ANIL – fiche syndic bénévole',        url: 'https://www.anil.org/votre-projet/vous-etes-proprietaire/syndic-benevole/' },
+                  { label: 'Legifrance – loi du 10 juillet 1965', url: 'https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256' },
+                  { label: 'ANIL – le syndic en copropriété',     url: 'https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/' },
                   { label: 'Service-public.fr – copropriété',     url: 'https://www.service-public.fr/particuliers/vosdroits/N31337' },
                 ].map(({ label, url }) => (
                   <li key={url}>

@@ -225,7 +225,7 @@ export default async function AdminCopropietesPage({
                     <Users size={11} className="inline mr-0.5" />Copro.
                   </th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">AG</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Inc.</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell" title="Incidents ouverts (non résolus)">Inc.</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Dépenses</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Créée</th>
@@ -270,7 +270,7 @@ export default async function AdminCopropietesPage({
                       <td className="px-4 py-3 text-xs text-gray-400 hidden xl:table-cell">{fmtDate(c.created_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
-                          {profile?.email && !adminUserIds.has(c.syndic_id) && <AdminImpersonate email={profile.email} />}
+                          {profile?.email && !adminUserIds.has(c.syndic_id) && <AdminImpersonate email={profile.email} iconOnly />}
                           <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} isOrphaned={!c.syndic_id} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} />
                         </div>
                       </td>
