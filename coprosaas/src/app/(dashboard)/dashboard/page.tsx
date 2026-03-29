@@ -246,6 +246,7 @@ export default async function DashboardPage() {
     .eq('copropriete_id', scopeId);
 
   // Date seuil pour alertes impayés > 60 jours
+  const todayStr = new Date().toISOString().split('T')[0];
   const sixtyDaysAgoStr = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   // Requêtes en parallèle pour les statistiques
@@ -262,6 +263,7 @@ export default async function DashboardPage() {
     { data: appelsEchus },
     { data: appelsEncaisses },
     { data: appelsProvisions },
+    { data: appelsEchusAujourdhui },
   ] = await Promise.all([
     // Dépenses de l'année en cours (5 dernières pour l'encart)
     supabase
@@ -334,6 +336,15 @@ export default async function DashboardPage() {
       .eq('copropriete_id', scopeId)
       .gte('date_echeance', `${currentYear}-01-01`)
       .lt('date_echeance', `${currentYear + 1}-01-01`),
+
+    // Lignes impayées d'appels émis dont l'échéance est dépassée (KPI solde impayé)
+    supabase
+      .from('lignes_appels_de_fonds')
+      .select('montant_du, coproprietaire_id, appels_de_fonds!inner(copropriete_id, date_echeance, statut)')
+      .eq('appels_de_fonds.copropriete_id', scopeId)
+      .eq('appels_de_fonds.statut', 'publie')
+      .lte('appels_de_fonds.date_echeance', todayStr)
+      .eq('paye', false),
   ]);
 
   // Calcul des KPIs
@@ -379,10 +390,12 @@ export default async function DashboardPage() {
   type LigneEncaissee = { montant_du: number };
   // appelsEncaisses conservé pour usage futur
   void (appelsEncaisses as LigneEncaissee[] | null);
-  const nbImpayés = coproprietaires?.filter((c) => c.solde < 0).length ?? 0;
-  const totalMontantImpayé = coproprietaires
-    ?.filter((c) => c.solde < 0)
-    .reduce((sum, c) => sum + Math.abs(c.solde), 0) ?? 0;
+
+  // KPI Solde impayé : lignes non payées d'appels dont l'échéance est passée
+  type LigneImpayee = { montant_du: number; coproprietaire_id: string | null };
+  const lignesImpayeesEchues = (appelsEchusAujourdhui ?? []) as LigneImpayee[];
+  const totalMontantImpayé = lignesImpayeesEchues.reduce((sum, l) => sum + l.montant_du, 0);
+  const nbImpayés = new Set(lignesImpayeesEchues.map((l) => l.coproprietaire_id).filter(Boolean)).size;
   const nbIncidentsOuverts = incidents?.length ?? 0;
   const nbCoproprietaires = coproprietaires?.length ?? 0;
 

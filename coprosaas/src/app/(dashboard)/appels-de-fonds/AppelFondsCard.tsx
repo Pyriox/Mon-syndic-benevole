@@ -87,7 +87,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
     try {
       const res = await fetch(`/api/appels-de-fonds/${appel.id}/publier`, { method: 'POST' });
       const json = await res.json();
-      setPublishMsg(json.message ?? (res.ok ? 'Publié avec succès' : 'Erreur'));
+      setPublishMsg(json.message ?? (res.ok ? 'Émis avec succès' : 'Erreur'));
       setPublishOk(res.ok);
       if (res.ok) {
         const { data: freshLignes } = await supabase
@@ -298,7 +298,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                   className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
                 >
                   {publishing ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
-                  <span>{publishing ? 'Publication…' : 'Publier'}</span>
+                  <span>{publishing ? 'Émission…' : 'Émettre'}</span>
                 </button>
               ) : pctPaye < 100 ? (
                 <button
@@ -348,7 +348,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
             <span>
               {appel.statut === 'publie'
                 ? <>Supprimer « <strong>{appel.titre}</strong> » ? Les soldes des copropriétaires non payés seront rétablis.</>
-                : <>Supprimer le brouillon « <strong>{appel.titre}</strong> » ? Cette action est irréversible.</>
+                : <>Supprimer l&apos;appel en préparation « <strong>{appel.titre}</strong> » ? Cette action est irréversible.</>
               }
             </span>
           </div>
@@ -476,7 +476,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                 </div>
               ) : appel.statut === 'brouillon' ? (
                 <p className="text-sm text-gray-400">
-                  La répartition sera générée automatiquement lors de la publication.
+                  La répartition sera générée automatiquement lors de l’émission.
                 </p>
               ) : (
                 <>
