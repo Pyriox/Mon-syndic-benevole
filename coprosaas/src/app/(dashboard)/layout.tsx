@@ -152,6 +152,19 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     // Tables support pas encore créées ou autre erreur non bloquante
   }
 
+  // --- Mise à jour last_active_at (non-bloquant, après réponse) ---
+  after(async () => {
+    try {
+      const admin = createAdminClient();
+      await admin
+        .from('profiles')
+        .update({ last_active_at: new Date().toISOString() })
+        .eq('id', user.id);
+    } catch {
+      // Non critique
+    }
+  });
+
   return (
     <DashboardShell
       coproprietes={userCoproprietes}

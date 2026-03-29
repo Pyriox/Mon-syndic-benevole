@@ -437,6 +437,17 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     }
 
     close();
+    // Log événement (fire-and-forget, politique RLS INSERT authés)
+    if (user.email) {
+      const nb = finalVersements.length;
+      void Promise.resolve(
+        supabase.from('user_events').insert({
+          user_email: user.email.toLowerCase(),
+          event_type: 'appel_fonds_created',
+          label: `${nb} appel${nb > 1 ? 's' : ''} de fonds créé${nb > 1 ? 's' : ''} — ${titre.trim()}`,
+        }),
+      ).catch(() => undefined);
+    }
     router.refresh();
   };
 

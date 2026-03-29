@@ -76,15 +76,24 @@ export default async function AdminUtilisateursPage({
     { data: adminRows },
     { data: coproprietairesData },
     { data: supportTicketsData },
+    { data: profilesData },
   ] = await Promise.all([
     admin.auth.admin.listUsers({ perPage: 1000 }),
     admin.from('coproprietes').select('id, nom, syndic_id, plan, plan_id'),
     admin.from('admin_users').select('user_id'),
     admin.from('coproprietaires').select('email, copropriete_id'),
     admin.from('support_tickets').select('user_email'),
+    admin.from('profiles').select('id, last_active_at'),
   ]);
 
   const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
+
+  // userId → last_active_at
+  const lastActiveById: Record<string, string | null> = {};
+  for (const p of profilesData ?? []) {
+    const typed = p as { id: string; last_active_at: string | null };
+    lastActiveById[typed.id] = typed.last_active_at;
+  }
 
   // copropriete_id → nom
   const coproprieteById: Record<string, string> = {};
@@ -258,8 +267,15 @@ export default async function AdminUtilisateursPage({
 
                   {/* Dernière connexion */}
                   <td className="px-4 py-3 hidden lg:table-cell">
-                    <p className="text-xs font-medium text-gray-700 leading-tight">{timeAgo(u.last_sign_in_at)}</p>
-                    <p className="text-[11px] text-gray-400 leading-tight">{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : '—'}</p>
+                    {(() => {
+                      const active = lastActiveById[u.id] ?? u.last_sign_in_at;
+                      return (
+                        <>
+                          <p className="text-xs font-medium text-gray-700 leading-tight">{timeAgo(active)}</p>
+                          <p className="text-[11px] text-gray-400 leading-tight">{active ? fmtDate(active) : '—'}</p>
+                        </>
+                      );
+                    })()}
                   </td>
 
                   {/* Copropriété */}

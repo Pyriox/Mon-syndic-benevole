@@ -5,12 +5,16 @@ import { ClipboardList, X, Loader2 } from 'lucide-react';
 import { getUserLogs, type UserEvent } from '@/lib/actions/admin-user-logs';
 
 const EVENT_LABELS: Record<string, { icon: string; label: string; color: string }> = {
-  account_confirmed:      { icon: '✓', label: 'Compte vérifié',       color: 'text-green-600 bg-green-50 border-green-200' },
-  trial_started:          { icon: '↗', label: 'Essai démarré',         color: 'text-amber-600 bg-amber-50 border-amber-200' },
-  subscription_created:   { icon: '↑', label: 'Abonnement activé',     color: 'text-blue-600 bg-blue-50 border-blue-200' },
-  subscription_cancelled: { icon: '↓', label: 'Résiliation',           color: 'text-orange-600 bg-orange-50 border-orange-200' },
-  payment_failed:         { icon: '✗', label: 'Paiement échoué',       color: 'text-red-600 bg-red-50 border-red-200' },
-  ticket_created:         { icon: '✉', label: 'Ticket ouvert',         color: 'text-purple-600 bg-purple-50 border-purple-200' },
+  account_confirmed:      { icon: '✓', label: 'Compte vérifié',         color: 'text-green-600 bg-green-50 border-green-200' },
+  trial_started:          { icon: '↗', label: 'Essai démarré',           color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  subscription_created:   { icon: '↑', label: 'Abonnement activé',       color: 'text-blue-600 bg-blue-50 border-blue-200' },
+  subscription_cancelled: { icon: '↓', label: 'Résiliation',             color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  payment_failed:         { icon: '✗', label: 'Paiement échoué',         color: 'text-red-600 bg-red-50 border-red-200' },
+  ticket_created:         { icon: '✉', label: 'Ticket ouvert',           color: 'text-purple-600 bg-purple-50 border-purple-200' },
+  copropriete_created:    { icon: '🏢', label: 'Copropriété créée',       color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
+  appel_fonds_created:    { icon: '📋', label: 'Appel de fonds créé',     color: 'text-teal-600 bg-teal-50 border-teal-200' },
+  ag_created:             { icon: '🗳️', label: 'AG créée',                color: 'text-sky-600 bg-sky-50 border-sky-200' },
+  coproprietaire_added:   { icon: '👤', label: 'Copropriétaire ajouté',   color: 'text-cyan-600 bg-cyan-50 border-cyan-200' },
 };
 
 function fmtDatetime(s: string) {

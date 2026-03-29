@@ -232,6 +232,17 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
       await supabase.from('resolutions').insert(toInsert);
     }
 
+    // Log événement (fire-and-forget)
+    if (user.email) {
+      void Promise.resolve(
+        supabase.from('user_events').insert({
+          user_email: user.email.toLowerCase(),
+          event_type: 'ag_created',
+          label: `AG créée — ${titreFinal}`,
+        }),
+      ).catch(() => undefined);
+    }
+
     resetAndClose();
     router.refresh();
   };

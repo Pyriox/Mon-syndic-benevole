@@ -2,7 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { invalidateLayoutCache } from '@/lib/cached-queries';
 
 export async function createCopropriete(formData: {
@@ -29,6 +31,20 @@ export async function createCopropriete(formData: {
     .single();
 
   if (error) return { error: error.message };
+
+  // Log de l'événement (non-bloquant)
+  const userEmail = user.email ?? '';
+  const coproNom  = formData.nom.trim();
+  after(async () => {
+    try {
+      const admin = createAdminClient();
+      await admin.from('user_events').insert({
+        user_email: userEmail.toLowerCase(),
+        event_type: 'copropriete_created',
+        label: `Copropriété créée — ${coproNom}`,
+      });
+    } catch { /* non critique */ }
+  });
 
   // Invalide le cache de navigation pour refléter la nouvelle copropriété
   invalidateLayoutCache(user.id);
