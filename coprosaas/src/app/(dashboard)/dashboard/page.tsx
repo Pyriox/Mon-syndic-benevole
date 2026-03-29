@@ -551,13 +551,13 @@ export default async function DashboardPage() {
               </div>
             </Card>
 
-            {/* Budget réel (dépenses + FT) */}
+            {/* Dépenses réelles + FT + tendance */}
             <Card className="flex items-center gap-4">
               <div className="p-3 bg-blue-100 rounded-xl shrink-0">
                 <Receipt size={24} className="text-blue-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Budget {currentYear}</p>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dépenses réelles {currentYear}</p>
                 <p className="text-2xl font-bold text-gray-900">{formatEuros(totalDepensesAvecFT)}</p>
                 {totalFondsTravaux > 0 ? (
                   <p className="text-xs text-amber-600 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux ALUR</p>
@@ -684,7 +684,7 @@ export default async function DashboardPage() {
             {/* Dépenses récentes */}
             <Card>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Dépenses {currentYear}</h3>
+                <h3 className="font-semibold text-gray-900">Budget {currentYear}</h3>
                 <Link href="/depenses" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
                   Voir tout <ArrowRight size={14} />
                 </Link>
