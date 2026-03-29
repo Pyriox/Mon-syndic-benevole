@@ -13,6 +13,7 @@ import AdminImpersonate from '../AdminImpersonate';
 import AdminCopyId from '../AdminCopyId';
 import AdminUserLogs from '../AdminUserLogs';
 import AdminSearch from '../AdminSearch';
+import AdminPagination from '../AdminPagination';
 import { Suspense } from 'react';
 import { Users, UserCheck, CheckCircle2, LifeBuoy } from 'lucide-react';
 
@@ -38,34 +39,30 @@ function RoleBadge({ role }: { role: 'admin' | 'syndic' | 'membre' }) {
   return <span className="inline-flex text-xs px-1.5 py-0.5 rounded font-semibold bg-teal-50 text-teal-700 border border-teal-200">Membre</span>;
 }
 
-function PlanBadge({ plan, planId }: { plan: string | null; planId: string | null }) {
-  if (plan === 'actif') {
-    const cfg: Record<string, { label: string; cls: string }> = {
-      essentiel: { label: 'Essentiel', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-      confort:   { label: 'Confort',   cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-      illimite:  { label: 'Illimité',  cls: 'bg-purple-50 text-purple-700 border-purple-200' },
-    };
-    const c = cfg[planId ?? ''] ?? { label: 'Actif', cls: 'bg-green-50 text-green-700 border-green-200' };
-    return <span className={`inline-flex text-xs px-2 py-0.5 rounded-md font-medium border ${c.cls}`}>{c.label}</span>;
-  }
-  if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">Impayé</span>;
-  if (plan === 'resilie')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-orange-50 text-orange-600 border border-orange-200">Résilié</span>;
-  if (plan === 'essai')    return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
-  if (plan === 'inactif')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">Inactif</span>;
-  return null;
-}
-
 export default async function AdminUtilisateursPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    role?: string;
+    verified?: string;
+    sort?: string;
+    order?: string;
+    page?: string;
+  }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
 
-  const { q } = await searchParams;
+  const { q, role, verified, sort, order, page } = await searchParams;
   const query = q?.trim().toLowerCase() ?? '';
+  const roleFilter = role === 'admin' || role === 'syndic' || role === 'membre' ? role : 'all';
+  const verifiedFilter = verified === 'yes' || verified === 'no' ? verified : 'all';
+  const sortBy = sort === 'last_active' || sort === 'tickets' ? sort : 'created';
+  const sortOrder = order === 'asc' ? 'asc' : 'desc';
+  const currentPage = Math.max(1, Number(page) || 1);
+  const PAGE_SIZE = 25;
 
   const admin = createAdminClient();
   const startOf30Days = new Date(Date.now() - 30 * 86400000).toISOString();
@@ -138,17 +135,65 @@ export default async function AdminUtilisateursPage({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coprosTyped = (coproprietes ?? []) as any[];
 
-  const allUsersSorted = [...authUsers].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  );
+  const filtered = authUsers.filter((u) => {
+    const meta = u.user_metadata as Record<string, string> | null;
+    const emailStr = u.email?.toLowerCase() ?? '';
+    const fullName = (meta?.full_name ?? '').toLowerCase();
 
-  const filtered = query
-    ? allUsersSorted.filter(
-        (u) =>
-          u.email?.toLowerCase().includes(query) ||
-          ((u.user_metadata as Record<string, string> | null)?.full_name ?? '').toLowerCase().includes(query),
-      )
-    : allUsersSorted;
+    if (query && !emailStr.includes(query) && !fullName.includes(query)) return false;
+
+    const isMember = meta?.role === 'copropriétaire';
+    const isAdmin = adminUserIds.has(u.id);
+    const effectiveRole = isAdmin ? 'admin' : isMember ? 'membre' : 'syndic';
+    if (roleFilter !== 'all' && effectiveRole !== roleFilter) return false;
+
+    if (verifiedFilter === 'yes' && !u.email_confirmed_at) return false;
+    if (verifiedFilter === 'no' && !!u.email_confirmed_at) return false;
+
+    return true;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'last_active') {
+      const va = new Date(lastActiveById[a.id] ?? a.last_sign_in_at ?? 0).getTime();
+      const vb = new Date(lastActiveById[b.id] ?? b.last_sign_in_at ?? 0).getTime();
+      return sortOrder === 'asc' ? va - vb : vb - va;
+    }
+
+    if (sortBy === 'tickets') {
+      const ta = ticketCount[(a.email ?? '').toLowerCase()] ?? 0;
+      const tb = ticketCount[(b.email ?? '').toLowerCase()] ?? 0;
+      return sortOrder === 'asc' ? ta - tb : tb - ta;
+    }
+
+    const ca = new Date(a.created_at).getTime();
+    const cb = new Date(b.created_at).getTime();
+    return sortOrder === 'asc' ? ca - cb : cb - ca;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const start = (safePage - 1) * PAGE_SIZE;
+  const pagedUsers = sorted.slice(start, start + PAGE_SIZE);
+
+  const hrefWith = (next: Partial<{ q: string; role: string; verified: string; sort: string; order: string; page: string }>) => {
+    const params = new URLSearchParams();
+    const valueQ = next.q ?? q ?? '';
+    const valueRole = next.role ?? roleFilter;
+    const valueVerified = next.verified ?? verifiedFilter;
+    const valueSort = next.sort ?? sortBy;
+    const valueOrder = next.order ?? sortOrder;
+    const valuePage = next.page ?? String(safePage);
+
+    if (valueQ) params.set('q', valueQ);
+    if (valueRole !== 'all') params.set('role', valueRole);
+    if (valueVerified !== 'all') params.set('verified', valueVerified);
+    if (valueSort !== 'created') params.set('sort', valueSort);
+    if (valueOrder !== 'desc') params.set('order', valueOrder);
+    if (valuePage !== '1') params.set('page', valuePage);
+
+    return `/admin/utilisateurs${params.toString() ? `?${params.toString()}` : ''}`;
+  };
 
   const kpis: Array<{ label: string; value: string | number; sub: string; color: string; Icon: ElementType }> = [
     { label: 'Total',    value: nbUsers,     sub: `+${newUsers30} ce mois`,   color: 'bg-blue-100 text-blue-600',    Icon: Users },
@@ -171,6 +216,58 @@ export default async function AdminUtilisateursPage({
         <Suspense><AdminSearch placeholder="Rechercher par email ou nom…" defaultValue={q ?? ''} /></Suspense>
       </div>
 
+      <div className="flex items-center justify-between gap-3 flex-wrap text-xs">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {([
+            { key: 'all', label: 'Tous rôles' },
+            { key: 'admin', label: 'Admins' },
+            { key: 'syndic', label: 'Syndics' },
+            { key: 'membre', label: 'Membres' },
+          ] as const).map((item) => (
+            <Link
+              key={item.key}
+              href={hrefWith({ role: item.key, page: '1' })}
+              className={`px-2.5 py-1 rounded-full border font-medium ${roleFilter === item.key ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'}`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {([
+            { key: 'all', label: 'Tous emails' },
+            { key: 'yes', label: 'Vérifiés' },
+            { key: 'no', label: 'Non vérifiés' },
+          ] as const).map((item) => (
+            <Link
+              key={item.key}
+              href={hrefWith({ verified: item.key, page: '1' })}
+              className={`px-2.5 py-1 rounded-full border font-medium ${verifiedFilter === item.key ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'}`}
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          {([
+            { key: 'created:desc', label: 'Inscription recente' },
+            { key: 'last_active:desc', label: 'Activite recente' },
+            { key: 'tickets:desc', label: 'Tickets support' },
+          ] as const).map((item) => {
+            const [nextSort, nextOrder] = item.key.split(':');
+            const active = sortBy === nextSort && sortOrder === nextOrder;
+            return (
+              <Link
+                key={item.key}
+                href={hrefWith({ sort: nextSort, order: nextOrder, page: '1' })}
+                className={`px-2.5 py-1 rounded-full border font-medium ${active ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── KPIs ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {kpis.map(({ label, value, sub, color, Icon }) => (
@@ -189,7 +286,9 @@ export default async function AdminUtilisateursPage({
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
           <p className="text-sm font-semibold text-gray-700">
-            {query ? `${filtered.length} / ${nbUsers} utilisateurs` : `${nbUsers} utilisateurs`}
+            {query || roleFilter !== 'all' || verifiedFilter !== 'all'
+              ? `${sorted.length} / ${nbUsers} utilisateurs`
+              : `${nbUsers} utilisateurs`}
           </p>
         </div>
         <table className="w-full text-sm">
@@ -206,14 +305,14 @@ export default async function AdminUtilisateursPage({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filtered.length === 0 && (
+            {pagedUsers.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-400">
                   Aucun résultat pour « {q} »
                 </td>
               </tr>
             )}
-            {filtered.map((u) => {
+            {pagedUsers.map((u) => {
               const meta     = u.user_metadata as Record<string, string> | null;
               const emailKey = u.email?.toLowerCase() ?? '';
               const isMember = meta?.role === 'copropriétaire';
@@ -222,11 +321,6 @@ export default async function AdminUtilisateursPage({
 
               // Copros du syndic
               const userCopros  = isMember ? [] : coprosTyped.filter((c) => c.syndic_id === u.id);
-              const hasActive   = userCopros.some((c) => c.plan === 'actif');
-              const hasEssai    = userCopros.some((c) => c.plan === 'essai');
-              const hasImpayes  = userCopros.some((c) => c.plan === 'passe_du');
-              const bestPlanId  = userCopros.find((c) => c.plan === 'actif')?.plan_id ?? null;
-              const displayPlan = hasActive ? 'actif' : hasEssai ? 'essai' : hasImpayes ? 'passe_du' : (userCopros[0]?.plan ?? null);
 
               // Copros du membre
               const memberCopros = isMember ? (memberCoproNames[emailKey] ?? []) : [];
@@ -337,6 +431,15 @@ export default async function AdminUtilisateursPage({
           </tbody>
         </table>
       </div>
+
+      <AdminPagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        totalItems={sorted.length}
+        pageSize={PAGE_SIZE}
+        prevHref={hrefWith({ page: String(Math.max(1, safePage - 1)) })}
+        nextHref={hrefWith({ page: String(Math.min(totalPages, safePage + 1)) })}
+      />
 
     </div>
   );

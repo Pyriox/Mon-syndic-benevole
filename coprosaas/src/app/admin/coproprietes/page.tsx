@@ -5,11 +5,14 @@
 // ============================================================
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import AdminCoproActions from '../AdminCoproActions';
 import AdminImpersonate from '../AdminImpersonate';
 import AdminCoproFilters from '../AdminCoproFilters';
 import AdminCoproTabs from '../AdminCoproTabs';
+import AdminSearch from '../AdminSearch';
+import AdminPagination from '../AdminPagination';
 import { Suspense } from 'react';
 import {
   Building2, DoorOpen, Users,
@@ -30,6 +33,23 @@ function fmtEur(n: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 }
 
+type CoproRow = {
+  id: string;
+  nom: string;
+  adresse: string | null;
+  code_postal: string | null;
+  ville: string | null;
+  nombre_lots: number | null;
+  plan: string | null;
+  plan_id: string | null;
+  syndic_id: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  plan_period_end: string | null;
+  created_at: string;
+  profiles: { full_name?: string; email?: string } | null;
+};
+
 function PlanBadge({ plan, planId }: { plan: string | null; planId: string | null }) {
   if (plan === 'actif') {
     const cfg: Record<string, { label: string; cls: string }> = {
@@ -49,35 +69,108 @@ function PlanBadge({ plan, planId }: { plan: string | null; planId: string | nul
 export default async function AdminCopropietesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: string; tab?: string }>;
+  searchParams: Promise<{
+    plan?: string;
+    tab?: string;
+    q?: string;
+    page?: string;
+    sort?: string;
+    order?: string;
+    orphaned?: string;
+    no_lots?: string;
+    no_members?: string;
+    risk?: string;
+  }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
 
-  const { plan: planFilter, tab: tabParam } = await searchParams;
+  const {
+    plan: planFilter,
+    tab: tabParam,
+    q,
+    page,
+    sort,
+    order,
+    orphaned,
+    no_lots,
+    no_members,
+    risk,
+  } = await searchParams;
+  const query = q?.trim().toLowerCase() ?? '';
+  const currentPage = Math.max(1, Number(page) || 1);
+  const PAGE_SIZE = 20;
+  const sortBy = sort === 'name' || sort === 'health' || sort === 'incidents' || sort === 'depenses' || sort === 'lots' || sort === 'members'
+    ? sort
+    : 'created';
+  const sortOrder = order === 'asc' ? 'asc' : 'desc';
+  const filterOrphaned = orphaned === '1';
+  const filterNoLots = no_lots === '1';
+  const filterNoMembers = no_members === '1';
+  const filterRisk = risk === 'high';
   const activeTab = tabParam === 'abonnements' ? 'abonnements' : 'coproprietes';
 
   const admin = createAdminClient();
 
-  // ── Coproprietes (toujours nécessaire) ──
-  const [{ data: coproprietes }, { data: adminRows }] = await Promise.all([
-    admin
-      .from('coproprietes')
-      .select('id, nom, adresse, code_postal, ville, nombre_lots, plan, plan_id, syndic_id, stripe_customer_id, stripe_subscription_id, plan_period_end, created_at, profiles!coproprietes_syndic_id_fkey(full_name, email)')
-      .order('created_at', { ascending: false }),
+  const baseSelect = 'id, nom, adresse, code_postal, ville, nombre_lots, plan, plan_id, syndic_id, stripe_customer_id, stripe_subscription_id, plan_period_end, created_at, profiles!coproprietes_syndic_id_fkey(full_name, email)';
+  const applyServerFilters = <T,>(queryBuilder: T) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let qBuilder = queryBuilder as any;
+    if (activeTab === 'coproprietes' && planFilter) {
+      if (planFilter === 'essai') qBuilder = qBuilder.or('plan.is.null,plan.eq.essai');
+      else qBuilder = qBuilder.eq('plan', planFilter);
+    }
+    if (activeTab === 'coproprietes' && query) {
+      qBuilder = qBuilder.or(`nom.ilike.%${query}%,ville.ilike.%${query}%,code_postal.ilike.%${query}%`);
+    }
+    return qBuilder;
+  };
+
+  const sortIsServerNative = sortBy === 'created' || sortBy === 'name';
+  const hasClientOnlyFilters = filterOrphaned || filterNoLots || filterNoMembers || filterRisk || !sortIsServerNative;
+
+  const [{ data: coproStatsRows }, { data: adminRows }] = await Promise.all([
+    admin.from('coproprietes').select('id, nom, plan, plan_id, stripe_customer_id, plan_period_end'),
     admin.from('admin_users').select('user_id'),
   ]);
+
+  let coproprietes: CoproRow[] = [];
+  let serverTotalCount = 0;
+
+  if (activeTab === 'coproprietes' && !hasClientOnlyFilters) {
+    const countQuery = applyServerFilters(admin.from('coproprietes').select('id', { count: 'exact', head: true }));
+    const { count } = await countQuery;
+    serverTotalCount = count ?? 0;
+
+    const rangeStart = (currentPage - 1) * PAGE_SIZE;
+    const rangeEnd = rangeStart + PAGE_SIZE - 1;
+    const orderCol = sortBy === 'name' ? 'nom' : 'created_at';
+    const dataQuery = applyServerFilters(admin.from('coproprietes').select(baseSelect))
+      .order(orderCol, { ascending: sortOrder === 'asc' })
+      .range(rangeStart, rangeEnd);
+    const { data } = await dataQuery;
+    coproprietes = (data ?? []) as CoproRow[];
+  } else {
+    const baseQuery = admin.from('coproprietes').select(baseSelect);
+    const dataQuery = activeTab === 'coproprietes'
+      ? applyServerFilters(baseQuery)
+      : baseQuery;
+    const { data } = await dataQuery.order('created_at', { ascending: false });
+    coproprietes = (data ?? []) as CoproRow[];
+    serverTotalCount = coproprietes.length;
+  }
+
   const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const coprosTyped = (coproprietes ?? []) as any[];
-  const nbCoproprietes = coprosTyped.length;
-  const nbActifs  = coprosTyped.filter((c) => c.plan === 'actif').length;
-  const nbEssai   = coprosTyped.filter((c) => !c.plan || c.plan === 'essai').length;
-  const nbInactif = coprosTyped.filter((c) => c.plan === 'inactif').length;
-  const nbResilie = coprosTyped.filter((c) => c.plan === 'resilie').length;
-  const nbPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du').length;
+  const coprosTyped = coproprietes;
+  const coprosStatsTyped = (coproStatsRows ?? []) as Pick<CoproRow, 'id' | 'nom' | 'plan' | 'plan_id' | 'stripe_customer_id' | 'plan_period_end'>[];
+  const nbCoproprietes = coprosStatsTyped.length;
+  const nbActifs  = coprosStatsTyped.filter((c) => c.plan === 'actif').length;
+  const nbEssai   = coprosStatsTyped.filter((c) => !c.plan || c.plan === 'essai').length;
+  const nbInactif = coprosStatsTyped.filter((c) => c.plan === 'inactif').length;
+  const nbResilie = coprosStatsTyped.filter((c) => c.plan === 'resilie').length;
+  const nbPasseDu = coprosStatsTyped.filter((c) => c.plan === 'passe_du').length;
 
   // ── Données opérationnelles (onglet coproprietes uniquement) ──
   let lotsParCopro: { copropriete_id: string }[] = [];
@@ -119,13 +212,6 @@ export default async function AdminCopropietesPage({
   }
 
   // ── Lookup maps (onglet coproprietes) ──
-  const displayedCopros = planFilter && activeTab === 'coproprietes'
-    ? coprosTyped.filter((c) => {
-        if (planFilter === 'essai') return !c.plan || c.plan === 'essai';
-        return c.plan === planFilter;
-      })
-    : coprosTyped;
-
   const lotsCount: Record<string, number> = {};
   for (const l of lotsParCopro) lotsCount[l.copropriete_id] = (lotsCount[l.copropriete_id] ?? 0) + 1;
   const coproCount: Record<string, number> = {};
@@ -139,17 +225,126 @@ export default async function AdminCopropietesPage({
     if (i.statut !== 'resolu') incidentCount[i.copropriete_id] = (incidentCount[i.copropriete_id] ?? 0) + 1;
   }
 
+  const getHealthScore = (c: CoproRow): number => {
+    let score = 100;
+    const openInc = incidentCount[c.id] ?? 0;
+    const lots = lotsCount[c.id] ?? 0;
+    const members = coproCount[c.id] ?? 0;
+
+    if (c.plan === 'passe_du') score -= 35;
+    else if (c.plan === 'inactif') score -= 20;
+    else if (c.plan === 'resilie') score -= 15;
+    score -= Math.min(openInc * 10, 40);
+    if (lots === 0) score -= 15;
+    if (members === 0) score -= 10;
+
+    return Math.max(0, Math.min(100, score));
+  };
+
+  const displayedCopros = activeTab === 'coproprietes'
+    ? coprosTyped.filter((c) => {
+        if (hasClientOnlyFilters && planFilter) {
+          if (planFilter === 'essai') {
+            if (c.plan && c.plan !== 'essai') return false;
+          } else if (c.plan !== planFilter) {
+            return false;
+          }
+        }
+
+        if (hasClientOnlyFilters && query) {
+          const haystack = `${c.nom ?? ''} ${c.ville ?? ''} ${c.code_postal ?? ''}`.toLowerCase();
+          if (!haystack.includes(query)) return false;
+        }
+
+        if (filterOrphaned && !!c.syndic_id) return false;
+        if (filterNoLots && (lotsCount[c.id] ?? 0) > 0) return false;
+        if (filterNoMembers && (coproCount[c.id] ?? 0) > 0) return false;
+        if (filterRisk && getHealthScore(c) > 59) return false;
+
+        return true;
+      })
+    : coprosTyped;
+
+  const sortedCopros = [...displayedCopros].sort((a, b) => {
+    if (sortBy === 'health') {
+      const av = getHealthScore(a);
+      const bv = getHealthScore(b);
+      return sortOrder === 'asc' ? av - bv : bv - av;
+    }
+    if (sortBy === 'incidents') {
+      const av = incidentCount[a.id] ?? 0;
+      const bv = incidentCount[b.id] ?? 0;
+      return sortOrder === 'asc' ? av - bv : bv - av;
+    }
+    if (sortBy === 'depenses') {
+      const av = depCount[a.id] ?? 0;
+      const bv = depCount[b.id] ?? 0;
+      return sortOrder === 'asc' ? av - bv : bv - av;
+    }
+    if (sortBy === 'lots') {
+      const av = lotsCount[a.id] ?? 0;
+      const bv = lotsCount[b.id] ?? 0;
+      return sortOrder === 'asc' ? av - bv : bv - av;
+    }
+    if (sortBy === 'members') {
+      const av = coproCount[a.id] ?? 0;
+      const bv = coproCount[b.id] ?? 0;
+      return sortOrder === 'asc' ? av - bv : bv - av;
+    }
+    if (sortBy === 'name') {
+      return sortOrder === 'asc' ? a.nom.localeCompare(b.nom) : b.nom.localeCompare(a.nom);
+    }
+    const av = new Date(a.created_at).getTime();
+    const bv = new Date(b.created_at).getTime();
+    return sortOrder === 'asc' ? av - bv : bv - av;
+  });
+
+  const totalItems = activeTab === 'coproprietes' && !hasClientOnlyFilters ? serverTotalCount : sortedCopros.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const start = (safePage - 1) * PAGE_SIZE;
+  const pagedCopros = activeTab === 'coproprietes' && !hasClientOnlyFilters
+    ? sortedCopros
+    : sortedCopros.slice(start, start + PAGE_SIZE);
+
+  const hrefWith = (next: Partial<{ plan: string; tab: string; q: string; page: string; sort: string; order: string; orphaned: string; no_lots: string; no_members: string; risk: string }>) => {
+    const params = new URLSearchParams();
+    const valueTab = next.tab ?? activeTab;
+    const valuePlan = next.plan ?? planFilter ?? '';
+    const valueQ = next.q ?? q ?? '';
+    const valuePage = next.page ?? String(safePage);
+    const valueSort = next.sort ?? sortBy;
+    const valueOrder = next.order ?? sortOrder;
+    const valueOrphaned = next.orphaned ?? (filterOrphaned ? '1' : '0');
+    const valueNoLots = next.no_lots ?? (filterNoLots ? '1' : '0');
+    const valueNoMembers = next.no_members ?? (filterNoMembers ? '1' : '0');
+    const valueRisk = next.risk ?? (filterRisk ? 'high' : '');
+
+    if (valueTab !== 'coproprietes') params.set('tab', valueTab);
+    if (valuePlan) params.set('plan', valuePlan);
+    if (valueQ) params.set('q', valueQ);
+    if (valuePage !== '1') params.set('page', valuePage);
+    if (valueSort !== 'created') params.set('sort', valueSort);
+    if (valueOrder !== 'desc') params.set('order', valueOrder);
+    if (valueOrphaned === '1') params.set('orphaned', '1');
+    if (valueNoLots === '1') params.set('no_lots', '1');
+    if (valueNoMembers === '1') params.set('no_members', '1');
+    if (valueRisk === 'high') params.set('risk', 'high');
+    return `/admin/coproprietes${params.toString() ? `?${params.toString()}` : ''}`;
+  };
+
   // ── Calculs abonnements ──
   const planBreakdown: Record<string, number> = { essentiel: 0, confort: 0, illimite: 0 };
-  for (const c of coprosTyped) {
+  for (const c of coprosStatsTyped) {
     if (c.plan === 'actif' && c.plan_id) planBreakdown[c.plan_id] = (planBreakdown[c.plan_id] ?? 0) + 1;
   }
   const mrr = Object.entries(planBreakdown).reduce((sum, [id, nb]) => sum + (MRR_PRICES[id] ?? 0) * nb, 0);
   const arr = Object.entries(planBreakdown).reduce((sum, [id, nb]) => sum + (ARR_PRICES[id] ?? 0) * nb, 0);
-  const conversionPct = coprosTyped.length > 0 ? Math.round((nbActifs / coprosTyped.length) * 100) : 0;
-  const in14d = new Date(Date.now() + 14 * 86400000).toISOString();
-  const upcomingRenewals = coprosTyped.filter((c) =>
-    c.plan === 'actif' && c.plan_period_end && c.plan_period_end >= new Date().toISOString() && c.plan_period_end <= in14d
+  const conversionPct = coprosStatsTyped.length > 0 ? Math.round((nbActifs / coprosStatsTyped.length) * 100) : 0;
+  const nowIso = new Date().toISOString();
+  const in14d = new Date(new Date(nowIso).getTime() + 14 * 86400000).toISOString();
+  const upcomingRenewals = coprosStatsTyped.filter((c) =>
+    c.plan === 'actif' && c.plan_period_end && c.plan_period_end >= nowIso && c.plan_period_end <= in14d
   );
   const customerToCopro: Record<string, string> = {};
   for (const c of coprosTyped) {
@@ -176,6 +371,8 @@ export default async function AdminCopropietesPage({
 
       {activeTab === 'coproprietes' ? (
         <>
+          <Suspense><AdminSearch placeholder="Rechercher une copropriete, ville, CP..." defaultValue={q ?? ''} /></Suspense>
+
           {/* ── Stats ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -211,6 +408,58 @@ export default async function AdminCopropietesPage({
             />
           </Suspense>
 
+          <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Link
+                href={hrefWith({ orphaned: filterOrphaned ? '0' : '1', page: '1' })}
+                className={`px-2.5 py-1 rounded-full border font-medium ${filterOrphaned ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300'}`}
+              >
+                Sans syndic
+              </Link>
+              <Link
+                href={hrefWith({ no_lots: filterNoLots ? '0' : '1', page: '1' })}
+                className={`px-2.5 py-1 rounded-full border font-medium ${filterNoLots ? 'bg-orange-600 border-orange-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-orange-300'}`}
+              >
+                Sans lots
+              </Link>
+              <Link
+                href={hrefWith({ no_members: filterNoMembers ? '0' : '1', page: '1' })}
+                className={`px-2.5 py-1 rounded-full border font-medium ${filterNoMembers ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300'}`}
+              >
+                Sans coproprietaires
+              </Link>
+              <Link
+                href={hrefWith({ risk: filterRisk ? '' : 'high', page: '1' })}
+                className={`px-2.5 py-1 rounded-full border font-medium ${filterRisk ? 'bg-red-600 border-red-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-red-300'}`}
+              >
+                Risque eleve
+              </Link>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {([
+                { key: 'created:desc', label: 'Recents' },
+                { key: 'name:asc', label: 'Nom A-Z' },
+                { key: 'health:asc', label: 'Sante critique' },
+                { key: 'incidents:desc', label: 'Incidents' },
+              ] as const).map((item) => {
+                const [nextSort, nextOrder] = item.key.split(':');
+                const active = sortBy === nextSort && sortOrder === nextOrder;
+                return (
+                  <Link
+                    key={item.key}
+                    href={hrefWith({ sort: nextSort, order: nextOrder, page: '1' })}
+                    className={`px-2.5 py-1 rounded-full border font-medium ${active ? 'bg-gray-800 text-white border-gray-800' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'}`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+            <p className="text-gray-500">
+              {totalItems} resultat{totalItems > 1 ? 's' : ''}
+            </p>
+          </div>
+
           {/* ── Table copropriétés ── */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
@@ -227,18 +476,25 @@ export default async function AdminCopropietesPage({
                   <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">AG</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell" title="Incidents ouverts (non résolus)">Inc.</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Dépenses</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Sante</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Créée</th>
                   <th className="px-4 py-3 w-10" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {displayedCopros.length === 0 && (
-                  <tr><td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-400">Aucune copropriété pour ce filtre</td></tr>
+                {pagedCopros.length === 0 && (
+                  <tr><td colSpan={11} className="px-4 py-8 text-center text-sm text-gray-400">Aucune copropriété pour ce filtre</td></tr>
                 )}
-                {displayedCopros.map((c) => {
+                {pagedCopros.map((c) => {
                   const profile = c.profiles as { full_name?: string; email?: string } | null;
                   const openInc = incidentCount[c.id] ?? 0;
+                  const health = getHealthScore(c);
+                  const healthCls = health >= 80
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : health >= 60
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-red-50 text-red-700 border-red-200';
                   return (
                     <tr key={c.id} className={`hover:bg-gray-50 transition-colors ${c.plan === 'passe_du' ? 'bg-red-50/30' : ''}`}>
                       <td className="px-4 py-3">
@@ -266,11 +522,18 @@ export default async function AdminCopropietesPage({
                       <td className="px-4 py-3 text-right text-xs font-medium text-gray-700 hidden xl:table-cell">
                         {depCount[c.id] ? fmtEur(depCount[c.id]) : '—'}
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex min-w-12 justify-center text-xs px-2 py-1 rounded-md border font-semibold ${healthCls}`}>
+                          {health}
+                        </span>
+                      </td>
                       <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
                       <td className="px-4 py-3 text-xs text-gray-400 hidden xl:table-cell">{fmtDate(c.created_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
-                          {profile?.email && !adminUserIds.has(c.syndic_id) && <AdminImpersonate email={profile.email} iconOnly />}
+                          {typeof profile?.email === 'string' && profile.email.length > 0 && (!c.syndic_id || !adminUserIds.has(c.syndic_id)) && (
+                            <AdminImpersonate email={profile.email} iconOnly />
+                          )}
                           <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} isOrphaned={!c.syndic_id} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} />
                         </div>
                       </td>
@@ -280,6 +543,15 @@ export default async function AdminCopropietesPage({
               </tbody>
             </table>
           </div>
+
+          <AdminPagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={PAGE_SIZE}
+            prevHref={hrefWith({ page: String(Math.max(1, safePage - 1)) })}
+            nextHref={hrefWith({ page: String(Math.min(totalPages, safePage + 1)) })}
+          />
         </>
       ) : (
         <div className="space-y-8">
