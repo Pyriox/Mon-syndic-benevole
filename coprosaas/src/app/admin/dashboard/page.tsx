@@ -12,7 +12,7 @@ import {
   AlertTriangle, Wallet, TrendingUp, UserCheck, Users, Clock,
   Mail, ExternalLink, Activity, CheckCircle2, CreditCard,
   Banknote, BarChart3, TrendingDown, Zap, Bell, XCircle,
-  Send, Database, Search, LifeBuoy,
+  Send, Database, Search, LifeBuoy, Building2,
 } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
@@ -276,7 +276,7 @@ export default async function AdminDashboardPage() {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
           <KpiCard label="Abonnés actifs" value={nbActifs} sub={`Essentiel ${planBreakdown.essentiel} · Confort ${planBreakdown.confort} · Illimité ${planBreakdown.illimite}`} icon={CreditCard} color="bg-blue-100 text-blue-600" />
-          <KpiCard label="Essais actifs" value={nbEssai} sub={`+${newUsers7} inscrits cette semaine`} icon={Zap} color="bg-amber-100 text-amber-600" />
+          <KpiCard label="Essais actifs" value={nbEssai} icon={Zap} color="bg-amber-100 text-amber-600" />
           <KpiCard label="Impayés" value={nbPasseDu} sub={nbPasseDu > 0 ? 'Action requise' : 'Aucun impayé'} icon={XCircle} color={nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={nbPasseDu > 0} />
           <KpiCard label="Taux de résiliation" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} ayant eu un abonnement`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
         </div>
@@ -416,9 +416,9 @@ export default async function AdminDashboardPage() {
           <KpiCard label="Assemblées"         value={nbAG ?? 0}              icon={CalendarDays} color="bg-pink-100 text-pink-600" />
           <KpiCard label="Appels de fonds"   value={nbAppels ?? 0}          icon={Wallet}       color="bg-amber-100 text-amber-600" />
           <KpiCard label="Incidents ouverts" value={nbIncidentsOuverts ?? 0} icon={AlertTriangle} color={nbIncidentsOuverts ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={!!nbIncidentsOuverts && nbIncidentsOuverts > 5} />
-          <KpiCard label="Syndics inscrits"  value={syndicUsers.length}     icon={UserCheck}    color="bg-indigo-100 text-indigo-600" sub={`+${newSyndics30} ce mois`} />
-          <KpiCard label="Membres inscrits"  value={memberUsers.length}     icon={Users}        color="bg-teal-100 text-teal-600"    sub={`${memberUsers.filter(u => !!u.email_confirmed_at).length} vérifiés`} />
-          <KpiCard label="Emails vérifiés"    value={`${confirmedPct} %`}    sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
+          <KpiCard label="Utilisateurs inscrits" value={nbUsers} sub={`${syndicUsers.length} syndics · ${memberUsers.length} membres`} icon={Users} color="bg-indigo-100 text-indigo-600" />
+          <KpiCard label="Copropriétés"           value={nbCoproprietes} sub={`${nbActifs} actives · ${nbEssai} en essai`} icon={Building2} color="bg-teal-100 text-teal-600" />
+          <KpiCard label="Emails vérifiés"         value={`${confirmedPct} %`} sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
         </div>
       </section>
 
