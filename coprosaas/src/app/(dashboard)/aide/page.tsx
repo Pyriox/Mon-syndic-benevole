@@ -120,7 +120,7 @@ const FAQ: { question: string; answer: string; category: keyof typeof CATEGORIES
   {
     category: 'app',
     question: "Comment modifier ou supprimer un élément créé par erreur ?",
-    answer: "La plupart des éléments (copropriétaires, lots, dépenses, appels de fonds en préparation, résolutions) sont modifiables ou supprimables depuis leur liste. Les appels de fonds déjà émis ne peuvent plus être supprimés directement pour conserver l'historique comptable : contactez le support si vous avez besoin d'une correction.",,
+    answer: "La plupart des éléments (copropriétaires, lots, dépenses, appels de fonds en préparation, résolutions) sont modifiables ou supprimables depuis leur liste. Les appels de fonds déjà émis ne peuvent plus être supprimés directement pour conserver l'historique comptable : contactez le support si vous avez besoin d'une correction.",
   },
   {
     category: 'app',
