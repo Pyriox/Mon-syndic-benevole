@@ -217,14 +217,15 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     }
     setTitre(`Calendrier de financement du budget prévisionnel et du fonds travaux ${budgetYear}`);
 
-    // Montant local pour initialiser les montants par versement avant la mise à jour du state postes
+    // Montant local (dépenses + fonds travaux) pour initialiser les versements
     const localMontantTotal = (newPostes.length > 0 ? newPostes : [{ ...POSTE_VIDE }])
       .reduce((s, p) => p.categorie === 'fonds_travaux_alur' ? s : s + (parseFloat(p.montant) || 0), 0);
+    const localTotalAvecFT = localMontantTotal + fondsTravauxTotal;
 
     // Échéancier voté en AG
     if (ag.votedDates.length >= 2) {
-      const montantParVersAG = localMontantTotal > 0
-        ? Math.round((localMontantTotal / ag.votedDates.length) * 100) / 100
+      const montantParVersAG = localTotalAvecFT > 0
+        ? Math.round((localTotalAvecFT / ag.votedDates.length) * 100) / 100
         : 0;
       setEditableVersements(ag.votedDates.map((d) => ({ date: d, montant: String(montantParVersAG) })));
       setFromAGDates(true);
@@ -240,11 +241,10 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       setGenDateDebut(ag.votedDates[0]);
     } else {
       // Pas de calendrier_financement voté : génération automatique d'un échéancier trimestriel
-      // en utilisant localMontantTotal (budget hors fonds travaux ALUR) et l'année du budget voté.
       const yearStart = `${budgetYear}-01-01`;
-      if (localMontantTotal > 0 && (hasBudgetPrev || fondsTravauxTotal > 0)) {
+      if (localTotalAvecFT > 0 && (hasBudgetPrev || fondsTravauxTotal > 0)) {
         const nb = PERIODICITE_NB['trimestriel'];
-        const baseAmount = Math.round((localMontantTotal / nb) * 100) / 100;
+        const baseAmount = Math.round((localTotalAvecFT / nb) * 100) / 100;
         setEditableVersements(
           Array.from({ length: nb }, (_, i) => ({
             date: addMonths(yearStart, i * PERIODICITE_MOIS['trimestriel']),
@@ -297,7 +297,9 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   const genererEcheancier = () => {
     if (!genDateDebut) return;
     const nb = PERIODICITE_NB[genPeriodicite] ?? 4;
-    const baseAmount = montantTotal > 0 ? Math.round((montantTotal / nb) * 100) / 100 : 0;
+    const ftEffectif = agImportee ? montantFondsTravaux : (parseFloat(montantFTManuel) || 0);
+    const totalAvecFT = montantTotal + ftEffectif;
+    const baseAmount = totalAvecFT > 0 ? Math.round((totalAvecFT / nb) * 100) / 100 : 0;
     setEditableVersements(Array.from({ length: nb }, (_, i) => ({
       date: addMonths(genDateDebut, i * PERIODICITE_MOIS[genPeriodicite]),
       montant: String(baseAmount),
