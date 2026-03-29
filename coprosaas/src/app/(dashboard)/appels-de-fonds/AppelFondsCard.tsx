@@ -67,7 +67,18 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
       const json = await res.json();
       setPublishMsg(json.message ?? (res.ok ? 'Publié avec succès' : 'Erreur'));
       setPublishOk(res.ok);
-      if (res.ok) router.refresh();
+      if (res.ok) {
+        const { data: freshLignes } = await supabase
+          .from('lignes_appels_de_fonds')
+          .select('id, montant_du, paye, date_paiement, coproprietaires(id, nom, prenom)')
+          .eq('appel_de_fonds_id', appel.id);
+        const mappedLignes: Ligne[] = (freshLignes ?? []).map((l) => {
+          const c = Array.isArray(l.coproprietaires) ? l.coproprietaires[0] ?? null : l.coproprietaires;
+          return { ...l, coproprietaires: c as Ligne['coproprietaires'] };
+        });
+        await saveToDocuments(mappedLignes);
+        router.refresh();
+      }
     } catch {
       setPublishMsg('Erreur réseau.');
       setPublishOk(false);
@@ -145,11 +156,12 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
     }
   };
 
-  const saveToDocuments = async () => {
+  const saveToDocuments = async (freshLignes?: Ligne[]) => {
     try {
+      const effectiveLignes = freshLignes ?? lignes;
       const appelForPDF: AppelForPDF = {
         ...appel,
-        lignes_appels_de_fonds: lignes.map((l) => ({
+        lignes_appels_de_fonds: effectiveLignes.map((l) => ({
           id: l.id,
           montant_du: l.montant_du,
           paye: l.paye,

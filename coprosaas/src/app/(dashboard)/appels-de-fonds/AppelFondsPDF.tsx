@@ -3,12 +3,10 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
-import { FileDown, Save } from 'lucide-react';
+import { FileDown } from 'lucide-react';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 
 interface Poste { libelle: string; categorie: string; montant: number }
@@ -367,82 +365,16 @@ export function buildAvisPersonnelPDF(
 
 // ── Composant principal (PDF syndic) ───────────────────────
 export default function AppelFondsPDF({ appel }: AppelFondsPDFProps) {
-  const supabase = createClient();
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState('');
-  const [saveOk, setSaveOk] = useState<boolean | null>(null);
-
   const handleExport = () => {
     const doc = buildAppelFondsPDF(appel);
     doc.save(`appel-de-fonds-${appel.titre.toLowerCase().replace(/\s+/g, '-')}.pdf`);
   };
 
-  const handleSaveToDocuments = async () => {
-    setSaving(true);
-    setSaveMsg('');
-    setSaveOk(null);
-
-    try {
-      const doc = buildAppelFondsPDF(appel);
-      const pdfBlob = doc.output('blob');
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setSaveMsg('Non connecté.'); setSaveOk(false); setSaving(false); return; }
-
-      const coproprieteId = appel.copropriete_id;
-      if (!coproprieteId) { setSaveMsg('Copropriété non identifiée.'); setSaveOk(false); setSaving(false); return; }
-
-      const { data: dossier } = await supabase
-        .from('dossiers')
-        .select('id')
-        .eq('nom', 'Appels de fonds')
-        .eq('created_by', user.id)
-        .maybeSingle();
-
-      const fileName = `${coproprieteId}/${Date.now()}-appel-de-fonds-${appel.titre.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: false });
-
-      if (uploadError) { setSaveMsg('Erreur upload : ' + uploadError.message); setSaveOk(false); setSaving(false); return; }
-
-      const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(uploadData.path);
-
-      const { error: dbError } = await supabase.from('documents').insert({
-        copropriete_id: coproprieteId,
-        dossier_id: dossier?.id ?? null,
-        nom: `Appel de fonds - ${appel.titre}`,
-        type: 'autre',
-        url: publicUrl,
-        taille: pdfBlob.size,
-        uploaded_by: user.id,
-      });
-
-      if (dbError) { setSaveMsg('Erreur enregistrement : ' + dbError.message); setSaveOk(false); setSaving(false); return; }
-
-      setSaveMsg('Document enregistré dans les documents.');
-      setSaveOk(true);
-    } catch (e: unknown) {
-      setSaveMsg('Erreur : ' + (e instanceof Error ? e.message : 'inconnue'));
-      setSaveOk(false);
-    }
-    setSaving(false);
-  };
-
   return (
-    <div className="ml-4 shrink-0 flex flex-col items-end gap-1.5">
-      <div className="flex items-center gap-2">
-        <Button size="sm" variant="secondary" onClick={handleExport}>
-          <FileDown size={14} /> Exporter PDF
-        </Button>
-        <Button size="sm" variant="secondary" onClick={handleSaveToDocuments} loading={saving}>
-          <Save size={14} /> Sauvegarder
-        </Button>
-      </div>
-      {saveMsg && (
-        <p className={`text-xs ${saveOk ? 'text-green-600' : 'text-red-600'}`}>{saveMsg}</p>
-      )}
+    <div className="ml-4 shrink-0">
+      <Button size="sm" variant="secondary" onClick={handleExport}>
+        <FileDown size={14} /> Exporter PDF
+      </Button>
     </div>
   );
 }
