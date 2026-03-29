@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowLeft, Building2, Clock, LifeBuoy, Mail, User2 } from 'lucide-react';
+import { ArrowLeft, Building2, Clock, LifeBuoy, Mail, MapPin, Phone, User2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminUser } from '@/lib/admin-config';
@@ -96,12 +96,12 @@ export default async function AdminUtilisateurProfilePage({
   ] = await Promise.all([
     admin
       .from('coproprietaires')
-      .select('id, nom, prenom, email, solde, copropriete_id, coproprietes(nom)')
+      .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, coproprietes(nom)')
       .eq('user_id', id),
     email
       ? admin
           .from('coproprietaires')
-          .select('id, nom, prenom, email, solde, copropriete_id, coproprietes(nom)')
+          .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, coproprietes(nom)')
           .eq('email', email)
       : Promise.resolve({ data: [], error: null }),
     email
@@ -125,8 +125,8 @@ export default async function AdminUtilisateurProfilePage({
   const syndicCopros = (syndicCoprosRes.data ?? []) as { id: string; nom: string; plan: string | null; plan_id: string | null; created_at: string }[];
 
   const memberRowsRaw = [
-    ...((memberByIdRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; email: string; solde: number; copropriete_id: string; coproprietes: { nom: string } | { nom: string }[] | null }>),
-    ...((memberByEmailRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; email: string; solde: number; copropriete_id: string; coproprietes: { nom: string } | { nom: string }[] | null }>),
+    ...((memberByIdRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; coproprietes: { nom: string } | { nom: string }[] | null }>),
+    ...((memberByEmailRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; coproprietes: { nom: string } | { nom: string }[] | null }>),
   ];
 
   const seen = new Set<string>();
@@ -140,6 +140,24 @@ export default async function AdminUtilisateurProfilePage({
   const fullName = ((authUser.user_metadata as Record<string, string> | null)?.full_name
     ?? (profileRes.data as { full_name: string | null } | null)?.full_name
     ?? null);
+
+  const authMeta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
+  const authPhone = (typeof authUser.phone === 'string' && authUser.phone.trim())
+    ? authUser.phone.trim()
+    : (typeof authMeta.phone === 'string' && authMeta.phone.trim())
+      ? authMeta.phone.trim()
+      : (typeof authMeta.telephone === 'string' && authMeta.telephone.trim())
+        ? authMeta.telephone.trim()
+        : null;
+
+  const phones = Array.from(new Set<string>([
+    ...(authPhone ? [authPhone] : []),
+    ...memberRows.map((m) => m.telephone?.trim()).filter((v): v is string => !!v),
+  ]));
+
+  const addresses = Array.from(new Set<string>(memberRows
+    .map((m) => [m.adresse, m.complement_adresse, m.code_postal, m.ville].filter(Boolean).join(', ').trim())
+    .filter((v) => v.length > 0)));
 
   return (
     <div className="space-y-6 pb-16">
@@ -181,6 +199,32 @@ export default async function AdminUtilisateurProfilePage({
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-gray-500">Tickets support</p>
               <p className="font-semibold text-gray-800 mt-0.5">{(ticketsRes.data ?? []).length}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid lg:grid-cols-2 gap-3 text-xs">
+            <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+              <p className="text-gray-500 mb-1">Données du compte</p>
+              <div className="space-y-1.5 text-gray-700">
+                <p><span className="text-gray-500">ID :</span> {authUser.id}</p>
+                <p><span className="text-gray-500">Email :</span> {authUser.email ?? '—'}</p>
+                <p><span className="text-gray-500">Téléphone :</span> {phones[0] ?? '—'}</p>
+                <p><span className="text-gray-500">Dernière connexion :</span> {fmtDate(authUser.last_sign_in_at)}</p>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+              <p className="text-gray-500 mb-1">Coordonnées connues (fiches liées)</p>
+              <div className="space-y-1.5 text-gray-700">
+                <p className="flex items-center gap-1.5"><Phone size={12} className="text-gray-400" /> {phones.join(' · ') || '—'}</p>
+                {addresses.length === 0 ? (
+                  <p className="flex items-center gap-1.5"><MapPin size={12} className="text-gray-400" /> —</p>
+                ) : (
+                  addresses.map((addr) => (
+                    <p key={addr} className="flex items-start gap-1.5"><MapPin size={12} className="text-gray-400 mt-[2px] shrink-0" /><span>{addr}</span></p>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>
