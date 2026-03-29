@@ -239,7 +239,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
             <div className="flex items-center gap-3 text-sm flex-wrap">
               <span className="font-bold text-gray-900">{formatEuros(appel.montant_total)}</span>              {(appel.montant_fonds_travaux ?? 0) > 0 && (
                 <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded shrink-0">
-                  dont {formatEuros(appel.montant_fonds_travaux!)} FT ALUR
+                  dont {formatEuros(appel.montant_fonds_travaux!)} Fonds travaux ALUR
                 </span>
               )}              <span className="text-gray-300">·</span>
               <span className="text-gray-500">Échéance <span className="text-gray-700 font-medium">{formatDate(appel.date_echeance)}</span></span>
@@ -273,7 +273,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                   {publishing ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                   <span>{publishing ? 'Publication…' : 'Publier'}</span>
                 </button>
-              ) : (
+              ) : pctPaye < 100 ? (
                 <button
                   type="button"
                   onClick={() => setShowEmailConfirm(true)}
@@ -288,7 +288,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                   {sending ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
                   <span>{sending ? 'Envoi…' : emailedAt ? 'Renvoyer' : 'Envoyer'}</span>
                 </button>
-              )
+              ) : null
             )}
             <AppelFondsPDF appel={appel} />
             <button

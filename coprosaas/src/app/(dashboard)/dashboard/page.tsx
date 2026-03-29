@@ -368,10 +368,13 @@ export default async function DashboardPage() {
     return s + ((a as { montant_fonds_travaux?: number }).montant_fonds_travaux ?? 0);
   }, 0);
 
-  // Écart prévisionnel : BP uniquement vs dépenses réelles
+  // Écart prévisionnel : BP hors fonds travaux vs dépenses réelles
   // Le fonds travaux est exclu : c'est une épargne (compte 103), pas une dépense à régulariser
+  const totalFondsTravauxBP = provisionsBP.reduce((s, a) =>
+    s + ((a as { montant_fonds_travaux?: number }).montant_fonds_travaux ?? 0), 0);
   const totalProvisionsBP = provisionsBP.reduce((s, a) => s + (a.montant_total ?? 0), 0);
-  const ecartPrevisionnel = totalProvisionsBP - totalDepenses;
+  const totalProvisionsBPHorsFT = totalProvisionsBP - totalFondsTravauxBP;
+  const ecartPrevisionnel = totalProvisionsBPHorsFT - totalDepenses;
 
   type LigneEncaissee = { montant_du: number };
   // appelsEncaisses conservé pour usage futur
@@ -578,8 +581,8 @@ export default async function DashboardPage() {
                   <p className="text-xs text-gray-500 mt-0.5">
                     {ecartPrevisionnel > 0 ? 'Surplus (trop-perçu provisoire)' : ecartPrevisionnel < 0 ? 'Déficit à régulariser' : 'Provisions = dépenses'}
                   </p>
-                  {totalFondsTravaux > 0 && (
-                    <p className="text-xs text-gray-400 mt-0.5">Hors {formatEuros(totalFondsTravaux)} FT (non régularisable)</p>
+                  {totalFondsTravauxBP > 0 && (
+                    <p className="text-xs text-gray-400 mt-0.5">Hors {formatEuros(totalFondsTravauxBP)} fonds travaux ALUR (non régularisable)</p>
                   )}
                 </div>
               </Card>
