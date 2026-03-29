@@ -345,7 +345,9 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
             <span>
               {appel.statut === 'publie'
                 ? <>Supprimer « <strong>{appel.titre}</strong> » ? Les soldes des copropriétaires non payés seront rétablis.</>
-                : <>Supprimer l&apos;appel en préparation « <strong>{appel.titre}</strong> » ? Cette action est irréversible.</>
+                : appel.statut === 'confirme'
+                  ? <>Supprimer « <strong>{appel.titre}</strong> » ? Les soldes des copropriétaires marqués payés seront ajustés.</>
+                  : <>Supprimer l&apos;appel en préparation « <strong>{appel.titre}</strong> » ? Cette action est irréversible.</>
               }
             </span>
           </div>

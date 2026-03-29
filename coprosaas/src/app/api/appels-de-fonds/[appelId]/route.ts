@@ -39,24 +39,44 @@ export async function DELETE(
     return NextResponse.json({ message: 'Non autorisé' }, { status: 403 });
   }
 
-  // Si l'appel est publié, reverser les soldes des copropriétaires non payés
-  if (appel.statut === 'publie') {
+  // Ajuster les soldes selon le statut de l'appel :
+  // - publie   : rétablir les lignes impayées (on ajoute le montant)
+  // - confirme : annuler les crédits importés marqués payés (on retire le montant)
+  if (appel.statut === 'publie' || appel.statut === 'confirme') {
     const { data: lignes } = await supabase
       .from('lignes_appels_de_fonds')
       .select('montant_du, paye, coproprietaire_id')
       .eq('appel_de_fonds_id', appelId);
 
+    const deltaByCopro = new Map<string, number>();
     for (const ligne of lignes ?? []) {
-      if (!ligne.paye && ligne.coproprietaire_id) {
-        const { data: cop } = await supabase
-          .from('coproprietaires')
-          .select('solde')
-          .eq('id', ligne.coproprietaire_id)
-          .single();
-        await supabase.from('coproprietaires').update({
-          solde: Math.round(((cop?.solde ?? 0) + ligne.montant_du) * 100) / 100,
-        }).eq('id', ligne.coproprietaire_id);
+      if (!ligne.coproprietaire_id) continue;
+
+      let delta = 0;
+      if (appel.statut === 'publie' && !ligne.paye) {
+        delta = ligne.montant_du;
       }
+      if (appel.statut === 'confirme' && ligne.paye) {
+        delta = -ligne.montant_du;
+      }
+      if (delta === 0) continue;
+
+      deltaByCopro.set(
+        ligne.coproprietaire_id,
+        (deltaByCopro.get(ligne.coproprietaire_id) ?? 0) + delta
+      );
+    }
+
+    for (const [coproprietaireId, delta] of deltaByCopro.entries()) {
+      const { data: cop } = await supabase
+        .from('coproprietaires')
+        .select('solde')
+        .eq('id', coproprietaireId)
+        .single();
+
+      await supabase.from('coproprietaires').update({
+        solde: Math.round(((cop?.solde ?? 0) + delta) * 100) / 100,
+      }).eq('id', coproprietaireId);
     }
   }
 
