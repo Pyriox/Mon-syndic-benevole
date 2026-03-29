@@ -344,6 +344,24 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     )));
   };
 
+  const updateVersementMontant = (index: number, montant: string) => {
+    setEditableVersements((prev) => {
+      const next = prev.map((x, j) => (j === index ? { ...x, montant } : x));
+      if (!useEcheancier || next.length < 2) return next;
+
+      const lastIndex = next.length - 1;
+      if (index === lastIndex) return next;
+
+      // Le dernier versement absorbe automatiquement l'écart restant.
+      const sumWithoutLast = roundToCents(next.reduce((s, v, i) => i === lastIndex ? s : s + (parseFloat(v.montant) || 0), 0));
+      const remainingForLast = roundToCents(totalBudgetAvecFT - sumWithoutLast);
+      const adjustedLast = Math.max(0, remainingForLast);
+
+      next[lastIndex] = { ...next[lastIndex], montant: String(adjustedLast) };
+      return next;
+    });
+  };
+
   // Regrouper les lots par copropriétaire (cumul des tantièmes si multi-lots)
   const repartition = useMemo(() => {
     const map = new Map<string, { copId: string; cop: { id: string; nom: string; prenom: string }; tantiemes: number; lotId: string | null }>();
@@ -745,7 +763,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                                 min="0"
                                 step="0.01"
                                 value={v.montant}
-                                onChange={(e) => setEditableVersements((prev) => prev.map((x, j) => j === i ? { ...x, montant: e.target.value } : x))}
+                                onChange={(e) => updateVersementMontant(i, e.target.value)}
                                 onBlur={() => {
                                   if (i === editableVersements.length - 1) snapLastVersementIfPossible();
                                 }}
