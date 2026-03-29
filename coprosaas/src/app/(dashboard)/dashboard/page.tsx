@@ -551,31 +551,34 @@ export default async function DashboardPage() {
               </div>
             </Card>
 
-            {/* Dépenses réelles + FT + tendance */}
+            {/* Budget réel (dépenses + FT) */}
             <Card className="flex items-center gap-4">
               <div className="p-3 bg-blue-100 rounded-xl shrink-0">
                 <Receipt size={24} className="text-blue-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dépenses réelles {currentYear}</p>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Budget {currentYear}</p>
                 <p className="text-2xl font-bold text-gray-900">{formatEuros(totalDepensesAvecFT)}</p>
-                {totalFondsTravaux > 0 && (
-                  <p className="text-xs text-amber-600 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux</p>
-                )}
-                {totalFondsTravaux === 0 && tendanceDepenses === 'hausse' && (
-                  <p className="text-xs text-red-600 flex items-center gap-0.5 mt-0.5 font-medium">
-                    <ArrowUp size={11} />{pctTendance}% vs {prevYear}
-                  </p>
-                )}
-                {totalFondsTravaux === 0 && tendanceDepenses === 'baisse' && (
-                  <p className="text-xs text-green-600 flex items-center gap-0.5 mt-0.5 font-medium">
-                    <ArrowDown size={11} />{Math.abs(pctTendance)}% vs {prevYear}
-                  </p>
-                )}
-                {totalFondsTravaux === 0 && tendanceDepenses === 'stable' && (
-                  <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5">
-                    <Minus size={11} />Stable vs {prevYear}
-                  </p>
+                {totalFondsTravaux > 0 ? (
+                  <p className="text-xs text-amber-600 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux ALUR</p>
+                ) : (
+                  <>
+                    {tendanceDepenses === 'hausse' && (
+                      <p className="text-xs text-red-600 flex items-center gap-0.5 mt-0.5 font-medium">
+                        <ArrowUp size={11} />{pctTendance}% vs {prevYear}
+                      </p>
+                    )}
+                    {tendanceDepenses === 'baisse' && (
+                      <p className="text-xs text-green-600 flex items-center gap-0.5 mt-0.5 font-medium">
+                        <ArrowDown size={11} />{Math.abs(pctTendance)}% vs {prevYear}
+                      </p>
+                    )}
+                    {tendanceDepenses === 'stable' && (
+                      <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5">
+                        <Minus size={11} />Stable vs {prevYear}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </Card>
