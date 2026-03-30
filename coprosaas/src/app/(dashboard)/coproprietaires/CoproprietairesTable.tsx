@@ -124,9 +124,7 @@ function IdentityBlock({
           ) : (
             inviteButton ?? null
           )}
-          {cp.user_id === currentUserId && (
-            <span className="inline-flex items-center bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
-          )}
+
         </div>
         {cp.raison_sociale && (
           <p className="text-xs text-gray-400 mt-0.5">

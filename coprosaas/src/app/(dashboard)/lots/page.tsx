@@ -35,10 +35,12 @@ function getConfig(type: string) {
   return LOT_TYPE_CONFIG[type] ?? defaultConfig;
 }
 
-function OwnerAvatar({ name }: { name: string }) {
+function OwnerAvatar({ name, isMe = false }: { name: string; isMe?: boolean }) {
   const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold shrink-0">
+    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold shrink-0 ${
+      isMe ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'
+    }`}>
       {initials}
     </span>
   );
@@ -251,11 +253,8 @@ export default async function LotsPage() {
                         {ownerName ? (
                           <div className="space-y-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <OwnerAvatar name={ownerName} />
+                              <OwnerAvatar name={ownerName} isMe={isMyLot} />
                               <span className="text-sm text-gray-700 truncate">{ownerName}</span>
-                              {isMyLot && (
-                                <span className="inline-flex items-center bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
-                              )}
                               {owner?.user_id && !isMyLot && (
                                 <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
                                   <UserCheck size={10} />Inscrit
@@ -343,11 +342,8 @@ export default async function LotsPage() {
                       <td className="py-3.5 px-5">
                         {ownerName ? (
                           <div className="flex items-center gap-2 flex-wrap">
-                            <OwnerAvatar name={ownerName} />
+                            <OwnerAvatar name={ownerName} isMe={isMyLot} />
                             <span className="text-gray-700">{ownerName}</span>
-                            {isMyLot && (
-                              <span className="inline-flex items-center bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">Vous</span>
-                            )}
                             {owner?.user_id && !isMyLot && (
                               <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
                                 <UserCheck size={10} />Inscrit
