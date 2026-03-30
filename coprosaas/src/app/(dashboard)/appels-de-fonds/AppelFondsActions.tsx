@@ -38,9 +38,13 @@ interface AGWithBudgets {
 }
 
 function addMonths(dateStr: string, months: number): string {
-  const d = new Date(dateStr + 'T00:00:00');
-  d.setMonth(d.getMonth() + months);
-  return d.toISOString().slice(0, 10);
+  const [year, month, day] = dateStr.split('-').map((p) => parseInt(p, 10));
+  const d = new Date(Date.UTC(year, month - 1, day));
+  d.setUTCMonth(d.getUTCMonth() + months);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
 }
 
 function roundToCents(value: number): number {

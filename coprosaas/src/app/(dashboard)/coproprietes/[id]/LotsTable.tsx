@@ -49,7 +49,7 @@ function OwnerAvatar({ name, isMe = false }: { name: string; isMe?: boolean }) {
     ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
     : name.slice(0, 2).toUpperCase();
   return (
-    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold shrink-0 ${
+    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold shrink-0 ${
       isMe ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'
     }`}>
       {initials || '?'}
