@@ -78,8 +78,7 @@ function LoginForm() {
     }
     trackEvent('login', { method: 'email' });
     void logEventForEmail({ email, eventType: 'login_success', label: 'Connexion réussie' }).catch(() => undefined);
-    router.push('/dashboard');
-    router.refresh();
+    router.replace('/dashboard');
   };
 
   const handleResendConfirmation = async () => {

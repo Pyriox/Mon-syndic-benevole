@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: 'Blog syndic bénévole — Guides pratiques et logiciel de gestion | Mon Syndic Bénévole',
   description:
     'Guides pratiques pour syndic bénévole : obligations légales, appels de fonds, fonds de travaux ALUR, logiciel de gestion copropriété. Tout ce que vous devez savoir pour gérer sans cabinet professionnel.',
+  robots: { index: true, follow: true },
   openGraph: {
     title: 'Blog syndic bénévole — Mon Syndic Bénévole',
     description:

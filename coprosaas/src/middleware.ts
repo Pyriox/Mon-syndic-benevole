@@ -32,8 +32,10 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Récupération de l'utilisateur courant (rafraîchit le token si besoin)
-  const { data: { user } } = await supabase.auth.getUser();
+  // Lecture de session côté middleware (plus rapide que getUser pour le routage)
+  // La validation stricte de l'utilisateur reste faite côté serveur dans le layout protégé.
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const pathname = request.nextUrl.pathname;
 

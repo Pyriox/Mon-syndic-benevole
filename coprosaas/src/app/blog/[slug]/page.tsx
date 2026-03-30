@@ -47,6 +47,7 @@ export async function generateMetadata({
     title: `${post.title} | Mon Syndic Bénévole`,
     description: post.description,
     keywords: post.keywords,
+    robots: { index: true, follow: true },
     openGraph: {
       title: post.title,
       description: post.description,

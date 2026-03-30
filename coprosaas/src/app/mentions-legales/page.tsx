@@ -5,6 +5,7 @@ import SiteLogo from "@/components/ui/SiteLogo";
 export const metadata: Metadata = {
   title: "Mentions légales",
   description: "Mentions légales de Mon Syndic Bénévole — éditeur, hébergement, données personnelles et propriété intellectuelle.",
+  alternates: { canonical: 'https://mon-syndic-benevole.fr/mentions-legales' },
   robots: { index: true, follow: true },
 };
 
