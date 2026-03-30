@@ -560,7 +560,7 @@ export default async function DashboardPage() {
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dépenses réelles {currentYear}</p>
                 <p className="text-2xl font-bold text-gray-900">{formatEuros(totalDepensesAvecFT)}</p>
                 {totalFondsTravaux > 0 ? (
-                  <p className="text-xs text-amber-600 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux ALUR</p>
+                  <p className="text-xs text-amber-500 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux ALUR</p>
                 ) : (
                   <>
                     {tendanceDepenses === 'hausse' && (
