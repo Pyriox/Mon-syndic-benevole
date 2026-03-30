@@ -309,8 +309,10 @@ export async function cloturerExercice(exerciceId: string): Promise<Regularisati
 
     await Promise.all(
       lignes.map((l) => {
-        const nouveauSolde = Math.round(
-          ((soldeActuel[l.coproprietaire_id] ?? 0) + (-l.balance)) * 100
+        // balance > 0 → complément dû → solde augmente (dette +)
+      // balance < 0 → trop-perçu  → solde diminue (crédit −)
+      const nouveauSolde = Math.round(
+          ((soldeActuel[l.coproprietaire_id] ?? 0) + l.balance) * 100
         ) / 100;
         return supabase
           .from('coproprietaires')

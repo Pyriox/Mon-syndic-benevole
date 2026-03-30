@@ -113,11 +113,11 @@ export async function POST(
     return NextResponse.json({ message: 'Erreur génération répartition : ' + lignesErr.message }, { status: 500 });
   }
 
-  // Débiter les soldes
+  // Créer la dette (solde positif = copropriétaire doit de l'argent)
   for (const r of repartition) {
     const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', r.copId).single();
     await supabase.from('coproprietaires').update({
-      solde: Math.round(((cop?.solde ?? 0) - r.montant) * 100) / 100,
+      solde: Math.round(((cop?.solde ?? 0) + r.montant) * 100) / 100,
     }).eq('id', r.copId);
   }
 

@@ -308,7 +308,7 @@ function MobileCoproCard({
       {/* Contact + Solde */}
       <div className="flex items-center justify-between gap-2">
         <ContactBlock email={cp.email} telephone={cp.telephone} />
-        <Badge variant={(cp.solde ?? 0) < 0 ? 'danger' : (cp.solde ?? 0) > 0 ? 'success' : 'default'} className="shrink-0">
+        <Badge variant={(cp.solde ?? 0) > 0 ? 'danger' : (cp.solde ?? 0) < 0 ? 'success' : 'default'} className="shrink-0">
           {formatEuros(cp.solde ?? 0)}
         </Badge>
       </div>
@@ -386,7 +386,7 @@ function SortableCoproRow({
 
       {/* Solde */}
       <td className="py-2.5 px-5 text-right">
-        <Badge variant={(cp.solde ?? 0) < 0 ? 'danger' : (cp.solde ?? 0) > 0 ? 'success' : 'default'}>
+        <Badge variant={(cp.solde ?? 0) > 0 ? 'danger' : (cp.solde ?? 0) < 0 ? 'success' : 'default'}>
           {formatEuros(cp.solde ?? 0)}
         </Badge>
       </td>

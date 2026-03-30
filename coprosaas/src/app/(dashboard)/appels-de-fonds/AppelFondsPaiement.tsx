@@ -92,12 +92,12 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
       date_paiement: date,
     }).eq('id', ligne.id);
 
-    // Mettre à jour le solde du copropriétaire (paiement = solde +)
+    // Paiement reçu : la dette diminue (solde positif = doit, donc on soustrait)
     if (ligne.coproprietaires?.id) {
       const { data: cop } = await supabase
         .from('coproprietaires').select('solde').eq('id', ligne.coproprietaires.id).single();
       await supabase.from('coproprietaires').update({
-        solde: Math.round(((cop?.solde ?? 0) + ligne.montant_du) * 100) / 100,
+        solde: Math.round(((cop?.solde ?? 0) - ligne.montant_du) * 100) / 100,
       }).eq('id', ligne.coproprietaires.id);
     }
 
@@ -114,12 +114,12 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
       date_paiement: null,
     }).eq('id', ligne.id);
 
-    // Annulation : reverser le solde
+    // Annulation paiement : la dette réapparaît (on additionne)
     if (ligne.coproprietaires?.id) {
       const { data: cop } = await supabase
         .from('coproprietaires').select('solde').eq('id', ligne.coproprietaires.id).single();
       await supabase.from('coproprietaires').update({
-        solde: Math.round(((cop?.solde ?? 0) - ligne.montant_du) * 100) / 100,
+        solde: Math.round(((cop?.solde ?? 0) + ligne.montant_du) * 100) / 100,
       }).eq('id', ligne.coproprietaires.id);
     }
 

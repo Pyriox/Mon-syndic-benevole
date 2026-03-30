@@ -103,13 +103,9 @@ export async function POST(
     return NextResponse.json({ message: 'Erreur génération répartition : ' + lignesErr.message }, { status: 500 });
   }
 
-  // Créditer les soldes (avance déjà reçue — solde augmente)
-  for (const r of repartition) {
-    const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', r.copId).single();
-    await supabase.from('coproprietaires').update({
-      solde: Math.round(((cop?.solde ?? 0) + r.montant) * 100) / 100,
-    }).eq('id', r.copId);
-  }
+  // Import historique : toutes les lignes sont paye=true immédiatement.
+  // La dette et le paiement se compensent → impact net sur solde = 0.
+  // Si le syndic décoche un paiement via l'UI, handleUnpay recrée la dette.
 
   // Passer en confirme (pas publié, pas d'e-mails)
   await supabase.from('appels_de_fonds')

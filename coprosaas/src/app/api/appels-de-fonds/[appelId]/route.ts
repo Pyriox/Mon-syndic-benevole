@@ -52,12 +52,12 @@ export async function DELETE(
     for (const ligne of lignes ?? []) {
       if (!ligne.coproprietaire_id) continue;
 
+      // Convention : solde positif = doit de l'argent.
+      // publier a ajouté +montant pour chaque ligne impayée → inverser au delete.
+      // importer ne touche plus au solde → rien à inverser pour confirme.
       let delta = 0;
       if (appel.statut === 'publie' && !ligne.paye) {
-        delta = ligne.montant_du;
-      }
-      if (appel.statut === 'confirme' && ligne.paye) {
-        delta = -ligne.montant_du;
+        delta = -ligne.montant_du;  // annule la dette créée lors de la publication
       }
       if (delta === 0) continue;
 
