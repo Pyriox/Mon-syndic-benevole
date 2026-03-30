@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="min-h-screen bg-gray-100">
       {/* Barre de navigation admin */}
       <header className="bg-gray-900 text-white sticky top-0 z-50">
-        <div className="max-w-screen-2xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <SiteLogo size={26} />
             <div>
@@ -50,9 +50,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       {/* Corps : sidebar + contenu */}
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6 flex gap-6 items-start">
+      <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col md:flex-row gap-4 md:gap-6 items-start">
         <AdminSidebar badges={{ '/admin/support': nbTicketsOuverts ?? 0 }} />
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 w-full">
           {children}
         </main>
       </div>

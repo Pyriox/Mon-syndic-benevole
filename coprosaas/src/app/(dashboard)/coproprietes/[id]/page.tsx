@@ -27,7 +27,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
   // Récupération de la copropriété
   const { data: copro } = await supabase
     .from('coproprietes')
-    .select('*')
+    .select('id, nom, adresse, code_postal, ville, created_at, plan, plan_id')
     .eq('id', id)
     .eq('syndic_id', user.id)   // Sécurité : seul le syndic propriétaire peut voir
     .single();
@@ -37,7 +37,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
   // Récupération des lots (sans join implicite pour éviter les problèmes de FK)
   const { data: lots } = await supabase
     .from('lots')
-    .select('*')
+    .select('id, numero, type, tantiemes, coproprietaire_id, position')
     .eq('copropriete_id', id)
     .order('position', { ascending: true, nullsFirst: false });
 

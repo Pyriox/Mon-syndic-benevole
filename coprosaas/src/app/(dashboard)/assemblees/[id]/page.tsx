@@ -34,11 +34,16 @@ export default async function AGDetailPage({ params }: Props) {
 
   const { data: ag } = await db
     .from('assemblees_generales')
-    .select('*, coproprietes(id, nom, adresse, ville, code_postal, syndic_id)')
+    .select('id, copropriete_id, titre, date_ag, lieu, notes, statut, quorum_atteint, convocation_envoyee_le, pv_envoye_le, coproprietes(id, nom, adresse, ville, code_postal, syndic_id)')
     .eq('id', id)
     .single();
 
   if (!ag || ag.copropriete_id !== selectedCoproId) notFound();
+
+  const copropriete = Array.isArray(ag.coproprietes)
+    ? (ag.coproprietes[0] ?? null)
+    : (ag.coproprietes ?? null);
+  const agWithCopropriete = { ...ag, coproprietes: copropriete };
 
   // Toutes les données liées chargées en parallèle
   const [
@@ -49,7 +54,7 @@ export default async function AGDetailPage({ params }: Props) {
   ] = await Promise.all([
     db
       .from('resolutions')
-      .select('*')
+      .select('id, ag_id, numero, titre, description, statut, majorite, voix_pour, voix_contre, voix_abstention, type_resolution, budget_postes, fonds_travaux_montant, designation_resultats')
       .eq('ag_id', id)
       .order('numero', { ascending: true }),
     // Copropriétaires de la copropriété (pour présences, votes et PV)
@@ -66,7 +71,7 @@ export default async function AGDetailPage({ params }: Props) {
     // Feuille de présence pour cette AG
     db
       .from('ag_presences')
-      .select('*')
+      .select('coproprietaire_id, statut, represente_par_id')
       .eq('ag_id', id),
   ]);
 
@@ -85,7 +90,7 @@ export default async function AGDetailPage({ params }: Props) {
   if (resolutionIds.length > 0) {
     const { data } = await db
       .from('votes_coproprietaires')
-      .select('*')
+      .select('resolution_id, coproprietaire_id, vote')
       .in('resolution_id', resolutionIds);
     votesCopro = data ?? [];
   }
@@ -135,7 +140,7 @@ export default async function AGDetailPage({ params }: Props) {
             </Badge>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-            <span>{ag.coproprietes?.nom}</span>
+            <span>{agWithCopropriete.coproprietes?.nom}</span>
             <span className="flex items-center gap-1">
               <CalendarDays size={13} />
               {new Date(ag.date_ag).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -165,7 +170,7 @@ export default async function AGDetailPage({ params }: Props) {
                 <AGEnvoyerConvocation
                   agId={id}
                   coproprieteId={ag.copropriete_id}
-                  ag={ag}
+                  ag={agWithCopropriete}
                   resolutions={resolutions ?? []}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   convocationEnvoyeeLe={(ag as any).convocation_envoyee_le ?? null}
@@ -181,11 +186,11 @@ export default async function AGDetailPage({ params }: Props) {
           {(ag.statut === 'planifiee' || ag.statut === 'terminee') && (
             <div className="flex items-center gap-2">
               {ag.statut === 'planifiee' && (
-                <ConvocationPDF ag={ag} resolutions={resolutions ?? []} />
+                <ConvocationPDF ag={agWithCopropriete} resolutions={resolutions ?? []} />
               )}
               {ag.statut === 'terminee' && (
                 <PVPDF
-                  ag={ag}
+                  ag={agWithCopropriete}
                   coproprieteId={ag.copropriete_id}
                   resolutions={resolutions ?? []}
                   presences={presences ?? []}

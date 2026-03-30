@@ -5,6 +5,9 @@ import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import LandingNav from '@/app/LandingNav';
 import { posts, formatPublishedAt } from '@/lib/blog';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: 'Blog syndic bénévole — Guides pratiques et logiciel de gestion | Mon Syndic Bénévole',
   description:

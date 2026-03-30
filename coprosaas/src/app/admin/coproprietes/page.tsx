@@ -408,7 +408,7 @@ export default async function AdminCopropietesPage({
             />
           </Suspense>
 
-          <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs">
             <div className="flex items-center gap-1.5 flex-wrap">
               <Link
                 href={hrefWith({ orphaned: filterOrphaned ? '0' : '1', page: '1' })}
@@ -461,8 +461,8 @@ export default async function AdminCopropietesPage({
           </div>
 
           {/* ── Table copropriétés ── */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[980px] text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Copropriété</th>
@@ -653,8 +653,8 @@ export default async function AdminCopropietesPage({
                 Ouvrir Stripe <ExternalLink size={11} />
               </a>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+              <table className="w-full min-w-[760px] text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50">
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Copropriété</th>
@@ -711,8 +711,8 @@ export default async function AdminCopropietesPage({
                 <p className="text-sm text-gray-400">Aucun paiement ou Stripe non configuré</p>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+                <table className="w-full min-w-[760px] text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">ID Stripe</th>

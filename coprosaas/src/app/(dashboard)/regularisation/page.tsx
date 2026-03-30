@@ -36,7 +36,7 @@ export default async function RegularisationPage({
   // Exercice pour l'année sélectionnée
   const { data: exercice } = await supabase
     .from('exercices')
-    .select('*')
+    .select('id, copropriete_id, annee, statut, cloture_at')
     .eq('copropriete_id', scopeId)
     .eq('annee', annee)
     .maybeSingle();

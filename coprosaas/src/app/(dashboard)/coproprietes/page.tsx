@@ -17,7 +17,7 @@ export default async function CopropriétésPage() {
   // Récupération des copropriétés du syndic connecté
   const { data: coproprietes } = await supabase
     .from('coproprietes')
-    .select('*')
+    .select('id, nom, adresse, code_postal, ville, nombre_lots, created_at')
     .eq('syndic_id', user.id)
     .order('created_at', { ascending: false });
 

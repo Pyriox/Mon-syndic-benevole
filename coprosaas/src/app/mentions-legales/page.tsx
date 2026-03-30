@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteLogo from "@/components/ui/SiteLogo";
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: "Mentions légales",
   description: "Mentions légales de Mon Syndic Bénévole — éditeur, hébergement, données personnelles et propriété intellectuelle.",

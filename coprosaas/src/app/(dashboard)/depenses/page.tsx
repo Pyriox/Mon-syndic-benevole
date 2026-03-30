@@ -281,7 +281,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
       .maybeSingle(),
     supabase
       .from('depenses')
-      .select('*')
+      .select('id, copropriete_id, titre, description, montant, date_depense, categorie, piece_jointe_url')
       .eq('copropriete_id', scopeId)
       .gte('date_depense', `${annee}-01-01`)
       .lt('date_depense', `${annee + 1}-01-01`)

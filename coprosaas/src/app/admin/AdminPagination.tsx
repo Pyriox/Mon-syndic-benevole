@@ -23,24 +23,24 @@ export default function AdminPagination({
   const lastItem = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className="flex items-center justify-between text-xs text-gray-500 gap-2 flex-wrap">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 gap-2">
       <p>
         {firstItem}-{lastItem} sur {totalItems} · page {currentPage}/{totalPages}
       </p>
       <div className="flex items-center gap-2">
         {currentPage > 1 ? (
-          <Link href={prevHref} className="px-2.5 py-1 rounded border border-gray-300 hover:bg-gray-50">
+          <Link href={prevHref} className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50">
             Precedent
           </Link>
         ) : (
-          <span className="px-2.5 py-1 rounded border border-gray-200 opacity-40">Precedent</span>
+          <span className="px-3 py-1.5 rounded border border-gray-200 opacity-40">Precedent</span>
         )}
         {currentPage < totalPages ? (
-          <Link href={nextHref} className="px-2.5 py-1 rounded border border-gray-300 hover:bg-gray-50">
+          <Link href={nextHref} className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50">
             Suivant
           </Link>
         ) : (
-          <span className="px-2.5 py-1 rounded border border-gray-200 opacity-40">Suivant</span>
+          <span className="px-3 py-1.5 rounded border border-gray-200 opacity-40">Suivant</span>
         )}
       </div>
     </div>

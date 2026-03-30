@@ -50,7 +50,7 @@ export default async function CoproprietairesPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [coproResult, { data: allLots }] = await Promise.all([
     isSyndic
-      ? supabase.from('coproprietaires').select('*').eq('copropriete_id', selectedCoproId ?? 'none').order('position', { ascending: true, nullsFirst: false })
+      ? supabase.from('coproprietaires').select('id, nom, prenom, raison_sociale, email, telephone, adresse, code_postal, ville, solde, user_id').eq('copropriete_id', selectedCoproId ?? 'none').order('position', { ascending: true, nullsFirst: false })
       : supabase.from('coproprietaires').select('id, nom, prenom, raison_sociale, adresse, code_postal, ville, user_id').eq('copropriete_id', selectedCoproId ?? 'none').order('position', { ascending: true, nullsFirst: false }),
     supabase
       .from('lots')

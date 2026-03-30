@@ -17,15 +17,6 @@ import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 
-// Dossiers racine permanents — dans l'ordre d'affichage souhaité
-const DEFAULT_DOSSIER_NAMES = [
-  'Assemblées Générales',
-  'Appels de fonds',
-  'Dépenses',
-  'Règlement copropriété',
-  'Contrats',
-];
-
 // Ordre d'utilité des dossiers permanents (plus petit = en premier)
 const DEFAULT_DOSSIER_ORDER: Record<string, number> = {
   'Assemblées Générales': 0,
@@ -256,7 +247,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const canWrite = isSubscribed(copropriete?.plan);
 
-  // ---- Initialisation des dossiers par défaut si absents ----
+  // ---- Lecture des dossiers ----
   const { data: rawDossiers } = await supabase
     .from('document_dossiers')
     .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
@@ -264,105 +255,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
     .order('is_default', { ascending: false })
     .order('created_at');
 
-  let dossiers: Dossier[] = (rawDossiers ?? []) as unknown as Dossier[];
-
-  // Migration : renomme "PV Assemblées Générales" → "Assemblées Générales"
-  const pvDossier = dossiers.find((d) => d.nom === 'PV Assemblées Générales' && !d.parent_id);
-  if (pvDossier) {
-    await supabase.from('document_dossiers').update({ nom: 'Assemblées Générales' }).eq('id', pvDossier.id);
-    dossiers = dossiers.map((d) => d.id === pvDossier.id ? { ...d, nom: 'Assemblées Générales' } : d);
-  }
-
-  // Auto-nettoyage des doublons de dossiers racine (garde le plus ancien)
-  const rootByName = new Map<string, string>();
-  const toDelete: string[] = [];
-  for (const d of dossiers.filter((x) => !x.parent_id).sort((a, b) => a.created_at.localeCompare(b.created_at))) {
-    if (rootByName.has(d.nom)) {
-      toDelete.push(d.id);
-    } else {
-      rootByName.set(d.nom, d.id);
-    }
-  }
-  if (toDelete.length > 0) {
-    await supabase.from('document_dossiers').delete().in('id', toDelete);
-    dossiers = dossiers.filter((d) => !toDelete.includes(d.id));
-  }
-
-  // Création des dossiers racine manquants
-  const existingRootNames = dossiers.filter((d) => !d.parent_id).map((d) => d.nom);
-  const missing = DEFAULT_DOSSIER_NAMES.filter((n) => !existingRootNames.includes(n));
-  if (missing.length) {
-    await supabase.from('document_dossiers').insert(
-      missing.map((nom) => ({ nom, is_default: true, syndic_id: user.id }))
-    );
-    const { data: refreshed2 } = await supabase
-      .from('document_dossiers')
-      .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
-      .eq('syndic_id', user.id)
-      .order('is_default', { ascending: false })
-      .order('created_at');
-    dossiers = (refreshed2 ?? []) as unknown as Dossier[];
-  }
-
-  // Migration : supprime le dossier "Convocations AG" devenu obsolète
-  const convDossiers = dossiers.filter((d) => d.nom === 'Convocations AG');
-  if (convDossiers.length > 0) {
-    const convIds = convDossiers.map((d) => d.id);
-    await supabase.from('documents').delete().in('dossier_id', convIds);
-    const subConvIds = dossiers.filter((d) => d.parent_id && convIds.includes(d.parent_id)).map((d) => d.id);
-    if (subConvIds.length > 0) {
-      await supabase.from('documents').delete().in('dossier_id', subConvIds);
-      await supabase.from('document_dossiers').delete().in('id', subConvIds);
-    }
-    await supabase.from('document_dossiers').delete().in('id', convIds);
-    dossiers = dossiers.filter((d) => !convIds.includes(d.id) && !(d.parent_id && convIds.includes(d.parent_id)));
-  }
-
-  // Migration : déplace les documents directement dans "Dépenses" vers le sous-dossier année courante
-  {
-    const currentYear = new Date().getFullYear().toString();
-    const depensesRoot = dossiers.find((d) => d.nom === 'Dépenses' && !d.parent_id);
-    if (depensesRoot && selectedCoproId) {
-      const yearSub = dossiers.find((d) => d.parent_id === depensesRoot.id && d.nom === currentYear);
-      if (yearSub) {
-        await supabase
-          .from('documents')
-          .update({ dossier_id: yearSub.id })
-          .eq('dossier_id', depensesRoot.id)
-          .eq('copropriete_id', selectedCoproId);
-      }
-    }
-  }
-
-  // Auto-création du sous-dossier "année courante"
-  {
-    const currentYear = new Date().getFullYear().toString();
-    const yearParentNames = ['Dépenses', 'Appels de fonds', 'Assemblées Générales'];
-    let yearFolderCreated = false;
-    for (const nom of yearParentNames) {
-      const parent = dossiers.find((d) => d.nom === nom && !d.parent_id);
-      if (!parent) continue;
-      const exists = dossiers.some((d) => d.parent_id === parent.id && d.nom === currentYear);
-      if (!exists) {
-        await supabase.from('document_dossiers').insert({
-          nom: currentYear,
-          is_default: true,
-          syndic_id: user.id,
-          parent_id: parent.id,
-        });
-        yearFolderCreated = true;
-      }
-    }
-    if (yearFolderCreated) {
-      const { data: refreshedYears } = await supabase
-        .from('document_dossiers')
-        .select('id, nom, is_default, created_at, parent_id' as 'id, nom, is_default, created_at')
-        .eq('syndic_id', user.id)
-        .order('is_default', { ascending: false })
-        .order('created_at');
-      dossiers = (refreshedYears ?? []) as unknown as Dossier[];
-    }
-  }
+  const dossiers: Dossier[] = (rawDossiers ?? []) as unknown as Dossier[];
 
   // Comptage documents par dossier
   const { data: docCounts } = await supabase
@@ -397,7 +290,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   const { data: documents } = dossierId && !hasSubs
     ? await supabase
         .from('documents')
-        .select('*, coproprietes(nom)')
+        .select('id, nom, type, taille, created_at')
         .eq('copropriete_id', selectedCoproId ?? 'none')
         .eq('dossier_id', dossierId)
         .order('created_at', { ascending: false })

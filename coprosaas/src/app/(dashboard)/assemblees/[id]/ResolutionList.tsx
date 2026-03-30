@@ -4,7 +4,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import {
   DndContext,
@@ -89,7 +88,13 @@ function SortableCard({
   coproprietaires,
   tantiemesMap,
   totalTantiemes,
-}: { res: AnyResolution } & Omit<ResolutionListProps, 'resolutions' | 'agId'>) {
+  onResolutionUpdated,
+  onResolutionDeleted,
+}: {
+  res: AnyResolution;
+  onResolutionUpdated: (resolution: AnyResolution) => void;
+  onResolutionDeleted: (resolutionId: string) => void;
+} & Omit<ResolutionListProps, 'resolutions' | 'agId'>) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: res.id });
 
@@ -275,8 +280,8 @@ function SortableCard({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          {canEdit && <ResolutionEdit resolution={res} agStatut={agStatut} />}
-          {canEdit && <ResolutionDelete resolutionId={res.id} />}
+          {canEdit && <ResolutionEdit resolution={res} agStatut={agStatut} onUpdated={onResolutionUpdated} />}
+          {canEdit && <ResolutionDelete resolutionId={res.id} onDeleted={onResolutionDeleted} />}
         </div>
       </div>
     </div>
@@ -291,9 +296,16 @@ export default function ResolutionList({
   canEdit,
   ...rest
 }: ResolutionListProps) {
-  const router = useRouter();
   const supabase = createClient();
   const [resolutions, setResolutions] = useState(initialResolutions);
+
+  const handleResolutionUpdated = (updated: AnyResolution) => {
+    setResolutions((prev) => prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r)));
+  };
+
+  const handleResolutionDeleted = (resolutionId: string) => {
+    setResolutions((prev) => prev.filter((r) => r.id !== resolutionId));
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -305,12 +317,15 @@ export default function ResolutionList({
     if (!over || active.id === over.id) return;
     const oldIndex = resolutions.findIndex((r) => r.id === active.id);
     const newIndex = resolutions.findIndex((r) => r.id === over.id);
+    const previous = resolutions;
     const reordered = arrayMove(resolutions, oldIndex, newIndex).map((r, i) => ({ ...r, numero: i + 1 }));
     setResolutions(reordered);
-    await Promise.all(
+    const updates = await Promise.all(
       reordered.map((r, i) => supabase.from('resolutions').update({ numero: i + 1 }).eq('id', r.id))
     );
-    router.refresh();
+    if (updates.some((u) => u.error)) {
+      setResolutions(previous);
+    }
   };
 
   return (
@@ -322,7 +337,15 @@ export default function ResolutionList({
       <SortableContext items={resolutions.map((r) => r.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
           {resolutions.map((res) => (
-            <SortableCard key={res.id} res={res} agStatut={agStatut} canEdit={canEdit} {...rest} />
+            <SortableCard
+              key={res.id}
+              res={res}
+              agStatut={agStatut}
+              canEdit={canEdit}
+              onResolutionUpdated={handleResolutionUpdated}
+              onResolutionDeleted={handleResolutionDeleted}
+              {...rest}
+            />
           ))}
         </div>
       </SortableContext>

@@ -224,6 +224,8 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
   const [noteText,     setNoteText]     = useState('');
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoUrl,     setPhotoUrl]     = useState<string | null>(incident.photo_url ?? null);
+  const [notes,        setNotes]        = useState<Note[]>(() => parseNotes(incident.notes_internes));
+  const [deleted,      setDeleted]      = useState(false);
 
   const [transitionData, setTransitionData] = useState<TransitionData>({
     montant_devis:           incident.montant_devis?.toString()           ?? '',
@@ -232,8 +234,6 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
     date_intervention_prevue: incident.date_intervention_prevue           ?? '',
     montant_final:           incident.montant_final?.toString()           ?? '',
   });
-
-  const notes = parseNotes(incident.notes_internes);
 
   // ---- Helpers ----
   async function transition(newStatut: StatutIncident, extra?: Record<string, unknown>) {
@@ -268,14 +268,18 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
       .update({ notes_internes: JSON.stringify(updated) })
       .eq('id', incident.id);
     setLoading(false);
-    if (!error) { setNoteText(''); setShowNoteForm(false); router.refresh(); }
+    if (!error) {
+      setNotes(updated);
+      setNoteText('');
+      setShowNoteForm(false);
+    }
   }
 
   async function handleDelete() {
     setLoading(true);
-    await supabase.from('incidents').delete().eq('id', incident.id);
+    const { error } = await supabase.from('incidents').delete().eq('id', incident.id);
     setLoading(false);
-    router.refresh();
+    if (!error) setDeleted(true);
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -307,6 +311,8 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
     incident.priorite === 'haute'   ? 'bg-orange-400' :
     incident.priorite === 'moyenne' ? 'bg-yellow-300' :
     'bg-gray-200';
+
+  if (deleted) return null;
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">

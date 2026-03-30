@@ -18,7 +18,7 @@ const NAV: NavItem[] = [
 export default function AdminSidebar({ badges = {} }: { badges?: Record<string, number> }) {
   const pathname = usePathname();
   return (
-    <nav className="w-52 shrink-0 flex flex-col gap-0.5 pt-1">
+    <nav className="w-full md:w-52 shrink-0 flex md:flex-col gap-2 md:gap-0.5 pt-0 md:pt-1 overflow-x-auto md:overflow-visible pb-1">
       {NAV.map(({ href, label, icon: Icon, soon }) => {
         const active = pathname === href || pathname.startsWith(href + '/');
         const badge = badges[href] ?? 0;
@@ -27,7 +27,7 @@ export default function AdminSidebar({ badges = {} }: { badges?: Record<string, 
             key={href}
             href={soon ? '#' : href}
             aria-disabled={soon}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+            className={`shrink-0 min-w-[144px] md:min-w-0 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               active
                 ? 'bg-white shadow-sm text-gray-900 border border-gray-200'
                 : 'text-gray-500 hover:text-gray-800 hover:bg-white/70'

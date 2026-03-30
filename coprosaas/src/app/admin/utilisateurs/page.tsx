@@ -216,7 +216,7 @@ export default async function AdminUtilisateursPage({
         <Suspense><AdminSearch placeholder="Rechercher par email ou nom…" defaultValue={q ?? ''} /></Suspense>
       </div>
 
-      <div className="flex items-center justify-between gap-3 flex-wrap text-xs">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs">
         <div className="flex items-center gap-1.5 flex-wrap">
           {([
             { key: 'all', label: 'Tous rôles' },
@@ -283,7 +283,7 @@ export default async function AdminUtilisateursPage({
       </div>
 
       {/* ── Table unifiée ── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
           <p className="text-sm font-semibold text-gray-700">
             {query || roleFilter !== 'all' || verifiedFilter !== 'all'
@@ -291,7 +291,7 @@ export default async function AdminUtilisateursPage({
               : `${nbUsers} utilisateurs`}
           </p>
         </div>
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[980px] text-sm">
           <thead>
             <tr className="border-b border-gray-100">
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Utilisateur</th>

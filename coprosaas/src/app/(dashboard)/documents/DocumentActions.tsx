@@ -325,48 +325,56 @@ export function DocumentMenu({
   doc: { id: string; nom: string };
   dossiers: { id: string; nom: string; parent_id?: string | null }[];
 }) {
-  const router   = useRouter();
   const supabase = createClient();
 
   const [action,   setAction]   = useState<'rename' | 'move' | 'delete' | null>(null);
+  const [localDoc, setLocalDoc] = useState(doc);
   const [nom,      setNom]      = useState(doc.nom);
   const [targetId, setTargetId] = useState('');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
+  const [hidden,   setHidden]   = useState(false);
 
   const open  = (a: typeof action) => { setAction(a); setError(''); };
-  const close = () => { setAction(null); setError(''); setLoading(false); setNom(doc.nom); };
+  const close = () => { setAction(null); setError(''); setLoading(false); setNom(localDoc.nom); setTargetId(''); };
 
   const handleRename = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nom.trim()) return;
     setLoading(true);
-    const { error: err } = await supabase.from('documents').update({ nom: nom.trim() }).eq('id', doc.id);
+    const nextNom = nom.trim();
+    const { error: err } = await supabase.from('documents').update({ nom: nextNom }).eq('id', localDoc.id);
     if (err) { setError(err.message); setLoading(false); return; }
-    close(); router.refresh();
+    setLocalDoc((prev) => ({ ...prev, nom: nextNom }));
+    close();
   };
 
   const handleMove = async () => {
     if (!targetId) return;
     setLoading(true);
-    const { error: err } = await supabase.from('documents').update({ dossier_id: targetId }).eq('id', doc.id);
+    const { error: err } = await supabase.from('documents').update({ dossier_id: targetId }).eq('id', localDoc.id);
     if (err) { setError(err.message); setLoading(false); return; }
-    close(); router.refresh();
+    setHidden(true);
+    close();
   };
 
   const handleDelete = async () => {
     setLoading(true);
-    await supabase.from('documents').delete().eq('id', doc.id);
-    close(); router.refresh();
+    const { error: err } = await supabase.from('documents').delete().eq('id', localDoc.id);
+    if (err) { setError(err.message); setLoading(false); return; }
+    setHidden(true);
+    close();
   };
 
   const btnCls = 'p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors';
+
+  if (hidden) return null;
 
   return (
     <>
       <div className="flex items-center gap-0.5">
         <a
-          href={`/api/documents/${doc.id}/download`}
+          href={`/api/documents/${localDoc.id}/download`}
           target="_blank"
           rel="noopener noreferrer"
           className={`${btnCls} hover:text-blue-600`}
@@ -375,8 +383,8 @@ export function DocumentMenu({
           <Eye size={14} />
         </a>
         <a
-          href={`/api/documents/${doc.id}/download`}
-          download={doc.nom}
+          href={`/api/documents/${localDoc.id}/download`}
+          download={localDoc.nom}
           className={`${btnCls} hover:text-green-600`}
           title="Télécharger"
         >
@@ -410,7 +418,7 @@ export function DocumentMenu({
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
             Choisissez le dossier de destination pour{' '}
-            <strong>&ldquo;{doc.nom}&rdquo;</strong>.
+            <strong>&ldquo;{localDoc.nom}&rdquo;</strong>.
           </p>
           <FolderPicker dossiers={dossiers} value={targetId} onChange={setTargetId} />
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -428,7 +436,7 @@ export function DocumentMenu({
             <AlertTriangle size={18} className="shrink-0 mt-0.5" />
             <p className="text-sm">La suppression est <strong>définitive</strong>. Le fichier sera retiré de la GED.</p>
           </div>
-          <p className="text-sm text-gray-700">Supprimer <strong>&ldquo;{doc.nom}&rdquo;</strong> ?</p>
+          <p className="text-sm text-gray-700">Supprimer <strong>&ldquo;{localDoc.nom}&rdquo;</strong> ?</p>
           <div className="flex gap-3 pt-1">
             <Button onClick={handleDelete} loading={loading} className="bg-red-600 hover:bg-red-700 text-white border-red-600">Supprimer</Button>
             <Button type="button" variant="secondary" onClick={close}>Annuler</Button>

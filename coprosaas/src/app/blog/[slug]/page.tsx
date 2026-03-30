@@ -9,6 +9,9 @@ import ArticleViewTracker from '@/components/ui/ArticleViewTracker';
 import LandingNav from '@/app/LandingNav';
 import { getPost, formatPublishedAt, posts } from '@/lib/blog';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 // ── Content components ───────────────────────────────────────────────────────────
 import ArticleGerer from '../_content/gerer-copropriete-sans-syndic-professionnel';
 import ArticleAppel from '../_content/appel-de-fonds-copropriete-calcul-repartition';

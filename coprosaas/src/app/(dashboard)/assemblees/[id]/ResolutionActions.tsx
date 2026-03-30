@@ -254,9 +254,16 @@ interface Resolution {
   fonds_travaux_montant?: number | null;
 }
 
-export function ResolutionEdit({ resolution, agStatut }: { resolution: Resolution; agStatut?: string }) {
+export function ResolutionEdit({
+  resolution,
+  agStatut,
+  onUpdated,
+}: {
+  resolution: Resolution;
+  agStatut?: string;
+  onUpdated?: (resolution: Resolution) => void;
+}) {
   const isPreLaunch = agStatut === 'creation' || agStatut === 'planifiee';
-  const router = useRouter();
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -291,21 +298,40 @@ export function ResolutionEdit({ resolution, agStatut }: { resolution: Resolutio
       ? budgetPostes.filter((p) => p.libelle.trim()).map((p) => ({ libelle: p.libelle.trim(), montant: parseFloat(p.montant) || 0 }))
       : (resolution.budget_postes ?? []);
 
+    const nextStatut = isPreLaunch ? 'en_attente' : formData.statut;
+    const nextVoixPour = isPreLaunch ? 0 : (parseInt(formData.voix_pour) || 0);
+    const nextVoixContre = isPreLaunch ? 0 : (parseInt(formData.voix_contre) || 0);
+    const nextVoixAbstention = isPreLaunch ? 0 : (parseInt(formData.voix_abstention) || 0);
+    const nextBudgetPostes = editPostesValides.length > 0 ? editPostesValides : null;
+    const nextFondsTravaux = typeConfig.hasFondsTravaux && fondsTravaux ? parseFloat(fondsTravaux) : null;
+
     const { error: dbError } = await supabase.from('resolutions').update({
       titre: formData.titre.trim(),
       description: formData.description.trim() || null,
       majorite: formData.majorite || null,
-      statut: isPreLaunch ? 'en_attente' : formData.statut,
-      voix_pour: isPreLaunch ? 0 : (parseInt(formData.voix_pour) || 0),
-      voix_contre: isPreLaunch ? 0 : (parseInt(formData.voix_contre) || 0),
-      voix_abstention: isPreLaunch ? 0 : (parseInt(formData.voix_abstention) || 0),
-      budget_postes: editPostesValides.length > 0 ? editPostesValides : null,
-      fonds_travaux_montant: typeConfig.hasFondsTravaux && fondsTravaux ? parseFloat(fondsTravaux) : null,
+      statut: nextStatut,
+      voix_pour: nextVoixPour,
+      voix_contre: nextVoixContre,
+      voix_abstention: nextVoixAbstention,
+      budget_postes: nextBudgetPostes,
+      fonds_travaux_montant: nextFondsTravaux,
     }).eq('id', resolution.id);
 
     if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
+    onUpdated?.({
+      ...resolution,
+      titre: formData.titre.trim(),
+      description: formData.description.trim() || null,
+      majorite: formData.majorite || null,
+      statut: nextStatut,
+      voix_pour: nextVoixPour,
+      voix_contre: nextVoixContre,
+      voix_abstention: nextVoixAbstention,
+      budget_postes: nextBudgetPostes,
+      fonds_travaux_montant: nextFondsTravaux,
+    });
+    setLoading(false);
     setIsOpen(false);
-    router.refresh();
   };
 
   return (
@@ -412,16 +438,16 @@ export function ResolutionEdit({ resolution, agStatut }: { resolution: Resolutio
 
 // ── Suppression d'une résolution ─────────────────────────────────────────────
 
-export function ResolutionDelete({ resolutionId }: { resolutionId: string }) {
-  const router = useRouter();
+export function ResolutionDelete({ resolutionId, onDeleted }: { resolutionId: string; onDeleted?: (resolutionId: string) => void }) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
     if (!confirm('Supprimer cette résolution ?')) return;
     setLoading(true);
-    await supabase.from('resolutions').delete().eq('id', resolutionId);
-    router.refresh();
+    const { error } = await supabase.from('resolutions').delete().eq('id', resolutionId);
+    setLoading(false);
+    if (!error) onDeleted?.(resolutionId);
   };
 
   return (

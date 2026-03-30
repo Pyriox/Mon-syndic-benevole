@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteLogo from "@/components/ui/SiteLogo";
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: "Conditions Générales d'Utilisation",
   description:
