@@ -432,7 +432,7 @@ export default async function DashboardPage() {
     nettoyage:          { bar: 'bg-teal-400',    dot: 'bg-teal-400' },
     administration:     { bar: 'bg-gray-400',    dot: 'bg-gray-400' },
     travaux:            { bar: 'bg-yellow-400',  dot: 'bg-yellow-400' },
-    fonds_travaux_alur: { bar: 'bg-amber-500',   dot: 'bg-amber-500' },
+    fonds_travaux_alur: { bar: 'bg-amber-400',   dot: 'bg-amber-400' },
     syndic_benevole:    { bar: 'bg-blue-600',    dot: 'bg-blue-600' },
     autre:              { bar: 'bg-slate-300',   dot: 'bg-slate-300' },
   };
@@ -537,7 +537,7 @@ export default async function DashboardPage() {
                   <>
                     <p className="text-2xl font-bold text-gray-900">{formatEuros(totalProvisions)}</p>
                     {totalFondsTravaux > 0 ? (
-                      <p className="text-xs text-amber-600 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux</p>
+                      <p className="text-xs text-amber-500 font-medium mt-0.5">dont {formatEuros(totalFondsTravaux)} fonds travaux ALUR</p>
                     ) : (
                       <p className="text-xs text-gray-500 mt-0.5">Charges appelées aux copro.</p>
                     )}
@@ -713,10 +713,10 @@ export default async function DashboardPage() {
                   {totalFondsTravaux > 0 && (
                     <li className="flex items-center justify-between py-2.5">
                       <div className="flex items-start gap-2.5 min-w-0">
-                        <span className="w-2 h-2 rounded-full shrink-0 mt-1.5 bg-amber-500" />
+                        <span className="w-2 h-2 rounded-full shrink-0 mt-1.5 bg-amber-400" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-gray-800">Fonds travaux ALUR</p>
-                          <p className="text-xs text-amber-600">Épargne obligatoire · {currentYear}</p>
+                          <p className="text-xs text-gray-500">{currentYear}</p>
                         </div>
                       </div>
                       <span className="text-sm font-semibold text-gray-900 shrink-0 ml-3">{formatEuros(totalFondsTravaux)}</span>
