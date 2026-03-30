@@ -95,16 +95,62 @@ export async function POST(
     Array.from(coprMap.entries()).map(([copId, e]) => ({ copId, lotId: e.lotId, tantiemes: e.tantiemes }))
   );
 
+  // Déterminer si cet appel est le premier publié après une clôture de régularisation.
+  // Dans ce cas, on reporte le solde existant dans le montant dû de l'appel
+  // pour que le copropriétaire revienne à 0 après paiement complet.
+  const { data: lastClosedExercice } = await supabase
+    .from('exercices')
+    .select('cloture_at')
+    .eq('copropriete_id', appel.copropriete_id)
+    .eq('statut', 'cloture')
+    .not('cloture_at', 'is', null)
+    .order('cloture_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let applyRegularisationCarryOver = false;
+  if (lastClosedExercice?.cloture_at) {
+    const { count: nbPublishedSinceClosure } = await supabase
+      .from('appels_de_fonds')
+      .select('id', { count: 'exact', head: true })
+      .eq('copropriete_id', appel.copropriete_id)
+      .in('statut', ['publie', 'confirme'])
+      .neq('id', appelId)
+      .gt('created_at', lastClosedExercice.cloture_at);
+
+    applyRegularisationCarryOver = (nbPublishedSinceClosure ?? 0) === 0;
+  }
+
+  const copIds = repartition.map((r) => r.copId);
+  const { data: copros } = await supabase
+    .from('coproprietaires')
+    .select('id, solde')
+    .in('id', copIds);
+
+  const soldeByCoproId: Record<string, number> = Object.fromEntries(
+    (copros ?? []).map((c) => [c.id, c.solde ?? 0])
+  );
+
+  const repartitionAjustee = repartition.map((r) => {
+    const baseMontant = Math.round((r.montant ?? 0) * 100) / 100;
+    if (!applyRegularisationCarryOver) {
+      return { ...r, montant_du: baseMontant };
+    }
+    const soldeCourant = Math.round((soldeByCoproId[r.copId] ?? 0) * 100) / 100;
+    const montantAjuste = Math.round((baseMontant + soldeCourant) * 100) / 100;
+    return { ...r, montant_du: montantAjuste };
+  });
+
   // Supprimer les lignes existantes si réémission
   await supabase.from('lignes_appels_de_fonds').delete().eq('appel_de_fonds_id', appelId);
 
   // Insérer les nouvelles lignes
   const { error: lignesErr } = await supabase.from('lignes_appels_de_fonds').insert(
-    repartition.map((r) => ({
+    repartitionAjustee.map((r) => ({
       appel_de_fonds_id: appelId,
       coproprietaire_id: r.copId,
       lot_id: r.lotId,
-      montant_du: r.montant,
+      montant_du: r.montant_du,
       paye: false,
       date_paiement: null,
     }))
@@ -113,12 +159,18 @@ export async function POST(
     return NextResponse.json({ message: 'Erreur génération répartition : ' + lignesErr.message }, { status: 500 });
   }
 
-  // Créer la dette (solde positif = copropriétaire doit de l'argent)
-  for (const r of repartition) {
-    const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', r.copId).single();
-    await supabase.from('coproprietaires').update({
-      solde: Math.round(((cop?.solde ?? 0) + r.montant) * 100) / 100,
-    }).eq('id', r.copId);
+  // Créer/mettre à jour la dette (solde positif = copropriétaire doit de l'argent)
+  // Si report régularisation : on remplace le solde courant par le montant dû ajusté,
+  // ainsi un paiement complet de ce 1er appel remet le solde à 0.
+  for (const r of repartitionAjustee) {
+    const soldeCourant = soldeByCoproId[r.copId] ?? 0;
+    const nouveauSolde = applyRegularisationCarryOver
+      ? r.montant_du
+      : Math.round((soldeCourant + r.montant_du) * 100) / 100;
+    await supabase
+      .from('coproprietaires')
+      .update({ solde: nouveauSolde })
+      .eq('id', r.copId);
   }
 
   // Détermine si l'avis doit être envoyé immédiatement (échéance <= J+30)
@@ -184,7 +236,7 @@ export async function POST(
   }
 
   return NextResponse.json({
-    message: `Appel publié · ${sent} avis envoyé(s) par e-mail.`,
+    message: `Appel publié · ${sent} avis envoyé(s) par e-mail.${applyRegularisationCarryOver ? ' Report de solde de régularisation appliqué.' : ''}`,
     sent,
   });
 }
