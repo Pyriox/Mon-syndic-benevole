@@ -50,10 +50,10 @@ export async function POST(
   // Récupérer les lignes avec copropriétaires (email + user_id pour fallback auth)
   const { data: lignes } = await supabase
     .from('lignes_appels_de_fonds')
-    .select('montant_du, paye, coproprietaires(nom, prenom, email, user_id)')
+    .select('montant_du, regularisation_ajustement, paye, coproprietaires(nom, prenom, email, user_id)')
     .eq('appel_de_fonds_id', appelId);
 
-  const destinataires: { nom: string; prenom: string; email: string; montant_du: number; paye: boolean }[] = [];
+  const destinataires: { nom: string; prenom: string; email: string; montant_du: number; regularisation_ajustement: number; paye: boolean }[] = [];
   for (const l of lignes ?? []) {
     const c = Array.isArray(l.coproprietaires)
       ? l.coproprietaires[0] as { nom: string; prenom: string; email: string; user_id: string | null } | undefined
@@ -66,7 +66,14 @@ export async function POST(
       email = authData?.user?.email ?? '';
     }
     if (!email) continue;
-    destinataires.push({ nom: c.nom, prenom: c.prenom, email, montant_du: l.montant_du, paye: l.paye });
+    destinataires.push({
+      nom: c.nom,
+      prenom: c.prenom,
+      email,
+      montant_du: l.montant_du,
+      regularisation_ajustement: l.regularisation_ajustement ?? 0,
+      paye: l.paye,
+    });
   }
 
   if (!destinataires.length) {
@@ -101,6 +108,7 @@ export async function POST(
         coproprieteNom,
         titre: appel.titre,
         montantDu: dest.montant_du,
+        regularisationAjustement: dest.regularisation_ajustement,
         dateEcheance: appel.date_echeance,
       }),
     });

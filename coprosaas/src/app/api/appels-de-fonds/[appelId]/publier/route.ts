@@ -134,11 +134,11 @@ export async function POST(
   const repartitionAjustee = repartition.map((r) => {
     const baseMontant = Math.round((r.montant ?? 0) * 100) / 100;
     if (!applyRegularisationCarryOver) {
-      return { ...r, montant_du: baseMontant };
+      return { ...r, montant_du: baseMontant, regularisation_ajustement: 0 };
     }
     const soldeCourant = Math.round((soldeByCoproId[r.copId] ?? 0) * 100) / 100;
     const montantAjuste = Math.round((baseMontant + soldeCourant) * 100) / 100;
-    return { ...r, montant_du: montantAjuste };
+    return { ...r, montant_du: montantAjuste, regularisation_ajustement: soldeCourant };
   });
 
   // Supprimer les lignes existantes si réémission
@@ -151,6 +151,7 @@ export async function POST(
       coproprietaire_id: r.copId,
       lot_id: r.lotId,
       montant_du: r.montant_du,
+      regularisation_ajustement: r.regularisation_ajustement,
       paye: false,
       date_paiement: null,
     }))
@@ -197,7 +198,7 @@ export async function POST(
   // Envoyer les e-mails immédiatement (échéance proche)
   const { data: lignes } = await supabase
     .from('lignes_appels_de_fonds')
-    .select('montant_du, coproprietaires(nom, prenom, email, user_id)')
+    .select('montant_du, regularisation_ajustement, coproprietaires(nom, prenom, email, user_id)')
     .eq('appel_de_fonds_id', appelId);
 
   const coproprieteNom = (appel.coproprietes as { nom: string } | null)?.nom ?? '';
@@ -229,6 +230,7 @@ export async function POST(
         coproprieteNom,
         titre: appel.titre,
         montantDu: l.montant_du,
+        regularisationAjustement: l.regularisation_ajustement ?? 0,
         dateEcheance: appel.date_echeance,
       }),
     });

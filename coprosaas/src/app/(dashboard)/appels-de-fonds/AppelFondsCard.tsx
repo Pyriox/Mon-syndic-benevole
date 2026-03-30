@@ -92,7 +92,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
       if (res.ok) {
         const { data: freshLignes } = await supabase
           .from('lignes_appels_de_fonds')
-          .select('id, montant_du, paye, date_paiement, coproprietaires(id, nom, prenom)')
+          .select('id, montant_du, regularisation_ajustement, paye, date_paiement, coproprietaires(id, nom, prenom)')
           .eq('appel_de_fonds_id', appel.id);
         const mappedLignes: Ligne[] = (freshLignes ?? []).map((l) => {
           const c = Array.isArray(l.coproprietaires) ? l.coproprietaires[0] ?? null : l.coproprietaires;
@@ -157,6 +157,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           coproprietaire_id: g.copId,
           lot_id: g.lotId,
           montant_du: g.montant,
+          regularisation_ajustement: 0,
           paye: false,
           date_paiement: null,
         }))
@@ -183,6 +184,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         lignes_appels_de_fonds: effectiveLignes.map((l) => ({
           id: l.id,
           montant_du: l.montant_du,
+          regularisation_ajustement: l.regularisation_ajustement,
           paye: l.paye,
           coproprietaires: l.coproprietaires
             ? { nom: l.coproprietaires.nom, prenom: l.coproprietaires.prenom }

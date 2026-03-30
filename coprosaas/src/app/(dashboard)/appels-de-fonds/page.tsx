@@ -43,7 +43,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
 
   const { data: appels } = await db
     .from('appels_de_fonds')
-    .select('*, coproprietes(nom), lignes_appels_de_fonds(id, montant_du, paye, date_paiement, coproprietaires(id, nom, prenom))')
+    .select('*, coproprietes(nom), lignes_appels_de_fonds(id, montant_du, regularisation_ajustement, paye, date_paiement, coproprietaires(id, nom, prenom))')
     .eq('copropriete_id', selectedCoproId ?? 'none')
     .gte('date_echeance', `${annee}-01-01`)
     .lt('date_echeance', `${annee + 1}-01-01`)

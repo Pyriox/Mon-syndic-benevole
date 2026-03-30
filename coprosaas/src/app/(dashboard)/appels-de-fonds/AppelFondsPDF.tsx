@@ -13,6 +13,7 @@ interface Poste { libelle: string; categorie: string; montant: number }
 export interface LigneForPDF {
   id: string;
   montant_du: number;
+  regularisation_ajustement?: number;
   paye: boolean;
   coproprietaires: { nom: string; prenom: string } | null;
 }
@@ -231,7 +232,7 @@ export interface AvisPersonnelInput {
 
 export function buildAvisPersonnelPDF(
   appel: AvisPersonnelInput,
-  ligne: { montant_du: number; coproprietaires: { nom: string; prenom: string } | null },
+  ligne: { montant_du: number; regularisation_ajustement?: number; coproprietaires: { nom: string; prenom: string } | null },
 ): jsPDF {
   const doc = new jsPDF();
   const W = doc.internal.pageSize.width;
@@ -243,6 +244,8 @@ export function buildAvisPersonnelPDF(
     ? `${ligne.coproprietaires.prenom} ${ligne.coproprietaires.nom}`
     : 'Copropriétaire';
   const ratio = appel.montant_total > 0 ? ligne.montant_du / appel.montant_total : 0;
+  const regularisationAjustement = ligne.regularisation_ajustement ?? 0;
+  const hasRegularisationAjustement = Math.abs(regularisationAjustement) > 0.0001;
 
   // ── Bandeau coloré ────────────────────────────────────────
   doc.setFillColor(...PDF_BLUE);
@@ -314,6 +317,18 @@ export function buildAvisPersonnelPDF(
     mL, y,
   );
   y += 10;
+
+  if (hasRegularisationAjustement) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...PDF_SLATE);
+    doc.text(
+      `Régularisation imputée : ${regularisationAjustement > 0 ? 'débit' : 'crédit'} ${fmtEurPDF(regularisationAjustement)} (inclus dans le total à régler)`,
+      mL,
+      y,
+    );
+    y += 10;
+  }
 
   // ── Postes ────────────────────────────────────────────────
   const ftAlurTotal = appel.montant_fonds_travaux ?? 0;

@@ -14,6 +14,7 @@ export interface AppelEmailParams {
   coproprieteNom: string;
   titre: string;
   montantDu: number;
+  regularisationAjustement?: number;
   dateEcheance: string;
 }
 
@@ -43,10 +44,14 @@ export function buildAppelEmailSubject(params: {
 }
 
 export function buildAppelEmail(params: AppelEmailParams): string {
-  const { type, prenom, nom, coproprieteNom, titre, montantDu, dateEcheance } = params;
+  const { type, prenom, nom, coproprieteNom, titre, montantDu, regularisationAjustement = 0, dateEcheance } = params;
   const color   = ACCENT[type];
   const dateStr = formatDateFR(dateEcheance);
   const montant = formatEurosFR(montantDu);
+  const hasRegularisation = Math.abs(regularisationAjustement) > 0.0001;
+  const regularisationLabel = regularisationAjustement > 0
+    ? 'Report de solde débiteur régularisé dans cet appel'
+    : 'Report de solde créditeur régularisé dans cet appel';
 
   const intro: Record<AppelEmailType, string> = {
     avis: `Un appel de fonds a été émis pour la copropriété <strong>${h(coproprieteNom)}</strong>.`,
@@ -72,9 +77,12 @@ export function buildAppelEmail(params: AppelEmailParams): string {
 
 ${infoTable(
   infoRow('Objet', h(titre)) +
+  (hasRegularisation ? infoRow('Régularisation', `${regularisationLabel} (${formatEurosFR(regularisationAjustement)})`) : '') +
   infoRow('Montant dû', montant, `font-size:18px;color:${color}`) +
   infoRow('Date d\'échéance', dateStr)
 )}
+
+${hasRegularisation ? `<p style="margin:10px 0 0;font-size:12px;color:${COLOR.muted}">Ce report est imputé dans le montant dû de cet appel de fonds.</p>` : ''}
 
 ${closing[type]}`;
 

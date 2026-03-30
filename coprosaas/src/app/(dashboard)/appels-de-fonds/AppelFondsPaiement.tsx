@@ -31,6 +31,7 @@ function parsePostes(d: string | null | undefined): Poste[] {
 export interface Ligne {
   id: string;
   montant_du: number;
+  regularisation_ajustement?: number;
   paye: boolean;
   date_paiement: string | null;
   coproprietaires: { id: string; nom: string; prenom: string } | null;
@@ -140,6 +141,8 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
       <div className="border border-gray-200 rounded-xl overflow-hidden">
         {lignes.map((ligne, idx) => {
           const statut = getStatut(ligne);
+          const regularisationAjustement = ligne.regularisation_ajustement ?? 0;
+          const hasRegularisationAjustement = Math.abs(regularisationAjustement) > 0.0001;
           const nom = ligne.coproprietaires
             ? `${ligne.coproprietaires.prenom} ${ligne.coproprietaires.nom}`
             : 'N/A';
@@ -164,6 +167,11 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                 {/* Nom + date paiement */}
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-medium text-gray-800">{nom}</span>
+                  {hasRegularisationAjustement && (
+                    <span className="ml-2 text-xs text-indigo-700">
+                      · {regularisationAjustement > 0 ? 'débit' : 'crédit'} de régularisation {formatEuros(regularisationAjustement)} imputé dans le total dû
+                    </span>
+                  )}
                   {statut === 'paye' && ligne.date_paiement && (
                     <span className="ml-2 text-xs text-green-600">
                       · payé le {new Date(ligne.date_paiement.slice(0, 10) + 'T00:00:00').toLocaleDateString('fr-FR')}

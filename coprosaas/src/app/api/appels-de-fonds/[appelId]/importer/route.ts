@@ -95,6 +95,7 @@ export async function POST(
       coproprietaire_id: r.copId,
       lot_id: r.lotId,
       montant_du: r.montant,
+      regularisation_ajustement: 0,
       paye: true,
       date_paiement: datePaiement,
     }))

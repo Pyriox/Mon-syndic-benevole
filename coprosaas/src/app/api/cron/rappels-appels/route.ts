@@ -234,7 +234,11 @@ interface AppelRow {
 }
 
 type CopRow = { nom: string; prenom: string; email: string; user_id: string | null };
-type LigneRow = { montant_du: number; coproprietaires: CopRow | CopRow[] | null };
+type LigneRow = {
+  montant_du: number;
+  regularisation_ajustement: number | null;
+  coproprietaires: CopRow | CopRow[] | null;
+};
 
 // ---- Envoi des notifications pour un appel donné ----
 async function sendRappelEmails(
@@ -246,7 +250,7 @@ async function sendRappelEmails(
   // Pour les rappels (J-7) et mises en demeure (J+15), uniquement les impayées.
   const query = supabase
     .from('lignes_appels_de_fonds')
-    .select('montant_du, coproprietaires(nom, prenom, email, user_id)')
+    .select('montant_du, regularisation_ajustement, coproprietaires(nom, prenom, email, user_id)')
     .eq('appel_de_fonds_id', appel.id);
 
   const { data: lignes } = type === 'avis'
@@ -263,8 +267,9 @@ async function sendRappelEmails(
     return {
       cop: c as CopRow | null,
       montant_du: l.montant_du,
+      regularisation_ajustement: l.regularisation_ajustement ?? 0,
     };
-  }).filter((r): r is { cop: CopRow; montant_du: number } => r.cop !== null);
+  }).filter((r): r is { cop: CopRow; montant_du: number; regularisation_ajustement: number } => r.cop !== null);
 
   // Résolution des emails manquants en parallèle (batch, pas de N+1)
   const userIdsToResolve: string[] = [...new Set<string>(
@@ -284,7 +289,7 @@ async function sendRappelEmails(
 
   // Envoi des emails
   let sent = 0;
-  await Promise.all(rows.map(async ({ cop, montant_du }) => {
+  await Promise.all(rows.map(async ({ cop, montant_du, regularisation_ajustement }) => {
     const email = cop.email || (cop.user_id ? emailByUserId.get(cop.user_id) ?? '' : '');
     if (!email) return;
 
@@ -299,6 +304,7 @@ async function sendRappelEmails(
         coproprieteNom,
         titre:          appel.titre,
         montantDu:      montant_du,
+        regularisationAjustement: regularisation_ajustement,
         dateEcheance:   appel.date_echeance,
       }),
     });
