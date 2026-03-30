@@ -36,12 +36,15 @@ function getConfig(type: string) {
 }
 
 function OwnerAvatar({ name, isMe = false }: { name: string; isMe?: boolean }) {
-  const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const initials = parts.length >= 2
+    ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
+    : name.slice(0, 2).toUpperCase();
   return (
-    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold shrink-0 ${
+    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold shrink-0 ${
       isMe ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'
     }`}>
-      {initials}
+      {initials || '?'}
     </span>
   );
 }
@@ -314,7 +317,7 @@ export default async function LotsPage() {
                   const Icon = cfg.icon;
                   const isMyLot = myFicheId !== null && lot.coproprietaire_id === myFicheId;
                   return (
-                    <tr key={lot.id} className={`border-b border-gray-100 last:border-0 transition-colors group ${isMyLot ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'}`}>
+                    <tr key={lot.id} className={`border-b border-gray-100 last:border-0 transition-colors group ${isMyLot ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}`}>
                       <td className="py-3.5 px-5">
                         <div className="flex items-center gap-2.5">
                           <div className={`p-1.5 ${cfg.bgColor} rounded-lg`}>
