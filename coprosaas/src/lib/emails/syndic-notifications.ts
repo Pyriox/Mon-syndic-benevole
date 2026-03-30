@@ -55,6 +55,8 @@ export interface BrouillonRappelEmailParams {
   appelsUrl: string;
 }
 
+export type BrouillonEcheanceType = 'j14' | 'j7' | 'j1_urgent';
+
 export function buildBrouillonRappelSubject(coproprieteNom: string, n: number): string {
   return `${n} appel${n > 1 ? 's' : ''} de fonds en attente de publication — ${coproprieteNom}`;
 }
@@ -85,6 +87,58 @@ ${ctaButton('Publier les appels de fonds →', appelsUrl, COLOR.amber)}
 </p>`;
 
   return wrapEmail(content, COLOR.amber);
+}
+
+export function buildBrouillonEcheanceSubject(
+  coproprieteNom: string,
+  n: number,
+  type: BrouillonEcheanceType,
+): string {
+  if (type === 'j14') return `[J-14] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} — ${coproprieteNom}`;
+  if (type === 'j7') return `[J-7] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} — ${coproprieteNom}`;
+  return `[Urgent] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} (< 7 jours) — ${coproprieteNom}`;
+}
+
+export function buildBrouillonEcheanceEmail(
+  params: BrouillonRappelEmailParams & { type: BrouillonEcheanceType },
+): string {
+  const { syndicPrenom, coproprieteNom, nombreBrouillons, appelsUrl, type } = params;
+  const n = nombreBrouillons;
+
+  const timingText = type === 'j14'
+    ? "arrivent à échéance dans 14 jours"
+    : type === 'j7'
+      ? "arrivent à échéance dans 7 jours"
+      : "arrivent à échéance dans moins de 7 jours et n'ont pas été émis le lendemain de leur création";
+
+  const urgencyText = type === 'j1_urgent'
+    ? 'Ce rappel est prioritaire : sans publication, les copropriétaires ne pourront pas être notifiés à temps.'
+    : 'Publiez ces appels pour déclencher l\'envoi des avis aux copropriétaires.';
+
+  const color = type === 'j1_urgent' ? COLOR.red : COLOR.amber;
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">
+  ${n} appel${n > 1 ? 's' : ''} proche${n > 1 ? 's' : ''} de l'échéance
+</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">Bonjour <strong>${h(syndicPrenom)}</strong>,</p>
+<p style="margin:0;font-size:14px;color:${COLOR.text};line-height:1.6">
+  <strong>${n} appel${n > 1 ? 's' : ''} de fonds</strong> en brouillon ${n > 1 ? 'sont' : 'est'} toujours non publié${n > 1 ? 's' : ''}
+  et ${timingText}.
+</p>
+<p style="margin:16px 0 0;font-size:14px;color:${COLOR.text};line-height:1.6">
+  ${urgencyText}
+</p>
+
+${ctaButton('Publier les appels de fonds →', appelsUrl, color)}
+
+<p style="margin:-8px 0 0;font-size:12px;color:${COLOR.muted}">
+  Rappel automatique envoyé une seule fois pour cette échéance.
+</p>`;
+
+  return wrapEmail(content, color);
 }
 
 // ── Incident résolu (notification au déclarant) ─────────────────────────────────

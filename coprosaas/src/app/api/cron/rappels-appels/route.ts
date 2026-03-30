@@ -16,7 +16,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 import { buildAppelEmail, buildAppelEmailSubject, type AppelEmailType } from '@/lib/emails/appel-de-fonds';
-import { buildBrouillonRappelEmail, buildBrouillonRappelSubject } from '@/lib/emails/syndic-notifications';
+import {
+  buildBrouillonRappelEmail,
+  buildBrouillonRappelSubject,
+  buildBrouillonEcheanceEmail,
+  buildBrouillonEcheanceSubject,
+  type BrouillonEcheanceType,
+} from '@/lib/emails/syndic-notifications';
 import { buildTrialEndingEmail, buildTrialEndingSubject } from '@/lib/emails/subscription';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
@@ -48,6 +54,7 @@ export async function GET(req: NextRequest) {
 
   const todayStr = today.toISOString().slice(0, 10);
   const dateJ30 = addDays(today, 30);  // avis : appels publiés dont l'échéance est dans <= 30 jours
+  const dateJ14 = addDays(today, 14);  // brouillons non publiés : rappel syndic J-14
   const dateJ7  = addDays(today, 7);   // appels avec échéance dans 7 jours
   const dateJ15 = addDays(today, -15); // appels avec échéance il y a 15 jours
 
@@ -123,6 +130,30 @@ export async function GET(req: NextRequest) {
     .lt('created_at', threeDaysAgo)
     .is('rappel_brouillon_at', null);
 
+  const { data: brouillonsJ14 } = await supabase
+    .from('appels_de_fonds')
+    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .eq('statut', 'brouillon')
+    .eq('date_echeance', dateJ14)
+    .is('rappel_brouillon_j14_at', null);
+
+  const { data: brouillonsJ7 } = await supabase
+    .from('appels_de_fonds')
+    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .eq('statut', 'brouillon')
+    .eq('date_echeance', dateJ7)
+    .is('rappel_brouillon_j7_at', null);
+
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: brouillonsJ1Urgent } = await supabase
+    .from('appels_de_fonds')
+    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .eq('statut', 'brouillon')
+    .lt('created_at', oneDayAgo)
+    .gte('date_echeance', todayStr)
+    .lt('date_echeance', dateJ7)
+    .is('rappel_brouillon_j1_urgent_at', null);
+
   // Groupe par copropriété (un seul e-mail par copropriété, listant tous ses brouillons)
   type BrouillonRow = {
     id: string;
@@ -130,24 +161,31 @@ export async function GET(req: NextRequest) {
     coproprietes: { nom: string; profiles: { email: string; full_name: string } | { email: string; full_name: string }[] | null } | null;
   };
 
-  const brouillonGroups = new Map<string, { coproprieteNom: string; syndicEmail: string; syndicPrenom: string; ids: string[] }>();
+  function groupBrouillons(rows: BrouillonRow[]) {
+    const groups = new Map<string, { coproprieteNom: string; syndicEmail: string; syndicPrenom: string; ids: string[] }>();
+    for (const b of rows) {
+      const copro = b.coproprietes;
+      if (!copro) continue;
+      const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
+      if (!profile?.email) continue;
 
-  for (const b of (brouillons ?? []) as unknown as BrouillonRow[]) {
-    const copro = b.coproprietes;
-    if (!copro) continue;
-    const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
-    if (!profile?.email) continue;
-
-    if (!brouillonGroups.has(b.copropriete_id)) {
-      brouillonGroups.set(b.copropriete_id, {
-        coproprieteNom: copro.nom,
-        syndicEmail: profile.email,
-        syndicPrenom: (profile.full_name ?? '').split(' ')[0] || 'Syndic',
-        ids: [],
-      });
+      if (!groups.has(b.copropriete_id)) {
+        groups.set(b.copropriete_id, {
+          coproprieteNom: copro.nom,
+          syndicEmail: profile.email,
+          syndicPrenom: (profile.full_name ?? '').split(' ')[0] || 'Syndic',
+          ids: [],
+        });
+      }
+      groups.get(b.copropriete_id)!.ids.push(b.id);
     }
-    brouillonGroups.get(b.copropriete_id)!.ids.push(b.id);
+    return groups;
   }
+
+  const brouillonGroups = groupBrouillons((brouillons ?? []) as unknown as BrouillonRow[]);
+  const brouillonJ14Groups = groupBrouillons((brouillonsJ14 ?? []) as unknown as BrouillonRow[]);
+  const brouillonJ7Groups = groupBrouillons((brouillonsJ7 ?? []) as unknown as BrouillonRow[]);
+  const brouillonJ1UrgentGroups = groupBrouillons((brouillonsJ1Urgent ?? []) as unknown as BrouillonRow[]);
 
   for (const [, group] of brouillonGroups) {
     const n = group.ids.length;
@@ -170,6 +208,39 @@ export async function GET(req: NextRequest) {
       totalSent++;
     }
   }
+
+  const sendBrouillonEcheanceReminders = async (
+    groups: Map<string, { coproprieteNom: string; syndicEmail: string; syndicPrenom: string; ids: string[] }>,
+    type: BrouillonEcheanceType,
+    updateColumn: 'rappel_brouillon_j14_at' | 'rappel_brouillon_j7_at' | 'rappel_brouillon_j1_urgent_at',
+  ) => {
+    for (const [, group] of groups) {
+      const n = group.ids.length;
+      const { error } = await resend.emails.send({
+        from: FROM,
+        to: group.syndicEmail,
+        subject: buildBrouillonEcheanceSubject(group.coproprieteNom, n, type),
+        html: buildBrouillonEcheanceEmail({
+          type,
+          syndicPrenom: group.syndicPrenom,
+          coproprieteNom: group.coproprieteNom,
+          nombreBrouillons: n,
+          appelsUrl: `${SITE_URL}/appels-de-fonds`,
+        }),
+      });
+      if (!error) {
+        await supabase
+          .from('appels_de_fonds')
+          .update({ [updateColumn]: new Date().toISOString() } as Record<string, unknown>)
+          .in('id', group.ids);
+        totalSent++;
+      }
+    }
+  };
+
+  await sendBrouillonEcheanceReminders(brouillonJ14Groups, 'j14', 'rappel_brouillon_j14_at');
+  await sendBrouillonEcheanceReminders(brouillonJ7Groups, 'j7', 'rappel_brouillon_j7_at');
+  await sendBrouillonEcheanceReminders(brouillonJ1UrgentGroups, 'j1_urgent', 'rappel_brouillon_j1_urgent_at');
 
   // ── Rappel J-3 fin d'essai ──────────────────────────────────────────────────
   // On envoie un email au syndic quand plan='essai' et plan_period_end = today + 3 jours.
@@ -220,6 +291,9 @@ export async function GET(req: NextRequest) {
     j7_appels:         j7Appels?.length      ?? 0,
     j15_appels:        j15Appels?.length     ?? 0,
     brouillon_groupes: brouillonGroups.size,
+    brouillon_j14_groupes: brouillonJ14Groups.size,
+    brouillon_j7_groupes: brouillonJ7Groups.size,
+    brouillon_j1_urgent_groupes: brouillonJ1UrgentGroups.size,
     trial_j3:          trialsEndingJ3?.length ?? 0,
     sent: totalSent,
   });
