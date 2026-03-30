@@ -43,11 +43,16 @@ const LOT_TYPE_CONFIG: Record<string, {
 const defaultConfig = LOT_TYPE_CONFIG.autre;
 function getConfig(type: string) { return LOT_TYPE_CONFIG[type] ?? defaultConfig; }
 
-function OwnerAvatar({ name }: { name: string }) {
-  const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+function OwnerAvatar({ name, isMe = false }: { name: string; isMe?: boolean }) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const initials = parts.length >= 2
+    ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
+    : name.slice(0, 2).toUpperCase();
   return (
-    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold shrink-0">
-      {initials}
+    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold shrink-0 ${
+      isMe ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'
+    }`}>
+      {initials || '?'}
     </span>
   );
 }
@@ -108,7 +113,7 @@ function SortableLotRow({
     <tr
       ref={setNodeRef}
       style={style}
-      className={`border-b border-gray-100 last:border-0 transition-colors ${isDragging ? 'bg-blue-50' : isMyLot ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'}`}
+      className={`border-b border-gray-100 last:border-0 transition-colors ${isDragging ? 'bg-blue-50' : isMyLot ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}`}
     >
       {/* Grip */}
       <td className="py-3.5 px-2 w-7">
@@ -151,11 +156,8 @@ function SortableLotRow({
       <td className="py-3.5 px-3">
         {ownerName ? (
           <div className="flex items-center gap-2">
-            <OwnerAvatar name={ownerName} />
+            <OwnerAvatar name={ownerName} isMe={isMyLot} />
             <span className="text-gray-700 text-sm">{ownerName}</span>
-            {isMyLot && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-600 text-white">Vous</span>
-            )}
           </div>
         ) : (
           <span className="text-orange-700 italic text-xs font-medium">Non assigné</span>
@@ -245,11 +247,8 @@ function SortableLotCard({
             <div>
               {ownerName ? (
                 <div className="flex items-center gap-1.5">
-                  <OwnerAvatar name={ownerName} />
+                  <OwnerAvatar name={ownerName} isMe={isMyLot} />
                   <span className="text-sm text-gray-700 truncate">{ownerName}</span>
-                  {isMyLot && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-600 text-white shrink-0">Vous</span>
-                  )}
                 </div>
               ) : (
                 <span className="text-xs text-orange-700 italic font-medium">Non assigné</span>
