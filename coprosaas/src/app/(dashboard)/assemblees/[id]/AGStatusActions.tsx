@@ -16,6 +16,11 @@ import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, Alert
 import LancerAGModal from './LancerAGModal';
 import { genererConvocationDoc, type ConvocationAGData, type ConvocationResolution } from './ConvocationPDF';
 
+function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
+  if (typeof window === 'undefined') return;
+  router.replace(`${window.location.pathname}${window.location.search}`);
+}
+
 // ---- Helper : trouver ou créer un sous-dossier ----
 async function getOrCreateSubDossier(
   supabase: ReturnType<typeof createClient>,
@@ -92,7 +97,7 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
       .eq('id', agId);
     if (dbError) { setError(dbError.message); setLoading(false); return; }
     setIsOpen(false);
-    router.refresh();
+    replaceCurrentRoute(router);
     setLoading(false);
   };
 
@@ -220,7 +225,7 @@ export function AGAnnuler({ agId }: { agId: string }) {
   const handleAnnuler = async () => {
     setLoading(true);
     await supabase.from('assemblees_generales').update({ statut: 'annulee' }).eq('id', agId);
-    router.refresh();
+    replaceCurrentRoute(router);
     setLoading(false);
     setIsOpen(false);
   };
@@ -502,7 +507,7 @@ export default function AGStatusActions({ agId, coproprieteId, currentStatut, qu
     setLoading(true);
     setIsConfirmOpen(false);
     await supabase.from('assemblees_generales').update({ statut: 'planifiee' }).eq('id', agId);
-    router.refresh();
+    replaceCurrentRoute(router);
     setLoading(false);
   };
 
@@ -514,7 +519,7 @@ export default function AGStatusActions({ agId, coproprieteId, currentStatut, qu
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quorumAtteint }),
     });
-    router.refresh();
+    replaceCurrentRoute(router);
     setLoading(false);
   };
 

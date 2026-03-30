@@ -11,6 +11,11 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { PlayCircle, UserCheck, UserX, Users } from 'lucide-react';
 
+function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
+  if (typeof window === 'undefined') return;
+  router.replace(`${window.location.pathname}${window.location.search}`);
+}
+
 interface Copro {
   id: string;
   nom: string;
@@ -110,7 +115,7 @@ export default function LancerAGModal({
 
     setIsOpen(false);
     setLoading(false);
-    router.refresh();
+    replaceCurrentRoute(router);
   };
 
   const presentCount = copros.filter(

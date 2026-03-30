@@ -17,6 +17,11 @@ import {
   Folder, ChevronRight,
 } from 'lucide-react';
 
+function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
+  if (typeof window === 'undefined') return;
+  router.replace(`${window.location.pathname}${window.location.search}`);
+}
+
 interface Copropriete { id: string; nom: string }
 interface Dossier { id: string; nom: string; parent_id?: string | null }
 
@@ -112,7 +117,7 @@ export default function DocumentActions({ coproprietes, defaultDossierId, showLa
     setLoading(false);
     setDone(true);
     // Ferme après un bref flash de succès
-    setTimeout(() => { handleClose(); router.refresh(); }, 900);
+    setTimeout(() => { handleClose(); replaceCurrentRoute(router); }, 900);
   };
 
   const visual = file ? fileVisual(file.name) : null;

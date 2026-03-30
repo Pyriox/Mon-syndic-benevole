@@ -15,6 +15,11 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { FolderPlus, Trash2, Pencil, Plus, AlertTriangle, MoreVertical } from 'lucide-react';
 
+function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
+  if (typeof window === 'undefined') return;
+  router.replace(`${window.location.pathname}${window.location.search}`);
+}
+
 
 
 // ─────────────────────────────────────────────
@@ -47,7 +52,7 @@ export default function DossierActions() {
 
     if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
     handleClose();
-    router.refresh();
+    replaceCurrentRoute(router);
   };
 
   return (
@@ -104,7 +109,7 @@ export function DossierRename({ dossierId, dossierNom }: DossierRenameProps) {
       .eq('id', dossierId);
     if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
     handleClose();
-    router.refresh();
+    replaceCurrentRoute(router);
   };
 
   return (
@@ -172,7 +177,7 @@ export function SubDossierActions({ parentId, dossier, hasDocuments, hasSubs, mo
     });
     if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
     handleClose();
-    router.refresh();
+    replaceCurrentRoute(router);
   };
 
   const handleRename = async (e: React.FormEvent) => {
@@ -186,7 +191,7 @@ export function SubDossierActions({ parentId, dossier, hasDocuments, hasSubs, mo
       .eq('id', dossier.id);
     if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
     handleClose();
-    router.refresh();
+    replaceCurrentRoute(router);
   };
 
   const executeDelete = async () => {
@@ -201,7 +206,7 @@ export function SubDossierActions({ parentId, dossier, hasDocuments, hasSubs, mo
     }
     await supabase.from('documents').delete().eq('dossier_id', dossier.id);
     await supabase.from('document_dossiers').delete().eq('id', dossier.id);
-    router.refresh();
+    replaceCurrentRoute(router);
   };
 
   if (mode === 'delete') {
@@ -314,7 +319,7 @@ export function DossierDelete({ dossierId, dossierNom }: DossierDeleteProps) {
     setLoading(true);
     setConfirmOpen(false);
     await supabase.from('document_dossiers').delete().eq('id', dossierId);
-    router.refresh();
+    replaceCurrentRoute(router);
   };
 
   return (
@@ -370,7 +375,7 @@ export function FolderMenu({ dossier, hasDocuments, hasSubs }: FolderMenuProps) 
     setLoading(true);
     const { error: err } = await supabase.from('document_dossiers').update({ nom: nom.trim() }).eq('id', dossier.id);
     if (err) { setError(err.message); setLoading(false); return; }
-    close(); router.refresh();
+    close(); replaceCurrentRoute(router);
   };
 
   const handleDelete = async () => {
@@ -386,7 +391,7 @@ export function FolderMenu({ dossier, hasDocuments, hasSubs }: FolderMenuProps) 
       await supabase.from('documents').delete().eq('dossier_id', dossier.id);
     }
     await supabase.from('document_dossiers').delete().eq('id', dossier.id);
-    close(); router.refresh();
+    close(); replaceCurrentRoute(router);
   };
 
   const hasContent = hasDocuments || hasSubs;
