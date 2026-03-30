@@ -4,15 +4,20 @@
 // ============================================================
 
 // --- Notification ---
-export type NotificationType = 'impaye' | 'incident' | 'ag' | 'appel_fonds' | 'support';
+export type NotificationType = 'impaye' | 'incident' | 'ag' | 'appel_fonds' | 'support' | 'preuve_email' | 'admin_alert' | string;
 
 export interface AppNotification {
   id: string;
   type: NotificationType;
-  label: string;
+  label?: string;
   sublabel?: string;
+  title?: string;
+  body?: string;
   href: string;
   severity: 'danger' | 'warning' | 'info';
+  actionLabel?: string;
+  isRead?: boolean;
+  createdAt?: string;
 }
 
 // --- Profil utilisateur ---

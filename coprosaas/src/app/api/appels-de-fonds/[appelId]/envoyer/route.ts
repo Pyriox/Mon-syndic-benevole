@@ -5,6 +5,8 @@ import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
 import { isSubscribed } from '@/lib/subscription';
 import { buildAppelEmail, buildAppelEmailSubject } from '@/lib/emails/appel-de-fonds';
+import { trackEmailDelivery } from '@/lib/email-delivery';
+import { pushNotification } from '@/lib/notification-center';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -93,14 +95,16 @@ export async function POST(
   for (const dest of destinataires) {
     if (dest.paye) continue; // Ne pas relancer les copropriétaires ayant déjà payé
 
-    const { error } = await resend.emails.send({
+    const subject = buildAppelEmailSubject({
+      type: 'avis',
+      coproprieteNom,
+      dateEcheance: appel.date_echeance,
+    });
+
+    const result = await resend.emails.send({
       from: FROM,
       to: dest.email,
-      subject: buildAppelEmailSubject({
-        type: 'avis',
-        coproprieteNom,
-        dateEcheance: appel.date_echeance,
-      }),
+      subject,
       html: buildAppelEmail({
         type: 'avis',
         prenom: dest.prenom,
@@ -113,8 +117,35 @@ export async function POST(
       }),
     });
 
-    if (error) errors.push(`${dest.email}: ${error.message}`);
-    else sent++;
+    if (result.error) {
+      errors.push(`${dest.email}: ${result.error.message}`);
+      await trackEmailDelivery({
+        templateKey: 'appel_avis',
+        status: 'failed',
+        recipientEmail: dest.email,
+        coproprieteId: appel.copropriete_id,
+        appelDeFondsId: appelId,
+        subject,
+        legalEventType: 'appel_de_fonds_avis',
+        legalReference: appelId,
+        payload: { type: 'manual_send' },
+        lastError: result.error.message,
+      });
+    } else {
+      sent++;
+      await trackEmailDelivery({
+        providerMessageId: result.data?.id,
+        templateKey: 'appel_avis',
+        status: 'sent',
+        recipientEmail: dest.email,
+        coproprieteId: appel.copropriete_id,
+        appelDeFondsId: appelId,
+        subject,
+        legalEventType: 'appel_de_fonds_avis',
+        legalReference: appelId,
+        payload: { type: 'manual_send' },
+      });
+    }
   }
 
   // Enregistrer la date d'envoi (nécessite la colonne emailed_at sur appels_de_fonds)
@@ -122,6 +153,18 @@ export async function POST(
     await supabase.from('appels_de_fonds')
       .update({ emailed_at: new Date().toISOString() } as Record<string, unknown>)
       .eq('id', appelId);
+
+    await pushNotification({
+      userId: user.id,
+      coproprieteId: appel.copropriete_id,
+      type: 'appel_fonds',
+      severity: 'info',
+      title: 'Avis d\'appel de fonds envoyes',
+      body: `${sent} envoi(s) traces`,
+      href: '/appels-de-fonds',
+      actionLabel: 'Ouvrir',
+      metadata: { appelId, sent, failed: errors.length },
+    });
   }
 
   return NextResponse.json({

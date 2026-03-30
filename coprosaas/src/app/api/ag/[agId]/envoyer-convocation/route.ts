@@ -5,6 +5,8 @@ import { Resend } from 'resend';
 import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emails/base';
 import { createClient } from '@/lib/supabase/server';
 import { isSubscribed } from '@/lib/subscription';
+import { trackEmailDelivery } from '@/lib/email-delivery';
+import { pushNotification } from '@/lib/notification-center';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
   // Récupération des copropriétaires de la copropriété
   const { data: coproprietaires } = await supabase
     .from('coproprietaires')
-    .select('nom, prenom, email')
+    .select('nom, prenom, email, user_id')
     .eq('copropriete_id', ag.copropriete_id)
     .not('email', 'is', null);
 
@@ -108,15 +110,45 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
 
     const html = wrapEmail(content, COLOR.blue);
 
-    const { error } = await resend.emails.send({
+    const subject = `Convocation AG — ${h(ag.coproprietes?.nom ?? '')} — ${dateFormatted}`;
+    const result = await resend.emails.send({
       from: FROM,
       to: cp.email,
-      subject: `Convocation AG — ${h(ag.coproprietes?.nom ?? '')} — ${dateFormatted}`,
+      subject,
       html,
     });
 
-    if (error) errors.push(`${cp.email}: ${error.message}`);
-    else sent++;
+    if (result.error) {
+      errors.push(`${cp.email}: ${result.error.message}`);
+      await trackEmailDelivery({
+        templateKey: 'ag_convocation',
+        status: 'failed',
+        recipientEmail: cp.email,
+        recipientUserId: cp.user_id,
+        coproprieteId: ag.copropriete_id,
+        agId,
+        subject,
+        legalEventType: 'convocation_ag',
+        legalReference: agId,
+        payload: { agTitle: ag.titre, dateAg: ag.date_ag },
+        lastError: result.error.message,
+      });
+    } else {
+      sent++;
+      await trackEmailDelivery({
+        providerMessageId: result.data?.id,
+        templateKey: 'ag_convocation',
+        status: 'sent',
+        recipientEmail: cp.email,
+        recipientUserId: cp.user_id,
+        coproprieteId: ag.copropriete_id,
+        agId,
+        subject,
+        legalEventType: 'convocation_ag',
+        legalReference: agId,
+        payload: { agTitle: ag.titre, dateAg: ag.date_ag },
+      });
+    }
   }
 
   // Marquer la date du dernier envoi (côté serveur — le client fait la même chose en parallèle)
@@ -125,6 +157,18 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
       .from('assemblees_generales')
       .update({ convocation_envoyee_le: new Date().toISOString() } as Record<string, unknown>)
       .eq('id', agId);
+
+    await pushNotification({
+      userId: user.id,
+      coproprieteId: ag.copropriete_id,
+      type: 'ag',
+      severity: 'info',
+      title: 'Convocations AG envoyees',
+      body: `${sent} envoi(s) trace(s) avec preuve`,
+      href: '/assemblees',
+      actionLabel: 'Ouvrir',
+      metadata: { agId, sent, failed: errors.length },
+    });
   }
 
   const wasAlreadySent = !!(ag as Record<string, unknown>).convocation_envoyee_le;

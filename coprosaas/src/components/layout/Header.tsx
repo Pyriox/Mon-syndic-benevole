@@ -32,7 +32,12 @@ const colorBySeverity = {
 
 export default function Header({ title, userName, notifications = [], onMenuOpen }: HeaderProps) {
   const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<AppNotification[]>(notifications);
   const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setItems(notifications);
+  }, [notifications]);
 
   // Ferme le panel si clic en dehors ou touche Escape
   useEffect(() => {
@@ -50,8 +55,32 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
     };
   }, []);
 
-  const nbNotifs = notifications.length;
-  const nbDanger = notifications.filter((n) => n.severity === 'danger').length;
+  const nbNotifs = items.length;
+  const unreadItems = items.filter((n) => n.isRead !== true);
+  const nbUnread = unreadItems.length;
+  const nbDanger = unreadItems.filter((n) => n.severity === 'danger').length;
+
+  const markAllRead = async () => {
+    setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    await fetch('/api/notifications/mark-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ all: true }),
+    }).catch(() => {
+      // Non bloquant: l'utilisateur garde l'etat local courant.
+    });
+  };
+
+  const markOneRead = async (id: string) => {
+    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    await fetch('/api/notifications/mark-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: [id] }),
+    }).catch(() => {
+      // Non bloquant.
+    });
+  };
 
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
@@ -65,7 +94,7 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
           <div ref={ref} className="relative">
             <button
               onClick={() => setOpen((v) => !v)}
-              aria-label={nbNotifs > 0 ? `Notifications : ${nbNotifs} alerte${nbNotifs > 1 ? 's' : ''}` : 'Notifications'}
+              aria-label={nbUnread > 0 ? `Notifications : ${nbUnread} non lue${nbUnread > 1 ? 's' : ''}` : 'Notifications'}
               aria-expanded={open}
               aria-haspopup="true"
               className={cn(
@@ -74,12 +103,12 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
               )}
             >
               <Bell size={20} />
-              {nbNotifs > 0 && (
+              {nbUnread > 0 && (
                 <span className={cn(
                   'absolute top-1 right-1 min-w-[16px] h-4 px-0.5 rounded-full text-[10px] font-bold text-white flex items-center justify-center leading-none',
                   nbDanger > 0 ? 'bg-red-500' : 'bg-amber-500'
                 )}>
-                  {nbNotifs > 9 ? '9+' : nbNotifs}
+                  {nbUnread > 9 ? '9+' : nbUnread}
                 </span>
               )}
             </button>
@@ -89,9 +118,20 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
               <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 w-[min(340px,calc(100vw-2rem))]">
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-900">Notifications</p>
-                  {nbNotifs > 0 && (
-                    <span className="text-xs text-gray-600">{nbNotifs} alerte{nbNotifs > 1 ? 's' : ''}</span>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {nbUnread > 0 && (
+                      <button
+                        type="button"
+                        onClick={markAllRead}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        Tout marquer lu
+                      </button>
+                    )}
+                    <Link href="/dashboard/notifications" onClick={() => setOpen(false)} className="text-xs text-gray-600 hover:text-gray-900">
+                      Historique
+                    </Link>
+                  </div>
                 </div>
 
                 {nbNotifs === 0 ? (
@@ -101,22 +141,34 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
                   </div>
                 ) : (
                   <ul className="max-h-[60vh] md:max-h-80 overflow-y-auto divide-y divide-gray-50">
-                    {notifications.map((notif) => {
-                      const Icon = iconByType[notif.type];
+                    {items.map((notif) => {
+                      const Icon = iconByType[notif.type as keyof typeof iconByType] ?? Bell;
+                      const titleText = notif.title ?? notif.label ?? 'Notification';
+                      const subtitleText = notif.body ?? notif.sublabel;
+                      const unread = notif.isRead !== true;
                       return (
                         <li key={notif.id}>
                           <Link
                             href={notif.href}
-                            onClick={() => setOpen(false)}
-                            className="flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors"
+                            onClick={() => {
+                              setOpen(false);
+                              void markOneRead(notif.id);
+                            }}
+                            className={cn(
+                              'flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors',
+                              unread ? 'bg-blue-50/50' : ''
+                            )}
                           >
                             <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
                               <Icon size={13} />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-gray-800 truncate">{notif.label}</p>
-                              {notif.sublabel && (
-                                <p className="text-xs text-gray-600 mt-0.5">{notif.sublabel}</p>
+                              <p className="text-sm font-medium text-gray-800 truncate">{titleText}</p>
+                              {subtitleText && (
+                                <p className="text-xs text-gray-600 mt-0.5">{subtitleText}</p>
+                              )}
+                              {notif.createdAt && (
+                                <p className="text-[11px] text-gray-500 mt-1">{new Date(notif.createdAt).toLocaleString('fr-FR')}</p>
                               )}
                             </div>
                           </Link>

@@ -47,12 +47,15 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
   const [sending, setSending] = useState(false);
   const [sendMsg, setSendMsg] = useState('');
   const [sendOk, setSendOk] = useState<boolean | null>(null);
+  const [statut, setStatut] = useState(appel.statut ?? null);
   const [emailedAt, setEmailedAt] = useState<string | null>(appel.emailed_at ?? null);
+  const [lignesCount, setLignesCount] = useState(lignes.length);
   const [regenerating, setRegenerating] = useState(false);
   const [regenMsg, setRegenMsg] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [publishMsg, setPublishMsg] = useState('');
   const [publishOk, setPublishOk] = useState<boolean | null>(null);
+  const [showPublishEmailPrompt, setShowPublishEmailPrompt] = useState(false);
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -60,6 +63,13 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
   const autoRegenRef = useRef(false);
   const router = useRouter();
   const supabase = createClient();
+  const currentStatut = statut ?? appel.statut;
+
+  useEffect(() => {
+    setStatut(appel.statut ?? null);
+    setEmailedAt(appel.emailed_at ?? null);
+    setLignesCount(lignes.length);
+  }, [appel.emailed_at, appel.statut, lignes.length]);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -84,12 +94,17 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
     setPublishing(true);
     setPublishMsg('');
     setPublishOk(null);
+    setShowPublishEmailPrompt(false);
     try {
       const res = await fetch(`/api/appels-de-fonds/${appel.id}/publier`, { method: 'POST' });
-      const json = await res.json();
+      const json = await res.json() as { message?: string; sent?: number; promptEmailSend?: boolean };
       setPublishMsg(json.message ?? (res.ok ? 'Émis avec succès' : 'Erreur'));
       setPublishOk(res.ok);
       if (res.ok) {
+        setStatut('publie');
+        if ((json.sent ?? 0) > 0) {
+          setEmailedAt(new Date().toISOString());
+        }
         const { data: freshLignes } = await supabase
           .from('lignes_appels_de_fonds')
           .select('id, montant_du, regularisation_ajustement, paye, date_paiement, coproprietaires(id, nom, prenom)')
@@ -98,8 +113,13 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           const c = Array.isArray(l.coproprietaires) ? l.coproprietaires[0] ?? null : l.coproprietaires;
           return { ...l, coproprietaires: c as Ligne['coproprietaires'] };
         });
+        setLignesCount(mappedLignes.length);
         await saveToDocuments(mappedLignes);
-        router.refresh();
+        if (json.promptEmailSend) {
+          setShowPublishEmailPrompt(true);
+        } else {
+          router.refresh();
+        }
       }
     } catch {
       setPublishMsg('Erreur réseau.');
@@ -110,11 +130,11 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
 
   // Auto-generate répartition when accordion opens with no lines (publié only)
   useEffect(() => {
-    if (open && lignes.length === 0 && isSyndic && !autoRegenRef.current && !regenerating && appel.statut !== 'brouillon') {
+    if (open && lignesCount === 0 && isSyndic && !autoRegenRef.current && !regenerating && currentStatut !== 'brouillon') {
       autoRegenRef.current = true;
       handleRegenerate();
     }
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentStatut, lignesCount, open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRegenerate = async () => {
     setRegenerating(true);
@@ -217,6 +237,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
 
   const handleSendEmails = async () => {
     setShowEmailConfirm(false);
+    setShowPublishEmailPrompt(false);
     setSending(true);
     setSendMsg('');
     setSendOk(null);
@@ -288,7 +309,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           {/* Actions */}
           <div className="flex items-center gap-1 flex-wrap sm:shrink-0 sm:flex-nowrap">
             {isSyndic && canWrite && (
-              appel.statut === 'brouillon' ? (
+              currentStatut === 'brouillon' ? (
                 <button
                   type="button"
                   onClick={handlePublish}
@@ -345,9 +366,9 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           <div className="flex items-center gap-2 text-sm text-red-800">
             <Trash2 size={15} className="shrink-0 text-red-500" />
             <span>
-              {appel.statut === 'publie'
+              {currentStatut === 'publie'
                 ? <>Supprimer « <strong>{appel.titre}</strong> » ? Les soldes des copropriétaires non payés seront rétablis.</>
-                : appel.statut === 'confirme'
+                : currentStatut === 'confirme'
                   ? <>Supprimer « <strong>{appel.titre}</strong> » ? Les soldes des copropriétaires marqués payés seront ajustés.</>
                   : <>Supprimer l&apos;appel en préparation « <strong>{appel.titre}</strong> » ? Cette action est irréversible.</>
               }
@@ -389,6 +410,37 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         </div>
       )}
 
+      {showPublishEmailPrompt && !sending && (
+        <div className="mx-5 mb-3 flex flex-wrap items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-amber-900">
+            <CalendarCheck2 size={15} className="shrink-0 text-amber-600" />
+            <span>
+              L&apos;échéance est à 30 jours. Envoyer maintenant l&apos;avis à{' '}
+              <strong>{lignesCount} copropriétaire{lignesCount > 1 ? 's' : ''}</strong> ?
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleSendEmails}
+              className="text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Envoyer maintenant
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPublishEmailPrompt(false);
+                router.refresh();
+              }}
+              className="text-xs font-medium text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              Plus tard
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Confirmation envoi email ─────────────────────────── */}
       {showEmailConfirm && !sending && (
         <div className="mx-5 mb-3 flex flex-wrap items-center justify-between gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
@@ -396,7 +448,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
             <Mail size={15} className="shrink-0 text-blue-600" />
             <span>
               Envoyer les avis de paiement à{' '}
-              <strong>{lignes.length} copropriétaire{lignes.length > 1 ? 's' : ''}</strong> ?
+              <strong>{lignesCount} copropriétaire{lignesCount > 1 ? 's' : ''}</strong> ?
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">

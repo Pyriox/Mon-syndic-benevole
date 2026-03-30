@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { isAdminUser } from '@/lib/admin-config';
 import { Resend } from 'resend';
 import { Mail, CheckCircle2, XCircle, Clock, ExternalLink, MousePointerClick, Eye } from 'lucide-react';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 interface ResendEmail {
   id: string;
@@ -66,6 +67,18 @@ export default async function AdminEmailsPage() {
   const nbFailed     = emails.filter((e) => e.last_event === 'failed').length;
   const deliveryRate = emails.length > 0 ? Math.round((nbDelivered / emails.length) * 100) : 0;
 
+  const admin = createAdminClient();
+  const { data: internalDeliveries } = await admin
+    .from('email_deliveries')
+    .select('id, status, retry_count, next_retry_at')
+    .order('created_at', { ascending: false })
+    .limit(500);
+
+  const internalBounces = (internalDeliveries ?? []).filter((r) => r.status === 'bounced').length;
+  const internalComplaints = (internalDeliveries ?? []).filter((r) => r.status === 'complained').length;
+  const internalFailed = (internalDeliveries ?? []).filter((r) => r.status === 'failed').length;
+  const internalRetryPending = (internalDeliveries ?? []).filter((r) => !!r.next_retry_at).length;
+
   return (
     <div className="space-y-6 pb-16">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -102,6 +115,31 @@ export default async function AdminEmailsPage() {
       </div>
 
       {/* ── Table ── */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-gray-900">Observabilite interne (preuves + retries)</h2>
+          <a href="/dashboard/notifications/preuves-email" className="text-xs text-blue-600 hover:text-blue-800">Voir les preuves</a>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-sm">
+          <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2">
+            <p className="text-xs text-red-600">Bounces</p>
+            <p className="font-semibold text-red-700">{internalBounces}</p>
+          </div>
+          <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2">
+            <p className="text-xs text-red-600">Plaintes</p>
+            <p className="font-semibold text-red-700">{internalComplaints}</p>
+          </div>
+          <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2">
+            <p className="text-xs text-red-600">Echecs</p>
+            <p className="font-semibold text-red-700">{internalFailed}</p>
+          </div>
+          <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+            <p className="text-xs text-amber-700">Retries en attente</p>
+            <p className="font-semibold text-amber-700">{internalRetryPending}</p>
+          </div>
+        </div>
+      </div>
+
       {fetchError ? (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <p className="text-sm text-red-700 font-medium">Impossible de charger les emails Resend</p>

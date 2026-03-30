@@ -15,6 +15,8 @@ import { repartirMontant } from '@/lib/utils';
 import { Resend } from 'resend';
 import { buildAppelEmail, buildAppelEmailSubject } from '@/lib/emails/appel-de-fonds';
 import { isSubscribed } from '@/lib/subscription';
+import { trackEmailDelivery } from '@/lib/email-delivery';
+import { pushNotification } from '@/lib/notification-center';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -174,18 +176,29 @@ export async function POST(
       .eq('id', r.copId);
   }
 
-  // Détermine si l'avis doit être envoyé immédiatement (échéance <= J+30)
-  // ou différé au cron quotidien (J-30 avant échéance).
-  const todayMs = Date.now();
-  const echeanceMs = new Date(appel.date_echeance + 'T00:00:00').getTime();
-  const daysUntilEcheance = Math.floor((echeanceMs - todayMs) / 86_400_000);
-  const sendImmediately = daysUntilEcheance <= 30;
+  // Détermine si l'avis doit être envoyé immédiatement (échéance à moins de 30 jours),
+  // proposé manuellement à J-30 exact, ou différé au cron quotidien avant cette date.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const echeance = new Date(`${appel.date_echeance}T00:00:00`);
+  echeance.setHours(0, 0, 0, 0);
+  const daysUntilEcheance = Math.round((echeance.getTime() - today.getTime()) / 86_400_000);
+  const promptEmailSend = daysUntilEcheance === 30;
+  const sendImmediately = daysUntilEcheance < 30;
 
   // Marquer comme publié (emailed_at = now seulement si envoi immédiat)
   const now = new Date().toISOString();
   await supabase.from('appels_de_fonds')
     .update({ statut: 'publie', ...(sendImmediately ? { emailed_at: now } : {}) })
     .eq('id', appelId);
+
+  if (promptEmailSend) {
+    return NextResponse.json({
+      message: "Appel publié · L'échéance est dans 30 jours. Voulez-vous envoyer l'avis par e-mail aux copropriétaires maintenant ?",
+      sent: 0,
+      promptEmailSend: true,
+    });
+  }
 
   if (!sendImmediately) {
     return NextResponse.json({
@@ -215,14 +228,16 @@ export async function POST(
     }
     if (!email) continue;
 
-    const { error } = await resend.emails.send({
+    const subject = buildAppelEmailSubject({
+      type: 'avis',
+      coproprieteNom,
+      dateEcheance: appel.date_echeance,
+    });
+
+    const result = await resend.emails.send({
       from: FROM,
       to: email,
-      subject: buildAppelEmailSubject({
-        type: 'avis',
-        coproprieteNom,
-        dateEcheance: appel.date_echeance,
-      }),
+      subject,
       html: buildAppelEmail({
         type: 'avis',
         prenom: cop.prenom,
@@ -234,7 +249,50 @@ export async function POST(
         dateEcheance: appel.date_echeance,
       }),
     });
-    if (!error) sent++;
+
+    if (result.error) {
+      await trackEmailDelivery({
+        templateKey: 'appel_avis',
+        status: 'failed',
+        recipientEmail: email,
+        coproprieteId: appel.copropriete_id,
+        appelDeFondsId: appelId,
+        subject,
+        legalEventType: 'appel_de_fonds_avis',
+        legalReference: appelId,
+        payload: { type: 'publish_immediate' },
+        lastError: result.error.message,
+      });
+    } else {
+      sent++;
+      await trackEmailDelivery({
+        providerMessageId: result.data?.id,
+        templateKey: 'appel_avis',
+        status: 'sent',
+        recipientEmail: email,
+        recipientUserId: cop.user_id,
+        coproprieteId: appel.copropriete_id,
+        appelDeFondsId: appelId,
+        subject,
+        legalEventType: 'appel_de_fonds_avis',
+        legalReference: appelId,
+        payload: { type: 'publish_immediate' },
+      });
+    }
+  }
+
+  if (sent > 0) {
+    await pushNotification({
+      userId: user.id,
+      coproprieteId: appel.copropriete_id,
+      type: 'appel_fonds',
+      severity: 'info',
+      title: 'Appel publie et avis envoyes',
+      body: `${sent} envoi(s) traces avec preuve`,
+      href: '/appels-de-fonds',
+      actionLabel: 'Ouvrir',
+      metadata: { appelId, sent },
+    });
   }
 
   return NextResponse.json({

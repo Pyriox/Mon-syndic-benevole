@@ -24,6 +24,7 @@ import {
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
 import { buildTrialEndingEmail, buildTrialEndingSubject } from '@/lib/emails/subscription';
+import { trackEmailDelivery } from '@/lib/email-delivery';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest) {
   // appel dont l'échéance est déjà dépassée (publie tardif ou cron manqué).
   const { data: avisAppels } = await supabase
     .from('appels_de_fonds')
-    .select('id, titre, montant_total, date_echeance, coproprietes(nom)')
+    .select('id, copropriete_id, titre, montant_total, date_echeance, coproprietes(nom)')
     .eq('statut', 'publie')
     .is('emailed_at', null)
     .gte('date_echeance', todayStr)
@@ -72,7 +73,7 @@ export async function GET(req: NextRequest) {
   // Appels à rappeler (J-7)
   const { data: j7Appels } = await supabase
     .from('appels_de_fonds')
-    .select('id, titre, montant_total, date_echeance, coproprietes(nom)')
+    .select('id, copropriete_id, titre, montant_total, date_echeance, coproprietes(nom)')
     .eq('statut', 'publie')
     .eq('date_echeance', dateJ7)
     .is('rappel_j7_at', null);
@@ -80,7 +81,7 @@ export async function GET(req: NextRequest) {
   // Appels en mise en demeure (J+15)
   const { data: j15Appels } = await supabase
     .from('appels_de_fonds')
-    .select('id, titre, montant_total, date_echeance, coproprietes(nom)')
+    .select('id, copropriete_id, titre, montant_total, date_echeance, coproprietes(nom)')
     .eq('statut', 'publie')
     .eq('date_echeance', dateJ15)
     .is('rappel_j15_at', null);
@@ -302,6 +303,7 @@ export async function GET(req: NextRequest) {
 // ---- Types locaux ----
 interface AppelRow {
   id: string;
+  copropriete_id: string;
   titre: string;
   date_echeance: string;
   coproprietes: { nom: string } | null;
@@ -367,10 +369,12 @@ async function sendRappelEmails(
     const email = cop.email || (cop.user_id ? emailByUserId.get(cop.user_id) ?? '' : '');
     if (!email) return;
 
-    const { error } = await resend.emails.send({
+    const subject = buildAppelEmailSubject({ type, coproprieteNom, dateEcheance: appel.date_echeance });
+
+    const result = await resend.emails.send({
       from: FROM,
       to: email,
-      subject: buildAppelEmailSubject({ type, coproprieteNom, dateEcheance: appel.date_echeance }),
+      subject,
       html: buildAppelEmail({
         type,
         prenom:         cop.prenom,
@@ -382,7 +386,38 @@ async function sendRappelEmails(
         dateEcheance:   appel.date_echeance,
       }),
     });
-    if (!error) sent++;
+
+    if (result.error) {
+      await trackEmailDelivery({
+        templateKey: type === 'avis' ? 'appel_avis' : type === 'rappel' ? 'appel_rappel' : 'appel_mise_en_demeure',
+        status: 'failed',
+        recipientEmail: email,
+        recipientUserId: cop.user_id,
+        coproprieteId: appel.copropriete_id,
+        appelDeFondsId: appel.id,
+        subject,
+        legalEventType: type === 'avis' ? 'appel_de_fonds_avis' : type === 'rappel' ? 'appel_de_fonds_rappel' : 'appel_de_fonds_mise_en_demeure',
+        legalReference: appel.id,
+        payload: { trigger: 'cron', type },
+        lastError: result.error.message,
+      });
+      return;
+    }
+
+    await trackEmailDelivery({
+      providerMessageId: result.data?.id,
+      templateKey: type === 'avis' ? 'appel_avis' : type === 'rappel' ? 'appel_rappel' : 'appel_mise_en_demeure',
+      status: 'sent',
+      recipientEmail: email,
+      recipientUserId: cop.user_id,
+      coproprieteId: appel.copropriete_id,
+      appelDeFondsId: appel.id,
+      subject,
+      legalEventType: type === 'avis' ? 'appel_de_fonds_avis' : type === 'rappel' ? 'appel_de_fonds_rappel' : 'appel_de_fonds_mise_en_demeure',
+      legalReference: appel.id,
+      payload: { trigger: 'cron', type },
+    });
+    sent++;
   }));
 
   return sent;

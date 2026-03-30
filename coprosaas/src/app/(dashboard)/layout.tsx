@@ -108,8 +108,32 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     'syndic';
   const userRole = selectedCopro?.role ?? accountRoleFromDb;
 
-  // --- Notifications (uniquement pour le syndic sur la copropriété sélectionnée) ---
+  // --- Notifications persistantes (centre de notifications) ---
   const notifications: AppNotification[] = [];
+
+  const { data: persistentNotifs } = await supabase
+    .from('app_notifications')
+    .select('id, type, severity, title, body, href, action_label, is_read, created_at, copropriete_id')
+    .eq('user_id', user.id)
+    .or(selectedCoproId ? `copropriete_id.is.null,copropriete_id.eq.${selectedCoproId}` : 'copropriete_id.is.null')
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  for (const n of persistentNotifs ?? []) {
+    notifications.push({
+      id: n.id,
+      type: n.type,
+      severity: n.severity,
+      title: n.title,
+      body: n.body ?? undefined,
+      href: n.href,
+      actionLabel: n.action_label ?? undefined,
+      isRead: n.is_read,
+      createdAt: n.created_at,
+    });
+  }
+
+  // --- Alertes dynamiques (uniquement pour le syndic sur la copropriété sélectionnée) ---
 
   if (selectedCoproId && userRole === 'syndic') {
     notifications.push(...await getSyndicNotifications(selectedCoproId));
@@ -145,6 +169,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
           sublabel: `${count} nouveau${count > 1 ? 'x' : ''} message${count > 1 ? 's' : ''} du support`,
           href: '/aide',
           severity: 'info',
+          isRead: false,
         });
       }
     }
