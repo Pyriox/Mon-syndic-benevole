@@ -114,7 +114,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           return { ...l, coproprietaires: c as Ligne['coproprietaires'] };
         });
         setLignesCount(mappedLignes.length);
-        await saveToDocuments(mappedLignes);
+        const saveResult = await saveToDocuments(mappedLignes);
+        if (!saveResult.ok) {
+          setPublishMsg((prev) => `${prev} (publication OK, archivage impossible: ${saveResult.error})`);
+        }
         if (json.promptEmailSend) {
           setShowPublishEmailPrompt(true);
         } else {
@@ -196,9 +199,11 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
     }
   };
 
-  const saveToDocuments = async (freshLignes?: Ligne[]) => {
+  const saveToDocuments = async (freshLignes?: Ligne[]): Promise<{ ok: boolean; error?: string }> => {
     try {
       const effectiveLignes = freshLignes ?? lignes;
+      if (!appel.copropriete_id) return { ok: false, error: 'Copropriété introuvable pour archiver le PDF.' };
+
       const appelForPDF: AppelForPDF = {
         ...appel,
         lignes_appels_de_fonds: effectiveLignes.map((l) => ({
@@ -211,28 +216,42 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
             : null,
         })),
       };
+
       const pdfDoc = buildAppelFondsPDF(appelForPDF);
       const pdfBlob = pdfDoc.output('blob');
+
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !appel.copropriete_id) return;
+      if (!user) return { ok: false, error: 'Session expirée. Reconnectez-vous pour archiver le document.' };
+
       const { data: dossier } = await supabase
-        .from('dossiers').select('id')
-        .eq('nom', 'Appels de fonds').eq('created_by', user.id).maybeSingle();
-      const fileName = `${appel.copropriete_id}/${Date.now()}-appel-${appel.id.slice(0, 8)}.pdf`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents').upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: false });
-      if (uploadError) return;
-      const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(uploadData.path);
-      await supabase.from('documents').insert({
-        copropriete_id: appel.copropriete_id,
-        dossier_id: dossier?.id ?? null,
-        nom: `Appel de fonds — ${appel.titre}`,
-        type: 'autre',
-        url: publicUrl,
-        taille: pdfBlob.size,
-        uploaded_by: user.id,
+        .from('dossiers')
+        .select('id')
+        .eq('nom', 'Appels de fonds')
+        .eq('created_by', user.id)
+        .maybeSingle();
+
+      const file = new File([pdfBlob], `appel-${appel.id.slice(0, 8)}.pdf`, { type: 'application/pdf' });
+      const form = new FormData();
+      form.append('file', file);
+      form.append('nom', `Appel de fonds — ${appel.titre}`);
+      form.append('type', 'autre');
+      form.append('copropriete_id', appel.copropriete_id);
+      if (dossier?.id) form.append('dossier_id', dossier.id);
+
+      const uploadRes = await fetch('/api/upload-document', {
+        method: 'POST',
+        body: form,
       });
-    } catch { /* silent */ }
+
+      if (!uploadRes.ok) {
+        const payload = await uploadRes.json().catch(() => ({})) as { error?: string };
+        return { ok: false, error: payload.error ?? 'Échec de l’archivage dans Documents.' };
+      }
+
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Erreur technique lors de l’archivage dans Documents.' };
+    }
   };
 
   const handleSendEmails = async () => {
@@ -248,7 +267,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
       setSendOk(res.ok);
       if (res.ok) {
         setEmailedAt(new Date().toISOString());
-        await saveToDocuments();
+        const saveResult = await saveToDocuments();
+        if (!saveResult.ok) {
+          setSendMsg((prev) => `${prev} (envoi OK, archivage impossible: ${saveResult.error})`);
+        }
         router.refresh();
       }
     } catch {

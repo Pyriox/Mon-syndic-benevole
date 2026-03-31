@@ -57,18 +57,6 @@ export default function NotificationsCenter({ initialItems }: { initialItems: No
           <p className="text-sm text-gray-500 mt-1">Historique persistant, suivi lu/non lu et actions rapides.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href="/dashboard/notifications/accuses-ag"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50"
-          >
-            Accuses AG
-          </Link>
-          <Link
-            href="/dashboard/notifications/preuves-email"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50"
-          >
-            Preuves email
-          </Link>
           <button
             type="button"
             onClick={markAllRead}

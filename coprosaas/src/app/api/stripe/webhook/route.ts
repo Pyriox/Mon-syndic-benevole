@@ -330,6 +330,30 @@ export async function POST(req: NextRequest) {
       }
 
       // ── Paiement échoué ───────────────────────────────────────────────────
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = invoice.customer as string;
+        const supabase = createAdminClient();
+        const { data: copro } = await supabase
+          .from('coproprietes')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .maybeSingle();
+        if (!copro) break;
+
+        try {
+          const adminClient = createAdminClient();
+          const { email, coproNom } = await getSyndicInfoByCoproId(adminClient, copro.id);
+          if (email && coproNom) {
+            await logUserEvent(adminClient, email, 'payment_succeeded', `Paiement réussi — ${coproNom}`);
+          }
+        } catch (e) {
+          console.error('[Stripe webhook] Erreur log payment_succeeded:', e);
+        }
+        break;
+      }
+
+      // ── Paiement échoué ───────────────────────────────────────────────────
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;

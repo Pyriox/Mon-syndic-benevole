@@ -67,7 +67,7 @@ export async function pushAdminAlert(params: {
       severity: params.severity ?? 'warning',
       title: params.title,
       body: params.body ?? null,
-      href: params.href ?? '/admin/emails',
+      href: params.href ?? '/admin/dashboard',
       actionLabel: 'Voir',
       metadata: params.metadata ?? {},
     }))

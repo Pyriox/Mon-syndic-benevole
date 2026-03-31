@@ -60,7 +60,7 @@ export function buildAppelEmail(params: AppelEmailParams): string {
   };
 
   const closing: Record<AppelEmailType, string> = {
-    avis: `<p style="margin:20px 0 0;font-size:14px;color:${COLOR.muted}">Merci d'effectuer votre règlement avant la date d'échéance.</p>`,
+    avis: `<p style="margin:20px 0 0;font-size:14px;color:${COLOR.muted}">Merci d'effectuer votre règlement avant la date d'échéance.</p><p style="margin:10px 0 0;font-size:13px;color:${COLOR.muted}">Votre avis est également disponible dans votre espace personnel copropriétaire.</p>`,
     rappel: `<p style="margin:20px 0 0;font-size:14px;color:${COLOR.muted}">Merci de régulariser votre situation avant l'échéance.</p>`,
     mise_en_demeure: alertBanner(
       'Sans régularisation sous 8 jours, cette situation sera portée à l\'ordre du jour de la prochaine assemblée générale.',

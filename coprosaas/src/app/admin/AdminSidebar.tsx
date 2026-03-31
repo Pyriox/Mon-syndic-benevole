@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ElementType } from 'react';
-import { LayoutDashboard, Users, Building2, LifeBuoy, Mail } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, LifeBuoy } from 'lucide-react';
 
 type NavItem = { href: string; label: string; icon: ElementType; soon?: boolean };
 
@@ -11,7 +11,6 @@ const NAV: NavItem[] = [
   { href: '/admin/dashboard',     label: 'Dashboard',      icon: LayoutDashboard },
   { href: '/admin/utilisateurs',  label: 'Utilisateurs',   icon: Users },
   { href: '/admin/coproprietes',  label: 'Copropriétés',   icon: Building2 },
-  { href: '/admin/emails',        label: 'Emails',         icon: Mail },
   { href: '/admin/support',       label: 'Support',        icon: LifeBuoy },
 ];
 

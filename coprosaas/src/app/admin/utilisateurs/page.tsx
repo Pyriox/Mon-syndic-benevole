@@ -405,7 +405,7 @@ export default async function AdminUtilisateursPage({
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <AdminCopyId id={u.id} iconOnly />
                       {!isAdmin && <AdminImpersonate email={u.email ?? ''} iconOnly />}
-                      <AdminUserLogs email={u.email ?? ''} />
+                      <AdminUserLogs email={u.email ?? ''} signupAt={u.created_at} />
                       {tickets > 0 && (
                         <span className="inline-flex items-center gap-1 text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 rounded px-1.5 py-0.5">
                           <LifeBuoy size={10} />{tickets}

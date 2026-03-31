@@ -15,14 +15,15 @@ export type UserEvent = {
 
 export type GetUserLogsFilters = {
   severity?: 'info' | 'warning' | 'error';
-  category?: 'billing' | 'account' | 'activity';
+  category?: 'billing' | 'account' | 'activity' | 'admin';
   search?: string;
 };
 
-const CATEGORY_EVENTS: Record<'billing' | 'account' | 'activity', string[]> = {
-  billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_failed', 'subscription_renewed', 'subscription_upgraded'],
-  account: ['account_confirmed', 'password_reset_requested', 'login_success'],
+const CATEGORY_EVENTS: Record<'billing' | 'account' | 'activity' | 'admin', string[]> = {
+  billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_succeeded', 'payment_failed', 'subscription_renewed', 'subscription_upgraded'],
+  account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'login_success', 'login_failed', 'email_confirmation_resent'],
   activity: ['copropriete_created', 'appel_fonds_created', 'ag_created', 'coproprietaire_added', 'ticket_created', 'document_uploaded', 'coproprietaire_deleted', 'appel_fonds_sent'],
+  admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_subscription_reset', 'admin_stripe_sync', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
 };
 
 export async function getUserLogs(

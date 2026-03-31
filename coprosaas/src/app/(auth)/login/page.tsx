@@ -72,6 +72,12 @@ function LoginForm() {
         setUnconfirmedEmail(email);
       } else {
         setError('Email ou mot de passe incorrect. Veuillez réessayer.');
+        void logEventForEmail({
+          email,
+          eventType: 'login_failed',
+          severity: 'warning',
+          label: 'Échec de connexion (identifiants invalides)',
+        }).catch(() => undefined);
       }
       setLoading(false);
       return;
@@ -83,8 +89,15 @@ function LoginForm() {
 
   const handleResendConfirmation = async () => {
     setResendLoading(true);
-    await supabase.auth.resend({ type: 'signup', email: unconfirmedEmail });
+    const { error: resendError } = await supabase.auth.resend({ type: 'signup', email: unconfirmedEmail });
     setResendLoading(false);
+    if (!resendError) {
+      void logEventForEmail({
+        email: unconfirmedEmail,
+        eventType: 'email_confirmation_resent',
+        label: 'Email de confirmation renvoyé',
+      }).catch(() => undefined);
+    }
     setResendSent(true);
   };
 

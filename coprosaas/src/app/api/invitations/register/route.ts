@@ -97,5 +97,18 @@ export async function POST(request: NextRequest) {
   // Marquer l'invitation comme acceptée
   await admin.from('invitations').update({ statut: 'acceptee' }).eq('token', token);
 
+  await Promise.resolve(
+    admin.from('user_events').insert({
+      user_email: invitation.email.toLowerCase(),
+      event_type: 'user_registered',
+      label: 'Inscription via invitation',
+      severity: 'info',
+      metadata: {
+        source: 'invitation',
+        copropriete_id: invitation.copropriete_id,
+      },
+    }),
+  ).catch(() => undefined);
+
   return NextResponse.json({ email: invitation.email });
 }

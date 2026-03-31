@@ -8,14 +8,18 @@ import { getUserLogs, type UserEvent, type GetUserLogsFilters } from '@/lib/acti
 const EVENT_META: Record<string, { icon: string; label: string; color: string }> = {
   // Compte
   account_confirmed:         { icon: '✓', label: 'Compte vérifié',              color: 'text-green-600 bg-green-50 border-green-200' },
+  user_registered:           { icon: '🆕', label: 'Inscription',                 color: 'text-blue-700 bg-blue-50 border-blue-200' },
   login_success:             { icon: '→', label: 'Connexion',                   color: 'text-gray-600 bg-gray-50 border-gray-200' },
+  login_failed:              { icon: '⚠', label: 'Connexion échouée',           color: 'text-amber-700 bg-amber-50 border-amber-200' },
   password_reset_requested:  { icon: '🔑', label: 'Réinit. mot de passe',        color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
+  email_confirmation_resent: { icon: '✉', label: 'Email de confirmation renvoyé', color: 'text-sky-700 bg-sky-50 border-sky-200' },
   // Facturation
   trial_started:             { icon: '↗', label: 'Essai démarré',               color: 'text-amber-600 bg-amber-50 border-amber-200' },
   subscription_created:      { icon: '↑', label: 'Abonnement activé',           color: 'text-blue-600 bg-blue-50 border-blue-200' },
   subscription_renewed:      { icon: '↻', label: 'Renouvellement',              color: 'text-blue-500 bg-blue-50 border-blue-200' },
   subscription_upgraded:     { icon: '⬆', label: 'Changement de plan',          color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
   subscription_cancelled:    { icon: '↓', label: 'Résiliation',                 color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  payment_succeeded:         { icon: '✓', label: 'Paiement réussi',             color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
   payment_failed:            { icon: '✗', label: 'Paiement échoué',             color: 'text-red-600 bg-red-50 border-red-200' },
   // Support
   ticket_created:            { icon: '✉', label: 'Ticket ouvert',               color: 'text-purple-600 bg-purple-50 border-purple-200' },
@@ -27,6 +31,21 @@ const EVENT_META: Record<string, { icon: string; label: string; color: string }>
   coproprietaire_added:      { icon: '👤', label: 'Copropriétaire ajouté',       color: 'text-cyan-600 bg-cyan-50 border-cyan-200' },
   coproprietaire_deleted:    { icon: '🗑️', label: 'Copropriétaire supprimé',     color: 'text-rose-600 bg-rose-50 border-rose-200' },
   document_uploaded:         { icon: '📎', label: 'Document ajouté',             color: 'text-slate-600 bg-slate-50 border-slate-200' },
+  // Admin
+  admin_user_deleted:              { icon: '🛑', label: 'Compte supprimé (admin)',            color: 'text-red-700 bg-red-50 border-red-200' },
+  admin_resend_confirmation:       { icon: '✉', label: 'Confirmation renvoyée (admin)',       color: 'text-sky-700 bg-sky-50 border-sky-200' },
+  admin_force_confirm:             { icon: '✓', label: 'Compte vérifié manuellement',         color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+  admin_invitation_cancelled:      { icon: '⊘', label: 'Invitation annulée (admin)',          color: 'text-amber-700 bg-amber-50 border-amber-200' },
+  admin_role_revoked:              { icon: '↓', label: 'Droits admin retirés',                color: 'text-orange-700 bg-orange-50 border-orange-200' },
+  admin_role_granted:              { icon: '↑', label: 'Droits admin accordés',               color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
+  admin_user_updated:              { icon: '✎', label: 'Utilisateur modifié (admin)',         color: 'text-slate-700 bg-slate-50 border-slate-200' },
+  admin_invitation_deleted:        { icon: '🗑', label: 'Invitation supprimée (admin)',        color: 'text-rose-700 bg-rose-50 border-rose-200' },
+  admin_subscription_reset:        { icon: '↺', label: 'Abonnement réinitialisé (admin)',     color: 'text-amber-700 bg-amber-50 border-amber-200' },
+  admin_stripe_sync:               { icon: '⇄', label: 'Synchronisation Stripe (admin)',      color: 'text-blue-700 bg-blue-50 border-blue-200' },
+  admin_syndic_reassigned:         { icon: '⇆', label: 'Syndic réassigné (admin)',            color: 'text-cyan-700 bg-cyan-50 border-cyan-200' },
+  admin_copro_updated:             { icon: '🏢', label: 'Copropriété modifiée (admin)',       color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
+  admin_impersonation_link_created:{ icon: '🔐', label: 'Lien d’impersonation généré',        color: 'text-purple-700 bg-purple-50 border-purple-200' },
+  admin_coproprietaire_updated:    { icon: '👤', label: 'Copropriétaire modifié (admin)',     color: 'text-teal-700 bg-teal-50 border-teal-200' },
 };
 
 const SEVERITY_DOT: Record<string, string> = {
@@ -35,7 +54,7 @@ const SEVERITY_DOT: Record<string, string> = {
   error:   'bg-red-500',
 };
 
-type Category = 'all' | 'billing' | 'account' | 'activity';
+type Category = 'all' | 'billing' | 'account' | 'activity' | 'admin';
 type Severity = 'all' | 'info' | 'warning' | 'error';
 
 function fmtDatetime(s: string) {
@@ -45,7 +64,25 @@ function fmtDatetime(s: string) {
   });
 }
 
-export default function AdminUserLogs({ email }: { email: string }) {
+function fmtPreciseDatetime(s: string) {
+  return new Date(s).toLocaleString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'short',
+  });
+}
+
+export default function AdminUserLogs({
+  email,
+  signupAt,
+}: {
+  email: string;
+  signupAt?: string | null;
+}) {
   const [open, setOpen]         = useState(false);
   const [loading, setLoading]   = useState(false);
   const [allEvents, setAllEvents] = useState<UserEvent[] | null>(null);
@@ -57,9 +94,10 @@ export default function AdminUserLogs({ email }: { email: string }) {
   const [severity, setSeverity] = useState<Severity>('all');
 
   const CATEGORY_EVENTS: Record<Exclude<Category, 'all'>, string[]> = {
-    billing:  ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_failed', 'subscription_renewed', 'subscription_upgraded'],
-    account:  ['account_confirmed', 'password_reset_requested', 'login_success'],
+    billing:  ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_succeeded', 'payment_failed', 'subscription_renewed', 'subscription_upgraded'],
+    account:  ['account_confirmed', 'user_registered', 'password_reset_requested', 'login_success', 'login_failed', 'email_confirmation_resent'],
     activity: ['copropriete_created', 'appel_fonds_created', 'appel_fonds_sent', 'ag_created', 'coproprietaire_added', 'coproprietaire_deleted', 'document_uploaded', 'ticket_created'],
+    admin:    ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_subscription_reset', 'admin_stripe_sync', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
   };
 
   const fetchEvents = async () => {
@@ -121,6 +159,9 @@ export default function AdminUserLogs({ email }: { email: string }) {
               <div>
                 <p className="text-sm font-semibold text-gray-900">Journal d&apos;activité</p>
                 <p className="text-xs text-gray-500 mt-0.5 truncate max-w-xs">{email}</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Inscription : {signupAt ? fmtPreciseDatetime(signupAt) : '—'}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -154,11 +195,11 @@ export default function AdminUserLogs({ email }: { email: string }) {
               {/* Catégorie + Sévérité */}
               <div className="flex gap-2 flex-wrap">
                 <div className="flex gap-1">
-                  {(['all', 'billing', 'account', 'activity'] as const).map((cat) => (
+                  {(['all', 'billing', 'account', 'activity', 'admin'] as const).map((cat) => (
                     <button key={cat}
                       onClick={() => setCategory(cat)}
                       className={`text-[11px] px-2 py-0.5 rounded-full border font-medium transition-colors ${category === cat ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'}`}>
-                      { cat === 'all' ? 'Tout' : cat === 'billing' ? 'Facturation' : cat === 'account' ? 'Compte' : 'Activité' }
+                      {cat === 'all' ? 'Tout' : cat === 'billing' ? 'Facturation' : cat === 'account' ? 'Compte' : cat === 'activity' ? 'Activité' : 'Admin'}
                     </button>
                   ))}
                 </div>
