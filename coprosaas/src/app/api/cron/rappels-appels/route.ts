@@ -21,6 +21,9 @@ import {
   buildBrouillonRappelSubject,
   buildBrouillonEcheanceEmail,
   buildBrouillonEcheanceSubject,
+  buildSyndicOnboardingReminderEmail,
+  buildSyndicOnboardingReminderSubject,
+  type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
 import { buildTrialEndingEmail, buildTrialEndingSubject } from '@/lib/emails/subscription';
@@ -44,6 +47,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
+  const onboardingOnly = req.nextUrl.searchParams.get('onboarding_only') === '1';
+  const onboardingForce = req.nextUrl.searchParams.get('onboarding_force') === '1';
+  const onboardingTestEmail = normalizeEmail(req.nextUrl.searchParams.get('onboarding_test_email'));
+  const onboardingKindParam = req.nextUrl.searchParams.get('onboarding_kind');
+  const onboardingKinds: SyndicOnboardingReminderKind[] = onboardingKindParam === 'j2'
+    ? ['j2']
+    : onboardingKindParam === 'j7'
+      ? ['j7']
+      : ['j2', 'j7'];
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -58,6 +71,8 @@ export async function GET(req: NextRequest) {
   const dateJ14 = addDays(today, 14);  // brouillons non publiés : rappel syndic J-14
   const dateJ7  = addDays(today, 7);   // appels avec échéance dans 7 jours
   const dateJ15 = addDays(today, -15); // appels avec échéance il y a 15 jours
+  const dateM2  = addDays(today, -2);  // onboarding syndic : J+2 après confirmation de compte
+  const dateM7  = addDays(today, -7);  // onboarding syndic : J+7 après confirmation de compte
 
   // ── Avis J-30 : appels publiés dont l'email n'a pas encore été envoyé ──
   // .gte('date_echeance', todayStr) empêche d'envoyer un "avis J-30" pour un
@@ -88,37 +103,39 @@ export async function GET(req: NextRequest) {
 
   let totalSent = 0;
 
-  // Traitement avis J-30 (email initial différé)
-  for (const appel of avisAppels ?? []) {
-    const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, 'avis');
-    if (sent >= 0) {
-      await supabase.from('appels_de_fonds')
-        .update({ emailed_at: new Date().toISOString() })
-        .eq('id', appel.id);
+  if (!onboardingOnly) {
+    // Traitement avis J-30 (email initial différé)
+    for (const appel of avisAppels ?? []) {
+      const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, 'avis');
+      if (sent >= 0) {
+        await supabase.from('appels_de_fonds')
+          .update({ emailed_at: new Date().toISOString() })
+          .eq('id', appel.id);
+      }
+      totalSent += sent;
     }
-    totalSent += sent;
-  }
 
-  // Traitement J-7
-  for (const appel of j7Appels ?? []) {
-    const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, 'rappel');
-    if (sent >= 0) {
-      await supabase.from('appels_de_fonds')
-        .update({ rappel_j7_at: new Date().toISOString() })
-        .eq('id', appel.id);
+    // Traitement J-7
+    for (const appel of j7Appels ?? []) {
+      const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, 'rappel');
+      if (sent >= 0) {
+        await supabase.from('appels_de_fonds')
+          .update({ rappel_j7_at: new Date().toISOString() })
+          .eq('id', appel.id);
+      }
+      totalSent += sent;
     }
-    totalSent += sent;
-  }
 
-  // Traitement J+15
-  for (const appel of j15Appels ?? []) {
-    const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, 'mise_en_demeure');
-    if (sent >= 0) {
-      await supabase.from('appels_de_fonds')
-        .update({ rappel_j15_at: new Date().toISOString() })
-        .eq('id', appel.id);
+    // Traitement J+15
+    for (const appel of j15Appels ?? []) {
+      const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, 'mise_en_demeure');
+      if (sent >= 0) {
+        await supabase.from('appels_de_fonds')
+          .update({ rappel_j15_at: new Date().toISOString() })
+          .eq('id', appel.id);
+      }
+      totalSent += sent;
     }
-    totalSent += sent;
   }
 
   // ── Rappel brouillons non publiés (> 3 jours) ──────────────────────────────
@@ -188,25 +205,27 @@ export async function GET(req: NextRequest) {
   const brouillonJ7Groups = groupBrouillons((brouillonsJ7 ?? []) as unknown as BrouillonRow[]);
   const brouillonJ1UrgentGroups = groupBrouillons((brouillonsJ1Urgent ?? []) as unknown as BrouillonRow[]);
 
-  for (const [, group] of brouillonGroups) {
-    const n = group.ids.length;
-    const { error } = await resend.emails.send({
-      from: FROM,
-      to: group.syndicEmail,
-      subject: buildBrouillonRappelSubject(group.coproprieteNom, n),
-      html: buildBrouillonRappelEmail({
-        syndicPrenom: group.syndicPrenom,
-        coproprieteNom: group.coproprieteNom,
-        nombreBrouillons: n,
-        appelsUrl: `${SITE_URL}/appels-de-fonds`,
-      }),
-    });
-    if (!error) {
-      await supabase
-        .from('appels_de_fonds')
-        .update({ rappel_brouillon_at: new Date().toISOString() })
-        .in('id', group.ids);
-      totalSent++;
+  if (!onboardingOnly) {
+    for (const [, group] of brouillonGroups) {
+      const n = group.ids.length;
+      const { error } = await resend.emails.send({
+        from: FROM,
+        to: group.syndicEmail,
+        subject: buildBrouillonRappelSubject(group.coproprieteNom, n),
+        html: buildBrouillonRappelEmail({
+          syndicPrenom: group.syndicPrenom,
+          coproprieteNom: group.coproprieteNom,
+          nombreBrouillons: n,
+          appelsUrl: `${SITE_URL}/appels-de-fonds`,
+        }),
+      });
+      if (!error) {
+        await supabase
+          .from('appels_de_fonds')
+          .update({ rappel_brouillon_at: new Date().toISOString() })
+          .in('id', group.ids);
+        totalSent++;
+      }
     }
   }
 
@@ -239,20 +258,57 @@ export async function GET(req: NextRequest) {
     }
   };
 
-  await sendBrouillonEcheanceReminders(brouillonJ14Groups, 'j14', 'rappel_brouillon_j14_at');
-  await sendBrouillonEcheanceReminders(brouillonJ7Groups, 'j7', 'rappel_brouillon_j7_at');
-  await sendBrouillonEcheanceReminders(brouillonJ1UrgentGroups, 'j1_urgent', 'rappel_brouillon_j1_urgent_at');
+  if (!onboardingOnly) {
+    await sendBrouillonEcheanceReminders(brouillonJ14Groups, 'j14', 'rappel_brouillon_j14_at');
+    await sendBrouillonEcheanceReminders(brouillonJ7Groups, 'j7', 'rappel_brouillon_j7_at');
+    await sendBrouillonEcheanceReminders(brouillonJ1UrgentGroups, 'j1_urgent', 'rappel_brouillon_j1_urgent_at');
+  }
+
+  // ── Relances onboarding syndic J+2 / J+7 ──────────────────────────────────
+  // Cible : syndics confirmés qui n'ont aucune copropriété OU < 2 copropriétaires.
+  // Idempotence : on loggue un event dédié pour ne jamais renvoyer la même relance.
+  const onboardingTargetEmails = onboardingTestEmail ? [onboardingTestEmail] : undefined;
+  let onboardingJ2Sent = 0;
+  let onboardingJ7Sent = 0;
+
+  if (onboardingKinds.includes('j2')) {
+    onboardingJ2Sent = await sendSyndicOnboardingReminders(
+      supabase,
+      dateM2,
+      'j2',
+      {
+        force: onboardingForce,
+        targetEmails: onboardingTargetEmails,
+      },
+    );
+    totalSent += onboardingJ2Sent;
+  }
+
+  if (onboardingKinds.includes('j7')) {
+    onboardingJ7Sent = await sendSyndicOnboardingReminders(
+      supabase,
+      dateM7,
+      'j7',
+      {
+        force: onboardingForce,
+        targetEmails: onboardingTargetEmails,
+      },
+    );
+    totalSent += onboardingJ7Sent;
+  }
 
   // ── Rappel J-3 fin d'essai ──────────────────────────────────────────────────
   // On envoie un email au syndic quand plan='essai' et plan_period_end = today + 3 jours.
   // Le cron quotidien garantit qu'il ne sera envoyé qu'une seule fois (la période est fixe).
   const dateJ3 = addDays(today, 3);
 
-  const { data: trialsEndingJ3 } = await supabase
-    .from('coproprietes')
-    .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
-    .eq('plan', 'essai')
-    .eq('plan_period_end', dateJ3);
+  const { data: trialsEndingJ3 } = onboardingOnly
+    ? { data: [] }
+    : await supabase
+      .from('coproprietes')
+      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+      .eq('plan', 'essai')
+      .eq('plan_period_end', dateJ3);
 
   type TrialRow = {
     id: string;
@@ -287,6 +343,10 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     ok: true,
+    onboarding_only: onboardingOnly,
+    onboarding_force: onboardingForce,
+    onboarding_test_email: onboardingTestEmail,
+    onboarding_kinds: onboardingKinds,
     date: today.toISOString().slice(0, 10),
     avis_appels:       avisAppels?.length    ?? 0,
     j7_appels:         j7Appels?.length      ?? 0,
@@ -295,6 +355,8 @@ export async function GET(req: NextRequest) {
     brouillon_j14_groupes: brouillonJ14Groups.size,
     brouillon_j7_groupes: brouillonJ7Groups.size,
     brouillon_j1_urgent_groupes: brouillonJ1UrgentGroups.size,
+    onboarding_j2: onboardingJ2Sent,
+    onboarding_j7: onboardingJ7Sent,
     trial_j3:          trialsEndingJ3?.length ?? 0,
     sent: totalSent,
   });
@@ -307,6 +369,176 @@ interface AppelRow {
   titre: string;
   date_echeance: string;
   coproprietes: { nom: string } | null;
+}
+
+type OnboardingSyndicProfile = {
+  id: string;
+  email: string;
+  full_name: string | null;
+};
+
+type OnboardingCopro = {
+  id: string;
+  syndic_id: string;
+};
+
+function dateRangeUtc(dateIso: string): { start: string; end: string } {
+  const start = `${dateIso}T00:00:00.000Z`;
+  const d = new Date(`${dateIso}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  const end = d.toISOString();
+  return { start, end };
+}
+
+async function getConfirmedEmailsForDate(
+  supabase: ReturnType<typeof createServerClient>,
+  dateIso: string,
+): Promise<string[]> {
+  const { start, end } = dateRangeUtc(dateIso);
+  const { data } = await supabase
+    .from('user_events')
+    .select('user_email')
+    .eq('event_type', 'account_confirmed')
+    .gte('created_at', start)
+    .lt('created_at', end);
+
+  const rows = (data ?? []) as Array<{ user_email: string | null }>;
+  return [...new Set(rows.map((row) => String(row.user_email ?? '').trim().toLowerCase()).filter((email): email is string => email.length > 0))];
+}
+
+async function getAlreadyRemindedEmails(
+  supabase: ReturnType<typeof createServerClient>,
+  eventType: string,
+  emails: string[],
+): Promise<Set<string>> {
+  if (!emails.length) return new Set();
+  const { data } = await supabase
+    .from('user_events')
+    .select('user_email')
+    .eq('event_type', eventType)
+    .in('user_email', emails);
+
+  const rows = (data ?? []) as Array<{ user_email: string | null }>;
+  return new Set(rows.map((row) => String(row.user_email ?? '').trim().toLowerCase()).filter((email): email is string => email.length > 0));
+}
+
+async function sendSyndicOnboardingReminders(
+  supabase: ReturnType<typeof createServerClient>,
+  targetDateIso: string,
+  kind: SyndicOnboardingReminderKind,
+  options?: {
+    force?: boolean;
+    targetEmails?: string[];
+  },
+): Promise<number> {
+  const force = options?.force === true;
+  const targetEmails = (options?.targetEmails ?? [])
+    .map((email) => email.trim().toLowerCase())
+    .filter((email) => email.length > 0);
+  const confirmedEmails = targetEmails.length > 0
+    ? targetEmails
+    : await getConfirmedEmailsForDate(supabase, targetDateIso);
+  if (!confirmedEmails.length) return 0;
+
+  const eventType = kind === 'j2'
+    ? 'onboarding_copro_reminder_j2_sent'
+    : 'onboarding_copro_reminder_j7_sent';
+
+  const alreadyReminded = force
+    ? new Set<string>()
+    : await getAlreadyRemindedEmails(supabase, eventType, confirmedEmails);
+  const candidateEmails = force
+    ? confirmedEmails
+    : confirmedEmails.filter((email) => !alreadyReminded.has(email));
+  if (!candidateEmails.length) return 0;
+
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, email, full_name')
+    .eq('role', 'syndic')
+    .in('email', candidateEmails);
+
+  const syndicProfiles = (profiles ?? []) as OnboardingSyndicProfile[];
+  if (!syndicProfiles.length) return 0;
+
+  const syndicIds = syndicProfiles.map((p) => p.id);
+  const { data: copros } = await supabase
+    .from('coproprietes')
+    .select('id, syndic_id')
+    .in('syndic_id', syndicIds);
+
+  const coproRows = (copros ?? []) as OnboardingCopro[];
+  const coproIds = coproRows.map((c) => c.id);
+
+  const coproBySyndicId = new Map<string, string[]>();
+  for (const copro of coproRows) {
+    if (!coproBySyndicId.has(copro.syndic_id)) coproBySyndicId.set(copro.syndic_id, []);
+    coproBySyndicId.get(copro.syndic_id)!.push(copro.id);
+  }
+
+  let coproprietairesRows: Array<{ copropriete_id: string }> = [];
+  if (coproIds.length) {
+    const { data: cpData } = await supabase
+      .from('coproprietaires')
+      .select('copropriete_id')
+      .in('copropriete_id', coproIds);
+    coproprietairesRows = (cpData ?? []) as Array<{ copropriete_id: string }>;
+  }
+
+  const coproCountById = new Map<string, number>();
+  for (const cp of coproprietairesRows) {
+    coproCountById.set(cp.copropriete_id, (coproCountById.get(cp.copropriete_id) ?? 0) + 1);
+  }
+
+  let sent = 0;
+  for (const profile of syndicProfiles) {
+    const email = profile.email.trim().toLowerCase();
+    const syndicCoproIds = coproBySyndicId.get(profile.id) ?? [];
+    const coproCount = syndicCoproIds.length;
+    const coproprietairesCount = syndicCoproIds.reduce((acc, coproId) => acc + (coproCountById.get(coproId) ?? 0), 0);
+
+    if (!force && !(coproCount === 0 || coproprietairesCount < 2)) continue;
+
+    const prenom = (profile.full_name ?? '').split(' ')[0] || 'Syndic';
+    const actionUrl = coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/coproprietaires`;
+    const subject = buildSyndicOnboardingReminderSubject({ kind, coproCount });
+    const html = buildSyndicOnboardingReminderEmail({
+      syndicPrenom: prenom,
+      kind,
+      coproCount,
+      coproprietairesCount,
+      actionUrl,
+    });
+
+    const result = await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject,
+      html,
+    });
+
+    if (result.error) {
+      console.error(`[cron] Erreur relance onboarding ${kind}:`, result.error);
+      continue;
+    }
+
+    await supabase.from('user_events').insert({
+      user_email: email,
+      event_type: force ? `${eventType}_test` : eventType,
+      label: force
+        ? `Relance onboarding copro test envoyee (${kind.toUpperCase()})`
+        : `Relance onboarding copro envoyee (${kind.toUpperCase()})`,
+    });
+
+    sent++;
+  }
+
+  return sent;
+}
+
+function normalizeEmail(value: string | null): string | null {
+  const email = String(value ?? '').trim().toLowerCase();
+  return email.length > 0 ? email : null;
 }
 
 type CopRow = { nom: string; prenom: string; email: string; user_id: string | null };

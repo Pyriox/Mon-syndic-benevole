@@ -9,6 +9,8 @@ import { createClient, getAuthUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getDashboardLayoutData, getSyndicNotifications, getCoproNotifications } from '@/lib/cached-queries';
 import DashboardShell from '@/components/layout/DashboardShell';
+import DashboardTracker from '@/components/DashboardTracker';
+import { Suspense } from 'react';
 import type { UserCopropriete, AppNotification } from '@/types';
 
 interface DashboardLayoutProps {
@@ -199,6 +201,9 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       userName={userName}
       notifications={notifications}
     >
+      <Suspense>
+        <DashboardTracker userRole={userRole} />
+      </Suspense>
       {children}
     </DashboardShell>
   );

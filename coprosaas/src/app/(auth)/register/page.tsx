@@ -5,7 +5,7 @@
 // ============================================================
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -13,7 +13,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
 import { Lock, ArrowRight, Building2, Users, FileText, CalendarDays } from 'lucide-react';
-import { trackEvent } from '@/lib/gtag';
+import { trackEvent, trackAnonymousEvent } from '@/lib/gtag';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 const BENEFITS = [
@@ -44,6 +44,18 @@ function RegisterForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  // Tracking d'abandon de formulaire
+  const formStartedRef = useRef(false);
+  const formSubmittedRef = useRef(false);
+  useEffect(() => {
+    return () => {
+      if (formStartedRef.current && !formSubmittedRef.current) {
+        trackAnonymousEvent('form_abandonment', { form: 'register', role: mode });
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!token) return;
     fetch(`/api/invitations?token=${token}`)
@@ -69,23 +81,31 @@ function RegisterForm() {
   }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    formStartedRef.current = true;
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    formSubmittedRef.current = true;
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
+      const errMsg = 'Les mots de passe ne correspondent pas.';
+      setError(errMsg);
+      trackAnonymousEvent('registration_error', { error: 'password_mismatch' });
       return;
     }
     if (formData.password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères.');
+      const errMsg = 'Le mot de passe doit contenir au moins 8 caractères.';
+      setError(errMsg);
+      trackAnonymousEvent('registration_error', { error: 'password_too_short' });
       return;
     }
     if (!acceptCgu) {
-      setError("Vous devez accepter les conditions générales d'utilisation.");
+      const errMsg = "Vous devez accepter les conditions générales d'utilisation.";
+      setError(errMsg);
+      trackAnonymousEvent('registration_error', { error: 'cgu_not_accepted' });
       return;
     }
 
@@ -107,7 +127,9 @@ function RegisterForm() {
       });
       const result = await res.json();
       if (!res.ok) {
-        setError(result.error ?? 'Une erreur est survenue.');
+        const errMsg = result.error ?? 'Une erreur est survenue.';
+        setError(errMsg);
+        trackAnonymousEvent('registration_error', { error: result.error ?? 'invitation_error', role: 'copropriétaire' });
         setLoading(false);
         return;
       }
@@ -118,10 +140,13 @@ function RegisterForm() {
       });
       if (signInError) {
         setError(signInError.message);
+        trackAnonymousEvent('registration_error', { error: 'sign_in_failed', role: 'copropriétaire' });
         setLoading(false);
         return;
       }
       trackEvent('sign_up', { role: 'copropriétaire', method: 'invitation' });
+      // ✅ Événement anonyme aussi (capture même les visiteurs refusant cookies)
+      trackAnonymousEvent('sign_up_anonymous', { role: 'copropriétaire', method: 'invitation' });
       router.push('/dashboard');
       router.refresh();
       return;
@@ -140,19 +165,25 @@ function RegisterForm() {
     });
 
     if (authError) {
-      setError('Erreur : ' + authError.message);
+      const errMsg = 'Erreur : ' + authError.message;
+      setError(errMsg);
+      trackAnonymousEvent('registration_error', { error: authError.code ?? 'sign_up_failed', role: 'syndic' });
       setLoading(false);
       return;
     }
 
     // Supabase renvoie identities: [] lorsque l'email est déjà utilisé (sans erreur explicite)
     if (data.user?.identities?.length === 0) {
-      setError('Cette adresse email est déjà utilisée. Essayez de vous connecter.');
+      const errMsg = 'Cette adresse email est déjà utilisée. Essayez de vous connecter.';
+      setError(errMsg);
+      trackAnonymousEvent('registration_error', { error: 'email_already_exists', role: 'syndic' });
       setLoading(false);
       return;
     }
 
     trackEvent('sign_up', { role: 'syndic', method: 'email' });
+    // ✅ Événement anonyme aussi (capture même les visiteurs refusant cookies)
+    trackAnonymousEvent('sign_up_anonymous', { role: 'syndic', method: 'email' });
     void logEventForEmail({
       email: formData.email,
       eventType: 'user_registered',

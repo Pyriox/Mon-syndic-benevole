@@ -265,6 +265,7 @@ export default async function AbonnementPage({
             planId={syncedCopro?.plan_id ?? null}
             subscriptionId={syncedCopro?.stripe_subscription_id ?? null}
             coproNom={syncedCopro?.nom ?? null}
+            amount={PLANS.find((p) => p.id === syncedCopro?.plan_id)?.annual ?? null}
           />
         )}
         {success === '1' && (

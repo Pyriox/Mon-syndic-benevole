@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -11,7 +11,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
 import { ArrowRight, MailCheck, Shield, Clock, TrendingUp } from 'lucide-react';
-import { trackEvent } from '@/lib/gtag';
+import { trackEvent, trackAnonymousEvent } from '@/lib/gtag';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 const REASSURANCES = [
@@ -49,6 +49,21 @@ function LoginForm() {
   const [resetError, setResetError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Tracking d'abandon de formulaire (form_abandonment)
+  const formStartedRef = useRef(false);
+  const formSubmittedRef = useRef(false);
+  useEffect(() => {
+    return () => {
+      if (formStartedRef.current && !formSubmittedRef.current) {
+        trackAnonymousEvent('form_abandonment', { form: 'login' });
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const setEmailTracked = (v: string) => { if (v) formStartedRef.current = true; setEmail(v); };
+  const setPasswordTracked = (v: string) => { if (v) formStartedRef.current = true; setPassword(v); };
+
   useEffect(() => {
     const errorParam = searchParams.get('error');
     const compteParam = searchParams.get('compte');
@@ -62,6 +77,7 @@ function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    formSubmittedRef.current = true;
     setLoading(true);
     setError('');
     setUnconfirmedEmail('');
@@ -70,8 +86,10 @@ function LoginForm() {
     if (authError) {
       if (authError.message === 'Email not confirmed') {
         setUnconfirmedEmail(email);
+        trackAnonymousEvent('login_error', { error: 'email_not_confirmed' });
       } else {
         setError('Email ou mot de passe incorrect. Veuillez réessayer.');
+        trackAnonymousEvent('login_error', { error: 'invalid_credentials' });
         void logEventForEmail({
           email,
           eventType: 'login_failed',
@@ -83,6 +101,8 @@ function LoginForm() {
       return;
     }
     trackEvent('login', { method: 'email' });
+    // ✅ Événement anonyme aussi
+    trackAnonymousEvent('login_anonymous', { method: 'email' });
     void logEventForEmail({ email, eventType: 'login_success', label: 'Connexion réussie' }).catch(() => undefined);
     router.replace('/dashboard');
   };
@@ -113,11 +133,17 @@ function LoginForm() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as { message?: string };
-        setResetError(data.message ?? 'Une erreur est survenue. Réessayez.');
+        const errMsg = data.message ?? 'Une erreur est survenue. Réessayez.';
+        setResetError(errMsg);
+        trackAnonymousEvent('password_reset_error', { error: data.message ?? 'unknown' });
         return;
       }
+      // ✅ Événement anonyme de demande de reset réussie (sans PII)
+      trackAnonymousEvent('password_reset_requested', {});
     } catch {
-      setResetError('Une erreur réseau est survenue. Vérifiez votre connexion et réessayez.');
+      const errMsg = 'Une erreur réseau est survenue. Vérifiez votre connexion et réessayez.';
+      setResetError(errMsg);
+      trackAnonymousEvent('password_reset_error', { error: 'network_error' });
       return;
     } finally {
       setResetLoading(false);
@@ -197,7 +223,7 @@ function LoginForm() {
                   label="Adresse email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmailTracked(e.target.value)}
                   placeholder="syndic@copropriete.fr"
                   required
                   autoComplete="email"
@@ -208,7 +234,7 @@ function LoginForm() {
                     label="Mot de passe"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setPasswordTracked(e.target.value)}
                     placeholder="••••••••"
                     required
                     autoComplete="current-password"

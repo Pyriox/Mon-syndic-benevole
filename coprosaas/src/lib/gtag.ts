@@ -23,6 +23,20 @@ export function trackEvent(action: string, params?: Record<string, unknown>) {
   window.gtag('event', action, params);
 }
 
+/**
+ * ✅ Envoie un événement ANONYME à GA4 sans attendre le consentement (légal en France CNIL)
+ * Utilisé pour: signup, login, erreurs, navigation de base
+ * Les données sont anonymes (pas d'ID utilisateur persistant)
+ */
+export function trackAnonymousEvent(action: string, params?: Record<string, unknown>) {
+  if (!GA_ID || typeof window === 'undefined' || !window.gtag) return;
+  // Envoyer l'événement avec anonymize_ip: true pour conformité CNIL
+  window.gtag('event', action, {
+    ...params,
+    anonymize_ip: true,
+  });
+}
+
 /** Accorde le consentement analytics + publicitaire — Consent Mode v2 (appelé quand l'utilisateur accepte) */
 export function grantConsent() {
   if (typeof window === 'undefined' || !window.gtag) return;
