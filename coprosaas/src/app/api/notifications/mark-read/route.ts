@@ -6,6 +6,31 @@ type MarkReadBody = {
   all?: boolean;
 };
 
+async function pruneReadNotifications(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<void> {
+  const { data: readRows, error } = await supabase
+    .from('app_notifications')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('is_read', true)
+    .order('read_at', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  if (error || !readRows || readRows.length <= 3) return;
+
+  const idsToDelete = readRows.slice(3).map((row) => row.id);
+  if (idsToDelete.length === 0) return;
+
+  await supabase
+    .from('app_notifications')
+    .delete()
+    .eq('user_id', userId)
+    .in('id', idsToDelete);
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -22,6 +47,7 @@ export async function POST(req: NextRequest) {
       .eq('is_read', false);
 
     if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+    await pruneReadNotifications(supabase, user.id);
     return NextResponse.json({ ok: true });
   }
 
@@ -37,5 +63,6 @@ export async function POST(req: NextRequest) {
     .in('id', ids);
 
   if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  await pruneReadNotifications(supabase, user.id);
   return NextResponse.json({ ok: true });
 }

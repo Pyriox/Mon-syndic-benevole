@@ -60,8 +60,14 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
   const nbUnread = unreadItems.length;
   const nbDanger = unreadItems.filter((n) => n.severity === 'danger').length;
 
+  const keepOnlyLastThreeRead = (list: AppNotification[]) => {
+    const unread = list.filter((n) => n.isRead !== true);
+    const read = list.filter((n) => n.isRead === true).slice(0, 3);
+    return [...unread, ...read];
+  };
+
   const markAllRead = async () => {
-    setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => ({ ...n, isRead: true }))));
     await fetch('/api/notifications/mark-read', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -72,7 +78,7 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
   };
 
   const markOneRead = async (id: string) => {
-    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))));
     await fetch('/api/notifications/mark-read', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -128,9 +134,6 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
                         Tout marquer lu
                       </button>
                     )}
-                    <Link href="/dashboard/notifications" onClick={() => setOpen(false)} className="text-xs text-gray-600 hover:text-gray-900">
-                      Historique
-                    </Link>
                   </div>
                 </div>
 
