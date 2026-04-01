@@ -1,6 +1,7 @@
 // ============================================================
 // Page : Détail d'une copropriété + gestion des lots
 // ============================================================
+import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import Card from '@/components/ui/Card';
@@ -16,6 +17,27 @@ import { MapPin, Hash, CalendarDays, Layers, UserCheck, Building2 } from 'lucide
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { title: 'Copropriete' };
+  }
+
+  const { data: copro } = await supabase
+    .from('coproprietes')
+    .select('nom')
+    .eq('id', id)
+    .eq('syndic_id', user.id)
+    .maybeSingle();
+
+  return {
+    title: copro?.nom ? `${copro.nom}` : 'Copropriete',
+  };
 }
 
 export default async function CopropriétéDetailPage({ params }: Props) {
