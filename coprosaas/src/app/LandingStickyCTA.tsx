@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import CtaLink from '@/components/ui/CtaLink';
 import { ArrowRight } from 'lucide-react';
 
 export default function LandingStickyCTA() {
@@ -39,12 +39,13 @@ export default function LandingStickyCTA() {
         <p className="text-sm font-bold text-gray-900 leading-tight">14 jours gratuits</p>
         <p className="text-xs text-gray-500 truncate">Sans engagement · À partir de 300 €/an</p>
       </div>
-      <Link
+      <CtaLink
         href="/register"
+        ctaLocation="sticky_cta"
         className="shrink-0 inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold px-3.5 py-2.5 rounded-xl text-sm transition-colors"
       >
         Essai gratuit <ArrowRight size={14} />
-      </Link>
+      </CtaLink>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 // Article : Gérer une copropriété sans syndic professionnel
 // ============================================================
 
-import Link from 'next/link';
+import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleGererCopropriete() {
@@ -60,12 +60,13 @@ export default function ArticleGererCopropriete() {
         <p className="text-sm text-gray-600 mb-4">
           Isabelle, Marc et Sylvie ont tous le même point commun : un outil qui calcule les tantièmes, suit les paiements et prépare les documents AG à leur place. Sans ça, la gestion manuelle finit par peser. Essai gratuit 14 jours, sans carte bancaire.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Tester gratuitement — 14 jours offerts →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="temps-reel" className={h2}>Combien de temps ça prend vraiment — décomposition par tâche</h2>
@@ -150,12 +151,13 @@ export default function ArticleGererCopropriete() {
         <p className="text-sm text-gray-600 mb-4">
           Mon Syndic Bénévole revient à moins de 25 €/mois pour toute la copropriété — quel que soit le nombre de lots. Appels de fonds calculés automatiquement, suivi des paiements, AG préparée en un clic. 14 jours gratuits, sans engagement.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Créer ma copropriété gratuitement →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="responsabilites" className={h2}>Les vraies responsabilités — ce qui vous revient concrètement</h2>
@@ -230,12 +232,13 @@ export default function ArticleGererCopropriete() {
         <p className="text-sm text-gray-600 mb-4">
           Mon Syndic Bénévole remplace le tableur par un outil pensé pour la copropriété : historique complet des paiements, calcul automatique par tantièmes, alertes sur les échéances légales. Opérationnel en 15 minutes.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Tester Mon Syndic Bénévole gratuitement →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="quand-professionnel" className={h2}>Les 4 cas où un syndic professionnel reste plus adapté</h2>
@@ -261,12 +264,13 @@ export default function ArticleGererCopropriete() {
         <p className="text-sm text-gray-600 mb-4">
           Créez votre copropriété sur Mon Syndic Bénévole en 15 minutes : lots, tantièmes, copropriétaires. Votre premier appel de fonds est calculé et prêt à envoyer le jour même de votre prise de mandat.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Créer ma copropriété gratuitement →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
@@ -299,12 +303,13 @@ export default function ArticleGererCopropriete() {
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Gérez votre immeuble sans vous y noyer</p>
         <p className="text-sm text-blue-100 mb-4">Appels de fonds, AG, fonds de travaux — tout en un. Essai gratuit 14 jours.</p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
           Créer ma copropriété sur Mon Syndic Bénévole →
-        </Link>
+        </CtaLink>
       </div>
     </>
   );

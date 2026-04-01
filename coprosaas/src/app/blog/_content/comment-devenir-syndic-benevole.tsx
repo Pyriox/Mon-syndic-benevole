@@ -3,7 +3,7 @@
 // Target KW : "comment devenir syndic bénévole"
 // ============================================================
 
-import Link from 'next/link';
+import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleCommentDevenirSyndicBenevole() {
@@ -57,12 +57,13 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         <p className="text-sm text-gray-600 mb-4">
           PV en main, une seule chose à faire : créer votre copropriété sur Mon Syndic Bénévole. Lots, tantièmes, copropriétaires — tout est guidé. Votre premier appel de fonds est prêt le jour même.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Créer votre syndic en moins de 30 minutes →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="48h" className={h2}>J+1 : ce que Pierre a fait le lendemain matin (et ce que vous devriez faire)</h2>
@@ -228,12 +229,13 @@ export default function ArticleCommentDevenirSyndicBenevole() {
           </div>
         </div>
         <div className="bg-blue-600 px-6 py-5 text-center">
-          <Link
+          <CtaLink
             href="/register"
+            ctaLocation="blog_article"
             className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
           >
             Créer votre syndic en moins de 30 minutes →
-          </Link>
+          </CtaLink>
           <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire · Résiliable à tout moment</p>
         </div>
       </div>
@@ -359,12 +361,13 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Pierre passe 3h par mois. Son appel de fonds : 10 minutes.</p>
         <p className="text-sm text-blue-100 mb-4">Vous venez d&apos;être élu ? Créez votre syndic en moins de 30 minutes — lots, tantièmes, premiers appels de fonds, tout est guidé étape par étape.</p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
           Créer votre syndic en moins de 30 minutes →
-        </Link>
+        </CtaLink>
         <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire</p>
       </div>
     </>

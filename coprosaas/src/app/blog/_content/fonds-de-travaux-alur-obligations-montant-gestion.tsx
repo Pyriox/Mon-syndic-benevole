@@ -2,7 +2,7 @@
 // Article : Fonds de travaux ALUR — obligations, montant, gestion
 // ============================================================
 
-import Link from 'next/link';
+import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleFondsTravaux() {
@@ -41,12 +41,13 @@ export default function ArticleFondsTravaux() {
         <p className="text-sm text-gray-600 mb-4">
           Mon Syndic Bénévole crée le compte fonds de travaux séparé et calcule les cotisations trimestrielles par lot. Alerte automatique avant chaque vote en AG.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Tester gratuitement — 14 jours offerts →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="montant-minimum" className={h2}>Combien mettre de côté : le minimum légal, et ce qu&apos;il faut vraiment prévoir</h2>
@@ -246,12 +247,13 @@ export default function ArticleFondsTravaux() {
         <p className="text-sm text-gray-600 mb-4">
           Mon Syndic Bénévole gère la cotisation au fonds de travaux séparément des charges courantes, calcule les quotes-parts par lot et alerte chaque année avant le vote en AG.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Tester Mon Syndic Bénévole gratuitement →
-        </Link>
+        </CtaLink>
       </div>
 
       <div className="my-6 rounded-xl border border-gray-200 p-5">
@@ -389,12 +391,13 @@ export default function ArticleFondsTravaux() {
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Gérez votre fonds de travaux sans risque d&apos;oubli</p>
         <p className="text-sm text-blue-100 mb-4">Séparation automatique des comptes, alerte annuelle avant le vote en AG, historique complet pour l&apos;état daté.</p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
           Créer ma copropriété sur Mon Syndic Bénévole →
-        </Link>
+        </CtaLink>
       </div>
     </>
   );

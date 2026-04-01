@@ -1,9 +1,9 @@
-// ============================================================
+﻿// ============================================================
 // Article : Migrer vers Mon Syndic Bénévole
 // Target KW : "migrer logiciel syndic bénévole", "reprendre gestion copropriété"
 // ============================================================
 
-import Link from 'next/link';
+import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleMigrer() {
@@ -59,12 +59,13 @@ export default function ArticleMigrer() {
         <p className="text-sm text-gray-600 mb-4">
           Créez votre espace en moins d&apos;une minute. Aucune installation nécessaire, aucune carte bancaire requise pour démarrer.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Créer mon espace gratuit →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="etape-1" className={h2}>Étape 1 — Créer la copropriété</h2>
@@ -180,12 +181,13 @@ export default function ArticleMigrer() {
         <p className="text-sm text-gray-600 mb-4">
           Lots, tantièmes, copropriétaires, soldes de départ — la structure de base est en place. Vous pouvez envoyer votre premier appel de fonds le jour même.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Démarrer ma migration →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="etape-5" className={h2}>Étape 5 — Créer le premier appel de fonds</h2>
@@ -373,12 +375,13 @@ export default function ArticleMigrer() {
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Opérationnel en une demi-journée.</p>
         <p className="text-sm text-blue-100 mb-4">Lots, tantièmes, appels de fonds, relances, AG, espace copropriétaires — tout est prêt le jour même.</p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
           Démarrer ma migration →
-        </Link>
+        </CtaLink>
         <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire · Résiliable à tout moment</p>
       </div>
     </>

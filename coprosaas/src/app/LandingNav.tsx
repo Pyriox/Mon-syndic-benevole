@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import SiteLogo from '@/components/ui/SiteLogo';
+import CtaLink from '@/components/ui/CtaLink';
 import { Menu, X } from 'lucide-react';
 
 const navLinks = [
@@ -41,22 +42,24 @@ export default function LandingNav() {
           <Link href="/login" className="text-sm text-white/70 hover:text-white transition-colors">
             Connexion
           </Link>
-          <Link
+          <CtaLink
             href="/register"
+            ctaLocation="nav_header"
             className="text-sm bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-xl transition-colors"
           >
             Essai gratuit
-          </Link>
+          </CtaLink>
         </div>
 
         {/* Mobile right-side buttons */}
         <div className="flex items-center gap-2 md:hidden">
-          <Link
+          <CtaLink
             href="/register"
+            ctaLocation="nav_header_mobile"
             className="text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-1.5 rounded-xl transition-colors"
           >
             Essai gratuit
-          </Link>
+          </CtaLink>
           <button
             aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
             aria-expanded={open}

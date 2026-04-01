@@ -3,7 +3,7 @@
 // Target KW : "obligations syndic bénévole", "responsabilité syndic bénévole"
 // ============================================================
 
-import Link from 'next/link';
+import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleObligationsSyndicBenevole() {
@@ -106,12 +106,13 @@ export default function ArticleObligationsSyndicBenevole() {
         <p className="text-sm text-gray-600 mb-4">
           Mon Syndic Bénévole calcule vos dates critiques et vous alerte avant chaque échéance — J-21 AG, notification PV, appels de fonds trimestriels. Zéro délai manqué.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Créer votre syndic en moins de 30 minutes →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="convocation-ag" className={h2}>Template : convocation d&apos;AG conforme</h2>
@@ -223,12 +224,13 @@ export default function ArticleObligationsSyndicBenevole() {
         <p className="text-sm text-gray-600 mb-4">
           Tous ces modèles sont intégrés dans Mon Syndic Bénévole avec les données de votre copropriété. Envoyez directement depuis la plateforme, avec preuve de réception.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Créer votre syndic en moins de 30 minutes →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="erreurs-a-eviter" className={h2}>5 erreurs qui finissent en contentieux</h2>
@@ -396,12 +398,13 @@ export default function ArticleObligationsSyndicBenevole() {
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Christophe a perdu 28 000 € de travaux sur un délai de 3 jours.</p>
         <p className="text-sm text-blue-100 mb-4">Avec Mon Syndic Bénévole, chaque date critique est calculée automatiquement. Vous êtes alerté avant, pas après.</p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
           Créer votre syndic en moins de 30 minutes →
-        </Link>
+        </CtaLink>
         <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire</p>
       </div>
     </>

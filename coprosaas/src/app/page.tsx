@@ -2,7 +2,6 @@
 // Page d'accueil publique — Landing page de Syndic-Benevole.eu
 // ============================================================
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import {
   Building2, CheckCircle, Users, Receipt, CalendarDays,
   AlertTriangle, FileText, Wallet, ArrowRight,
@@ -13,6 +12,7 @@ import {
 import SiteLogo from '@/components/ui/SiteLogo';
 import LandingNav from './LandingNav';
 import LandingStickyCTA from './LandingStickyCTA';
+import CtaLink from '@/components/ui/CtaLink';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import PublicFooter from '@/components/layout/PublicFooter';
 
@@ -218,12 +218,13 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 sm:mb-12">
-            <Link
+            <CtaLink
               href="/register"
+              ctaLocation="landing_hero"
               className="flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg shadow-lg shadow-blue-900/30 w-full sm:w-auto justify-center"
             >
               Créer ma copro gratuitement <ArrowRight size={18} />
-            </Link>
+            </CtaLink>
             <a
               href="#demo"
               className="flex items-center gap-2 border border-white/20 text-white/90 font-medium px-8 py-4 rounded-2xl hover:bg-white/10 transition-colors text-lg w-full sm:w-auto justify-center"
@@ -357,9 +358,9 @@ export default function HomePage() {
             <p className="text-gray-500 text-base mb-4">
               C&apos;est votre copropriété. La loi vous autorise à la gérer vous-même — syndic bénévole, sans agrémentation requise.
             </p>
-            <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-7 py-3.5 rounded-xl transition-colors text-sm">
+            <CtaLink href="/register" ctaLocation="landing_comparison" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-7 py-3.5 rounded-xl transition-colors text-sm">
               Démarrer gratuitement — 14 jours offerts <ArrowRight size={14} />
-            </Link>
+            </CtaLink>
           </div>
         </div>
       </section>
@@ -408,9 +409,9 @@ export default function HomePage() {
           </div>
 
           <div className="mt-10 text-center">
-            <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
+            <CtaLink href="/register" ctaLocation="landing_features" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
               Créer ma copro gratuitement <ArrowRight size={16} />
-            </Link>
+            </CtaLink>
             <p className="mt-3 text-sm text-gray-500">Moyen de paiement requis — aucun débit pendant 14 jours &middot; Résiliable à tout moment</p>
           </div>
         </div>
@@ -486,9 +487,9 @@ export default function HomePage() {
           </div>
 
           <div className="mt-10 text-center">
-            <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
+            <CtaLink href="/register" ctaLocation="landing_howto" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
               Démarrer maintenant <ArrowRight size={16} />
-            </Link>
+            </CtaLink>
             <p className="mt-3 text-sm text-gray-500">Opérationnel en 30 minutes · Aucune formation requise</p>
           </div>
         </div>
@@ -821,9 +822,9 @@ export default function HomePage() {
             </div>
           </div>
           <div className="text-center mt-10 sm:mt-14">
-            <Link href="/register" className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg shadow-lg shadow-blue-900/30">
+            <CtaLink href="/register" ctaLocation="landing_demo" className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg shadow-lg shadow-blue-900/30">
               Tester pendant 14 jours <ArrowRight size={18} />
-            </Link>
+            </CtaLink>
             <p className="mt-3 text-blue-300/50 text-sm">14 jours offerts · Annulation sans frais</p>
           </div>
         </div>
@@ -901,9 +902,9 @@ export default function HomePage() {
           </div>
 
           <div className="text-center">
-            <Link href="/register" className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30 w-full sm:w-auto">
+            <CtaLink href="/register" ctaLocation="landing_testimonials" className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30 w-full sm:w-auto">
               Créer votre syndic en moins de 30 minutes <ArrowRight size={16} />
-            </Link>
+            </CtaLink>
           </div>
         </div>
       </section>
@@ -943,9 +944,9 @@ export default function HomePage() {
                     <span className="text-blue-200 pb-1.5">/an</span>
                   </div>
                   <p className="text-blue-200/80 text-xs mb-6">soit <span className="font-semibold text-white">25 €/mois</span></p>
-                <Link href="/register" className="block text-center bg-white text-blue-700 font-bold py-3.5 rounded-2xl hover:bg-blue-50 transition-colors mt-auto">
+                <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-white text-blue-700 font-bold py-3.5 rounded-2xl hover:bg-blue-50 transition-colors mt-auto">
                   Commencer gratuitement →
-                </Link>
+                </CtaLink>
               </div>
             </div>
 
@@ -961,9 +962,9 @@ export default function HomePage() {
                 <span className="text-gray-500 pb-1.5">/an</span>
               </div>
               <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">37,50 €/mois</span></p>
-              <Link href="/register" className="block text-center bg-emerald-600 text-white font-bold py-3.5 rounded-2xl hover:bg-emerald-700 transition-colors mt-auto">
+              <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-emerald-600 text-white font-bold py-3.5 rounded-2xl hover:bg-emerald-700 transition-colors mt-auto">
                 Commencer gratuitement →
-              </Link>
+              </CtaLink>
             </div>
 
             {/* Plan Illimité */}
@@ -978,9 +979,9 @@ export default function HomePage() {
                 <span className="text-gray-500 pb-1.5">/an</span>
               </div>
               <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">50 €/mois</span></p>
-              <Link href="/register" className="block text-center bg-violet-600 text-white font-bold py-3.5 rounded-2xl hover:bg-violet-700 transition-colors mt-auto">
+              <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-violet-600 text-white font-bold py-3.5 rounded-2xl hover:bg-violet-700 transition-colors mt-auto">
                 Commencer gratuitement →
-              </Link>
+              </CtaLink>
             </div>
 
           </div>
@@ -1073,12 +1074,13 @@ export default function HomePage() {
           <p className="text-lg text-blue-100/70 mb-10">
             Reprenez la gestion de votre copropriété — comme un pro, pour 10 fois moins cher. Démarrez aujourd&apos;hui, sans risque.
           </p>
-          <Link
+          <CtaLink
             href="/register"
+            ctaLocation="landing_final"
             className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-7 sm:px-10 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg sm:text-xl shadow-xl shadow-blue-900/30"
           >
             Créer ma copro gratuitement <ArrowRight size={20} />
-          </Link>
+          </CtaLink>
           <p className="mt-4 text-blue-300/50 text-sm">Facturation annuelle · Sans engagement · Résiliez à tout moment</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-blue-300/60">
             <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-green-400" /> 14 jours offerts</span>

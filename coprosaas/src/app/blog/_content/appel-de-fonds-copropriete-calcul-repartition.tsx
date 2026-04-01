@@ -2,7 +2,7 @@
 // Article : Appel de fonds copropriété — calcul, répartition, relance
 // ============================================================
 
-import Link from 'next/link';
+import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleAppelDeFonds() {
@@ -115,12 +115,13 @@ export default function ArticleAppelDeFonds() {
         <p className="text-sm text-gray-600 mb-4">
           Renseignez vos lots et vos tantièmes une seule fois. Mon Syndic Bénévole calcule chaque quote-part et génère les avis pour tous vos copropriétaires en 30 secondes — sans formule, sans erreur.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Générer mes appels de fonds automatiquement →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="types-charges" className={h2}>Charges générales vs charges spéciales : une distinction qui change tout</h2>
@@ -221,12 +222,13 @@ export default function ArticleAppelDeFonds() {
         <p className="text-sm text-gray-600 mb-4">
           Mon Syndic Bénévole calcule les quotes-parts, génère les avis de paiement et envoie les e-mails à tous vos copropriétaires en un clic — avec leur solde courant et leur historique. Essai gratuit 14 jours.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Générer mes appels de fonds automatiquement →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="appel-exceptionnel" className={h2}>L&apos;appel de fonds exceptionnel : même logique, calendrier différent</h2>
@@ -383,12 +385,13 @@ export default function ArticleAppelDeFonds() {
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Générez vos appels de fonds automatiquement — en 30 secondes</p>
         <p className="text-sm text-blue-100 mb-4">Tantièmes, quotes-parts, avis de paiement, suivi des virements — tout en un. 14 jours d&apos;essai gratuit, sans carte bancaire.</p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
           Générer mes appels de fonds automatiquement →
-        </Link>
+        </CtaLink>
       </div>
     </>
   );

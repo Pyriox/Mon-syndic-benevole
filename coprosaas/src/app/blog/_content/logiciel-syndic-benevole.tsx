@@ -3,7 +3,7 @@
 // Target KW : "logiciel syndic bénévole", "logiciel gestion copropriété"
 // ============================================================
 
-import Link from 'next/link';
+import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
 export default function ArticleLogicielSyndicBenevole() {
@@ -22,12 +22,13 @@ export default function ArticleLogicielSyndicBenevole() {
         <p className="text-sm text-gray-600 mb-4">
           Il a migré depuis Excel en 35 minutes. Son premier appel de fonds a été envoyé 3 heures plus tard.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Créer votre syndic en moins de 30 minutes →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="excel-vs-logiciel" className={h2}>La comparaison honnête : Excel, logiciel dédié, syndic pro</h2>
@@ -182,12 +183,13 @@ export default function ArticleLogicielSyndicBenevole() {
         <p className="text-sm text-gray-600 mb-4">
           Lots, tantièmes, appels de fonds, relances, AG, espace copropriétaires — Mon Syndic Bénévole les intègre tous.
         </p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
           Créer votre syndic en moins de 30 minutes →
-        </Link>
+        </CtaLink>
       </div>
 
       <h2 id="migration-excel" className={h2}>Comment migrer depuis Excel en 30 minutes</h2>
@@ -300,12 +302,13 @@ export default function ArticleLogicielSyndicBenevole() {
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Marc a économisé 4 h/mois et 2 700 €/an. En 35 minutes de migration.</p>
         <p className="text-sm text-blue-100 mb-4">Configurez votre copropriété, ajoutez vos lots et émettez votre premier appel de fonds le jour même.</p>
-        <Link
+        <CtaLink
+          ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
           Créer votre syndic en moins de 30 minutes →
-        </Link>
+        </CtaLink>
         <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire · Résiliable à tout moment</p>
       </div>
     </>
