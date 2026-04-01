@@ -39,6 +39,13 @@ export type ResendSendResultLike = {
 
 const RETRY_DELAY_MS = 6 * 60 * 60 * 1000;
 
+function normalizeProviderMessageId(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.replace(/^<|>$/g, '');
+}
+
 function buildStatusUpdate(status: EmailDeliveryStatus, lastError?: string | null): Record<string, string | null> {
   const now = new Date().toISOString();
 
@@ -109,10 +116,11 @@ function getProviderErrorMessage(payload: Record<string, unknown>, status: Email
 export async function trackEmailDelivery(input: TrackEmailDeliveryInput): Promise<void> {
   const admin = createAdminClient();
   const normalizedEmail = input.recipientEmail.trim().toLowerCase();
+  const normalizedProviderMessageId = normalizeProviderMessageId(input.providerMessageId ?? null);
   if (!normalizedEmail) return;
 
   const row = {
-    provider_message_id: input.providerMessageId ?? null,
+    provider_message_id: normalizedProviderMessageId,
     template_key: input.templateKey,
     status: input.status,
     recipient_email: normalizedEmail,
@@ -148,7 +156,7 @@ export async function trackResendSendResult(
 
   await trackEmailDelivery({
     ...input,
-    providerMessageId: result.data?.id ?? null,
+    providerMessageId: normalizeProviderMessageId(result.data?.id ?? null),
     status: 'sent',
   });
 
@@ -171,6 +179,8 @@ export async function applyProviderEvent(params: {
   providerMessageId: string;
   providerEvent: string;
   payload: Record<string, unknown>;
+  recipientEmail?: string | null;
+  subject?: string | null;
 }): Promise<{
   delivery: {
     id: string;
@@ -187,12 +197,48 @@ export async function applyProviderEvent(params: {
     return { delivery: null, newStatus: null };
   }
 
+  const normalizedProviderMessageId = normalizeProviderMessageId(params.providerMessageId);
+  if (!normalizedProviderMessageId) {
+    return { delivery: null, newStatus };
+  }
+
   const admin = createAdminClient();
-  const { data: delivery } = await admin
+  let { data: delivery } = await admin
     .from('email_deliveries')
-    .select('id, recipient_email, copropriete_id, ag_id, template_key, status')
-    .eq('provider_message_id', params.providerMessageId)
+    .select('id, recipient_email, copropriete_id, ag_id, template_key, status, provider_message_id')
+    .eq('provider_message_id', normalizedProviderMessageId)
     .maybeSingle();
+
+  // Fallback: certains events peuvent arriver avec un id différent (ou des anciennes lignes sans provider_message_id)
+  // On récupère alors la ligne la plus récente pour le même destinataire/sujet, puis on attache l'id provider.
+  if (!delivery && params.recipientEmail) {
+    const normalizedEmail = params.recipientEmail.trim().toLowerCase();
+    if (normalizedEmail) {
+      let fallback = admin
+        .from('email_deliveries')
+        .select('id, recipient_email, copropriete_id, ag_id, template_key, status, provider_message_id')
+        .eq('recipient_email', normalizedEmail)
+        .in('status', ['queued', 'sent', 'delivered', 'opened', 'clicked'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const normalizedSubject = params.subject?.trim();
+      if (normalizedSubject) {
+        fallback = fallback.eq('subject', normalizedSubject);
+      }
+
+      const { data: fallbackDelivery } = await fallback.maybeSingle();
+      delivery = fallbackDelivery;
+
+      if (delivery && !delivery.provider_message_id) {
+        await admin
+          .from('email_deliveries')
+          .update({ provider_message_id: normalizedProviderMessageId })
+          .eq('id', delivery.id)
+          .is('provider_message_id', null);
+      }
+    }
+  }
 
   if (!delivery) {
     return { delivery: null, newStatus };

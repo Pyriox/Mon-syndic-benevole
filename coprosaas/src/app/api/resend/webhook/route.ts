@@ -12,12 +12,42 @@ type ResendEmailWebhook = {
   created_at: string;
   data?: {
     email_id?: string;
+    id?: string;
+    email?: { id?: string };
     to?: string[];
+    to_email?: string;
     subject?: string;
     bounce?: { message?: string };
     failed?: { reason?: string };
   } & Record<string, unknown>;
 };
+
+function extractProviderMessageId(event: ResendEmailWebhook): string | null {
+  const data = event.data;
+  const raw = data?.email_id
+    ?? data?.id
+    ?? (typeof data?.email === 'object' && data.email && 'id' in data.email ? data.email.id : undefined);
+
+  if (!raw || typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  return trimmed.replace(/^<|>$/g, '');
+}
+
+function extractRecipientEmail(event: ResendEmailWebhook): string | null {
+  const to = event.data?.to;
+  if (Array.isArray(to) && to.length > 0 && typeof to[0] === 'string') {
+    const first = to[0].trim().toLowerCase();
+    if (first) return first;
+  }
+
+  if (typeof event.data?.to_email === 'string') {
+    const value = event.data.to_email.trim().toLowerCase();
+    if (value) return value;
+  }
+
+  return null;
+}
 
 function isAlertStatus(status: string | null): status is 'failed' | 'bounced' | 'complained' {
   return status === 'failed' || status === 'bounced' || status === 'complained';
@@ -64,7 +94,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Signature invalide' }, { status: 400 });
   }
 
-  const providerMessageId = event.data?.email_id;
+  const providerMessageId = extractProviderMessageId(event);
   if (!providerMessageId) {
     return NextResponse.json({ ok: true, ignored: true, reason: 'missing_email_id' });
   }
@@ -73,6 +103,8 @@ export async function POST(req: NextRequest) {
     providerMessageId,
     providerEvent: event.type,
     payload: (event.data ?? {}) as Record<string, unknown>,
+    recipientEmail: extractRecipientEmail(event),
+    subject: typeof event.data?.subject === 'string' ? event.data.subject : null,
   });
 
   if (delivery && isAlertStatus(newStatus)) {
