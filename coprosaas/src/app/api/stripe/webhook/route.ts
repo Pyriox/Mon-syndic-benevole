@@ -15,6 +15,7 @@ import {
   buildCancelledEmail, buildCancelledSubject,
   type SubscriptionEmailParams,
 } from '@/lib/emails/subscription';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -61,16 +62,33 @@ async function sendStripeEmail(params: {
   subject: string;
   html: string;
   context: string;
+  templateKey: string;
+  coproprieteId?: string | null;
+  recipientUserId?: string | null;
+  legalEventType?: string | null;
+  legalReference?: string | null;
+  payload?: Record<string, unknown>;
 }): Promise<void> {
-  const { error } = await resend.emails.send({
+  const result = await resend.emails.send({
     from: FROM,
     to: params.to,
     subject: params.subject,
     html: params.html,
   });
 
-  if (error) {
-    throw new Error(`[${params.context}] ${error.message}`);
+  const tracked = await trackResendSendResult(result, {
+    templateKey: params.templateKey,
+    recipientEmail: params.to,
+    recipientUserId: params.recipientUserId ?? null,
+    coproprieteId: params.coproprieteId ?? null,
+    subject: params.subject,
+    legalEventType: params.legalEventType ?? params.context,
+    legalReference: params.legalReference ?? null,
+    payload: params.payload ?? { context: params.context },
+  });
+
+  if (!tracked.ok) {
+    throw new Error(`[${params.context}] ${tracked.errorMessage}`);
   }
 }
 
@@ -175,7 +193,18 @@ export async function POST(req: NextRequest) {
               const [subject, html] = subPlan === 'essai'
                 ? [buildTrialStartedSubject(coproData.nom), buildTrialStartedEmail(emailParams)]
                 : [buildSubscriptionCreatedSubject(coproData.nom), buildSubscriptionCreatedEmail(emailParams)];
-              await sendStripeEmail({ to: userEmail, subject, html, context: 'checkout.session.completed' });
+              await sendStripeEmail({
+                to: userEmail,
+                subject,
+                html,
+                context: 'checkout.session.completed',
+                templateKey: subPlan === 'essai' ? 'subscription_trial_started' : 'subscription_created',
+                coproprieteId: coproId,
+                recipientUserId: userId,
+                legalEventType: subPlan === 'essai' ? 'trial_started' : 'subscription_created',
+                legalReference: subId ?? coproId,
+                payload: { planId: session.metadata?.plan_id ?? null, planState: subPlan },
+              });
               await logUserEvent(
                 adminClient,
                 userEmail,
@@ -246,7 +275,17 @@ export async function POST(req: NextRequest) {
               const [subject, html] = isTrialToPaid
                 ? [buildTrialToPaidSubject(coproNom), buildTrialToPaidEmail(emailParams)]
                 : [buildRenewalSubject(coproNom), buildRenewalEmail(emailParams)];
-              await sendStripeEmail({ to: email, subject, html, context: 'customer.subscription.updated' });
+              await sendStripeEmail({
+                to: email,
+                subject,
+                html,
+                context: 'customer.subscription.updated',
+                templateKey: isTrialToPaid ? 'subscription_trial_to_paid' : 'subscription_renewal',
+                coproprieteId: coproId,
+                legalEventType: isTrialToPaid ? 'subscription_trial_to_paid' : 'subscription_renewal',
+                legalReference: sub['id'] as string,
+                payload: { planId: subMeta?.plan_id ?? null, status: subStatus },
+              });
             }
           } catch (e) {
             console.error('[Stripe webhook] Erreur email subscription update:', e);
@@ -303,6 +342,11 @@ export async function POST(req: NextRequest) {
               subject: buildCancelledSubject(coproNom),
               html: buildCancelledEmail(emailParams),
               context: 'customer.subscription.deleted',
+              templateKey: 'subscription_cancelled',
+              coproprieteId: coproId,
+              legalEventType: 'subscription_cancelled',
+              legalReference: sub.id,
+              payload: { planId: sub.metadata?.plan_id ?? null },
             });
             await logUserEvent(
               adminClient,
@@ -397,6 +441,11 @@ export async function POST(req: NextRequest) {
               subject: buildPaymentFailedSubject(coproNom),
               html: buildPaymentFailedEmail(emailParams),
               context: 'invoice.payment_failed',
+              templateKey: 'subscription_payment_failed',
+              coproprieteId: copro.id,
+              legalEventType: 'payment_failed',
+              legalReference: invoice.id,
+              payload: { customerId },
             });
             await logUserEvent(adminClient, email, 'payment_failed', `Paiement échoué — ${coproNom}`);
           }

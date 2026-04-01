@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 import { buildIncidentResoluEmail, buildIncidentResoluSubject } from '@/lib/emails/syndic-notifications';
 import type { StatutIncident } from '@/types';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -62,10 +63,11 @@ export async function PATCH(
       const declarantEmail = declarant?.email;
       if (declarantEmail) {
         const prenom = (declarant?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
-        const { error } = await resend.emails.send({
+        const subject = buildIncidentResoluSubject(incident.titre);
+        const result = await resend.emails.send({
           from: FROM,
           to: declarantEmail,
-          subject: buildIncidentResoluSubject(incident.titre),
+          subject,
           html: buildIncidentResoluEmail({
             prenomDeclarant: prenom,
             titreIncident: incident.titre,
@@ -75,8 +77,18 @@ export async function PATCH(
             incidentsUrl: `${SITE_URL}/incidents`,
           }),
         });
-        if (error) {
-          console.error('[incidents/statut] Email error:', error.message);
+        const tracked = await trackResendSendResult(result, {
+          templateKey: 'incident_resolved',
+          recipientEmail: declarantEmail,
+          recipientUserId: incident.declare_par,
+          coproprieteId: incident.copropriete_id,
+          subject,
+          legalEventType: 'incident_resolved',
+          legalReference: incidentId,
+          payload: { titreIncident: incident.titre },
+        });
+        if (!tracked.ok) {
+          console.error('[incidents/statut] Email error:', tracked.errorMessage);
         }
       }
     } catch (e) {

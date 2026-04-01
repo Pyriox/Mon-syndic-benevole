@@ -99,6 +99,16 @@ export default function PolitiqueConfidentialitePage() {
                   <td className="py-2 pr-4">Google Analytics 4</td>
                   <td className="py-2">Mesure d{"'"}audience (avec consentement)</td>
                 </tr>
+                <tr className="border-b border-slate-800">
+                  <td className="py-2 pr-4">Journaux applicatifs (email, type d'événement, métadonnées techniques)</td>
+                  <td className="py-2 pr-4">Application / base de données</td>
+                  <td className="py-2">Sécurité, support, preuve d'actions et diagnostic</td>
+                </tr>
+                <tr className="border-b border-slate-800">
+                  <td className="py-2 pr-4">Historique de délivrabilité email (statuts, erreurs, ouvertures, clics)</td>
+                  <td className="py-2 pr-4">Resend / application</td>
+                  <td className="py-2">Preuve d'envoi, suivi de remise et traitement des incidents email</td>
+                </tr>
                 <tr>
                   <td className="py-2 pr-4">Logs techniques (IP, navigateur, horodatage)</td>
                   <td className="py-2 pr-4">Infrastr. (Vercel / Supabase)</td>
@@ -152,6 +162,12 @@ export default function PolitiqueConfidentialitePage() {
               <strong className="text-gray-300">Logs de sécurité :</strong> 12 mois maximum.
             </li>
             <li>
+              <strong className="text-gray-300">Journaux applicatifs et support :</strong> 24 mois maximum, sauf nécessité légale ou contentieuse.
+            </li>
+            <li>
+              <strong className="text-gray-300">Historique de délivrabilité email :</strong> 24 mois maximum pour prouver l'envoi, la remise ou diagnostiquer un incident.
+            </li>
+            <li>
               <strong className="text-gray-300">Données analytiques (GA4) :</strong> 14 mois maximum (paramètre
               par défaut Google Analytics).
             </li>
@@ -163,6 +179,9 @@ export default function PolitiqueConfidentialitePage() {
             Vos données ne sont ni vendues, ni louées, ni cédées à des tiers à des fins commerciales.
             Elles peuvent être partagées avec les sous-traitants suivants, dans la stricte limite de leurs
             missions :
+            <li>
+              <strong className="text-gray-300">Resend, Inc.</strong> — envoi transactionnel des emails et remontée des statuts techniques de délivrabilité.
+            </li>
           </p>
           <ul className="list-disc list-inside space-y-2 pl-2 mt-3">
             <li>
@@ -269,9 +288,26 @@ export default function PolitiqueConfidentialitePage() {
 
         <Section title="9. Cookies">
           <p>
-            Les cookies analytiques (Google Analytics 4) ne sont déposés qu{"'"}avec votre consentement,
-            recueilli via le bandeau affiché lors de votre première visite. Vous pouvez retirer ce consentement
-            à tout moment en cliquant sur «&nbsp;Gérer les cookies&nbsp;» en bas de page.
+            Nous utilisons des cookies et technologies similaires de deux catégories :
+          </p>
+          <ul className="list-disc list-inside space-y-1.5 pl-2 mt-3">
+            <li>
+              <strong className="text-gray-300">Cookies strictement nécessaires</strong> — authentification, sécurité,
+              maintien de session, mémorisation de certaines préférences fonctionnelles. Ils ne peuvent pas être désactivés
+              depuis le bandeau car le service ne fonctionnerait plus correctement.
+            </li>
+            <li>
+              <strong className="text-gray-300">Cookies analytiques</strong> — Google Analytics 4, activés uniquement
+              avec votre consentement explicite pour mesurer l'audience et améliorer le service.
+            </li>
+          </ul>
+          <p>
+            Les événements analytics ne sont transmis qu'après acceptation de la mesure d'audience. Vous pouvez retirer ou
+            modifier ce consentement à tout moment en cliquant sur «&nbsp;Gérer les cookies&nbsp;» dans le footer public ou
+            sur «&nbsp;Cookies&nbsp;» dans l'espace connecté.
+          </p>
+          <p>
+            Le bandeau mémorise votre choix pendant 13 mois maximum dans votre navigateur, puis le consentement vous est redemandé.
           </p>
         </Section>
 

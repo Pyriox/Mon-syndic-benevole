@@ -4,7 +4,15 @@
  * Bouton "Gérer les cookies" — dispatche l'événement écouté par CookieBanner
  * pour permettre à l'utilisateur de modifier son choix à tout moment (exigence CNIL).
  */
-export default function CookiePreferencesButton() {
+interface CookiePreferencesButtonProps {
+  className?: string;
+  label?: string;
+}
+
+export default function CookiePreferencesButton({
+  className = 'hover:text-gray-300 transition-colors text-left',
+  label = 'Gérer les cookies',
+}: CookiePreferencesButtonProps) {
   function handleClick() {
     window.dispatchEvent(new Event('show-cookie-banner'));
   }
@@ -12,9 +20,9 @@ export default function CookiePreferencesButton() {
   return (
     <button
       onClick={handleClick}
-      className="hover:text-gray-300 transition-colors text-left"
+      className={className}
     >
-      Gérer les cookies
+      {label}
     </button>
   );
 }

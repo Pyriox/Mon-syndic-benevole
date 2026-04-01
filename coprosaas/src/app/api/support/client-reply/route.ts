@@ -8,6 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { h } from '@/lib/emails/base';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM          = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'contact@mon-syndic-benevole.fr'}>`;
@@ -99,12 +100,20 @@ export async function POST(req: NextRequest) {
   </div>
 </div>`;
 
+  const subject = `[Support] Réponse client — ${ticket.subject}`;
   resend.emails.send({
     from:    FROM,
     to:      [SUPPORT_EMAIL],
-    subject: `[Support] Réponse client — ${ticket.subject}`,
+    subject,
     html:    adminHtml,
-  }).catch((err) => console.error('[client-reply] admin notification error:', err));
+  }).then((result) => trackResendSendResult(result, {
+    templateKey: 'support_client_reply_notification',
+    recipientEmail: SUPPORT_EMAIL,
+    subject,
+    legalEventType: 'support_client_reply_notification',
+    legalReference: ticket.id,
+    payload: { ticketId: ticket.id, userId: user.id, fromEmail: ticket.user_email },
+  })).catch((err) => console.error('[client-reply] admin notification error:', err));
 
   return NextResponse.json({ message: 'Message envoyé' });
 }

@@ -11,6 +11,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 import { buildInvitationEmail, buildInvitationEmailSubject } from '@/lib/emails/invitation';
 import { rateLimit } from '@/lib/rate-limit';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -126,16 +127,28 @@ export async function POST(request: NextRequest) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mon-syndic-benevole.fr';
   const link = `${siteUrl}/register?token=${token}`;
 
+  const subject = buildInvitationEmailSubject(copro.nom);
+
   // Envoyer l'email d'invitation via Resend
-  const { error: emailError } = await resend.emails.send({
+  const result = await resend.emails.send({
     from: FROM,
     to: [email.toLowerCase().trim()],
-    subject: buildInvitationEmailSubject(copro.nom),
+    subject,
     html: buildInvitationEmail({ coproprieteNom: copro.nom, syndicPrenom, inviteLink: link }),
   });
 
-  if (emailError) {
-    console.error('[invitations] Resend error:', emailError);
+  const tracked = await trackResendSendResult(result, {
+    templateKey: 'invitation',
+    recipientEmail: email.toLowerCase().trim(),
+    coproprieteId: copropriete_id,
+    subject,
+    legalEventType: 'copro_invitation',
+    legalReference: token,
+    payload: { lotId: lot_id ?? null, invitedBy: user.id },
+  });
+
+  if (!tracked.ok) {
+    console.error('[invitations] Resend error:', tracked.errorMessage);
     // On retourne quand même le lien — l'invitation est créée, seul l'email a échoué
     return NextResponse.json({ link, token, copropriete: copro.nom, emailWarning: "L'email n'a pas pu être envoyé. Utilisez le lien ci-dessous." });
   }

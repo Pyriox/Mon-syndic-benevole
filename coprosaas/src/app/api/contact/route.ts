@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'contact@mon-syndic-benevole.fr'}>`;
@@ -77,16 +78,30 @@ export async function POST(req: NextRequest) {
   </div>
 </div>`;
 
-  const { error } = await resend.emails.send({
+  const subjectLine = `[Contact] ${subject}`;
+  const result = await resend.emails.send({
     from: FROM,
     to: [SUPPORT_EMAIL],
     replyTo: email,
-    subject: `[Contact] ${subject}`,
+    subject: subjectLine,
     html,
   });
 
-  if (error) {
-    console.error('[contact] Resend error:', error);
+  const tracked = await trackResendSendResult(result, {
+    templateKey: 'contact_notification',
+    recipientEmail: SUPPORT_EMAIL,
+    subject: subjectLine,
+    legalEventType: 'contact_notification',
+    legalReference: email.trim().toLowerCase(),
+    payload: {
+      fromEmail: email.trim().toLowerCase(),
+      fromName: name.trim(),
+      userId: userId?.trim() || null,
+    },
+  });
+
+  if (!tracked.ok) {
+    console.error('[contact] Resend error:', tracked.errorMessage);
     return NextResponse.json({ message: 'Erreur envoi email' }, { status: 500 });
   }
 

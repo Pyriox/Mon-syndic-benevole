@@ -4,7 +4,7 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import LandingNav from '@/app/LandingNav';
 import { posts, formatPublishedAt } from '@/lib/blog';
-import CookiePreferencesButton from '@/components/CookiePreferencesButton';
+import PublicFooter from '@/components/layout/PublicFooter';
 
 export const dynamic = 'force-static';
 export const revalidate = 86400;
@@ -102,27 +102,7 @@ export default function BlogPage() {
 
       <ScrollToTopButton />
 
-      {/* Footer */}
-      <footer className="bg-slate-950 py-10 px-4 sm:px-6" aria-label="Pied de page">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <SiteLogo size={32} />
-            <span className="font-bold text-white text-sm">Mon Syndic Bénévole</span>
-          </div>
-          <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés</p>
-          <nav aria-label="Liens du pied de page">
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-gray-400">
-              <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
-              <Link href="/cgu" className="hover:text-gray-300 transition-colors">CGU / CGV</Link>
-              <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
-              <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
-              <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
-              <a href="mailto:contact@mon-syndic-benevole.fr" className="hover:text-gray-300 transition-colors">contact@mon-syndic-benevole.fr</a>
-              <CookiePreferencesButton />
-            </div>
-          </nav>
-        </div>
-      </footer>
+      <PublicFooter compact />
     </div>
   );
 }

@@ -28,6 +28,15 @@ export type TrackEmailDeliveryInput = {
   lastError?: string | null;
 };
 
+export type ResendSendResultLike = {
+  data?: {
+    id?: string | null;
+  } | null;
+  error?: {
+    message?: string;
+  } | null;
+};
+
 const RETRY_DELAY_MS = 6 * 60 * 60 * 1000;
 
 function buildStatusUpdate(status: EmailDeliveryStatus, lastError?: string | null): Record<string, string | null> {
@@ -119,6 +128,31 @@ export async function trackEmailDelivery(input: TrackEmailDeliveryInput): Promis
   };
 
   await admin.from('email_deliveries').insert(row);
+}
+
+export async function trackResendSendResult(
+  result: ResendSendResultLike,
+  input: Omit<TrackEmailDeliveryInput, 'status' | 'providerMessageId' | 'lastError'>,
+): Promise<{ ok: boolean; errorMessage: string | null }> {
+  const errorMessage = result.error?.message ?? null;
+
+  if (errorMessage) {
+    await trackEmailDelivery({
+      ...input,
+      status: 'failed',
+      lastError: errorMessage,
+    });
+
+    return { ok: false, errorMessage };
+  }
+
+  await trackEmailDelivery({
+    ...input,
+    providerMessageId: result.data?.id ?? null,
+    status: 'sent',
+  });
+
+  return { ok: true, errorMessage: null };
 }
 
 export function mapProviderEventToStatus(providerEvent: string): EmailDeliveryStatus | null {

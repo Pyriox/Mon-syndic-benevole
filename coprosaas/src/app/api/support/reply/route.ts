@@ -10,6 +10,7 @@ import {
   buildSupportReplyEmail,
   buildSupportReplyEmailSubject,
 } from '@/lib/emails/support-reply';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM  = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -82,15 +83,25 @@ export async function POST(req: NextRequest) {
     ticketUrl,
   });
 
-  const { error: mailErr } = await resend.emails.send({
+  const subject = buildSupportReplyEmailSubject(ticket.subject);
+  const result = await resend.emails.send({
     from:    FROM,
     to:      [ticket.user_email],
-    subject: buildSupportReplyEmailSubject(ticket.subject),
+    subject,
     html,
   });
 
-  if (mailErr) {
-    console.error('[support/reply] Resend error:', mailErr);
+  const tracked = await trackResendSendResult(result, {
+    templateKey: 'support_reply',
+    recipientEmail: ticket.user_email,
+    subject,
+    legalEventType: 'support_reply',
+    legalReference: ticket.id,
+    payload: { ticketId: ticket.id, adminUserId: user.id },
+  });
+
+  if (!tracked.ok) {
+    console.error('[support/reply] Resend error:', tracked.errorMessage);
     // Le message est sauvegardé — on signale l'échec d'email à l'admin
     return NextResponse.json({ message: 'Réponse enregistrée (email non envoyé)', emailWarning: true });
   }

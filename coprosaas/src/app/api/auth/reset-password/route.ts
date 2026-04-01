@@ -22,6 +22,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { RESET_PASSWORD_SUBJECT, buildResetPasswordEmail } from '@/lib/emails/reset-password';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -77,15 +78,24 @@ export async function POST(req: NextRequest) {
       ? `${getBaseUrl()}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`
       : props.action_link; // fallback si hashed_token absent (ne devrait pas arriver)
 
-    const { error: sendError } = await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM,
       to: email,
       subject: RESET_PASSWORD_SUBJECT,
       html: buildResetPasswordEmail(resetLink),
     });
 
-    if (sendError) {
-      console.error('[reset-password] Resend error:', sendError.message);
+    const tracked = await trackResendSendResult(result, {
+      templateKey: 'password_reset',
+      recipientEmail: email,
+      subject: RESET_PASSWORD_SUBJECT,
+      legalEventType: 'password_reset',
+      legalReference: email,
+      payload: { flow: 'reset_password' },
+    });
+
+    if (!tracked.ok) {
+      console.error('[reset-password] Resend error:', tracked.errorMessage);
       return NextResponse.json({ message: 'Erreur lors de l\'envoi de l\'e-mail. Réessayez.' }, { status: 500 });
     }
 

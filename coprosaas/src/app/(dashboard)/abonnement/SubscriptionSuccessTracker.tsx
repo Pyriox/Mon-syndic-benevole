@@ -28,7 +28,7 @@ export default function SubscriptionSuccessTracker({ planId, subscriptionId, cop
       items: [
         {
           item_id: planId ?? 'unknown',
-          item_name: `Abonnement ${planId ?? ''} — ${coproNom ?? ''}`,
+          item_name: `Abonnement ${planId ?? ''}`,
           price,
           quantity: 1,
         },

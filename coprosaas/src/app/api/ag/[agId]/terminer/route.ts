@@ -13,6 +13,7 @@ import {
   buildAGTermineeEmail,
   buildAGTermineeSubject,
 } from '@/lib/emails/syndic-notifications';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -75,11 +76,12 @@ export async function POST(
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
     const prenom = (profile?.full_name ?? '').split(' ')[0] || 'Syndic';
+    const subject = buildAGTermineeSubject(copro.nom ?? '');
     await resend.emails
       .send({
         from: FROM,
         to: syndicEmail,
-        subject: buildAGTermineeSubject(copro.nom ?? ''),
+        subject,
         html: buildAGTermineeEmail({
           syndicPrenom: prenom,
           coproprieteNom: copro.nom ?? '',
@@ -87,6 +89,15 @@ export async function POST(
           appelsDeGondsUrl: `${siteUrl}/appels-de-fonds`,
         }),
       })
+      .then((result) => trackResendSendResult(result, {
+        templateKey: 'ag_ended_syndic_notification',
+        recipientEmail: syndicEmail,
+        recipientUserId: user.id,
+        subject,
+        legalEventType: 'ag_ended_syndic_notification',
+        legalReference: agId,
+        payload: { quorumAtteint, coproprieteNom: copro.nom ?? '' },
+      }))
       .catch((e) => console.error('[ag/terminer] Erreur envoi email syndic:', e));
   }
 

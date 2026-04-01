@@ -128,9 +128,9 @@ export default function MentionsLegalesPage() {
             d'améliorer l'expérience utilisateur.
           </p>
           <p className="mt-4">
-            Vous pouvez désactiver les cookies analytiques à tout moment via les paramètres de votre navigateur.
-            La désactivation des cookies d'authentification empêche l'accès aux fonctionnalités nécessitant
-            une connexion.
+            Les cookies analytiques ne sont activés qu'après votre consentement explicite. Vous pouvez modifier votre choix
+            à tout moment via le bouton « Gérer les cookies » présent sur le site. La désactivation des cookies strictement
+            nécessaires empêche l'accès aux fonctionnalités nécessitant une connexion.
           </p>
         </Section>
 

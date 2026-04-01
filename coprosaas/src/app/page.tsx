@@ -14,7 +14,7 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import LandingNav from './LandingNav';
 import LandingStickyCTA from './LandingStickyCTA';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
-import CookiePreferencesButton from '@/components/CookiePreferencesButton';
+import PublicFooter from '@/components/layout/PublicFooter';
 
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
@@ -1093,45 +1093,7 @@ export default function HomePage() {
       <LandingStickyCTA />
       <ScrollToTopButton />
 
-      {/* ── Guides SEO ── */}
-      <div className="bg-slate-900 border-t border-white/5 py-6 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Nos guides</p>
-          <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-xs text-gray-500">
-            <Link href="/blog/comment-devenir-syndic-benevole" className="hover:text-gray-400 transition-colors">Comment devenir syndic bénévole</Link>
-            <Link href="/blog/obligations-syndic-benevole" className="hover:text-gray-400 transition-colors">Obligations du syndic bénévole</Link>
-            <Link href="/blog/appel-de-fonds-copropriete-calcul-repartition" className="hover:text-gray-400 transition-colors">Appels de fonds — calcul et répartition</Link>
-            <Link href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className="hover:text-gray-400 transition-colors">Fonds de travaux ALUR</Link>
-            <Link href="/blog/gerer-copropriete-sans-syndic-professionnel" className="hover:text-gray-400 transition-colors">Gérer sa copropriété sans syndic professionnel</Link>
-            <Link href="/blog/logiciel-syndic-benevole" className="hover:text-gray-400 transition-colors">Logiciel syndic bénévole</Link>
-            <Link href="/blog/migrer-vers-mon-syndic-benevole" className="hover:text-gray-400 transition-colors">Migrer vers Mon Syndic Bénévole</Link>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Footer ── */}
-      <footer className="bg-slate-950 py-10 px-4 sm:px-6" aria-label="Pied de page">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <SiteLogo size={32} />
-            <span className="font-bold text-white text-sm">Mon Syndic Bénévole</span>
-          </div>
-          <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés
-          </p>
-          <nav aria-label="Liens du pied de page">
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-gray-400">
-              <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales</Link>
-              <Link href="/cgu" className="hover:text-gray-300 transition-colors">CGU / CGV</Link>
-              <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
-              <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
-              <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
-              <a href="mailto:contact@mon-syndic-benevole.fr" className="hover:text-gray-300 transition-colors">contact@mon-syndic-benevole.fr</a>
-              <CookiePreferencesButton />
-            </div>
-          </nav>
-        </div>
-      </footer>
+      <PublicFooter />
 
     </div>
     </>

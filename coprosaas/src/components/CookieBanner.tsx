@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { denyConsent, grantConsent, pageview, updateConsent, type ConsentPreferences } from '@/lib/gtag';
-
-const CONSENT_KEY = 'cookie_consent';
+import { CONSENT_KEY, denyConsent, grantConsent, pageview, updateConsent, type ConsentPreferences } from '@/lib/gtag';
 // CNIL : le consentement doit être renouvelé tous les 13 mois maximum
 const CONSENT_MAX_AGE_MS = 13 * 30 * 24 * 60 * 60 * 1000;
 
@@ -16,8 +14,8 @@ type StoredConsent = {
 };
 
 const DEFAULT_PREFERENCES: ConsentPreferences = {
-  analytics: true,
-  ads: true,
+  analytics: false,
+  ads: false,
 };
 
 function getStoredConsent(): StoredConsent | null {
@@ -152,7 +150,7 @@ export default function CookieBanner() {
       >
         <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#f8fafc_0%,#eef6ff_55%,#fff7ed_100%)] px-6 py-6 sm:px-8">
           <div className="mb-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-            {isPrivacyPolicyPage ? 'Vous pouvez lire cette page avant de choisir' : 'Votre choix est requis avant de continuer'}
+            {isPrivacyPolicyPage ? 'Vous pouvez lire cette page avant de choisir' : 'Choisissez vos préférences'}
           </div>
           <h2 className="text-2xl font-semibold text-slate-950">Aidez-nous à améliorer Mon Syndic Bénévole</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
@@ -160,8 +158,8 @@ export default function CookieBanner() {
             optionnels pour mesurer les pages utiles, comprendre les parcours qui bloquent et mieux présenter nos offres.
           </p>
           <p className="mt-3 text-sm leading-6 text-slate-700">
-            Accepter nous aide à corriger plus vite les points de friction, à prioriser les fonctionnalités utiles aux
-            syndics bénévoles et à financer nos contenus gratuits. Vous pouvez aussi refuser ou choisir catégorie par catégorie.
+            Vous pouvez accepter, refuser ou personnaliser ces cookies. Le refus n'empêche pas l'accès au service,
+            hors cookies strictement nécessaires à la connexion et à la sécurité.
           </p>
         </div>
 

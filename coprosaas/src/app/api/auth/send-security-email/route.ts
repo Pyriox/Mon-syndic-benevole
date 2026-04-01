@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { wrapEmail, h, alertBanner, infoTable, infoRow, COLOR, CONTACT_EMAIL, SITE_URL } from '@/lib/emails/base';
 import { rateLimit } from '@/lib/rate-limit';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -93,19 +94,31 @@ export async function POST(req: NextRequest) {
 
   const toEmail = user.email; // toujours envoyé à l'adresse actuelle (avant changement)
 
-  const { error } = await resend.emails.send({
+  const subject = type === 'password_changed'
+    ? 'Votre mot de passe Mon Syndic Bénévole a été modifié'
+    : "Demande de changement d'adresse e-mail — Mon Syndic Bénévole";
+
+  const result = await resend.emails.send({
     from: FROM,
     to: toEmail,
-    subject: type === 'password_changed'
-      ? 'Votre mot de passe Mon Syndic Bénévole a été modifié'
-      : "Demande de changement d'adresse e-mail — Mon Syndic Bénévole",
+    subject,
     html: type === 'password_changed'
       ? passwordChangedHtml()
       : emailChangeRequestedHtml(newEmail!),
   });
 
-  if (error) {
-    console.error('[send-security-email] Resend error:', error);
+  const tracked = await trackResendSendResult(result, {
+    templateKey: type === 'password_changed' ? 'security_password_changed' : 'security_email_change_requested',
+    recipientEmail: toEmail,
+    recipientUserId: user.id,
+    subject,
+    legalEventType: type,
+    legalReference: user.id,
+    payload: type === 'email_change_requested' ? { newEmail } : { kind: 'password_changed' },
+  });
+
+  if (!tracked.ok) {
+    console.error('[send-security-email] Resend error:', tracked.errorMessage);
     // On ne bloque pas l'UX si l'e-mail échoue
     return NextResponse.json({ message: 'Erreur envoi email' }, { status: 500 });
   }

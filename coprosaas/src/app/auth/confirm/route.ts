@@ -24,6 +24,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 import { buildWelcomeEmail, buildWelcomeSubject } from '@/lib/emails/welcome';
+import { trackResendSendResult } from '@/lib/email-delivery';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -40,18 +41,31 @@ async function sendWelcomeEmail(params: {
   email: string;
   prenom: string | null;
   flow: 'PKCE' | 'token_hash';
+  userId?: string | null;
 }): Promise<void> {
-  const { email, prenom, flow } = params;
+  const { email, prenom, flow, userId } = params;
 
-  const { error } = await resend.emails.send({
+  const subject = buildWelcomeSubject();
+
+  const result = await resend.emails.send({
     from: FROM,
     to: email,
-    subject: buildWelcomeSubject(),
+    subject,
     html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
   });
 
-  if (error) {
-    throw new Error(`[${flow}] ${error.message}`);
+  const tracked = await trackResendSendResult(result, {
+    templateKey: 'welcome',
+    recipientEmail: email,
+    recipientUserId: userId ?? null,
+    subject,
+    legalEventType: 'welcome_email',
+    legalReference: email.toLowerCase(),
+    payload: { flow },
+  });
+
+  if (!tracked.ok) {
+    throw new Error(`[${flow}] ${tracked.errorMessage}`);
   }
 }
 
@@ -132,7 +146,7 @@ export async function GET(request: NextRequest) {
 
           // E-mail de bienvenue (awaité — le fire-and-forget est tué par Vercel avant complétion)
           const prenom = getFirstName(data.user.user_metadata?.full_name);
-          await sendWelcomeEmail({ email, prenom, flow: 'PKCE' });
+          await sendWelcomeEmail({ email, prenom, flow: 'PKCE', userId });
           await logAccountConfirmed(email).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
         } catch (linkErr) {
           console.error('[auth/confirm] PKCE auto-link error:', linkErr);
@@ -219,7 +233,7 @@ export async function GET(request: NextRequest) {
 
         // 3. E-mail de bienvenue (awaité — le fire-and-forget est tué par Vercel avant complétion)
         const prenom = getFirstName(data.user.user_metadata?.full_name);
-        await sendWelcomeEmail({ email, prenom, flow: 'token_hash' });
+        await sendWelcomeEmail({ email, prenom, flow: 'token_hash', userId });
         await logAccountConfirmed(email).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
       } catch (linkErr) {
         // Non bloquant — l'utilisateur peut quand même accéder au dashboard
