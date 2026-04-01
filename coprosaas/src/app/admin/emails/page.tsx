@@ -142,7 +142,7 @@ export default async function AdminEmailsPage({
     ? (status as DeliveryStatus)
     : 'all';
   const currentPage = Math.max(1, Number(page) || 1);
-  const PAGE_SIZE = 40;
+  const PAGE_SIZE = 20;
 
   const admin = createAdminClient();
 
