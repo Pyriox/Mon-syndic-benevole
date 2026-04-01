@@ -15,7 +15,8 @@ type DeliveryStatus =
   | 'clicked'
   | 'bounced'
   | 'complained'
-  | 'failed';
+  | 'failed'
+  | 'unknown';
 
 type DeliveryRow = {
   id: string;
@@ -39,6 +40,7 @@ type DeliveryRow = {
 type LiveStatus = {
   status: DeliveryStatus;
   eventLabel: string;
+  sourceEvent: string | null;
 };
 
 const ALL_STATUSES: DeliveryStatus[] = [
@@ -50,6 +52,7 @@ const ALL_STATUSES: DeliveryStatus[] = [
   'bounced',
   'complained',
   'failed',
+  'unknown',
 ];
 
 function formatDateTime(value: string | null): string {
@@ -73,6 +76,7 @@ function statusLabel(status: DeliveryStatus): string {
     case 'bounced': return 'Bounce';
     case 'complained': return 'Plainte';
     case 'failed': return 'Echec';
+    case 'unknown': return 'Inconnu';
   }
 }
 
@@ -86,6 +90,7 @@ function statusClass(status: DeliveryStatus): string {
     case 'bounced': return 'bg-amber-50 text-amber-700 border-amber-200';
     case 'complained': return 'bg-orange-50 text-orange-700 border-orange-200';
     case 'failed': return 'bg-red-50 text-red-700 border-red-200';
+    case 'unknown': return 'bg-slate-100 text-slate-700 border-slate-200';
   }
 }
 
@@ -97,9 +102,11 @@ function mapProviderEventToStatus(event: string | null | undefined): DeliverySta
   if (normalized.includes('clicked') || normalized.includes('click')) return 'clicked';
   if (normalized.includes('bounced') || normalized.includes('bounce')) return 'bounced';
   if (normalized.includes('complained') || normalized.includes('complaint')) return 'complained';
+  if (normalized.includes('delivery_delayed') || normalized.includes('delayed') || normalized.includes('scheduled') || normalized.includes('queued')) return 'queued';
+  if (normalized.includes('canceled') || normalized.includes('cancelled')) return 'failed';
   if (normalized.includes('failed') || normalized.includes('fail')) return 'failed';
   if (normalized.includes('sent')) return 'sent';
-  if (normalized.includes('queued') || normalized.includes('scheduled') || normalized.includes('processing')) return 'queued';
+  if (normalized.includes('processing')) return 'queued';
   return null;
 }
 
@@ -112,10 +119,51 @@ function eventLabelFromLive(status: DeliveryStatus): string {
     case 'opened': return 'Ouvert (Resend live)';
     case 'delivered': return 'Livre (Resend live)';
     case 'sent': return 'Envoye (Resend live)';
+    case 'unknown': return 'Inconnu (Resend live)';
     case 'queued':
     default:
       return 'Queue (Resend live)';
   }
+}
+
+function normalizeProviderMessageId(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.replace(/^<|>$/g, '');
+}
+
+async function wait(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function getLiveStatusWithRetry(resend: Resend, providerMessageId: string): Promise<LiveStatus> {
+  const normalizedId = normalizeProviderMessageId(providerMessageId);
+  if (!normalizedId) {
+    return { status: 'unknown', eventLabel: 'Inconnu (Resend live)', sourceEvent: null };
+  }
+
+  const delays = [0, 200, 600];
+  for (let i = 0; i < delays.length; i++) {
+    try {
+      if (delays[i] > 0) await wait(delays[i]);
+      const res = await resend.emails.get(normalizedId);
+      const payload = res as unknown as { data?: { last_event?: string | null; status?: string | null } | null };
+      const sourceEvent = payload.data?.last_event ?? payload.data?.status ?? null;
+      const mapped = mapProviderEventToStatus(sourceEvent);
+      return {
+        status: mapped ?? 'unknown',
+        eventLabel: mapped ? eventLabelFromLive(mapped) : 'Inconnu (Resend live)',
+        sourceEvent,
+      };
+    } catch {
+      if (i === delays.length - 1) {
+        return { status: 'unknown', eventLabel: 'Inconnu (Resend indisponible)', sourceEvent: null };
+      }
+    }
+  }
+
+  return { status: 'unknown', eventLabel: 'Inconnu (Resend live)', sourceEvent: null };
 }
 
 function makeHref(params: URLSearchParams, key: string, value?: string): string {
@@ -153,9 +201,6 @@ export default async function AdminEmailsPage({
       { count: 'exact' },
     );
 
-  if (statusFilter !== 'all') {
-    base = base.eq('status', statusFilter);
-  }
   if (query) {
     const safe = query.replace(/[%]/g, '').replace(/,/g, ' ');
     base = base.or(`recipient_email.ilike.%${safe}%,subject.ilike.%${safe}%,template_key.ilike.%${safe}%`);
@@ -171,31 +216,35 @@ export default async function AdminEmailsPage({
   const liveByDeliveryId = new Map<string, LiveStatus>();
 
   if (resend) {
-    await Promise.all(rows.map(async (row) => {
-      if (!row.provider_message_id) return;
-      try {
-        const res = await resend.emails.get(row.provider_message_id);
-        const payload = res as unknown as { data?: { last_event?: string | null; status?: string | null } | null };
-        const liveStatus = mapProviderEventToStatus(payload.data?.last_event ?? payload.data?.status ?? null);
-        if (!liveStatus) return;
-        liveByDeliveryId.set(row.id, {
-          status: liveStatus,
-          eventLabel: eventLabelFromLive(liveStatus),
-        });
-      } catch {
-        // Ignore provider errors and keep DB status as fallback.
+    // Batching pour éviter les erreurs de rate limit Resend sur les pages chargées.
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+      const batch = rows.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map(async (row) => {
+        const live = row.provider_message_id
+          ? await getLiveStatusWithRetry(resend, row.provider_message_id)
+          : { status: 'unknown', eventLabel: 'Inconnu (sans provider id)', sourceEvent: null };
+        return { deliveryId: row.id, live };
+      }));
+      for (const result of batchResults) {
+        liveByDeliveryId.set(result.deliveryId, result.live);
       }
-    }));
+    }
   }
 
   const effectiveRows = rows.map((row) => {
     const live = liveByDeliveryId.get(row.id);
     return {
       ...row,
-      status: live?.status ?? row.status,
-      live_event_label: live?.eventLabel ?? null,
+      status: live?.status ?? 'unknown',
+      live_event_label: live?.eventLabel ?? 'Inconnu (Resend)',
+      live_source_event: live?.sourceEvent ?? null,
     };
   });
+
+  const filteredRows = statusFilter === 'all'
+    ? effectiveRows
+    : effectiveRows.filter((row) => row.status === statusFilter);
   const totalItems = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
   const params = new URLSearchParams();
@@ -253,7 +302,7 @@ export default async function AdminEmailsPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {effectiveRows.map((row) => (
+              {filteredRows.map((row) => (
                 <tr key={row.id} className="hover:bg-gray-50/70">
                   <td className="px-3 py-2 align-top">
                     <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold border ${statusClass(row.status)}`}>
@@ -265,29 +314,14 @@ export default async function AdminEmailsPage({
                   <td className="px-3 py-2 align-top text-gray-600 font-mono text-xs">{row.template_key}</td>
                   <td className="px-3 py-2 align-top text-gray-600 whitespace-nowrap">{formatDateTime(row.created_at)}</td>
                   <td className="px-3 py-2 align-top text-gray-600 text-xs">
-                    {row.live_event_label
-                      ? row.live_event_label
-                      : row.complained_at
-                      ? `Plainte: ${formatDateTime(row.complained_at)}`
-                      : row.bounced_at
-                        ? `Bounce: ${formatDateTime(row.bounced_at)}`
-                        : row.failed_at
-                          ? `Echec: ${formatDateTime(row.failed_at)}`
-                          : row.clicked_at
-                            ? `Clique: ${formatDateTime(row.clicked_at)}`
-                            : row.opened_at
-                              ? `Ouvert: ${formatDateTime(row.opened_at)}`
-                              : row.delivered_at
-                                ? `Livre: ${formatDateTime(row.delivered_at)}`
-                                : row.sent_at
-                                  ? `Envoye: ${formatDateTime(row.sent_at)}`
-                                  : '—'}
+                    {row.live_event_label}
+                    {row.live_source_event ? <p className="text-gray-500 mt-1">Event: {row.live_source_event}</p> : null}
                     {row.last_error ? <p className="text-red-600 mt-1">{row.last_error}</p> : null}
                     {row.retry_count > 0 ? <p className="text-amber-700 mt-1">Retries: {row.retry_count}</p> : null}
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && (
+              {filteredRows.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-3 py-8 text-center text-sm text-gray-500">Aucun e-mail pour ce filtre.</td>
                 </tr>
