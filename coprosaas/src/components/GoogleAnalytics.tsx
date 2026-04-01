@@ -11,7 +11,7 @@ import { GA_ID, pageview, trackAnonymousEvent } from '@/lib/gtag';
 const GA_DEBUG_PARAM = 'ga_debug';
 const GA_DEBUG_STORAGE_KEY = 'ga_debug';
 
-function isGaDebugEnabled(searchParams: ReadonlyURLSearchParams): boolean {
+function isGaDebugEnabled(searchParams: Pick<URLSearchParams, 'get'>): boolean {
   if (searchParams.get(GA_DEBUG_PARAM) === '1') {
     return true;
   }
