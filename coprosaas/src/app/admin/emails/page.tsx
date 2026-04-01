@@ -2,9 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import AdminSearch from '../AdminSearch';
-import AdminPagination from '../AdminPagination';
 import { isAdminUser } from '@/lib/admin-config';
 
 type DeliveryStatus =
@@ -18,29 +16,13 @@ type DeliveryStatus =
   | 'failed'
   | 'unknown';
 
-type DeliveryRow = {
+type ResendEmailRow = {
   id: string;
-  provider_message_id: string | null;
-  template_key: string;
   status: DeliveryStatus;
-  recipient_email: string;
+  lastEvent: string | null;
+  recipients: string[];
   subject: string | null;
   created_at: string;
-  sent_at: string | null;
-  delivered_at: string | null;
-  opened_at: string | null;
-  clicked_at: string | null;
-  bounced_at: string | null;
-  failed_at: string | null;
-  complained_at: string | null;
-  last_error: string | null;
-  retry_count: number;
-};
-
-type LiveStatus = {
-  status: DeliveryStatus;
-  eventLabel: string;
-  sourceEvent: string | null;
 };
 
 const ALL_STATUSES: DeliveryStatus[] = [
@@ -102,68 +84,13 @@ function mapProviderEventToStatus(event: string | null | undefined): DeliverySta
   if (normalized.includes('clicked') || normalized.includes('click')) return 'clicked';
   if (normalized.includes('bounced') || normalized.includes('bounce')) return 'bounced';
   if (normalized.includes('complained') || normalized.includes('complaint')) return 'complained';
+  if (normalized.includes('suppressed')) return 'failed';
   if (normalized.includes('delivery_delayed') || normalized.includes('delayed') || normalized.includes('scheduled') || normalized.includes('queued')) return 'queued';
   if (normalized.includes('canceled') || normalized.includes('cancelled')) return 'failed';
   if (normalized.includes('failed') || normalized.includes('fail')) return 'failed';
   if (normalized.includes('sent')) return 'sent';
   if (normalized.includes('processing')) return 'queued';
   return null;
-}
-
-function eventLabelFromLive(status: DeliveryStatus): string {
-  switch (status) {
-    case 'complained': return 'Plainte (Resend live)';
-    case 'bounced': return 'Bounce (Resend live)';
-    case 'failed': return 'Echec (Resend live)';
-    case 'clicked': return 'Clique (Resend live)';
-    case 'opened': return 'Ouvert (Resend live)';
-    case 'delivered': return 'Livre (Resend live)';
-    case 'sent': return 'Envoye (Resend live)';
-    case 'unknown': return 'Inconnu (Resend live)';
-    case 'queued':
-    default:
-      return 'Queue (Resend live)';
-  }
-}
-
-function normalizeProviderMessageId(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  return trimmed.replace(/^<|>$/g, '');
-}
-
-async function wait(ms: number): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function getLiveStatusWithRetry(resend: Resend, providerMessageId: string): Promise<LiveStatus> {
-  const normalizedId = normalizeProviderMessageId(providerMessageId);
-  if (!normalizedId) {
-    return { status: 'unknown', eventLabel: 'Inconnu (Resend live)', sourceEvent: null };
-  }
-
-  const delays = [0, 200, 600];
-  for (let i = 0; i < delays.length; i++) {
-    try {
-      if (delays[i] > 0) await wait(delays[i]);
-      const res = await resend.emails.get(normalizedId);
-      const payload = res as unknown as { data?: { last_event?: string | null; status?: string | null } | null };
-      const sourceEvent = payload.data?.last_event ?? payload.data?.status ?? null;
-      const mapped = mapProviderEventToStatus(sourceEvent);
-      return {
-        status: mapped ?? 'unknown',
-        eventLabel: mapped ? eventLabelFromLive(mapped) : 'Inconnu (Resend live)',
-        sourceEvent,
-      };
-    } catch {
-      if (i === delays.length - 1) {
-        return { status: 'unknown', eventLabel: 'Inconnu (Resend indisponible)', sourceEvent: null };
-      }
-    }
-  }
-
-  return { status: 'unknown', eventLabel: 'Inconnu (Resend live)', sourceEvent: null };
 }
 
 function makeHref(params: URLSearchParams, key: string, value?: string): string {
@@ -178,13 +105,13 @@ function makeHref(params: URLSearchParams, key: string, value?: string): string 
 export default async function AdminEmailsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; page?: string; after?: string; before?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !(await isAdminUser(user.id, supabase))) redirect('/login');
 
-  const { q, status, page } = await searchParams;
+  const { q, status, page, after, before } = await searchParams;
   const query = q?.trim() ?? '';
   const statusFilter = ALL_STATUSES.includes((status ?? '') as DeliveryStatus)
     ? (status as DeliveryStatus)
@@ -192,76 +119,89 @@ export default async function AdminEmailsPage({
   const currentPage = Math.max(1, Number(page) || 1);
   const PAGE_SIZE = 20;
 
-  const admin = createAdminClient();
-
-  let base = admin
-    .from('email_deliveries')
-    .select(
-      'id, provider_message_id, template_key, status, recipient_email, subject, created_at, sent_at, delivered_at, opened_at, clicked_at, bounced_at, failed_at, complained_at, last_error, retry_count',
-      { count: 'exact' },
-    );
-
-  if (query) {
-    const safe = query.replace(/[%]/g, '').replace(/,/g, ' ');
-    base = base.or(`recipient_email.ilike.%${safe}%,subject.ilike.%${safe}%,template_key.ilike.%${safe}%`);
-  }
-
-  const from = (currentPage - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
-  const { data, count } = await base.order('created_at', { ascending: false }).range(from, to);
-
-  const rows = (data ?? []) as DeliveryRow[];
-
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-  const liveByDeliveryId = new Map<string, LiveStatus>();
-
-  if (resend) {
-    // Batching pour éviter les erreurs de rate limit Resend sur les pages chargées.
-    const BATCH_SIZE = 5;
-    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-      const batch = rows.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(batch.map(async (row) => {
-        const live: LiveStatus = row.provider_message_id
-          ? await getLiveStatusWithRetry(resend, row.provider_message_id)
-          : { status: 'unknown', eventLabel: 'Inconnu (sans provider id)', sourceEvent: null };
-        return { deliveryId: row.id, live };
-      }));
-      for (const result of batchResults) {
-        liveByDeliveryId.set(result.deliveryId, result.live);
-      }
-    }
+  if (!resend) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-lg sm:text-xl font-bold text-gray-900">Suivi des e-mails</h1>
+        <div className="bg-white rounded-xl border border-red-200 p-4 text-sm text-red-700">
+          RESEND_API_KEY manquante. Impossible de charger les e-mails via l'API Resend.
+        </div>
+      </div>
+    );
   }
 
-  const effectiveRows = rows.map((row) => {
-    const live = liveByDeliveryId.get(row.id);
-    return {
-      ...row,
-      status: live?.status ?? 'unknown',
-      live_event_label: live?.eventLabel ?? 'Inconnu (Resend)',
-      live_source_event: live?.sourceEvent ?? null,
-    };
-  });
+  const listResponse = await resend.emails.list(
+    after
+      ? { limit: PAGE_SIZE, after }
+      : before
+        ? { limit: PAGE_SIZE, before }
+        : { limit: PAGE_SIZE },
+  );
+  const apiRows = (listResponse.data?.data ?? []) as Array<{
+    id: string;
+    to: string[];
+    subject: string;
+    created_at: string;
+    last_event: string;
+  }>;
+
+  const normalizedRows: ResendEmailRow[] = apiRows.map((row) => ({
+    id: row.id,
+    recipients: Array.isArray(row.to) ? row.to : [],
+    subject: row.subject ?? null,
+    created_at: row.created_at,
+    lastEvent: row.last_event ?? null,
+    status: mapProviderEventToStatus(row.last_event) ?? 'unknown',
+  }));
+
+  const queryLower = query.toLowerCase();
+  const queryFilteredRows = query
+    ? normalizedRows.filter((row) => {
+        const recipientsText = row.recipients.join(', ').toLowerCase();
+        const subjectText = (row.subject ?? '').toLowerCase();
+        return recipientsText.includes(queryLower)
+          || subjectText.includes(queryLower)
+          || row.id.toLowerCase().includes(queryLower)
+          || (row.lastEvent ?? '').toLowerCase().includes(queryLower);
+      })
+    : normalizedRows;
 
   const filteredRows = statusFilter === 'all'
-    ? effectiveRows
-    : effectiveRows.filter((row) => row.status === statusFilter);
-  const totalItems = count ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    ? queryFilteredRows
+    : queryFilteredRows.filter((row) => row.status === statusFilter);
+
+  const firstRowId = normalizedRows[0]?.id;
+  const lastRowId = normalizedRows[normalizedRows.length - 1]?.id;
+  const hasMore = Boolean(listResponse.data?.has_more);
+
+  const prevEnabled = Boolean(after || before) && Boolean(firstRowId);
+  const nextEnabled = hasMore && Boolean(lastRowId);
+
   const params = new URLSearchParams();
   if (query) params.set('q', query);
   if (statusFilter !== 'all') params.set('status', statusFilter);
 
   const prev = new URLSearchParams(params.toString());
   prev.set('page', String(Math.max(1, currentPage - 1)));
+  if (firstRowId) {
+    prev.set('before', firstRowId);
+    prev.delete('after');
+  }
+
   const next = new URLSearchParams(params.toString());
-  next.set('page', String(Math.min(totalPages, currentPage + 1)));
+  next.set('page', String(currentPage + 1));
+  if (lastRowId) {
+    next.set('after', lastRowId);
+    next.delete('before');
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-lg sm:text-xl font-bold text-gray-900">Suivi des e-mails</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Historique de diffusion et delivrabilite (Resend + app)</p>
+          <p className="text-xs text-gray-500 mt-0.5">Source unique: API Resend (sans base locale)</p>
         </div>
       </div>
 
@@ -296,9 +236,9 @@ export default async function AdminEmailsPage({
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Destinataire</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Sujet</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Template</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Email ID</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Cree le</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Evenement</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Dernier evenement</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -309,15 +249,12 @@ export default async function AdminEmailsPage({
                       {statusLabel(row.status)}
                     </span>
                   </td>
-                  <td className="px-3 py-2 align-top text-gray-700">{row.recipient_email}</td>
+                  <td className="px-3 py-2 align-top text-gray-700">{row.recipients.join(', ') || '—'}</td>
                   <td className="px-3 py-2 align-top text-gray-800 max-w-[360px] truncate" title={row.subject ?? ''}>{row.subject ?? '—'}</td>
-                  <td className="px-3 py-2 align-top text-gray-600 font-mono text-xs">{row.template_key}</td>
+                  <td className="px-3 py-2 align-top text-gray-600 font-mono text-xs">{row.id}</td>
                   <td className="px-3 py-2 align-top text-gray-600 whitespace-nowrap">{formatDateTime(row.created_at)}</td>
                   <td className="px-3 py-2 align-top text-gray-600 text-xs">
-                    {row.live_event_label}
-                    {row.live_source_event ? <p className="text-gray-500 mt-1">Event: {row.live_source_event}</p> : null}
-                    {row.last_error ? <p className="text-red-600 mt-1">{row.last_error}</p> : null}
-                    {row.retry_count > 0 ? <p className="text-amber-700 mt-1">Retries: {row.retry_count}</p> : null}
+                    {row.lastEvent ?? 'unknown'}
                   </td>
                 </tr>
               ))}
@@ -331,14 +268,25 @@ export default async function AdminEmailsPage({
         </div>
       </div>
 
-      <AdminPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        pageSize={PAGE_SIZE}
-        prevHref={`/admin/emails?${prev.toString()}`}
-        nextHref={`/admin/emails?${next.toString()}`}
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 gap-2">
+        <p>{filteredRows.length} e-mail(s) charges (page {currentPage}, limite {PAGE_SIZE})</p>
+        <div className="flex items-center gap-2">
+          {prevEnabled ? (
+            <Link href={`/admin/emails?${prev.toString()}`} className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50">
+              Precedent
+            </Link>
+          ) : (
+            <span className="px-3 py-1.5 rounded border border-gray-200 opacity-40">Precedent</span>
+          )}
+          {nextEnabled ? (
+            <Link href={`/admin/emails?${next.toString()}`} className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50">
+              Suivant
+            </Link>
+          ) : (
+            <span className="px-3 py-1.5 rounded border border-gray-200 opacity-40">Suivant</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
