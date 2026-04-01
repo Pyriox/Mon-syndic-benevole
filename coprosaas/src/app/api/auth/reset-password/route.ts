@@ -23,19 +23,10 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { RESET_PASSWORD_SUBJECT, buildResetPasswordEmail } from '@/lib/emails/reset-password';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 import { trackResendSendResult } from '@/lib/email-delivery';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
-
-function getBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return 'https://mon-syndic-benevole.fr';
-}
 
 export async function POST(req: NextRequest) {
   // Rate limiting : 3 demandes par IP par 10 minutes
@@ -75,7 +66,7 @@ export async function POST(req: NextRequest) {
     const props = data.properties as { hashed_token?: string; action_link: string };
     const tokenHash = props.hashed_token;
     const resetLink = tokenHash
-      ? `${getBaseUrl()}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`
+      ? `${getCanonicalSiteUrl()}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`
       : props.action_link; // fallback si hashed_token absent (ne devrait pas arriver)
 
     const result = await resend.emails.send({

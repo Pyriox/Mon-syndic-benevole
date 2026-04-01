@@ -15,6 +15,7 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import { Lock, ArrowRight, Building2, Users, FileText, CalendarDays } from 'lucide-react';
 import { trackEvent, trackAnonymousEvent } from '@/lib/gtag';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const BENEFITS = [
   { icon: Building2, text: 'Gérez plusieurs copropriétés depuis un seul espace' },
@@ -159,7 +160,7 @@ function RegisterForm() {
       email: formData.email,
       password: formData.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: `${getCanonicalSiteUrl()}/auth/confirm`,
         data: { full_name: fullName, prenom: formData.prenom.trim(), nom: formData.nom.trim(), role: 'syndic' },
       },
     });

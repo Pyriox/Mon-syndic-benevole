@@ -1,9 +1,11 @@
+import { getCanonicalSiteUrl } from '@/lib/site-url';
+
 // ============================================================
 // Base layout partagé pour tous les e-mails transactionnels.
 // Design : minimaliste, compatible tous clients mail.
 // ============================================================
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
+export const SITE_URL = getCanonicalSiteUrl();
 export const CONTACT_EMAIL = 'contact@mon-syndic-benevole.fr';
 export const BRAND_NAME = 'Mon Syndic Bénévole';
 

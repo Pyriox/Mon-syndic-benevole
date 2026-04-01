@@ -14,6 +14,7 @@ import {
   buildAGTermineeSubject,
 } from '@/lib/emails/syndic-notifications';
 import { trackResendSendResult } from '@/lib/email-delivery';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -73,8 +74,7 @@ export async function POST(
   const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
   const syndicEmail = profile?.email;
   if (syndicEmail) {
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
+    const siteUrl = getCanonicalSiteUrl();
     const prenom = (profile?.full_name ?? '').split(' ')[0] || 'Syndic';
     const subject = buildAGTermineeSubject(copro.nom ?? '');
     await resend.emails

@@ -12,6 +12,7 @@ import { Resend } from 'resend';
 import { buildInvitationEmail, buildInvitationEmailSubject } from '@/lib/emails/invitation';
 import { rateLimit } from '@/lib/rate-limit';
 import { trackResendSendResult } from '@/lib/email-delivery';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
   const syndicPrenom = (profile?.full_name ?? '').split(' ')[0] || 'Le syndic';
 
   // Construire le lien d'invitation (utiliser la variable d'environnement plutôt que l'en-tête Origin)
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mon-syndic-benevole.fr';
+  const siteUrl = getCanonicalSiteUrl();
   const link = `${siteUrl}/register?token=${token}`;
 
   const subject = buildInvitationEmailSubject(copro.nom);

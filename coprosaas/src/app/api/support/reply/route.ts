@@ -11,11 +11,12 @@ import {
   buildSupportReplyEmailSubject,
 } from '@/lib/emails/support-reply';
 import { trackResendSendResult } from '@/lib/email-delivery';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM  = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 import { isAdminUser } from '@/lib/admin-config';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mon-syndic-benevole.fr';
+const SITE_URL = getCanonicalSiteUrl();
 
 export async function POST(req: NextRequest) {
   // ── Auth : seul l'admin peut répondre ──

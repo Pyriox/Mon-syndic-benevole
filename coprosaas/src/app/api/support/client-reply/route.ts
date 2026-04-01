@@ -9,11 +9,12 @@ import { createClient } from '@/lib/supabase/server';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { h } from '@/lib/emails/base';
 import { trackResendSendResult } from '@/lib/email-delivery';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM          = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'contact@mon-syndic-benevole.fr'}>`;
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? 'contact@mon-syndic-benevole.fr';
-const SITE_URL      = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
+const SITE_URL      = getCanonicalSiteUrl();
 
 export async function POST(req: NextRequest) {
   // Rate limit : 20 messages par IP par minute

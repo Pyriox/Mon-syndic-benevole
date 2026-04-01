@@ -16,10 +16,11 @@ import {
   type SubscriptionEmailParams,
 } from '@/lib/emails/subscription';
 import { trackResendSendResult } from '@/lib/email-delivery';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
+const SITE_URL = getCanonicalSiteUrl();
 
 function getPlanLabel(planId: string | null | undefined): string {
   if (planId === 'illimite') return 'Illimité';

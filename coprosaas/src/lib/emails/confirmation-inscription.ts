@@ -12,7 +12,7 @@
 import { wrapEmail, ctaButton, COLOR } from './base';
 
 export const CONFIRMATION_INSCRIPTION_SUBJECT =
-  'Confirmez votre adresse e-mail — Mon Syndic Bénévole';
+  'Activez votre compte — Mon Syndic Bénévole';
 
 export function confirmationInscriptionHtml(): string {
   const content = `

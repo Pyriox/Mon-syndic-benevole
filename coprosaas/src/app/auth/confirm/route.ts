@@ -25,10 +25,11 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 import { buildWelcomeEmail, buildWelcomeSubject } from '@/lib/emails/welcome';
 import { trackResendSendResult } from '@/lib/email-delivery';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
+const SITE_URL = getCanonicalSiteUrl();
 
 function getFirstName(fullName: unknown): string | null {
   if (typeof fullName !== 'string') return null;
