@@ -34,6 +34,31 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-ben
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM   = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 
+async function trackCronEmail(params: {
+  providerMessageId?: string | null;
+  errorMessage?: string | null;
+  templateKey: string;
+  recipientEmail: string;
+  subject: string;
+  coproprieteId?: string | null;
+  payload?: Record<string, unknown>;
+  legalEventType?: string | null;
+  legalReference?: string | null;
+}): Promise<void> {
+  await trackEmailDelivery({
+    providerMessageId: params.providerMessageId ?? null,
+    templateKey: params.templateKey,
+    status: params.errorMessage ? 'failed' : 'sent',
+    recipientEmail: params.recipientEmail,
+    coproprieteId: params.coproprieteId ?? null,
+    subject: params.subject,
+    legalEventType: params.legalEventType ?? null,
+    legalReference: params.legalReference ?? null,
+    payload: params.payload ?? { trigger: 'cron' },
+    lastError: params.errorMessage ?? null,
+  });
+}
+
 function addDays(base: Date, days: number): string {
   const d = new Date(base);
   d.setDate(d.getDate() + days);
@@ -206,12 +231,13 @@ export async function GET(req: NextRequest) {
   const brouillonJ1UrgentGroups = groupBrouillons((brouillonsJ1Urgent ?? []) as unknown as BrouillonRow[]);
 
   if (!onboardingOnly) {
-    for (const [, group] of brouillonGroups) {
+    for (const [coproprieteId, group] of brouillonGroups) {
       const n = group.ids.length;
-      const { error } = await resend.emails.send({
+      const subject = buildBrouillonRappelSubject(group.coproprieteNom, n);
+      const result = await resend.emails.send({
         from: FROM,
         to: group.syndicEmail,
-        subject: buildBrouillonRappelSubject(group.coproprieteNom, n),
+        subject,
         html: buildBrouillonRappelEmail({
           syndicPrenom: group.syndicPrenom,
           coproprieteNom: group.coproprieteNom,
@@ -219,7 +245,18 @@ export async function GET(req: NextRequest) {
           appelsUrl: `${SITE_URL}/appels-de-fonds`,
         }),
       });
-      if (!error) {
+      await trackCronEmail({
+        providerMessageId: result.data?.id,
+        errorMessage: result.error?.message,
+        templateKey: 'appel_brouillon_rappel',
+        recipientEmail: group.syndicEmail,
+        subject,
+        coproprieteId,
+        legalEventType: 'appel_brouillon_rappel',
+        legalReference: group.ids.join(','),
+        payload: { trigger: 'cron', reminderType: 'brouillon', appelIds: group.ids },
+      });
+      if (!result.error) {
         await supabase
           .from('appels_de_fonds')
           .update({ rappel_brouillon_at: new Date().toISOString() })
@@ -234,12 +271,13 @@ export async function GET(req: NextRequest) {
     type: BrouillonEcheanceType,
     updateColumn: 'rappel_brouillon_j14_at' | 'rappel_brouillon_j7_at' | 'rappel_brouillon_j1_urgent_at',
   ) => {
-    for (const [, group] of groups) {
+    for (const [coproprieteId, group] of groups) {
       const n = group.ids.length;
-      const { error } = await resend.emails.send({
+      const subject = buildBrouillonEcheanceSubject(group.coproprieteNom, n, type);
+      const result = await resend.emails.send({
         from: FROM,
         to: group.syndicEmail,
-        subject: buildBrouillonEcheanceSubject(group.coproprieteNom, n, type),
+        subject,
         html: buildBrouillonEcheanceEmail({
           type,
           syndicPrenom: group.syndicPrenom,
@@ -248,7 +286,18 @@ export async function GET(req: NextRequest) {
           appelsUrl: `${SITE_URL}/appels-de-fonds`,
         }),
       });
-      if (!error) {
+      await trackCronEmail({
+        providerMessageId: result.data?.id,
+        errorMessage: result.error?.message,
+        templateKey: `appel_brouillon_echeance_${type}`,
+        recipientEmail: group.syndicEmail,
+        subject,
+        coproprieteId,
+        legalEventType: 'appel_brouillon_echeance',
+        legalReference: group.ids.join(','),
+        payload: { trigger: 'cron', reminderType: type, appelIds: group.ids },
+      });
+      if (!result.error) {
         await supabase
           .from('appels_de_fonds')
           .update({ [updateColumn]: new Date().toISOString() } as Record<string, unknown>)
@@ -324,11 +373,12 @@ export async function GET(req: NextRequest) {
 
     const prenom = (profile.full_name ?? '').split(' ')[0] || null;
     const planLabel = row.plan_id === 'illimite' ? 'Illimité' : row.plan_id === 'confort' ? 'Confort' : 'Essentiel';
+    const subject = buildTrialEndingSubject(row.nom);
 
-    const { error } = await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM,
       to: profile.email,
-      subject: buildTrialEndingSubject(row.nom),
+      subject,
       html: buildTrialEndingEmail({
         prenom,
         coproprieteNom: row.nom,
@@ -337,8 +387,19 @@ export async function GET(req: NextRequest) {
         dashboardUrl: `${SITE_URL}/abonnement`,
       }),
     });
-    if (!error) totalSent++;
-    else console.error('[cron] Erreur email trial J-3:', error);
+    await trackCronEmail({
+      providerMessageId: result.data?.id,
+      errorMessage: result.error?.message,
+      templateKey: 'subscription_trial_ending_j3',
+      recipientEmail: profile.email,
+      subject,
+      coproprieteId: row.id,
+      legalEventType: 'subscription_trial_ending',
+      legalReference: row.id,
+      payload: { trigger: 'cron', reminderType: 'trial_j3', planId: row.plan_id },
+    });
+    if (!result.error) totalSent++;
+    else console.error('[cron] Erreur email trial J-3:', result.error);
   }
 
   return NextResponse.json({
@@ -515,6 +576,21 @@ async function sendSyndicOnboardingReminders(
       to: email,
       subject,
       html,
+    });
+
+    await trackCronEmail({
+      providerMessageId: result.data?.id,
+      errorMessage: result.error?.message,
+      templateKey: `syndic_onboarding_${kind}`,
+      recipientEmail: email,
+      subject,
+      payload: {
+        trigger: 'cron',
+        kind,
+        coproCount,
+        coproprietairesCount,
+        force,
+      },
     });
 
     if (result.error) {

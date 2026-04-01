@@ -56,6 +56,24 @@ async function logUserEvent(
   ).catch((e: Error) => console.warn('[logUserEvent]', e?.message));
 }
 
+async function sendStripeEmail(params: {
+  to: string;
+  subject: string;
+  html: string;
+  context: string;
+}): Promise<void> {
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: params.to,
+    subject: params.subject,
+    html: params.html,
+  });
+
+  if (error) {
+    throw new Error(`[${params.context}] ${error.message}`);
+  }
+}
+
 // ⚠️ Ne pas parser le body en JSON — Stripe exige le raw body pour vérifier la signature.
 export const runtime = 'nodejs';
 
@@ -157,9 +175,7 @@ export async function POST(req: NextRequest) {
               const [subject, html] = subPlan === 'essai'
                 ? [buildTrialStartedSubject(coproData.nom), buildTrialStartedEmail(emailParams)]
                 : [buildSubscriptionCreatedSubject(coproData.nom), buildSubscriptionCreatedEmail(emailParams)];
-              resend.emails.send({ from: FROM, to: userEmail, subject, html }).catch((e) =>
-                console.error('[Stripe webhook] Email checkout error:', e),
-              );
+              await sendStripeEmail({ to: userEmail, subject, html, context: 'checkout.session.completed' });
               await logUserEvent(
                 adminClient,
                 userEmail,
@@ -230,9 +246,7 @@ export async function POST(req: NextRequest) {
               const [subject, html] = isTrialToPaid
                 ? [buildTrialToPaidSubject(coproNom), buildTrialToPaidEmail(emailParams)]
                 : [buildRenewalSubject(coproNom), buildRenewalEmail(emailParams)];
-              resend.emails.send({ from: FROM, to: email, subject, html }).catch((e) =>
-                console.error('[Stripe webhook] Email subscription update error:', e),
-              );
+              await sendStripeEmail({ to: email, subject, html, context: 'customer.subscription.updated' });
             }
           } catch (e) {
             console.error('[Stripe webhook] Erreur email subscription update:', e);
@@ -284,12 +298,12 @@ export async function POST(req: NextRequest) {
               periodEnd: null,
               dashboardUrl: `${SITE_URL}/abonnement`,
             };
-            resend.emails.send({
-              from: FROM,
+            await sendStripeEmail({
               to: email,
               subject: buildCancelledSubject(coproNom),
               html: buildCancelledEmail(emailParams),
-            }).catch((e) => console.error('[Stripe webhook] Email cancelled error:', e));
+              context: 'customer.subscription.deleted',
+            });
             await logUserEvent(
               adminClient,
               email,
@@ -378,12 +392,12 @@ export async function POST(req: NextRequest) {
               periodEnd: null,
               dashboardUrl: `${SITE_URL}/abonnement`,
             };
-            resend.emails.send({
-              from: FROM,
+            await sendStripeEmail({
               to: email,
               subject: buildPaymentFailedSubject(coproNom),
               html: buildPaymentFailedEmail(emailParams),
-            }).catch((e) => console.error('[Stripe webhook] Email payment_failed error:', e));
+              context: 'invoice.payment_failed',
+            });
             await logUserEvent(adminClient, email, 'payment_failed', `Paiement échoué — ${coproNom}`);
           }
         } catch (e) {

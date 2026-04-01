@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { createAdminClient } from '@/lib/supabase/admin';
+
 export type EmailDeliveryStatus =
   | 'queued'
   | 'sent'
@@ -26,18 +28,108 @@ export type TrackEmailDeliveryInput = {
   lastError?: string | null;
 };
 
+const RETRY_DELAY_MS = 6 * 60 * 60 * 1000;
+
+function buildStatusUpdate(status: EmailDeliveryStatus, lastError?: string | null): Record<string, string | null> {
+  const now = new Date().toISOString();
+
+  switch (status) {
+    case 'sent':
+      return {
+        status,
+        sent_at: now,
+        delivered_at: null,
+        opened_at: null,
+        clicked_at: null,
+        bounced_at: null,
+        complained_at: null,
+        failed_at: null,
+        next_retry_at: null,
+        last_error: null,
+      };
+    case 'delivered':
+      return { status, delivered_at: now, next_retry_at: null, last_error: null };
+    case 'opened':
+      return { status, opened_at: now, next_retry_at: null, last_error: null };
+    case 'clicked':
+      return { status, clicked_at: now, next_retry_at: null, last_error: null };
+    case 'bounced':
+      return {
+        status,
+        bounced_at: now,
+        next_retry_at: new Date(Date.now() + RETRY_DELAY_MS).toISOString(),
+        last_error: lastError ?? null,
+      };
+    case 'complained':
+      return { status, complained_at: now, next_retry_at: null, last_error: lastError ?? null };
+    case 'failed':
+      return {
+        status,
+        failed_at: now,
+        next_retry_at: new Date(Date.now() + RETRY_DELAY_MS).toISOString(),
+        last_error: lastError ?? null,
+      };
+    case 'queued':
+    default:
+      return { status, last_error: lastError ?? null };
+  }
+}
+
+function getProviderErrorMessage(payload: Record<string, unknown>, status: EmailDeliveryStatus): string | null {
+  if (status === 'failed') {
+    const failed = payload.failed;
+    if (failed && typeof failed === 'object' && 'reason' in failed && typeof failed.reason === 'string') {
+      return failed.reason;
+    }
+  }
+
+  if (status === 'bounced') {
+    const bounce = payload.bounce;
+    if (bounce && typeof bounce === 'object' && 'message' in bounce && typeof bounce.message === 'string') {
+      return bounce.message;
+    }
+  }
+
+  if (status === 'complained') {
+    return 'Provider complaint event';
+  }
+
+  return null;
+}
+
 export async function trackEmailDelivery(input: TrackEmailDeliveryInput): Promise<void> {
-  void input;
+  const admin = createAdminClient();
+  const normalizedEmail = input.recipientEmail.trim().toLowerCase();
+  if (!normalizedEmail) return;
+
+  const row = {
+    provider_message_id: input.providerMessageId ?? null,
+    template_key: input.templateKey,
+    status: input.status,
+    recipient_email: normalizedEmail,
+    recipient_user_id: input.recipientUserId ?? null,
+    copropriete_id: input.coproprieteId ?? null,
+    ag_id: input.agId ?? null,
+    appel_de_fonds_id: input.appelDeFondsId ?? null,
+    subject: input.subject ?? null,
+    legal_event_type: input.legalEventType ?? null,
+    legal_reference: input.legalReference ?? null,
+    payload: input.payload ?? {},
+    ...buildStatusUpdate(input.status, input.lastError),
+  };
+
+  await admin.from('email_deliveries').insert(row);
 }
 
 export function mapProviderEventToStatus(providerEvent: string): EmailDeliveryStatus | null {
-  if (providerEvent.includes('delivered')) return 'delivered';
-  if (providerEvent.includes('opened') || providerEvent.includes('open')) return 'opened';
-  if (providerEvent.includes('clicked') || providerEvent.includes('click')) return 'clicked';
-  if (providerEvent.includes('bounced') || providerEvent.includes('bounce')) return 'bounced';
-  if (providerEvent.includes('complained') || providerEvent.includes('complaint')) return 'complained';
-  if (providerEvent.includes('failed') || providerEvent.includes('fail')) return 'failed';
-  if (providerEvent.includes('sent')) return 'sent';
+  const normalizedEvent = providerEvent.toLowerCase();
+  if (normalizedEvent.includes('delivered')) return 'delivered';
+  if (normalizedEvent.includes('opened') || normalizedEvent.includes('open')) return 'opened';
+  if (normalizedEvent.includes('clicked') || normalizedEvent.includes('click')) return 'clicked';
+  if (normalizedEvent.includes('bounced') || normalizedEvent.includes('bounce')) return 'bounced';
+  if (normalizedEvent.includes('complained') || normalizedEvent.includes('complaint')) return 'complained';
+  if (normalizedEvent.includes('failed') || normalizedEvent.includes('fail')) return 'failed';
+  if (normalizedEvent.includes('sent')) return 'sent';
   return null;
 }
 
@@ -56,6 +148,35 @@ export async function applyProviderEvent(params: {
   } | null;
   newStatus: EmailDeliveryStatus | null;
 }> {
-  void params;
-  return { delivery: null, newStatus: null };
+  const newStatus = mapProviderEventToStatus(params.providerEvent);
+  if (!newStatus) {
+    return { delivery: null, newStatus: null };
+  }
+
+  const admin = createAdminClient();
+  const { data: delivery } = await admin
+    .from('email_deliveries')
+    .select('id, recipient_email, copropriete_id, ag_id, template_key, status')
+    .eq('provider_message_id', params.providerMessageId)
+    .maybeSingle();
+
+  if (!delivery) {
+    return { delivery: null, newStatus };
+  }
+
+  await admin.from('email_delivery_events').insert({
+    delivery_id: delivery.id,
+    provider_event: params.providerEvent,
+    payload: params.payload,
+  });
+
+  await admin
+    .from('email_deliveries')
+    .update(buildStatusUpdate(newStatus, getProviderErrorMessage(params.payload, newStatus)))
+    .eq('id', delivery.id);
+
+  return {
+    delivery,
+    newStatus,
+  };
 }

@@ -62,7 +62,7 @@ export async function PATCH(
       const declarantEmail = declarant?.email;
       if (declarantEmail) {
         const prenom = (declarant?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
-        resend.emails.send({
+        const { error } = await resend.emails.send({
           from: FROM,
           to: declarantEmail,
           subject: buildIncidentResoluSubject(incident.titre),
@@ -74,7 +74,10 @@ export async function PATCH(
             montantFinal: incident.montant_final as number | null,
             incidentsUrl: `${SITE_URL}/incidents`,
           }),
-        }).catch((e) => console.error('[incidents/statut] Email error:', e));
+        });
+        if (error) {
+          console.error('[incidents/statut] Email error:', error.message);
+        }
       }
     } catch (e) {
       console.error('[incidents/statut] Erreur email résolu:', e);

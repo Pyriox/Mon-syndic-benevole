@@ -29,6 +29,41 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
+function getFirstName(fullName: unknown): string | null {
+  if (typeof fullName !== 'string') return null;
+  const value = fullName.trim();
+  if (!value) return null;
+  return value.split(' ')[0] ?? null;
+}
+
+async function sendWelcomeEmail(params: {
+  email: string;
+  prenom: string | null;
+  flow: 'PKCE' | 'token_hash';
+}): Promise<void> {
+  const { email, prenom, flow } = params;
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: buildWelcomeSubject(),
+    html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
+  });
+
+  if (error) {
+    throw new Error(`[${flow}] ${error.message}`);
+  }
+}
+
+async function logAccountConfirmed(email: string): Promise<void> {
+  const admin = createAdminClient();
+  await admin.from('user_events').insert({
+    user_email: email.toLowerCase(),
+    event_type: 'account_confirmed',
+    label: 'Compte confirmé',
+  });
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get('token_hash');
@@ -96,17 +131,9 @@ export async function GET(request: NextRequest) {
             .eq('statut', 'en_attente');
 
           // E-mail de bienvenue (awaité — le fire-and-forget est tué par Vercel avant complétion)
-          const prenom = (data.user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
-          await resend.emails.send({
-            from: FROM,
-            to: email,
-            subject: buildWelcomeSubject(),
-            html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
-          }).catch((e) => console.error('[auth/confirm] Welcome email error (PKCE):', e));
-          const adminLog = createAdminClient();
-          await Promise.resolve(
-            adminLog.from('user_events').insert({ user_email: email.toLowerCase(), event_type: 'account_confirmed', label: 'Compte confirmé' }),
-          ).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
+          const prenom = getFirstName(data.user.user_metadata?.full_name);
+          await sendWelcomeEmail({ email, prenom, flow: 'PKCE' });
+          await logAccountConfirmed(email).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
         } catch (linkErr) {
           console.error('[auth/confirm] PKCE auto-link error:', linkErr);
         }
@@ -191,17 +218,9 @@ export async function GET(request: NextRequest) {
           .eq('statut', 'en_attente');
 
         // 3. E-mail de bienvenue (awaité — le fire-and-forget est tué par Vercel avant complétion)
-        const prenom = (data.user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
-        await resend.emails.send({
-          from: FROM,
-          to: email,
-          subject: buildWelcomeSubject(),
-          html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
-        }).catch((e) => console.error('[auth/confirm] Welcome email error (token_hash):', e));
-        const adminLog = createAdminClient();
-        await Promise.resolve(
-          adminLog.from('user_events').insert({ user_email: email.toLowerCase(), event_type: 'account_confirmed', label: 'Compte confirmé' }),
-        ).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
+        const prenom = getFirstName(data.user.user_metadata?.full_name);
+        await sendWelcomeEmail({ email, prenom, flow: 'token_hash' });
+        await logAccountConfirmed(email).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
       } catch (linkErr) {
         // Non bloquant — l'utilisateur peut quand même accéder au dashboard
         console.error('[auth/confirm] auto-link error:', linkErr);

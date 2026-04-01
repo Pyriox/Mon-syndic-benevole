@@ -164,7 +164,7 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
       type: 'ag',
       severity: 'info',
       title: 'Convocations AG envoyees',
-      body: `${sent} envoi(s) trace(s) avec preuve`,
+        body: `${sent} convocation(s) envoyee(s) par e-mail`,
       href: '/assemblees',
       actionLabel: 'Ouvrir',
       metadata: { agId, sent, failed: errors.length },

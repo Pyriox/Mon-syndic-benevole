@@ -35,7 +35,21 @@ describe('POST /api/notifications/mark-read', () => {
     const eqSecond = vi.fn().mockReturnValue({ error: null });
     const eqFirst = vi.fn().mockReturnValue({ eq: eqSecond });
     const update = vi.fn().mockReturnValue({ eq: eqFirst });
-    const from = vi.fn().mockReturnValue({ update });
+
+    const limit = vi.fn().mockResolvedValue({ data: [], error: null });
+    const order2 = vi.fn().mockReturnValue({ limit });
+    const order1 = vi.fn().mockReturnValue({ order: order2 });
+    const eqRead = vi.fn().mockReturnValue({ order: order1 });
+    const eqUser = vi.fn().mockReturnValue({ eq: eqRead });
+    const select = vi.fn().mockReturnValue({ eq: eqUser });
+
+    const from = vi.fn().mockImplementation((table: string) => {
+      if (table !== 'app_notifications') return {};
+      return {
+        update,
+        select,
+      };
+    });
 
     createClientMock.mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
@@ -52,6 +66,7 @@ describe('POST /api/notifications/mark-read', () => {
     expect(update).toHaveBeenCalled();
     expect(eqFirst).toHaveBeenCalledWith('user_id', 'u1');
     expect(eqSecond).toHaveBeenCalledWith('is_read', false);
+    expect(select).toHaveBeenCalledWith('id');
   });
 
   it('retourne 400 si ids vide', async () => {

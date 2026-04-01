@@ -288,7 +288,7 @@ export async function POST(
       type: 'appel_fonds',
       severity: 'info',
       title: 'Appel publie et avis envoyes',
-      body: `${sent} envoi(s) traces avec preuve`,
+        body: `${sent} avis envoye(s) par e-mail`,
       href: '/appels-de-fonds',
       actionLabel: 'Ouvrir',
       metadata: { appelId, sent },

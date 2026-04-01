@@ -160,7 +160,7 @@ export async function POST(
       type: 'appel_fonds',
       severity: 'info',
       title: 'Avis d\'appel de fonds envoyes',
-      body: `${sent} envoi(s) traces`,
+        body: `${sent} avis envoye(s) par e-mail`,
       href: '/appels-de-fonds',
       actionLabel: 'Ouvrir',
       metadata: { appelId, sent, failed: errors.length },
