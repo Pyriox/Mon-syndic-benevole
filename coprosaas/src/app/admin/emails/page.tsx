@@ -25,6 +25,12 @@ type ResendEmailRow = {
   created_at: string;
 };
 
+type TimelineStep = {
+  key: string;
+  label: string;
+  state: 'done' | 'current' | 'pending';
+};
+
 const ALL_STATUSES: DeliveryStatus[] = [
   'queued',
   'sent',
@@ -91,6 +97,46 @@ function mapProviderEventToStatus(event: string | null | undefined): DeliverySta
   if (normalized.includes('sent')) return 'sent';
   if (normalized.includes('processing')) return 'queued';
   return null;
+}
+
+function getStatusTimeline(status: DeliveryStatus): TimelineStep[] {
+  if (status === 'unknown') {
+    return [{ key: 'unknown', label: 'Inconnu', state: 'current' }];
+  }
+
+  const successFlow: Array<{ key: DeliveryStatus; label: string }> = [
+    { key: 'queued', label: 'Queue' },
+    { key: 'sent', label: 'Envoye' },
+    { key: 'delivered', label: 'Livre' },
+    { key: 'opened', label: 'Ouvert' },
+    { key: 'clicked', label: 'Clique' },
+  ];
+
+  if (status === 'bounced' || status === 'complained' || status === 'failed') {
+    const errorLabel = statusLabel(status);
+    return [
+      { key: 'queued', label: 'Queue', state: 'done' },
+      { key: 'sent', label: 'Envoye', state: 'done' },
+      { key: status, label: errorLabel, state: 'current' },
+    ];
+  }
+
+  const currentIndex = successFlow.findIndex((step) => step.key === status);
+  return successFlow.map((step, index) => ({
+    key: step.key,
+    label: step.label,
+    state: index < currentIndex ? 'done' : index === currentIndex ? 'current' : 'pending',
+  }));
+}
+
+function timelineClass(state: TimelineStep['state']): string {
+  switch (state) {
+    case 'done': return 'bg-green-50 text-green-700 border-green-200';
+    case 'current': return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'pending':
+    default:
+      return 'bg-gray-50 text-gray-500 border-gray-200';
+  }
 }
 
 function makeHref(params: URLSearchParams, key: string, value?: string): string {
@@ -238,7 +284,7 @@ export default async function AdminEmailsPage({
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Sujet</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Email ID</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Cree le</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Dernier evenement</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Evenement brut</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -250,8 +296,40 @@ export default async function AdminEmailsPage({
                     </span>
                   </td>
                   <td className="px-3 py-2 align-top text-gray-700">{row.recipients.join(', ') || '—'}</td>
-                  <td className="px-3 py-2 align-top text-gray-800 max-w-[360px] truncate" title={row.subject ?? ''}>{row.subject ?? '—'}</td>
-                  <td className="px-3 py-2 align-top text-gray-600 font-mono text-xs">{row.id}</td>
+                  <td className="px-3 py-2 align-top text-gray-800 max-w-[420px]">
+                    <details>
+                      <summary className="cursor-pointer list-none hover:text-blue-700 truncate" title={row.subject ?? ''}>
+                        {row.subject ?? '—'}
+                      </summary>
+                      <div className="mt-2 space-y-2">
+                        <p className="text-[11px] text-gray-500">Deroule du cycle d'envoi</p>
+                        <div className="flex flex-wrap gap-1">
+                          {getStatusTimeline(row.status).map((step) => (
+                            <span
+                              key={`${row.id}-${step.key}`}
+                              className={`inline-flex px-2 py-0.5 rounded text-[11px] font-medium border ${timelineClass(step.state)}`}
+                            >
+                              {step.label}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-gray-500">
+                          L'API Resend expose le dernier evenement, pas l'horodatage complet de chaque transition.
+                        </p>
+                      </div>
+                    </details>
+                  </td>
+                  <td className="px-3 py-2 align-top text-gray-600 font-mono text-xs">
+                    <a
+                      href={`https://resend.com/emails/${row.id}`}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="text-blue-700 hover:text-blue-900 underline"
+                      title={row.id}
+                    >
+                      {row.id}
+                    </a>
+                  </td>
                   <td className="px-3 py-2 align-top text-gray-600 whitespace-nowrap">{formatDateTime(row.created_at)}</td>
                   <td className="px-3 py-2 align-top text-gray-600 text-xs">
                     {row.lastEvent ?? 'unknown'}
