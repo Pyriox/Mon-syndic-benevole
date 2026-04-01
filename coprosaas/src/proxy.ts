@@ -1,15 +1,15 @@
 // ============================================================
-// Middleware Next.js — Protection des routes authentifiées
-// Tout accès à /dashboard/* et les modules nécessite une session active
+// Proxy Next.js — Protection des routes authentifiees
+// Tout acces a /dashboard/* et les modules necessite une session active
 // ============================================================
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { isAdminUser } from '@/lib/admin-config';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  // Création du client Supabase dans le middleware (avec gestion des cookies)
+  // Creation du client Supabase dans le proxy (avec gestion des cookies)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // Met à jour les cookies dans la requête et la réponse
+          // Met a jour les cookies dans la requete et la reponse
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -32,14 +32,14 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Lecture de session côté middleware (plus rapide que getUser pour le routage)
-  // La validation stricte de l'utilisateur reste faite côté serveur dans le layout protégé.
+  // Lecture de session cote proxy (plus rapide que getUser pour le routage)
+  // La validation stricte de l'utilisateur reste faite cote serveur dans le layout protege.
   const { data: { session } } = await supabase.auth.getSession();
   const user = session?.user ?? null;
 
   const pathname = request.nextUrl.pathname;
 
-  // Route /admin : réservée exclusivement à l'administrateur
+  // Route /admin : reservee exclusivement a l'administrateur
   if (pathname.startsWith('/admin')) {
     if (!user) {
       const url = request.nextUrl.clone();
@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Routes protégées : redirige vers /login si non connecté
+  // Routes protegees : redirige vers /login si non connecte
   const protectedRoutes = [
     '/dashboard',
     '/coproprietes',
@@ -78,7 +78,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Si déjà connecté et tente d'accéder au login/register, redirige vers le dashboard
+  // Si deja connecte et tente d'acceder au login/register, redirige vers le dashboard
   if ((pathname === '/login' || pathname === '/register') && user) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
@@ -88,9 +88,9 @@ export async function middleware(request: NextRequest) {
   return supabaseResponse;
 }
 
-// Définit les routes sur lesquelles le middleware s'exécute
-// On exclut volontairement la landing page et les assets statiques pour éviter
-// un aller-retour réseau vers Supabase sur chaque requête publique.
+// Definit les routes sur lesquelles le proxy s'execute
+// On exclut volontairement la landing page et les assets statiques pour eviter
+// un aller-retour reseau vers Supabase sur chaque requete publique.
 export const config = {
   matcher: [
     '/dashboard/:path*',

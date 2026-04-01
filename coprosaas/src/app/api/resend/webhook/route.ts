@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
         timestamp: svixTimestamp,
         signature: svixSignature,
       },
-    }) as ResendEmailWebhook;
+    }) as unknown as ResendEmailWebhook;
   } catch (error) {
     console.error('[resend/webhook] verify error:', error);
     return NextResponse.json({ message: 'Signature invalide' }, { status: 400 });
