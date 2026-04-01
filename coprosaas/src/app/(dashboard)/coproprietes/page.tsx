@@ -1,6 +1,9 @@
 // ============================================================
 // Page : Liste des copropriétés
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Coproprietes' };
+
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -20,6 +23,21 @@ export default async function CopropriétésPage() {
     .select('id, nom, adresse, code_postal, ville, nombre_lots, created_at')
     .eq('syndic_id', user.id)
     .order('created_at', { ascending: false });
+
+  // Calcul temps reel du nombre de lots (plus fiable que la colonne denormalisee nombre_lots)
+  const coproIds = (coproprietes ?? []).map((c) => c.id);
+  const lotsByCopro = new Map<string, number>();
+  if (coproIds.length > 0) {
+    const { data: lots } = await supabase
+      .from('lots')
+      .select('copropriete_id')
+      .in('copropriete_id', coproIds);
+
+    for (const lot of lots ?? []) {
+      const coproId = lot.copropriete_id as string;
+      lotsByCopro.set(coproId, (lotsByCopro.get(coproId) ?? 0) + 1);
+    }
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -67,7 +85,12 @@ export default async function CopropriétésPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Hash size={14} className="shrink-0" />
-                    <span>{copro.nombre_lots} lot{copro.nombre_lots > 1 ? 's' : ''}</span>
+                    {(() => {
+                      const lotsCount = lotsByCopro.has(copro.id)
+                        ? (lotsByCopro.get(copro.id) ?? 0)
+                        : copro.nombre_lots;
+                      return <span>{lotsCount} lot{lotsCount > 1 ? 's' : ''}</span>;
+                    })()}
                   </div>
                 </div>
               </Card>
