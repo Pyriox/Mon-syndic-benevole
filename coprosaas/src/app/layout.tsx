@@ -136,7 +136,7 @@ export default function RootLayout({
               strategy="beforeInteractive"
             />
             <Script id="gtag-init" strategy="beforeInteractive">
-              {`gtag('js', new Date()); gtag('config', '${gaId}');`}
+              {`gtag('js', new Date()); gtag('config', '${gaId}', { send_page_view: false });`}
             </Script>
             <GoogleAnalytics />
           </>

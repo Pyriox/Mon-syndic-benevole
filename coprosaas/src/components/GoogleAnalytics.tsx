@@ -21,9 +21,8 @@ function TrackPageView() {
     // Tracker la page view
     pageview(url);
     
-    // AUSSI envoyer de manière anonyme pour capturer même les visiteurs qui refusent les cookies
-    // (légal CNIL: anonymize_ip = true, pas d'ID utilisateur)
-    trackAnonymousEvent('page_view', { page_path: url });
+    // Événement distinct pour éviter de gonfler artificiellement la métrique GA4 "page_view".
+    trackAnonymousEvent('page_view_anonymous', { page_path: url });
   }, [pathname, searchParams]);
 
   return null;
