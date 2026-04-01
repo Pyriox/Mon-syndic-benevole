@@ -147,14 +147,14 @@ export default function CookieBanner() {
           <div className="mb-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
             Votre choix est requis avant de continuer
           </div>
-          <h2 className="text-2xl font-semibold text-slate-950">Aidez-nous a ameliorer Mon Syndic Benevole</h2>
+          <h2 className="text-2xl font-semibold text-slate-950">Aidez-nous à améliorer Mon Syndic Bénévole</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Nous utilisons des cookies strictement necessaires pour securiser votre session, ainsi que des cookies
-            optionnels pour mesurer les pages utiles, comprendre les parcours qui bloquent et mieux presenter nos offres.
+            Nous utilisons des cookies strictement nécessaires pour sécuriser votre session, ainsi que des cookies
+            optionnels pour mesurer les pages utiles, comprendre les parcours qui bloquent et mieux présenter nos offres.
           </p>
           <p className="mt-3 text-sm leading-6 text-slate-700">
-            Accepter nous aide a corriger plus vite les points de friction, a prioriser les fonctionnalites utiles aux
-            syndics benevoles et a financer nos contenus gratuits. Vous pouvez aussi refuser ou choisir categorie par categorie.
+            Accepter nous aide à corriger plus vite les points de friction, à prioriser les fonctionnalités utiles aux
+            syndics bénévoles et à financer nos contenus gratuits. Vous pouvez aussi refuser ou choisir catégorie par catégorie.
           </p>
         </div>
 
@@ -162,9 +162,9 @@ export default function CookieBanner() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-slate-900">Cookies necessaires</p>
+                <p className="text-sm font-semibold text-slate-900">Cookies nécessaires</p>
                 <p className="mt-1 text-sm leading-6 text-slate-600">
-                  Toujours actifs pour la connexion, la securite, la sauvegarde de vos preferences et le bon fonctionnement du site.
+                  Toujours actifs pour la connexion, la sécurité, la sauvegarde de vos préférences et le bon fonctionnement du site.
                 </p>
               </div>
               <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">Toujours actifs</span>
@@ -178,7 +178,7 @@ export default function CookieBanner() {
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Mesure d'audience</p>
                     <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Pour savoir quelles pages sont consultees, quels contenus aident vraiment et ou l'experience merite d'etre simplifiee.
+                      Pour savoir quelles pages sont consultées, quels contenus aident vraiment et où l'expérience mérite d'être simplifiée.
                     </p>
                   </div>
                   <button
@@ -199,7 +199,7 @@ export default function CookieBanner() {
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Personnalisation et mesure publicitaire</p>
                     <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Pour evaluer les campagnes qui nous apportent des utilisateurs pertinents et eviter de pousser des messages moins utiles.
+                      Pour évaluer les campagnes qui nous apportent des utilisateurs pertinents et éviter de pousser des messages moins utiles.
                     </p>
                   </div>
                   <button
@@ -228,9 +228,14 @@ export default function CookieBanner() {
           )}
 
           <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600">
-            Les cookies optionnels ne sont actives qu'avec votre accord. Details complets dans la{' '}
-            <Link href="/politique-confidentialite" className="font-medium text-slate-900 underline underline-offset-4 hover:text-blue-700">
-              politique de confidentialite
+            Les cookies optionnels ne sont activés qu'avec votre accord. Détails complets dans la{' '}
+            <Link
+              href="/politique-confidentialite"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-slate-900 underline underline-offset-4 hover:text-blue-700"
+            >
+              politique de confidentialité
             </Link>
             .
           </div>
