@@ -2,6 +2,9 @@
 // Page : Régularisation de charges
 // Calcul exercice par exercice, déclenché manuellement après AG
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Régularisation' };
+
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import AnneeSelector from '@/components/ui/AnneeSelector';

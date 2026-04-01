@@ -1,6 +1,9 @@
 // ============================================================
 // Page : Liste des Assemblées Générales
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Assemblées générales' };
+
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Link from 'next/link';

@@ -4,6 +4,8 @@
 // Les données sont mises en cache via unstable_cache (60 s lots, 30 s copros)
 // et invalidées immédiatement par les Server Actions de mutation.
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Lots' };
 
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { getLots, getCoproprietaires } from '@/lib/cached-queries';

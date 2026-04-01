@@ -2,6 +2,9 @@
 // Page : Abonnement
 // Architecture : 1 abonnement Stripe par copropriété
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Abonnement' };
+
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';

@@ -1,6 +1,9 @@
 // ============================================================
 // Page : Liste des dépenses avec répartition automatique
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Dépenses et charges' };
+
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';

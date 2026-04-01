@@ -1,6 +1,9 @@
 // ============================================================
 // Page : Incidents et travaux — Pipeline de suivi par statut
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Incidents & travaux' };
+
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import EmptyState from '@/components/ui/EmptyState';

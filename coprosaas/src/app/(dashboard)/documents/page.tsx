@@ -2,6 +2,9 @@
 // Page : Gestion des documents — vue gestionnaire de fichiers
 // Table unifiée dossiers + fichiers, navigation par breadcrumb
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Documents' };
+
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { redirect } from 'next/navigation';

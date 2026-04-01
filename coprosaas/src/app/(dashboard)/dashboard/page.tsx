@@ -2,6 +2,9 @@
 // Dashboard principal — Vue synthétique de la copropriété
 // Affiche les KPIs, dépenses récentes, incidents et AG à venir
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Tableau de bord' };
+
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Link from 'next/link';

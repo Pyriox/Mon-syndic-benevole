@@ -2,6 +2,9 @@
 // Page : Liste des copropriétaires (vue tableau)
 // Filtrée sur la copropriété sélectionnée (cookie selected_copro_id)
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Copropriétaires' };
+
 export const revalidate = 60;
 
 import Link from 'next/link';

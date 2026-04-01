@@ -1,6 +1,9 @@
 ﻿// ============================================================
 // Page : Appels de fonds
 // ============================================================
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Appels de fonds' };
+
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import EmptyState from '@/components/ui/EmptyState';
