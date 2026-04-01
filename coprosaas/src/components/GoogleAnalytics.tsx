@@ -6,7 +6,7 @@
 
 import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { pageview, trackAnonymousEvent } from '@/lib/gtag';
+import { pageview } from '@/lib/gtag';
 
 function TrackPageView() {
   const pathname = usePathname();
@@ -17,12 +17,7 @@ function TrackPageView() {
     if (pathname.startsWith('/admin')) return;
 
     const url = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
-    
-    // Tracker la page view
     pageview(url);
-    
-    // Événement distinct pour éviter de gonfler artificiellement la métrique GA4 "page_view".
-    trackAnonymousEvent('page_view_anonymous', { page_path: url });
   }, [pathname, searchParams]);
 
   return null;

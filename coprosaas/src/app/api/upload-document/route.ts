@@ -35,6 +35,8 @@ export async function POST(req: NextRequest) {
   const type = formData.get('type') as string | null;
   const dossier_id = formData.get('dossier_id') as string | null;
 
+  const coproprietaire_id = formData.get('coproprietaire_id') as string | null;
+
   if (!file || !copropriete_id || !nom || !type) {
     return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 });
   }
@@ -124,6 +126,7 @@ export async function POST(req: NextRequest) {
     url: publicUrl,
     taille: file.size,
     uploaded_by: user.id,
+    ...(coproprietaire_id ? { coproprietaire_id } : {}),
   });
 
   if (dbError) {

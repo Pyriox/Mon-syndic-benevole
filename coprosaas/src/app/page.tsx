@@ -14,6 +14,7 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import LandingNav from './LandingNav';
 import LandingStickyCTA from './LandingStickyCTA';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
+import CookiePreferencesButton from '@/components/CookiePreferencesButton';
 
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
@@ -1126,6 +1127,7 @@ export default function HomePage() {
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
               <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
               <a href="mailto:contact@mon-syndic-benevole.fr" className="hover:text-gray-300 transition-colors">contact@mon-syndic-benevole.fr</a>
+              <CookiePreferencesButton />
             </div>
           </nav>
         </div>

@@ -4,6 +4,7 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import LandingNav from '@/app/LandingNav';
 import { posts, formatPublishedAt } from '@/lib/blog';
+import CookiePreferencesButton from '@/components/CookiePreferencesButton';
 
 export const dynamic = 'force-static';
 export const revalidate = 86400;
@@ -117,6 +118,7 @@ export default function BlogPage() {
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
               <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
               <a href="mailto:contact@mon-syndic-benevole.fr" className="hover:text-gray-300 transition-colors">contact@mon-syndic-benevole.fr</a>
+              <CookiePreferencesButton />
             </div>
           </nav>
         </div>

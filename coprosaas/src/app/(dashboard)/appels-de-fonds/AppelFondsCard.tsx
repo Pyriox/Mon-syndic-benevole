@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCh
 import Badge from '@/components/ui/Badge';
 import { formatEuros, formatDate, LABELS_CATEGORIE, repartirMontant } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
-import AppelFondsPDF, { buildAppelFondsPDF, type AppelForPDF } from './AppelFondsPDF';
+import AppelFondsPDF, { buildAvisPersonnelPDF, type AvisPersonnelInput } from './AppelFondsPDF';
 import AppelFondsPaiement, { type Ligne } from './AppelFondsPaiement';
 
 interface Poste { libelle: string; categorie: string; montant: number }
@@ -202,50 +202,51 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
   const saveToDocuments = async (freshLignes?: Ligne[]): Promise<{ ok: boolean; error?: string }> => {
     try {
       const effectiveLignes = freshLignes ?? lignes;
-      if (!appel.copropriete_id) return { ok: false, error: 'Copropriété introuvable pour archiver le PDF.' };
-
-      const appelForPDF: AppelForPDF = {
-        ...appel,
-        lignes_appels_de_fonds: effectiveLignes.map((l) => ({
-          id: l.id,
-          montant_du: l.montant_du,
-          regularisation_ajustement: l.regularisation_ajustement,
-          paye: l.paye,
-          coproprietaires: l.coproprietaires
-            ? { nom: l.coproprietaires.nom, prenom: l.coproprietaires.prenom }
-            : null,
-        })),
-      };
-
-      const pdfDoc = buildAppelFondsPDF(appelForPDF);
-      const pdfBlob = pdfDoc.output('blob');
+      if (!appel.copropriete_id) return { ok: false, error: 'Copropriété introuvable pour archiver les avis.' };
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return { ok: false, error: 'Session expirée. Reconnectez-vous pour archiver le document.' };
+      if (!user) return { ok: false, error: 'Session expirée. Reconnectez-vous pour archiver les avis.' };
 
+      // Trouver le dossier "Appels de fonds" du syndic
       const { data: dossier } = await supabase
-        .from('dossiers')
+        .from('document_dossiers')
         .select('id')
         .eq('nom', 'Appels de fonds')
-        .eq('created_by', user.id)
+        .eq('syndic_id', user.id)
         .maybeSingle();
 
-      const file = new File([pdfBlob], `appel-${appel.id.slice(0, 8)}.pdf`, { type: 'application/pdf' });
-      const form = new FormData();
-      form.append('file', file);
-      form.append('nom', `Appel de fonds — ${appel.titre}`);
-      form.append('type', 'autre');
-      form.append('copropriete_id', appel.copropriete_id);
-      if (dossier?.id) form.append('dossier_id', dossier.id);
+      const appelForPDF: AvisPersonnelInput = {
+        titre: appel.titre,
+        montant_total: appel.montant_total,
+        date_echeance: appel.date_echeance,
+        coproprietes: appel.coproprietes,
+        description: appel.description,
+        montant_fonds_travaux: appel.montant_fonds_travaux,
+      };
 
-      const uploadRes = await fetch('/api/upload-document', {
-        method: 'POST',
-        body: form,
-      });
+      // Générer et archiver un avis individuel pour chaque copropriétaire
+      for (const ligne of effectiveLignes) {
+        if (!ligne.coproprietaires?.id) continue;
 
-      if (!uploadRes.ok) {
-        const payload = await uploadRes.json().catch(() => ({})) as { error?: string };
-        return { ok: false, error: payload.error ?? 'Échec de l’archivage dans Documents.' };
+        const pdfDoc = buildAvisPersonnelPDF(appelForPDF, ligne);
+        const pdfBlob = pdfDoc.output('blob');
+        const safeName = `${ligne.coproprietaires.prenom}-${ligne.coproprietaires.nom}`
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+        const file = new File([pdfBlob], `avis-${safeName}.pdf`, { type: 'application/pdf' });
+        const form = new FormData();
+        form.append('file', file);
+        form.append('nom', `Avis — ${ligne.coproprietaires.prenom} ${ligne.coproprietaires.nom} — ${appel.titre}`);
+        form.append('type', 'autre');
+        form.append('copropriete_id', appel.copropriete_id);
+        if (dossier?.id) form.append('dossier_id', dossier.id);
+        form.append('coproprietaire_id', ligne.coproprietaires.id);
+
+        const uploadRes = await fetch('/api/upload-document', { method: 'POST', body: form });
+        if (!uploadRes.ok) {
+          const payload = await uploadRes.json().catch(() => ({})) as { error?: string };
+          return { ok: false, error: payload.error ?? 'Échec de l\'archivage dans Documents.' };
+        }
       }
 
       return { ok: true };

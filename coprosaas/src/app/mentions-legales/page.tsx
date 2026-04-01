@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import SiteLogo from "@/components/ui/SiteLogo";
+import CookiePreferencesButton from "@/components/CookiePreferencesButton";
 
 export const dynamic = 'force-static';
 export const revalidate = 86400;
@@ -167,8 +168,9 @@ export default function MentionsLegalesPage() {
 
       {/* ── Footer ── */}
       <footer className="bg-slate-950 border-t border-slate-800 py-8 px-6 mt-8">
-        <div className="max-w-4xl mx-auto text-center text-gray-600 text-sm">
-          © {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center text-gray-600 text-sm">
+          <span>© {new Date().getFullYear()} Mon Syndic Bénévole — Tous droits réservés</span>
+          <CookiePreferencesButton />
         </div>
       </footer>
 

@@ -11,10 +11,15 @@ declare global {
   }
 }
 
+export interface ConsentPreferences {
+  analytics: boolean;
+  ads: boolean;
+}
+
 /** Envoie une page_view à GA4 (navigation client-side) */
 export function pageview(url: string) {
   if (!GA_ID || typeof window === 'undefined' || !window.gtag) return;
-  window.gtag('config', GA_ID, { page_path: url });
+  window.gtag('config', GA_ID, { page_location: window.location.origin + url });
 }
 
 /** Envoie un event personnalisé à GA4 */
@@ -24,9 +29,9 @@ export function trackEvent(action: string, params?: Record<string, unknown>) {
 }
 
 /**
- * ✅ Envoie un événement ANONYME à GA4 sans attendre le consentement (légal en France CNIL)
- * Utilisé pour: signup, login, erreurs, navigation de base
- * Les données sont anonymes (pas d'ID utilisateur persistant)
+ * Envoie un événement à GA4 avec anonymize_ip: true.
+ * Utilisé pour : dashboard views, onboarding — pas d'identifiant utilisateur persistant.
+ * Consent Mode v2 reste actif : les hits respectent analytics_storage.
  */
 export function trackAnonymousEvent(action: string, params?: Record<string, unknown>) {
   if (!GA_ID || typeof window === 'undefined' || !window.gtag) return;
@@ -37,24 +42,24 @@ export function trackAnonymousEvent(action: string, params?: Record<string, unkn
   });
 }
 
+export function updateConsent(preferences: ConsentPreferences) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  const adsGranted = preferences.ads ? 'granted' : 'denied';
+  window.gtag('consent', 'update', {
+    analytics_storage: preferences.analytics ? 'granted' : 'denied',
+    ad_storage: adsGranted,
+    ad_user_data: adsGranted,
+    ad_personalization: adsGranted,
+  });
+}
+
 /** Accorde le consentement analytics + publicitaire — Consent Mode v2 (appelé quand l'utilisateur accepte) */
 export function grantConsent() {
-  if (typeof window === 'undefined' || !window.gtag) return;
-  window.gtag('consent', 'update', {
-    analytics_storage: 'granted',
-    ad_storage: 'granted',
-    ad_user_data: 'granted',
-    ad_personalization: 'granted',
-  });
+  updateConsent({ analytics: true, ads: true });
 }
 
 /** Refuse le consentement analytics — Consent Mode v2 (appelé quand l'utilisateur refuse) */
 export function denyConsent() {
-  if (typeof window === 'undefined' || !window.gtag) return;
-  window.gtag('consent', 'update', {
-    analytics_storage: 'denied',
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-  });
+  updateConsent({ analytics: false, ads: false });
 }

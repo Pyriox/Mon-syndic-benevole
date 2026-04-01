@@ -8,6 +8,7 @@ import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import ArticleViewTracker from '@/components/ui/ArticleViewTracker';
 import LandingNav from '@/app/LandingNav';
 import { getPost, formatPublishedAt, posts } from '@/lib/blog';
+import CookiePreferencesButton from '@/components/CookiePreferencesButton';
 
 export const dynamic = 'force-static';
 export const revalidate = 86400;
@@ -242,6 +243,7 @@ export default async function ArticlePage({
               <Link href="/login" className="hover:text-gray-300 transition-colors">Connexion</Link>
               <Link href="/register" className="hover:text-gray-300 transition-colors">Inscription</Link>
               <a href="mailto:contact@mon-syndic-benevole.fr" className="hover:text-gray-300 transition-colors">contact@mon-syndic-benevole.fr</a>
+              <CookiePreferencesButton />
             </div>
           </nav>
         </div>
