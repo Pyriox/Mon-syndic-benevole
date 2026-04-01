@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { denyConsent, grantConsent, pageview, updateConsent, type ConsentPreferences } from '@/lib/gtag';
 
 const CONSENT_KEY = 'cookie_consent';
@@ -58,9 +59,11 @@ function applyStoredConsent(stored: StoredConsent) {
 }
 
 export default function CookieBanner() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [preferences, setPreferences] = useState<ConsentPreferences>(DEFAULT_PREFERENCES);
+  const isPrivacyPolicyPage = pathname === '/politique-confidentialite';
 
   useEffect(() => {
     const stored = getStoredConsent();
@@ -79,7 +82,7 @@ export default function CookieBanner() {
   }, []);
 
   useEffect(() => {
-    if (!visible) return undefined;
+    if (!visible || isPrivacyPolicyPage) return undefined;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -87,7 +90,7 @@ export default function CookieBanner() {
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [visible]);
+  }, [isPrivacyPolicyPage, visible]);
 
   // Permettre la réouverture depuis le footer (exigence CNIL : retrait aussi facile que l'octroi)
   useEffect(() => {
@@ -136,16 +139,20 @@ export default function CookieBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
+    <div className={isPrivacyPolicyPage
+      ? 'fixed inset-x-0 bottom-0 z-50 px-4 pb-4'
+      : 'fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm'}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Préférences cookies"
-        className="w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"
+        className={isPrivacyPolicyPage
+          ? 'mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl'
+          : 'w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl'}
       >
         <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#f8fafc_0%,#eef6ff_55%,#fff7ed_100%)] px-6 py-6 sm:px-8">
           <div className="mb-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-            Votre choix est requis avant de continuer
+            {isPrivacyPolicyPage ? 'Vous pouvez lire cette page avant de choisir' : 'Votre choix est requis avant de continuer'}
           </div>
           <h2 className="text-2xl font-semibold text-slate-950">Aidez-nous à améliorer Mon Syndic Bénévole</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
