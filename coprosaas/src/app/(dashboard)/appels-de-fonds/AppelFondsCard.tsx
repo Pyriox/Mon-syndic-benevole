@@ -207,13 +207,47 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return { ok: false, error: 'Session expirée. Reconnectez-vous pour archiver les avis.' };
 
-      // Trouver le dossier "Appels de fonds" du syndic
-      const { data: dossier } = await supabase
+      // Trouver ou créer le dossier racine "Appels de fonds"
+      let { data: dossier } = await supabase
         .from('document_dossiers')
         .select('id')
         .eq('nom', 'Appels de fonds')
         .eq('syndic_id', user.id)
+        .is('parent_id', null)
         .maybeSingle();
+
+      if (!dossier) {
+        const { data: created } = await (supabase.from('document_dossiers') as any)
+          .insert({ nom: 'Appels de fonds', is_default: true, syndic_id: user.id, parent_id: null })
+          .select('id')
+          .single();
+        dossier = created;
+      }
+
+      // Trouver ou créer le sous-dossier de l'année (ex: "2026")
+      const annee = appel.date_echeance
+        ? String(new Date(appel.date_echeance).getFullYear())
+        : String(new Date().getFullYear());
+
+      let targetDossierId: string | null = dossier?.id ?? null;
+      if (dossier?.id) {
+        let { data: yearDossier } = await supabase
+          .from('document_dossiers')
+          .select('id')
+          .eq('nom', annee)
+          .eq('syndic_id', user.id)
+          .eq('parent_id', dossier.id)
+          .maybeSingle();
+
+        if (!yearDossier) {
+          const { data: created } = await (supabase.from('document_dossiers') as any)
+            .insert({ nom: annee, is_default: false, syndic_id: user.id, parent_id: dossier.id })
+            .select('id')
+            .single();
+          yearDossier = created;
+        }
+        targetDossierId = yearDossier?.id ?? dossier.id;
+      }
 
       const appelForPDF: AvisPersonnelInput = {
         titre: appel.titre,
@@ -239,7 +273,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         form.append('nom', `Avis — ${ligne.coproprietaires.prenom} ${ligne.coproprietaires.nom} — ${appel.titre}`);
         form.append('type', 'autre');
         form.append('copropriete_id', appel.copropriete_id);
-        if (dossier?.id) form.append('dossier_id', dossier.id);
+        if (targetDossierId) form.append('dossier_id', targetDossierId);
         form.append('coproprietaire_id', ligne.coproprietaires.id);
 
         const uploadRes = await fetch('/api/upload-document', { method: 'POST', body: form });
