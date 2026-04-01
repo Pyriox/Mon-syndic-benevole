@@ -221,7 +221,7 @@ export default async function AdminEmailsPage({
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
       const batchResults = await Promise.all(batch.map(async (row) => {
-        const live = row.provider_message_id
+        const live: LiveStatus = row.provider_message_id
           ? await getLiveStatusWithRetry(resend, row.provider_message_id)
           : { status: 'unknown', eventLabel: 'Inconnu (sans provider id)', sourceEvent: null };
         return { deliveryId: row.id, live };
