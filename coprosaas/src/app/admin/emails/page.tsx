@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import AdminSearch from '../AdminSearch';
@@ -18,6 +19,7 @@ type DeliveryStatus =
 
 type DeliveryRow = {
   id: string;
+  provider_message_id: string | null;
   template_key: string;
   status: DeliveryStatus;
   recipient_email: string;
@@ -32,6 +34,11 @@ type DeliveryRow = {
   complained_at: string | null;
   last_error: string | null;
   retry_count: number;
+};
+
+type LiveStatus = {
+  status: DeliveryStatus;
+  eventLabel: string;
 };
 
 const ALL_STATUSES: DeliveryStatus[] = [
@@ -82,6 +89,35 @@ function statusClass(status: DeliveryStatus): string {
   }
 }
 
+function mapProviderEventToStatus(event: string | null | undefined): DeliveryStatus | null {
+  if (!event) return null;
+  const normalized = event.toLowerCase();
+  if (normalized.includes('delivered')) return 'delivered';
+  if (normalized.includes('opened') || normalized.includes('open')) return 'opened';
+  if (normalized.includes('clicked') || normalized.includes('click')) return 'clicked';
+  if (normalized.includes('bounced') || normalized.includes('bounce')) return 'bounced';
+  if (normalized.includes('complained') || normalized.includes('complaint')) return 'complained';
+  if (normalized.includes('failed') || normalized.includes('fail')) return 'failed';
+  if (normalized.includes('sent')) return 'sent';
+  if (normalized.includes('queued') || normalized.includes('scheduled') || normalized.includes('processing')) return 'queued';
+  return null;
+}
+
+function eventLabelFromLive(status: DeliveryStatus): string {
+  switch (status) {
+    case 'complained': return 'Plainte (Resend live)';
+    case 'bounced': return 'Bounce (Resend live)';
+    case 'failed': return 'Echec (Resend live)';
+    case 'clicked': return 'Clique (Resend live)';
+    case 'opened': return 'Ouvert (Resend live)';
+    case 'delivered': return 'Livre (Resend live)';
+    case 'sent': return 'Envoye (Resend live)';
+    case 'queued':
+    default:
+      return 'Queue (Resend live)';
+  }
+}
+
 function makeHref(params: URLSearchParams, key: string, value?: string): string {
   const next = new URLSearchParams(params.toString());
   if (!value || value === 'all') next.delete(key);
@@ -113,7 +149,7 @@ export default async function AdminEmailsPage({
   let base = admin
     .from('email_deliveries')
     .select(
-      'id, template_key, status, recipient_email, subject, created_at, sent_at, delivered_at, opened_at, clicked_at, bounced_at, failed_at, complained_at, last_error, retry_count',
+      'id, provider_message_id, template_key, status, recipient_email, subject, created_at, sent_at, delivered_at, opened_at, clicked_at, bounced_at, failed_at, complained_at, last_error, retry_count',
       { count: 'exact' },
     );
 
@@ -130,6 +166,36 @@ export default async function AdminEmailsPage({
   const { data, count } = await base.order('created_at', { ascending: false }).range(from, to);
 
   const rows = (data ?? []) as DeliveryRow[];
+
+  const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+  const liveByDeliveryId = new Map<string, LiveStatus>();
+
+  if (resend) {
+    await Promise.all(rows.map(async (row) => {
+      if (!row.provider_message_id) return;
+      try {
+        const res = await resend.emails.get(row.provider_message_id);
+        const payload = res as unknown as { data?: { last_event?: string | null; status?: string | null } | null };
+        const liveStatus = mapProviderEventToStatus(payload.data?.last_event ?? payload.data?.status ?? null);
+        if (!liveStatus) return;
+        liveByDeliveryId.set(row.id, {
+          status: liveStatus,
+          eventLabel: eventLabelFromLive(liveStatus),
+        });
+      } catch {
+        // Ignore provider errors and keep DB status as fallback.
+      }
+    }));
+  }
+
+  const effectiveRows = rows.map((row) => {
+    const live = liveByDeliveryId.get(row.id);
+    return {
+      ...row,
+      status: live?.status ?? row.status,
+      live_event_label: live?.eventLabel ?? null,
+    };
+  });
   const totalItems = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
   const params = new URLSearchParams();
@@ -187,7 +253,7 @@ export default async function AdminEmailsPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {rows.map((row) => (
+              {effectiveRows.map((row) => (
                 <tr key={row.id} className="hover:bg-gray-50/70">
                   <td className="px-3 py-2 align-top">
                     <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold border ${statusClass(row.status)}`}>
@@ -199,7 +265,9 @@ export default async function AdminEmailsPage({
                   <td className="px-3 py-2 align-top text-gray-600 font-mono text-xs">{row.template_key}</td>
                   <td className="px-3 py-2 align-top text-gray-600 whitespace-nowrap">{formatDateTime(row.created_at)}</td>
                   <td className="px-3 py-2 align-top text-gray-600 text-xs">
-                    {row.complained_at
+                    {row.live_event_label
+                      ? row.live_event_label
+                      : row.complained_at
                       ? `Plainte: ${formatDateTime(row.complained_at)}`
                       : row.bounced_at
                         ? `Bounce: ${formatDateTime(row.bounced_at)}`
