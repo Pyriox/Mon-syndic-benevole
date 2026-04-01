@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import Script from "next/script";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import CookieBanner from "@/components/CookieBanner";
 import "./globals.css";
 
 const geist = Geist({
@@ -109,22 +110,21 @@ export default function RootLayout({
         {children}
         {gaId && (
           <>
-            {/* Temporairement forcé à "accepté" pour isoler un problème lié au consentement cookies. */}
+            {/* Définition de gtag + consent par défaut AVANT toute hydratation React
+                → strategy="beforeInteractive" garantit que window.gtag est disponible
+                   dès le premier useEffect (évite la race condition CookieBanner) */}
             <Script id="gtag-consent" strategy="beforeInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
-                try {
-                  localStorage.setItem('cookie_consent', JSON.stringify({ value: 'accepted', timestamp: Date.now() }));
-                } catch (error) {}
                 gtag('consent', 'default', {
-                  analytics_storage: 'granted',
-                  ad_storage: 'granted',
-                  ad_user_data: 'granted',
-                  ad_personalization: 'granted',
+                  analytics_storage: 'denied',
+                  ad_storage: 'denied',
+                  ad_user_data: 'denied',
+                  ad_personalization: 'denied',
                   functionality_storage: 'granted',
                   security_storage: 'granted',
-                  wait_for_update: 0
+                  wait_for_update: 2000
                 });
               `}
             </Script>
@@ -141,6 +141,7 @@ export default function RootLayout({
             <GoogleAnalytics />
           </>
         )}
+        <CookieBanner />
         <SpeedInsights />
       </body>
     </html>
