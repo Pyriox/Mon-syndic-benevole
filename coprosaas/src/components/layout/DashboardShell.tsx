@@ -5,9 +5,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import BottomNav from './BottomNav';
+import CookiePreferencesButton from '@/components/CookiePreferencesButton';
 import type { UserCopropriete, AppNotification } from '@/types';
 
 interface DashboardShellProps {
@@ -64,6 +66,17 @@ export default function DashboardShell({
             {children}
           </div>
         </main>
+
+        {/* Footer discret */}
+        <footer className="hidden md:flex items-center justify-center gap-4 px-6 py-3 border-t border-gray-100 bg-white">
+          <Link href="/cgu" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">CGU</Link>
+          <span className="text-gray-200" aria-hidden="true">·</span>
+          <Link href="/mentions-legales" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Mentions légales</Link>
+          <span className="text-gray-200" aria-hidden="true">·</span>
+          <Link href="/politique-confidentialite" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Confidentialité</Link>
+          <span className="text-gray-200" aria-hidden="true">·</span>
+          <CookiePreferencesButton className="text-xs text-gray-400 hover:text-gray-600 transition-colors" label="Cookies" />
+        </footer>
       </div>
 
       {/* Barre de navigation fixe en bas — mobile uniquement */}

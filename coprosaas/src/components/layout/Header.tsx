@@ -7,7 +7,6 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import CookiePreferencesButton from '@/components/CookiePreferencesButton';
 import type { AppNotification } from '@/types';
 
 interface HeaderProps {
@@ -97,11 +96,6 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
 
         {/* Zone droite */}
         <div className="flex items-center gap-2 md:gap-3">
-          <CookiePreferencesButton
-            className="hidden md:inline-flex text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors"
-            label="Cookies"
-          />
-
           {/* Cloche notifications */}
           <div ref={ref} className="relative">
             <button
