@@ -28,6 +28,7 @@ import {
 } from '@/lib/emails/syndic-notifications';
 import { buildTrialEndingEmail, buildTrialEndingSubject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
+import { resolveOnboardingKinds } from '@/lib/onboarding-reminders';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
@@ -75,12 +76,12 @@ export async function GET(req: NextRequest) {
   const onboardingOnly = req.nextUrl.searchParams.get('onboarding_only') === '1';
   const onboardingForce = req.nextUrl.searchParams.get('onboarding_force') === '1';
   const onboardingTestEmail = normalizeEmail(req.nextUrl.searchParams.get('onboarding_test_email'));
-  const onboardingKindParam = req.nextUrl.searchParams.get('onboarding_kind');
-  const onboardingKinds: SyndicOnboardingReminderKind[] = onboardingKindParam === 'j2'
-    ? ['j2']
-    : onboardingKindParam === 'j7'
-      ? ['j7']
-      : ['j2', 'j7'];
+  const onboardingKindParam = req.nextUrl.searchParams.get('onboarding_kind') as SyndicOnboardingReminderKind | 'all' | null;
+  const onboardingKinds = resolveOnboardingKinds({
+    requestedKind: onboardingKindParam,
+    force: onboardingForce,
+    hasTargetEmails: Boolean(onboardingTestEmail),
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -10,12 +10,13 @@ import AdminUserLogs from '../../AdminUserLogs';
 
 function fmtDate(s: string | null | undefined): string {
   if (!s) return '—';
-  return new Date(s).toLocaleDateString('fr-FR', {
+  return new Date(s).toLocaleString('fr-FR', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Europe/Paris',
   });
 }
 

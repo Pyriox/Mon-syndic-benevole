@@ -18,19 +18,19 @@ import { Suspense } from 'react';
 import { Users, UserCheck, CheckCircle2, LifeBuoy } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
+import { formatRelativeDayLabel } from '@/lib/admin-date';
 
 function timeAgo(s: string | null | undefined): string {
-  if (!s) return '—';
-  const d = Math.floor((Date.now() - new Date(s).getTime()) / 86400000);
-  if (d === 0) return "Aujourd'hui";
-  if (d === 1) return 'Hier';
-  if (d < 30) return `Il y a ${d} j`;
-  if (d < 365) return `Il y a ${Math.floor(d / 30)} mois`;
-  return `Il y a ${Math.floor(d / 365)} an${Math.floor(d / 365) > 1 ? 's' : ''}`;
+  return formatRelativeDayLabel(s);
 }
 function fmtDate(s: string | null | undefined) {
   if (!s) return '—';
-  return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(s).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Europe/Paris',
+  });
 }
 
 function RoleBadge({ role }: { role: 'admin' | 'syndic' | 'membre' }) {

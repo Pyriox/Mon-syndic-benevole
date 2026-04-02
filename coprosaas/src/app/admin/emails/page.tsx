@@ -50,30 +50,42 @@ function formatDateTime(value: string | null): string {
 
 function statusLabel(status: DeliveryStatus): string {
   switch (status) {
-    case 'queued': return 'Queue';
-    case 'sent': return 'Envoye';
-    case 'delivered': return 'Livre';
+    case 'queued': return 'En file';
+    case 'sent': return 'Envoyé';
+    case 'delivered': return 'Livré';
     case 'opened': return 'Ouvert';
-    case 'clicked': return 'Clique';
+    case 'clicked': return 'Cliqué';
     case 'bounced': return 'Bounce';
     case 'complained': return 'Plainte';
-    case 'failed': return 'Echec';
+    case 'failed': return 'Échec';
     case 'unknown': return 'Inconnu';
   }
 }
 
 function statusClass(status: DeliveryStatus): string {
   switch (status) {
-    case 'queued': return 'bg-gray-100 text-gray-700 border-gray-200';
-    case 'sent': return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'queued': return 'bg-slate-100 text-slate-700 border-slate-200';
+    case 'sent': return 'bg-sky-50 text-sky-700 border-sky-200';
     case 'delivered': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    case 'opened': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+    case 'opened': return 'bg-violet-50 text-violet-700 border-violet-200';
     case 'clicked': return 'bg-cyan-50 text-cyan-700 border-cyan-200';
     case 'bounced': return 'bg-amber-50 text-amber-700 border-amber-200';
-    case 'complained': return 'bg-orange-50 text-orange-700 border-orange-200';
+    case 'complained': return 'bg-rose-50 text-rose-700 border-rose-200';
     case 'failed': return 'bg-red-50 text-red-700 border-red-200';
-    case 'unknown': return 'bg-slate-100 text-slate-700 border-slate-200';
+    case 'unknown': return 'bg-gray-100 text-gray-700 border-gray-200';
   }
+}
+
+function statusFilterClass(status: DeliveryStatus | 'all', isActive: boolean): string {
+  if (status === 'all') {
+    return isActive
+      ? 'bg-gray-900 text-white border-gray-900'
+      : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300';
+  }
+
+  const tone = statusClass(status);
+  const outline = tone.replace(/bg-[^ ]+/, 'bg-white');
+  return isActive ? tone : `${outline} hover:opacity-80`;
 }
 
 function mapProviderEventToStatus(event: string | null | undefined): DeliveryStatus | null {
@@ -212,7 +224,7 @@ export default async function AdminEmailsPage({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={makeHref(params, 'status', 'all')}
-            className={`px-2.5 py-1 text-xs rounded-full border ${statusFilter === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+            className={`px-2.5 py-1 text-xs rounded-full border ${statusFilterClass('all', statusFilter === 'all')}`}
           >
             Tous
           </Link>
@@ -220,7 +232,7 @@ export default async function AdminEmailsPage({
             <Link
               key={s}
               href={makeHref(params, 'status', s)}
-              className={`px-2.5 py-1 text-xs rounded-full border ${statusFilter === s ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+              className={`px-2.5 py-1 text-xs rounded-full border ${statusFilterClass(s, statusFilter === s)}`}
             >
               {statusLabel(s)}
             </Link>
@@ -238,7 +250,6 @@ export default async function AdminEmailsPage({
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Sujet</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Email ID</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Cree le</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Evenement brut</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -263,14 +274,11 @@ export default async function AdminEmailsPage({
                     </a>
                   </td>
                   <td className="px-3 py-2 align-top text-gray-600 whitespace-nowrap">{formatDateTime(row.created_at)}</td>
-                  <td className="px-3 py-2 align-top text-gray-600 text-xs">
-                    {row.lastEvent ?? 'unknown'}
-                  </td>
                 </tr>
               ))}
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-sm text-gray-500">Aucun e-mail pour ce filtre.</td>
+                  <td colSpan={5} className="px-3 py-8 text-center text-sm text-gray-500">Aucun e-mail pour ce filtre.</td>
                 </tr>
               )}
             </tbody>

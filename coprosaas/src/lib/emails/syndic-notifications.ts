@@ -168,7 +168,9 @@ export function buildSyndicOnboardingReminderSubject(params: {
   kind: SyndicOnboardingReminderKind;
   coproCount: number;
 }): string {
-  const prefix = params.kind === 'j2' ? '[J+2] Votre copropriété vous attend' : '[J+7] Passez à l\'action sur votre copropriété';
+  const prefix = params.kind === 'j2'
+    ? 'Votre copropriété vous attend'
+    : 'Passez à l\'action sur votre copropriété';
   const state = params.coproCount === 0
     ? 'Créez votre première copropriété'
     : 'Ajoutez vos premiers copropriétaires';
