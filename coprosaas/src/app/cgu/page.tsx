@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Conditions Générales d'Utilisation",
   description:
     "Conditions Générales d'Utilisation et de Vente de Mon Syndic Bénévole — modalités d'accès, abonnements, obligations et responsabilités.",
-  alternates: { canonical: 'https://mon-syndic-benevole.fr/cgu' },
+  alternates: { canonical: 'https://www.mon-syndic-benevole.fr/cgu' },
   robots: { index: true, follow: true },
 };
 
@@ -55,7 +55,7 @@ export default function CguPage() {
             Bénévole</strong> (ci-après «&nbsp;le Service&nbsp;»), édité par Mon Syndic Bénévole, accessible
             à l{"'"}adresse{" "}
             <a
-              href="https://mon-syndic-benevole.fr"
+              href="https://www.mon-syndic-benevole.fr"
               className="text-blue-400 hover:text-blue-300 transition-colors"
             >
               mon-syndic-benevole.fr

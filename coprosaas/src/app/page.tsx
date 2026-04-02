@@ -32,12 +32,12 @@ export const metadata: Metadata = {
     'charges copropriété logiciel',
     'tantièmes millièmes',
   ],
-  alternates: { canonical: 'https://mon-syndic-benevole.fr' },
+  alternates: { canonical: 'https://www.mon-syndic-benevole.fr' },
   openGraph: {
     title: 'Logiciel de gestion de copropriété pour syndic bénévole | Mon Syndic Bénévole',
     description:
       'Logiciel syndic bénévole : gérez charges, appels de fonds, AG, documents et incidents depuis un seul outil. 14 jours gratuits, puis à partir de 300 €/an.',
-    url: 'https://mon-syndic-benevole.fr',
+    url: 'https://www.mon-syndic-benevole.fr',
     siteName: 'Mon Syndic Bénévole',
     locale: 'fr_FR',
     type: 'website',
@@ -77,17 +77,17 @@ export default function HomePage() {
     '@graph': [
       {
         '@type': 'Organization',
-        '@id': 'https://mon-syndic-benevole.fr/#organization',
+        '@id': 'https://www.mon-syndic-benevole.fr/#organization',
         name: 'Mon Syndic Bénévole',
-        url: 'https://mon-syndic-benevole.fr',
-        logo: 'https://mon-syndic-benevole.fr/logo.png',
+        url: 'https://www.mon-syndic-benevole.fr',
+        logo: 'https://www.mon-syndic-benevole.fr/logo.png',
         description: 'Logiciel de gestion de copropriété pour syndics bénévoles.',
       },
       {
         '@type': 'SoftwareApplication',
-        '@id': 'https://mon-syndic-benevole.fr/#app',
+        '@id': 'https://www.mon-syndic-benevole.fr/#app',
         name: 'Mon Syndic Bénévole',
-        url: 'https://mon-syndic-benevole.fr',
+        url: 'https://www.mon-syndic-benevole.fr',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         offers: {
@@ -107,23 +107,23 @@ export default function HomePage() {
       },
       {
         '@type': 'WebPage',
-        '@id': 'https://mon-syndic-benevole.fr/#webpage',
-        url: 'https://mon-syndic-benevole.fr',
+        '@id': 'https://www.mon-syndic-benevole.fr/#webpage',
+        url: 'https://www.mon-syndic-benevole.fr',
         name: 'Mon Syndic Bénévole — La gestion de copropriété simple & abordable',
-        isPartOf: { '@id': 'https://mon-syndic-benevole.fr/#organization' },
+        isPartOf: { '@id': 'https://www.mon-syndic-benevole.fr/#organization' },
         inLanguage: 'fr-FR',
       },
       {
         '@type': 'WebSite',
-        '@id': 'https://mon-syndic-benevole.fr/#website',
-        url: 'https://mon-syndic-benevole.fr',
+        '@id': 'https://www.mon-syndic-benevole.fr/#website',
+        url: 'https://www.mon-syndic-benevole.fr',
         name: 'Mon Syndic Bénévole',
         inLanguage: 'fr-FR',
-        publisher: { '@id': 'https://mon-syndic-benevole.fr/#organization' },
+        publisher: { '@id': 'https://www.mon-syndic-benevole.fr/#organization' },
       },
       {
         '@type': 'FAQPage',
-        '@id': 'https://mon-syndic-benevole.fr/#faq',
+        '@id': 'https://www.mon-syndic-benevole.fr/#faq',
         mainEntity: [
           {
             '@type': 'Question',
@@ -169,7 +169,7 @@ export default function HomePage() {
       },
       {
         '@type': 'HowTo',
-        '@id': 'https://mon-syndic-benevole.fr/#howto',
+        '@id': 'https://www.mon-syndic-benevole.fr/#howto',
         name: 'Comment gérer sa copropriété avec Mon Syndic Bénévole',
         description: "Gérez votre copropriété en 4 étapes simples, sans formation ni migration.",
         step: [

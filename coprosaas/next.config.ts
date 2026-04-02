@@ -19,6 +19,16 @@ const nextConfig: NextConfig = {
     // Tree-shake lucide-react : réduit significativement la taille du bundle JS
     optimizePackageImports: ['lucide-react'],
   },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'mon-syndic-benevole.fr' }],
+        destination: 'https://www.mon-syndic-benevole.fr/:path*',
+        permanent: true,
+      },
+    ];
+  },
   // Cache HTTP pour les assets statiques Next.js
   async headers() {
     return [

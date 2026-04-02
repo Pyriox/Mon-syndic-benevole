@@ -18,12 +18,12 @@ export const metadata: Metadata = {
     title: 'Blog syndic bénévole — Mon Syndic Bénévole',
     description:
       'Guides pratiques et conseils pour gérer votre copropriété en tant que syndic bénévole. Logiciel de gestion à partir de 25 €/mois.',
-    url: 'https://mon-syndic-benevole.fr/blog',
+    url: 'https://www.mon-syndic-benevole.fr/blog',
     siteName: 'Mon Syndic Bénévole',
     locale: 'fr_FR',
     type: 'website',
   },
-  alternates: { canonical: 'https://mon-syndic-benevole.fr/blog' },
+  alternates: { canonical: 'https://www.mon-syndic-benevole.fr/blog' },
 };
 
 export default function BlogPage() {

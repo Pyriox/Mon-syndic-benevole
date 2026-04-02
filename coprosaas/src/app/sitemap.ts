@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { posts } from '@/lib/blog';
 
-const APP_URL = 'https://mon-syndic-benevole.fr';
+const APP_URL = 'https://www.mon-syndic-benevole.fr';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const blogEntries: MetadataRoute.Sitemap = posts.map((post) => ({

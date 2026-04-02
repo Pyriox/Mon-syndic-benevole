@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Politique de Confidentialité",
   description:
     "Politique de confidentialité de Mon Syndic Bénévole — données collectées, finalités, droits RGPD et durées de conservation.",
-  alternates: { canonical: 'https://mon-syndic-benevole.fr/politique-confidentialite' },
+  alternates: { canonical: 'https://www.mon-syndic-benevole.fr/politique-confidentialite' },
   robots: { index: true, follow: true },
 };
 

@@ -13,7 +13,7 @@ const geist = Geist({
   display: 'optional',
 });
 
-const APP_URL = "https://mon-syndic-benevole.fr";
+const APP_URL = "https://www.mon-syndic-benevole.fr";
 const TITLE   = "Mon Syndic Bénévole — La gestion de copropriété simple & abordable";
 const DESC    = "Mon Syndic Bénévole simplifie la gestion des copropriétés pour les syndics bénévoles. Charges, appels de fonds, assemblées générales, documents et plus. Essai gratuit 14 jours, puis à partir de 300 €/an.";
 

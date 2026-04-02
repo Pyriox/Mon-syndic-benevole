@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const APP_URL = 'https://mon-syndic-benevole.fr';
+const APP_URL = 'https://www.mon-syndic-benevole.fr';
 
 export default function robots(): MetadataRoute.Robots {
   return {

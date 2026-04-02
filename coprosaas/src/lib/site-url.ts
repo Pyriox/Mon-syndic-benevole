@@ -1,4 +1,4 @@
-const PRODUCTION_SITE_URL = 'https://mon-syndic-benevole.fr';
+const PRODUCTION_SITE_URL = 'https://www.mon-syndic-benevole.fr';
 
 function normalize(url: string): string {
   return url.trim().replace(/\/$/, '');

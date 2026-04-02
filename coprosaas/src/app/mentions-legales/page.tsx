@@ -9,7 +9,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Mentions légales",
   description: "Mentions légales de Mon Syndic Bénévole — éditeur, hébergement, données personnelles et propriété intellectuelle.",
-  alternates: { canonical: 'https://mon-syndic-benevole.fr/mentions-legales' },
+  alternates: { canonical: 'https://www.mon-syndic-benevole.fr/mentions-legales' },
   robots: { index: true, follow: true },
 };
 

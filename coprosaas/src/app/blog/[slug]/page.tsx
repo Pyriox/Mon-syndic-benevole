@@ -55,14 +55,14 @@ export async function generateMetadata({
     openGraph: {
       title: post.title,
       description: post.description,
-      url: `https://mon-syndic-benevole.fr/blog/${post.slug}`,
+      url: `https://www.mon-syndic-benevole.fr/blog/${post.slug}`,
       siteName: 'Mon Syndic Bénévole',
       locale: 'fr_FR',
       type: 'article',
       publishedTime: post.publishedAt,
       modifiedTime: post.updatedAt ?? post.publishedAt,
     },
-    alternates: { canonical: `https://mon-syndic-benevole.fr/blog/${post.slug}` },
+    alternates: { canonical: `https://www.mon-syndic-benevole.fr/blog/${post.slug}` },
   };
 }
 
@@ -82,7 +82,7 @@ export default async function ArticlePage({
   // Related articles (others)
   const related = posts.filter((p) => p.slug !== slug).slice(0, 2);
 
-  const APP_URL = 'https://mon-syndic-benevole.fr';
+  const APP_URL = 'https://www.mon-syndic-benevole.fr';
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
