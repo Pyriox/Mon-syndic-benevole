@@ -103,16 +103,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
+  const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
+  const hasGoogleTagging = Boolean(gtmId || gaId);
 
   return (
     <html lang="fr">
       <body className={`${geist.variable} antialiased overflow-x-hidden`}>
+        {gtmId && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+            />
+          </noscript>
+        )}
         {children}
-        {gaId && (
+        {hasGoogleTagging && (
           <>
             {/* Définition de gtag + consent par défaut AVANT toute hydratation React
-                → strategy="beforeInteractive" garantit que window.gtag est disponible
-                   dès le premier useEffect (évite la race condition CookieBanner) */}
+                → partagé par GA4 et Google Tag Manager via la même dataLayer */}
             <Script id="gtag-consent" strategy="beforeInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
@@ -128,16 +139,33 @@ export default function RootLayout({
                 });
               `}
             </Script>
-            {/* Chargement du script GA AVANT hydratation React
-                → strategy="beforeInteractive" garantit que gtag est disponible
-                   avant le premier useEffect (évite race condition) */}
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="beforeInteractive"
-            />
-            <Script id="gtag-init" strategy="beforeInteractive">
-              {`gtag('js', new Date()); gtag('config', '${gaId}', { send_page_view: false });`}
-            </Script>
+            {gtmId ? (
+              <Script id="gtm-init" strategy="beforeInteractive">
+                {`
+                  (function(w,d,s,l,i){
+                    w[l]=w[l]||[];
+                    w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
+                    var f=d.getElementsByTagName(s)[0],
+                        j=d.createElement(s),
+                        dl=l!='dataLayer'?'&l='+l:'';
+                    j.async=true;
+                    j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+                    f.parentNode.insertBefore(j,f);
+                  })(window,document,'script','dataLayer','${gtmId}');
+                `}
+              </Script>
+            ) : gaId ? (
+              <>
+                {/* Fallback historique si GTM n'est pas configuré */}
+                <Script
+                  src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+                  strategy="beforeInteractive"
+                />
+                <Script id="gtag-init" strategy="beforeInteractive">
+                  {`gtag('js', new Date()); gtag('config', '${gaId}', { send_page_view: false });`}
+                </Script>
+              </>
+            ) : null}
             <GoogleAnalytics />
           </>
         )}

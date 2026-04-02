@@ -3,8 +3,9 @@
 //
 // Vérifie que l'utilisateur connecté a bien accès à la
 // copropriété contenue dans le cookie selected_copro_id.
-// Si le cookie est absent (premier rendu), aucune vérification n'est nécessaire
-// car toutes les requêtes utiliseront 'none' comme identifiant → résultats vides.
+// Si le cookie est absent (premier rendu), on retombe sur la première
+// copropriété accessible, y compris via une fiche copropriétaire encore
+// liée uniquement par email.
 // Si le cookie est présent et que l'utilisateur n'a pas accès → redirect('/dashboard').
 //
 // Usage :
@@ -46,11 +47,12 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
   const admin = createAdminClient();
   const cookieStore = await cookies();
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
+  const normalizedEmail = user.email?.trim().toLowerCase() ?? '';
 
   // Pas de cookie : fallback sur la première copropriété accessible
   // (même logique que le layout — évite une vue vide avant que CoproSelector pose le cookie)
   if (!selectedCoproId) {
-    const [{ data: firstSyndic }, { data: firstCopro }] = await Promise.all([
+    const [{ data: firstSyndic }, { data: firstCopro }, { data: firstCoproByEmail }] = await Promise.all([
       admin
         .from('coproprietes')
         .select('id, nom, syndic_id, plan, plan_id')
@@ -65,6 +67,16 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
         .order('copropriete_id')
         .limit(1)
         .maybeSingle(),
+      normalizedEmail
+        ? admin
+            .from('coproprietaires')
+            .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
+            .eq('email', normalizedEmail)
+            .is('user_id', null)
+            .order('copropriete_id')
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
 
     if (firstSyndic) {
@@ -73,6 +85,11 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
     }
     if (firstCopro?.coproprietes) {
       const copro = firstCopro.coproprietes as unknown as CoproInfo;
+      if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
+      return { user, selectedCoproId: copro.id, role: 'copropriétaire', copro };
+    }
+    if (firstCoproByEmail?.coproprietes) {
+      const copro = firstCoproByEmail.coproprietes as unknown as CoproInfo;
       if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
       return { user, selectedCoproId: copro.id, role: 'copropriétaire', copro };
     }
@@ -96,13 +113,15 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
       .eq('copropriete_id', selectedCoproId)
       .eq('user_id', user.id)
       .maybeSingle(),
-    admin
-      .from('coproprietaires')
-      .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
-      .eq('copropriete_id', selectedCoproId)
-      .eq('email', user.email ?? '')
-      .is('user_id', null)
-      .maybeSingle(),
+    normalizedEmail
+      ? admin
+          .from('coproprietaires')
+          .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
+          .eq('copropriete_id', selectedCoproId)
+          .eq('email', normalizedEmail)
+          .is('user_id', null)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   if (asSyndic) {

@@ -3,6 +3,7 @@
 // ============================================================
 
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? '';
+export const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? '';
 export const CONSENT_KEY = 'cookie_consent';
 
 declare global {
@@ -67,30 +68,63 @@ export function hasAnalyticsConsent(): boolean {
   return getConsentPreferences().analytics;
 }
 
-/** Envoie une page_view à GA4 (navigation client-side) */
-export function pageview(url: string) {
-  if (!GA_ID || typeof window === 'undefined' || !window.gtag || !hasAnalyticsConsent()) return;
-  window.gtag('config', GA_ID, { page_location: window.location.origin + url });
+function pushToDataLayer(payload: Record<string, unknown>) {
+  if (typeof window === 'undefined') return;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push(payload);
 }
 
-/** Envoie un event personnalisé à GA4 */
+/** Envoie une page_view pilotée par GTM (ou GA4 en fallback si GTM absent). */
+export function pageview(url: string) {
+  if (typeof window === 'undefined' || !hasAnalyticsConsent()) return;
+
+  const payload = {
+    page_location: window.location.origin + url,
+    page_path: url,
+    page_title: document.title,
+  };
+
+  if (GTM_ID) {
+    pushToDataLayer({ event: 'virtual_pageview', ...payload });
+    return;
+  }
+
+  if (!GA_ID || !window.gtag) return;
+  window.gtag('config', GA_ID, payload);
+}
+
+/** Envoie un event personnalisé à GTM / GA4. */
 export function trackEvent(action: string, params?: Record<string, unknown>) {
-  if (!GA_ID || typeof window === 'undefined' || !window.gtag || !hasAnalyticsConsent()) return;
+  if (typeof window === 'undefined' || !hasAnalyticsConsent()) return;
+
+  if (GTM_ID) {
+    pushToDataLayer({ event: action, ...params });
+    return;
+  }
+
+  if (!GA_ID || !window.gtag) return;
   window.gtag('event', action, params);
 }
 
 /**
- * Envoie un événement à GA4 avec anonymize_ip: true.
+ * Envoie un événement anonyme à GTM / GA4.
  * Utilisé pour : dashboard views, onboarding — pas d'identifiant utilisateur persistant.
- * Consent Mode v2 reste actif : les hits respectent analytics_storage.
  */
 export function trackAnonymousEvent(action: string, params?: Record<string, unknown>) {
-  if (!GA_ID || typeof window === 'undefined' || !window.gtag || !hasAnalyticsConsent()) return;
-  // Envoyer l'événement avec anonymize_ip: true pour conformité CNIL
-  window.gtag('event', action, {
+  if (typeof window === 'undefined' || !hasAnalyticsConsent()) return;
+
+  const payload = {
     ...params,
     anonymize_ip: true,
-  });
+  };
+
+  if (GTM_ID) {
+    pushToDataLayer({ event: action, ...payload });
+    return;
+  }
+
+  if (!GA_ID || !window.gtag) return;
+  window.gtag('event', action, payload);
 }
 
 export function updateConsent(preferences: ConsentPreferences) {
