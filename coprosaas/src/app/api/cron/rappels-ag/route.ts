@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { buildAGReminderEmail, buildAGReminderSubject } from '@/lib/emails/ag-reminders';
 import { pushNotification, pushAdminAlert } from '@/lib/notification-center';
 import { trackEmailDelivery } from '@/lib/email-delivery';
+import { getCronAuthState } from '@/lib/cron-auth';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Benevole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -15,9 +16,12 @@ function addDays(base: Date, days: number): string {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  const cronAuth = getCronAuthState(req);
+  if (!cronAuth.ok) {
+    return NextResponse.json({
+      message: 'Unauthorized',
+      ...cronAuth.debug,
+    }, { status: 401 });
   }
 
   const admin = createAdminClient();

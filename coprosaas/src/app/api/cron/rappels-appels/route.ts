@@ -29,6 +29,7 @@ import {
 import { buildTrialEndingEmail, buildTrialEndingSubject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { resolveOnboardingKinds } from '@/lib/onboarding-reminders';
+import { getCronAuthState } from '@/lib/cron-auth';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
@@ -68,9 +69,12 @@ function addDays(base: Date, days: number): string {
 
 export async function GET(req: NextRequest) {
   // Protection par secret partagé (Vercel ajoute Authorization: Bearer <CRON_SECRET>)
-  const auth = req.headers.get('authorization');
-  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  const cronAuth = getCronAuthState(req);
+  if (!cronAuth.ok) {
+    return NextResponse.json({
+      message: 'Unauthorized',
+      ...cronAuth.debug,
+    }, { status: 401 });
   }
 
   const onboardingOnly = req.nextUrl.searchParams.get('onboarding_only') === '1';
