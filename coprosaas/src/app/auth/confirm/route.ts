@@ -26,16 +26,50 @@ import { Resend } from 'resend';
 import { buildWelcomeEmail, buildWelcomeSubject } from '@/lib/emails/welcome';
 import { trackResendSendResult } from '@/lib/email-delivery';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
+import { shouldRunSignupFollowups } from '@/lib/auth-confirmation';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 const SITE_URL = getCanonicalSiteUrl();
+
+function normalizeEmail(value: string): string {
+  return value.trim().toLowerCase();
+}
 
 function getFirstName(fullName: unknown): string | null {
   if (typeof fullName !== 'string') return null;
   const value = fullName.trim();
   if (!value) return null;
   return value.split(' ')[0] ?? null;
+}
+
+async function getSignupFollowupState(
+  admin: ReturnType<typeof createAdminClient>,
+  email: string,
+): Promise<{
+  hasAccountConfirmedEvent: boolean;
+  hasWelcomeEmailDelivery: boolean;
+}> {
+  const normalizedEmail = normalizeEmail(email);
+
+  const [eventQuery, deliveryQuery] = await Promise.all([
+    admin
+      .from('user_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_email', normalizedEmail)
+      .eq('event_type', 'account_confirmed'),
+    admin
+      .from('email_deliveries')
+      .select('id', { count: 'exact', head: true })
+      .eq('recipient_email', normalizedEmail)
+      .eq('template_key', 'welcome')
+      .in('status', ['sent', 'delivered', 'opened', 'clicked']),
+  ]);
+
+  return {
+    hasAccountConfirmedEvent: (eventQuery.count ?? 0) > 0,
+    hasWelcomeEmailDelivery: (deliveryQuery.count ?? 0) > 0,
+  };
 }
 
 async function sendWelcomeEmail(params: {
@@ -45,23 +79,24 @@ async function sendWelcomeEmail(params: {
   userId?: string | null;
 }): Promise<void> {
   const { email, prenom, flow, userId } = params;
+  const normalizedEmail = normalizeEmail(email);
 
   const subject = buildWelcomeSubject();
 
   const result = await resend.emails.send({
     from: FROM,
-    to: email,
+    to: normalizedEmail,
     subject,
     html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
   });
 
   const tracked = await trackResendSendResult(result, {
     templateKey: 'welcome',
-    recipientEmail: email,
+    recipientEmail: normalizedEmail,
     recipientUserId: userId ?? null,
     subject,
     legalEventType: 'welcome_email',
-    legalReference: email.toLowerCase(),
+    legalReference: normalizedEmail,
     payload: { flow },
   });
 
@@ -70,13 +105,61 @@ async function sendWelcomeEmail(params: {
   }
 }
 
-async function logAccountConfirmed(email: string): Promise<void> {
-  const admin = createAdminClient();
+async function logAccountConfirmed(
+  admin: ReturnType<typeof createAdminClient>,
+  email: string,
+): Promise<void> {
   await admin.from('user_events').insert({
-    user_email: email.toLowerCase(),
+    user_email: normalizeEmail(email),
     event_type: 'account_confirmed',
     label: 'Compte confirmé',
   });
+}
+
+async function runSignupFollowups(params: {
+  email: string;
+  prenom: string | null;
+  flow: 'PKCE' | 'token_hash';
+  userId: string;
+  emailConfirmedAt?: string | null;
+}): Promise<void> {
+  const { email, prenom, flow, userId, emailConfirmedAt } = params;
+  const normalizedEmail = normalizeEmail(email);
+  const admin = createAdminClient();
+
+  await Promise.all([
+    admin
+      .from('coproprietaires')
+      .update({ user_id: userId })
+      .eq('email', normalizedEmail)
+      .is('user_id', null),
+    admin
+      .from('invitations')
+      .update({ statut: 'acceptee' })
+      .eq('email', normalizedEmail)
+      .eq('statut', 'en_attente'),
+  ]);
+
+  const { hasAccountConfirmedEvent, hasWelcomeEmailDelivery } = await getSignupFollowupState(admin, normalizedEmail);
+
+  if (!shouldRunSignupFollowups({
+    flow: flow === 'PKCE' ? 'pkce' : 'token_hash',
+    emailConfirmedAt,
+    hasAccountConfirmedEvent,
+    hasWelcomeEmailDelivery,
+  })) {
+    return;
+  }
+
+  if (!hasAccountConfirmedEvent) {
+    await logAccountConfirmed(admin, normalizedEmail).catch((e: Error) => {
+      console.warn('[auth/confirm] logAccountConfirmed error:', e?.message);
+    });
+  }
+
+  if (!hasWelcomeEmailDelivery) {
+    await sendWelcomeEmail({ email: normalizedEmail, prenom, flow, userId });
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -123,34 +206,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=lien_invalide', request.url));
     }
 
-    // Après une confirmation d'inscription via PKCE, même auto-liaison que le flux token_hash.
-    // En mode PKCE, Supabase ne transmet PAS le paramètre type= dans la redirection finale :
-    // seul ?code= est présent. On détecte donc un nouveau compte en vérifiant que
-    // email_confirmed_at vient d'être posé (< 2 minutes).
-    const justConfirmed = data.user.email_confirmed_at
-      && (Date.now() - new Date(data.user.email_confirmed_at).getTime()) < 120_000;
-    if (justConfirmed && data.user) {
+    // Les follow-ups d'inscription (liaison invitation, log account_confirmed,
+    // e-mail de bienvenue) sont désormais idempotents et basés sur l'historique réel,
+    // plutôt que sur une fenêtre temporelle fragile de 2 minutes.
+    if (data.user) {
       const { id: userId, email } = data.user;
       if (email) {
         try {
-          const admin = createAdminClient();
-          await admin
-            .from('coproprietaires')
-            .update({ user_id: userId })
-            .eq('email', email.toLowerCase())
-            .is('user_id', null);
-          await admin
-            .from('invitations')
-            .update({ statut: 'acceptee' })
-            .eq('email', email.toLowerCase())
-            .eq('statut', 'en_attente');
-
-          // E-mail de bienvenue (awaité — le fire-and-forget est tué par Vercel avant complétion)
           const prenom = getFirstName(data.user.user_metadata?.full_name);
-          await sendWelcomeEmail({ email, prenom, flow: 'PKCE', userId });
-          await logAccountConfirmed(email).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
+          await runSignupFollowups({
+            email,
+            prenom,
+            flow: 'PKCE',
+            userId,
+            emailConfirmedAt: data.user.email_confirmed_at ?? null,
+          });
         } catch (linkErr) {
-          console.error('[auth/confirm] PKCE auto-link error:', linkErr);
+          console.error('[auth/confirm] PKCE signup follow-up error:', linkErr);
         }
       }
     }
@@ -210,32 +282,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=lien_invalide', request.url));
   }
 
-  // Après une confirmation d'inscription, lier automatiquement l'utilisateur
-  // à sa fiche coproprietaire (si une fiche avec ce même email existe sans user_id)
+  // Après une confirmation d'inscription, on applique les follow-ups de manière
+  // idempotente : liaison invitation, log account_confirmed et e-mail de bienvenue.
   if (type === 'signup' && data.user) {
     const { id: userId, email } = data.user;
     if (email) {
       try {
-        const admin = createAdminClient();
-
-        // 1. Lier toutes les fiches coproprietaires avec cet email et sans user_id
-        await admin
-          .from('coproprietaires')
-          .update({ user_id: userId })
-          .eq('email', email.toLowerCase())
-          .is('user_id', null);
-
-        // 2. Marquer les invitations en attente pour cet email comme acceptées
-        await admin
-          .from('invitations')
-          .update({ statut: 'acceptee' })
-          .eq('email', email.toLowerCase())
-          .eq('statut', 'en_attente');
-
-        // 3. E-mail de bienvenue (awaité — le fire-and-forget est tué par Vercel avant complétion)
         const prenom = getFirstName(data.user.user_metadata?.full_name);
-        await sendWelcomeEmail({ email, prenom, flow: 'token_hash', userId });
-        await logAccountConfirmed(email).catch((e: Error) => console.warn('[auth/confirm] logUserEvent error:', e?.message));
+        await runSignupFollowups({
+          email,
+          prenom,
+          flow: 'token_hash',
+          userId,
+          emailConfirmedAt: data.user.email_confirmed_at ?? null,
+        });
       } catch (linkErr) {
         // Non bloquant — l'utilisateur peut quand même accéder au dashboard
         console.error('[auth/confirm] auto-link error:', linkErr);
