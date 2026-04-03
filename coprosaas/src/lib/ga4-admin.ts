@@ -69,7 +69,15 @@ export type Ga4AdminAnalytics = {
 };
 
 function formatPrivateKey(privateKey: string | undefined) {
-  return (privateKey ?? '').replace(/\\n/g, '\n').trim();
+  const normalized = (privateKey ?? '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .trim();
+
+  if (!normalized) return '';
+  return normalized.endsWith('\n') ? normalized : `${normalized}\n`;
 }
 
 function getConfig() {
@@ -130,7 +138,16 @@ function createSignedJwt(clientEmail: string, privateKey: string) {
   signer.update(unsignedToken);
   signer.end();
 
-  const signature = signer.sign(createPrivateKey(privateKey)).toString('base64url');
+  let keyObject;
+  try {
+    keyObject = createPrivateKey({ key: formatPrivateKey(privateKey), format: 'pem' });
+  } catch {
+    throw new Error(
+      'Clé privée GA4 invalide ou mal formatée. Colle le champ `private_key` complet du JSON Google, sans quotes parasites, en conservant les retours `\\n`.',
+    );
+  }
+
+  const signature = signer.sign(keyObject).toString('base64url');
   return `${unsignedToken}.${signature}`;
 }
 
@@ -333,10 +350,14 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       consentStates: parseBreakdown(consentStateReport),
     };
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erreur inconnue côté GA4.';
+
     return {
       ...emptyState,
       configured: true,
-      error: error instanceof Error ? error.message : 'Erreur inconnue côté GA4.',
+      error: message.includes('DECODER routines::unsupported')
+        ? 'Clé privée GA4 invalide ou mal formatée. Dans Vercel, colle la valeur `private_key` du JSON Google sans quotes externes, ou garde les `\\n` sur une seule ligne.'
+        : message,
     };
   }
 }
