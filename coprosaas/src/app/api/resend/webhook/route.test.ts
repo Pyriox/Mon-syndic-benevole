@@ -76,7 +76,7 @@ describe('POST /api/resend/webhook', () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(applyProviderEventMock).toHaveBeenCalledWith({
+    expect(applyProviderEventMock).toHaveBeenCalledWith(expect.objectContaining({
       providerMessageId: 'email_123',
       providerEvent: 'email.bounced',
       payload: {
@@ -85,7 +85,9 @@ describe('POST /api/resend/webhook', () => {
         subject: 'Test',
         bounce: { message: 'Mailbox unavailable' },
       },
-    });
+      recipientEmail: 'copro@example.com',
+      subject: 'Test',
+    }));
     expect(pushAdminAlertMock).toHaveBeenCalledTimes(1);
     expect(json).toEqual({ ok: true, matched: true, status: 'bounced' });
   });

@@ -67,8 +67,9 @@ export default async function AdminDashboardPage() {
 
   const admin = createAdminClient();
   const today = new Date();
-  const startOf30Days = new Date(Date.now() - 30 * 86400000).toISOString();
-  const startOf7Days  = new Date(Date.now() - 7  * 86400000).toISOString();
+  const todayTs = today.getTime();
+  const startOf30Days = new Date(todayTs - 30 * 86400000).toISOString();
+  const startOf7Days  = new Date(todayTs - 7  * 86400000).toISOString();
   const startOfYear   = `${today.getFullYear()}-01-01`;
 
   const [
@@ -161,7 +162,7 @@ export default async function AdminDashboardPage() {
   const churned   = hadStripe.filter((c) => c.plan === 'resilie');
   const churnRate = hadStripe.length > 0 ? Math.round((churned.length / hadStripe.length) * 100) : 0;
 
-  const in14d = new Date(Date.now() + 14 * 86400000).toISOString();
+  const in14d = new Date(todayTs + 14 * 86400000).toISOString();
   const upcomingRenewals = coprosTyped.filter((c) =>
     c.plan === 'actif' && c.plan_period_end && c.plan_period_end >= new Date().toISOString() && c.plan_period_end <= in14d
   );
@@ -222,7 +223,7 @@ export default async function AdminDashboardPage() {
     .slice(0, 5);
 
   const stripeFailures = stripeCharges.filter((c) => c.status === 'failed');
-  const alertNonConfirmedOld = authUsers.filter((u) => !u.email_confirmed_at && u.created_at < new Date(Date.now() - 7 * 86400000).toISOString() && !adminUserIds.has(u.id));
+  const alertNonConfirmedOld = authUsers.filter((u) => !u.email_confirmed_at && u.created_at < new Date(todayTs - 7 * 86400000).toISOString() && !adminUserIds.has(u.id));
   const alertInvitationsExpirees = (invitations ?? []).filter((inv) => inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date());
   const alertCoprosWithoutLots = coprosTyped.filter((c) => (lotsCount[c.id] ?? 0) === 0);
   const alertPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du');
@@ -527,14 +528,15 @@ export default async function AdminDashboardPage() {
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Outils &amp; liens rapides</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           {([
-            { href: 'https://dashboard.stripe.com/subscriptions',                    label: 'Stripe',         sub: 'Paiements',        icon: CreditCard, color: 'bg-indigo-50 text-indigo-600' },
-            { href: 'https://supabase.com/dashboard/project/ybhqvpnafwertoricfce', label: 'Supabase',       sub: 'Base de données', icon: Database,   color: 'bg-green-50 text-green-600' },
-            { href: 'https://vercel.com/dashboard',                                  label: 'Vercel',         sub: 'Déploiements',  icon: Activity,   color: 'bg-gray-100 text-gray-600' },
-            { href: 'https://resend.com/emails',                                     label: 'Resend',         sub: 'Emails',           icon: Mail,       color: 'bg-purple-50 text-purple-600' },
-            { href: 'https://analytics.google.com',                                  label: 'Analytics',      sub: 'GA4',              icon: Search,     color: 'bg-orange-50 text-orange-600' },
-            { href: 'https://search.google.com/search-console',                      label: 'Search Console', sub: 'SEO',              icon: TrendingUp, color: 'bg-blue-50 text-blue-600' },
+            { href: '/admin/analytics',                                               label: 'Analytics admin', sub: 'Vue interne',      icon: BarChart3,  color: 'bg-indigo-50 text-indigo-600' },
+            { href: 'https://dashboard.stripe.com/subscriptions',                     label: 'Stripe',          sub: 'Paiements',        icon: CreditCard, color: 'bg-indigo-50 text-indigo-600' },
+            { href: 'https://supabase.com/dashboard/project/ybhqvpnafwertoricfce',  label: 'Supabase',        sub: 'Base de données', icon: Database,   color: 'bg-green-50 text-green-600' },
+            { href: 'https://vercel.com/dashboard',                                   label: 'Vercel',          sub: 'Déploiements',    icon: Activity,   color: 'bg-gray-100 text-gray-600' },
+            { href: 'https://resend.com/emails',                                      label: 'Resend',          sub: 'Emails',           icon: Mail,       color: 'bg-purple-50 text-purple-600' },
+            { href: 'https://analytics.google.com',                                   label: 'GA4',             sub: 'Vue Google',       icon: Search,     color: 'bg-orange-50 text-orange-600' },
+            { href: 'https://search.google.com/search-console',                       label: 'Search Console',  sub: 'SEO',              icon: TrendingUp, color: 'bg-blue-50 text-blue-600' },
           ] as { href: string; label: string; sub: string; icon: ElementType; color: string }[]).map(({ href, label, sub, icon: Icon, color }) => (
-            <a key={href} href={href} target="_blank" rel="noopener noreferrer"
+            <a key={href} href={href} target={href.startsWith('http') ? '_blank' : undefined} rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
               className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col items-center gap-2 hover:border-gray-300 hover:shadow-md transition-all text-center">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}><Icon size={16} /></div>
               <div>

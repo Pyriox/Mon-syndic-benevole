@@ -123,9 +123,9 @@ export default function MentionsLegalesPage() {
         {/* 6. Cookies */}
         <Section title="6. Cookies">
           <p>
-            Ce site utilise des cookies strictement nécessaires à son fonctionnement (session d'authentification)
-            ainsi que des cookies analytiques anonymisés via <strong className="text-white">Google Analytics 4</strong> afin
-            d'améliorer l'expérience utilisateur.
+            Ce site utilise des cookies strictement nécessaires à son fonctionnement (session d'authentification), une
+            mesure d'audience strictement cookieless pour des statistiques agrégées, ainsi que — si vous l'acceptez — des
+            cookies analytiques anonymisés via <strong className="text-white">Google Analytics 4</strong>.
           </p>
           <p className="mt-4">
             Les cookies analytiques ne sont activés qu'après votre consentement explicite. Vous pouvez modifier votre choix

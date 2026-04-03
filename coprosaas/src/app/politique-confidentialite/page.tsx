@@ -297,14 +297,20 @@ export default function PolitiqueConfidentialitePage() {
               depuis le bandeau car le service ne fonctionnerait plus correctement.
             </li>
             <li>
-              <strong className="text-gray-300">Cookies analytiques</strong> — Google Analytics 4, activés uniquement
-              avec votre consentement explicite pour mesurer l'audience et améliorer le service.
+              <strong className="text-gray-300">Mesure d&apos;audience cookieless</strong> — événements agrégés sans cookie,
+              sans identifiant persistant ni fonctionnalité publicitaire, utilisés pour compter les visites, les CTA utiles
+              et les parcours à améliorer.
+            </li>
+            <li>
+              <strong className="text-gray-300">Cookies analytiques optionnels</strong> — Google Analytics 4, activés
+              avec votre consentement explicite pour enrichir cette mesure dans le temps.
             </li>
           </ul>
           <p>
-            Les événements analytics ne sont transmis qu'après acceptation de la mesure d'audience. Vous pouvez retirer ou
-            modifier ce consentement à tout moment en cliquant sur «&nbsp;Gérer les cookies&nbsp;» dans le footer public ou
-            sur «&nbsp;Cookies&nbsp;» dans l'espace connecté.
+            Le dépôt de cookies analytiques et toute personnalisation publicitaire n'ont lieu qu'après votre accord. Sans
+            consentement, nous limitons la mesure à des événements cookieless agrégés, sans stockage d'identifiant persistant
+            dans votre navigateur. Vous pouvez retirer ou modifier ce consentement à tout moment en cliquant sur «&nbsp;Gérer
+            les cookies&nbsp;» dans le footer public ou sur «&nbsp;Cookies&nbsp;» dans l'espace connecté.
           </p>
           <p>
             Le bandeau mémorise votre choix pendant 13 mois maximum dans votre navigateur, puis le consentement vous est redemandé.

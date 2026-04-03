@@ -148,52 +148,47 @@ export default function CookieBanner() {
 
   return (
     <div className={isPrivacyPolicyPage
-      ? 'fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4 sm:pb-4'
-      : 'fixed inset-0 z-50 flex items-end justify-center bg-slate-950/55 p-2 pt-6 backdrop-blur-sm sm:items-center sm:p-4'}>
+      ? 'fixed inset-x-0 bottom-0 z-50 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.6rem)] sm:px-4 sm:pb-4'
+      : 'fixed inset-0 z-50 flex items-end justify-center bg-slate-950/55 p-2 pt-4 backdrop-blur-sm sm:items-center sm:p-3.5'}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Préférences cookies"
         className={isPrivacyPolicyPage
-          ? 'mx-auto w-full max-w-2xl overflow-hidden overflow-y-auto overscroll-contain rounded-[1.25rem] border border-slate-200 bg-white shadow-2xl sm:rounded-3xl max-h-[calc(100svh-1rem)]'
-          : 'w-full max-w-2xl overflow-hidden overflow-y-auto overscroll-contain rounded-[1.25rem] border border-slate-200 bg-white shadow-2xl sm:rounded-3xl max-h-[calc(100svh-1rem)]'}
+          ? 'mx-auto w-full max-w-[44rem] overflow-hidden overflow-y-auto overscroll-contain rounded-[1.1rem] border border-slate-200 bg-white shadow-2xl sm:rounded-[1.6rem] max-h-[calc(100svh-0.75rem)]'
+          : 'w-full max-w-[44rem] overflow-hidden overflow-y-auto overscroll-contain rounded-[1.1rem] border border-slate-200 bg-white shadow-2xl sm:rounded-[1.6rem] max-h-[calc(100svh-0.75rem)]'}
       >
-        <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#f8fafc_0%,#eef6ff_55%,#fff7ed_100%)] px-4 py-4 sm:px-8 sm:py-6">
-          <div className="mb-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700 sm:text-xs">
+        <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#f8fafc_0%,#eef6ff_55%,#fff7ed_100%)] px-4 py-3.5 sm:px-7 sm:py-5">
+          <div className="mb-2 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-medium text-emerald-700 sm:text-[11px]">
             {isPrivacyPolicyPage ? 'Vous pouvez lire cette page avant de choisir' : 'Choisissez vos préférences'}
           </div>
-          <h2 className="text-lg font-semibold leading-tight text-slate-950 sm:text-2xl">Aidez-nous à améliorer Mon Syndic Bénévole</h2>
-          <p className="mt-3 text-sm leading-5 text-slate-600 sm:leading-6">
-            Nous utilisons des cookies strictement nécessaires pour sécuriser votre session, ainsi que des cookies
-            optionnels pour mesurer les pages utiles, comprendre les parcours qui bloquent et mieux présenter nos offres.
-          </p>
-          <p className="mt-3 text-sm leading-5 text-slate-700 sm:leading-6">
-            Vous pouvez accepter, refuser ou personnaliser ces cookies. Le refus n&apos;empêche pas l&apos;accès au service,
-            hors cookies strictement nécessaires à la connexion et à la sécurité.
+          <h2 className="text-base font-semibold leading-tight text-slate-950 sm:text-[1.35rem]">Aidez-nous à améliorer Mon Syndic Bénévole</h2>
+          <p className="mt-2 text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-5">
+            Cookies nécessaires pour la sécurité, et mesure d&apos;audience optionnelle — avec ou sans cookie selon votre choix.
           </p>
         </div>
 
-        <div className="px-4 py-4 sm:px-8 sm:py-5">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 sm:p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="px-4 py-3.5 sm:px-7 sm:py-4.5">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-3.5">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-900">Cookies nécessaires</p>
-                <p className="mt-1 text-sm leading-5 text-slate-600 sm:leading-6">
-                  Toujours actifs pour la connexion, la sécurité, la sauvegarde de vos préférences et le bon fonctionnement du site.
+                <p className="mt-1 text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-5">
+                  Connexion, sécurité et bon fonctionnement du site.
                 </p>
               </div>
-              <span className="self-start rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white sm:self-auto">Toujours actifs</span>
+              <span className="self-start rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white sm:self-auto">Toujours actifs</span>
             </div>
           </div>
 
           {showCustom && (
-            <div className="mt-4 space-y-3">
-              <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-3.5 sm:p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="mt-3.5 space-y-2.5">
+              <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3 sm:p-3.5">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-900">Mesure d&apos;audience</p>
-                    <p className="mt-1 text-sm leading-5 text-slate-600 sm:leading-6">
-                      Pour savoir quelles pages sont consultées, quels contenus aident vraiment et où l&apos;expérience mérite d&apos;être simplifiée.
+                    <p className="mt-1 text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-5">
+                      Pour comprendre les pages utiles et les parcours à améliorer.
                     </p>
                   </div>
                   <button
@@ -209,12 +204,12 @@ export default function CookieBanner() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3.5 sm:p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 sm:p-3.5">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-900">Personnalisation et mesure publicitaire</p>
-                    <p className="mt-1 text-sm leading-5 text-slate-600 sm:leading-6">
-                      Pour évaluer les campagnes qui nous apportent des utilisateurs pertinents et éviter de pousser des messages moins utiles.
+                    <p className="mt-1 text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-5">
+                      Pour mesurer l&apos;efficacité des campagnes et limiter les messages moins utiles.
                     </p>
                   </div>
                   <button
@@ -236,14 +231,14 @@ export default function CookieBanner() {
             <button
               type="button"
               onClick={() => setShowCustom(true)}
-              className="mt-4 text-sm font-medium text-slate-700 underline underline-offset-4 hover:text-slate-950"
+              className="mt-3.5 text-sm font-medium text-slate-700 underline underline-offset-4 hover:text-slate-950"
             >
               Personnaliser mes choix
             </button>
           )}
 
-          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-3.5 text-sm leading-5 text-slate-600 sm:p-4 sm:leading-6">
-            Les cookies optionnels ne sont activés qu&apos;avec votre accord. Détails complets dans la{' '}
+          <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3 text-[13px] leading-5 text-slate-600 sm:p-3.5 sm:text-sm sm:leading-5">
+            Les cookies optionnels ne s&apos;activent qu&apos;avec votre accord. Détails dans la{' '}
             <Link
               href="/politique-confidentialite"
               target="_blank"
@@ -255,19 +250,19 @@ export default function CookieBanner() {
             .
           </div>
 
-          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2.5 sm:flex-row">
               <button
                 type="button"
                 onClick={refuse}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 sm:w-auto"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 sm:w-auto"
               >
                 Refuser les cookies optionnels
               </button>
               <button
                 type="button"
                 onClick={showCustom ? saveCustomPreferences : () => setShowCustom(true)}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100 sm:w-auto"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100 sm:w-auto"
               >
                 {showCustom ? 'Valider ma personnalisation' : 'Personnaliser'}
               </button>
@@ -276,7 +271,7 @@ export default function CookieBanner() {
             <button
               type="button"
               onClick={accept}
-              className="w-full rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/20 transition hover:bg-blue-700 sm:w-auto"
+              className="w-full rounded-xl bg-slate-950 px-4.5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-950/20 transition hover:bg-blue-700 sm:w-auto"
             >
               Oui, j&apos;accepte
             </button>

@@ -109,16 +109,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${geist.variable} antialiased overflow-x-hidden`}>
-        {gtmId && (
-          <noscript>
-            <iframe
-              src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
-              height="0"
-              width="0"
-              style={{ display: 'none', visibility: 'hidden' }}
-            />
-          </noscript>
-        )}
+        {/* Pas de fallback <noscript> GTM : cela peut déclencher des requêtes Google avant le consentement JS. */}
         {children}
         {hasGoogleTagging && (
           <>
@@ -127,7 +118,7 @@ export default function RootLayout({
             <Script id="gtag-consent" strategy="beforeInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
+                window.gtag = function gtag(){window.dataLayer.push(arguments);};
                 gtag('consent', 'default', {
                   analytics_storage: 'denied',
                   ad_storage: 'denied',
@@ -137,6 +128,8 @@ export default function RootLayout({
                   security_storage: 'granted',
                   wait_for_update: 2000
                 });
+                gtag('set', 'ads_data_redaction', true);
+                gtag('set', 'url_passthrough', false);
               `}
             </Script>
             {gtmId ? (
@@ -162,7 +155,15 @@ export default function RootLayout({
                   strategy="beforeInteractive"
                 />
                 <Script id="gtag-init" strategy="beforeInteractive">
-                  {`gtag('js', new Date()); gtag('config', '${gaId}', { send_page_view: false });`}
+                  {`
+                    gtag('js', new Date());
+                    gtag('config', '${gaId}', {
+                      send_page_view: false,
+                      anonymize_ip: true,
+                      allow_google_signals: false,
+                      allow_ad_personalization_signals: false
+                    });
+                  `}
                 </Script>
               </>
             ) : null}
