@@ -70,28 +70,29 @@ async function getOrCreateSubDossierPV(
   parentId: string | null,
   syndicId: string
 ): Promise<string | null> {
-  const base = supabase.from('document_dossiers').select('id');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const withFilter = parentId
-    ? (base as any).eq('parent_id', parentId)
-    : (base as any).is('parent_id', null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: existing } = await (withFilter as any)
+  const baseQuery = supabase
+    .from('document_dossiers')
+    .select('id')
     .eq('nom', nom)
-    .eq('syndic_id', syndicId)
-    .maybeSingle();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((existing as any)?.id) return (existing as any).id;
-  const payload: Record<string, string | null | boolean> = { nom, syndic_id: syndicId, is_default: false };
-  if (parentId) payload.parent_id = parentId;
+    .eq('syndic_id', syndicId);
+
+  const { data: existing } = parentId
+    ? await baseQuery.eq('parent_id', parentId).maybeSingle()
+    : await baseQuery.is('parent_id', null).maybeSingle();
+
+  if (existing?.id) return existing.id;
+
+  const payload = parentId
+    ? { nom, syndic_id: syndicId, is_default: false, parent_id: parentId }
+    : { nom, syndic_id: syndicId, is_default: false };
+
   const { data: created } = await supabase
     .from('document_dossiers')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .insert(payload as any)
+    .insert(payload as never)
     .select('id')
     .single();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (created as any)?.id ?? null;
+
+  return created?.id ?? null;
 }
 
 // ─── Couleurs ─────────────────────────────────────────────

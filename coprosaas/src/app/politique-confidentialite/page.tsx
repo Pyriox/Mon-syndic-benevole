@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unescaped-entities */
+
 import type { Metadata } from "next";
 import Link from "next/link";
 import SiteLogo from "@/components/ui/SiteLogo";

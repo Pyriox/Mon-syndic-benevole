@@ -172,12 +172,11 @@ export default async function AGDetailPage({ params }: Props) {
                   coproprieteId={ag.copropriete_id}
                   ag={agWithCopropriete}
                   resolutions={resolutions ?? []}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  convocationEnvoyeeLe={(ag as any).convocation_envoyee_le ?? null}
+                  convocationEnvoyeeLe={ag.convocation_envoyee_le ?? null}
                 />
               )}
               {ag.statut === 'terminee' && (
-                <AGEnvoyerPV agId={id} coproprieteId={ag.copropriete_id} pvEnvoyeLe={(ag as any).pv_envoye_le ?? null} />
+                <AGEnvoyerPV agId={id} coproprieteId={ag.copropriete_id} pvEnvoyeLe={ag.pv_envoye_le ?? null} />
               )}
             </div>
           )}

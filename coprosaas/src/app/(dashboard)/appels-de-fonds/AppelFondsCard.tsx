@@ -217,8 +217,9 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         .maybeSingle();
 
       if (!dossier) {
-        const { data: created } = await (supabase.from('document_dossiers') as any)
-          .insert({ nom: 'Appels de fonds', is_default: true, syndic_id: user.id, parent_id: null })
+        const { data: created } = await supabase
+          .from('document_dossiers')
+          .insert({ nom: 'Appels de fonds', is_default: true, syndic_id: user.id, parent_id: null } as never)
           .select('id')
           .single();
         dossier = created;
@@ -240,8 +241,9 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           .maybeSingle();
 
         if (!yearDossier) {
-          const { data: created } = await (supabase.from('document_dossiers') as any)
-            .insert({ nom: annee, is_default: false, syndic_id: user.id, parent_id: dossier.id })
+          const { data: created } = await supabase
+            .from('document_dossiers')
+            .insert({ nom: annee, is_default: false, syndic_id: user.id, parent_id: dossier.id } as never)
             .select('id')
             .single();
           yearDossier = created;

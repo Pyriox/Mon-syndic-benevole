@@ -3,6 +3,8 @@
 // Target KW : "logiciel syndic bénévole", "logiciel gestion copropriété"
 // ============================================================
 
+/* eslint-disable @next/next/no-html-link-for-pages */
+
 import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 

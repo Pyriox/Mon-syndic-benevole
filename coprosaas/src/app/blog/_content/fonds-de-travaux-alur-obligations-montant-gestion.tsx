@@ -2,6 +2,8 @@
 // Article : Fonds de travaux ALUR — obligations, montant, gestion
 // ============================================================
 
+/* eslint-disable @next/next/no-html-link-for-pages */
+
 import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 

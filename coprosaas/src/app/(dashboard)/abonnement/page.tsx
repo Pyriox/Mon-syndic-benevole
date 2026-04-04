@@ -313,12 +313,12 @@ export default async function AbonnementPage({
         {(coproprietes ?? []).length === 0 && (
           <div className="text-center py-16 text-gray-400 text-sm">
             <p className="mb-2">Vous n&apos;avez encore aucune copropriété.</p>
-            <a
+            <Link
               href="/coproprietes/nouvelle"
               className="text-blue-600 hover:underline font-medium"
             >
               Créer ma première copropriété
-            </a>
+            </Link>
           </div>
         )}
 

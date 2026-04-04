@@ -33,6 +33,8 @@ export default async function DashboardPage() {
   const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
 
   const scopeId = selectedCoproId ?? 'none';
+  const now = new Date();
+  const nowTs = now.getTime();
 
   // ── Tableau de bord copropriétaire ───────────────────────────────────────
   if (userRole === 'copropriétaire') {
@@ -68,7 +70,7 @@ export default async function DashboardPage() {
 
     const prochaineAG = assembleesUpcoming?.[0] ?? null;
     const joursAvantAG = prochaineAG
-      ? Math.ceil((new Date(prochaineAG.date_ag).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      ? Math.ceil((new Date(prochaineAG.date_ag).getTime() - nowTs) / (1000 * 60 * 60 * 24))
       : null;
     const solde = fiche?.solde ?? 0;
     const displayFirstName =
@@ -249,11 +251,11 @@ export default async function DashboardPage() {
     .eq('copropriete_id', scopeId);
 
   // Date seuil pour alertes impayés > 60 jours
-  const todayStr = new Date().toISOString().split('T')[0];
-  const sixtyDaysAgoStr = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const todayStr = now.toISOString().split('T')[0];
+  const sixtyDaysAgoStr = new Date(nowTs - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   // Requêtes en parallèle pour les statistiques
-  const currentYear = new Date().getFullYear();
+  const currentYear = now.getFullYear();
   const prevYear = currentYear - 1;
 
   const [
@@ -312,7 +314,7 @@ export default async function DashboardPage() {
       .from('assemblees_generales')
       .select('id, titre, date_ag, statut')
       .eq('copropriete_id', scopeId)
-      .gte('date_ag', new Date().toISOString())
+      .gte('date_ag', now.toISOString())
       .neq('statut', 'terminee')
       .neq('statut', 'annulee')
       .order('date_ag', { ascending: true })
@@ -412,7 +414,7 @@ export default async function DashboardPage() {
   const montantImpayes60j = lignesImpayes60j.reduce((sum, l) => sum + l.montant_du, 0);
 
   // Alertes : incidents ouverts sans suivi depuis > 7 jours
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(nowTs - 7 * 24 * 60 * 60 * 1000);
   const incidentsAnciens = (incidents ?? []).filter(
     (i) => i.statut === 'ouvert' && new Date(i.date_declaration) < sevenDaysAgo
   );
@@ -420,7 +422,7 @@ export default async function DashboardPage() {
   // Alerte : prochaine AG dans < 30 jours
   const prochaineAG = assemblees?.[0] ?? null;
   const joursAvantAG = prochaineAG
-    ? Math.ceil((new Date(prochaineAG.date_ag).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil((new Date(prochaineAG.date_ag).getTime() - nowTs) / (1000 * 60 * 60 * 24))
     : null;
   const agUrgente = joursAvantAG !== null && joursAvantAG <= 30;
 

@@ -131,62 +131,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       });
   }, [coproprieteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // -- Charger les AGs terminées avec budgets approuvés --------
-  useEffect(() => {
-    if (!isOpen || !coproprieteId) return;
-    const fetchAGs = async () => {
-      setLoadingAGs(true);
-      const { data: ags } = await supabase
-        .from('assemblees_generales')
-        .select('id, titre, date_ag')
-        .eq('copropriete_id', coproprieteId)
-        .eq('statut', 'terminee')
-        .order('date_ag', { ascending: false });
-
-      if (!ags?.length) { setLoadingAGs(false); return; }
-
-      const { data: resolutions } = await supabase
-        .from('resolutions')
-        .select('id, titre, type_resolution, budget_postes, fonds_travaux_montant, ag_id')
-        .in('ag_id', ags.map((a) => a.id))
-        .in('type_resolution', ['budget_previsionnel', 'revision_budget', 'fonds_travaux', 'calendrier_financement'])
-        .eq('statut', 'approuvee');
-
-      const grouped: AGWithBudgets[] = ags
-        .map((ag) => {
-          const agRes = (resolutions ?? []).filter((r) => r.ag_id === ag.id);
-          const calendrier = agRes.find((r) => r.type_resolution === 'calendrier_financement');
-          return {
-            ag_id: ag.id,
-            ag_titre: ag.titre,
-            ag_date: ag.date_ag,
-            votedDates: (calendrier?.budget_postes ?? []).map((p: { libelle: string }) => p.libelle).filter(Boolean),
-            resolutions: agRes
-              .filter((r) => r.type_resolution !== 'calendrier_financement')
-              .map((r) => ({
-                id: r.id,
-                titre: r.titre,
-                type_resolution: r.type_resolution,
-                budget_postes: r.budget_postes as { libelle: string; montant: number }[] | null,
-                fonds_travaux_montant: r.fonds_travaux_montant,
-              })),
-          };
-        })
-        .filter((ag) => ag.resolutions.length > 0);
-
-      setAgsDisponibles(grouped);
-      setLoadingAGs(false);
-
-      // Présélection automatique si une seule AG avec budget est disponible
-      if (grouped.length === 1) {
-        selectAG(grouped[0]);
-      }
-    };
-    fetchAGs();
-  }, [isOpen, coproprieteId]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // -- Sélection d'une AG --------------------------------------
-  const selectAG = (ag: AGWithBudgets) => {
+  function selectAG(ag: AGWithBudgets) {
     setAgImportee(ag);
     setIsExceptionnel(false);
 
@@ -273,7 +219,64 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       setGenPeriodicite('trimestriel');
     }
     setPostesExpanded(false);
-  };
+  }
+
+  // -- Charger les AGs terminées avec budgets approuvés --------
+  useEffect(() => {
+    if (!isOpen || !coproprieteId) return;
+    const fetchAGs = async () => {
+      setLoadingAGs(true);
+      const { data: ags } = await supabase
+        .from('assemblees_generales')
+        .select('id, titre, date_ag')
+        .eq('copropriete_id', coproprieteId)
+        .eq('statut', 'terminee')
+        .order('date_ag', { ascending: false });
+
+      if (!ags?.length) {
+        setLoadingAGs(false);
+        return;
+      }
+
+      const { data: resolutions } = await supabase
+        .from('resolutions')
+        .select('id, titre, type_resolution, budget_postes, fonds_travaux_montant, ag_id')
+        .in('ag_id', ags.map((a) => a.id))
+        .in('type_resolution', ['budget_previsionnel', 'revision_budget', 'fonds_travaux', 'calendrier_financement'])
+        .eq('statut', 'approuvee');
+
+      const grouped: AGWithBudgets[] = ags
+        .map((ag) => {
+          const agRes = (resolutions ?? []).filter((r) => r.ag_id === ag.id);
+          const calendrier = agRes.find((r) => r.type_resolution === 'calendrier_financement');
+          return {
+            ag_id: ag.id,
+            ag_titre: ag.titre,
+            ag_date: ag.date_ag,
+            votedDates: (calendrier?.budget_postes ?? []).map((p: { libelle: string }) => p.libelle).filter(Boolean),
+            resolutions: agRes
+              .filter((r) => r.type_resolution !== 'calendrier_financement')
+              .map((r) => ({
+                id: r.id,
+                titre: r.titre,
+                type_resolution: r.type_resolution,
+                budget_postes: r.budget_postes as { libelle: string; montant: number }[] | null,
+                fonds_travaux_montant: r.fonds_travaux_montant,
+              })),
+          };
+        })
+        .filter((ag) => ag.resolutions.length > 0);
+
+      setAgsDisponibles(grouped);
+      setLoadingAGs(false);
+
+      if (grouped.length === 1) {
+        selectAG(grouped[0]);
+      }
+    };
+
+    fetchAGs();
+  }, [isOpen, coproprieteId, supabase]);
 
   // -- Réinitialiser le choix d'AG -----------------------------
   const resetAG = () => {

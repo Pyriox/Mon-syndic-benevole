@@ -14,8 +14,8 @@ export function getStripe(): Stripe {
 
 // Alias pour compatibilité avec les fichiers existants
 export const stripe = new Proxy({} as Stripe, {
-  get(_target, prop) {
-    return (getStripe() as any)[prop];
+  get(_target, prop, receiver) {
+    return Reflect.get(getStripe(), prop, receiver);
   },
 });
 

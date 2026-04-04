@@ -2,6 +2,8 @@
 // Article : Appel de fonds copropriété — calcul, répartition, relance
 // ============================================================
 
+/* eslint-disable @next/next/no-html-link-for-pages, react/no-unescaped-entities */
+
 import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 
