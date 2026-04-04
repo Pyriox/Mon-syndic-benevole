@@ -9,34 +9,50 @@ import { createClient } from '@/lib/supabase/server';
 import type { ElementType } from 'react';
 import Link from 'next/link';
 import AdminUserActions from '../AdminUserActions';
-import AdminImpersonate from '../AdminImpersonate';
-import AdminCopyId from '../AdminCopyId';
-import AdminUserLogs from '../AdminUserLogs';
 import AdminSearch from '../AdminSearch';
 import AdminPagination from '../AdminPagination';
+import AdminStatCard from '../AdminStatCard';
 import { Suspense } from 'react';
 import { Users, UserCheck, CheckCircle2, LifeBuoy } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
 import { formatRelativeDayLabel } from '@/lib/admin-date';
+import { appendAdminFrom, buildAdminListHref } from '@/lib/admin-list-params';
+import { formatAdminDate } from '@/lib/admin-format';
+import { listAllAdminAuthUsers } from '@/lib/admin-auth-users';
+import { RoleBadge } from '../AdminBadges';
+
+type LinkedCopro = {
+  id: string;
+  nom: string;
+  plan: string | null;
+  plan_id: string | null;
+};
 
 function timeAgo(s: string | null | undefined): string {
   return formatRelativeDayLabel(s);
 }
-function fmtDate(s: string | null | undefined) {
-  if (!s) return '—';
-  return new Date(s).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'Europe/Paris',
-  });
-}
 
-function RoleBadge({ role }: { role: 'admin' | 'syndic' | 'membre' }) {
-  if (role === 'admin')  return <span className="inline-flex text-xs px-1.5 py-0.5 rounded font-semibold bg-blue-100 text-blue-700">Admin</span>;
-  if (role === 'syndic') return <span className="inline-flex text-xs px-1.5 py-0.5 rounded font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">Syndic</span>;
-  return <span className="inline-flex text-xs px-1.5 py-0.5 rounded font-semibold bg-teal-50 text-teal-700 border border-teal-200">Membre</span>;
+function getInactivityBadge(lastActivityAt: string | null | undefined, hasActiveOrTrial: boolean) {
+  if (!lastActivityAt || hasActiveOrTrial) return null;
+
+  const diffInDays = Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 86400000);
+
+  if (diffInDays >= 60) {
+    return {
+      label: 'Inactif 60j+',
+      className: 'text-red-700 bg-red-50 border-red-200',
+    };
+  }
+
+  if (diffInDays >= 30) {
+    return {
+      label: 'Inactif 30j+',
+      className: 'text-amber-700 bg-amber-50 border-amber-200',
+    };
+  }
+
+  return null;
 }
 
 export default async function AdminUtilisateursPage({
@@ -69,14 +85,14 @@ export default async function AdminUtilisateursPage({
   const startOf7Days  = new Date(Date.now() - 7  * 86400000).toISOString();
 
   const [
-    authResult,
+    authUsers,
     { data: coproprietes },
     { data: adminRows },
     { data: coproprietairesData },
     { data: supportTicketsData },
     { data: profilesData },
   ] = await Promise.all([
-    admin.auth.admin.listUsers({ perPage: 1000 }),
+    listAllAdminAuthUsers(admin),
     admin.from('coproprietes').select('id, nom, syndic_id, plan, plan_id'),
     admin.from('admin_users').select('user_id'),
     admin.from('coproprietaires').select('email, copropriete_id'),
@@ -93,23 +109,31 @@ export default async function AdminUtilisateursPage({
     lastActiveById[typed.id] = typed.last_active_at;
   }
 
-  // copropriete_id → nom
-  const coproprieteById: Record<string, string> = {};
+  // copropriete_id → détails copro
+  const coproprieteById: Record<string, LinkedCopro> = {};
   for (const c of coproprietes ?? []) {
-    const typed = c as { id: string; nom: string };
-    coproprieteById[typed.id] = typed.nom;
+    const typed = c as { id: string; nom: string; plan: string | null; plan_id: string | null };
+    coproprieteById[typed.id] = {
+      id: typed.id,
+      nom: typed.nom,
+      plan: typed.plan ?? null,
+      plan_id: typed.plan_id ?? null,
+    };
   }
 
-  // member email → [copro names]
-  const memberCoproNames: Record<string, string[]> = {};
+  // member email → copropriétés liées
+  const memberCoproLinks: Record<string, LinkedCopro[]> = {};
   for (const cp of coproprietairesData ?? []) {
     const typed = cp as { email: string; copropriete_id: string };
     const email = typed.email?.toLowerCase();
     if (!email) continue;
-    const nom = coproprieteById[typed.copropriete_id];
-    if (nom) {
-      memberCoproNames[email] ??= [];
-      if (!memberCoproNames[email].includes(nom)) memberCoproNames[email].push(nom);
+
+    const copro = coproprieteById[typed.copropriete_id];
+    if (!copro) continue;
+
+    memberCoproLinks[email] ??= [];
+    if (!memberCoproLinks[email].some((item) => item.id === copro.id)) {
+      memberCoproLinks[email].push(copro);
     }
   }
 
@@ -120,7 +144,6 @@ export default async function AdminUtilisateursPage({
     if (email) ticketCount[email] = (ticketCount[email] ?? 0) + 1;
   }
 
-  const authUsers    = authResult.data?.users ?? [];
   const nbUsers      = authUsers.length;
   const nbUnconfirmed = authUsers.filter((u) => !u.email_confirmed_at).length;
   const confirmedPct  = nbUsers > 0 ? Math.round(((nbUsers - nbUnconfirmed) / nbUsers) * 100) : 0;
@@ -176,24 +199,26 @@ export default async function AdminUtilisateursPage({
   const start = (safePage - 1) * PAGE_SIZE;
   const pagedUsers = sorted.slice(start, start + PAGE_SIZE);
 
-  const hrefWith = (next: Partial<{ q: string; role: string; verified: string; sort: string; order: string; page: string }>) => {
-    const params = new URLSearchParams();
-    const valueQ = next.q ?? q ?? '';
-    const valueRole = next.role ?? roleFilter;
-    const valueVerified = next.verified ?? verifiedFilter;
-    const valueSort = next.sort ?? sortBy;
-    const valueOrder = next.order ?? sortOrder;
-    const valuePage = next.page ?? String(safePage);
+  const hrefWith = (next: Partial<{ q: string; role: string; verified: string; sort: string; order: string; page: string }>) => buildAdminListHref(
+    '/admin/utilisateurs',
+    {
+      q: next.q ?? q ?? '',
+      role: next.role ?? roleFilter,
+      verified: next.verified ?? verifiedFilter,
+      sort: next.sort ?? sortBy,
+      order: next.order ?? sortOrder,
+      page: next.page ?? String(safePage),
+    },
+    {
+      role: 'all',
+      verified: 'all',
+      sort: 'created',
+      order: 'desc',
+      page: '1',
+    },
+  );
 
-    if (valueQ) params.set('q', valueQ);
-    if (valueRole !== 'all') params.set('role', valueRole);
-    if (valueVerified !== 'all') params.set('verified', valueVerified);
-    if (valueSort !== 'created') params.set('sort', valueSort);
-    if (valueOrder !== 'desc') params.set('order', valueOrder);
-    if (valuePage !== '1') params.set('page', valuePage);
-
-    return `/admin/utilisateurs${params.toString() ? `?${params.toString()}` : ''}`;
-  };
+  const currentListHref = hrefWith({ page: String(safePage) });
 
   const kpis: Array<{ label: string; value: string | number; sub: string; color: string; Icon: ElementType }> = [
     { label: 'Total',    value: nbUsers,     sub: `+${newUsers30} ce mois`,   color: 'bg-blue-100 text-blue-600',    Icon: Users },
@@ -271,14 +296,7 @@ export default async function AdminUtilisateursPage({
       {/* ── KPIs ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {kpis.map(({ label, value, sub, color, Icon }) => (
-          <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">
-            <div className={`p-3 rounded-xl ${color} shrink-0`}><Icon size={18} /></div>
-            <div>
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
-              <p className="text-2xl font-bold text-gray-900 mt-0.5">{value}</p>
-              <p className="text-xs text-gray-500">{sub}</p>
-            </div>
-          </div>
+          <AdminStatCard key={label} label={label} value={value} sub={sub} color={color} icon={Icon} />
         ))}
       </div>
 
@@ -291,23 +309,20 @@ export default async function AdminUtilisateursPage({
               : `${nbUsers} utilisateurs`}
           </p>
         </div>
-        <table className="w-full min-w-[980px] text-sm">
+        <table className="w-full min-w-[900px] text-sm">
           <thead>
             <tr className="border-b border-gray-100">
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Utilisateur</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Rôle</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Inscrit</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Connexion</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Copropriété</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Support</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut / alertes</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Dernière activité</th>
               <th className="px-4 py-3 w-10" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {pagedUsers.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-400">
+                <td colSpan={5} className="px-4 py-10 text-center text-sm text-gray-400">
                   Aucun résultat pour « {q} »
                 </td>
               </tr>
@@ -319,11 +334,19 @@ export default async function AdminUtilisateursPage({
               const isAdmin  = adminUserIds.has(u.id);
               const role: 'admin' | 'syndic' | 'membre' = isAdmin ? 'admin' : isMember ? 'membre' : 'syndic';
 
-              // Copros du syndic
-              const userCopros  = isMember ? [] : coprosTyped.filter((c) => c.syndic_id === u.id);
+              const userCopros = isMember
+                ? []
+                : (coprosTyped
+                    .filter((c) => c.syndic_id === u.id)
+                    .map((c) => ({ id: c.id, nom: c.nom, plan: c.plan ?? null, plan_id: c.plan_id ?? null })) as LinkedCopro[]);
 
-              // Copros du membre
-              const memberCopros = isMember ? (memberCoproNames[emailKey] ?? []) : [];
+              const linkedCopros = isMember ? (memberCoproLinks[emailKey] ?? []) : userCopros;
+              const hasActiveSubscription = linkedCopros.some((copro) => copro.plan === 'actif');
+              const hasTrialInProgress = linkedCopros.some((copro) => !copro.plan || copro.plan === 'essai');
+              const activityRef = lastActiveById[u.id] ?? u.last_sign_in_at ?? u.created_at;
+              const inactivityBadge = role === 'admin'
+                ? null
+                : getInactivityBadge(activityRef, hasActiveSubscription || hasTrialInProgress);
 
               const avatarCls = role === 'admin'  ? 'bg-blue-100 text-blue-700'
                               : role === 'syndic' ? 'bg-indigo-100 text-indigo-700'
@@ -342,19 +365,43 @@ export default async function AdminUtilisateursPage({
                       </div>
                       <div className="min-w-0">
                         <Link
-                          href={`/admin/utilisateurs/${u.id}`}
+                          href={appendAdminFrom(`/admin/utilisateurs/${u.id}`, currentListHref)}
                           className="text-sm font-medium text-gray-800 truncate leading-tight hover:text-indigo-700 hover:underline"
                         >
                           {u.email}
                         </Link>
                         {meta?.full_name && (
                           <Link
-                            href={`/admin/utilisateurs/${u.id}`}
+                            href={appendAdminFrom(`/admin/utilisateurs/${u.id}`, currentListHref)}
                             className="block text-xs text-gray-400 truncate leading-tight hover:text-indigo-600 hover:underline"
                           >
                             {meta.full_name}
                           </Link>
                         )}
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {linkedCopros.length === 0 ? (
+                            <span className="inline-flex text-[11px] px-1.5 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-400">
+                              Aucune copropriété liée
+                            </span>
+                          ) : (
+                            <>
+                              {linkedCopros.slice(0, 2).map((copro) => (
+                                <Link
+                                  key={copro.id}
+                                  href={appendAdminFrom(`/admin/coproprietes/${copro.id}`, currentListHref)}
+                                  className="inline-flex text-[11px] px-1.5 py-0.5 rounded border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                                >
+                                  {copro.nom}
+                                </Link>
+                              ))}
+                              {linkedCopros.length > 2 && (
+                                <span className="inline-flex text-[11px] px-1.5 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-500">
+                                  +{linkedCopros.length - 2}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -364,54 +411,59 @@ export default async function AdminUtilisateursPage({
                     <RoleBadge role={role} />
                   </td>
 
-                  {/* Inscrit */}
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    <p className="text-xs font-medium text-gray-700 leading-tight">{timeAgo(u.created_at)}</p>
-                    <p className="text-[11px] text-gray-400 leading-tight">{fmtDate(u.created_at)}</p>
-                  </td>
-
-                  {/* Dernière connexion */}
-                  <td className="px-4 py-3 hidden lg:table-cell">
-                    {(() => {
-                      const active = lastActiveById[u.id] ?? u.last_sign_in_at;
-                      return (
-                        <>
-                          <p className="text-xs font-medium text-gray-700 leading-tight">{timeAgo(active)}</p>
-                          <p className="text-[11px] text-gray-400 leading-tight">{active ? fmtDate(active) : '—'}</p>
-                        </>
-                      );
-                    })()}
-                  </td>
-
-                  {/* Copropriété */}
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    {(() => {
-                      const count = isMember ? memberCopros.length : userCopros.length;
-                      if (count === 0) return <span className="text-xs text-gray-400">—</span>;
-                      return <span className="text-xs font-semibold text-gray-700">{count} copro{count > 1 ? 's' : ''}</span>;
-                    })()}
-                  </td>
-
-                  {/* Email vérifié */}
-                  <td className="px-4 py-3 text-center">
-                    {u.email_confirmed_at
-                      ? <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500" />OK</span>
-                      : <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />Attente</span>
-                    }
-                  </td>
-
-                  {/* Support */}
+                  {/* Statut / alertes */}
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <AdminCopyId id={u.id} iconOnly />
-                      {!isAdmin && <AdminImpersonate email={u.email ?? ''} iconOnly />}
-                      <AdminUserLogs email={u.email ?? ''} signupAt={u.created_at} />
+                    <div className="flex flex-wrap gap-1.5">
+                      {u.email_confirmed_at ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          Vérifié
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          Email en attente
+                        </span>
+                      )}
+
+                      {hasActiveSubscription && (
+                        <span className="inline-flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                          Abonnement actif
+                        </span>
+                      )}
+
+                      {!hasActiveSubscription && hasTrialInProgress && (
+                        <span className="inline-flex items-center gap-1 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">
+                          Essai en cours
+                        </span>
+                      )}
+
+                      {role !== 'admin' && linkedCopros.length === 0 && (
+                        <span className="inline-flex items-center gap-1 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5">
+                          Sans copro
+                        </span>
+                      )}
+
                       {tickets > 0 && (
                         <span className="inline-flex items-center gap-1 text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 rounded px-1.5 py-0.5">
-                          <LifeBuoy size={10} />{tickets}
+                          <LifeBuoy size={10} />
+                          {tickets} ticket{tickets > 1 ? 's' : ''}
+                        </span>
+                      )}
+
+                      {inactivityBadge && (
+                        <span className={`inline-flex items-center gap-1 text-xs border rounded px-1.5 py-0.5 ${inactivityBadge.className}`}>
+                          {inactivityBadge.label}
                         </span>
                       )}
                     </div>
+                  </td>
+
+                  {/* Dernière activité */}
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <p className="text-xs font-medium text-gray-700 leading-tight">{timeAgo(activityRef)}</p>
+                    <p className="text-[11px] text-gray-400 leading-tight">{formatAdminDate(activityRef)}</p>
+                    <p className="text-[11px] text-gray-300 leading-tight">Inscrit le {formatAdminDate(u.created_at)}</p>
                   </td>
 
                   {/* Actions */}

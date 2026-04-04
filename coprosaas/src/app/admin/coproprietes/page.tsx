@@ -13,6 +13,7 @@ import AdminCoproFilters from '../AdminCoproFilters';
 import AdminCoproTabs from '../AdminCoproTabs';
 import AdminSearch from '../AdminSearch';
 import AdminPagination from '../AdminPagination';
+import AdminStatCard from '../AdminStatCard';
 import { Suspense } from 'react';
 import {
   Building2, DoorOpen, Users,
@@ -20,18 +21,14 @@ import {
   CheckCircle2, XCircle, ExternalLink,
 } from 'lucide-react';
 import { isAdminUser } from '@/lib/admin-config';
+import { appendAdminFrom, buildAdminListHref } from '@/lib/admin-list-params';
+import { formatAdminCurrency, formatAdminDate } from '@/lib/admin-format';
 import { stripe } from '@/lib/stripe';
+import { PlanBadge } from '../AdminBadges';
 
 const MRR_PRICES: Record<string, number> = { essentiel: 25, confort: 30, illimite: 45 };
 const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
 
-function fmtDate(s: string | null | undefined) {
-  if (!s) return '—';
-  return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-function fmtEur(n: number): string {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
-}
 
 type CoproRow = {
   id: string;
@@ -50,21 +47,6 @@ type CoproRow = {
   profiles: { full_name?: string; email?: string } | null;
 };
 
-function PlanBadge({ plan, planId }: { plan: string | null; planId: string | null }) {
-  if (plan === 'actif') {
-    const cfg: Record<string, { label: string; cls: string }> = {
-      essentiel: { label: 'Essentiel', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-      confort:   { label: 'Confort',   cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-      illimite:  { label: 'Illimité',  cls: 'bg-purple-50 text-purple-700 border-purple-200' },
-    };
-    const c = cfg[planId ?? ''] ?? { label: 'Actif', cls: 'bg-green-50 text-green-700 border-green-200' };
-    return <span className={`inline-flex text-xs px-2 py-0.5 rounded-md font-medium border ${c.cls}`}>{c.label}</span>;
-  }
-  if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">Impayé</span>;
-  if (plan === 'resilie')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-orange-50 text-orange-600 border border-orange-200">Résilié</span>;
-  if (plan === 'inactif')  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">Inactif</span>;
-  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
-}
 
 export default async function AdminCopropietesPage({
   searchParams,
@@ -101,7 +83,7 @@ export default async function AdminCopropietesPage({
   const query = q?.trim().toLowerCase() ?? '';
   const currentPage = Math.max(1, Number(page) || 1);
   const PAGE_SIZE = 20;
-  const sortBy = sort === 'name' || sort === 'health' || sort === 'incidents' || sort === 'depenses' || sort === 'lots' || sort === 'members'
+  const sortBy = sort === 'name' || sort === 'health' || sort === 'incidents' || sort === 'depenses' || sort === 'lots' || sort === 'members' || sort === 'renewal'
     ? sort
     : 'created';
   const sortOrder = order === 'asc' ? 'asc' : 'desc';
@@ -180,18 +162,29 @@ export default async function AdminCopropietesPage({
   let incidentsParCopro: { copropriete_id: string; statut: string }[] = [];
 
   if (activeTab === 'coproprietes') {
+    const scopedCoproIds = !hasClientOnlyFilters ? coprosTyped.map((copro) => copro.id) : [];
+
+    const scopeByCoproId = <T,>(queryBuilder: T) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let qBuilder = queryBuilder as any;
+      if (scopedCoproIds.length > 0) {
+        qBuilder = qBuilder.in('copropriete_id', scopedCoproIds);
+      }
+      return qBuilder;
+    };
+
     const [l, cp, ag, dep, inc] = await Promise.all([
-      admin.from('lots').select('copropriete_id'),
-      admin.from('coproprietaires').select('copropriete_id'),
-      admin.from('assemblees_generales').select('copropriete_id'),
-      admin.from('depenses').select('copropriete_id, montant'),
-      admin.from('incidents').select('copropriete_id, statut'),
+      scopeByCoproId(admin.from('lots').select('copropriete_id')),
+      scopeByCoproId(admin.from('coproprietaires').select('copropriete_id')),
+      scopeByCoproId(admin.from('assemblees_generales').select('copropriete_id')),
+      scopeByCoproId(admin.from('depenses').select('copropriete_id, montant')),
+      scopeByCoproId(admin.from('incidents').select('copropriete_id, statut')),
     ]);
-    lotsParCopro        = l.data ?? [];
+    lotsParCopro = l.data ?? [];
     coproprietairesData = cp.data ?? [];
-    agParCopro          = ag.data ?? [];
-    depParCopro         = dep.data ?? [];
-    incidentsParCopro   = inc.data ?? [];
+    agParCopro = ag.data ?? [];
+    depParCopro = dep.data ?? [];
+    incidentsParCopro = inc.data ?? [];
   }
 
   // ── Données Stripe (onglet abonnements uniquement) ──
@@ -239,6 +232,22 @@ export default async function AdminCopropietesPage({
     if (members === 0) score -= 10;
 
     return Math.max(0, Math.min(100, score));
+  };
+
+  const getHealthDetails = (c: CoproRow): string[] => {
+    const details: string[] = [];
+    const openInc = incidentCount[c.id] ?? 0;
+    const lots = lotsCount[c.id] ?? 0;
+    const members = coproCount[c.id] ?? 0;
+
+    if (lots === 0) details.push('0 lot');
+    if (members === 0) details.push('0 copropriétaire');
+    if (openInc > 0) details.push(`${openInc} incident${openInc > 1 ? 's' : ''} ouvert${openInc > 1 ? 's' : ''}`);
+    if (c.plan === 'passe_du') details.push('plan impayé');
+    if (c.plan === 'inactif') details.push('plan inactif');
+    if (c.plan === 'resilie') details.push('plan résilié');
+
+    return details.length > 0 ? details : ['Aucun signal'];
   };
 
   const displayedCopros = activeTab === 'coproprietes'
@@ -294,6 +303,16 @@ export default async function AdminCopropietesPage({
     if (sortBy === 'name') {
       return sortOrder === 'asc' ? a.nom.localeCompare(b.nom) : b.nom.localeCompare(a.nom);
     }
+    if (sortBy === 'renewal') {
+      const av = a.plan === 'actif' && a.plan_period_end ? new Date(a.plan_period_end).getTime() : Number.POSITIVE_INFINITY;
+      const bv = b.plan === 'actif' && b.plan_period_end ? new Date(b.plan_period_end).getTime() : Number.POSITIVE_INFINITY;
+
+      if (!Number.isFinite(av) && !Number.isFinite(bv)) return 0;
+      if (!Number.isFinite(av)) return 1;
+      if (!Number.isFinite(bv)) return -1;
+
+      return sortOrder === 'asc' ? av - bv : bv - av;
+    }
     const av = new Date(a.created_at).getTime();
     const bv = new Date(b.created_at).getTime();
     return sortOrder === 'asc' ? av - bv : bv - av;
@@ -307,31 +326,33 @@ export default async function AdminCopropietesPage({
     ? sortedCopros
     : sortedCopros.slice(start, start + PAGE_SIZE);
 
-  const hrefWith = (next: Partial<{ plan: string; tab: string; q: string; page: string; sort: string; order: string; orphaned: string; no_lots: string; no_members: string; risk: string }>) => {
-    const params = new URLSearchParams();
-    const valueTab = next.tab ?? activeTab;
-    const valuePlan = next.plan ?? planFilter ?? '';
-    const valueQ = next.q ?? q ?? '';
-    const valuePage = next.page ?? String(safePage);
-    const valueSort = next.sort ?? sortBy;
-    const valueOrder = next.order ?? sortOrder;
-    const valueOrphaned = next.orphaned ?? (filterOrphaned ? '1' : '0');
-    const valueNoLots = next.no_lots ?? (filterNoLots ? '1' : '0');
-    const valueNoMembers = next.no_members ?? (filterNoMembers ? '1' : '0');
-    const valueRisk = next.risk ?? (filterRisk ? 'high' : '');
+  const hrefWith = (next: Partial<{ plan: string; tab: string; q: string; page: string; sort: string; order: string; orphaned: string; no_lots: string; no_members: string; risk: string }>) => buildAdminListHref(
+    '/admin/coproprietes',
+    {
+      tab: next.tab ?? activeTab,
+      plan: next.plan ?? planFilter ?? '',
+      q: next.q ?? q ?? '',
+      page: next.page ?? String(safePage),
+      sort: next.sort ?? sortBy,
+      order: next.order ?? sortOrder,
+      orphaned: next.orphaned ?? (filterOrphaned ? '1' : '0'),
+      no_lots: next.no_lots ?? (filterNoLots ? '1' : '0'),
+      no_members: next.no_members ?? (filterNoMembers ? '1' : '0'),
+      risk: next.risk ?? (filterRisk ? 'high' : ''),
+    },
+    {
+      tab: 'coproprietes',
+      sort: 'created',
+      order: 'desc',
+      page: '1',
+      orphaned: '0',
+      no_lots: '0',
+      no_members: '0',
+      risk: '',
+    },
+  );
 
-    if (valueTab !== 'coproprietes') params.set('tab', valueTab);
-    if (valuePlan) params.set('plan', valuePlan);
-    if (valueQ) params.set('q', valueQ);
-    if (valuePage !== '1') params.set('page', valuePage);
-    if (valueSort !== 'created') params.set('sort', valueSort);
-    if (valueOrder !== 'desc') params.set('order', valueOrder);
-    if (valueOrphaned === '1') params.set('orphaned', '1');
-    if (valueNoLots === '1') params.set('no_lots', '1');
-    if (valueNoMembers === '1') params.set('no_members', '1');
-    if (valueRisk === 'high') params.set('risk', 'high');
-    return `/admin/coproprietes${params.toString() ? `?${params.toString()}` : ''}`;
-  };
+  const currentListHref = hrefWith({ page: String(safePage) });
 
   // ── Calculs abonnements ──
   const planBreakdown: Record<string, number> = { essentiel: 0, confort: 0, illimite: 0 };
@@ -376,18 +397,12 @@ export default async function AdminCopropietesPage({
           {/* ── Stats ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: 'Total copropriétés',   value: nbCoproprietes,          icon: Building2, color: 'bg-blue-100 text-blue-600' },
-              { label: 'Abonnées actives',      value: nbActifs,                icon: Building2, color: 'bg-green-100 text-green-600' },
-              { label: 'En essai',              value: nbEssai,                 icon: Building2, color: 'bg-amber-100 text-amber-600' },
-              { label: 'Inactives / résiliées / impayées',  value: nbInactif + nbResilie + nbPasseDu,  icon: Building2, color: nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400' },
+              { label: 'Total copropriétés', value: nbCoproprietes, icon: Building2, color: 'bg-blue-100 text-blue-600' },
+              { label: 'Abonnées actives', value: nbActifs, icon: Building2, color: 'bg-green-100 text-green-600' },
+              { label: 'En essai', value: nbEssai, icon: Building2, color: 'bg-amber-100 text-amber-600' },
+              { label: 'Inactives / résiliées / impayées', value: nbInactif + nbResilie + nbPasseDu, icon: Building2, color: nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400' },
             ].map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">
-                <div className={`p-3 rounded-xl ${color} shrink-0`}><Icon size={18} /></div>
-                <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-0.5">{value}</p>
-                </div>
-              </div>
+              <AdminStatCard key={label} label={label} value={value} color={color} icon={Icon} />
             ))}
           </div>
 
@@ -440,7 +455,8 @@ export default async function AdminCopropietesPage({
                 { key: 'created:desc', label: 'Recents' },
                 { key: 'name:asc', label: 'Nom A-Z' },
                 { key: 'health:asc', label: 'Sante critique' },
-                { key: 'incidents:desc', label: 'Incidents' },
+                { key: 'renewal:asc', label: 'Renouvellement' },
+                { key: 'incidents:desc', label: 'Risques ouverts' },
               ] as const).map((item) => {
                 const [nextSort, nextOrder] = item.key.split(':');
                 const active = sortBy === nextSort && sortOrder === nextOrder;
@@ -473,10 +489,8 @@ export default async function AdminCopropietesPage({
                   <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">
                     <Users size={11} className="inline mr-0.5" />Copro.
                   </th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">AG</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell" title="Incidents ouverts (non résolus)">Inc.</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Dépenses</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Sante</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Activité / Risques</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Santé</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Créée</th>
                   <th className="px-4 py-3 w-10" />
@@ -484,17 +498,19 @@ export default async function AdminCopropietesPage({
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {pagedCopros.length === 0 && (
-                  <tr><td colSpan={11} className="px-4 py-8 text-center text-sm text-gray-400">Aucune copropriété pour ce filtre</td></tr>
+                  <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-gray-400">Aucune copropriété pour ce filtre</td></tr>
                 )}
                 {pagedCopros.map((c) => {
                   const profile = c.profiles as { full_name?: string; email?: string } | null;
                   const openInc = incidentCount[c.id] ?? 0;
                   const health = getHealthScore(c);
+                  const healthDetails = getHealthDetails(c);
                   const healthCls = health >= 80
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : health >= 60
                       ? 'bg-amber-50 text-amber-700 border-amber-200'
                       : 'bg-red-50 text-red-700 border-red-200';
+                  const healthLabel = health >= 80 ? 'OK' : health >= 60 ? 'À surveiller' : 'Critique';
                   return (
                     <tr key={c.id} className={`hover:bg-gray-50 transition-colors ${c.plan === 'passe_du' ? 'bg-red-50/30' : ''}`}>
                       <td className="px-4 py-3">
@@ -504,6 +520,16 @@ export default async function AdminCopropietesPage({
                       <td className="px-4 py-3 hidden md:table-cell">
                         <p className="text-xs text-gray-700 truncate max-w-[130px]">{profile?.full_name ?? '—'}</p>
                         <p className="text-xs text-gray-400 truncate max-w-[130px]">{profile?.email ?? ''}</p>
+                        {c.syndic_id ? (
+                          <Link
+                            href={appendAdminFrom(`/admin/utilisateurs/${c.syndic_id}`, currentListHref)}
+                            className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800"
+                          >
+                            Ouvrir <ExternalLink size={10} />
+                          </Link>
+                        ) : (
+                          <span className="mt-1 inline-flex text-[11px] text-orange-600">Aucun syndic lié</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">
@@ -513,28 +539,38 @@ export default async function AdminCopropietesPage({
                       <td className="px-4 py-3 text-center hidden md:table-cell">
                         <span className="text-xs text-gray-600 font-medium">{coproCount[c.id] ?? 0}</span>
                       </td>
-                      <td className="px-4 py-3 text-center text-xs text-gray-600 hidden lg:table-cell">{agCount[c.id] ?? 0}</td>
-                      <td className="px-4 py-3 text-center hidden lg:table-cell">
-                        {openInc > 0
-                          ? <span className="inline-flex items-center justify-center text-xs font-bold text-red-600 bg-red-50 rounded-full w-6 h-6">{openInc}</span>
-                          : <span className="text-xs text-gray-300">—</span>}
-                      </td>
-                      <td className="px-4 py-3 text-right text-xs font-medium text-gray-700 hidden xl:table-cell">
-                        {depCount[c.id] ? fmtEur(depCount[c.id]) : '—'}
+                      <td className="px-4 py-3 hidden lg:table-cell">
+                        <div className="space-y-0.5">
+                          <p className="text-xs text-gray-700">
+                            {agCount[c.id] ?? 0} AG · {formatAdminCurrency(depCount[c.id] ?? 0)} dépenses
+                          </p>
+                          {openInc > 0 ? (
+                            <p className="text-xs font-medium text-red-600">
+                              {openInc} incident{openInc > 1 ? 's' : ''} ouvert{openInc > 1 ? 's' : ''}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-gray-400">Aucun incident ouvert</p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex min-w-12 justify-center text-xs px-2 py-1 rounded-md border font-semibold ${healthCls}`}>
-                          {health}
-                        </span>
+                        <div title={healthDetails.join(' · ')}>
+                          <span className={`inline-flex min-w-12 justify-center text-xs px-2 py-1 rounded-md border font-semibold ${healthCls}`}>
+                            {healthLabel} · {health}
+                          </span>
+                          <p className="mt-1 text-[11px] text-gray-400 leading-tight max-w-[150px] mx-auto">
+                            {healthDetails.slice(0, 2).join(' · ')}
+                          </p>
+                        </div>
                       </td>
                       <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
-                      <td className="px-4 py-3 text-xs text-gray-400 hidden xl:table-cell">{fmtDate(c.created_at)}</td>
+                      <td className="px-4 py-3 text-xs text-gray-400 hidden xl:table-cell">{formatAdminDate(c.created_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
                           {typeof profile?.email === 'string' && profile.email.length > 0 && (!c.syndic_id || !adminUserIds.has(c.syndic_id)) && (
                             <AdminImpersonate email={profile.email} iconOnly />
                           )}
-                          <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} isOrphaned={!c.syndic_id} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} />
+                          <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} isOrphaned={!c.syndic_id} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} contextHref={currentListHref} />
                         </div>
                       </td>
                     </tr>
@@ -558,7 +594,7 @@ export default async function AdminCopropietesPage({
           {/* ── KPIs ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {([
-              { label: 'MRR',               value: fmtEur(mrr),           sub: `ARR : ${fmtEur(arr)}`,                            icon: Banknote,   color: 'bg-emerald-100 text-emerald-600' },
+              { label: 'MRR',               value: formatAdminCurrency(mrr),           sub: `ARR : ${formatAdminCurrency(arr)}`,                            icon: Banknote,   color: 'bg-emerald-100 text-emerald-600' },
               { label: 'Abonnés actifs',    value: nbActifs,               sub: `taux conv. ${conversionPct} %`,                   icon: CreditCard, color: 'bg-blue-100 text-blue-600' },
               { label: 'Trials',            value: nbEssai,                sub: 'Essai gratuit',                                   icon: TrendingUp, color: 'bg-amber-100 text-amber-600' },
               { label: 'Impayés/Inactifs',  value: nbPasseDu + nbInactif,  sub: `${nbPasseDu} impayés · ${nbInactif} inactifs`,   icon: BarChart3,  color: nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400' },
@@ -596,7 +632,7 @@ export default async function AdminCopropietesPage({
                           <span className="text-gray-400 text-xs">· {price}</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-xs text-gray-400">{fmtEur(revenue)}/an</span>
+                          <span className="text-xs text-gray-400">{formatAdminCurrency(revenue)}/an</span>
                           <span className="font-bold text-gray-800">{nb}</span>
                         </div>
                       </div>
@@ -633,7 +669,7 @@ export default async function AdminCopropietesPage({
                         <p className="text-sm font-medium text-gray-800">{c.nom}</p>
                         <PlanBadge plan={c.plan} planId={c.plan_id} />
                       </div>
-                      <p className="text-xs font-semibold text-amber-700">{fmtDate(c.plan_period_end)}</p>
+                      <p className="text-xs font-semibold text-amber-700">{formatAdminDate(c.plan_period_end)}</p>
                     </div>
                   ))}
                 </div>
@@ -673,7 +709,7 @@ export default async function AdminCopropietesPage({
                         <td className="px-4 py-3"><p className="font-medium text-gray-800">{c.nom}</p></td>
                         <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell truncate max-w-[180px]">{profile?.email ?? '—'}</td>
                         <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
-                        <td className="px-4 py-3 text-xs text-gray-600 hidden lg:table-cell">{fmtDate(c.plan_period_end)}</td>
+                        <td className="px-4 py-3 text-xs text-gray-600 hidden lg:table-cell">{formatAdminDate(c.plan_period_end)}</td>
                         <td className="px-4 py-3 hidden xl:table-cell">
                           {c.stripe_subscription_id ? (
                             <a href={`https://dashboard.stripe.com/subscriptions/${c.stripe_subscription_id}`}
@@ -684,7 +720,7 @@ export default async function AdminCopropietesPage({
                           ) : <span className="text-xs text-gray-300">—</span>}
                         </td>
                         <td className="px-4 py-3">
-                          <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} />
+                          <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} contextHref={currentListHref} />
                         </td>
                       </tr>
                     );
@@ -740,7 +776,7 @@ export default async function AdminCopropietesPage({
                             {coproNom ?? <span className="text-gray-300">—</span>}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <span className={`text-sm font-bold ${isFailed ? 'text-red-600' : 'text-gray-800'}`}>{fmtEur(ch.amount)}</span>
+                            <span className={`text-sm font-bold ${isFailed ? 'text-red-600' : 'text-gray-800'}`}>{formatAdminCurrency(ch.amount)}</span>
                           </td>
                           <td className="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">
                             {new Date(ch.created * 1000).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}

@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   LifeBuoy, Search, Send, RefreshCw, ChevronDown,
-  Clock, CheckCircle, MessageSquare, User, Shield,
+  CheckCircle, MessageSquare, User, Shield,
   Circle, AlertCircle, Inbox,
 } from 'lucide-react';
 

@@ -137,7 +137,7 @@ export default async function AdminEmailsPage({
       <div className="space-y-4">
         <h1 className="text-lg sm:text-xl font-bold text-gray-900">Suivi des e-mails</h1>
         <div className="bg-white rounded-xl border border-red-200 p-4 text-sm text-red-700">
-          RESEND_API_KEY manquante. Impossible de charger les e-mails via l'API Resend.
+          RESEND_API_KEY manquante. Impossible de charger les e-mails via l&apos;API Resend.
         </div>
       </div>
     );

@@ -3,9 +3,12 @@
 // ============================================================
 'use client';
 
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Loader2, RotateCcw, RefreshCw, UserCog, Pencil, Users } from 'lucide-react';
+import Modal from '@/components/ui/Modal';
+import { appendAdminFrom } from '@/lib/admin-list-params';
+import { AdminConfirmDialog, AdminDialogNotice, AdminPromptDialog } from './AdminActionDialog';
 
 interface Props {
   coproId: string;
@@ -17,26 +20,59 @@ interface Props {
   codePostal?: string | null;
   ville?: string | null;
   nombreLots?: number | null;
+  contextHref?: string;
 }
 
-export default function AdminCoproActions({ coproId, coproNom, currentPlan, isOrphaned, adresse, codePostal, ville, nombreLots }: Props) {
+type ConfirmAction = 'reset_subscription' | 'stripe_sync';
+
+async function getErrorMessage(response: Response, fallback = 'Une erreur est survenue.') {
+  try {
+    const data = await response.json() as { error?: string };
+    return data.error ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export default function AdminCoproActions({
+  coproId,
+  coproNom,
+  currentPlan,
+  isOrphaned,
+  adresse,
+  codePostal,
+  ville,
+  nombreLots,
+  contextHref,
+}: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
+  const [error, setError] = useState('');
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropPos, setDropPos] = useState<{ top: number; right: number } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const [pendingAction, setPendingAction] = useState<ConfirmAction | 'edit' | 'reassign_syndic' | null>(null);
 
-  // ── Edit modal ────────────────────────────────────────────
-  const [editOpen,      setEditOpen]      = useState(false);
-  const [editNom,       setEditNom]       = useState(coproNom);
-  const [editAdresse,   setEditAdresse]   = useState(adresse ?? '');
-  const [editCodePostal,setEditCodePostal]= useState(codePostal ?? '');
-  const [editVille,     setEditVille]     = useState(ville ?? '');
-  const [editNbLots,    setEditNbLots]    = useState(String(nombreLots ?? ''));
-  const [editLoading,   setEditLoading]   = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editNom, setEditNom] = useState(coproNom);
+  const [editAdresse, setEditAdresse] = useState(adresse ?? '');
+  const [editCodePostal, setEditCodePostal] = useState(codePostal ?? '');
+  const [editVille, setEditVille] = useState(ville ?? '');
+  const [editNbLots, setEditNbLots] = useState(String(nombreLots ?? ''));
+  const [reassignOpen, setReassignOpen] = useState(false);
+  const [reassignEmail, setReassignEmail] = useState('');
+
+  const toggleOpen = () => {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    }
+    setOpen((value) => !value);
+  };
 
   const openEdit = () => {
+    setError('');
     setEditNom(coproNom);
     setEditAdresse(adresse ?? '');
     setEditCodePostal(codePostal ?? '');
@@ -46,10 +82,12 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan, isOr
     setEditOpen(true);
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setEditLoading(true);
-    const res = await fetch('/api/admin/coproprietes', {
+  const handleEditSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setPendingAction('edit');
+
+    const response = await fetch('/api/admin/coproprietes', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -61,219 +99,264 @@ export default function AdminCoproActions({ coproId, coproNom, currentPlan, isOr
         nombre_lots: editNbLots ? Number(editNbLots) : undefined,
       }),
     });
-    setEditLoading(false);
-    if (res.ok) {
+
+    setPendingAction(null);
+    if (response.ok) {
       setEditOpen(false);
       setDone('Modifié');
       setTimeout(() => router.refresh(), 800);
-    } else {
-      const { error } = await res.json();
-      alert('Erreur : ' + error);
+      return;
     }
+
+    setError(`Erreur : ${await getErrorMessage(response)}`);
   };
 
-  const toggleOpen = () => {
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setDropPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-    }
-    setOpen((v) => !v);
-  };
-
-  const post = async (body: object) => {
-    setLoading(true);
+  const requestConfirmation = (action: ConfirmAction) => {
+    setError('');
     setOpen(false);
-    const res = await fetch('/api/admin/coproprietes', {
+    setConfirmAction(action);
+  };
+
+  const postAction = async (body: Record<string, unknown>, successMessage = 'OK') => {
+    setError('');
+    const action = String(body.action ?? 'edit') as ConfirmAction | 'reassign_syndic';
+    setPendingAction(action);
+
+    const response = await fetch('/api/admin/coproprietes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    setLoading(false);
-    if (res.ok) {
-      setDone('OK');
+
+    setPendingAction(null);
+    if (response.ok) {
+      setDone(successMessage);
       setTimeout(() => router.refresh(), 800);
-    } else {
-      const { error } = await res.json();
-      alert('Erreur : ' + error);
+      return true;
+    }
+
+    setError(`Erreur : ${await getErrorMessage(response)}`);
+    return false;
+  };
+
+  const executeConfirmedAction = async () => {
+    if (!confirmAction) return;
+
+    const action = confirmAction;
+    setConfirmAction(null);
+    await postAction({ action, coproId }, action === 'stripe_sync' ? 'Sync OK' : 'Réinitialisé');
+  };
+
+  const submitReassign = async () => {
+    const nextEmail = reassignEmail.trim().toLowerCase();
+    if (!nextEmail) {
+      setError('Adresse email requise pour la réassignation.');
+      return;
+    }
+
+    const success = await postAction({ action: 'reassign_syndic', coproId, newEmail: nextEmail }, 'Syndic réassigné');
+    if (success) {
+      setReassignOpen(false);
+      setReassignEmail('');
     }
   };
 
-  const handleReset = () => {
-    if (!confirm(`Réinitialiser l'abonnement de « ${coproNom} » ?\n\nLe plan sera remis à « inactif » et les données Stripe effacées (stripe_subscription_id, stripe_customer_id, plan_period_end).`)) return;
-    post({ action: 'reset_subscription', coproId });
+  const openDetails = () => {
+    setOpen(false);
+    router.push(appendAdminFrom(`/admin/coproprietes/${coproId}`, contextHref ?? null));
   };
 
-  const handleSync = () => {
-    if (!confirm(`Synchroniser « ${coproNom} » depuis Stripe ?\n\nLe plan sera mis à jour selon l'abonnement réel dans Stripe.`)) return;
-    post({ action: 'stripe_sync', coproId });
-  };
-
-  const handleReassign = () => {
-    const email = window.prompt(
-      `Réassigner le syndic de « ${coproNom} »\n\nEntrez l\'adresse email du nouveau syndic :`,
-    );
-    if (!email?.trim()) return;
-    if (!confirm(`Confirmer la réassignation de « ${coproNom} » à ${email.trim()} ?`)) return;
-    post({ action: 'reassign_syndic', coproId, newEmail: email.trim() } as Record<string, unknown>);
-  };
-
-  if (done) return <span className="text-xs text-green-600 font-medium">✓</span>;
+  if (done) return <span className="text-xs font-medium text-green-600">✓</span>;
 
   return (
     <>
-      {/* ── Edit modal ──────────────────────────────────── */}
-      {editOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setEditOpen(false)}
-        >
-          <div
-            className="bg-white rounded-2xl p-6 shadow-xl w-full max-w-lg mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-sm font-bold text-gray-900 mb-4">Modifier la copropriété</h2>
-            <form onSubmit={handleEditSubmit} className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Nom</label>
-                <input
-                  type="text"
-                  value={editNom}
-                  onChange={(e) => setEditNom(e.target.value)}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Adresse</label>
-                <input
-                  type="text"
-                  value={editAdresse}
-                  onChange={(e) => setEditAdresse(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Code postal</label>
-                  <input
-                    type="text"
-                    value={editCodePostal}
-                    onChange={(e) => setEditCodePostal(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Ville</label>
-                  <input
-                    type="text"
-                    value={editVille}
-                    onChange={(e) => setEditVille(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Nombre de lots</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={editNbLots}
-                  onChange={(e) => setEditNbLots(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditOpen(false)}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-600 transition-colors"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={editLoading}
-                  className="text-sm px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 transition-colors"
-                >
-                  {editLoading ? 'Enregistrement…' : 'Enregistrer'}
-                </button>
-              </div>
-            </form>
+      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Modifier la copropriété" size="lg">
+        <form onSubmit={handleEditSubmit} className="space-y-3">
+          <AdminDialogNotice message={error} />
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">Nom</label>
+            <input
+              type="text"
+              value={editNom}
+              onChange={(event) => setEditNom(event.target.value)}
+              required
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-        </div>
-      )}
-
-      {/* ── Row actions ─────────────────────────────────── */}
-      <div className="relative flex items-center justify-end gap-1">
-        {isOrphaned && (
-          <span title="Copropriété sans syndic" className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600">
-            <UserCog size={11} />
-          </span>
-        )}
-        {loading ? (
-          <Loader2 size={15} className="animate-spin text-gray-400" />
-        ) : (
-          <button
-            ref={buttonRef}
-            onClick={toggleOpen}
-            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
-            aria-label="Actions"
-          >
-            <MoreHorizontal size={15} />
-          </button>
-        )}
-        {open && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <div
-              className="fixed z-50 bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[210px]"
-              style={{ top: dropPos?.top ?? 0, right: dropPos?.right ?? 0 }}
-            >
-              <button
-                onClick={openEdit}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-blue-700 hover:bg-blue-50 transition-colors"
-              >
-                <Pencil size={12} className="shrink-0" />
-                Modifier les infos
-              </button>
-              <button
-                onClick={() => { window.location.href = `/admin/coproprietes/${coproId}`; }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                <Users size={12} className="shrink-0" />
-                Voir les copropriétaires
-              </button>
-              <div className="border-t border-gray-100 my-1" />
-              <button
-                onClick={handleSync}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-blue-700 hover:bg-blue-50 transition-colors"
-              >
-                <RefreshCw size={12} className="shrink-0" />
-                Sync depuis Stripe
-              </button>
-              <div className="border-t border-gray-100 my-1" />
-              <button
-                onClick={handleReassign}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-violet-700 hover:bg-violet-50 transition-colors"
-              >
-                <UserCog size={12} className="shrink-0" />
-                Réassigner le syndic
-              </button>
-              {currentPlan !== 'essai' && (
-                <>
-                  <div className="border-t border-gray-100 my-1" />
-                  <button
-                    onClick={handleReset}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 transition-colors"
-                  >
-                    <RotateCcw size={12} className="shrink-0" />
-                    Réinitialiser (inactif)
-                  </button>
-                </>
-              )}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">Adresse</label>
+            <input
+              type="text"
+              value={editAdresse}
+              onChange={(event) => setEditAdresse(event.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700">Code postal</label>
+              <input
+                type="text"
+                value={editCodePostal}
+                onChange={(event) => setEditCodePostal(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
-          </>
-        )}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700">Ville</label>
+              <input
+                type="text"
+                value={editVille}
+                onChange={(event) => setEditVille(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">Nombre de lots</label>
+            <input
+              type="number"
+              min={0}
+              value={editNbLots}
+              onChange={(event) => setEditNbLots(event.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setEditOpen(false)}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={pendingAction === 'edit'}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            >
+              {pendingAction === 'edit' && <Loader2 size={12} className="animate-spin" />}
+              {pendingAction === 'edit' ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <AdminConfirmDialog
+        isOpen={confirmAction === 'stripe_sync'}
+        onClose={() => setConfirmAction(null)}
+        title="Synchroniser depuis Stripe"
+        description={<p>Mettre à jour <strong>{coproNom}</strong> selon l&apos;abonnement réel présent dans Stripe ?</p>}
+        confirmLabel="Lancer la synchronisation"
+        onConfirm={executeConfirmedAction}
+        isLoading={pendingAction === 'stripe_sync'}
+      />
+
+      <AdminConfirmDialog
+        isOpen={confirmAction === 'reset_subscription'}
+        onClose={() => setConfirmAction(null)}
+        title="Réinitialiser l'abonnement"
+        description={<p>Remettre <strong>{coproNom}</strong> en <strong>inactif</strong> et effacer les identifiants Stripe liés ?</p>}
+        confirmLabel="Réinitialiser"
+        onConfirm={executeConfirmedAction}
+        isLoading={pendingAction === 'reset_subscription'}
+        tone="danger"
+      />
+
+      <AdminPromptDialog
+        isOpen={reassignOpen}
+        onClose={() => setReassignOpen(false)}
+        title="Réassigner le syndic"
+        description={<p>Entrez l&apos;adresse email du nouveau syndic pour <strong>{coproNom}</strong>.</p>}
+        label="Email du nouveau syndic"
+        value={reassignEmail}
+        onChange={setReassignEmail}
+        onConfirm={submitReassign}
+        confirmLabel="Réassigner"
+        placeholder="nom@exemple.fr"
+        isLoading={pendingAction === 'reassign_syndic'}
+        error={error}
+      />
+
+      <div className="flex flex-col items-end gap-1">
+        <div className="relative flex items-center justify-end gap-1">
+          {isOrphaned && (
+            <span title="Copropriété sans syndic" className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+              <UserCog size={11} />
+            </span>
+          )}
+          {pendingAction && pendingAction !== 'edit' ? (
+            <Loader2 size={15} className="animate-spin text-gray-400" />
+          ) : (
+            <button
+              ref={buttonRef}
+              onClick={toggleOpen}
+              className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+              aria-label="Actions"
+            >
+              <MoreHorizontal size={15} />
+            </button>
+          )}
+          {open && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+              <div
+                className="fixed z-50 min-w-[210px] rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
+                style={{ top: dropPos?.top ?? 0, right: dropPos?.right ?? 0 }}
+              >
+                <button
+                  onClick={openEdit}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-blue-700 transition-colors hover:bg-blue-50"
+                >
+                  <Pencil size={12} className="shrink-0" />
+                  Modifier les infos
+                </button>
+                <button
+                  onClick={openDetails}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  <Users size={12} className="shrink-0" />
+                  Voir les copropriétaires
+                </button>
+                <div className="my-1 border-t border-gray-100" />
+                <button
+                  onClick={() => requestConfirmation('stripe_sync')}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-blue-700 transition-colors hover:bg-blue-50"
+                >
+                  <RefreshCw size={12} className="shrink-0" />
+                  Sync depuis Stripe
+                </button>
+                <div className="my-1 border-t border-gray-100" />
+                <button
+                  onClick={() => {
+                    setError('');
+                    setOpen(false);
+                    setReassignEmail('');
+                    setReassignOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-violet-700 transition-colors hover:bg-violet-50"
+                >
+                  <UserCog size={12} className="shrink-0" />
+                  Réassigner le syndic
+                </button>
+                {currentPlan !== 'essai' && (
+                  <>
+                    <div className="my-1 border-t border-gray-100" />
+                    <button
+                      onClick={() => requestConfirmation('reset_subscription')}
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-amber-700 transition-colors hover:bg-amber-50"
+                    >
+                      <RotateCcw size={12} className="shrink-0" />
+                      Réinitialiser (inactif)
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {error && !editOpen && !reassignOpen ? <p className="max-w-[220px] text-right text-[11px] text-red-600">{error}</p> : null}
       </div>
     </>
   );

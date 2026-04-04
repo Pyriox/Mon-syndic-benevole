@@ -16,40 +16,14 @@ import {
 } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
+import { formatRelativeDayLabel } from '@/lib/admin-date';
+import { formatAdminCurrency } from '@/lib/admin-format';
+import AdminStatCard from '../AdminStatCard';
 const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
 const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
-function fmtEur(n: number): string {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
-}
-function fmtDate(s: string | null | undefined): string {
-  if (!s) return '—';
-  return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-}
 function timeAgo(s: string | null | undefined): string {
-  if (!s) return '—';
-  const d = Math.floor((Date.now() - new Date(s).getTime()) / 86400000);
-  if (d === 0) return "Aujourd'hui";
-  if (d === 1) return 'Hier';
-  if (d < 30) return `Il y a ${d} j`;
-  if (d < 365) return `Il y a ${Math.floor(d / 30)} mois`;
-  return `Il y a ${Math.floor(d / 365)} an${Math.floor(d / 365) > 1 ? 's' : ''}`;
-}
-
-function KpiCard({ label, value, sub, icon: Icon, color, danger }: {
-  label: string; value: string | number; sub?: string;
-  icon: ElementType; color: string; danger?: boolean;
-}) {
-  return (
-    <div className={`bg-white rounded-xl border shadow-sm p-5 flex items-start gap-4 ${danger ? 'border-red-200 bg-red-50/30' : 'border-gray-200'}`}>
-      <div className={`p-3 rounded-xl ${color} shrink-0 mt-0.5`}><Icon size={20} /></div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
-        <p className={`text-2xl font-bold mt-0.5 ${danger ? 'text-red-600' : 'text-gray-900'}`}>{value}</p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  );
+  return formatRelativeDayLabel(s);
 }
 
 function ProgressBar({ value, color }: { value: number; color: string }) {
@@ -68,9 +42,7 @@ export default async function AdminDashboardPage() {
   const admin = createAdminClient();
   const today = new Date();
   const todayTs = today.getTime();
-  const startOf30Days = new Date(todayTs - 30 * 86400000).toISOString();
   const startOf7Days  = new Date(todayTs - 7  * 86400000).toISOString();
-  const startOfYear   = `${today.getFullYear()}-01-01`;
 
   const [
     { count: nbLots },
@@ -78,8 +50,6 @@ export default async function AdminDashboardPage() {
     { count: nbAG },
     { count: nbIncidentsOuverts },
     { count: nbAppels },
-    { data: depensesTotales },
-    { data: depensesAnnee },
     { data: coproprietes },
     authResult,
     { data: invitations },
@@ -93,8 +63,6 @@ export default async function AdminDashboardPage() {
     admin.from('assemblees_generales').select('id', { count: 'exact', head: true }),
     admin.from('incidents').select('id', { count: 'exact', head: true }).in('statut', ['ouvert', 'en_cours']),
     admin.from('appels_de_fonds').select('id', { count: 'exact', head: true }),
-    admin.from('depenses').select('montant'),
-    admin.from('depenses').select('montant').gte('date_depense', startOfYear),
     admin.from('coproprietes').select('id, nom, plan, plan_id, stripe_customer_id, plan_period_end, created_at').order('created_at', { ascending: false }),
     admin.auth.admin.listUsers({ perPage: 1000 }),
     admin.from('invitations').select('id, email, statut, expires_at, created_at').order('created_at', { ascending: false }).limit(100),
@@ -137,13 +105,8 @@ export default async function AdminDashboardPage() {
   // ── Computed ──
   const authUsers = authResult.data?.users ?? [];
   const nbUsers = authUsers.length;
-  const newUsers30 = authUsers.filter((u) => u.created_at >= startOf30Days).length;
-  const newUsers7  = authUsers.filter((u) => u.created_at >= startOf7Days).length;
   const nbUnconfirmed = authUsers.filter((u) => !u.email_confirmed_at).length;
   const confirmedPct = nbUsers > 0 ? Math.round(((nbUsers - nbUnconfirmed) / nbUsers) * 100) : 0;
-
-  const totalDepenses = depensesTotales?.reduce((s, d) => s + d.montant, 0) ?? 0;
-  const totalDepensesAnnee = depensesAnnee?.reduce((s, d) => s + d.montant, 0) ?? 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coprosTyped = (coproprietes ?? []) as any[];
@@ -232,9 +195,6 @@ export default async function AdminDashboardPage() {
 
   const syndicUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire');
   const memberUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role === 'copropriétaire');
-  const newSyndics30 = syndicUsers.filter((u) => u.created_at >= startOf30Days).length;
-
-  void fmtDate; // used below
 
   return (
     <div className="space-y-6 pb-16">
@@ -250,8 +210,8 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="flex gap-3 flex-wrap">
             {([
-              { val: fmtEur(arr), lbl: 'ARR' },
-              { val: fmtEur(cashCeMois), lbl: 'Cash mois' },
+              { val: formatAdminCurrency(arr), lbl: 'ARR' },
+              { val: formatAdminCurrency(cashCeMois), lbl: 'Cash mois' },
               { val: String(nbActifs), lbl: 'Abonnés' },
               { val: String(nbEssai), lbl: 'Essais' },
             ] as { val: string; lbl: string }[]).map(({ val, lbl }) => (
@@ -274,16 +234,16 @@ export default async function AdminDashboardPage() {
       <section>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Revenus &amp; abonnements</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard label="ARR" value={fmtEur(arr)} sub={`Conv. ${conversionPct} % · ${nbActifs} abonnés actifs`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
-          <KpiCard label="Cash encaissé (mois)" value={fmtEur(cashCeMois)} sub={`${today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`} icon={Receipt} color="bg-blue-100 text-blue-600" />
-          <KpiCard label="Cash encaissé (année)" value={fmtEur(cashTotalAnnee)} sub={`Dont ${fmtEur(cashNewSubsAnnee)} nouveaux · ${fmtEur(cashRenouvellements)} renouv.`} icon={BarChart3} color="bg-violet-100 text-violet-600" />
-          <KpiCard label="Renouvellements (année)" value={nbRenouvellements} sub={`${fmtEur(cashRenouvellements)} encaissés · ${newSubsAnnee.length} nouveaux abonnés`} icon={TrendingUp} color="bg-teal-100 text-teal-600" />
+          <AdminStatCard label="ARR" value={formatAdminCurrency(arr)} sub={`Conv. ${conversionPct} % · ${nbActifs} abonnés actifs`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
+          <AdminStatCard label="Cash encaissé (mois)" value={formatAdminCurrency(cashCeMois)} sub={`${today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`} icon={Receipt} color="bg-blue-100 text-blue-600" />
+          <AdminStatCard label="Cash encaissé (année)" value={formatAdminCurrency(cashTotalAnnee)} sub={`Dont ${formatAdminCurrency(cashNewSubsAnnee)} nouveaux · ${formatAdminCurrency(cashRenouvellements)} renouv.`} icon={BarChart3} color="bg-violet-100 text-violet-600" />
+          <AdminStatCard label="Renouvellements (année)" value={nbRenouvellements} sub={`${formatAdminCurrency(cashRenouvellements)} encaissés · ${newSubsAnnee.length} nouveaux abonnés`} icon={TrendingUp} color="bg-teal-100 text-teal-600" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-          <KpiCard label="Abonnés actifs" value={nbActifs} sub={`Essentiel ${planBreakdown.essentiel} · Confort ${planBreakdown.confort} · Illimité ${planBreakdown.illimite}`} icon={CreditCard} color="bg-blue-100 text-blue-600" />
-          <KpiCard label="Essais actifs" value={nbEssai} icon={Zap} color="bg-amber-100 text-amber-600" />
-          <KpiCard label="Impayés" value={nbPasseDu} sub={nbPasseDu > 0 ? 'Action requise' : 'Aucun impayé'} icon={XCircle} color={nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={nbPasseDu > 0} />
-          <KpiCard label="Taux de résiliation" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} ayant eu un abonnement`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
+          <AdminStatCard label="Abonnés actifs" value={nbActifs} sub={`Essentiel ${planBreakdown.essentiel} · Confort ${planBreakdown.confort} · Illimité ${planBreakdown.illimite}`} icon={CreditCard} color="bg-blue-100 text-blue-600" />
+          <AdminStatCard label="Essais actifs" value={nbEssai} icon={Zap} color="bg-amber-100 text-amber-600" />
+          <AdminStatCard label="Impayés" value={nbPasseDu} sub={nbPasseDu > 0 ? 'Action requise' : 'Aucun impayé'} icon={XCircle} color={nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={nbPasseDu > 0} />
+          <AdminStatCard label="Taux de résiliation" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} ayant eu un abonnement`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
         </div>
       </section>
 
@@ -303,7 +263,7 @@ export default async function AdminDashboardPage() {
                     <div key={i} className="flex-1 h-full flex flex-col justify-end group relative">
                       {cash > 0 && (
                         <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                          {fmtEur(cash)}
+                          {formatAdminCurrency(cash)}
                         </div>
                       )}
                       <div
@@ -327,7 +287,7 @@ export default async function AdminDashboardPage() {
                 <div className="flex gap-4 text-xs">
                   {cashParMois.map((cash, i) => cash > 0 && (
                     <span key={i} className={`font-medium ${i === today.getMonth() ? 'text-emerald-600' : 'text-gray-600'}`}>
-                      {MONTH_LABELS[i]} : {fmtEur(cash)} ({subsParMois[i]} sub{subsParMois[i] > 1 ? 's' : ''})
+                      {MONTH_LABELS[i]} : {formatAdminCurrency(cash)} ({subsParMois[i]} sub{subsParMois[i] > 1 ? 's' : ''})
                     </span>
                   ))}
                 </div>
@@ -416,14 +376,14 @@ export default async function AdminDashboardPage() {
       <section>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Plateforme en chiffres</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiCard label="Lots gérés"       value={nbLots ?? 0}            icon={DoorOpen}     color="bg-violet-100 text-violet-600" />
-          <KpiCard label="Copropriétaires"    value={nbCoproprietaires ?? 0} icon={UserCheck}    color="bg-green-100 text-green-600" />
-          <KpiCard label="Assemblées"         value={nbAG ?? 0}              icon={CalendarDays} color="bg-pink-100 text-pink-600" />
-          <KpiCard label="Appels de fonds"   value={nbAppels ?? 0}          icon={Wallet}       color="bg-amber-100 text-amber-600" />
-          <KpiCard label="Incidents ouverts" value={nbIncidentsOuverts ?? 0} icon={AlertTriangle} color={nbIncidentsOuverts ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={!!nbIncidentsOuverts && nbIncidentsOuverts > 5} />
-          <KpiCard label="Utilisateurs inscrits" value={nbUsers} sub={`${syndicUsers.length} syndics · ${memberUsers.length} membres`} icon={Users} color="bg-indigo-100 text-indigo-600" />
-          <KpiCard label="Copropriétés"           value={nbCoproprietes} icon={Building2} color="bg-teal-100 text-teal-600" />
-          <KpiCard label="Emails vérifiés"         value={`${confirmedPct} %`} sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
+          <AdminStatCard label="Lots gérés" value={nbLots ?? 0} icon={DoorOpen} color="bg-violet-100 text-violet-600" />
+          <AdminStatCard label="Copropriétaires" value={nbCoproprietaires ?? 0} icon={UserCheck} color="bg-green-100 text-green-600" />
+          <AdminStatCard label="Assemblées" value={nbAG ?? 0} icon={CalendarDays} color="bg-pink-100 text-pink-600" />
+          <AdminStatCard label="Appels de fonds" value={nbAppels ?? 0} icon={Wallet} color="bg-amber-100 text-amber-600" />
+          <AdminStatCard label="Incidents ouverts" value={nbIncidentsOuverts ?? 0} icon={AlertTriangle} color={nbIncidentsOuverts ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={!!nbIncidentsOuverts && nbIncidentsOuverts > 5} />
+          <AdminStatCard label="Utilisateurs inscrits" value={nbUsers} sub={`${syndicUsers.length} syndics · ${memberUsers.length} membres`} icon={Users} color="bg-indigo-100 text-indigo-600" />
+          <AdminStatCard label="Copropriétés" value={nbCoproprietes} icon={Building2} color="bg-teal-100 text-teal-600" />
+          <AdminStatCard label="Emails vérifiés" value={`${confirmedPct} %`} sub={`${nbUsers - nbUnconfirmed} / ${nbUsers}`} icon={CheckCircle2} color="bg-green-100 text-green-600" />
         </div>
       </section>
 

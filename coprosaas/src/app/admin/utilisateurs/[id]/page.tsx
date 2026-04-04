@@ -4,55 +4,30 @@ import { ArrowLeft, Building2, Clock, LifeBuoy, Mail, MapPin, Phone, User2 } fro
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminUser } from '@/lib/admin-config';
+import { appendAdminFrom, buildAdminPath, resolveAdminBackHref } from '@/lib/admin-list-params';
+import { formatAdminDateTime } from '@/lib/admin-format';
 import AdminImpersonate from '../../AdminImpersonate';
 import AdminCopyId from '../../AdminCopyId';
-import AdminUserLogs from '../../AdminUserLogs';
+import AdminUserEventTimeline from '../../AdminUserEventTimeline';
+import { PlanBadge, RoleBadge } from '../../AdminBadges';
 
-function fmtDate(s: string | null | undefined): string {
-  if (!s) return '—';
-  return new Date(s).toLocaleString('fr-FR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Europe/Paris',
-  });
-}
-
-function RoleBadge({ role }: { role: 'admin' | 'syndic' | 'membre' }) {
-  if (role === 'admin') {
-    return <span className="inline-flex text-xs px-2 py-0.5 rounded font-semibold bg-blue-100 text-blue-700">Admin</span>;
-  }
-  if (role === 'syndic') {
-    return <span className="inline-flex text-xs px-2 py-0.5 rounded font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">Syndic</span>;
-  }
-  return <span className="inline-flex text-xs px-2 py-0.5 rounded font-semibold bg-teal-50 text-teal-700 border border-teal-200">Membre</span>;
-}
-
-function PlanBadge({ plan, planId }: { plan: string | null; planId: string | null }) {
-  if (plan === 'actif') {
-    const cfg: Record<string, { label: string; cls: string }> = {
-      essentiel: { label: 'Essentiel', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-      confort: { label: 'Confort', cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-      illimite: { label: 'Illimité', cls: 'bg-purple-50 text-purple-700 border-purple-200' },
-    };
-    const c = cfg[planId ?? ''] ?? { label: 'Actif', cls: 'bg-green-50 text-green-700 border-green-200' };
-    return <span className={`inline-flex text-xs px-2 py-0.5 rounded-md font-medium border ${c.cls}`}>{c.label}</span>;
-  }
-  if (plan === 'passe_du') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-red-50 text-red-600 border border-red-200">Impayé</span>;
-  if (plan === 'resilie') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-orange-50 text-orange-600 border border-orange-200">Résilié</span>;
-  if (plan === 'essai') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">Essai</span>;
-  if (plan === 'inactif') return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">Inactif</span>;
-  return <span className="inline-flex text-xs px-2 py-0.5 rounded-md font-medium bg-gray-100 text-gray-500 border border-gray-200">—</span>;
-}
+const EVENT_CATEGORY_MAP = {
+  billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_succeeded', 'payment_failed', 'subscription_renewed', 'subscription_upgraded'],
+  account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'login_success', 'login_failed', 'email_confirmation_resent'],
+  activity: ['copropriete_created', 'appel_fonds_created', 'appel_fonds_sent', 'ag_created', 'coproprietaire_added', 'coproprietaire_deleted', 'document_uploaded', 'ticket_created'],
+  admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_subscription_reset', 'admin_stripe_sync', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
+} as const;
 
 export default async function AdminUtilisateurProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ logPage?: string; from?: string; logCategory?: string; logLevel?: string }>;
 }) {
   const { id } = await params;
+  const { logPage, from, logCategory, logLevel } = await searchParams;
+  const backHref = resolveAdminBackHref(from, '/admin/utilisateurs');
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -76,8 +51,8 @@ export default async function AdminUtilisateurProfilePage({
   if (!authUser) {
     return (
       <div className="space-y-4 pb-16">
-        <Link href="/admin/utilisateurs" className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700">
-          <ArrowLeft size={13} /> Retour aux utilisateurs
+        <Link href={backHref} className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700">
+          <ArrowLeft size={13} /> {from ? 'Retour au contexte précédent' : 'Retour aux utilisateurs'}
         </Link>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-sm text-gray-500">Utilisateur introuvable.</div>
       </div>
@@ -97,12 +72,12 @@ export default async function AdminUtilisateurProfilePage({
   ] = await Promise.all([
     admin
       .from('coproprietaires')
-      .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, coproprietes(nom)')
+      .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, coproprietes(id, nom)')
       .eq('user_id', id),
     email
       ? admin
           .from('coproprietaires')
-          .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, coproprietes(nom)')
+          .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, coproprietes(id, nom)')
           .eq('email', email)
       : Promise.resolve({ data: [], error: null }),
     email
@@ -119,15 +94,15 @@ export default async function AdminUtilisateurProfilePage({
           .select('id, event_type, label, created_at, severity')
           .eq('user_email', email)
           .order('created_at', { ascending: false })
-          .limit(20)
+          .limit(40)
       : Promise.resolve({ data: [], error: null }),
   ]);
 
   const syndicCopros = (syndicCoprosRes.data ?? []) as { id: string; nom: string; plan: string | null; plan_id: string | null; created_at: string }[];
 
   const memberRowsRaw = [
-    ...((memberByIdRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; coproprietes: { nom: string } | { nom: string }[] | null }>),
-    ...((memberByEmailRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; coproprietes: { nom: string } | { nom: string }[] | null }>),
+    ...((memberByIdRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; coproprietes: { id?: string; nom: string } | { id?: string; nom: string }[] | null }>),
+    ...((memberByEmailRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; coproprietes: { id?: string; nom: string } | { id?: string; nom: string }[] | null }>),
   ];
 
   const seen = new Set<string>();
@@ -141,6 +116,35 @@ export default async function AdminUtilisateurProfilePage({
   const fullName = ((authUser.user_metadata as Record<string, string> | null)?.full_name
     ?? (profileRes.data as { full_name: string | null } | null)?.full_name
     ?? null);
+
+  const allEvents = (eventsRes.data ?? []) as Array<{
+    id: string;
+    event_type: string;
+    label: string;
+    created_at: string;
+    severity?: 'info' | 'warning' | 'error';
+  }>;
+  const currentLogCategory = logCategory === 'billing' || logCategory === 'account' || logCategory === 'activity' || logCategory === 'admin'
+    ? logCategory
+    : 'all';
+  const currentLogLevel = logLevel === 'warning' || logLevel === 'error'
+    ? logLevel
+    : 'all';
+  const filteredEvents = allEvents.filter((event) => {
+    if (currentLogLevel !== 'all' && (event.severity ?? 'info') !== currentLogLevel) return false;
+    if (currentLogCategory !== 'all') {
+      const categoryEvents = EVENT_CATEGORY_MAP[currentLogCategory] as readonly string[];
+      if (!categoryEvents.includes(event.event_type)) return false;
+    }
+    return true;
+  });
+
+  const EVENT_PAGE_SIZE = 10;
+  const totalEventPages = Math.max(1, Math.ceil(filteredEvents.length / EVENT_PAGE_SIZE));
+  const currentLogPage = Math.min(Math.max(1, Number(logPage) || 1), totalEventPages);
+  const pagedEvents = filteredEvents.slice((currentLogPage - 1) * EVENT_PAGE_SIZE, currentLogPage * EVENT_PAGE_SIZE);
+  const warningCount = allEvents.filter((event) => event.severity === 'warning').length;
+  const errorCount = allEvents.filter((event) => event.severity === 'error').length;
 
   const authMeta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
   const authPhone = (typeof authUser.phone === 'string' && authUser.phone.trim())
@@ -159,13 +163,31 @@ export default async function AdminUtilisateurProfilePage({
   const addresses = Array.from(new Set<string>(memberRows
     .map((m) => [m.adresse, m.complement_adresse, m.code_postal, m.ville].filter(Boolean).join(', ').trim())
     .filter((v) => v.length > 0)));
+  const linkedCoproCount = isMember ? memberRows.length : syndicCopros.length;
+  const supportCount = (ticketsRes.data ?? []).length;
+  const currentPageHref = buildAdminPath(`/admin/utilisateurs/${id}`, {
+    from,
+    logCategory: currentLogCategory !== 'all' ? currentLogCategory : undefined,
+    logLevel: currentLogLevel !== 'all' ? currentLogLevel : undefined,
+    logPage: currentLogPage > 1 ? String(currentLogPage) : undefined,
+  });
+  const countEventsForCategory = (category: keyof typeof EVENT_CATEGORY_MAP | 'all') => (
+    category === 'all'
+      ? allEvents.length
+      : allEvents.filter((event) => (EVENT_CATEGORY_MAP[category] as readonly string[]).includes(event.event_type)).length
+  );
+  const countEventsForLevel = (level: 'all' | 'warning' | 'error') => (
+    level === 'all'
+      ? allEvents.length
+      : allEvents.filter((event) => (event.severity ?? 'info') === level).length
+  );
 
   return (
     <div className="space-y-6 pb-16">
       <div>
-        <Link href="/admin/utilisateurs" className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 mb-3 transition-colors">
+        <Link href={backHref} className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 mb-3 transition-colors">
           <ArrowLeft size={13} />
-          Retour aux utilisateurs
+          {from ? 'Retour au contexte précédent' : 'Retour aux utilisateurs'}
         </Link>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
           <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -175,23 +197,43 @@ export default async function AdminUtilisateurProfilePage({
                 {fullName || authUser.email || 'Utilisateur'}
               </h1>
               <p className="text-sm text-gray-500 mt-1">{authUser.email ?? '—'}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700">
+                  {linkedCoproCount} copropriété{linkedCoproCount > 1 ? 's' : ''} liée{linkedCoproCount > 1 ? 's' : ''}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 font-medium text-gray-700">
+                  {supportCount} ticket{supportCount > 1 ? 's' : ''} support
+                </span>
+                <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 font-medium text-blue-700">
+                  {allEvents.length} événements récents
+                </span>
+                {warningCount > 0 && (
+                  <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-medium text-amber-700">
+                    {warningCount} warning{warningCount > 1 ? 's' : ''}
+                  </span>
+                )}
+                {errorCount > 0 && (
+                  <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2 py-0.5 font-medium text-red-700">
+                    {errorCount} erreur{errorCount > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <RoleBadge role={role} />
               <AdminCopyId id={id} />
               {!isAdmin && <AdminImpersonate email={authUser.email ?? ''} />}
-              {authUser.email && <AdminUserLogs email={authUser.email} />}
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3 mt-4 text-xs">
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-gray-500">Inscription</p>
-              <p className="font-semibold text-gray-800 mt-0.5">{fmtDate(authUser.created_at)}</p>
+              <p className="font-semibold text-gray-800 mt-0.5">{formatAdminDateTime(authUser.created_at)}</p>
             </div>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-gray-500">Dernière activité</p>
-              <p className="font-semibold text-gray-800 mt-0.5">{fmtDate(lastActive)}</p>
+              <p className="font-semibold text-gray-800 mt-0.5">{formatAdminDateTime(lastActive)}</p>
             </div>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-gray-500">Email confirmé</p>
@@ -210,7 +252,7 @@ export default async function AdminUtilisateurProfilePage({
                 <p><span className="text-gray-500">ID :</span> {authUser.id}</p>
                 <p><span className="text-gray-500">Email :</span> {authUser.email ?? '—'}</p>
                 <p><span className="text-gray-500">Téléphone :</span> {phones[0] ?? '—'}</p>
-                <p><span className="text-gray-500">Dernière connexion :</span> {fmtDate(authUser.last_sign_in_at)}</p>
+                <p><span className="text-gray-500">Dernière connexion :</span> {formatAdminDateTime(authUser.last_sign_in_at)}</p>
               </div>
             </div>
 
@@ -245,10 +287,10 @@ export default async function AdminUtilisateurProfilePage({
             {!isMember && syndicCopros.map((c) => (
               <div key={c.id} className="px-4 py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <Link href={`/admin/coproprietes/${c.id}`} className="text-sm font-medium text-gray-800 hover:text-indigo-700 hover:underline truncate">
+                  <Link href={appendAdminFrom(`/admin/coproprietes/${c.id}`, currentPageHref)} className="text-sm font-medium text-gray-800 hover:text-indigo-700 hover:underline truncate">
                     {c.nom}
                   </Link>
-                  <p className="text-xs text-gray-400">Créée le {fmtDate(c.created_at)}</p>
+                  <p className="text-xs text-gray-400">Créée le {formatAdminDateTime(c.created_at)}</p>
                 </div>
                 <PlanBadge plan={c.plan} planId={c.plan_id} />
               </div>
@@ -262,7 +304,12 @@ export default async function AdminUtilisateurProfilePage({
               return (
                 <div key={m.id} className="px-4 py-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{copro?.nom ?? 'Copropriété inconnue'}</p>
+                    <Link
+                      href={appendAdminFrom(`/admin/coproprietes/${copro?.id ?? m.copropriete_id}`, currentPageHref)}
+                      className="text-sm font-medium text-gray-800 hover:text-indigo-700 hover:underline truncate"
+                    >
+                      {copro?.nom ?? 'Copropriété inconnue'}
+                    </Link>
                     <p className="text-xs text-gray-400 truncate">{[m.prenom, m.nom].filter(Boolean).join(' ')} · {m.email}</p>
                   </div>
                   <span className="text-xs font-semibold text-gray-700">{(m.solde ?? 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
@@ -287,7 +334,7 @@ export default async function AdminUtilisateurProfilePage({
                   <Link key={ticket.id} href={`/admin/support?ticket=${ticket.id}`} className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-gray-50">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate">{ticket.subject}</p>
-                      <p className="text-xs text-gray-400">Maj {fmtDate(ticket.updated_at)}</p>
+                      <p className="text-xs text-gray-400">Maj {formatAdminDateTime(ticket.updated_at)}</p>
                     </div>
                     <span className="text-xs text-gray-600 capitalize">{ticket.status.replace('_', ' ')}</span>
                   </Link>
@@ -299,36 +346,73 @@ export default async function AdminUtilisateurProfilePage({
       </div>
 
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-          <Clock size={14} className="text-gray-500" />
-          <p className="text-sm font-semibold text-gray-800">Journal utilisateur (20 derniers événements)</p>
-        </div>
-        {(eventsRes.data ?? []).length === 0 ? (
-          <p className="px-4 py-6 text-sm text-gray-400">Aucun événement.</p>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {(eventsRes.data ?? []).map((e) => {
-              const event = e as { id: string; event_type: string; label: string; created_at: string; severity?: string };
-              const sevCls = event.severity === 'error'
-                ? 'text-red-700 bg-red-50 border-red-200'
-                : event.severity === 'warning'
-                  ? 'text-amber-700 bg-amber-50 border-amber-200'
-                  : 'text-gray-600 bg-gray-50 border-gray-200';
-              return (
-                <div key={event.id} className="px-4 py-3 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{event.label || event.event_type}</p>
-                    <p className="text-xs text-gray-400">{event.event_type}</p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <span className={`inline-flex text-[11px] px-2 py-0.5 rounded-md border ${sevCls}`}>{event.severity ?? 'info'}</span>
-                    <p className="text-[11px] text-gray-400 mt-1">{fmtDate(event.created_at)}</p>
-                  </div>
-                </div>
-              );
-            })}
+        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Clock size={14} className="text-gray-500" />
+              <p className="text-sm font-semibold text-gray-800">Journal utilisateur (40 derniers événements)</p>
+            </div>
+            <p className="text-xs text-gray-400">{filteredEvents.length} résultat{filteredEvents.length > 1 ? 's' : ''} · 10 par page</p>
           </div>
-        )}
+
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-1.5 text-xs">
+              {([
+                { key: 'all', label: 'Tout' },
+                { key: 'account', label: 'Compte' },
+                { key: 'billing', label: 'Facturation' },
+                { key: 'activity', label: 'Activité' },
+                { key: 'admin', label: 'Admin' },
+              ] as const).map((item) => (
+                <Link
+                  key={item.key}
+                  href={buildAdminPath(`/admin/utilisateurs/${id}`, {
+                    from,
+                    logCategory: item.key !== 'all' ? item.key : undefined,
+                    logLevel: currentLogLevel !== 'all' ? currentLogLevel : undefined,
+                  })}
+                  className={`rounded-full border px-2.5 py-1 font-medium ${currentLogCategory === item.key ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300'}`}
+                >
+                  {item.label} · {countEventsForCategory(item.key)}
+                </Link>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 text-xs">
+              {([
+                { key: 'all', label: 'Tous niveaux' },
+                { key: 'warning', label: 'Warnings' },
+                { key: 'error', label: 'Erreurs' },
+              ] as const).map((item) => (
+                <Link
+                  key={item.key}
+                  href={buildAdminPath(`/admin/utilisateurs/${id}`, {
+                    from,
+                    logCategory: currentLogCategory !== 'all' ? currentLogCategory : undefined,
+                    logLevel: item.key !== 'all' ? item.key : undefined,
+                  })}
+                  className={`rounded-full border px-2.5 py-1 font-medium ${currentLogLevel === item.key ? 'border-gray-800 bg-gray-800 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'}`}
+                >
+                  {item.label} · {countEventsForLevel(item.key)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+        <AdminUserEventTimeline
+          events={pagedEvents}
+          currentPage={currentLogPage}
+          totalPages={totalEventPages}
+          totalItems={filteredEvents.length}
+          basePath={`/admin/utilisateurs/${id}`}
+          pageSize={EVENT_PAGE_SIZE}
+          queryParams={{
+            from,
+            logCategory: currentLogCategory !== 'all' ? currentLogCategory : undefined,
+            logLevel: currentLogLevel !== 'all' ? currentLogLevel : undefined,
+          }}
+          emptyMessage={allEvents.length === 0 ? 'Aucun événement.' : 'Aucun événement pour ces filtres.'}
+        />
       </section>
 
       <div className="text-xs text-gray-400 flex items-center gap-1.5">

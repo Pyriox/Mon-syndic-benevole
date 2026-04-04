@@ -8,17 +8,22 @@ import { isAdminUser } from '@/lib/admin-config';
 import { ArrowLeft, Users } from 'lucide-react';
 import Link from 'next/link';
 import AdminCoproprietaireActions from '../../AdminCoproprietaireActions';
+import { resolveAdminBackHref } from '@/lib/admin-list-params';
 
 export default async function AdminCoproDetail({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
 
   const { id } = await params;
+  const { from } = await searchParams;
+  const backHref = resolveAdminBackHref(from, '/admin/coproprietes');
   const admin = createAdminClient();
 
   const [{ data: copro }, { data: coproprietaires }] = await Promise.all([
@@ -49,11 +54,11 @@ export default async function AdminCoproDetail({
       {/* ── Header ── */}
       <div>
         <Link
-          href="/admin/coproprietes"
+          href={backHref}
           className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 mb-3 transition-colors"
         >
           <ArrowLeft size={13} />
-          Retour aux copropriétés
+          {from ? 'Retour au contexte précédent' : 'Retour aux copropriétés'}
         </Link>
         <h1 className="text-xl font-bold text-gray-900">{copro.nom}</h1>
         <p className="text-sm text-gray-500 mt-0.5">
