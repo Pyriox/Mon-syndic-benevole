@@ -10,6 +10,7 @@ describe('gtag helpers', () => {
 
     window.gtag = vi.fn();
     window.dataLayer = [];
+    delete window.__msbLastPageview;
     localStorage.clear();
     document.cookie = '';
     window.history.replaceState({}, '', '/tarifs?plan=confort');
@@ -82,6 +83,50 @@ describe('gtag helpers', () => {
     const purchaseEvent = window.dataLayer.find((event) => event.event === 'purchase');
     expect(purchaseEvent).toBeDefined();
     expect(purchaseEvent).not.toHaveProperty('transaction_id');
+  });
+
+  it('ignore une pageview dupliquée sur la même URL', async () => {
+    localStorage.setItem(
+      'cookie_consent',
+      JSON.stringify({
+        value: 'accepted',
+        timestamp: Date.now(),
+        preferences: { analytics: true, ads: true },
+      })
+    );
+
+    const { pageview } = await import('../gtag');
+
+    pageview('/tarifs?plan=confort');
+    pageview('/tarifs?plan=confort');
+
+    expect(window.dataLayer.filter((event) => event.event === 'virtual_pageview')).toHaveLength(1);
+  });
+
+  it('autorise une nouvelle pageview sur la même URL après changement de consentement', async () => {
+    const { pageview } = await import('../gtag');
+
+    localStorage.setItem(
+      'cookie_consent',
+      JSON.stringify({
+        value: 'refused',
+        timestamp: Date.now(),
+        preferences: { analytics: false, ads: false },
+      })
+    );
+    pageview('/tarifs?plan=confort');
+
+    localStorage.setItem(
+      'cookie_consent',
+      JSON.stringify({
+        value: 'accepted',
+        timestamp: Date.now(),
+        preferences: { analytics: true, ads: true },
+      })
+    );
+    pageview('/tarifs?plan=confort');
+
+    expect(window.dataLayer.filter((event) => event.event === 'virtual_pageview')).toHaveLength(2);
   });
 
   it('supprime les cookies Google existants lors d’un refus', async () => {

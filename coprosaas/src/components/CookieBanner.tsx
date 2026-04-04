@@ -112,6 +112,13 @@ export default function CookieBanner() {
     return () => window.removeEventListener('show-cookie-banner', handleShow);
   }, []);
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('msb-cookie-banner-visibility', { detail: { visible } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('msb-cookie-banner-visibility', { detail: { visible: false } }));
+    };
+  }, [visible]);
+
   function accept() {
     saveConsent('accepted', { analytics: true, ads: true });
     grantConsent();
@@ -148,7 +155,7 @@ export default function CookieBanner() {
 
   return (
     <div className={isPrivacyPolicyPage
-      ? 'fixed inset-x-0 bottom-0 z-50 px-2.5 pb-[calc(env(safe-area-inset-bottom)+0.6rem)] sm:px-4 sm:pb-4'
+      ? 'fixed inset-x-0 bottom-0 z-50 px-2.5 pb-[calc(env(safe-area-inset-bottom)+var(--msb-mobile-bottom-offset,0px)+0.6rem)] sm:px-4 sm:pb-4'
       : 'fixed inset-0 z-50 flex items-end justify-center bg-slate-950/55 p-2 pt-4 backdrop-blur-sm sm:items-center sm:p-3.5'}>
       <div
         role="dialog"

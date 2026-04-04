@@ -71,6 +71,17 @@ const planFeatures = [
   'Support par e-mail inclus',
 ];
 
+const comparisonRows = [
+  ['Coût annuel (10 lots)', '1 500 – 3 000 €', 'À partir de 300 €'],
+  ['Engagement', 'Contrat 1–3 ans', 'Résiliable à tout moment'],
+  ['Accès à vos données', 'Sur demande', 'Temps réel, 24h/24'],
+  ['Délai de réponse', 'Plusieurs jours', 'Immédiat'],
+  ['Convocations & PV AG', 'Souvent en supplément', '✓ Incluses'],
+  ['GED Documents en ligne', '✗ Rarement', '✓ Incluse'],
+  ['Tableau de bord live', '✗', '✓'],
+  ['Transparence des comptes', 'Partielle', '✓ Totale'],
+] as const;
+
 export default function HomePage() {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -328,23 +339,32 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="mt-10 w-full overflow-x-auto rounded-2xl shadow-sm">
+          <div className="mt-10 md:hidden space-y-3">
+            {comparisonRows.map(([label, pro, nous]) => (
+              <div key={label} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <p className="text-sm font-semibold text-gray-900">{label}</p>
+                <div className="mt-3 grid gap-2">
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Syndic professionnel</p>
+                    <p className="mt-1 text-sm text-gray-700">{pro}</p>
+                  </div>
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700">Mon Syndic Bénévole</p>
+                    <p className="mt-1 text-sm font-semibold text-blue-800">{nous}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 hidden md:block w-full overflow-x-auto rounded-2xl shadow-sm">
             <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden min-w-[480px]">
               <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-200 text-sm font-semibold">
                 <div className="py-4 px-5 text-gray-400" />
                 <div className="py-4 px-4 text-center text-gray-600 border-l border-gray-200">Syndic professionnel</div>
                 <div className="py-4 px-4 text-center text-blue-700 border-l border-gray-200 bg-blue-50/60">Mon Syndic Bénévole</div>
               </div>
-              {[
-                ['Coût annuel (10 lots)', '1 500 – 3 000 €', 'À partir de 300 €'],
-                ['Engagement', 'Contrat 1–3 ans', 'Résiliable à tout moment'],
-                ['Accès à vos données', 'Sur demande', 'Temps réel, 24h/24'],
-                ['Délai de réponse', 'Plusieurs jours', 'Immédiat'],
-                ['Convocations & PV AG', 'Souvent en supplément', '✓ Incluses'],
-                ['GED Documents en ligne', '✗ Rarement', '✓ Incluse'],
-                ['Tableau de bord live', '✗', '✓'],
-                ['Transparence des comptes', 'Partielle', '✓ Totale'],
-              ].map(([label, pro, nous], i) => (
+              {comparisonRows.map(([label, pro, nous], i) => (
                 <div key={label} className={`grid grid-cols-3 text-sm border-b border-gray-100 last:border-0 ${i % 2 === 1 ? 'bg-gray-50/40' : ''}`}>
                   <div className="py-3.5 px-5 text-gray-700 font-medium">{label}</div>
                   <div className="py-3.5 px-4 text-center text-gray-500 border-l border-gray-100">{pro}</div>

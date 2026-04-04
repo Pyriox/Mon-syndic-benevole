@@ -7,6 +7,7 @@ import { ArrowRight } from 'lucide-react';
 export default function LandingStickyCTA() {
   const [show, setShow] = useState(false);
   const [hiddenByCTA, setHiddenByCTA] = useState(false);
+  const [cookieBannerVisible, setCookieBannerVisible] = useState(false);
 
   // Show after 400px of scroll
   useEffect(() => {
@@ -28,7 +29,28 @@ export default function LandingStickyCTA() {
     return () => obs.disconnect();
   }, []);
 
-  if (!show || hiddenByCTA) return null;
+  useEffect(() => {
+    const handleVisibility = (event: Event) => {
+      const nextVisible = (event as CustomEvent<{ visible?: boolean }>).detail?.visible === true;
+      setCookieBannerVisible(nextVisible);
+    };
+
+    window.addEventListener('msb-cookie-banner-visibility', handleVisibility as EventListener);
+    return () => window.removeEventListener('msb-cookie-banner-visibility', handleVisibility as EventListener);
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (show && !hiddenByCTA && !cookieBannerVisible) {
+      root.style.setProperty('--msb-mobile-bottom-offset', '88px');
+    } else {
+      root.style.setProperty('--msb-mobile-bottom-offset', '0px');
+    }
+
+    return () => root.style.setProperty('--msb-mobile-bottom-offset', '0px');
+  }, [cookieBannerVisible, hiddenByCTA, show]);
+
+  if (!show || hiddenByCTA || cookieBannerVisible) return null;
 
   return (
     <div

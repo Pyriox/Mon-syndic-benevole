@@ -247,7 +247,7 @@ function RegisterForm() {
 
   // --- Formulaire principal ---
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-950 flex items-start lg:items-center justify-center px-4 py-6 sm:py-8">
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-0 shadow-2xl rounded-3xl overflow-hidden">
 
         {/* ── Panneau gauche : valeur ── */}
@@ -326,7 +326,7 @@ function RegisterForm() {
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {mode === 'coproprietaire' && invitationPrenom ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>

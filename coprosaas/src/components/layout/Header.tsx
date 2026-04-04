@@ -39,6 +39,19 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
     setItems(notifications);
   }, [notifications]);
 
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    if (window.innerWidth < 768) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   // Ferme le panel si clic en dehors ou touche Escape
   useEffect(() => {
     const clickHandler = (e: MouseEvent) => {
@@ -119,68 +132,77 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
               )}
             </button>
 
-            {/* Panel dropdown — plein écran sur mobile */}
+            {/* Panel notifications — feuille mobile, dropdown desktop */}
             {open && (
-              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 w-[min(340px,calc(100vw-2rem))]">
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-900">Notifications</p>
-                  <div className="flex items-center gap-3">
-                    {nbUnread > 0 && (
-                      <button
-                        type="button"
-                        onClick={markAllRead}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        Tout marquer lu
-                      </button>
-                    )}
-                  </div>
-                </div>
+              <>
+                <button
+                  type="button"
+                  aria-label="Fermer les notifications"
+                  onClick={() => setOpen(false)}
+                  className="fixed inset-0 z-40 bg-slate-950/20 md:hidden"
+                />
 
-                {nbNotifs === 0 ? (
-                  <div className="px-4 py-8 text-center">
-                    <Bell size={28} className="mx-auto text-gray-500 mb-2" />
-                    <p className="text-sm text-gray-500">Aucune alerte en cours</p>
+                <div className="fixed inset-x-2 top-16 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-[min(340px,calc(100vw-2rem))] md:max-h-none md:rounded-xl">
+                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
+                    <p className="text-sm font-semibold text-gray-900">Notifications</p>
+                    <div className="flex items-center gap-3">
+                      {nbUnread > 0 && (
+                        <button
+                          type="button"
+                          onClick={markAllRead}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Tout marquer lu
+                        </button>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <ul className="max-h-[60vh] md:max-h-80 overflow-y-auto divide-y divide-gray-50">
-                    {items.map((notif) => {
-                      const Icon = iconByType[notif.type as keyof typeof iconByType] ?? Bell;
-                      const titleText = notif.title ?? notif.label ?? 'Notification';
-                      const subtitleText = notif.body ?? notif.sublabel;
-                      const unread = notif.isRead !== true;
-                      return (
-                        <li key={notif.id}>
-                          <Link
-                            href={notif.href}
-                            onClick={() => {
-                              setOpen(false);
-                              void markOneRead(notif.id);
-                            }}
-                            className={cn(
-                              'flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors',
-                              unread ? 'bg-blue-50/50' : ''
-                            )}
-                          >
-                            <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
-                              <Icon size={13} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-gray-800 truncate">{titleText}</p>
-                              {subtitleText && (
-                                <p className="text-xs text-gray-600 mt-0.5">{subtitleText}</p>
+
+                  {nbNotifs === 0 ? (
+                    <div className="px-4 py-8 text-center">
+                      <Bell size={28} className="mx-auto text-gray-500 mb-2" />
+                      <p className="text-sm text-gray-500">Aucune alerte en cours</p>
+                    </div>
+                  ) : (
+                    <ul className="flex-1 overflow-y-auto divide-y divide-gray-50 md:max-h-80">
+                      {items.map((notif) => {
+                        const Icon = iconByType[notif.type as keyof typeof iconByType] ?? Bell;
+                        const titleText = notif.title ?? notif.label ?? 'Notification';
+                        const subtitleText = notif.body ?? notif.sublabel;
+                        const unread = notif.isRead !== true;
+                        return (
+                          <li key={notif.id}>
+                            <Link
+                              href={notif.href}
+                              onClick={() => {
+                                setOpen(false);
+                                void markOneRead(notif.id);
+                              }}
+                              className={cn(
+                                'flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors',
+                                unread ? 'bg-blue-50/50' : ''
                               )}
-                              {notif.createdAt && (
-                                <p className="text-[11px] text-gray-500 mt-1">{new Date(notif.createdAt).toLocaleString('fr-FR')}</p>
-                              )}
-                            </div>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
+                            >
+                              <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
+                                <Icon size={13} />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-gray-800 truncate">{titleText}</p>
+                                {subtitleText && (
+                                  <p className="text-xs text-gray-600 mt-0.5">{subtitleText}</p>
+                                )}
+                                {notif.createdAt && (
+                                  <p className="text-[11px] text-gray-500 mt-1">{new Date(notif.createdAt).toLocaleString('fr-FR')}</p>
+                                )}
+                              </div>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </>
             )}
           </div>
 

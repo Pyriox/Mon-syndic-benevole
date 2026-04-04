@@ -172,73 +172,120 @@ export default async function DocumentsPage({ searchParams }: Props) {
             description="Aucun document partagé pour le moment."
           />
         ) : (
-          <Card padding="none">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500">
-                      <Link href={buildSortUrl(dossierId, 'nom', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
-                        Nom
-                        {sort === 'nom' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
-                      </Link>
-                    </th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">
-                      <Link href={buildSortUrl(dossierId, 'date', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
-                        Date
-                        {sort === 'date' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
-                      </Link>
-                    </th>
-                    <th className="text-right px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Taille</th>
-                    <th className="text-center px-4 py-3 font-medium text-gray-500 w-20"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Dossiers en premier */}
-                  {visibleDossiers.map((d) => {
-                    const subCount = dossiers.filter((x) => x.parent_id === d.id).length;
-                    const docCount = countByDossier[d.id] ?? 0;
-                    const count = subCount > 0 ? subCount : docCount;
-                    const countLabel = subCount > 0
-                      ? `${count} dossier${count !== 1 ? 's' : ''}`
-                      : `${count} document${count !== 1 ? 's' : ''}`;
-                    return (
-                      <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3">
-                          <Link href={`/documents?dossier=${d.id}`} className="flex items-center gap-3 group/row">
-                            <Folder size={18} className={`${folderColorClass(d)} shrink-0`} />
-                            <span className="font-medium text-gray-900 group-hover/row:text-blue-600 transition-colors">{d.nom}</span>
-                            <span className="text-xs text-gray-400 ml-1">({countLabel})</span>
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3 text-gray-400 hidden md:table-cell">—</td>
-                        <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">—</td>
-                        <td className="px-4 py-3"></td>
-                      </tr>
-                    );
-                  })}
-                  {/* Fichiers ensuite */}
-                  {sortDocs((documents ?? []) as Doc[], sort, dir).map((doc) => (
-                    <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <FileText size={18} className="text-gray-400 shrink-0" />
-                          <span className="font-medium text-gray-900">{doc.nom}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
-                      <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center">
-                          <DocumentMenu doc={{ id: doc.id, nom: doc.nom }} dossiers={dossiers} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <>
+            <div className="space-y-2 md:hidden">
+              {visibleDossiers.map((d) => {
+                const subCount = dossiers.filter((x) => x.parent_id === d.id).length;
+                const docCount = countByDossier[d.id] ?? 0;
+                const count = subCount > 0 ? subCount : docCount;
+                const countLabel = subCount > 0
+                  ? `${count} dossier${count !== 1 ? 's' : ''}`
+                  : `${count} document${count !== 1 ? 's' : ''}`;
+                return (
+                  <Card key={d.id}>
+                    <Link href={`/documents?dossier=${d.id}`} className="flex items-start gap-3">
+                      <Folder size={18} className={`${folderColorClass(d)} mt-0.5 shrink-0`} />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-gray-900">{d.nom}</p>
+                        <p className="text-xs text-gray-500 mt-1">{countLabel}</p>
+                      </div>
+                      <ChevronRight size={16} className="text-gray-400 shrink-0 mt-0.5" />
+                    </Link>
+                  </Card>
+                );
+              })}
+
+              {sortDocs((documents ?? []) as Doc[], sort, dir).map((doc) => (
+                <Card key={doc.id}>
+                  <div className="flex items-start gap-3">
+                    <FileText size={18} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 break-words">{doc.nom}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDate(doc.created_at)} · {formatTaille(doc.taille)}
+                      </p>
+                    </div>
+                    <a
+                      href={`/api/documents/${doc.id}/download`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-blue-200 hover:text-blue-700 hover:bg-blue-50 transition-colors shrink-0"
+                    >
+                      <Download size={13} /> Ouvrir
+                    </a>
+                  </div>
+                </Card>
+              ))}
             </div>
-          </Card>
+
+            <Card padding="none" className="hidden md:block">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium text-gray-500">
+                        <Link href={buildSortUrl(dossierId, 'nom', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                          Nom
+                          {sort === 'nom' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
+                        </Link>
+                      </th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">
+                        <Link href={buildSortUrl(dossierId, 'date', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                          Date
+                          {sort === 'date' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
+                        </Link>
+                      </th>
+                      <th className="text-right px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Taille</th>
+                      <th className="text-center px-4 py-3 font-medium text-gray-500 w-20"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Dossiers en premier */}
+                    {visibleDossiers.map((d) => {
+                      const subCount = dossiers.filter((x) => x.parent_id === d.id).length;
+                      const docCount = countByDossier[d.id] ?? 0;
+                      const count = subCount > 0 ? subCount : docCount;
+                      const countLabel = subCount > 0
+                        ? `${count} dossier${count !== 1 ? 's' : ''}`
+                        : `${count} document${count !== 1 ? 's' : ''}`;
+                      return (
+                        <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3">
+                            <Link href={`/documents?dossier=${d.id}`} className="flex items-center gap-3 group/row">
+                              <Folder size={18} className={`${folderColorClass(d)} shrink-0`} />
+                              <span className="font-medium text-gray-900 group-hover/row:text-blue-600 transition-colors">{d.nom}</span>
+                              <span className="text-xs text-gray-400 ml-1">({countLabel})</span>
+                            </Link>
+                          </td>
+                          <td className="px-4 py-3 text-gray-400 hidden md:table-cell">—</td>
+                          <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">—</td>
+                          <td className="px-4 py-3"></td>
+                        </tr>
+                      );
+                    })}
+                    {/* Fichiers ensuite */}
+                    {sortDocs((documents ?? []) as Doc[], sort, dir).map((doc) => (
+                      <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <FileText size={18} className="text-gray-400 shrink-0" />
+                            <span className="font-medium text-gray-900">{doc.nom}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
+                        <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center">
+                            <DocumentMenu doc={{ id: doc.id, nom: doc.nom }} dossiers={dossiers} />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </>
         )}
       </div>
     );
@@ -375,92 +422,152 @@ export default async function DocumentsPage({ searchParams }: Props) {
           }
         />
       ) : (
-        <Card padding="none">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">
-                    <Link href={buildSortUrl(dossierId, 'nom', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
-                      Nom
-                      {sort === 'nom' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
+        <>
+          <div className="space-y-2 md:hidden">
+            {visibleDossiers.map((d) => {
+              const subCount = dossiers.filter((x) => x.parent_id === d.id).length;
+              const docCount = countByDossier[d.id] ?? 0;
+              const count = subCount > 0 ? subCount : docCount;
+              const countLabel = subCount > 0
+                ? `${count} dossier${count !== 1 ? 's' : ''}`
+                : `${count} document${count !== 1 ? 's' : ''}`;
+              return (
+                <Card key={d.id}>
+                  <div className="flex items-start gap-3">
+                    <Link href={`/documents?dossier=${d.id}`} className="flex items-start gap-3 min-w-0 flex-1 group/link">
+                      <Folder size={18} className={`${folderColorClass(d)} mt-0.5 shrink-0`} />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-gray-900 group-hover/link:text-blue-700 transition-colors">{d.nom}</p>
+                        <p className="text-xs text-gray-500 mt-1">{countLabel}</p>
+                      </div>
                     </Link>
-                  </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">
-                    <Link href={buildSortUrl(dossierId, 'date', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
-                      Date
-                      {sort === 'date' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
-                    </Link>
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Taille</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-500 w-32">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* ── Dossiers en premier ── */}
-                {visibleDossiers.map((d) => {
-                  const subCount = dossiers.filter((x) => x.parent_id === d.id).length;
-                  const docCount = countByDossier[d.id] ?? 0;
-                  const count = subCount > 0 ? subCount : docCount;
-                  const countLabel = subCount > 0
-                    ? `${count} dossier${count !== 1 ? 's' : ''}`
-                    : `${count} document${count !== 1 ? 's' : ''}`;
-                  return (
-                    <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors group">
+                    {canWrite && !d.is_default ? (
+                      <FolderMenu
+                        dossier={{ id: d.id, nom: d.nom, parent_id: d.parent_id }}
+                        hasDocuments={docCount > 0}
+                        hasSubs={subCount > 0}
+                      />
+                    ) : (
+                      <ChevronRight size={16} className="text-gray-400 shrink-0 mt-0.5" />
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+
+            {sortDocs((documents ?? []) as Doc[], sort, dir).map((doc) => (
+              <Card key={doc.id}>
+                <div className="flex items-start gap-3">
+                  <FileText size={18} className="text-gray-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-gray-900 break-words">{doc.nom}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatDate(doc.created_at)} · {formatTaille(doc.taille)}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    {canWrite
+                      ? <DocumentMenu doc={{ id: doc.id, nom: doc.nom }} dossiers={dossiers} />
+                      : (
+                        <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-blue-200 hover:text-blue-700 hover:bg-blue-50 transition-colors" title="Voir">
+                          <ExternalLink size={13} /> Ouvrir
+                        </a>
+                      )
+                    }
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <Card padding="none" className="hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">
+                      <Link href={buildSortUrl(dossierId, 'nom', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                        Nom
+                        {sort === 'nom' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
+                      </Link>
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">
+                      <Link href={buildSortUrl(dossierId, 'date', sort, dir)} className="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                        Date
+                        {sort === 'date' ? (dir === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : null}
+                      </Link>
+                    </th>
+                    <th className="text-right px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Taille</th>
+                    <th className="text-center px-4 py-3 font-medium text-gray-500 w-32">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* ── Dossiers en premier ── */}
+                  {visibleDossiers.map((d) => {
+                    const subCount = dossiers.filter((x) => x.parent_id === d.id).length;
+                    const docCount = countByDossier[d.id] ?? 0;
+                    const count = subCount > 0 ? subCount : docCount;
+                    const countLabel = subCount > 0
+                      ? `${count} dossier${count !== 1 ? 's' : ''}`
+                      : `${count} document${count !== 1 ? 's' : ''}`;
+                    return (
+                      <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors group">
+                        <td className="px-4 py-3">
+                          <Link href={`/documents?dossier=${d.id}`} className="flex items-center gap-3 group/link">
+                            <Folder size={18} className={`${folderColorClass(d)} shrink-0`} />
+                            <span className="font-medium text-gray-900 group-hover/link:text-blue-600 transition-colors">{d.nom}</span>
+                            <span className="text-xs text-gray-400">({countLabel})</span>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 hidden md:table-cell">—</td>
+                        <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">—</td>
+                        <td className="px-4 py-3">
+                          {canWrite && !d.is_default && (
+                            <div className="flex items-center justify-center">
+                              <FolderMenu
+                                dossier={{ id: d.id, nom: d.nom, parent_id: d.parent_id }}
+                                hasDocuments={docCount > 0}
+                                hasSubs={subCount > 0}
+                              />
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+
+                  {/* ── Fichiers ensuite ── */}
+                  {sortDocs((documents ?? []) as Doc[], sort, dir).map((doc) => (
+                    <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
-                        <Link href={`/documents?dossier=${d.id}`} className="flex items-center gap-3 group/link">
-                          <Folder size={18} className={`${folderColorClass(d)} shrink-0`} />
-                          <span className="font-medium text-gray-900 group-hover/link:text-blue-600 transition-colors">{d.nom}</span>
-                          <span className="text-xs text-gray-400">({countLabel})</span>
-                        </Link>
+                        <div className="flex items-center gap-3">
+                          <FileText size={18} className="text-gray-400 shrink-0" />
+                          <span className="font-medium text-gray-900">{doc.nom}</span>
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-400 hidden md:table-cell">—</td>
-                      <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">—</td>
+                      <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
+                      <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
                       <td className="px-4 py-3">
-                        {canWrite && !d.is_default && (
-                          <div className="flex items-center justify-center">
-                            <FolderMenu
-                              dossier={{ id: d.id, nom: d.nom, parent_id: d.parent_id }}
-                              hasDocuments={docCount > 0}
-                              hasSubs={subCount > 0}
-                            />
-                          </div>
-                        )}
+                        <div className="flex items-center justify-center">
+                          {canWrite
+                            ? <DocumentMenu doc={{ id: doc.id, nom: doc.nom }} dossiers={dossiers} />
+                            : (
+                              <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Voir">
+                                <ExternalLink size={14} />
+                              </a>
+                            )
+                          }
+                        </div>
                       </td>
                     </tr>
-                  );
-                })}
-
-                {/* ── Fichiers ensuite ── */}
-                {sortDocs((documents ?? []) as Doc[], sort, dir).map((doc) => (
-                  <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <FileText size={18} className="text-gray-400 shrink-0" />
-                        <span className="font-medium text-gray-900">{doc.nom}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{formatDate(doc.created_at)}</td>
-                    <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center">
-                        {canWrite
-                          ? <DocumentMenu doc={{ id: doc.id, nom: doc.nom }} dossiers={dossiers} />
-                          : (
-                            <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Voir">
-                              <ExternalLink size={14} />
-                            </a>
-                          )
-                        }
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
       )}
     </div>
   );

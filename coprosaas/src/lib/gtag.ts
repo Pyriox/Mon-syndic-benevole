@@ -12,6 +12,10 @@ declare global {
   interface Window {
     gtag: (...args: unknown[]) => void;
     dataLayer: Record<string, unknown>[];
+    __msbLastPageview?: {
+      key: string;
+      timestamp: number;
+    };
   }
 }
 
@@ -120,6 +124,22 @@ function sanitizeUrlForAnalytics(url: string) {
   }
 }
 
+const PAGEVIEW_DEDUPE_WINDOW_MS = 1500;
+
+function isDuplicatePageview(key: string) {
+  if (typeof window === 'undefined') return false;
+
+  const now = Date.now();
+  const lastPageview = window.__msbLastPageview;
+
+  if (lastPageview && lastPageview.key === key && now - lastPageview.timestamp < PAGEVIEW_DEDUPE_WINDOW_MS) {
+    return true;
+  }
+
+  window.__msbLastPageview = { key, timestamp: now };
+  return false;
+}
+
 export function clearGoogleCookies() {
   if (typeof document === 'undefined' || typeof window === 'undefined') return;
 
@@ -188,13 +208,16 @@ export function pageview(url: string) {
     consent_state: hasAnalyticsConsent() ? 'granted' : 'denied',
     anonymize_ip: true,
   };
+  const dedupeKey = `${payload.consent_state}:${sanitizedUrl}`;
 
   if (GTM_ID) {
+    if (isDuplicatePageview(dedupeKey)) return;
     pushToDataLayer({ event: 'virtual_pageview', ...payload });
     return;
   }
 
   if (!GA_ID || !window.gtag) return;
+  if (isDuplicatePageview(dedupeKey)) return;
   window.gtag('config', GA_ID, {
     ...payload,
     send_page_view: true,

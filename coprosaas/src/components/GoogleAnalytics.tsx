@@ -4,19 +4,23 @@
 // ============================================================
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { pageview } from '@/lib/gtag';
 
 function TrackPageView() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const lastTrackedUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Ne pas tracker les pages admin
     if (pathname.startsWith('/admin')) return;
 
     const url = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
+    if (url === lastTrackedUrlRef.current) return;
+
+    lastTrackedUrlRef.current = url;
     pageview(url);
   }, [pathname, searchParams]);
 
