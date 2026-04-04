@@ -111,11 +111,16 @@ export default async function AdminAnalyticsPage() {
   }
 
   const analytics = await getGa4AdminAnalytics();
-  const signUps = analytics.businessEvents.sign_up ?? 0;
-  const checkouts = analytics.businessEvents.begin_checkout ?? 0;
-  const purchases = analytics.businessEvents.purchase ?? 0;
-  const logins = analytics.businessEvents.login ?? 0;
-  const onboardingComplete = analytics.businessEvents.onboarding_complete ?? 0;
+  const signUps7d = analytics.businessEvents7d.sign_up ?? 0;
+  const signUps30d = analytics.businessEvents30d.sign_up ?? 0;
+  const checkouts7d = analytics.businessEvents7d.begin_checkout ?? 0;
+  const checkouts30d = analytics.businessEvents30d.begin_checkout ?? 0;
+  const purchases7d = analytics.businessEvents7d.purchase ?? 0;
+  const purchases30d = analytics.businessEvents30d.purchase ?? 0;
+  const logins7d = analytics.businessEvents7d.login ?? 0;
+  const logins30d = analytics.businessEvents30d.login ?? 0;
+  const onboardingComplete7d = analytics.businessEvents7d.onboarding_complete ?? 0;
+  const onboardingComplete30d = analytics.businessEvents30d.onboarding_complete ?? 0;
 
   return (
     <div className="space-y-6 pb-16">
@@ -202,37 +207,37 @@ export default async function AdminAnalyticsPage() {
           tone="bg-blue-50 text-blue-600"
         />
         <StatCard
-          label="Sessions (30 j)"
-          value={fmtNumber(analytics.last30d.sessions)}
-          hint={`${fmtNumber(analytics.last7d.sessions)} sur 7 jours`}
+          label="Sessions (7 j)"
+          value={fmtNumber(analytics.last7d.sessions)}
+          hint={`${fmtNumber(analytics.last30d.sessions)} sur 30 jours`}
           icon={Activity}
           tone="bg-violet-50 text-violet-600"
         />
         <StatCard
-          label="Pages vues (30 j)"
-          value={fmtNumber(analytics.last30d.pageViews)}
-          hint={`${fmtNumber(analytics.last7d.pageViews)} sur 7 jours`}
+          label="Pages vues (7 j)"
+          value={fmtNumber(analytics.last7d.pageViews)}
+          hint={`${fmtNumber(analytics.last30d.pageViews)} sur 30 jours`}
           icon={Eye}
           tone="bg-emerald-50 text-emerald-600"
         />
         <StatCard
-          label="Inscriptions"
-          value={fmtNumber(signUps)}
-          hint={`${pct(signUps, analytics.last30d.activeUsers)}% des utilisateurs actifs 30 j`}
+          label="Inscriptions (7 j)"
+          value={fmtNumber(signUps7d)}
+          hint={`${fmtNumber(signUps30d)} sur 30 jours · ${pct(signUps7d, analytics.last7d.activeUsers)}% des actifs 7 j`}
           icon={UserPlus}
           tone="bg-indigo-50 text-indigo-600"
         />
         <StatCard
-          label="Débuts de checkout"
-          value={fmtNumber(checkouts)}
-          hint={`${fmtNumber(purchases)} achats détectés`}
+          label="Débuts de checkout (7 j)"
+          value={fmtNumber(checkouts7d)}
+          hint={`${fmtNumber(checkouts30d)} sur 30 jours · ${fmtNumber(purchases7d)} achats sur 7 j`}
           icon={MousePointerClick}
           tone="bg-amber-50 text-amber-600"
         />
         <StatCard
-          label="Achats / conversions"
-          value={fmtNumber(purchases)}
-          hint={checkouts > 0 ? `${pct(purchases, checkouts)}% de conversion checkout → achat` : 'Aucun checkout mesuré'}
+          label="Achats / conversions (7 j)"
+          value={fmtNumber(purchases7d)}
+          hint={checkouts7d > 0 ? `${fmtNumber(purchases30d)} sur 30 jours · ${pct(purchases7d, checkouts7d)}% de conversion 7 j` : `${fmtNumber(purchases30d)} sur 30 jours · aucun checkout sur 7 j`}
           icon={ShoppingCart}
           tone="bg-rose-50 text-rose-600"
         />
@@ -243,15 +248,18 @@ export default async function AdminAnalyticsPage() {
           <h2 className="text-sm font-semibold text-gray-900">Événements business utiles</h2>
           <div className="mt-4 space-y-3">
             {[
-              { label: 'Connexion', value: logins },
-              { label: 'Onboarding terminé', value: onboardingComplete },
-              { label: 'Sign up', value: signUps },
-              { label: 'Begin checkout', value: checkouts },
-              { label: 'Purchase', value: purchases },
+              { label: 'Connexion', value7d: logins7d, value30d: logins30d },
+              { label: 'Onboarding terminé', value7d: onboardingComplete7d, value30d: onboardingComplete30d },
+              { label: 'Sign up', value7d: signUps7d, value30d: signUps30d },
+              { label: 'Begin checkout', value7d: checkouts7d, value30d: checkouts30d },
+              { label: 'Purchase', value7d: purchases7d, value30d: purchases30d },
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
                 <span className="text-sm text-gray-700">{item.label}</span>
-                <span className="text-sm font-semibold text-gray-900">{fmtNumber(item.value)}</span>
+                <span className="text-right text-sm font-semibold text-gray-900">
+                  {fmtNumber(item.value7d)}
+                  <span className="block text-[11px] font-normal text-gray-500">{fmtNumber(item.value30d)} sur 30 j</span>
+                </span>
               </div>
             ))}
           </div>

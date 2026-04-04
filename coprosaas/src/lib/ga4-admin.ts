@@ -52,7 +52,8 @@ export type Ga4AdminAnalytics = {
     sessions: number;
     pageViews: number;
   };
-  businessEvents: Record<string, number>;
+  businessEvents7d: Record<string, number>;
+  businessEvents30d: Record<string, number>;
   topPages: Array<{
     path: string;
     title: string;
@@ -252,7 +253,8 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
     error: null,
     last7d: { activeUsers: 0, sessions: 0, pageViews: 0 },
     last30d: { activeUsers: 0, sessions: 0, pageViews: 0 },
-    businessEvents: {},
+    businessEvents7d: {},
+    businessEvents30d: {},
     topPages: [],
     topEvents: [],
     measurementModes: [],
@@ -290,7 +292,7 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       },
     };
 
-    const [overview7, overview30, topPagesReport, topEventsReport, measurementModeReport, consentStateReport] =
+    const [overview7, overview30, topPagesReport, topEvents7dReport, topEvents30dReport, measurementModeReport, consentStateReport] =
       await Promise.all([
         runReport(accessToken, config.propertyId, {
           dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
@@ -308,12 +310,20 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
           limit: '8',
         }),
         runReport(accessToken, config.propertyId, {
+          dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
+          dimensions: [{ name: 'eventName' }],
+          metrics: [{ name: 'eventCount' }],
+          dimensionFilter: eventFilter,
+          orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+          limit: String(CUSTOM_EVENT_NAMES.length),
+        }),
+        runReport(accessToken, config.propertyId, {
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
           dimensions: [{ name: 'eventName' }],
           metrics: [{ name: 'eventCount' }],
           dimensionFilter: eventFilter,
           orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
-          limit: '12',
+          limit: String(CUSTOM_EVENT_NAMES.length),
         }),
         runReport(accessToken, config.propertyId, {
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
@@ -333,8 +343,9 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
         }).catch(() => ({ rows: [] })),
       ]);
 
-    const topEvents = parseTopEvents(topEventsReport);
-    const businessEvents = Object.fromEntries(topEvents.map((item) => [item.name, item.count]));
+    const topEvents = parseTopEvents(topEvents30dReport);
+    const businessEvents7d = Object.fromEntries(parseTopEvents(topEvents7dReport).map((item) => [item.name, item.count]));
+    const businessEvents30d = Object.fromEntries(topEvents.map((item) => [item.name, item.count]));
 
     return {
       ...emptyState,
@@ -343,7 +354,8 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       fetchedAt: new Date().toISOString(),
       last7d: parseOverview(overview7),
       last30d: parseOverview(overview30),
-      businessEvents,
+      businessEvents7d,
+      businessEvents30d,
       topPages: parseTopPages(topPagesReport),
       topEvents,
       measurementModes: parseBreakdown(measurementModeReport),
