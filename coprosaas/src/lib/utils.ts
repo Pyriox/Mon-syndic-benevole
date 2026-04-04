@@ -149,6 +149,11 @@ export const LABELS_TYPE_INCIDENT: Record<string, string> = {
   autre: 'Autre',
 };
 
+export const LABELS_NATURE_INCIDENT: Record<string, string> = {
+  incident: 'Incident',
+  travaux: 'Travaux',
+};
+
 export const LABELS_PRIORITE: Record<string, string> = {
   faible: 'Faible',
   moyenne: 'Moyenne',

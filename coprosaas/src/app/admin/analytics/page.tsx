@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminUser } from '@/lib/admin-config';
 import { getGa4AdminAnalytics } from '@/lib/ga4-admin';
 
@@ -34,6 +35,13 @@ function fmtDateTime(value: string) {
 function pct(part: number, total: number) {
   if (!total) return 0;
   return Math.round((part / total) * 100);
+}
+
+function countSince<T extends { created_at?: string | null }>(items: T[], sinceMs: number) {
+  return items.reduce((sum, item) => {
+    const parsed = item.created_at ? Date.parse(item.created_at) : Number.NaN;
+    return Number.isFinite(parsed) && parsed >= sinceMs ? sum + 1 : sum;
+  }, 0);
 }
 
 function StatCard({
@@ -111,16 +119,61 @@ export default async function AdminAnalyticsPage() {
   }
 
   const analytics = await getGa4AdminAnalytics();
+  const admin = createAdminClient();
+  const snapshotMs = Date.parse(analytics.fetchedAt);
+  const nowMs = Number.isFinite(snapshotMs) ? snapshotMs : 0;
+  const last7dMs = nowMs - 7 * 24 * 60 * 60 * 1000;
+  const last30dIso = new Date(nowMs - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [{ data: recentUserEvents }, { data: recentCopros }] = await Promise.all([
+    admin
+      .from('user_events')
+      .select('event_type, created_at')
+      .in('event_type', ['begin_checkout', 'trial_started', 'subscription_created'])
+      .gte('created_at', last30dIso),
+    admin
+      .from('coproprietes')
+      .select('created_at')
+      .gte('created_at', last30dIso),
+  ]);
+
   const signUps7d = analytics.businessEvents7d.sign_up ?? 0;
   const signUps30d = analytics.businessEvents30d.sign_up ?? 0;
-  const checkouts7d = analytics.businessEvents7d.begin_checkout ?? 0;
-  const checkouts30d = analytics.businessEvents30d.begin_checkout ?? 0;
-  const purchases7d = analytics.businessEvents7d.purchase ?? 0;
-  const purchases30d = analytics.businessEvents30d.purchase ?? 0;
+  const gaCheckouts7d = analytics.businessEvents7d.begin_checkout ?? 0;
+  const gaCheckouts30d = analytics.businessEvents30d.begin_checkout ?? 0;
+  const gaPurchases7d = analytics.businessEvents7d.purchase ?? 0;
+  const gaPurchases30d = analytics.businessEvents30d.purchase ?? 0;
   const logins7d = analytics.businessEvents7d.login ?? 0;
   const logins30d = analytics.businessEvents30d.login ?? 0;
-  const onboardingComplete7d = analytics.businessEvents7d.onboarding_complete ?? 0;
-  const onboardingComplete30d = analytics.businessEvents30d.onboarding_complete ?? 0;
+  const gaOnboardingComplete7d = analytics.businessEvents7d.onboarding_complete ?? 0;
+  const gaOnboardingComplete30d = analytics.businessEvents30d.onboarding_complete ?? 0;
+
+  const purchaseLikeEvents = (recentUserEvents ?? []).filter((event) => (
+    event.event_type === 'trial_started' || event.event_type === 'subscription_created'
+  ));
+  const checkoutEvents = (recentUserEvents ?? []).filter((event) => event.event_type === 'begin_checkout');
+
+  const internalPurchases30d = purchaseLikeEvents.length;
+  const internalPurchases7d = countSince(purchaseLikeEvents, last7dMs);
+  const internalCheckouts30d = Math.max(checkoutEvents.length, internalPurchases30d);
+  const internalCheckouts7d = Math.max(countSince(checkoutEvents, last7dMs), internalPurchases7d);
+  const internalOnboarding30d = (recentCopros ?? []).length;
+  const internalOnboarding7d = countSince(recentCopros ?? [], last7dMs);
+
+  const checkouts7d = Math.max(gaCheckouts7d, internalCheckouts7d);
+  const checkouts30d = Math.max(gaCheckouts30d, internalCheckouts30d);
+  const purchases7d = Math.max(gaPurchases7d, internalPurchases7d);
+  const purchases30d = Math.max(gaPurchases30d, internalPurchases30d);
+  const onboardingComplete7d = Math.max(gaOnboardingComplete7d, internalOnboarding7d);
+  const onboardingComplete30d = Math.max(gaOnboardingComplete30d, internalOnboarding30d);
+  const usingBusinessFallback = (
+    checkouts7d > gaCheckouts7d ||
+    checkouts30d > gaCheckouts30d ||
+    purchases7d > gaPurchases7d ||
+    purchases30d > gaPurchases30d ||
+    onboardingComplete7d > gaOnboardingComplete7d ||
+    onboardingComplete30d > gaOnboardingComplete30d
+  );
 
   return (
     <div className="space-y-6 pb-16">
@@ -243,13 +296,22 @@ export default async function AdminAnalyticsPage() {
         />
       </section>
 
+      {usingBusinessFallback && (
+        <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4 shadow-sm">
+          <p className="text-sm text-sky-900">
+            Les cartes <strong>Onboarding</strong>, <strong>Begin checkout</strong> et <strong>Purchase</strong> utilisent aussi les logs internes
+            de l’app et de Stripe pour éviter les faux zéros quand GA4 ne remonte pas encore ces événements métier.
+          </p>
+        </section>
+      )}
+
       <section className="grid gap-4 xl:grid-cols-3">
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm xl:col-span-1">
           <h2 className="text-sm font-semibold text-gray-900">Événements business utiles</h2>
           <div className="mt-4 space-y-3">
             {[
               { label: 'Connexion', value7d: logins7d, value30d: logins30d },
-              { label: 'Onboarding terminé', value7d: onboardingComplete7d, value30d: onboardingComplete30d },
+              { label: 'Onboarding / copro créée', value7d: onboardingComplete7d, value30d: onboardingComplete30d },
               { label: 'Sign up', value7d: signUps7d, value30d: signUps30d },
               { label: 'Begin checkout', value7d: checkouts7d, value30d: checkouts30d },
               { label: 'Purchase', value7d: purchases7d, value30d: purchases30d },

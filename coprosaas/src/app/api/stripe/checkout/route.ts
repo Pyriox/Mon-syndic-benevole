@@ -160,6 +160,19 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    if (user.email) {
+      try {
+        const adminClient = createAdminClient();
+        await adminClient.from('user_events').insert({
+          user_email: user.email.toLowerCase(),
+          event_type: 'begin_checkout',
+          label: `Checkout démarré — ${copro.nom} (${planId})`,
+        });
+      } catch (logError) {
+        console.error('[stripe/checkout] begin_checkout log error:', logError);
+      }
+    }
+
     return NextResponse.json({ url: session.url });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Erreur interne';

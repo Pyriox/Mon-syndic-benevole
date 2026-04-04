@@ -218,6 +218,7 @@ export interface Resolution {
 // --- Incident / Travaux ---
 export type StatutIncident = 'ouvert' | 'devis_demande' | 'devis_recu' | 'en_cours' | 'resolu';
 export type PrioriteIncident = 'faible' | 'moyenne' | 'haute' | 'urgente';
+export type NatureIncident = 'incident' | 'travaux';
 export type TypeIncident =
   | 'plomberie' | 'electricite' | 'parties_communes' | 'ascenseur'
   | 'toiture' | 'securite' | 'espaces_verts' | 'autre';
@@ -227,6 +228,7 @@ export interface Incident {
   copropriete_id: string;
   titre: string;
   description: string;
+  nature: NatureIncident | null;
   statut: StatutIncident;
   priorite: PrioriteIncident;
   type_incident: TypeIncident | null;

@@ -61,7 +61,6 @@ interface IncidentGroupsProps {
 }
 
 export default function IncidentGroups({ incidents, isSyndic, canWrite }: IncidentGroupsProps) {
-  // Map statut → open state
   const [open, setOpen] = useState<Record<StatutIncident, boolean>>(() =>
     Object.fromEntries(GROUPS.map(g => [g.statut, g.defaultOpen])) as Record<StatutIncident, boolean>
   );
@@ -69,11 +68,34 @@ export default function IncidentGroups({ incidents, isSyndic, canWrite }: Incide
   const toggle = (statut: StatutIncident) =>
     setOpen(prev => ({ ...prev, [statut]: !prev[statut] }));
 
+  const priorityRank: Record<string, number> = {
+    urgente: 0,
+    haute: 1,
+    moyenne: 2,
+    faible: 3,
+  };
+
   return (
     <div className="space-y-3">
       {GROUPS.map(group => {
         const items = incidents.filter(i => i.statut === group.statut);
         if (items.length === 0) return null;
+
+        const sortedItems = [...items].sort((a, b) => {
+          const aNature = a.nature === 'travaux' ? 'travaux' : 'incident';
+          const bNature = b.nature === 'travaux' ? 'travaux' : 'incident';
+
+          if (aNature === 'travaux' && bNature === 'travaux') {
+            const aDate = a.date_intervention_prevue ? new Date(a.date_intervention_prevue).getTime() : Number.POSITIVE_INFINITY;
+            const bDate = b.date_intervention_prevue ? new Date(b.date_intervention_prevue).getTime() : Number.POSITIVE_INFINITY;
+            if (aDate !== bDate) return aDate - bDate;
+          }
+
+          const byPriority = (priorityRank[a.priorite] ?? 99) - (priorityRank[b.priorite] ?? 99);
+          if (byPriority !== 0) return byPriority;
+
+          return new Date(b.date_declaration).getTime() - new Date(a.date_declaration).getTime();
+        });
 
         const isOpen  = open[group.statut];
         const urgents = items.filter(i => i.priorite === 'urgente').length;
@@ -106,7 +128,7 @@ export default function IncidentGroups({ incidents, isSyndic, canWrite }: Incide
             {/* Cards */}
             {isOpen && (
               <div className="bg-gray-50 p-3 space-y-2">
-                {items.map(incident => (
+                {sortedItems.map(incident => (
                   <IncidentCard key={incident.id} incident={incident} isSyndic={isSyndic} canWrite={canWrite} />
                 ))}
               </div>

@@ -18,10 +18,10 @@ import {
 } from 'lucide-react';
 import {
   formatDate, formatEuros,
-  LABELS_STATUT_INCIDENT, LABELS_TYPE_INCIDENT, LABELS_PRIORITE,
+  LABELS_NATURE_INCIDENT, LABELS_STATUT_INCIDENT, LABELS_TYPE_INCIDENT, LABELS_PRIORITE,
   cn,
 } from '@/lib/utils';
-import type { Incident, StatutIncident } from '@/types';
+import type { Incident, NatureIncident, StatutIncident } from '@/types';
 
 // -----------------------------------------------------------
 // Helpers
@@ -44,6 +44,14 @@ function variantPriorite(p: string): BadgeVariant {
   if (p === 'moyenne') return 'default';
   if (p === 'haute')   return 'warning';
   return 'danger'; // urgente
+}
+
+function getNature(incident: Incident): NatureIncident {
+  return incident.nature === 'travaux' ? 'travaux' : 'incident';
+}
+
+function variantNature(nature: NatureIncident): BadgeVariant {
+  return nature === 'travaux' ? 'info' : 'danger';
 }
 
 interface Note { date: string; texte: string; }
@@ -75,17 +83,20 @@ interface TransitionPanelProps {
 function TransitionPanel({ incident, data, setData, onTransition, loading }: TransitionPanelProps) {
   const handle = (e: React.ChangeEvent<HTMLInputElement>) =>
     setData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const nature = getNature(incident);
 
   if (incident.statut === 'ouvert') {
     return (
       <div className="bg-gray-50 rounded-xl p-3 space-y-2">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Prochaines étapes</p>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          {nature === 'travaux' ? 'Préparation du chantier' : 'Prochaines étapes'}
+        </p>
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" onClick={() => onTransition('devis_demande')} loading={loading}>
-            Demander un devis
+            {nature === 'travaux' ? 'Lancer les devis' : 'Demander un devis'}
           </Button>
           <Button size="sm" variant="secondary" onClick={() => onTransition('resolu')} loading={loading}>
-            Résoudre directement
+            {nature === 'travaux' ? 'Clôturer directement' : 'Résoudre directement'}
           </Button>
         </div>
       </div>
@@ -128,7 +139,7 @@ function TransitionPanel({ incident, data, setData, onTransition, loading }: Tra
   if (incident.statut === 'devis_recu') {
     return (
       <div className="bg-purple-50 border border-purple-100 rounded-xl p-3 space-y-3">
-        <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Lancer les travaux</p>
+        <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">{nature === 'travaux' ? 'Planifier les travaux' : 'Planifier l\'intervention'}</p>
         <div className="grid grid-cols-2 gap-2">
           <Input
             label="Artisan"
@@ -161,7 +172,7 @@ function TransitionPanel({ incident, data, setData, onTransition, loading }: Tra
           })}
           loading={loading}
         >
-          Démarrer les travaux
+          {nature === 'travaux' ? 'Démarrer les travaux' : 'Démarrer l\'intervention'}
         </Button>
       </div>
     );
@@ -170,7 +181,7 @@ function TransitionPanel({ incident, data, setData, onTransition, loading }: Tra
   if (incident.statut === 'en_cours') {
     return (
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 space-y-3">
-        <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Travaux terminés ?</p>
+        <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">{nature === 'travaux' ? 'Travaux terminés ?' : 'Intervention terminée ?'}</p>
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <Input
@@ -226,6 +237,8 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
   const [photoUrl,     setPhotoUrl]     = useState<string | null>(incident.photo_url ?? null);
   const [notes,        setNotes]        = useState<Note[]>(() => parseNotes(incident.notes_internes));
   const [deleted,      setDeleted]      = useState(false);
+
+  const nature = getNature(incident);
 
   const [transitionData, setTransitionData] = useState<TransitionData>({
     montant_devis:           incident.montant_devis?.toString()           ?? '',
@@ -329,6 +342,9 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
 
               {/* Badges row */}
               <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                <Badge variant={variantNature(nature)}>
+                  {LABELS_NATURE_INCIDENT[nature] ?? nature}
+                </Badge>
                 <Badge variant={variantStatut(incident.statut)}>
                   {LABELS_STATUT_INCIDENT[incident.statut] ?? incident.statut}
                 </Badge>
@@ -350,7 +366,7 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
                     <MapPin size={11} /> {incident.localisation}
                   </span>
                 )}
-                <span className="shrink-0">Déclaré le {formatDate(incident.date_declaration)}</span>
+                <span className="shrink-0">{nature === 'travaux' ? 'Ajouté le' : 'Déclaré le'} {formatDate(incident.date_declaration)}</span>
                 {incident.artisan_nom && (
                   <span className="flex items-center gap-1 shrink-0">
                     <User size={11} /> {incident.artisan_nom}
@@ -544,10 +560,10 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
       )}
 
       {/* Delete confirmation modal */}
-      <Modal isOpen={deleteModal} onClose={() => setDeleteModal(false)} title="Supprimer l'incident" size="sm">
+      <Modal isOpen={deleteModal} onClose={() => setDeleteModal(false)} title={nature === 'travaux' ? 'Supprimer ces travaux' : "Supprimer l'incident"} size="sm">
         <p className="text-sm text-gray-600 mb-4">
           Êtes-vous sûr de vouloir supprimer <strong className="text-gray-900">{incident.titre}</strong> ?
-          Cette action est irréversible.
+          {nature === 'travaux' ? ' Ce suivi de travaux sera perdu.' : ' Cette déclaration sera perdue.'}
         </p>
         <div className="flex gap-3">
           <Button variant="danger" onClick={handleDelete} loading={loading}>Supprimer</Button>
