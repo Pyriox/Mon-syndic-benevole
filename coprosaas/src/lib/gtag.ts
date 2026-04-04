@@ -183,7 +183,6 @@ export function pageview(url: string) {
   const sanitizedUrl = sanitizeUrlForAnalytics(url);
   const payload = {
     page_location: window.location.origin + sanitizedUrl,
-    page_path: sanitizedUrl,
     page_title: document.title.slice(0, 120),
     measurement_mode: getMeasurementMode(),
     consent_state: hasAnalyticsConsent() ? 'granted' : 'denied',

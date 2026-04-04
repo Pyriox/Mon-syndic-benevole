@@ -48,7 +48,6 @@ describe('gtag helpers', () => {
       expect.arrayContaining([
         expect.objectContaining({
           event: 'virtual_pageview',
-          page_path: '/tarifs?plan=confort',
           measurement_mode: 'cookieless',
         }),
         expect.objectContaining({
@@ -59,6 +58,10 @@ describe('gtag helpers', () => {
         }),
       ])
     );
+
+    const pageViewEvent = window.dataLayer.find((event) => event.event === 'virtual_pageview');
+    expect(pageViewEvent).toBeDefined();
+    expect(pageViewEvent).not.toHaveProperty('page_path');
 
     expect(window.dataLayer).toEqual(
       expect.arrayContaining([

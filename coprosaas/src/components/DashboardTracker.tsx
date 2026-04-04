@@ -25,7 +25,6 @@ export default function DashboardTracker({ userRole }: Props) {
     prevPathRef.current = fullPath;
 
     trackAnonymousEvent('dashboard_page_view', {
-      page_path: pathname,
       role: userRole,
     });
   }, [pathname, searchParams, userRole]);
