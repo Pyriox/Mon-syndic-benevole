@@ -62,12 +62,13 @@ function RegisterForm() {
   useEffect(() => {
     const invitationToken = token;
     if (!invitationToken) return;
+    const safeInvitationToken = invitationToken;
 
     let cancelled = false;
 
     async function loadInvitation() {
       try {
-        const response = await fetch(`/api/invitations?token=${encodeURIComponent(invitationToken)}`);
+        const response = await fetch(`/api/invitations?token=${encodeURIComponent(safeInvitationToken)}`);
         const data = await response.json().catch(() => ({})) as {
           error?: string;
           email?: string;
@@ -111,7 +112,7 @@ function RegisterForm() {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              token: invitationToken,
+              token: safeInvitationToken,
               user_id: session.user.id,
               full_name: fullName,
             }),
