@@ -82,6 +82,8 @@ const comparisonRows = [
   ['Transparence des comptes', 'Partielle', '✓ Totale'],
 ] as const;
 
+const comparisonRowsMobile = comparisonRows.slice(0, 4);
+
 export default function HomePage() {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -258,7 +260,7 @@ export default function HomePage() {
       <main>
 
       {/* ═══════ PROBLÈME ═══════ */}
-      <section aria-labelledby="probleme-heading" className="bg-white py-14 sm:py-20 px-4 sm:px-6">
+      <section aria-labelledby="probleme-heading" className="bg-white py-10 sm:py-20 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 id="probleme-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -340,7 +342,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-10 md:hidden space-y-3">
-            {comparisonRows.map(([label, pro, nous]) => (
+            {comparisonRowsMobile.map(([label, pro, nous]) => (
               <div key={label} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                 <p className="text-sm font-semibold text-gray-900">{label}</p>
                 <div className="mt-3 grid gap-2">
@@ -386,7 +388,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════ SOLUTION ══════════════════════════════ */}
-      <section id="fonctionnalites" aria-labelledby="solution-heading" className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6 border-y border-gray-100">
+      <section id="fonctionnalites" aria-labelledby="solution-heading" className="bg-gray-50 py-10 sm:py-20 px-4 sm:px-6 border-y border-gray-100">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 id="solution-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -401,7 +403,7 @@ export default function HomePage() {
 
           {/* 4 modules clés */}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             {[
               { Icon: Wallet, bg: 'bg-blue-100', fg: 'text-blue-600', title: 'Appels de fonds', desc: 'Génération auto, répartition par tantièmes, export PDF & e-mail.' },
               { Icon: CalendarDays, bg: 'bg-indigo-100', fg: 'text-indigo-600', title: 'Assemblées générales', desc: 'Convocations légales, votes, procès-verbal en un clic.' },
@@ -418,8 +420,12 @@ export default function HomePage() {
             ))}
           </div>
 
+          <p className="sm:hidden text-center text-sm text-gray-500 mb-6">
+            Appels de fonds, AG, dépenses, documents, incidents et support inclus.
+          </p>
+
           {/* Inclus également */}
-          <div className="bg-white border border-gray-200 rounded-2xl px-6 py-5 flex flex-wrap gap-x-6 gap-y-2.5 items-center justify-center">
+          <div className="hidden sm:flex bg-white border border-gray-200 rounded-2xl px-6 py-5 flex-wrap gap-x-6 gap-y-2.5 items-center justify-center">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest w-full text-center mb-1">Inclus également dans tous les plans</span>
             {['Suivi incidents & travaux', 'Espace copropriétaire', 'Notifications automatiques', 'Fonds de travaux ALUR', 'Tableau de bord temps réel', 'Support par e-mail'].map((f) => (
               <span key={f} className="flex items-center gap-1.5 text-sm text-gray-600">
@@ -438,7 +444,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════ COMMENT ÇA MARCHE ══════════════════════════════ */}
-      <section aria-labelledby="howto-heading" className="bg-gray-50 border-y border-gray-100 py-14 sm:py-20 px-4 sm:px-6">
+      <section aria-labelledby="howto-heading" className="bg-gray-50 border-y border-gray-100 py-10 sm:py-20 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Comment ça marche</p>
@@ -450,7 +456,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {[
               {
                 step: '01', bg: 'bg-blue-600', ring: 'ring-blue-100', textColor: 'text-blue-600',
@@ -494,7 +500,7 @@ export default function HomePage() {
                     <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium shrink-0">{time}</span>
                   </div>
                   <p className="text-sm text-gray-500 leading-relaxed mb-3">{desc}</p>
-                  <ul className="space-y-1.5">
+                  <ul className="hidden sm:block space-y-1.5">
                     {detail.map((d) => (
                       <li key={d} className="flex items-center gap-2 text-xs text-gray-600">
                         <CheckCircle size={11} className="text-green-600 shrink-0" /> {d}
@@ -516,7 +522,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════ DÉMO ══════════════════════════════ */}
-      <section id="demo" aria-labelledby="demo-heading" className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-14 sm:py-20 px-4 sm:px-6">
+      <section id="demo" aria-labelledby="demo-heading" className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-10 sm:py-20 px-4 sm:px-6">
         <div className="hidden sm:block absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="hidden sm:block absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-5xl mx-auto">
@@ -851,7 +857,7 @@ export default function HomePage() {
       </section>
 
       {/* ── L'histoire derrière le projet ── */}
-      <section aria-labelledby="histoire-heading" className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-14 sm:py-20 px-4 sm:px-6">
+      <section aria-labelledby="histoire-heading" className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-10 sm:py-20 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-3">L&apos;histoire derrière le projet</p>
@@ -863,19 +869,24 @@ export default function HomePage() {
           {/* Témoignage fondateur */}
           <div className="bg-white/5 border border-white/15 rounded-2xl p-6 sm:p-8 mb-12 max-w-2xl mx-auto">
             <div className="text-blue-300/40 text-6xl font-serif leading-none mb-2 select-none">&ldquo;</div>
-            <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6 space-y-3">
-              <p>
-                On avait un syndic professionnel.{' '}
-                <span className="text-white font-medium">Factures qu&apos;on ne comprenait pas, impossible de les joindre, un forfait de base et des frais sur tout le reste.</span>{' '}
-                En AG, on a décidé de s&apos;en passer.
+            <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6">
+              <p className="sm:hidden">
+                Avec un syndic pro, tout coûtait cher et manquait de clarté. Avec Excel, tout était à refaire chaque trimestre. J&apos;ai donc créé l&apos;outil que j&apos;aurais aimé avoir comme syndic bénévole.
               </p>
-              <p>
-                On a essayé avec Excel et Google Drive. <span className="text-white font-medium">Chaque trimestre, je recommençais de zéro</span> : recalculer les quotes-parts, retrouver qui avait payé, envoyer les convocations à la main&hellip; C&apos;était chronophage et stressant.
-              </p>
-              <p>
-                Je n&apos;ai pas trouvé d&apos;outil fait pour ça — alors{' '}
-                <span className="text-white font-medium">je l&apos;ai construit moi-même.</span>
-              </p>
+              <div className="hidden sm:block space-y-3">
+                <p>
+                  On avait un syndic professionnel.{' '}
+                  <span className="text-white font-medium">Factures qu&apos;on ne comprenait pas, impossible de les joindre, un forfait de base et des frais sur tout le reste.</span>{' '}
+                  En AG, on a décidé de s&apos;en passer.
+                </p>
+                <p>
+                  On a essayé avec Excel et Google Drive. <span className="text-white font-medium">Chaque trimestre, je recommençais de zéro</span> : recalculer les quotes-parts, retrouver qui avait payé, envoyer les convocations à la main&hellip; C&apos;était chronophage et stressant.
+                </p>
+                <p>
+                  Je n&apos;ai pas trouvé d&apos;outil fait pour ça — alors{' '}
+                  <span className="text-white font-medium">je l&apos;ai construit moi-même.</span>
+                </p>
+              </div>
             </blockquote>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-500/30 rounded-full flex items-center justify-center shrink-0">
@@ -930,7 +941,7 @@ export default function HomePage() {
       </section>
 
             {/* ── Tarif ── */}
-      <section id="tarif" aria-labelledby="pricing-heading" className="py-14 sm:py-20 px-4 sm:px-6 bg-white">
+      <section id="tarif" aria-labelledby="pricing-heading" className="py-10 sm:py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-violet-600 uppercase tracking-widest mb-3">Tarifs</p>
@@ -948,7 +959,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-stretch mb-8 sm:mb-10">
 
             {/* Plan Essentiel */}
             <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-5 sm:p-7 text-white shadow-2xl shadow-blue-900/20 overflow-hidden flex flex-col">
@@ -971,7 +982,7 @@ export default function HomePage() {
             </div>
 
             {/* Plan Confort */}
-            <div className="bg-white border-2 border-emerald-200 rounded-3xl p-5 sm:p-7 shadow-lg flex flex-col relative overflow-hidden">
+            <div className="hidden md:flex bg-white border-2 border-emerald-200 rounded-3xl p-5 sm:p-7 shadow-lg flex-col relative overflow-hidden">
               <div className="absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">
                 Copros moyennes
               </div>
@@ -988,7 +999,7 @@ export default function HomePage() {
             </div>
 
             {/* Plan Illimité */}
-            <div className="bg-white border-2 border-violet-200 rounded-3xl p-5 sm:p-7 shadow-lg flex flex-col relative overflow-hidden">
+            <div className="hidden md:flex bg-white border-2 border-violet-200 rounded-3xl p-5 sm:p-7 shadow-lg flex-col relative overflow-hidden">
               <div className="absolute top-4 right-4 bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-1 rounded-full">
                 Grandes copros
               </div>
@@ -1005,6 +1016,10 @@ export default function HomePage() {
             </div>
 
           </div>
+
+          <p className="text-center text-gray-500 text-sm md:hidden mb-4">
+            Autres formules : <strong>Confort 450 €/an</strong> (20 lots) et <strong>Illimité 600 €/an</strong>.
+          </p>
 
           <p className="text-center text-gray-500 text-sm mb-6">Les 3 plans offrent exactement les mêmes fonctionnalités — seule différence&nbsp;: le nombre de lots inclus.</p>
           {/* Fonctionnalités incluses dans tous les plans */}
@@ -1027,7 +1042,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" aria-labelledby="faq-heading" className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6">
+      <section id="faq" aria-labelledby="faq-heading" className="bg-gray-50 py-10 sm:py-20 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Questions fréquentes</p>
@@ -1081,7 +1096,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA final ── */}
-      <section data-cta-final className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-16 sm:py-24 px-4 sm:px-6 text-white text-center relative overflow-hidden">
+      <section data-cta-final className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-12 sm:py-24 px-4 sm:px-6 text-white text-center relative overflow-hidden">
         <div className="hidden sm:block absolute top-0 left-1/3 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="hidden sm:block absolute bottom-0 right-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-2xl mx-auto">
