@@ -26,7 +26,7 @@ import { Resend } from 'resend';
 import { buildWelcomeEmail, buildWelcomeSubject } from '@/lib/emails/welcome';
 import { trackResendSendResult } from '@/lib/email-delivery';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
-import { shouldRunSignupFollowups } from '@/lib/auth-confirmation';
+import { getSafeAuthRedirectPath, shouldRunSignupFollowups } from '@/lib/auth-confirmation';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
 
   // Destination par défaut selon le type
   const defaultNext = type === 'recovery' ? '/reset-password' : '/dashboard';
-  const next        = searchParams.get('next') ?? defaultNext;
+  const next        = getSafeAuthRedirectPath(searchParams.get('next'), defaultNext);
 
   // ── Flux PKCE : échange du code d'autorisation ──────────────────────
   // Supabase redirige ici avec ?code=AUTH_CODE après avoir vérifié le

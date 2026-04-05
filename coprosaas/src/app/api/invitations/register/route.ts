@@ -6,8 +6,14 @@
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getClientIp, rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!await rateLimit(`invite-register:${ip}`, 10, 600_000)) {
+    return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans 10 minutes.' }, { status: 429 });
+  }
+
   const body = await request.json() as {
     token?: string;
     password?: string;
@@ -60,10 +66,15 @@ export async function POST(request: NextRequest) {
 
   if (createError) {
     // Email déjà utilisé ou autre erreur
-    const msg = createError.message.toLowerCase().includes('already')
-      ? 'Cette adresse email est déjà utilisée. Essayez de vous connecter.'
-      : createError.message;
-    return NextResponse.json({ error: msg }, { status: 400 });
+    if (createError.message.toLowerCase().includes('already')) {
+      return NextResponse.json({
+        error: 'Cette adresse email possède déjà un compte. Connectez-vous pour rejoindre la copropriété.',
+        requiresLogin: true,
+        email: invitation.email,
+      }, { status: 409 });
+    }
+
+    return NextResponse.json({ error: createError.message }, { status: 400 });
   }
 
   const userId = created.user.id;

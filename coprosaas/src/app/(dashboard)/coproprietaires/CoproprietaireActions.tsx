@@ -208,10 +208,14 @@ interface CoproprietaireInviteProps {
 export function CoproprietaireInvite({ coproprietaireId, displayName }: CoproprietaireInviteProps) {
   const [state, setState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [warningMsg, setWarningMsg] = useState('');
+  const [fallbackLink, setFallbackLink] = useState('');
 
   const handleInvite = async () => {
     setState('loading');
     setErrorMsg('');
+    setWarningMsg('');
+    setFallbackLink('');
     const res = await fetch('/api/invitations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -222,15 +226,30 @@ export function CoproprietaireInvite({ coproprietaireId, displayName }: Copropri
       setErrorMsg(data.error ?? "Erreur d'envoi");
       setState('error');
     } else {
+      setWarningMsg(data.emailWarning ?? '');
+      setFallbackLink(data.link ?? '');
       setState('sent');
     }
   };
 
   if (state === 'sent') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium px-2 py-1">
-        ✓ Invitation envoyée
-      </span>
+      <div className="flex flex-col gap-0.5">
+        <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium px-2 py-1">
+          ✓ {warningMsg ? 'Lien généré' : 'Invitation envoyée'}
+        </span>
+        {warningMsg && <p className="text-[10px] text-amber-600 leading-tight max-w-[170px]">{warningMsg}</p>}
+        {fallbackLink && (
+          <a
+            href={fallbackLink}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[10px] text-blue-600 hover:text-blue-700 underline break-all max-w-[170px]"
+          >
+            Ouvrir le lien d&apos;invitation
+          </a>
+        )}
+      </div>
     );
   }
 

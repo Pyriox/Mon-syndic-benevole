@@ -10,12 +10,16 @@ import { cookies } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 import { buildInvitationEmail, buildInvitationEmailSubject } from '@/lib/emails/invitation';
-import { rateLimit } from '@/lib/rate-limit';
+import { getClientIp, rateLimit } from '@/lib/rate-limit';
 import { trackResendSendResult } from '@/lib/email-delivery';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
 
 function makeSupabase(cookieStore: Awaited<ReturnType<typeof cookies>>) {
   return createServerClient(
@@ -41,8 +45,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
   }
 
-  // Rate limiting : 20 invitations par utilisateur par 10 minutes
-  if (!await rateLimit(user.id, 20, 600_000)) {
+  // Rate limiting volontairement permissif pour l'onboarding :
+  // un nouveau syndic peut inviter 10 à 15 copropriétaires en quelques minutes.
+  if (!await rateLimit(`invite-create:${user.id}`, 20, 600_000)) {
     return NextResponse.json({ error: "Trop d'invitations envoyées. Réessayez dans 10 minutes." }, { status: 429 });
   }
 
@@ -69,6 +74,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email et copropriété requis' }, { status: 400 });
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!isValidEmail(normalizedEmail)) {
+    return NextResponse.json({ error: 'Adresse email invalide' }, { status: 400 });
+  }
+
   // Vérifier que la copropriété appartient bien au syndic connecté
   const { data: copro } = await supabase
     .from('coproprietes')
@@ -85,7 +95,7 @@ export async function POST(request: NextRequest) {
   const { data: existing } = await supabase
     .from('invitations')
     .select('token, statut, expires_at')
-    .eq('email', email.toLowerCase().trim())
+    .eq('email', normalizedEmail)
     .eq('copropriete_id', copropriete_id)
     .eq('statut', 'en_attente')
     .gt('expires_at', new Date().toISOString())
@@ -101,7 +111,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('invitations')
       .insert({
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         copropriete_id,
         lot_id: lot_id || null,
         created_by: user.id,
@@ -133,14 +143,14 @@ export async function POST(request: NextRequest) {
   // Envoyer l'email d'invitation via Resend
   const result = await resend.emails.send({
     from: FROM,
-    to: [email.toLowerCase().trim()],
+    to: [normalizedEmail],
     subject,
     html: buildInvitationEmail({ coproprieteNom: copro.nom, syndicPrenom, inviteLink: link }),
   });
 
   const tracked = await trackResendSendResult(result, {
     templateKey: 'invitation',
-    recipientEmail: email.toLowerCase().trim(),
+    recipientEmail: normalizedEmail,
     coproprieteId: copropriete_id,
     subject,
     legalEventType: 'copro_invitation',
@@ -162,6 +172,11 @@ export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('token');
   if (!token) {
     return NextResponse.json({ error: 'Token manquant' }, { status: 400 });
+  }
+
+  const ip = getClientIp(request);
+  if (!await rateLimit(`invite-lookup:${ip}`, 60, 600_000)) {
+    return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans quelques minutes.' }, { status: 429 });
   }
 
   // Utilise l'admin client : le visiteur n'est pas connecté, les RLS bloquent les jointures

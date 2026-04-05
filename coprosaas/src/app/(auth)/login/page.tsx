@@ -32,6 +32,8 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
+  const inviteToken = searchParams.get('invite_token');
+  const inviteEmail = searchParams.get('email');
 
   const [mode, setMode] = useState<'login' | 'forgot'>('login');
 
@@ -58,7 +60,6 @@ function LoginForm() {
         trackAnonymousEvent('form_abandonment', { form: 'login' });
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setEmailTracked = (v: string) => { if (v) formStartedRef.current = true; setEmail(v); };
@@ -67,13 +68,20 @@ function LoginForm() {
   useEffect(() => {
     const errorParam = searchParams.get('error');
     const compteParam = searchParams.get('compte');
+    if (inviteEmail) {
+      setEmail(inviteEmail);
+      setResetEmail(inviteEmail);
+    }
     if (errorParam === 'lien_invalide') {
       setError('Ce lien de réinitialisation est invalide ou a expiré. Veuillez faire une nouvelle demande.');
     }
     if (compteParam === 'active') {
       setSuccess('Votre compte est activé ! Connectez-vous ci-dessous.');
     }
-  }, [searchParams]);
+    if (inviteToken) {
+      setSuccess((current) => current || 'Connectez-vous pour rejoindre automatiquement votre copropriété.');
+    }
+  }, [inviteEmail, inviteToken, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +90,7 @@ function LoginForm() {
     setError('');
     setUnconfirmedEmail('');
     setResendSent(false);
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
     if (authError) {
       if (authError.message === 'Email not confirmed') {
         setUnconfirmedEmail(email);
@@ -100,6 +108,31 @@ function LoginForm() {
       setLoading(false);
       return;
     }
+    if (inviteToken && data.user) {
+      const fullName = typeof data.user.user_metadata?.full_name === 'string'
+        ? data.user.user_metadata.full_name
+        : '';
+
+      try {
+        const response = await fetch('/api/invitations', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: inviteToken,
+            user_id: data.user.id,
+            full_name: fullName,
+          }),
+        });
+
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({})) as { error?: string };
+          console.warn('[login] invitation accept error:', result.error ?? response.statusText);
+        }
+      } catch (inviteError) {
+        console.warn('[login] invitation accept unexpected error:', inviteError);
+      }
+    }
+
     trackEvent('login', { method: 'email' });
     // ✅ Événement anonyme aussi
     trackAnonymousEvent('login_anonymous', { method: 'email' });

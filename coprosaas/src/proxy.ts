@@ -78,8 +78,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Si deja connecte et tente d'acceder au login/register, redirige vers le dashboard
-  if ((pathname === '/login' || pathname === '/register') && user) {
+  // Si deja connecte et tente d'acceder au login/register, redirige vers le dashboard.
+  // Exception : on laisse passer /register?token=... pour permettre l'acceptation
+  // d'une invitation copropriétaire par un compte déjà existant.
+  const isInvitationRegister = pathname === '/register' && request.nextUrl.searchParams.has('token');
+  if ((pathname === '/login' || (pathname === '/register' && !isInvitationRegister)) && user) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);

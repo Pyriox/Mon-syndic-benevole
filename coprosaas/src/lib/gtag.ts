@@ -111,10 +111,18 @@ function sanitizeUrlForAnalytics(url: string) {
 
   try {
     const parsed = new URL(url, window.location.origin);
-    const sensitiveKeys = ['token', 'code', 'email', 'access_token', 'refresh_token', 'password', 'redirectTo'];
+    const sensitiveKeys = ['token', 'token_hash', 'code', 'email', 'next', 'access_token', 'refresh_token', 'password', 'redirectTo'];
 
     for (const key of sensitiveKeys) {
       parsed.searchParams.delete(key);
+    }
+
+    if (parsed.pathname.startsWith('/auth/confirm')) {
+      for (const key of Array.from(parsed.searchParams.keys())) {
+        if (key !== 'type') {
+          parsed.searchParams.delete(key);
+        }
+      }
     }
 
     const search = parsed.searchParams.toString();

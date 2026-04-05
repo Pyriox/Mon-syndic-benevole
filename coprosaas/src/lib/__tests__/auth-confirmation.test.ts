@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { shouldRunSignupFollowups } from '../auth-confirmation';
+import { getSafeAuthRedirectPath, shouldRunSignupFollowups } from '../auth-confirmation';
+
+describe('getSafeAuthRedirectPath', () => {
+  it('keeps internal relative paths and query strings', () => {
+    expect(getSafeAuthRedirectPath('/reset-password?type=recovery', '/dashboard')).toBe('/reset-password?type=recovery');
+  });
+
+  it('rejects external absolute URLs and falls back to the default path', () => {
+    expect(getSafeAuthRedirectPath('https://evil.example/phishing', '/dashboard')).toBe('/dashboard');
+    expect(getSafeAuthRedirectPath('//evil.example/phishing', '/dashboard')).toBe('/dashboard');
+  });
+});
 
 describe('shouldRunSignupFollowups', () => {
   it('runs follow-ups for a confirmed PKCE account even when the confirmation timestamp is not recent', () => {

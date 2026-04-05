@@ -28,14 +28,14 @@ export default function PublicFooter({ compact = false }: PublicFooterProps) {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <nav aria-label="Liens utiles" className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-400">
+          <nav aria-label="Liens utiles" className="flex flex-wrap gap-x-5 gap-y-2 text-xs sm:text-sm text-gray-400">
             <Link href="/mentions-legales" className="hover:text-gray-200 transition-colors">Mentions légales</Link>
             <Link href="/politique-confidentialite" className="hover:text-gray-200 transition-colors">Confidentialité</Link>
             <Link href="/cgu" className="hover:text-gray-200 transition-colors">CGU / CGV</Link>
             <Link href="/blog" className="hover:text-gray-200 transition-colors">Blog</Link>
             <a href="mailto:contact@mon-syndic-benevole.fr" className="hover:text-gray-200 transition-colors">contact@mon-syndic-benevole.fr</a>
           </nav>
-          <CookiePreferencesButton className="text-sm text-gray-400 hover:text-gray-200" />
+          <CookiePreferencesButton className="text-xs sm:text-sm text-gray-400 hover:text-gray-200" />
         </div>
       </div>
     </footer>

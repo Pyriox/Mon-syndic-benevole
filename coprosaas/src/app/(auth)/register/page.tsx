@@ -16,6 +16,7 @@ import { Lock, ArrowRight, Building2, Users, FileText, CalendarDays } from 'luci
 import { trackEvent, trackAnonymousEvent } from '@/lib/gtag';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
+import { buildInvitationLoginHref, getInvitationAcceptanceState } from '@/lib/invitation-acceptance';
 
 const BENEFITS = [
   { icon: Building2, text: 'Gérez plusieurs copropriétés depuis un seul espace' },
@@ -44,6 +45,7 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [sessionMismatch, setSessionMismatch] = useState(false);
 
   // Tracking d'abandon de formulaire
   const formStartedRef = useRef(false);
@@ -58,28 +60,94 @@ function RegisterForm() {
   }, []);
 
   useEffect(() => {
-    if (!token) return;
-    fetch(`/api/invitations?token=${token}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) {
-          setError(data.error);
+    const invitationToken = token;
+    if (!invitationToken) return;
+
+    let cancelled = false;
+
+    async function loadInvitation() {
+      try {
+        const response = await fetch(`/api/invitations?token=${encodeURIComponent(invitationToken)}`);
+        const data = await response.json().catch(() => ({})) as {
+          error?: string;
+          email?: string;
+          copropriete?: string;
+          prenom?: string | null;
+          nom?: string | null;
+        };
+
+        if (!response.ok || data.error || !data.email) {
+          if (cancelled) return;
+          setError(data.error ?? "Impossible de vérifier l'invitation.");
           setMode('invalid');
-        } else {
-          setInvitationEmail(data.email);
-          setCoproprieteNom(data.copropriete ?? '');
-          setInvitationPrenom(data.prenom ?? '');
-          setInvitationNom(data.nom ?? '');
-          setFormData((prev) => ({
-            ...prev,
-            prenom: data.prenom ?? '',
-            nom: data.nom ?? '',
-          }));
-          setMode('coproprietaire');
+          return;
         }
-      })
-      .catch(() => { setError("Impossible de vérifier l'invitation."); setMode('invalid'); });
-  }, [token]);
+
+        if (cancelled) return;
+
+        setInvitationEmail(data.email);
+        setCoproprieteNom(data.copropriete ?? '');
+        setInvitationPrenom(data.prenom ?? '');
+        setInvitationNom(data.nom ?? '');
+        setFormData((prev) => ({
+          ...prev,
+          prenom: data.prenom ?? '',
+          nom: data.nom ?? '',
+        }));
+
+        const { data: sessionData } = await supabase.auth.getSession();
+        const session = sessionData.session;
+        const invitationState = getInvitationAcceptanceState({
+          invitationEmail: data.email,
+          currentUserEmail: session?.user?.email ?? null,
+        });
+
+        if (invitationState === 'accept-now' && session?.user) {
+          const fullName = typeof session.user.user_metadata?.full_name === 'string'
+            ? session.user.user_metadata.full_name
+            : `${data.prenom ?? ''} ${data.nom ?? ''}`.trim();
+
+          const linkResponse = await fetch('/api/invitations', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: invitationToken,
+              user_id: session.user.id,
+              full_name: fullName,
+            }),
+          });
+
+          const linkResult = await linkResponse.json().catch(() => ({})) as { error?: string };
+
+          if (cancelled) return;
+
+          if (linkResponse.ok) {
+            router.replace('/dashboard');
+            return;
+          }
+
+          setError(linkResult.error ?? 'Impossible de rattacher cette invitation à votre compte.');
+        }
+
+        if (cancelled) return;
+        setSessionMismatch(invitationState === 'wrong-account');
+        setMode('coproprietaire');
+      } catch {
+        if (cancelled) return;
+        setError("Impossible de vérifier l'invitation.");
+        setMode('invalid');
+      }
+    }
+
+    void loadInvitation();
+
+    return () => {
+      cancelled = true;
+    };
+  // `createClient()` retourne une nouvelle instance ; on évite de la mettre en dépendance
+  // pour ne pas relancer en boucle le chargement/acceptation de l'invitation.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     formStartedRef.current = true;
@@ -148,8 +216,7 @@ function RegisterForm() {
       trackEvent('sign_up', { role: 'copropriétaire', method: 'invitation' });
       // ✅ Événement anonyme aussi (capture même les visiteurs refusant cookies)
       trackAnonymousEvent('sign_up_anonymous', { role: 'copropriétaire', method: 'invitation' });
-      router.push('/dashboard');
-      router.refresh();
+      router.replace('/dashboard');
       return;
     }
 
@@ -197,8 +264,7 @@ function RegisterForm() {
       return;
     }
 
-    router.push('/dashboard');
-    router.refresh();
+    router.replace('/dashboard');
   };
 
   // --- États d'affichage ---
@@ -321,7 +387,12 @@ function RegisterForm() {
             <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Créer mon compte</h1>
             <p className="text-sm text-gray-500">
               Déjà un compte ?{' '}
-              <Link href="/login" className="text-blue-600 hover:underline font-medium">Se connecter</Link>
+              <Link
+                href={mode === 'coproprietaire' && token ? buildInvitationLoginHref(token, invitationEmail) : '/login'}
+                className="text-blue-600 hover:underline font-medium"
+              >
+                Se connecter
+              </Link>
             </p>
           </div>
 
@@ -389,6 +460,28 @@ function RegisterForm() {
                 placeholder="vous@email.fr"
                 required
               />
+            )}
+
+            {mode === 'coproprietaire' && token && invitationEmail && (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-700 space-y-2">
+                <p>
+                  {sessionMismatch ? (
+                    <>
+                      Cette invitation est destinée à <strong>{invitationEmail}</strong>. Déconnectez-vous puis reconnectez-vous avec cette adresse pour la rattacher automatiquement.
+                    </>
+                  ) : (
+                    <>
+                      Vous avez déjà un compte avec <strong>{invitationEmail}</strong> ? Connectez-vous et nous rattacherons automatiquement cette invitation.
+                    </>
+                  )}
+                </p>
+                <Link
+                  href={buildInvitationLoginHref(token, invitationEmail)}
+                  className="inline-flex items-center gap-1 text-blue-600 hover:underline font-medium"
+                >
+                  Se connecter avec cette adresse <ArrowRight size={14} />
+                </Link>
+              </div>
             )}
 
             <Input
