@@ -8,7 +8,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Button from '@/components/ui/Button';
 import { FileDown, Send } from 'lucide-react';
-import { formatDate, TYPES_RESOLUTION } from '@/lib/utils';
+import { formatDate, formatTime, getParisYear, TYPES_RESOLUTION } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 
 interface Resolution {
@@ -233,10 +233,10 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     let y = 53;
 
     // ── Bloc méta-données ───────────────────────────────────
-    const dateFormatted = new Date(ag.date_ag).toLocaleDateString('fr-FR', {
+    const dateFormatted = formatDate(ag.date_ag, {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
-    const heureFormatted = new Date(ag.date_ag).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const heureFormatted = formatTime(ag.date_ag);
 
     doc.setFillColor(239, 246, 255);
     doc.roundedRect(mL, y, inner, 46, 2, 2, 'F');
@@ -622,12 +622,12 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const year = new Date(ag.date_ag).getFullYear().toString();
+        const year = String(getParisYear(ag.date_ag) ?? new Date().getFullYear());
         const rootId = await getOrCreateSubDossierPV(supabase, 'Assemblées Générales', null, user.id);
         if (rootId) {
           const yearId = await getOrCreateSubDossierPV(supabase, year, rootId, user.id);
           if (yearId) {
-            const dateFr = new Date(ag.date_ag).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            const dateFr = formatDate(ag.date_ag, { day: 'numeric', month: 'long', year: 'numeric' });
             const agFolderName = `${ag.titre} — ${dateFr}`;
             const agDossierId = await getOrCreateSubDossierPV(supabase, agFolderName, yearId, user.id);
             if (agDossierId) {

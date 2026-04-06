@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatRelativeDayLabel } from '../admin-date';
+import { formatDateTime, formatTime, toParisISOString } from '../utils';
 
 describe('formatRelativeDayLabel', () => {
   it('returns Hier for a date on the previous calendar day', () => {
@@ -8,5 +9,17 @@ describe('formatRelativeDayLabel', () => {
 
   it('returns Aujourd\'hui for a date on the same calendar day', () => {
     expect(formatRelativeDayLabel('2026-04-02T01:15:00.000Z', new Date('2026-04-02T08:00:00.000Z'))).toBe("Aujourd'hui");
+  });
+});
+
+describe('AG timezone helpers', () => {
+  it('formats a stored UTC AG time in Europe/Paris', () => {
+    expect(formatTime('2026-04-06T07:00:00.000Z')).toBe('09:00');
+    expect(formatDateTime('2026-04-06T07:00:00.000Z')).toContain('09:00');
+  });
+
+  it('converts a selected Paris wall-clock time to the correct UTC ISO string', () => {
+    expect(toParisISOString('2026-04-06', '09', '00')).toBe('2026-04-06T07:00:00.000Z');
+    expect(toParisISOString('2026-01-15', '09', '00')).toBe('2026-01-15T08:00:00.000Z');
   });
 });

@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
+import { formatDate, getParisYear } from '@/lib/utils';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     return NextResponse.json({ message: 'Aucun copropriétaire avec email trouvé.' }, { status: 422 });
   }
 
-  const dateFormatted = new Date(ag.date_ag).toLocaleDateString('fr-FR', {
+  const dateFormatted = formatDate(ag.date_ag, {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
   }).join('');
 
   // Sauvegarde dans les documents de la copropriété
-  const pvNom = `PV AG — ${ag.titre} — ${new Date(ag.date_ag).getFullYear()}`;
+  const pvNom = `PV AG — ${ag.titre} — ${getParisYear(ag.date_ag) ?? new Date().getFullYear()}`;
   const { data: dossier } = await supabase
     .from('document_dossiers')
     .select('id')

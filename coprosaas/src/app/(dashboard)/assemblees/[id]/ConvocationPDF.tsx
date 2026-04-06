@@ -7,6 +7,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Button from '@/components/ui/Button';
+import { formatDate, formatTime } from '@/lib/utils';
 import { FileDown } from 'lucide-react';
 
 interface Resolution {
@@ -118,10 +119,10 @@ function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[])
   doc.setFillColor(...LIGHT);
   doc.roundedRect(mL, y, inner, 24, 2, 2, 'F');
 
-  const dateFormatted = new Date(ag.date_ag).toLocaleDateString('fr-FR', {
+  const dateFormatted = formatDate(ag.date_ag, {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
-  const heureFormatted = new Date(ag.date_ag).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const heureFormatted = formatTime(ag.date_ag);
 
   doc.setTextColor(29, 78, 216);
   doc.setFont('helvetica', 'bold');

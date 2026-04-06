@@ -3,6 +3,48 @@
 // ============================================================
 import { type ClassValue, clsx } from 'clsx';
 
+const APP_TIME_ZONE = 'Europe/Paris';
+
+function padDatePart(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+function getTimeZoneParts(value: string | Date, timeZone: string = APP_TIME_ZONE) {
+  const date = value instanceof Date ? value : new Date(value);
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+
+  const pick = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value ?? '0');
+
+  return {
+    year: pick('year'),
+    month: pick('month'),
+    day: pick('day'),
+    hour: pick('hour'),
+    minute: pick('minute'),
+    second: pick('second'),
+  };
+}
+
+function getTimeZoneOffsetMilliseconds(value: Date, timeZone: string = APP_TIME_ZONE): number {
+  const zoned = getTimeZoneParts(value, timeZone);
+  const zonedUtc = Date.UTC(zoned.year, zoned.month - 1, zoned.day, zoned.hour, zoned.minute, zoned.second);
+  return zonedUtc - value.getTime();
+}
+
+function formatInParis(value: string | null | undefined, options: Intl.DateTimeFormatOptions): string {
+  if (!value) return '—';
+  return new Intl.DateTimeFormat('fr-FR', { timeZone: APP_TIME_ZONE, ...options }).format(new Date(value));
+}
+
 // ---- Fusion de classes CSS Tailwind ----
 export function cn(...inputs: ClassValue[]): string {
   return clsx(inputs);
@@ -16,14 +58,69 @@ export function formatEuros(montant: number): string {
   }).format(montant);
 }
 
-// ---- Formatage de date en français ----
-export function formatDate(dateString: string): string {
+// ---- Formatage de date en français (fuseau Europe/Paris) ----
+export function formatDate(dateString: string, options: Intl.DateTimeFormatOptions = {}): string {
   if (!dateString) return '';
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+    timeZone: APP_TIME_ZONE,
+    ...options,
   }).format(new Date(dateString));
+}
+
+export function formatTime(dateString: string | null | undefined): string {
+  return formatInParis(dateString, {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function formatDateTime(dateString: string | null | undefined): string {
+  return formatInParis(dateString, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function toParisISOString(dateValue: string, hourValue: string, minuteValue: string): string {
+  if (!dateValue) return '';
+
+  const [year, month, day] = dateValue.split('-').map(Number);
+  const hour = Number(hourValue || '0');
+  const minute = Number(minuteValue || '0');
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+  const offset = getTimeZoneOffsetMilliseconds(utcGuess, APP_TIME_ZONE);
+
+  return new Date(utcGuess.getTime() - offset).toISOString();
+}
+
+export function getParisDateInputValue(value: string | null | undefined): string {
+  if (!value) return '';
+
+  const parts = getTimeZoneParts(value, APP_TIME_ZONE);
+  return `${parts.year}-${padDatePart(parts.month)}-${padDatePart(parts.day)}`;
+}
+
+export function getParisTimeInputValue(value: string | null | undefined): { hour: string; minute: string } {
+  if (!value) {
+    return { hour: '00', minute: '00' };
+  }
+
+  const parts = getTimeZoneParts(value, APP_TIME_ZONE);
+  return {
+    hour: padDatePart(parts.hour),
+    minute: padDatePart(parts.minute),
+  };
+}
+
+export function getParisYear(value: string | null | undefined): number | null {
+  if (!value) return null;
+  return getTimeZoneParts(value, APP_TIME_ZONE).year;
 }
 
 // ---- Calcul de la répartition des charges selon les tantièmes ----

@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
+import { formatDate, formatDateTime, getParisDateInputValue, getParisTimeInputValue, getParisYear, toParisISOString } from '@/lib/utils';
 import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, AlertTriangle, Mail } from 'lucide-react';
 import LancerAGModal from './LancerAGModal';
 import { genererConvocationDoc, type ConvocationAGData, type ConvocationResolution } from './ConvocationPDF';
@@ -57,12 +58,12 @@ async function getDossierConvocationsAG(
   dateAg: string,
   titreAg: string
 ): Promise<string | null> {
-  const year = new Date(dateAg).getFullYear().toString();
+  const year = String(getParisYear(dateAg) ?? new Date().getFullYear());
   const rootId = await getOrCreateSubDossier(supabase, 'Assemblées Générales', null, syndicId);
   if (!rootId) return null;
   const yearId = await getOrCreateSubDossier(supabase, year, rootId, syndicId);
   if (!yearId) return null;
-  const dateFr = new Date(dateAg).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dateFr = formatDate(dateAg, { day: 'numeric', month: 'long', year: 'numeric' });
   const agFolderName = `${titreAg} — ${dateFr}`;
   return getOrCreateSubDossier(supabase, agFolderName, yearId, syndicId);
 }
@@ -75,11 +76,10 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const initial = new Date(dateAg);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const [dateVal,   setDateVal]   = useState(`${initial.getFullYear()}-${pad(initial.getMonth() + 1)}-${pad(initial.getDate())}`);
-  const [heureVal,  setHeureVal]  = useState(pad(initial.getHours()));
-  const [minuteVal, setMinuteVal] = useState(pad(initial.getMinutes()));
+  const initialTime = getParisTimeInputValue(dateAg);
+  const [dateVal,   setDateVal]   = useState(getParisDateInputValue(dateAg));
+  const [heureVal,  setHeureVal]  = useState(initialTime.hour);
+  const [minuteVal, setMinuteVal] = useState(initialTime.minute);
   const [isVisio,   setIsVisio]   = useState(lieu === 'Visioconférence');
   const [lieuVal,   setLieuVal]   = useState(lieu === 'Visioconférence' ? '' : (lieu ?? ''));
 
@@ -91,7 +91,7 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
     const { error: dbError } = await supabase
       .from('assemblees_generales')
       .update({
-        date_ag: new Date(`${dateVal}T${heureVal}:${minuteVal}`).toISOString(),
+        date_ag: toParisISOString(dateVal, heureVal, minuteVal),
         lieu: newLieu,
       })
       .eq('id', agId);
@@ -294,10 +294,7 @@ export function AGEnvoyerConvocation({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const fmtDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('fr-FR', {
-      day: 'numeric', month: 'long', year: 'numeric',
-    }) + ' à ' + new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const fmtDate = (iso: string) => formatDateTime(iso);
 
   const handleEnvoyer = async () => {
     setLoading(true);
@@ -313,7 +310,7 @@ export function AGEnvoyerConvocation({
       const dossierId = user ? await getDossierConvocationsAG(supabase, user.id, ag.date_ag, ag.titre) : null;
 
       // 3. Uploader le PDF dans la section documents
-      const annee = new Date(ag.date_ag).getFullYear();
+      const annee = getParisYear(ag.date_ag) ?? new Date().getFullYear();
       const uploadForm = new FormData();
       uploadForm.append('file', pdfBlob, `convocation-${agId}.pdf`);
       uploadForm.append('copropriete_id', coproprieteId);
@@ -413,10 +410,7 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const fmtDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('fr-FR', {
-      day: 'numeric', month: 'long', year: 'numeric',
-    }) + ' à ' + new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const fmtDate = (iso: string) => formatDateTime(iso);
 
   const handleEnvoyer = async () => {
     setLoading(true);

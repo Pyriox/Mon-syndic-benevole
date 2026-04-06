@@ -12,7 +12,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
-import { formatEuros } from '@/lib/utils';
+import { formatEuros, toParisISOString } from '@/lib/utils';
 import {
   Plus, AlertTriangle, Video, Calendar, Zap,
   ChevronDown, ChevronUp, Trash2, Users, Check,
@@ -187,7 +187,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
       .insert({
         copropriete_id: formData.copropriete_id,
         titre: titreFinal,
-        date_ag: new Date(formData.date_ag).toISOString(),
+        date_ag: toParisISOString(dateVal, heureVal, minuteVal),
         lieu,
         notes: formData.notes.trim() || null,
         statut: 'creation',

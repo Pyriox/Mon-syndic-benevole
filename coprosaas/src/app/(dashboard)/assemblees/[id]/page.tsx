@@ -14,7 +14,7 @@ import ResolutionList from './ResolutionList';
 import AGStatusActions from './AGStatusActions';
 import { AGDelete, AGAnnuler, AGEnvoyerPV, AGEnvoyerConvocation, AGEditInfos } from './AGStatusActions';
 import PresencePanel from './PresencePanel';
-import { LABELS_STATUT_AG } from '@/lib/utils';
+import { formatDate, formatTime, LABELS_STATUT_AG } from '@/lib/utils';
 import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
@@ -143,9 +143,9 @@ export default async function AGDetailPage({ params }: Props) {
             <span>{agWithCopropriete.coproprietes?.nom}</span>
             <span className="flex items-center gap-1">
               <CalendarDays size={13} />
-              {new Date(ag.date_ag).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              {formatDate(ag.date_ag, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
               {' à '}
-              {new Date(ag.date_ag).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              {formatTime(ag.date_ag)}
             </span>
             {ag.lieu && (
               <span className="flex items-center gap-1">

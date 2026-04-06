@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
+import { formatDate, formatTime } from '@/lib/utils';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -63,10 +64,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     return NextResponse.json({ message: 'Aucun copropriétaire avec email trouvé.' }, { status: 422 });
   }
 
-  const dateFormatted = new Date(ag.date_ag).toLocaleDateString('fr-FR', {
+  const dateFormatted = formatDate(ag.date_ag, {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
-  const heureFormatted = new Date(ag.date_ag).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const heureFormatted = formatTime(ag.date_ag);
 
   const ordreduJour = (resolutions ?? [])
     .map((r) => `
