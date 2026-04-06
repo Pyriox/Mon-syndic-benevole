@@ -8,6 +8,7 @@ import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
 import { formatDate, formatTime } from '@/lib/utils';
+import { buildConvocationPdfAttachment } from '@/lib/ag-email-pdf';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -80,6 +81,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
       </tr>`)
     .join('');
 
+  const pdfAttachment = buildConvocationPdfAttachment({
+    agId,
+    coproprieteNom: ag.coproprietes?.nom ?? '',
+    titreAg: ag.titre,
+    dateAg: ag.date_ag,
+    lieu: ag.lieu,
+    notes: ag.notes,
+    resolutions: (resolutions ?? []).map((r) => ({
+      numero: r.numero,
+      titre: r.titre,
+      description: r.description,
+    })),
+  });
+
   let sent = 0;
   const errors: string[] = [];
 
@@ -117,6 +132,7 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
       to: cp.email,
       subject,
       html,
+      attachments: [pdfAttachment],
     });
 
     if (result.error) {
@@ -174,10 +190,15 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
 
   const wasAlreadySent = !!(ag as Record<string, unknown>).convocation_envoyee_le;
 
+  const failed = errors.length;
+
   return NextResponse.json({
-    message: errors.length
-      ? `${sent} email(s) envoyé(s), ${errors.length} échec(s) : ${errors.join('; ')}`
+    message: failed
+      ? `${sent} convocation(s) envoyée(s), ${failed} échec(s).`
       : `${sent} convocation(s) envoyée(s) avec succès.`,
+    sent,
+    failed,
+    errors,
     alreadySentAt: wasAlreadySent ? (ag as Record<string, unknown>).convocation_envoyee_le : null,
-  });
+  }, { status: sent === 0 && failed > 0 ? 500 : 200 });
 }

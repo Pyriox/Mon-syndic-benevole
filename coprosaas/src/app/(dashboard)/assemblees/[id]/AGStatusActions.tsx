@@ -22,6 +22,12 @@ function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
   router.replace(`${window.location.pathname}${window.location.search}`);
 }
 
+type EmailSendSummary = {
+  level: 'success' | 'warning' | 'error';
+  message: string;
+  details: string[];
+};
+
 // ---- Helper : trouver ou créer un sous-dossier ----
 async function getOrCreateSubDossier(
   supabase: ReturnType<typeof createClient>,
@@ -282,6 +288,7 @@ export function AGEnvoyerConvocation({
   const [sentDate, setSentDate] = useState<string | null>(convocationEnvoyeeLe ?? null);
   const [error, setError] = useState('');
   const [emailCount, setEmailCount] = useState<number | null>(null);
+  const [sendSummary, setSendSummary] = useState<EmailSendSummary | null>(null);
 
   useEffect(() => {
     if (!isOpen || emailCount !== null) return;
@@ -299,6 +306,7 @@ export function AGEnvoyerConvocation({
   const handleEnvoyer = async () => {
     setLoading(true);
     setError('');
+    setSendSummary(null);
     try {
       // 1. Générer le PDF de convocation
       const pdfDoc = genererConvocationDoc(ag, resolutions);
@@ -322,18 +330,36 @@ export function AGEnvoyerConvocation({
       // 4. Envoyer les e-mails de convocation
       const res = await fetch(`/api/ag/${agId}/envoyer-convocation`, { method: 'POST' });
       const json = await res.json().catch(() => ({}));
+      const sent = Number(json.sent ?? 0);
+      const failed = Number(json.failed ?? 0);
+      const details = Array.isArray(json.errors) ? json.errors.filter((item: unknown): item is string => typeof item === 'string') : [];
+
       if (!res.ok) {
-        setError(json.message ?? "Erreur lors de l'envoi.");
+        const message = json.message ?? "Erreur lors de l'envoi.";
+        setError(message);
+        setSendSummary({ level: 'error', message, details });
       } else {
-        // 5. Enregistrer la date d'envoi en base
-        const now = new Date().toISOString();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await supabase.from('assemblees_generales').update({ convocation_envoyee_le: now } as any).eq('id', agId);
-        setSentDate(now);
-        setIsOpen(false);
+        if (sent > 0) {
+          const now = new Date().toISOString();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await supabase.from('assemblees_generales').update({ convocation_envoyee_le: now } as any).eq('id', agId);
+          setSentDate(now);
+        }
+
+        setSendSummary({
+          level: failed > 0 ? 'warning' : 'success',
+          message: json.message ?? `${sent} convocation(s) envoyée(s).`,
+          details,
+        });
+
+        if (failed === 0) {
+          setIsOpen(false);
+        }
       }
     } catch (e) {
-      setError('Erreur : ' + (e instanceof Error ? e.message : 'inconnue'));
+      const message = 'Erreur : ' + (e instanceof Error ? e.message : 'inconnue');
+      setError(message);
+      setSendSummary({ level: 'error', message, details: [] });
     } finally {
       setLoading(false);
     }
@@ -345,6 +371,17 @@ export function AGEnvoyerConvocation({
         {sentDate && (
           <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
             <CheckCircle size={13} /> Envoyée le {fmtDate(sentDate)}
+          </span>
+        )}
+        {sendSummary && (
+          <span className={`max-w-xs text-right text-xs font-medium ${
+            sendSummary.level === 'success'
+              ? 'text-green-600'
+              : sendSummary.level === 'warning'
+                ? 'text-amber-700'
+                : 'text-red-600'
+          }`}>
+            {sendSummary.message}
           </span>
         )}
         <Button variant={sentDate ? 'secondary' : 'secondary'} size="sm" onClick={() => setIsOpen(true)}>
@@ -375,8 +412,26 @@ export function AGEnvoyerConvocation({
           )}
           <p className="text-sm text-gray-600">
             La convocation inclut la date, le lieu et l&apos;ordre du jour complet.
-            Un PDF sera également enregistré dans vos <strong>Documents</strong> (dossier Convocations AG).
+            Le PDF est joint à l&apos;e-mail et enregistré dans vos <strong>Documents</strong> (dossier Convocations AG).
           </p>
+          {sendSummary && (
+            <div className={`rounded-lg border px-3 py-2 text-sm ${
+              sendSummary.level === 'success'
+                ? 'border-green-200 bg-green-50 text-green-700'
+                : sendSummary.level === 'warning'
+                  ? 'border-amber-200 bg-amber-50 text-amber-800'
+                  : 'border-red-200 bg-red-50 text-red-700'
+            }`}>
+              <p>{sendSummary.message}</p>
+              {sendSummary.details.length > 0 && (
+                <ul className="mt-1 list-disc pl-5 text-xs">
+                  {sendSummary.details.slice(0, 3).map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button loading={loading} onClick={handleEnvoyer} disabled={emailCount === 0}>
@@ -398,6 +453,7 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
   const [sentDate, setSentDate] = useState<string | null>(pvEnvoyeLe ?? null);
   const [error, setError] = useState('');
   const [emailCount, setEmailCount] = useState<number | null>(null);
+  const [sendSummary, setSendSummary] = useState<EmailSendSummary | null>(null);
 
   useEffect(() => {
     if (!isOpen || emailCount !== null) return;
@@ -415,20 +471,40 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
   const handleEnvoyer = async () => {
     setLoading(true);
     setError('');
+    setSendSummary(null);
     try {
       const res = await fetch(`/api/ag/${agId}/envoyer-pv`, { method: 'POST' });
       const json = await res.json().catch(() => ({}));
+      const sent = Number(json.sent ?? 0);
+      const failed = Number(json.failed ?? 0);
+      const details = Array.isArray(json.errors) ? json.errors.filter((item: unknown): item is string => typeof item === 'string') : [];
+
       if (!res.ok) {
-        setError(json.message ?? "Erreur lors de l'envoi.");
+        const message = json.message ?? "Erreur lors de l'envoi.";
+        setError(message);
+        setSendSummary({ level: 'error', message, details });
       } else {
-        const now = new Date().toISOString();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await supabase.from('assemblees_generales').update({ pv_envoye_le: now } as any).eq('id', agId);
-        setSentDate(now);
-        setIsOpen(false);
+        if (sent > 0) {
+          const now = new Date().toISOString();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await supabase.from('assemblees_generales').update({ pv_envoye_le: now } as any).eq('id', agId);
+          setSentDate(now);
+        }
+
+        setSendSummary({
+          level: failed > 0 ? 'warning' : 'success',
+          message: json.message ?? `${sent} PV envoyé(s).`,
+          details,
+        });
+
+        if (failed === 0) {
+          setIsOpen(false);
+        }
       }
     } catch {
-      setError('Erreur réseau.');
+      const message = 'Erreur réseau.';
+      setError(message);
+      setSendSummary({ level: 'error', message, details: [] });
     } finally {
       setLoading(false);
     }
@@ -440,6 +516,17 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
         {sentDate && (
           <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
             <CheckCircle size={13} /> PV envoyé le {fmtDate(sentDate)}
+          </span>
+        )}
+        {sendSummary && (
+          <span className={`max-w-xs text-right text-xs font-medium ${
+            sendSummary.level === 'success'
+              ? 'text-green-600'
+              : sendSummary.level === 'warning'
+                ? 'text-amber-700'
+                : 'text-red-600'
+          }`}>
+            {sendSummary.message}
           </span>
         )}
         <Button variant="secondary" size="sm" onClick={() => setIsOpen(true)}>
@@ -468,7 +555,25 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
               </p>
             </div>
           )}
-          <p className="text-sm text-gray-600">Le procès-verbal de l&apos;assemblée sera envoyé en pièce jointe.</p>
+          <p className="text-sm text-gray-600">Le procès-verbal de l&apos;assemblée sera envoyé en pièce jointe PDF.</p>
+          {sendSummary && (
+            <div className={`rounded-lg border px-3 py-2 text-sm ${
+              sendSummary.level === 'success'
+                ? 'border-green-200 bg-green-50 text-green-700'
+                : sendSummary.level === 'warning'
+                  ? 'border-amber-200 bg-amber-50 text-amber-800'
+                  : 'border-red-200 bg-red-50 text-red-700'
+            }`}>
+              <p>{sendSummary.message}</p>
+              {sendSummary.details.length > 0 && (
+                <ul className="mt-1 list-disc pl-5 text-xs">
+                  {sendSummary.details.slice(0, 3).map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button loading={loading} onClick={handleEnvoyer} disabled={emailCount === 0}>

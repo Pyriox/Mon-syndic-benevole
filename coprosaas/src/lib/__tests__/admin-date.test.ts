@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatRelativeDayLabel } from '../admin-date';
-import { formatDateTime, formatTime, toParisISOString } from '../utils';
+import { formatDateTime, formatTime, getDefaultFundingCallDate, toParisISOString } from '../utils';
 
 describe('formatRelativeDayLabel', () => {
   it('returns Hier for a date on the previous calendar day', () => {
@@ -21,5 +21,16 @@ describe('AG timezone helpers', () => {
   it('converts a selected Paris wall-clock time to the correct UTC ISO string', () => {
     expect(toParisISOString('2026-04-06', '09', '00')).toBe('2026-04-06T07:00:00.000Z');
     expect(toParisISOString('2026-01-15', '09', '00')).toBe('2026-01-15T08:00:00.000Z');
+  });
+});
+
+describe('getDefaultFundingCallDate', () => {
+  it('defaults the first funding date to January 1st of year n+1 based on the AG date', () => {
+    expect(getDefaultFundingCallDate([], '2026-11-18')).toBe('2027-01-01');
+  });
+
+  it('keeps added funding dates in year n+1 by extending the existing schedule', () => {
+    expect(getDefaultFundingCallDate(['2027-01-01'], '2026-11-18')).toBe('2027-04-01');
+    expect(getDefaultFundingCallDate(['2027-01-01', '2027-04-01'], '2026-11-18')).toBe('2027-07-01');
   });
 });

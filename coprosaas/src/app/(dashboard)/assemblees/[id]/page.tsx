@@ -102,6 +102,26 @@ export default async function AGDetailPage({ params }: Props) {
   const toutesResolutionsVotees =
     (resolutions ?? []).length > 0 &&
     (resolutions ?? []).every((r) => r.statut !== 'en_attente');
+  const workflowSteps = [
+    { label: 'Brouillon créé', done: true },
+    { label: 'Planification validée', done: ['planifiee', 'en_cours', 'terminee'].includes(ag.statut) },
+    { label: 'Convocation envoyée', done: Boolean(ag.convocation_envoyee_le) },
+    { label: 'AG démarrée', done: ['en_cours', 'terminee'].includes(ag.statut), current: ag.statut === 'en_cours' },
+    { label: 'PV envoyé', done: Boolean(ag.pv_envoye_le) },
+  ];
+  const nextActionLabel = ag.statut === 'annulee'
+    ? 'Cette AG est annulée.'
+    : ag.statut === 'creation'
+      ? 'Étape suivante : valider la planification.'
+      : ag.statut === 'planifiee' && !ag.convocation_envoyee_le
+        ? 'Étape suivante : envoyer la convocation.'
+        : ag.statut === 'planifiee'
+          ? "Étape suivante : démarrer l'AG le jour J."
+          : ag.statut === 'en_cours'
+            ? "Étape suivante : clôturer l'AG après les votes."
+            : ag.statut === 'terminee' && !ag.pv_envoye_le
+              ? 'Étape suivante : envoyer le PV.'
+              : 'Parcours AG complété.';
 
   // Présents + représentés (sans absents) pour VoteParCopro
   const voteurs = (presences ?? []).filter((p) => p.statut !== 'absent');
@@ -219,6 +239,36 @@ export default async function AGDetailPage({ params }: Props) {
           <p className="text-sm text-gray-600 whitespace-pre-wrap">{ag.notes}</p>
         </Card>
       )}
+
+      <Card>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Suivi du parcours AG</p>
+            <p className="text-xs text-gray-500 mt-1">{nextActionLabel}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {workflowSteps.map((step) => {
+              const done = step.done;
+              const current = 'current' in step && step.current;
+              return (
+                <span
+                  key={step.label}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+                    done
+                      ? 'bg-green-100 text-green-700'
+                      : current
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {done ? <CheckCircle size={12} /> : <Clock size={12} />}
+                  {step.label}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </Card>
 
       {/* Quorum — calculé dynamiquement depuis la feuille de présence */}
       {(ag.statut === 'en_cours' || ag.statut === 'terminee') && (

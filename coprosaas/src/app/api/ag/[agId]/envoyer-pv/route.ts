@@ -4,10 +4,12 @@ import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emails/base';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
 import { formatDate, getParisYear } from '@/lib/utils';
+import { buildPVPdfAttachment } from '@/lib/ag-email-pdf';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -18,6 +20,52 @@ const STATUT_LABELS: Record<string, { label: string; color: string }> = {
   reportee:  { label: 'Reportée',  color: COLOR.amber },
   en_attente:{ label: 'En attente',color: COLOR.muted },
 };
+
+function sanitizeFileName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9-_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase() || 'document';
+}
+
+async function getOrCreateSubDossier(
+  admin: ReturnType<typeof createAdminClient>,
+  nom: string,
+  parentId: string | null,
+  syndicId: string,
+): Promise<string | null> {
+  const base = admin.from('document_dossiers').select('id').eq('syndic_id', syndicId).eq('nom', nom);
+  const query = parentId ? base.eq('parent_id', parentId) : base.is('parent_id', null);
+  const { data: existing } = await query.maybeSingle();
+  if (existing?.id) return existing.id;
+
+  const payload: Record<string, string | boolean | null> = { nom, syndic_id: syndicId, is_default: false };
+  if (parentId) payload.parent_id = parentId;
+
+  const { data: created } = await admin.from('document_dossiers').insert(payload).select('id').single();
+  return created?.id ?? null;
+}
+
+async function getDossierAGDocuments(
+  admin: ReturnType<typeof createAdminClient>,
+  syndicId: string,
+  dateAg: string,
+  titreAg: string,
+): Promise<string | null> {
+  const rootId = await getOrCreateSubDossier(admin, 'Assemblées Générales', null, syndicId);
+  if (!rootId) return null;
+
+  const year = String(getParisYear(dateAg) ?? new Date().getFullYear());
+  const yearId = await getOrCreateSubDossier(admin, year, rootId, syndicId);
+  if (!yearId) return null;
+
+  const dateFr = formatDate(dateAg, { day: 'numeric', month: 'long', year: 'numeric' });
+  const agFolderName = `${titreAg} — ${dateFr}`;
+  return getOrCreateSubDossier(admin, agFolderName, yearId, syndicId);
+}
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ agId: string }> }) {
   const { agId } = await params;
@@ -84,24 +132,61 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     </tr>`;
   }).join('');
 
-  // Sauvegarde dans les documents de la copropriété
-  const pvNom = `PV AG — ${ag.titre} — ${getParisYear(ag.date_ag) ?? new Date().getFullYear()}`;
-  const { data: dossier } = await supabase
-    .from('document_dossiers')
-    .select('id')
-    .eq('nom', 'PV Assemblées Générales')
-    .eq('syndic_id', ag.coproprietes?.syndic_id ?? '')
-    .maybeSingle();
+  const admin = createAdminClient();
+  const pdfAttachment = buildPVPdfAttachment({
+    agId,
+    coproprieteNom: ag.coproprietes?.nom ?? '',
+    titreAg: ag.titre,
+    dateAg: ag.date_ag,
+    lieu: ag.lieu,
+    quorumAtteint: ag.quorum_atteint,
+    notes: ag.notes,
+    resolutions: (resolutions ?? []).map((r) => ({
+      numero: r.numero,
+      titre: r.titre,
+      statut: r.statut,
+      voix_pour: r.voix_pour,
+      voix_contre: r.voix_contre,
+      voix_abstention: r.voix_abstention,
+    })),
+  });
 
-  if (dossier) {
-    await supabase.from('documents').upsert({
+  let documentStored = false;
+  let documentStoreError: string | null = null;
+
+  try {
+    const dossierId = await getDossierAGDocuments(admin, user.id, ag.date_ag, ag.titre);
+    const pdfBuffer = Buffer.from(pdfAttachment.content, 'base64');
+    const safeName = sanitizeFileName(pdfAttachment.filename.replace(/\.pdf$/i, ''));
+    const storagePath = `${ag.copropriete_id}/${Date.now()}-${safeName}.pdf`;
+
+    const { data: uploadData, error: uploadError } = await admin.storage
+      .from('documents')
+      .upload(storagePath, pdfBuffer, {
+        contentType: 'application/pdf',
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { data: { publicUrl } } = admin.storage.from('documents').getPublicUrl(uploadData.path);
+    const pvNom = `PV AG — ${ag.coproprietes?.nom ?? ''} — ${getParisYear(ag.date_ag) ?? new Date().getFullYear()}`;
+    const { error: documentError } = await admin.from('documents').upsert({
       copropriete_id: ag.copropriete_id,
-      dossier_id: dossier.id,
+      dossier_id: dossierId,
       nom: pvNom,
       type: 'pv_ag',
-      url: `/assemblees/${agId}`,
-      taille: 0,
+      url: publicUrl,
+      taille: pdfBuffer.byteLength,
+      uploaded_by: user.id,
     }, { onConflict: 'nom,copropriete_id' });
+
+    if (documentError) throw new Error(documentError.message);
+    documentStored = true;
+  } catch (error) {
+    documentStoreError = error instanceof Error ? error.message : 'Erreur inconnue';
+    console.error('[ag/envoyer-pv] archive error:', documentStoreError);
   }
 
   let sent = 0;
@@ -149,6 +234,7 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
       to: cp.email,
       subject,
       html,
+      attachments: [pdfAttachment],
     });
 
     if (result.error) {
@@ -206,10 +292,23 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
 
   const wasAlreadySent = !!(ag as Record<string, unknown>).pv_envoye_le;
 
+  const failed = errors.length;
+
+  const archiveMessage = documentStored
+    ? ' Le PDF a bien été archivé dans Documents.'
+    : documentStoreError
+      ? ' Attention : le PV a été envoyé mais son archivage dans Documents a échoué.'
+      : '';
+
   return NextResponse.json({
-    message: errors.length
-      ? `${sent} email(s) envoyé(s), ${errors.length} échec(s) : ${errors.join('; ')}`
-      : `PV envoyé à ${sent} copropriétaire(s) avec succès.`,
+    message: (failed
+      ? `${sent} PV envoyé(s), ${failed} échec(s).`
+      : `PV envoyé à ${sent} copropriétaire(s) avec succès.`) + archiveMessage,
+    sent,
+    failed,
+    errors,
+    documentStored,
+    documentStoreError,
     alreadySentAt: wasAlreadySent ? (ag as Record<string, unknown>).pv_envoye_le : null,
-  });
+  }, { status: sent === 0 && failed > 0 ? 500 : 200 });
 }

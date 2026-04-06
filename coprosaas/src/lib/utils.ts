@@ -123,6 +123,42 @@ export function getParisYear(value: string | null | undefined): number | null {
   return getTimeZoneParts(value, APP_TIME_ZONE).year;
 }
 
+function isDateInputValue(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function addMonthsToDateInputValue(value: string, months: number): string {
+  if (!isDateInputValue(value)) return '';
+
+  const [year, month, day] = value.split('-').map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1, day));
+  shifted.setUTCMonth(shifted.getUTCMonth() + months);
+
+  return `${shifted.getUTCFullYear()}-${padDatePart(shifted.getUTCMonth() + 1)}-${padDatePart(shifted.getUTCDate())}`;
+}
+
+export function getDefaultFundingCallDate(existingDates: string[], agDateValue?: string | null): string {
+  const validDates = existingDates.filter(isDateInputValue);
+
+  if (validDates.length >= 2) {
+    const previousDate = validDates[validDates.length - 2];
+    const lastDate = validDates[validDates.length - 1];
+    const [previousYear, previousMonth] = previousDate.split('-').map(Number);
+    const [lastYear, lastMonth] = lastDate.split('-').map(Number);
+    const inferredMonthStep = (lastYear - previousYear) * 12 + (lastMonth - previousMonth);
+
+    return addMonthsToDateInputValue(lastDate, inferredMonthStep > 0 ? inferredMonthStep : 3);
+  }
+
+  if (validDates.length === 1) {
+    return addMonthsToDateInputValue(validDates[0], 3);
+  }
+
+  const agDate = agDateValue?.slice(0, 10) ?? '';
+  const fallbackYear = isDateInputValue(agDate) ? Number(agDate.slice(0, 4)) : new Date().getFullYear();
+  return `${fallbackYear + 1}-01-01`;
+}
+
 // ---- Calcul de la répartition des charges selon les tantièmes ----
 export function calculerPart(
   montantTotal: number,

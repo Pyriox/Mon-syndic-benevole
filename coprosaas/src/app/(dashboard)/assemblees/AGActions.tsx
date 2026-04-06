@@ -12,7 +12,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
-import { formatEuros, toParisISOString } from '@/lib/utils';
+import { formatEuros, getDefaultFundingCallDate, toParisISOString } from '@/lib/utils';
 import {
   Plus, AlertTriangle, Video, Calendar, Zap,
   ChevronDown, ChevronUp, Trash2, Users, Check,
@@ -163,10 +163,8 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
   // -- Navigation --
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
-    const agYear = dateVal ? new Date(dateVal + 'T00:00:00').getFullYear() : new Date().getFullYear();
-    const nextYearDefault = `${agYear + 1}-01-01`;
     const initialized = initResolutions(typeAG).map((r) =>
-      r.hasEcheancier ? { ...r, echeancierDates: [nextYearDefault] } : r
+      r.hasEcheancier ? { ...r, echeancierDates: [getDefaultFundingCallDate([], dateVal)] } : r
     );
     setResolutions(initialized);
     setWizardStep(2);
@@ -263,15 +261,15 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
   return (
     <>
       <Button onClick={() => setIsOpen(true)} size={showLabel ? 'md' : 'sm'}>
-        <Plus size={16} /> {showLabel ? 'Planifier une AG' : 'Nouvelle AG'}
+        <Plus size={16} /> {showLabel ? 'Créer le brouillon d&apos;AG' : 'Nouvelle AG'}
       </Button>
 
       <Modal
         isOpen={isOpen}
         onClose={resetAndClose}
         title={wizardStep === 1
-          ? "Planifier une Assemblée Générale"
-          : `Ordre du jour — ${includedCount} résolution(s)`}
+          ? "Créer le brouillon d'une Assemblée Générale"
+          : `Ordre du jour du brouillon — ${includedCount} résolution(s)`}
         size="xl"
       >
         {/* ==================== ÉTAPE 1 ==================== */}
@@ -490,7 +488,9 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                           <span className="text-gray-400 font-normal ml-1">(minimum 1 date)</span>
                         </label>
                         <button type="button"
-                          onClick={() => updateResolution(r.id, { echeancierDates: [...r.echeancierDates, ''] })}
+                          onClick={() => updateResolution(r.id, {
+                            echeancierDates: [...r.echeancierDates, getDefaultFundingCallDate(r.echeancierDates, dateVal)],
+                          })}
                           className="text-xs text-green-600 hover:text-green-800 flex items-center gap-1 font-medium">
                           <Plus size={12} /> Ajouter une date
                         </button>
@@ -625,7 +625,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
 
             <div className="flex gap-3 pt-1">
               <Button onClick={handleSubmit} loading={loading}>
-                <Check size={15} /> Planifier l&apos;AG
+                <Check size={15} /> Créer le brouillon d&apos;AG
               </Button>
               <Button type="button" variant="secondary" onClick={() => setWizardStep(1)}>Retour</Button>
               <Button type="button" variant="secondary" onClick={resetAndClose}>Annuler</Button>
