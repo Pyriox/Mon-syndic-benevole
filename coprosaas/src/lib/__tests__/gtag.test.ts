@@ -152,6 +152,50 @@ describe('gtag helpers', () => {
     expect(window.dataLayer.filter((event) => event.event === 'virtual_pageview')).toHaveLength(2);
   });
 
+  it('envoie seulement l’événement standard quand le consentement analytics est accordé', async () => {
+    localStorage.setItem(
+      'cookie_consent',
+      JSON.stringify({
+        value: 'accepted',
+        timestamp: Date.now(),
+        preferences: { analytics: true, ads: true },
+      })
+    );
+
+    const { trackConsentAwareEvent } = await import('../gtag');
+
+    trackConsentAwareEvent({
+      standardEvent: 'sign_up',
+      anonymousEvent: 'sign_up_anonymous',
+      params: { method: 'email', role: 'syndic' },
+    });
+
+    expect(window.dataLayer.filter((event) => event.event === 'sign_up')).toHaveLength(1);
+    expect(window.dataLayer.filter((event) => event.event === 'sign_up_anonymous')).toHaveLength(0);
+  });
+
+  it('envoie seulement l’événement anonyme quand le consentement analytics est refusé', async () => {
+    localStorage.setItem(
+      'cookie_consent',
+      JSON.stringify({
+        value: 'refused',
+        timestamp: Date.now(),
+        preferences: { analytics: false, ads: false },
+      })
+    );
+
+    const { trackConsentAwareEvent } = await import('../gtag');
+
+    trackConsentAwareEvent({
+      standardEvent: 'login',
+      anonymousEvent: 'login_anonymous',
+      params: { method: 'email' },
+    });
+
+    expect(window.dataLayer.filter((event) => event.event === 'login')).toHaveLength(0);
+    expect(window.dataLayer.filter((event) => event.event === 'login_anonymous')).toHaveLength(1);
+  });
+
   it('supprime les cookies Google existants lors d’un refus', async () => {
     const { denyConsent } = await import('../gtag');
 

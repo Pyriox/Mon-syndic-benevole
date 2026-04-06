@@ -13,7 +13,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
 import { Lock, ArrowRight, Building2, Users, FileText, CalendarDays } from 'lucide-react';
-import { trackEvent, trackAnonymousEvent } from '@/lib/gtag';
+import { trackAnonymousEvent, trackConsentAwareEvent } from '@/lib/gtag';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
 import { buildInvitationLoginHref, getInvitationAcceptanceState } from '@/lib/invitation-acceptance';
@@ -214,9 +214,11 @@ function RegisterForm() {
         setLoading(false);
         return;
       }
-      trackEvent('sign_up', { role: 'copropriétaire', method: 'invitation' });
-      // ✅ Événement anonyme aussi (capture même les visiteurs refusant cookies)
-      trackAnonymousEvent('sign_up_anonymous', { role: 'copropriétaire', method: 'invitation' });
+      trackConsentAwareEvent({
+        standardEvent: 'sign_up',
+        anonymousEvent: 'sign_up_anonymous',
+        params: { role: 'copropriétaire', method: 'invitation' },
+      });
       router.replace('/dashboard');
       return;
     }
@@ -250,9 +252,11 @@ function RegisterForm() {
       return;
     }
 
-    trackEvent('sign_up', { role: 'syndic', method: 'email' });
-    // ✅ Événement anonyme aussi (capture même les visiteurs refusant cookies)
-    trackAnonymousEvent('sign_up_anonymous', { role: 'syndic', method: 'email' });
+    trackConsentAwareEvent({
+      standardEvent: 'sign_up',
+      anonymousEvent: 'sign_up_anonymous',
+      params: { role: 'syndic', method: 'email' },
+    });
     void logEventForEmail({
       email: formData.email,
       eventType: 'user_registered',

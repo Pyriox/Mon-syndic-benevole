@@ -137,20 +137,22 @@ export default async function AdminAnalyticsPage() {
       .gte('created_at', last30dIso),
   ]);
 
-  const gaSignUps7d = Math.max(
-    analytics.businessEvents7d.sign_up ?? 0,
-    analytics.businessEvents7d.sign_up_anonymous ?? 0,
-  );
-  const gaSignUps30d = Math.max(
-    analytics.businessEvents30d.sign_up ?? 0,
-    analytics.businessEvents30d.sign_up_anonymous ?? 0,
-  );
+  const gaSignUps7d =
+    (analytics.businessEvents7d.sign_up ?? 0) +
+    (analytics.businessEvents7d.sign_up_anonymous ?? 0);
+  const gaSignUps30d =
+    (analytics.businessEvents30d.sign_up ?? 0) +
+    (analytics.businessEvents30d.sign_up_anonymous ?? 0);
   const gaCheckouts7d = analytics.businessEvents7d.begin_checkout ?? 0;
   const gaCheckouts30d = analytics.businessEvents30d.begin_checkout ?? 0;
   const gaPurchases7d = analytics.businessEvents7d.purchase ?? 0;
   const gaPurchases30d = analytics.businessEvents30d.purchase ?? 0;
-  const logins7d = analytics.businessEvents7d.login ?? 0;
-  const logins30d = analytics.businessEvents30d.login ?? 0;
+  const logins7d =
+    (analytics.businessEvents7d.login ?? 0) +
+    (analytics.businessEvents7d.login_anonymous ?? 0);
+  const logins30d =
+    (analytics.businessEvents30d.login ?? 0) +
+    (analytics.businessEvents30d.login_anonymous ?? 0);
   const gaOnboardingComplete7d = analytics.businessEvents7d.onboarding_complete ?? 0;
   const gaOnboardingComplete30d = analytics.businessEvents30d.onboarding_complete ?? 0;
 
@@ -347,14 +349,14 @@ export default async function AdminAnalyticsPage() {
 
         <div className="xl:col-span-2 grid gap-4 md:grid-cols-2">
           <BreakdownCard
-            title="Répartition `measurement_mode`"
-            items={analytics.measurementModes}
-            emptyText="La dimension personnalisée `measurement_mode` n’est pas encore disponible dans GA4."
-          />
-          <BreakdownCard
             title="Répartition `consent_state`"
             items={analytics.consentStates}
             emptyText="La dimension personnalisée `consent_state` n’est pas encore disponible dans GA4."
+          />
+          <BreakdownCard
+            title="Type d’appareil"
+            items={analytics.deviceCategories}
+            emptyText="GA4 ne renvoie pas encore la dimension `deviceCategory` pour cette propriété."
           />
         </div>
       </section>

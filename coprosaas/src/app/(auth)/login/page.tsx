@@ -11,7 +11,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
 import { ArrowRight, MailCheck, Shield, Clock, TrendingUp } from 'lucide-react';
-import { trackEvent, trackAnonymousEvent } from '@/lib/gtag';
+import { trackAnonymousEvent, trackConsentAwareEvent } from '@/lib/gtag';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 const REASSURANCES = [
@@ -133,9 +133,11 @@ function LoginForm() {
       }
     }
 
-    trackEvent('login', { method: 'email' });
-    // ✅ Événement anonyme aussi
-    trackAnonymousEvent('login_anonymous', { method: 'email' });
+    trackConsentAwareEvent({
+      standardEvent: 'login',
+      anonymousEvent: 'login_anonymous',
+      params: { method: 'email' },
+    });
     void logEventForEmail({ email, eventType: 'login_success', label: 'Connexion réussie' }).catch(() => undefined);
     router.replace('/dashboard');
   };

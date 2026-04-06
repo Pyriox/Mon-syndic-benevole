@@ -66,6 +66,7 @@ export type Ga4AdminAnalytics = {
   }>;
   measurementModes: BreakdownItem[];
   consentStates: BreakdownItem[];
+  deviceCategories: BreakdownItem[];
   notes: string[];
 };
 
@@ -259,6 +260,7 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
     topEvents: [],
     measurementModes: [],
     consentStates: [],
+    deviceCategories: [],
     notes: [
       'Les chiffres GA4 peuvent avoir un léger délai de traitement.',
       'Les répartitions par consentement nécessitent les dimensions personnalisées GA4 correspondantes.',
@@ -292,7 +294,7 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       },
     };
 
-    const [overview7, overview30, topPagesReport, topEvents7dReport, topEvents30dReport, measurementModeReport, consentStateReport] =
+    const [overview7, overview30, topPagesReport, topEvents7dReport, topEvents30dReport, measurementModeReport, consentStateReport, deviceCategoryReport] =
       await Promise.all([
         runReport(accessToken, config.propertyId, {
           dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
@@ -341,6 +343,13 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
           orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
           limit: '10',
         }).catch(() => ({ rows: [] })),
+        runReport(accessToken, config.propertyId, {
+          dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+          dimensions: [{ name: 'deviceCategory' }],
+          metrics: [{ name: 'activeUsers' }],
+          orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+          limit: '10',
+        }).catch(() => ({ rows: [] })),
       ]);
 
     const topEvents = parseTopEvents(topEvents30dReport);
@@ -360,6 +369,7 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       topEvents,
       measurementModes: parseBreakdown(measurementModeReport),
       consentStates: parseBreakdown(consentStateReport),
+      deviceCategories: parseBreakdown(deviceCategoryReport),
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue côté GA4.';

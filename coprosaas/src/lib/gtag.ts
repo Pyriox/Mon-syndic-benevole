@@ -288,6 +288,27 @@ export function trackAnonymousEvent(action: string, params?: Record<string, unkn
   window.gtag('event', action, payload);
 }
 
+/**
+ * Envoie la version standard si le consentement analytics est accordé,
+ * sinon la version anonyme pour éviter les doublons d'un même événement métier.
+ */
+export function trackConsentAwareEvent({
+  standardEvent,
+  anonymousEvent,
+  params,
+}: {
+  standardEvent: string;
+  anonymousEvent: string;
+  params?: Record<string, unknown>;
+}) {
+  if (hasAnalyticsConsent()) {
+    trackEvent(standardEvent, params);
+    return;
+  }
+
+  trackAnonymousEvent(anonymousEvent, params);
+}
+
 export function updateConsent(preferences: ConsentPreferences) {
   if (typeof window === 'undefined') return;
 
