@@ -190,6 +190,8 @@ export default async function AdminCopropietesPage({
   // ── Données Stripe (onglet abonnements uniquement) ──
   type StripeCharge = { id: string; amount: number; status: string; created: number; customerId: string | null; description: string | null };
   let stripeCharges: StripeCharge[] = [];
+  let stripeStatus: 'ok' | 'warning' = 'ok';
+  let stripeStatusMessage = 'Données Stripe synchronisées en lecture seule.';
   if (activeTab === 'abonnements') {
     try {
       const list = await stripe.charges.list({ limit: 50 });
@@ -201,7 +203,14 @@ export default async function AdminCopropietesPage({
         customerId: typeof c.customer === 'string' ? c.customer : null,
         description: c.description ?? null,
       }));
-    } catch { /* non-blocking */ }
+      if (stripeCharges.length === 0) {
+        stripeStatus = 'warning';
+        stripeStatusMessage = 'Aucun paiement Stripe récent trouvé. Les chiffres affichés viennent surtout des plans internes.';
+      }
+    } catch (error) {
+      stripeStatus = 'warning';
+      stripeStatusMessage = `Stripe indisponible : ${error instanceof Error ? error.message : 'erreur inconnue'}. Les KPI financiers restent visibles via les plans internes.`;
+    }
   }
 
   // ── Lookup maps (onglet coproprietes) ──
@@ -353,6 +362,24 @@ export default async function AdminCopropietesPage({
   );
 
   const currentListHref = hrefWith({ page: String(safePage) });
+  const resetOperationalHref = hrefWith({
+    plan: '',
+    q: '',
+    page: '1',
+    sort: 'created',
+    order: 'desc',
+    orphaned: '0',
+    no_lots: '0',
+    no_members: '0',
+    risk: '',
+  });
+  const orphanedCount = displayedCopros.filter((c) => !c.syndic_id).length;
+  const withoutLotsCount = displayedCopros.filter((c) => (lotsCount[c.id] ?? 0) === 0).length;
+  const withoutMembersCount = displayedCopros.filter((c) => (coproCount[c.id] ?? 0) === 0).length;
+  const criticalRiskCount = displayedCopros.filter((c) => getHealthScore(c) <= 59).length;
+  const activeOperationalFilters = [planFilter, query, filterOrphaned ? 'orphaned' : '', filterNoLots ? 'no-lots' : '', filterNoMembers ? 'no-members' : '', filterRisk ? 'risk' : '']
+    .filter(Boolean)
+    .length;
 
   // ── Calculs abonnements ──
   const planBreakdown: Record<string, number> = { essentiel: 0, confort: 0, illimite: 0 };
@@ -429,32 +456,32 @@ export default async function AdminCopropietesPage({
                 href={hrefWith({ orphaned: filterOrphaned ? '0' : '1', page: '1' })}
                 className={`px-2.5 py-1 rounded-full border font-medium ${filterOrphaned ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300'}`}
               >
-                Sans syndic
+                Sans syndic assigné ({orphanedCount})
               </Link>
               <Link
                 href={hrefWith({ no_lots: filterNoLots ? '0' : '1', page: '1' })}
                 className={`px-2.5 py-1 rounded-full border font-medium ${filterNoLots ? 'bg-orange-600 border-orange-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-orange-300'}`}
               >
-                Sans lots
+                0 lot importé ({withoutLotsCount})
               </Link>
               <Link
                 href={hrefWith({ no_members: filterNoMembers ? '0' : '1', page: '1' })}
                 className={`px-2.5 py-1 rounded-full border font-medium ${filterNoMembers ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300'}`}
               >
-                Sans coproprietaires
+                0 copropriétaire ({withoutMembersCount})
               </Link>
               <Link
                 href={hrefWith({ risk: filterRisk ? '' : 'high', page: '1' })}
                 className={`px-2.5 py-1 rounded-full border font-medium ${filterRisk ? 'bg-red-600 border-red-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-red-300'}`}
               >
-                Risque eleve
+                Santé critique ({criticalRiskCount})
               </Link>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               {([
-                { key: 'created:desc', label: 'Recents' },
+                { key: 'created:desc', label: 'Récentes' },
                 { key: 'name:asc', label: 'Nom A-Z' },
-                { key: 'health:asc', label: 'Sante critique' },
+                { key: 'health:asc', label: 'Santé critique' },
                 { key: 'renewal:asc', label: 'Renouvellement' },
                 { key: 'incidents:desc', label: 'Risques ouverts' },
               ] as const).map((item) => {
@@ -472,8 +499,26 @@ export default async function AdminCopropietesPage({
               })}
             </div>
             <p className="text-gray-500">
-              {totalItems} resultat{totalItems > 1 ? 's' : ''}
+              {totalItems} résultat{totalItems > 1 ? 's' : ''} · {hasClientOnlyFilters ? 'analyse avancée' : 'pagination optimisée'}
             </p>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">
+                  {hasClientOnlyFilters ? 'Mode analyse avancée' : 'Mode pagination optimisée'}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {totalItems} copropriété(s) correspondent aux filtres. {criticalRiskCount} présentent un risque élevé et {orphanedCount} sont sans syndic assigné.
+                </p>
+              </div>
+              {activeOperationalFilters > 0 && (
+                <Link href={resetOperationalHref} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">
+                  Réinitialiser tous les filtres
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* ── Table copropriétés ── */}
@@ -591,6 +636,10 @@ export default async function AdminCopropietesPage({
         </>
       ) : (
         <div className="space-y-8">
+          <div className={`rounded-xl border px-4 py-3 text-sm ${stripeStatus === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
+            {stripeStatusMessage}
+          </div>
+
           {/* ── KPIs ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {([

@@ -30,10 +30,10 @@ export default function AdminPagination({
       <div className="flex items-center gap-2">
         {currentPage > 1 ? (
           <Link href={prevHref} className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50">
-            Precedent
+            Précédent
           </Link>
         ) : (
-          <span className="px-3 py-1.5 rounded border border-gray-200 opacity-40">Precedent</span>
+          <span className="px-3 py-1.5 rounded border border-gray-200 opacity-40">Précédent</span>
         )}
         {currentPage < totalPages ? (
           <Link href={nextHref} className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50">

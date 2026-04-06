@@ -33,8 +33,10 @@ export default function AdminSearch({ placeholder = 'Rechercher…', defaultValu
       } else {
         params.delete('q');
       }
+      params.delete('page');
 
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      const nextQuery = params.toString();
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
     }, debounceMs);
 
     return () => window.clearTimeout(timeout);

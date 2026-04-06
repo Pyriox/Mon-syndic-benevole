@@ -80,6 +80,8 @@ export default async function AdminDashboardPage() {
   type StripeInvoice = { id: string; amount_paid: number; status: string; customerId: string | null; created: number; billingReason: string | null };
   let stripeCharges: StripeCharge[] = [];
   let stripeInvoices: StripeInvoice[] = [];
+  let stripeStatus: 'ok' | 'warning' = 'ok';
+  let stripeStatusMessage = 'Stripe est synchronisé : les encaissements et renouvellements affichés sont à jour.';
   try {
     const [chargesList, invoicesList] = await Promise.all([
       stripe.charges.list({ limit: 100 }),
@@ -100,7 +102,14 @@ export default async function AdminDashboardPage() {
       created: inv.created,
       billingReason: inv.billing_reason ?? null,
     }));
-  } catch { /* non-blocking */ }
+    if (stripeCharges.length === 0 && stripeInvoices.length === 0) {
+      stripeStatus = 'warning';
+      stripeStatusMessage = 'Aucune donnée Stripe récente trouvée. L’ARR reste calculée depuis les plans internes, mais les encaissements peuvent être incomplets.';
+    }
+  } catch (error) {
+    stripeStatus = 'warning';
+    stripeStatusMessage = `Stripe indisponible : ${error instanceof Error ? error.message : 'erreur inconnue'}. Les KPI financiers utilisent le fallback interne quand c’est possible.`;
+  }
 
   // ── Computed ──
   const authUsers = authResult.data?.users ?? [];
@@ -192,6 +201,12 @@ export default async function AdminDashboardPage() {
   const alertPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du');
   const nbTicketsOuverts = (ticketsSupport ?? []).filter((t) => (t as { status: string }).status === 'ouvert').length;
   const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertCoprosWithoutLots.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length + nbTicketsOuverts;
+  const priorityActions = [
+    nbTicketsOuverts > 0 ? { label: 'Tickets support', value: nbTicketsOuverts, href: '/admin/support', tone: 'indigo' } : null,
+    alertPasseDu.length > 0 ? { label: 'Abonnements impayés', value: alertPasseDu.length, href: '/admin/abonnements', tone: 'red' } : null,
+    upcomingRenewals.length > 0 ? { label: 'Renouvellements < 14j', value: upcomingRenewals.length, href: '/admin/abonnements', tone: 'amber' } : null,
+    alertNonConfirmedOld.length > 0 ? { label: 'Comptes non vérifiés > 7j', value: alertNonConfirmedOld.length, href: '/admin/utilisateurs', tone: 'orange' } : null,
+  ].filter(Boolean) as Array<{ label: string; value: number; href: string; tone: 'indigo' | 'red' | 'amber' | 'orange' }>;
 
   const syndicUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire');
   const memberUsers = authUsers.filter((u) => (u.user_metadata as Record<string, string> | null)?.role === 'copropriétaire');
@@ -230,8 +245,37 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
+      <section>
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">À traiter maintenant</p>
+          {priorityActions.length === 0 && <span className="text-xs text-emerald-600">Aucune urgence détectée</span>}
+        </div>
+        {priorityActions.length > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {priorityActions.map((item) => {
+              const toneClass = item.tone === 'red'
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : item.tone === 'amber'
+                  ? 'border-amber-200 bg-amber-50 text-amber-700'
+                  : item.tone === 'orange'
+                    ? 'border-orange-200 bg-orange-50 text-orange-700'
+                    : 'border-indigo-200 bg-indigo-50 text-indigo-700';
+              return (
+                <Link key={item.label} href={item.href} className={`rounded-xl border px-4 py-3 transition-colors hover:opacity-90 ${toneClass}`}>
+                  <p className="text-lg font-bold">{item.value}</p>
+                  <p className="text-xs font-semibold mt-0.5">{item.label}</p>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       {/* ── KPIs financiers principaux ── */}
       <section>
+        <div className={`mb-3 rounded-xl border px-4 py-3 text-sm ${stripeStatus === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
+          {stripeStatusMessage}
+        </div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Revenus &amp; abonnements</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <AdminStatCard label="ARR" value={formatAdminCurrency(arr)} sub={`Conv. ${conversionPct} % · ${nbActifs} abonnés actifs`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />

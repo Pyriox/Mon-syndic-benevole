@@ -85,7 +85,7 @@ export default async function AdminUtilisateursPage({
   const startOf7Days  = new Date(Date.now() - 7  * 86400000).toISOString();
 
   const [
-    authUsers,
+    { users: authUsers, total: totalAuthUsers, truncated: authUsersTruncated, pagesFetched },
     { data: coproprietes },
     { data: adminRows },
     { data: coproprietairesData },
@@ -95,7 +95,7 @@ export default async function AdminUtilisateursPage({
     listAllAdminAuthUsers(admin),
     admin.from('coproprietes').select('id, nom, syndic_id, plan, plan_id'),
     admin.from('admin_users').select('user_id'),
-    admin.from('coproprietaires').select('email, copropriete_id'),
+    admin.from('coproprietaires').select('email, user_id, copropriete_id'),
     admin.from('support_tickets').select('user_email'),
     admin.from('profiles').select('id, last_active_at'),
   ]);
@@ -121,19 +121,27 @@ export default async function AdminUtilisateursPage({
     };
   }
 
-  // member email → copropriétés liées
-  const memberCoproLinks: Record<string, LinkedCopro[]> = {};
+  // copropriétaire → copropriétés liées (priorité au user_id, fallback sur email)
+  const memberCoproLinksByUserId: Record<string, LinkedCopro[]> = {};
+  const memberCoproLinksByEmail: Record<string, LinkedCopro[]> = {};
   for (const cp of coproprietairesData ?? []) {
-    const typed = cp as { email: string; copropriete_id: string };
-    const email = typed.email?.toLowerCase();
-    if (!email) continue;
-
+    const typed = cp as { email: string | null; user_id: string | null; copropriete_id: string };
     const copro = coproprieteById[typed.copropriete_id];
     if (!copro) continue;
 
-    memberCoproLinks[email] ??= [];
-    if (!memberCoproLinks[email].some((item) => item.id === copro.id)) {
-      memberCoproLinks[email].push(copro);
+    if (typed.user_id) {
+      memberCoproLinksByUserId[typed.user_id] ??= [];
+      if (!memberCoproLinksByUserId[typed.user_id].some((item) => item.id === copro.id)) {
+        memberCoproLinksByUserId[typed.user_id].push(copro);
+      }
+    }
+
+    const email = typed.email?.toLowerCase();
+    if (email) {
+      memberCoproLinksByEmail[email] ??= [];
+      if (!memberCoproLinksByEmail[email].some((item) => item.id === copro.id)) {
+        memberCoproLinksByEmail[email].push(copro);
+      }
     }
   }
 
@@ -144,16 +152,23 @@ export default async function AdminUtilisateursPage({
     if (email) ticketCount[email] = (ticketCount[email] ?? 0) + 1;
   }
 
-  const nbUsers      = authUsers.length;
+  const nbUsers = totalAuthUsers || authUsers.length;
   const nbUnconfirmed = authUsers.filter((u) => !u.email_confirmed_at).length;
-  const confirmedPct  = nbUsers > 0 ? Math.round(((nbUsers - nbUnconfirmed) / nbUsers) * 100) : 0;
-  const newUsers30   = authUsers.filter((u) => u.created_at >= startOf30Days).length;
-  const newUsers7    = authUsers.filter((u) => u.created_at >= startOf7Days).length;
+  const confirmedPct = authUsers.length > 0 ? Math.round(((authUsers.length - nbUnconfirmed) / authUsers.length) * 100) : 0;
+  const newUsers30 = authUsers.filter((u) => u.created_at >= startOf30Days).length;
+  const newUsers7 = authUsers.filter((u) => u.created_at >= startOf7Days).length;
 
   const syndicCount = authUsers.filter(
     (u) => (u.user_metadata as Record<string, string> | null)?.role !== 'copropriétaire',
   ).length;
-  const memberCount = nbUsers - syndicCount;
+  const memberCount = authUsers.length - syndicCount;
+  const inactive30Count = authUsers.filter((u) => {
+    if (adminUserIds.has(u.id)) return false;
+    const activityRef = lastActiveById[u.id] ?? u.last_sign_in_at ?? u.created_at;
+    return Math.floor((Date.now() - new Date(activityRef).getTime()) / 86400000) >= 30;
+  }).length;
+  const ticketUserCount = Object.keys(ticketCount).length;
+  const hasActiveFilters = Boolean(query) || roleFilter !== 'all' || verifiedFilter !== 'all' || sortBy !== 'created' || sortOrder !== 'desc';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coprosTyped = (coproprietes ?? []) as any[];
@@ -293,6 +308,32 @@ export default async function AdminUtilisateursPage({
         </div>
       </div>
 
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-800">
+              {hasActiveFilters ? 'Vue d’analyse filtrée' : 'Vue globale des comptes'}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              {sorted.length} résultat(s) · {inactive30Count} inactif(s) depuis 30 jours ou plus · {ticketUserCount} utilisateur(s) avec ticket support.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="rounded-full bg-white px-2 py-1 text-slate-600 border border-slate-200">
+              Tri : {sortBy === 'last_active' ? 'activité' : sortBy === 'tickets' ? 'tickets support' : 'inscription'}
+            </span>
+            <span className="rounded-full bg-white px-2 py-1 text-slate-600 border border-slate-200">
+              {pagesFetched} page(s) auth chargée(s)
+            </span>
+          </div>
+        </div>
+        {authUsersTruncated && (
+          <p className="mt-2 text-xs text-amber-700">
+            La vue a été plafonnée pour préserver les performances. Les indicateurs sont calculés sur les premiers comptes récupérés.
+          </p>
+        )}
+      </div>
+
       {/* ── KPIs ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {kpis.map(({ label, value, sub, color, Icon }) => (
@@ -340,7 +381,9 @@ export default async function AdminUtilisateursPage({
                     .filter((c) => c.syndic_id === u.id)
                     .map((c) => ({ id: c.id, nom: c.nom, plan: c.plan ?? null, plan_id: c.plan_id ?? null })) as LinkedCopro[]);
 
-              const linkedCopros = isMember ? (memberCoproLinks[emailKey] ?? []) : userCopros;
+              const linkedCopros = isMember
+                ? (memberCoproLinksByUserId[u.id] ?? memberCoproLinksByEmail[emailKey] ?? [])
+                : userCopros;
               const hasActiveSubscription = linkedCopros.some((copro) => copro.plan === 'actif');
               const hasTrialInProgress = linkedCopros.some((copro) => !copro.plan || copro.plan === 'essai');
               const activityRef = lastActiveById[u.id] ?? u.last_sign_in_at ?? u.created_at;
