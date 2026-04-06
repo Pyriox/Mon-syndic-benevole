@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import {
   Activity,
   BarChart3,
+  Clock3,
   Cookie,
   ExternalLink,
   Eye,
@@ -193,6 +194,17 @@ export default async function AdminAnalyticsPage() {
     onboardingComplete7d > gaOnboardingComplete7d ||
     onboardingComplete30d > gaOnboardingComplete30d
   );
+  const audienceSourceLabel = analytics.configured && !analytics.error ? 'GA4 direct' : 'GA4 à vérifier';
+  const businessSourceLabel = !analytics.configured
+    ? 'Fallback interne + Stripe'
+    : usingBusinessFallback
+      ? 'GA4 + logs internes / Stripe'
+      : 'GA4 direct';
+  const businessSourceNote = !analytics.configured
+    ? 'Les chiffres business restent visibles grâce aux événements applicatifs et à Stripe, même sans connexion GA4.'
+    : usingBusinessFallback
+      ? 'Les événements métier utilisent la meilleure valeur disponible entre GA4, les logs internes et Stripe pour éviter les faux zéros.'
+      : 'Sur la période récente, GA4 couvre déjà correctement les événements métier sans correction supplémentaire.';
 
   return (
     <div className="space-y-6 pb-16">
@@ -270,46 +282,73 @@ export default async function AdminAnalyticsPage() {
         </section>
       )}
 
+      <section className="grid gap-4 lg:grid-cols-3">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Source audience</p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">{audienceSourceLabel}</p>
+          <p className="mt-1 text-sm text-gray-600">
+            Utilisateurs, sessions et pages vues proviennent exclusivement de la propriété Google Analytics 4.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Source KPI business</p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">{businessSourceLabel}</p>
+          <p className="mt-1 text-sm text-gray-600">{businessSourceNote}</p>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Clock3 size={16} className="text-indigo-600" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Fraîcheur</p>
+          </div>
+          <p className="mt-1 text-lg font-semibold text-gray-900">{fmtDateTime(analytics.fetchedAt)}</p>
+          <p className="mt-1 text-sm text-gray-600">
+            Dernier snapshot serveur. GA4 peut avoir quelques minutes à 24 h de latence selon les événements.
+          </p>
+        </div>
+      </section>
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <StatCard
           label="Utilisateurs actifs (7 j)"
           value={fmtNumber(analytics.last7d.activeUsers)}
-          hint={`${fmtNumber(analytics.last30d.activeUsers)} sur 30 jours`}
+          hint={`${fmtNumber(analytics.last30d.activeUsers)} sur 30 jours · source GA4`}
           icon={Users}
           tone="bg-blue-50 text-blue-600"
         />
         <StatCard
           label="Sessions (7 j)"
           value={fmtNumber(analytics.last7d.sessions)}
-          hint={`${fmtNumber(analytics.last30d.sessions)} sur 30 jours`}
+          hint={`${fmtNumber(analytics.last30d.sessions)} sur 30 jours · source GA4`}
           icon={Activity}
           tone="bg-violet-50 text-violet-600"
         />
         <StatCard
           label="Pages vues (7 j)"
           value={fmtNumber(analytics.last7d.pageViews)}
-          hint={`${fmtNumber(analytics.last30d.pageViews)} sur 30 jours`}
+          hint={`${fmtNumber(analytics.last30d.pageViews)} sur 30 jours · source GA4`}
           icon={Eye}
           tone="bg-emerald-50 text-emerald-600"
         />
         <StatCard
           label="Inscriptions (7 j)"
           value={fmtNumber(signUps7d)}
-          hint={`${fmtNumber(signUps30d)} sur 30 jours · ${pct(signUps7d, analytics.last7d.activeUsers)}% des actifs 7 j`}
+          hint={`${fmtNumber(signUps30d)} sur 30 jours · ${pct(signUps7d, analytics.last7d.activeUsers)}% des actifs 7 j · source ${businessSourceLabel}`}
           icon={UserPlus}
           tone="bg-indigo-50 text-indigo-600"
         />
         <StatCard
           label="Débuts de checkout (7 j)"
           value={fmtNumber(checkouts7d)}
-          hint={`${fmtNumber(checkouts30d)} sur 30 jours · ${fmtNumber(purchases7d)} achats sur 7 j`}
+          hint={`${fmtNumber(checkouts30d)} sur 30 jours · ${fmtNumber(purchases7d)} achats sur 7 j · source ${businessSourceLabel}`}
           icon={MousePointerClick}
           tone="bg-amber-50 text-amber-600"
         />
         <StatCard
           label="Achats / conversions (7 j)"
           value={fmtNumber(purchases7d)}
-          hint={checkouts7d > 0 ? `${fmtNumber(purchases30d)} sur 30 jours · ${pct(purchases7d, checkouts7d)}% de conversion 7 j` : `${fmtNumber(purchases30d)} sur 30 jours · aucun checkout sur 7 j`}
+          hint={checkouts7d > 0 ? `${fmtNumber(purchases30d)} sur 30 jours · ${pct(purchases7d, checkouts7d)}% de conversion 7 j · source ${businessSourceLabel}` : `${fmtNumber(purchases30d)} sur 30 jours · aucun checkout sur 7 j · source ${businessSourceLabel}`}
           icon={ShoppingCart}
           tone="bg-rose-50 text-rose-600"
         />
@@ -324,6 +363,32 @@ export default async function AdminAnalyticsPage() {
           </p>
         </section>
       )}
+
+      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <BarChart3 size={16} className="text-indigo-600" />
+          <h2 className="text-sm font-semibold text-gray-900">Contrôle source KPI business (7 jours)</h2>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            { label: 'Inscriptions', ga: gaSignUps7d, internal: internalSignUps7d, retained: signUps7d },
+            { label: 'Checkout', ga: gaCheckouts7d, internal: internalCheckouts7d, retained: checkouts7d },
+            { label: 'Achats', ga: gaPurchases7d, internal: internalPurchases7d, retained: purchases7d },
+            { label: 'Onboarding', ga: gaOnboardingComplete7d, internal: internalOnboarding7d, retained: onboardingComplete7d },
+          ].map((item) => (
+            <div key={item.label} className="rounded-xl bg-gray-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{item.label}</p>
+              <p className="mt-1 text-lg font-semibold text-gray-900">{fmtNumber(item.retained)}</p>
+              <p className="mt-1 text-xs text-gray-600">
+                GA4 {fmtNumber(item.ga)} · interne {fmtNumber(item.internal)}
+              </p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-gray-500">
+          Valeur retenue dans l’admin = maximum disponible entre GA4 et les données internes / Stripe sur la même période.
+        </p>
+      </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm xl:col-span-1">

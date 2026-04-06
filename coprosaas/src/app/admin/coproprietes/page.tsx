@@ -99,7 +99,7 @@ export default async function AdminCopropietesPage({
   const applyServerFilters = <T,>(queryBuilder: T) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let qBuilder = queryBuilder as any;
-    if (activeTab === 'coproprietes' && planFilter) {
+    if (planFilter) {
       if (planFilter === 'essai') qBuilder = qBuilder.or('plan.is.null,plan.eq.essai');
       else qBuilder = qBuilder.eq('plan', planFilter);
     }
@@ -135,9 +135,7 @@ export default async function AdminCopropietesPage({
     coproprietes = (data ?? []) as CoproRow[];
   } else {
     const baseQuery = admin.from('coproprietes').select(baseSelect);
-    const dataQuery = activeTab === 'coproprietes'
-      ? applyServerFilters(baseQuery)
-      : baseQuery;
+    const dataQuery = applyServerFilters(baseQuery);
     const { data } = await dataQuery.order('created_at', { ascending: false });
     coproprietes = (data ?? []) as CoproRow[];
     serverTotalCount = coproprietes.length;
@@ -261,7 +259,7 @@ export default async function AdminCopropietesPage({
 
   const displayedCopros = activeTab === 'coproprietes'
     ? coprosTyped.filter((c) => {
-        if (hasClientOnlyFilters && planFilter) {
+        if (planFilter) {
           if (planFilter === 'essai') {
             if (c.plan && c.plan !== 'essai') return false;
           } else if (c.plan !== planFilter) {
