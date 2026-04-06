@@ -129,7 +129,7 @@ export default async function AdminAnalyticsPage() {
     admin
       .from('user_events')
       .select('event_type, created_at')
-      .in('event_type', ['begin_checkout', 'trial_started', 'subscription_created'])
+      .in('event_type', ['user_registered', 'account_confirmed', 'begin_checkout', 'trial_started', 'subscription_created'])
       .gte('created_at', last30dIso),
     admin
       .from('coproprietes')
@@ -137,8 +137,14 @@ export default async function AdminAnalyticsPage() {
       .gte('created_at', last30dIso),
   ]);
 
-  const signUps7d = analytics.businessEvents7d.sign_up ?? 0;
-  const signUps30d = analytics.businessEvents30d.sign_up ?? 0;
+  const gaSignUps7d = Math.max(
+    analytics.businessEvents7d.sign_up ?? 0,
+    analytics.businessEvents7d.sign_up_anonymous ?? 0,
+  );
+  const gaSignUps30d = Math.max(
+    analytics.businessEvents30d.sign_up ?? 0,
+    analytics.businessEvents30d.sign_up_anonymous ?? 0,
+  );
   const gaCheckouts7d = analytics.businessEvents7d.begin_checkout ?? 0;
   const gaCheckouts30d = analytics.businessEvents30d.begin_checkout ?? 0;
   const gaPurchases7d = analytics.businessEvents7d.purchase ?? 0;
@@ -148,11 +154,18 @@ export default async function AdminAnalyticsPage() {
   const gaOnboardingComplete7d = analytics.businessEvents7d.onboarding_complete ?? 0;
   const gaOnboardingComplete30d = analytics.businessEvents30d.onboarding_complete ?? 0;
 
+  const registrationEvents = (recentUserEvents ?? []).filter((event) => event.event_type === 'user_registered');
+  const confirmedAccountEvents = (recentUserEvents ?? []).filter((event) => event.event_type === 'account_confirmed');
   const purchaseLikeEvents = (recentUserEvents ?? []).filter((event) => (
     event.event_type === 'trial_started' || event.event_type === 'subscription_created'
   ));
   const checkoutEvents = (recentUserEvents ?? []).filter((event) => event.event_type === 'begin_checkout');
 
+  const internalSignUps30d = Math.max(registrationEvents.length, confirmedAccountEvents.length);
+  const internalSignUps7d = Math.max(
+    countSince(registrationEvents, last7dMs),
+    countSince(confirmedAccountEvents, last7dMs),
+  );
   const internalPurchases30d = purchaseLikeEvents.length;
   const internalPurchases7d = countSince(purchaseLikeEvents, last7dMs);
   const internalCheckouts30d = Math.max(checkoutEvents.length, internalPurchases30d);
@@ -160,6 +173,8 @@ export default async function AdminAnalyticsPage() {
   const internalOnboarding30d = (recentCopros ?? []).length;
   const internalOnboarding7d = countSince(recentCopros ?? [], last7dMs);
 
+  const signUps7d = Math.max(gaSignUps7d, internalSignUps7d);
+  const signUps30d = Math.max(gaSignUps30d, internalSignUps30d);
   const checkouts7d = Math.max(gaCheckouts7d, internalCheckouts7d);
   const checkouts30d = Math.max(gaCheckouts30d, internalCheckouts30d);
   const purchases7d = Math.max(gaPurchases7d, internalPurchases7d);
@@ -167,6 +182,8 @@ export default async function AdminAnalyticsPage() {
   const onboardingComplete7d = Math.max(gaOnboardingComplete7d, internalOnboarding7d);
   const onboardingComplete30d = Math.max(gaOnboardingComplete30d, internalOnboarding30d);
   const usingBusinessFallback = (
+    signUps7d > gaSignUps7d ||
+    signUps30d > gaSignUps30d ||
     checkouts7d > gaCheckouts7d ||
     checkouts30d > gaCheckouts30d ||
     purchases7d > gaPurchases7d ||
@@ -299,8 +316,9 @@ export default async function AdminAnalyticsPage() {
       {usingBusinessFallback && (
         <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4 shadow-sm">
           <p className="text-sm text-sky-900">
-            Les cartes <strong>Onboarding</strong>, <strong>Begin checkout</strong> et <strong>Purchase</strong> utilisent aussi les logs internes
-            de l’app et de Stripe pour éviter les faux zéros quand GA4 ne remonte pas encore ces événements métier.
+            Les cartes <strong>Inscription</strong>, <strong>Onboarding</strong>, <strong>Begin checkout</strong> et <strong>Purchase</strong>
+            utilisent aussi les logs internes de l’app (et Stripe pour la facturation) pour éviter les faux zéros quand GA4 ne remonte pas
+            encore certains événements métier.
           </p>
         </section>
       )}
