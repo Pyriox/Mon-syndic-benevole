@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowLeft, Building2, Clock, LifeBuoy, Mail, MapPin, Phone, User2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, Clock, LifeBuoy, Mail, MapPin, Phone, ShieldAlert, User2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminUser } from '@/lib/admin-config';
@@ -94,7 +94,7 @@ export default async function AdminUtilisateurProfilePage({
           .select('id, event_type, label, created_at, severity')
           .eq('user_email', email)
           .order('created_at', { ascending: false })
-          .limit(40)
+          .limit(100)
       : Promise.resolve({ data: [], error: null }),
   ]);
 
@@ -165,6 +165,12 @@ export default async function AdminUtilisateurProfilePage({
     .filter((v) => v.length > 0)));
   const linkedCoproCount = isMember ? memberRows.length : syndicCopros.length;
   const supportCount = (ticketsRes.data ?? []).length;
+  const accountSignals = [
+    !authUser.email_confirmed_at ? 'E-mail non confirmé' : null,
+    !lastActive ? 'Aucune activité récente remontée' : null,
+    linkedCoproCount === 0 ? 'Aucune copropriété liée' : null,
+    supportCount > 0 ? `${supportCount} ticket${supportCount > 1 ? 's' : ''} support en suivi` : null,
+  ].filter((value): value is string => Boolean(value));
   const currentPageHref = buildAdminPath(`/admin/utilisateurs/${id}`, {
     from,
     logCategory: currentLogCategory !== 'all' ? currentLogCategory : undefined,
@@ -221,8 +227,6 @@ export default async function AdminUtilisateurProfilePage({
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <RoleBadge role={role} />
-              <AdminCopyId id={id} />
-              {!isAdmin && <AdminImpersonate email={authUser.email ?? ''} />}
             </div>
           </div>
 
@@ -268,6 +272,42 @@ export default async function AdminUtilisateurProfilePage({
                   ))
                 )}
               </div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid lg:grid-cols-[1.1fr_0.9fr] gap-3 text-xs">
+            <div className={`rounded-lg border px-3 py-3 ${accountSignals.length > 0 ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
+              <p className={`mb-2 flex items-center gap-1.5 text-sm font-semibold ${accountSignals.length > 0 ? 'text-amber-800' : 'text-emerald-800'}`}>
+                {accountSignals.length > 0 ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
+                Signaux à surveiller
+              </p>
+              {accountSignals.length === 0 ? (
+                <p className="text-emerald-700">Aucun signal bloquant détecté sur ce compte.</p>
+              ) : (
+                <ul className="space-y-1 text-amber-800">
+                  {accountSignals.map((signal) => (
+                    <li key={signal}>• {signal}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-3">
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-red-800">
+                <ShieldAlert size={14} /> Actions sensibles
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <AdminCopyId id={id} />
+                {!isAdmin && <AdminImpersonate email={authUser.email ?? ''} />}
+                {supportCount > 0 && (
+                  <Link href={`/admin/support?q=${encodeURIComponent(authUser.email ?? '')}`} className="inline-flex items-center rounded-lg border border-red-200 bg-white px-2.5 py-1.5 font-medium text-red-700 hover:border-red-300">
+                    Voir le support
+                  </Link>
+                )}
+              </div>
+              <p className="mt-2 text-red-700/80">
+                Réserver ces actions aux vérifications manuelles ou à l’assistance directe d’un utilisateur.
+              </p>
             </div>
           </div>
         </div>
@@ -350,7 +390,7 @@ export default async function AdminUtilisateurProfilePage({
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <Clock size={14} className="text-gray-500" />
-              <p className="text-sm font-semibold text-gray-800">Journal utilisateur (40 derniers événements)</p>
+              <p className="text-sm font-semibold text-gray-800">Journal utilisateur (100 derniers événements)</p>
             </div>
             <p className="text-xs text-gray-400">{filteredEvents.length} résultat{filteredEvents.length > 1 ? 's' : ''} · 10 par page</p>
           </div>

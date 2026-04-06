@@ -2,11 +2,12 @@
 // ============================================================
 // AdminSupportShell — Interface de messagerie support admin
 // ============================================================
-import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   LifeBuoy, Search, Send, RefreshCw, ChevronDown,
   CheckCircle, MessageSquare, User, Shield,
-  Circle, AlertCircle, Inbox,
+  Circle, AlertCircle, Inbox, Mail,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────
@@ -69,9 +70,19 @@ function formatDateFull(d: string) {
 
 // ── Composant principal ─────────────────────────────────────
 
-export default function AdminSupportShell({ initialTickets }: { initialTickets: Ticket[] }) {
+export default function AdminSupportShell({
+  initialTickets,
+  initialSearch = '',
+  initialFilterStatus = 'all',
+  initialTicketId = null,
+}: {
+  initialTickets: Ticket[];
+  initialSearch?: string;
+  initialFilterStatus?: 'all' | TicketStatus;
+  initialTicketId?: string | null;
+}) {
   const [tickets, setTickets]       = useState<Ticket[]>(initialTickets);
-  const [selectedId, setSelectedId] = useState<string | null>(initialTickets[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialTicketId ?? initialTickets[0]?.id ?? null);
   const [messages, setMessages]     = useState<Message[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [reply, setReply]           = useState('');
@@ -79,8 +90,8 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
   const [sendError, setSendError]   = useState('');
   const [sendEmailWarning, setSendEmailWarning] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
-  const [search, setSearch]         = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | TicketStatus>('all');
+  const [search, setSearch]         = useState(initialSearch);
+  const [filterStatus, setFilterStatus] = useState<'all' | TicketStatus>(initialFilterStatus);
   const [refreshing, setRefreshing] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -193,7 +204,7 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
   };
 
   // ── Filtrage liste ──
-  const filteredTickets = tickets.filter((t) => {
+  const filteredTickets = useMemo(() => tickets.filter((t) => {
     const matchStatus = filterStatus === 'all' || t.status === filterStatus;
     const q = search.toLowerCase();
     const matchSearch = !q
@@ -201,9 +212,17 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
       || t.user_email.toLowerCase().includes(q)
       || t.subject.toLowerCase().includes(q);
     return matchStatus && matchSearch;
-  });
+  }), [tickets, filterStatus, search]);
 
   const countByStatus = (s: TicketStatus) => tickets.filter((t) => t.status === s).length;
+  const PAGE_SIZE = 12;
+  const [listPage, setListPage] = useState(1);
+  useEffect(() => {
+    setListPage(1);
+  }, [search, filterStatus]);
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / PAGE_SIZE));
+  const safePage = Math.min(listPage, totalPages);
+  const pagedTickets = filteredTickets.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   // ── Keyboard shortcut : Cmd/Ctrl+Enter → envoyer ──
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -240,6 +259,20 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
           <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
           Actualiser
         </button>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: 'Tickets ouverts', value: countByStatus('ouvert'), tone: 'bg-blue-50 text-blue-700 border-blue-200' },
+          { label: 'En cours', value: countByStatus('en_cours'), tone: 'bg-amber-50 text-amber-700 border-amber-200' },
+          { label: 'Résolus', value: countByStatus('resolu'), tone: 'bg-green-50 text-green-700 border-green-200' },
+          { label: 'Résultats filtrés', value: filteredTickets.length, tone: 'bg-slate-50 text-slate-700 border-slate-200' },
+        ].map((item) => (
+          <div key={item.label} className={`rounded-xl border px-4 py-3 ${item.tone}`}>
+            <p className="text-lg font-bold">{item.value}</p>
+            <p className="text-xs font-semibold mt-0.5">{item.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* ── Corps : liste + conversation ── */}
@@ -287,7 +320,7 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
                 <Inbox size={28} className="mx-auto text-gray-500 mb-2" />
                 <p className="text-xs text-gray-500">Aucun ticket</p>
               </div>
-            ) : filteredTickets.map((t) => (
+            ) : pagedTickets.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setSelectedId(t.id)}
@@ -301,10 +334,34 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
                   <span className="text-xs font-semibold text-gray-900 truncate flex-1">{t.user_name}</span>
                   <span className="shrink-0 text-[10px] text-gray-500">{formatDateFR(t.updated_at)}</span>
                 </div>
+                <p className="text-[11px] text-gray-500 truncate mb-1">{t.user_email}</p>
                 <p className="text-xs text-gray-600 truncate mb-1.5">{t.subject}</p>
                 <StatusBadge status={t.status} />
               </button>
             ))}
+            {filteredTickets.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between px-1 pt-2 text-[11px] text-gray-500">
+                <span>Page {safePage}/{totalPages}</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setListPage((p) => Math.max(1, p - 1))}
+                    disabled={safePage === 1}
+                    className="rounded border border-gray-200 px-2 py-1 disabled:opacity-40"
+                  >
+                    Précédent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setListPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safePage === totalPages}
+                    className="rounded border border-gray-200 px-2 py-1 disabled:opacity-40"
+                  >
+                    Suivant
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -327,6 +384,14 @@ export default function AdminSupportShell({ initialTickets }: { initialTickets: 
                     {' · '}{selectedTicket.user_email}
                     {' · '}créé le {formatDateFull(selectedTicket.created_at)}
                   </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                    <Link href={`/admin/utilisateurs?q=${encodeURIComponent(selectedTicket.user_email)}`} className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-1 font-medium text-indigo-700 hover:border-indigo-300">
+                      <User size={11} /> Voir l’utilisateur
+                    </Link>
+                    <Link href={`/admin/emails?q=${encodeURIComponent(selectedTicket.user_email)}`} className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-1 font-medium text-gray-700 hover:border-gray-300">
+                      <Mail size={11} /> Historique e-mails
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Sélecteur de statut */}
