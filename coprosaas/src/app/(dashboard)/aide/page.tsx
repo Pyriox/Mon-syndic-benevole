@@ -31,6 +31,14 @@ const SUBJECT_CHIPS = [
   'Autre',
 ];
 
+const SUBJECT_CHIPS_COPRO = [
+  'Question sur mon solde',
+  'Document ou convocation',
+  'Problème de connexion',
+  'Signaler une anomalie',
+  'Autre',
+];
+
 const MAX_MESSAGE = 3000;
 
 // ── Types support ────────────────────────────────────────────
@@ -129,6 +137,49 @@ const FAQ: { question: string; answer: string; category: keyof typeof CATEGORIES
   },
 ];
 
+const FAQ_COPRO: { question: string; answer: string; category: keyof typeof CATEGORIES }[] = [
+  {
+    category: 'demarrage',
+    question: 'Comment accéder à ma copropriété et retrouver mes informations ?',
+    answer: 'Depuis le menu de navigation, vous retrouvez votre tableau de bord, vos lots, vos documents et vos informations de profil. Si vous avez accès à plusieurs copropriétés, utilisez le sélecteur en haut à gauche.',
+  },
+  {
+    category: 'finances',
+    question: 'Comment consulter mon solde et mes appels de fonds ?',
+    answer: 'Le tableau de bord affiche votre solde en temps réel et les charges à régler. La page « Appels de fonds » vous permet de consulter vos échéances, leur statut et les montants déjà réglés ou encore dus.',
+  },
+  {
+    category: 'finances',
+    question: 'Pourquoi mon solde est-il en rouge ou en vert ?',
+    answer: 'Un solde en rouge signifie qu’un montant reste à payer. Un solde en vert signifie au contraire qu’une avance ou un crédit est enregistré en votre faveur.',
+  },
+  {
+    category: 'ag',
+    question: 'Où retrouver ma convocation d’AG ou le procès-verbal ?',
+    answer: 'Les convocations, procès-verbaux et autres documents partagés sont disponibles dans la page « Documents ». Vous n’y voyez que les fichiers auxquels vous avez accès.',
+  },
+  {
+    category: 'ag',
+    question: 'Comment connaître la date de la prochaine AG ?',
+    answer: 'La prochaine assemblée générale apparaît sur votre tableau de bord dès qu’elle est planifiée. Vous pouvez également consulter la page « Assemblées » pour retrouver la date, le lieu et les résolutions.',
+  },
+  {
+    category: 'app',
+    question: 'Pourquoi je ne peux pas renommer, déplacer ou supprimer un document ?',
+    answer: 'Ces actions sont réservées au syndic. En vue copropriétaire, vous pouvez uniquement consulter et télécharger les documents qui vous sont partagés.',
+  },
+  {
+    category: 'app',
+    question: 'Je ne vois pas un document ou un avis de fonds, que faire ?',
+    answer: 'Vérifiez d’abord que la bonne copropriété est sélectionnée. Si un document manque encore, contactez votre syndic ou utilisez le formulaire de support sur cette page.',
+  },
+  {
+    category: 'app',
+    question: 'Comment poser une question ou signaler un problème ?',
+    answer: 'Depuis cette page, vous pouvez envoyer un message au support. Si votre demande concerne votre dossier ou votre copropriété, pensez à préciser le contexte afin de recevoir une réponse plus rapide.',
+  },
+];
+
 // ── Composant accordéon FAQ ──────────────────────────────────
 function FaqItem({ question, answer, category, defaultOpen = false }: {
   question: string; answer: string; category: keyof typeof CATEGORIES; defaultOpen?: boolean;
@@ -164,7 +215,8 @@ function FaqItem({ question, answer, category, defaultOpen = false }: {
 
 // ── Page principale ──────────────────────────────────────────
 export default function AidePage() {
-  const router = useRouter();  const [name, setName]       = useState('');
+  const router = useRouter();
+  const [name, setName]       = useState('');
   const [email, setEmail]     = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -172,6 +224,8 @@ export default function AidePage() {
   const [sent, setSent]       = useState(false);
   const [error, setError]     = useState('');
   const [userId, setUserId]   = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<'syndic' | 'copropriétaire' | null>(null);
+  const [selectedCoproName, setSelectedCoproName] = useState('');
 
   // Tickets support
   const [tickets, setTickets]               = useState<Ticket[]>([]);
@@ -188,16 +242,60 @@ export default function AidePage() {
   const [search, setSearch]       = useState('');
   const [activecat, setActivecat] = useState<string>('all');
 
-  // Pré-remplissage depuis la session + chargement tickets
+  // Pré-remplissage depuis la session + détection du contexte utilisateur
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    let cancelled = false;
+
+    const readCookie = (key: string) => {
+      if (typeof document === 'undefined') return null;
+      const value = document.cookie
+        .split('; ')
+        .find((item) => item.startsWith(`${key}=`))
+        ?.split('=')[1];
+      return value ?? null;
+    };
+
+    const loadUserContext = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled) return;
+
       if (user?.email) setEmail(user.email);
-      if (user?.id)    setUserId(user.id);
-    });
-    supabase.from('profiles').select('full_name').maybeSingle().then(({ data }) => {
-      if (data?.full_name) setName(data.full_name);
-    });
+      if (user?.id) setUserId(user.id);
+
+      const selectedCoproId = readCookie('selected_copro_id');
+
+      const profileQuery = supabase.from('profiles').select('full_name').maybeSingle();
+      const syndicQuery = selectedCoproId
+        ? supabase.from('coproprietes').select('id, nom').eq('id', selectedCoproId).eq('syndic_id', user?.id ?? '').maybeSingle()
+        : supabase.from('coproprietes').select('id, nom').eq('syndic_id', user?.id ?? '').maybeSingle();
+      const coproQuery = selectedCoproId
+        ? supabase.from('coproprietaires').select('id').eq('copropriete_id', selectedCoproId).eq('user_id', user?.id ?? '').maybeSingle()
+        : supabase.from('coproprietaires').select('id').eq('user_id', user?.id ?? '').maybeSingle();
+
+      const [{ data: profile }, { data: syndicCopro }, { data: coproMember }] = await Promise.all([
+        profileQuery,
+        syndicQuery,
+        coproQuery,
+      ]);
+
+      if (cancelled) return;
+
+      if (profile?.full_name) setName(profile.full_name);
+      if (syndicCopro?.nom) setSelectedCoproName(syndicCopro.nom);
+
+      if (coproMember) {
+        setUserRole('copropriétaire');
+      } else if (syndicCopro) {
+        setUserRole('syndic');
+      }
+    };
+
+    loadUserContext().catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Charger les tickets dès qu'on a le userId
@@ -320,25 +418,117 @@ export default function AidePage() {
       setLoading(false);
     }
   };
+  const isCoproView = userRole === 'copropriétaire';
+  const faqItems = isCoproView ? FAQ_COPRO : FAQ;
+  const subjectChips = isCoproView ? SUBJECT_CHIPS_COPRO : SUBJECT_CHIPS;
+  const resourceLinks = isCoproView
+    ? [
+        { label: 'Service-public.fr – copropriété', url: 'https://www.service-public.fr/particuliers/vosdroits/N31337' },
+        { label: 'ANIL – charges et répartition en copropriété', url: 'https://www.anil.org/votre-projet/vous-etes-proprietaire/copropriete/charges-de-copropriete/' },
+        { label: 'ANIL – assemblée générale des copropriétaires', url: 'https://www.anil.org/votre-projet/vous-etes-proprietaire/copropriete/assemblee-generale/' },
+      ]
+    : [
+        { label: 'Legifrance – loi du 10 juillet 1965', url: 'https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256' },
+        { label: 'ANIL – le syndic en copropriété',     url: 'https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/' },
+        { label: 'Service-public.fr – copropriété',     url: 'https://www.service-public.fr/particuliers/vosdroits/N31337' },
+      ];
+  const cycleSteps = isCoproView
+    ? [
+        {
+          num: '1',
+          color: 'bg-blue-100 text-blue-700',
+          title: 'Consultez votre solde et vos échéances',
+          body: 'Votre tableau de bord vous indique immédiatement si un appel de fonds reste à régler et vous permet de suivre vos montants dus ou vos éventuels crédits.',
+        },
+        {
+          num: '2',
+          color: 'bg-purple-100 text-purple-700',
+          title: 'Retrouvez vos documents partagés',
+          body: 'La page « Documents » vous donne accès aux avis de fonds, convocations d’AG, procès-verbaux et autres fichiers que le syndic partage avec vous.',
+        },
+        {
+          num: '3',
+          color: 'bg-green-100 text-green-700',
+          title: 'Suivez les assemblées générales',
+          body: 'Dès qu’une AG est planifiée, vous retrouvez la date et les documents associés dans votre espace. Les convocations et PV restent consultables en ligne.',
+        },
+        {
+          num: '4',
+          color: 'bg-amber-100 text-amber-700',
+          title: 'Contactez le support si besoin',
+          body: 'Si vous constatez une anomalie ou un document manquant, utilisez le formulaire ci-dessous pour nous écrire. Nous pourrons vous guider rapidement.',
+        },
+      ]
+    : [
+        {
+          num: '1',
+          color: 'bg-purple-100 text-purple-700',
+          title: "L'AG vote le budget prévisionnel",
+          body: "Chaque année, l'Assemblée Générale vote le budget de l'exercice suivant. Ex : l'AG de juin 2026 vote le budget 2027.",
+        },
+        {
+          num: '2',
+          color: 'bg-blue-100 text-blue-700',
+          title: 'Le syndic crée les appels de fonds',
+          body: "Dans « Appels de fonds », créez une série liée à l'AG : 4 appels trimestriels avec des échéances en 2027 (01/01, 01/04, 01/07, 01/10). Les quotes-parts sont calculées automatiquement selon les tantièmes.",
+        },
+        {
+          num: '3',
+          color: 'bg-amber-100 text-amber-700',
+          title: 'Publiez et notifiez les copropriétaires',
+          body: "À la publication, chaque copropriétaire reçoit son avis de paiement par email. Son solde est débité automatiquement. Marquez chaque paiement reçu pour mettre à jour les soldes en temps réel.",
+        },
+        {
+          num: '4',
+          color: 'bg-green-100 text-green-700',
+          title: "Le dashboard reflète l'exercice en cours",
+          body: "Les provisions 2027, les dépenses réelles et l'écart prévisionnel s'affichent automatiquement dès que les données sont saisies. Le solde impayé = somme des soldes négatifs des copropriétaires.",
+        },
+        {
+          num: '5',
+          color: 'bg-orange-100 text-orange-700',
+          title: "Régularisation en fin d'exercice",
+          body: "En fin d'année, comparez les provisions appelées aux dépenses réelles. Si écart positif → trop-perçu à rembourser ou reporter. Si négatif → appel complémentaire à émettre.",
+        },
+      ];
+
   const filteredFaq = useMemo(() => {
     const q = search.toLowerCase();
-    return FAQ.filter((item) => {
+    return faqItems.filter((item) => {
       const matchCat    = activecat === 'all' || item.category === activecat;
       const matchSearch = !q || item.question.toLowerCase().includes(q) || item.answer.toLowerCase().includes(q);
       return matchCat && matchSearch;
     });
-  }, [search, activecat]);
+  }, [search, activecat, faqItems]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-12">
 
       {/* ── En-tête ── */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Aide & Contact</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {isCoproView ? 'Aide copropriétaire' : 'Aide & Contact'}
+        </h1>
         <p className="text-gray-500 mt-1 text-sm">
-          Questions fréquentes, support et comprendre le fonctionnement annuel.
+          {isCoproView
+            ? `Réponses utiles pour consulter votre espace, vos documents et votre solde${selectedCoproName ? ` — ${selectedCoproName}` : ''}.`
+            : 'Questions fréquentes, support et comprendre le fonctionnement annuel.'}
         </p>
       </div>
+
+      {isCoproView && (
+        <Card className="border-blue-200 bg-blue-50/70">
+          <div className="flex items-start gap-3">
+            <Info size={18} className="shrink-0 text-blue-600 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-blue-900">Dans votre espace copropriétaire</p>
+              <p className="text-sm text-blue-800 mt-1">
+                Vous pouvez consulter votre solde, télécharger vos documents partagés, suivre les assemblées générales et contacter le support si nécessaire.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* ── FAQ ── */}
       <div>
@@ -348,7 +538,9 @@ export default function AidePage() {
           </div>
           <div>
             <h2 className="text-base font-semibold text-gray-900">Questions fréquentes</h2>
-            <p className="text-xs text-gray-400">Sur le syndic bénévole et l&apos;application</p>
+            <p className="text-xs text-gray-400">
+              {isCoproView ? 'Réponses utiles pour votre espace copropriétaire' : 'Sur le syndic bénévole et l&apos;application'}
+            </p>
           </div>
         </div>
 
@@ -414,7 +606,9 @@ export default function AidePage() {
           </div>
           <div>
             <h2 className="text-base font-semibold text-gray-900">Support</h2>
-            <p className="text-xs text-gray-400">Vos demandes et notre formulaire de contact</p>
+            <p className="text-xs text-gray-400">
+              {isCoproView ? 'Questions sur votre espace, vos documents ou votre accès' : 'Vos demandes et notre formulaire de contact'}
+            </p>
           </div>
         </div>
 
@@ -595,7 +789,7 @@ export default function AidePage() {
                   <div>
                     <p className="text-xs font-medium text-gray-600 mb-2">Sujet rapide</p>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {SUBJECT_CHIPS.map((chip) => (
+                      {subjectChips.map((chip) => (
                         <button
                           key={chip}
                           type="button"
@@ -679,11 +873,7 @@ export default function AidePage() {
             <Card padding="md">
               <h3 className="text-sm font-semibold text-gray-800 mb-3">Ressources officielles</h3>
               <ul className="space-y-2">
-                {[
-                  { label: 'Legifrance – loi du 10 juillet 1965', url: 'https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256' },
-                  { label: 'ANIL – le syndic en copropriété',     url: 'https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/' },
-                  { label: 'Service-public.fr – copropriété',     url: 'https://www.service-public.fr/particuliers/vosdroits/N31337' },
-                ].map(({ label, url }) => (
+                {resourceLinks.map(({ label, url }) => (
                   <li key={url}>
                     <a
                       href={url}
@@ -709,44 +899,17 @@ export default function AidePage() {
             <BookOpen size={16} className="text-green-600" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-gray-900">Comprendre le cycle annuel</h2>
-            <p className="text-xs text-gray-400">AG · Appels de fonds · Dashboard · Régularisation</p>
+            <h2 className="text-base font-semibold text-gray-900">
+              {isCoproView ? 'Comprendre votre espace copropriétaire' : 'Comprendre le cycle annuel'}
+            </h2>
+            <p className="text-xs text-gray-400">
+              {isCoproView ? 'Solde · Documents · Assemblées · Support' : 'AG · Appels de fonds · Dashboard · Régularisation'}
+            </p>
           </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 space-y-0">
-          {[
-            {
-              num: '1',
-              color: 'bg-purple-100 text-purple-700',
-              title: "L'AG vote le budget prévisionnel",
-              body: "Chaque année, l'Assemblée Générale vote le budget de l'exercice suivant. Ex : l'AG de juin 2026 vote le budget 2027.",
-            },
-            {
-              num: '2',
-              color: 'bg-blue-100 text-blue-700',
-              title: 'Le syndic crée les appels de fonds',
-              body: "Dans « Appels de fonds », créez une série liée à l'AG : 4 appels trimestriels avec des échéances en 2027 (01/01, 01/04, 01/07, 01/10). Les quotes-parts sont calculées automatiquement selon les tantièmes.",
-            },
-            {
-              num: '3',
-              color: 'bg-amber-100 text-amber-700',
-              title: 'Publiez et notifiez les copropriétaires',
-              body: "À la publication, chaque copropriétaire reçoit son avis de paiement par email. Son solde est débité automatiquement. Marquez chaque paiement reçu pour mettre à jour les soldes en temps réel.",
-            },
-            {
-              num: '4',
-              color: 'bg-green-100 text-green-700',
-              title: "Le dashboard reflète l'exercice en cours",
-              body: "Les provisions 2027, les dépenses réelles et l'écart prévisionnel s'affichent automatiquement dès que les données sont saisies. Le solde impayé = somme des soldes négatifs des copropriétaires.",
-            },
-            {
-              num: '5',
-              color: 'bg-orange-100 text-orange-700',
-              title: "Régularisation en fin d'exercice",
-              body: "En fin d'année, comparez les provisions appelées aux dépenses réelles. Si écart positif → trop-perçu à rembourser ou reporter. Si négatif → appel complémentaire à émettre.",
-            },
-          ].map((step, i, arr) => (
+          {cycleSteps.map((step, i, arr) => (
             <div key={step.num} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${step.color}`}>
@@ -761,27 +924,28 @@ export default function AidePage() {
             </div>
           ))}
 
-          {/* Note première année */}
-          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-2">
-            <Info size={15} className="text-amber-700 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-semibold text-amber-800">Première année sur Mon Syndic Bénévole ?</p>
-              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                Les appels de fonds de l&apos;exercice en cours ont probablement été gérés sur une autre plateforme.
-                Vous pouvez les re-saisir manuellement (même pour un seul appel global annuel) pour que le dashboard
-                affiche les bonnes provisions et impayés. Les T1/T2 déjà payés peuvent être marqués payés
-                directement après publication.
-              </p>
-              <a
-                href="/blog/migrer-vers-mon-syndic-benevole"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
-              >
-                Lire le guide de migration complet →
-              </a>
+          {!isCoproView && (
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-2">
+              <Info size={15} className="text-amber-700 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-semibold text-amber-800">Première année sur Mon Syndic Bénévole ?</p>
+                <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                  Les appels de fonds de l&apos;exercice en cours ont probablement été gérés sur une autre plateforme.
+                  Vous pouvez les re-saisir manuellement (même pour un seul appel global annuel) pour que le dashboard
+                  affiche les bonnes provisions et impayés. Les T1/T2 déjà payés peuvent être marqués payés
+                  directement après publication.
+                </p>
+                <a
+                  href="/blog/migrer-vers-mon-syndic-benevole"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
+                >
+                  Lire le guide de migration complet →
+                </a>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

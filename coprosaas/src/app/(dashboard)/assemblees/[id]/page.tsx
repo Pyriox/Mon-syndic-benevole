@@ -250,7 +250,7 @@ export default async function AGDetailPage({ params }: Props) {
               <div>
                 <p className="text-sm font-semibold text-amber-900">Envoyer la convocation</p>
                 <p className="text-sm text-amber-800">
-                  La planification est validée, mais la convocation n&apos;a pas encore été envoyée depuis CoproSaaS.
+                  La planification est validée, mais la convocation n&apos;a pas encore été envoyée depuis Mon Syndic Bénévole.
                   Faites-le maintenant pour garder une trace d&apos;envoi et éviter un oubli avant le jour J.
                 </p>
               </div>
