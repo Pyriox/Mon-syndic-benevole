@@ -262,7 +262,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
   return (
     <>
       <Button onClick={() => setIsOpen(true)} size={showLabel ? 'md' : 'sm'}>
-        <Plus size={16} /> {showLabel ? 'Créer le brouillon d&apos;AG' : 'Nouvelle AG'}
+        <Plus size={16} /> {showLabel ? 'Créer le brouillon d’AG' : 'Nouvelle AG'}
       </Button>
 
       <Modal
@@ -279,7 +279,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
 
             {/* Type d'AG */}
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Type d&apos;assemblée générale</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">Type d’assemblée générale</p>
               <div className="grid grid-cols-2 gap-2">
                 <button type="button"
                   onClick={() => setTypeAG('ordinaire')}
@@ -299,7 +299,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
               {typeAG === 'exceptionnelle' && (
                 <div className="mt-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                   <AlertTriangle size={13} className="shrink-0 mt-0.5 text-amber-600" />
-                  <span>Convoquée en dehors du calendrier annuel pour un point urgent. Seules 3 résolutions de bureau seront pré-remplies — vous ajouterez l&apos;objet spécifique ensuite.</span>
+                  <span>Convoquée en dehors du calendrier annuel pour un point urgent. Seules 3 résolutions de bureau seront pré-remplies — vous ajouterez l’objet spécifique ensuite.</span>
                 </div>
               )}
             </div>
@@ -345,7 +345,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                 <div className="mt-2 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5 text-red-500" />
                   <span>
-                    <strong>Date passée :</strong> la date sélectionnée est antérieure à aujourd&apos;hui.
+                    <strong>Date passée :</strong> la date sélectionnée est antérieure à aujourd’hui.
                   </span>
                 </div>
               )}
@@ -353,7 +353,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                 <div className="mt-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5 text-amber-700" />
                   <span>
-                    <strong>Délai insuffisant :</strong> la convocation doit être envoyée au moins 21 jours avant l&apos;AG (art. 9 décret 17/03/1967).
+                    <strong>Délai insuffisant :</strong> la convocation doit être envoyée au moins 21 jours avant l’AG (art. 9 décret 17/03/1967).
                     Actuellement : <strong>{joursAvantAG} jour{joursAvantAG! > 1 ? 's' : ''}</strong> restant{joursAvantAG! > 1 ? 's' : ''}.
                   </span>
                 </div>
@@ -384,7 +384,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
             {error && <p className="text-sm text-red-600">{error}</p>}
 
             <div className="flex gap-3 pt-1">
-              <Button type="submit">Suivant — Configurer l&apos;ordre du jour</Button>
+              <Button type="submit">Suivant — Configurer l’ordre du jour</Button>
               <Button type="button" variant="secondary" onClick={resetAndClose}>Annuler</Button>
             </div>
           </form>
@@ -485,7 +485,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                     <div className="px-4 pb-4 border-t border-green-200/60 pt-3">
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-xs font-semibold text-green-800">
-                          Dates d&apos;appel de fonds <span className="text-red-500">*</span>
+                          Dates d’appel de fonds <span className="text-red-500">*</span>
                           <span className="text-gray-400 font-normal ml-1">(minimum 1 date)</span>
                         </label>
                         <button type="button"
@@ -606,7 +606,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
 
             {/* Récapitulatif */}
             <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-600 flex items-center gap-4 flex-wrap">
-              <span><strong className="text-gray-800">{includedCount}</strong> résolution(s) à l&apos;ordre du jour</span>
+              <span><strong className="text-gray-800">{includedCount}</strong> résolution(s) à l’ordre du jour</span>
               {totalBudget > 0 && (
                 <span>Budget prévisionnel : <strong className="text-indigo-700">{formatEuros(totalBudget)}</strong></span>
               )}
@@ -626,7 +626,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
 
             <div className="flex gap-3 pt-1">
               <Button onClick={handleSubmit} loading={loading}>
-                <Check size={15} /> Créer le brouillon d&apos;AG
+                <Check size={15} /> Créer le brouillon d’AG
               </Button>
               <Button type="button" variant="secondary" onClick={() => setWizardStep(1)}>Retour</Button>
               <Button type="button" variant="secondary" onClick={resetAndClose}>Annuler</Button>
