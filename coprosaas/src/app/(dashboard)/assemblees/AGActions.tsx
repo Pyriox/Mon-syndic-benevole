@@ -48,52 +48,59 @@ interface WizardResolution {
 // -------------------------------------------------------
 // Templates de résolutions
 // -------------------------------------------------------
-const TEMPLATES_ORDINAIRE: Omit<WizardResolution, 'inclure' | 'budgetPostes' | 'fondsTravaux' | 'expanded' | 'echeancierDates'>[] = [
-  { id: 'r1',  numero: 1,  titre: 'Désignation du président de séance',
-    description: "Élu par l'assemblée pour diriger les débats. Le syndic ne peut être président.",
-    majorite: 'article_24', type_resolution: 'president_seance',    optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
-  { id: 'r2',  numero: 2,  titre: 'Désignation du secrétaire de séance',
-    description: "Chargé de rédiger le procès-verbal. Souvent le syndic.",
-    majorite: 'article_24', type_resolution: 'secretaire_seance',   optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
-  { id: 'r3',  numero: 3,  titre: 'Désignation du ou des scrutateurs',
-    description: 'Contrôlent les votes et la feuille de présence. Peuvent être copropriétaires ou mandataires.',
-    majorite: 'article_24', type_resolution: 'scrutateurs',         optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
-  { id: 'r4',  numero: 4,  titre: `Approbation des comptes de l'exercice ${new Date().getFullYear() - 1}`,
-    description: `Validation des comptes de gestion de la copropriété pour l'exercice ${new Date().getFullYear() - 1}.`,
-    majorite: 'article_24', type_resolution: 'approbation_comptes', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false },
-  { id: 'r5',  numero: 5,  titre: 'Quitus au syndic',
-    description: "Les copropriétaires approuvent la gestion du syndic pour l'exercice écoulé.",
-    majorite: 'article_24', type_resolution: 'quitus_syndic',       optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false },
-  { id: 'r6',  numero: 6,  titre: "Révision du budget de l'année en cours",
-    description: 'Modification facultative du budget en cours. Indiquez les postes modifiés.',
-    majorite: 'article_24', type_resolution: 'revision_budget',     optional: true,  hasBudget: true,  hasFondsTravaux: false, isDesignation: false },
-  { id: 'r7',  numero: 7,  titre: 'Vote du budget prévisionnel',
-    description: "Budget pour les dépenses courantes de l'année suivante. Détaillez par poste.",
-    majorite: 'article_24', type_resolution: 'budget_previsionnel', optional: false, hasBudget: true,  hasFondsTravaux: false, isDesignation: false },
-  { id: 'r8',  numero: 8,  titre: 'Cotisation au fonds de travaux (ALUR)',
-    description: 'Obligatoire depuis la loi ALUR. Minimum recommandé : 5% du budget prévisionnel.',
-    majorite: 'article_25', type_resolution: 'fonds_travaux',       optional: false, hasBudget: false, hasFondsTravaux: true,  isDesignation: false },
-  { id: 'r9',  numero: 9,  titre: 'Autorisation de travaux sur parties communes',
-    description: "Vote d'autorisation et de financement de travaux sur les parties communes (hors entretien courant déjà budgété). Détaillez les postes et le montant estimatif.",
-    majorite: 'article_25', type_resolution: null, optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
-  { id: 'r10', numero: 10, titre: 'Calendrier de financement du budget prévisionnel et du fonds travaux',
-    description: "Dates auxquelles les appels de fonds seront émis suite aux votes du budget et du fonds de travaux. Au moins une date requise.",
-    majorite: 'article_24', type_resolution: 'calendrier_financement', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false, hasEcheancier: true },
-  { id: 'r11', numero: 11, titre: 'Désignation ou renouvellement du syndic',
-    description: "Si le mandat du syndic arrive à échéance. Précisez la date de fin du nouveau mandat.",
-    majorite: 'article_25', type_resolution: 'designation_syndic',  optional: true,  hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
-  { id: 'r12', numero: 12, titre: 'Désignation ou renouvellement du conseil syndical',
-    description: 'Élection des membres du conseil syndical. Facultatif.',
-    majorite: 'article_24', type_resolution: 'conseil_syndical',    optional: true,  hasBudget: false, hasFondsTravaux: false, isDesignation: true  },
-];
+function buildOrdinaryTemplates(referenceYear: number): Omit<WizardResolution, 'inclure' | 'budgetPostes' | 'fondsTravaux' | 'expanded' | 'echeancierDates'>[] {
+  const currentExerciseYear = referenceYear;
+  const previousExerciseYear = referenceYear - 1;
+  const nextExerciseYear = referenceYear + 1;
 
-const TEMPLATES_EXCEPTIONNELLE = TEMPLATES_ORDINAIRE.slice(0, 3);
+  return [
+    { id: 'r1', numero: 1, titre: 'Désignation du président de séance',
+      description: "Élu par l'assemblée pour diriger les débats. Le syndic ne peut être président.",
+      majorite: 'article_24', type_resolution: 'president_seance', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
+    { id: 'r2', numero: 2, titre: 'Désignation du secrétaire de séance',
+      description: 'Chargé de rédiger le procès-verbal. Souvent le syndic.',
+      majorite: 'article_24', type_resolution: 'secretaire_seance', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
+    { id: 'r3', numero: 3, titre: 'Désignation du ou des scrutateurs',
+      description: 'Contrôlent les votes et la feuille de présence. Peuvent être copropriétaires ou mandataires.',
+      majorite: 'article_24', type_resolution: 'scrutateurs', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
+    { id: 'r4', numero: 4, titre: `Approbation des comptes de l'exercice ${previousExerciseYear}`,
+      description: `Validation des comptes de gestion de la copropriété pour l'exercice ${previousExerciseYear}.`,
+      majorite: 'article_24', type_resolution: 'approbation_comptes', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false },
+    { id: 'r5', numero: 5, titre: 'Quitus au syndic',
+      description: `Les copropriétaires approuvent la gestion du syndic pour l'exercice ${previousExerciseYear}.`,
+      majorite: 'article_24', type_resolution: 'quitus_syndic', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false },
+    { id: 'r6', numero: 6, titre: `Révision du budget prévisionnel ${currentExerciseYear}`,
+      description: `Ajustement facultatif du budget de l'exercice ${currentExerciseYear}. Indiquez les postes modifiés si nécessaire.`,
+      majorite: 'article_24', type_resolution: 'revision_budget', optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
+    { id: 'r7', numero: 7, titre: `Vote du budget prévisionnel ${nextExerciseYear}`,
+      description: `Budget pour les dépenses courantes de l'exercice ${nextExerciseYear}. Détaillez les postes par ligne.`,
+      majorite: 'article_24', type_resolution: 'budget_previsionnel', optional: false, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
+    { id: 'r8', numero: 8, titre: `Cotisation au fonds de travaux (ALUR) ${nextExerciseYear}`,
+      description: `Cotisation obligatoire pour l'exercice ${nextExerciseYear}. Minimum recommandé : 5 % du budget prévisionnel.`,
+      majorite: 'article_25', type_resolution: 'fonds_travaux', optional: false, hasBudget: false, hasFondsTravaux: true, isDesignation: false },
+    { id: 'r9', numero: 9, titre: 'Autorisation de travaux sur parties communes',
+      description: "Vote d'autorisation et de financement de travaux sur les parties communes (hors entretien courant déjà budgété). Détaillez les postes et le montant estimatif.",
+      majorite: 'article_25', type_resolution: null, optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
+    { id: 'r10', numero: 10, titre: `Calendrier de financement ${nextExerciseYear} (budget prévisionnel + fonds travaux)`,
+      description: `Dates auxquelles les appels de fonds de l'exercice ${nextExerciseYear} seront émis suite aux votes du budget et du fonds de travaux. Au moins une date requise.`,
+      majorite: 'article_24', type_resolution: 'calendrier_financement', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false, hasEcheancier: true },
+    { id: 'r11', numero: 11, titre: 'Désignation ou renouvellement du syndic',
+      description: 'Facultatif, mais conseillé si le mandat arrive à échéance. Précisez ensuite la date de fin du nouveau mandat.',
+      majorite: 'article_25', type_resolution: 'designation_syndic', optional: true, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
+    { id: 'r12', numero: 12, titre: 'Désignation ou renouvellement du conseil syndical',
+      description: 'Élection des membres du conseil syndical. Facultatif.',
+      majorite: 'article_24', type_resolution: 'conseil_syndical', optional: true, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
+  ];
+}
 
-function initResolutions(type: 'ordinaire' | 'exceptionnelle'): WizardResolution[] {
-  const templates = type === 'ordinaire' ? TEMPLATES_ORDINAIRE : TEMPLATES_EXCEPTIONNELLE;
+function initResolutions(type: 'ordinaire' | 'exceptionnelle', referenceYear: number): WizardResolution[] {
+  const templates = type === 'ordinaire'
+    ? buildOrdinaryTemplates(referenceYear)
+    : buildOrdinaryTemplates(referenceYear).slice(0, 3);
+
   return templates.map((t) => ({
     ...t,
-    inclure: !t.optional,
+    inclure: !t.optional || t.type_resolution === 'designation_syndic',
     budgetPostes: t.hasBudget ? [{ libelle: '', montant: '' }] : [],
     fondsTravaux: '',
     echeancierDates: t.hasEcheancier ? [''] : [],
@@ -163,7 +170,8 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
   // -- Navigation --
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
-    const initialized = initResolutions(typeAG).map((r) =>
+    const planningYear = dateVal ? new Date(dateVal).getFullYear() : new Date().getFullYear();
+    const initialized = initResolutions(typeAG, planningYear).map((r) =>
       r.hasEcheancier ? { ...r, echeancierDates: [getDefaultFundingCallDate([], dateVal)] } : r
     );
     setResolutions(initialized);
