@@ -145,8 +145,7 @@ export function ProfilEditActions({
     }
 
     setIsOpen(false);
-    router.push('/profil');
-    router.refresh();
+    router.replace('/profil');
   };
 
   const formContent = (inModal: boolean) => (
@@ -250,7 +249,6 @@ export function ProfilIdentiteEditor({
     setFiche((prev) => (prev ? { ...prev, [field]: val } : prev));
     setEditingField(null);
     setSaving(false);
-    router.refresh();
   };
 
   const toggleSci = async () => {
@@ -260,7 +258,6 @@ export function ProfilIdentiteEditor({
       await supabase.from('coproprietaires').update({ raison_sociale: null }).eq('id', fiche.id);
       setFiche((prev) => (prev ? { ...prev, raison_sociale: null } : prev));
       setSaving(false);
-      router.refresh();
     } else {
       setTempValue('');
       setEditingField('raison_sociale');
@@ -578,6 +575,7 @@ export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
     .map((l) => l.id);
 
   const [selectedLotIds, setSelectedLotIds] = useState<string[]>(myCurrentLotIds);
+  const [currentLotIds, setCurrentLotIds] = useState<string[]>(myCurrentLotIds);
 
   const toggleLot = (lotId: string) => {
     setSelectedLotIds((prev) =>
@@ -615,7 +613,7 @@ export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
       copro = data;
     }
 
-    const toRemove = myCurrentLotIds.filter((id) => !selectedLotIds.includes(id));
+    const toRemove = currentLotIds.filter((id) => !selectedLotIds.includes(id));
     if (toRemove.length) {
       await supabase.from('lots').update({ coproprietaire_id: null }).in('id', toRemove);
     }
@@ -623,20 +621,19 @@ export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
       await supabase.from('lots').update({ coproprietaire_id: copro.id }).in('id', selectedLotIds);
     }
 
+    setCurrentLotIds(selectedLotIds);
     setIsOpen(false);
-    router.push('/profil');
-    router.refresh();
   };
 
   return (
     <>
       <button
-        onClick={() => { setSelectedLotIds(myCurrentLotIds); setIsOpen(true); }}
+        onClick={() => { setSelectedLotIds(currentLotIds); setIsOpen(true); }}
         className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
       >
         <Pencil size={13} />
-        {myCurrentLotIds.length > 0
-          ? `${myCurrentLotIds.length} lot${myCurrentLotIds.length > 1 ? 's' : ''} — modifier`
+        {currentLotIds.length > 0
+          ? `${currentLotIds.length} lot${currentLotIds.length > 1 ? 's' : ''} — modifier`
           : 'Me lier à un lot'}
       </button>
 

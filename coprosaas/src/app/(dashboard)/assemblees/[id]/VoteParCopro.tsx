@@ -6,7 +6,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import { Save, SkipForward, Plus, Trash2, CheckCircle2, Pencil, Users, AlertTriangle, Zap } from 'lucide-react';
@@ -55,7 +54,6 @@ export default function VoteParCopro({
   initialBudgetPostes,
   initialFondsTravaux,
 }: VoteParCoproProps) {
-  const router = useRouter();
   const supabase = createClient();
 
   const typeConfig      = typeResolution ? (TYPES_RESOLUTION[typeResolution] ?? null) : null;
@@ -90,6 +88,9 @@ export default function VoteParCopro({
   );
 
   const [passerelleActive, setPasserelleActive] = useState(false);
+  const [savedDesignationResultats, setSavedDesignationResultats] = useState<{ id: string; nom: string; prenom: string }[] | null | undefined>(undefined);
+  const [savedBudgetPostes, setSavedBudgetPostes] = useState<{ libelle: string; montant: number }[] | null | undefined>(undefined);
+  const [savedFondsTravaux, setSavedFondsTravaux] = useState<number | null | undefined>(undefined);
 
   const [dirty,   setDirty]   = useState(false);
   const [saving,  setSaving]  = useState(false);
@@ -98,7 +99,7 @@ export default function VoteParCopro({
     resolutionStatut === 'approuvee' || resolutionStatut === 'refusee' || resolutionStatut === 'reportee'
   );
   // Statut optimiste : mis à jour immédiatement après enregistrement,
-  // avant que router.refresh() ne mette à jour le prop resolutionStatut
+  // sans attendre un rerender serveur de la page.
   const [savedStatut, setSavedStatut] = useState<string | null>(null);
 
   // -- Helpers --
@@ -166,11 +167,11 @@ export default function VoteParCopro({
       voix_contre: 0,
       voix_abstention: 0,
     }).eq('id', resolutionId);
+    setSavedDesignationResultats(resultats);
     setSavedStatut(desigStatut);
     setDirty(false);
     setSaving(false);
     setSaved(true);
-    router.refresh();
   };
 
   // -- Save vote standard --
@@ -199,11 +200,16 @@ export default function VoteParCopro({
       .update({ voix_pour: tantPour, voix_contre: tantContre, voix_abstention: tantAbst, statut: newStatut, ...extraFields })
       .eq('id', resolutionId);
 
+    setSavedBudgetPostes(
+      hasBudget
+        ? budgetPostes.filter((p) => p.libelle.trim()).map((p) => ({ libelle: p.libelle.trim(), montant: parseFloat(p.montant) || 0 }))
+        : []
+    );
+    setSavedFondsTravaux(hasFondsTravaux ? (fondsTravaux ? parseFloat(fondsTravaux) : null) : null);
     setSavedStatut(newStatut);
     setDirty(false);
     setSaving(false);
     setSaved(true);
-    router.refresh();
   };
 
   const handleSkip = async () => {
@@ -213,7 +219,6 @@ export default function VoteParCopro({
     setSavedStatut('reportee');
     setSaving(false);
     setSaved(true);
-    router.refresh();
   };
 
   if (presences.length === 0) {
@@ -224,8 +229,11 @@ export default function VoteParCopro({
   // PANNEAU RESULTAT (apres enregistrement ou resolution deja votee)
   // ==============================================================
   // effectiveStatut : utilise savedStatut (mis à jour optimistiquement après save)
-  // plutôt que le prop resolutionStatut qui n'est mis à jour qu'après router.refresh()
+  // plutôt que d'attendre un nouveau rendu serveur de la page.
   const effectiveStatut = savedStatut ?? resolutionStatut;
+  const effectiveDesignationResultats = savedDesignationResultats ?? (designationResultats ?? []);
+  const effectiveBudgetPostes = savedBudgetPostes ?? (initialBudgetPostes ?? []);
+  const effectiveFondsTravaux = savedFondsTravaux !== undefined ? savedFondsTravaux : initialFondsTravaux;
   const isApproved = effectiveStatut === 'approuvee';
   const isRefused  = effectiveStatut === 'refusee';
   const isReported = effectiveStatut === 'reportee';
@@ -246,29 +254,29 @@ export default function VoteParCopro({
           </div>
 
           {/* Designation result */}
-          {isDesignation && designationResultats && designationResultats.length > 0 && (
+          {isDesignation && effectiveDesignationResultats.length > 0 && (
             <p className="text-xs text-gray-700 mt-1.5 flex items-center gap-1.5">
               <Users size={11} className="shrink-0" />
               <span>
-                <span className="font-medium">Désigné{designationResultats.length > 1 ? 's' : ''} :</span>{' '}
-                {designationResultats.map((d) => `${d.prenom} ${d.nom}`).join(', ')}
+                <span className="font-medium">Désigné{effectiveDesignationResultats.length > 1 ? 's' : ''} :</span>{' '}
+                {effectiveDesignationResultats.map((d) => `${d.prenom} ${d.nom}`.trim()).join(', ')}
               </span>
             </p>
           )}
 
           {/* Budget result */}
-          {hasBudget && initialBudgetPostes && initialBudgetPostes.length > 0 && (
+          {hasBudget && effectiveBudgetPostes.length > 0 && (
             <p className="text-xs text-gray-700 mt-1.5">
               <span className="font-medium">Budget voté :</span>{' '}
-              {formatEuros(initialBudgetPostes.reduce((s, p) => s + p.montant, 0))}
-              {' '}<span className="text-gray-400">({initialBudgetPostes.length} poste{initialBudgetPostes.length > 1 ? 's' : ''})</span>
+              {formatEuros(effectiveBudgetPostes.reduce((s, p) => s + p.montant, 0))}
+              {' '}<span className="text-gray-400">({effectiveBudgetPostes.length} poste{effectiveBudgetPostes.length > 1 ? 's' : ''})</span>
             </p>
           )}
 
           {/* Fonds travaux result */}
-          {hasFondsTravaux && initialFondsTravaux != null && (
+          {hasFondsTravaux && effectiveFondsTravaux != null && (
             <p className="text-xs text-gray-700 mt-1.5">
-              <span className="font-medium">Cotisation fonds de travaux :</span> {formatEuros(initialFondsTravaux)}
+              <span className="font-medium">Cotisation fonds de travaux :</span> {formatEuros(effectiveFondsTravaux)}
             </p>
           )}
 

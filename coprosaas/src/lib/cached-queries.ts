@@ -16,15 +16,26 @@ import { unstable_cache, revalidateTag } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { AppNotification } from '@/types';
 
+function safeRevalidateTag(tag: string) {
+  try {
+    revalidateTag(tag, 'default');
+  } catch {
+    // Les tests unitaires exécutent parfois ces helpers hors contexte App Router.
+  }
+}
+
 // ── Helpers d'invalidation (à appeler depuis les Server Actions) ──────────────
 export function invalidateLayoutCache(userId: string) {
-  revalidateTag(`layout-${userId}`, 'default');
+  safeRevalidateTag(`layout-${userId}`);
 }
 export function invalidateLotsCache(coproId: string) {
-  revalidateTag(`lots-${coproId}`, 'default');
+  safeRevalidateTag(`lots-${coproId}`);
 }
 export function invalidateCoproprietairesCache(coproId: string) {
-  revalidateTag(`coproprietaires-${coproId}`, 'default');
+  safeRevalidateTag(`coproprietaires-${coproId}`);
+}
+export function invalidateDashboardCache(coproId: string) {
+  safeRevalidateTag(`dashboard-${coproId}`);
 }
 
 // ── Profil + copropriétés (layout global) ────────────────────────────────────
@@ -302,3 +313,358 @@ export const getCoproNotifications = unstable_cache(
   ['copropriétaire-notifications'],
   { revalidate: 30 },
 );
+
+// ── Dashboard syndic : snapshot agrégé pour streaming + cache court ──────────
+export function getSyndicDashboardSnapshot(coproId: string) {
+  return unstable_cache(
+    async () => {
+      if (!coproId || coproId === 'none') {
+      return {
+        currentYear: new Date().getFullYear(),
+        prevYear: new Date().getFullYear() - 1,
+        nbLots: 0,
+        nbCoproprietaires: 0,
+        hasProvisions: false,
+        totalProvisions: 0,
+        totalFondsTravaux: 0,
+        totalDepensesAvecFT: 0,
+        ecartPrevisionnel: 0,
+        tendanceDepenses: 'nouveau' as const,
+        pctTendance: 0,
+        totalMontantImpaye: 0,
+        nbImpayes: 0,
+        nbIncidentsOuverts: 0,
+        depenses: [] as Array<{ id: string; titre: string; montant: number; date_depense: string; categorie: string }>,
+        repartitionBudget: [] as Array<{ cat: string; total: number; pct: number }>,
+        totalBudget: 0,
+        assemblees: [] as Array<{ id: string; titre: string; date_ag: string; statut: string }>,
+        nbImpayes60j: 0,
+        montantImpayes60j: 0,
+        incidentsAnciens: [] as Array<{ id: string; titre: string; statut: string; priorite: string; date_declaration: string }>,
+        agUrgente: false,
+        prochaineAG: null as { id: string; titre: string; date_ag: string; statut: string } | null,
+        joursAvantAG: null as number | null,
+      };
+    }
+
+    const admin = createAdminClient();
+    const now = new Date();
+    const nowTs = now.getTime();
+    const todayStr = now.toISOString().split('T')[0];
+    const sixtyDaysAgoStr = new Date(nowTs - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const currentYear = now.getFullYear();
+    const prevYear = currentYear - 1;
+
+    const [
+      { count: nbLots },
+      { count: nbCoproprietaires },
+      { data: depenses },
+      { data: depensesAll },
+      { data: depensesAnPasse },
+      { data: incidents },
+      { data: assemblees },
+      { data: appelsEchus },
+      { data: appelsProvisions },
+      { data: appelsEchusAujourdhui },
+    ] = await Promise.all([
+      admin.from('lots').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
+      admin.from('coproprietaires').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
+      admin
+        .from('depenses')
+        .select('id, titre, montant, date_depense, categorie')
+        .eq('copropriete_id', coproId)
+        .gte('date_depense', `${currentYear}-01-01`)
+        .lt('date_depense', `${currentYear + 1}-01-01`)
+        .order('date_depense', { ascending: false })
+        .limit(5),
+      admin
+        .from('depenses')
+        .select('categorie, montant')
+        .eq('copropriete_id', coproId)
+        .gte('date_depense', `${currentYear}-01-01`)
+        .lt('date_depense', `${currentYear + 1}-01-01`),
+      admin
+        .from('depenses')
+        .select('montant')
+        .eq('copropriete_id', coproId)
+        .gte('date_depense', `${prevYear}-01-01`)
+        .lt('date_depense', `${prevYear + 1}-01-01`),
+      admin
+        .from('incidents')
+        .select('id, titre, statut, priorite, date_declaration')
+        .eq('copropriete_id', coproId)
+        .neq('statut', 'resolu')
+        .order('date_declaration', { ascending: false })
+        .limit(5),
+      admin
+        .from('assemblees_generales')
+        .select('id, titre, date_ag, statut')
+        .eq('copropriete_id', coproId)
+        .gte('date_ag', now.toISOString())
+        .neq('statut', 'terminee')
+        .neq('statut', 'annulee')
+        .order('date_ag', { ascending: true })
+        .limit(3),
+      admin
+        .from('appels_de_fonds')
+        .select('id, date_echeance, lignes_appels_de_fonds(id, montant_du, paye)')
+        .eq('copropriete_id', coproId)
+        .lt('date_echeance', sixtyDaysAgoStr),
+      admin
+        .from('appels_de_fonds')
+        .select('montant_total, type_appel, montant_fonds_travaux')
+        .eq('copropriete_id', coproId)
+        .gte('date_echeance', `${currentYear}-01-01`)
+        .lt('date_echeance', `${currentYear + 1}-01-01`),
+      admin
+        .from('lignes_appels_de_fonds')
+        .select('montant_du, coproprietaire_id, appels_de_fonds!inner(copropriete_id, date_echeance, statut)')
+        .eq('appels_de_fonds.copropriete_id', coproId)
+        .eq('appels_de_fonds.statut', 'publie')
+        .lte('appels_de_fonds.date_echeance', todayStr)
+        .eq('paye', false),
+    ]);
+
+    const totalDepenses = depenses?.reduce((sum, depense) => sum + depense.montant, 0) ?? 0;
+    const totalDepensesAnPasse = depensesAnPasse?.reduce((sum, depense) => sum + depense.montant, 0) ?? 0;
+
+    let tendanceDepenses: 'hausse' | 'baisse' | 'stable' | 'nouveau' = 'nouveau';
+    let pctTendance = 0;
+    if (totalDepensesAnPasse > 0) {
+      pctTendance = Math.round(((totalDepenses - totalDepensesAnPasse) / totalDepensesAnPasse) * 100);
+      if (Math.abs(pctTendance) <= 2) tendanceDepenses = 'stable';
+      else if (pctTendance > 0) tendanceDepenses = 'hausse';
+      else tendanceDepenses = 'baisse';
+    }
+
+    const provisionsBP = (appelsProvisions ?? []).filter(
+      (appel) => appel.type_appel === 'budget_previsionnel' || appel.type_appel === 'revision_budget' || appel.type_appel == null,
+    );
+    const provisionsRows = (appelsProvisions ?? []).filter(
+      (appel) => appel.type_appel === 'budget_previsionnel' || appel.type_appel === 'revision_budget' || appel.type_appel === 'fonds_travaux' || appel.type_appel == null,
+    );
+
+    const hasProvisions = provisionsRows.length > 0;
+    const totalProvisions = provisionsRows.reduce((sum, appel) => sum + (appel.montant_total ?? 0), 0);
+    const totalFondsTravaux = provisionsRows.reduce((sum, appel) => {
+      if (appel.type_appel === 'fonds_travaux') return sum + (appel.montant_total ?? 0);
+      return sum + ((appel as { montant_fonds_travaux?: number }).montant_fonds_travaux ?? 0);
+    }, 0);
+    const totalFondsTravauxBP = provisionsBP.reduce(
+      (sum, appel) => sum + ((appel as { montant_fonds_travaux?: number }).montant_fonds_travaux ?? 0),
+      0,
+    );
+    const totalProvisionsBP = provisionsBP.reduce((sum, appel) => sum + (appel.montant_total ?? 0), 0);
+    const totalProvisionsBPHorsFT = totalProvisionsBP - totalFondsTravauxBP;
+    const ecartPrevisionnel = totalProvisionsBPHorsFT - totalDepenses;
+    const totalDepensesAvecFT = totalDepenses + totalFondsTravaux;
+
+    const lignesImpayeesEchues = (appelsEchusAujourdhui ?? []) as Array<{ montant_du: number; coproprietaire_id: string | null }>;
+    const totalMontantImpaye = lignesImpayeesEchues.reduce((sum, ligne) => sum + ligne.montant_du, 0);
+    const nbImpayes = new Set(lignesImpayeesEchues.map((ligne) => ligne.coproprietaire_id).filter(Boolean)).size;
+    const nbIncidentsOuverts = incidents?.length ?? 0;
+
+    const lignesImpayes60j = (appelsEchus ?? []).flatMap((appel) =>
+      ((appel.lignes_appels_de_fonds ?? []) as Array<{ id: string; montant_du: number; paye: boolean }>).filter((ligne) => !ligne.paye),
+    );
+    const nbImpayes60j = lignesImpayes60j.length;
+    const montantImpayes60j = lignesImpayes60j.reduce((sum, ligne) => sum + ligne.montant_du, 0);
+
+    const sevenDaysAgo = new Date(nowTs - 7 * 24 * 60 * 60 * 1000);
+    const incidentsAnciens = (incidents ?? []).filter(
+      (incident) => incident.statut === 'ouvert' && new Date(incident.date_declaration) < sevenDaysAgo,
+    );
+
+    const prochaineAG = assemblees?.[0] ?? null;
+    const joursAvantAG = prochaineAG
+      ? Math.ceil((new Date(prochaineAG.date_ag).getTime() - nowTs) / (1000 * 60 * 60 * 24))
+      : null;
+    const agUrgente = joursAvantAG !== null && joursAvantAG <= 30;
+
+    const repartitionRaw: Record<string, number> = {};
+    for (const depense of depensesAll ?? []) {
+      const categorie = depense.categorie ?? 'autre';
+      repartitionRaw[categorie] = (repartitionRaw[categorie] ?? 0) + depense.montant;
+    }
+
+    const totalRepartition = Object.values(repartitionRaw).reduce((sum, value) => sum + value, 0);
+    const repartition = Object.entries(repartitionRaw)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 7)
+      .map(([cat, total]) => ({
+        cat,
+        total,
+        pct: totalRepartition > 0 ? Math.round((total / totalRepartition) * 100) : 0,
+      }));
+
+    const totalBudget = totalRepartition + totalFondsTravaux;
+    const repartitionBudget = [
+      ...(totalFondsTravaux > 0
+        ? [{ cat: 'fonds_travaux_alur', total: totalFondsTravaux, pct: totalBudget > 0 ? Math.round((totalFondsTravaux / totalBudget) * 100) : 0 }]
+        : []),
+      ...repartition.map((item) => ({
+        ...item,
+        pct: totalBudget > 0 ? Math.round((item.total / totalBudget) * 100) : 0,
+      })),
+    ];
+
+    return {
+      currentYear,
+      prevYear,
+      nbLots: nbLots ?? 0,
+      nbCoproprietaires: nbCoproprietaires ?? 0,
+      hasProvisions,
+      totalProvisions,
+      totalFondsTravaux,
+      totalDepensesAvecFT,
+      ecartPrevisionnel,
+      tendanceDepenses,
+      pctTendance,
+      totalMontantImpaye,
+      nbImpayes,
+      nbIncidentsOuverts,
+      depenses: (depenses ?? []).map((depense) => ({
+        id: depense.id,
+        titre: depense.titre,
+        montant: depense.montant,
+        date_depense: depense.date_depense,
+        categorie: depense.categorie ?? 'autre',
+      })),
+      repartitionBudget,
+      totalBudget,
+      assemblees: (assemblees ?? []).map((ag) => ({
+        id: ag.id,
+        titre: ag.titre,
+        date_ag: ag.date_ag,
+        statut: ag.statut,
+      })),
+      nbImpayes60j,
+      montantImpayes60j,
+      incidentsAnciens: (incidentsAnciens ?? []).map((incident) => ({
+        id: incident.id,
+        titre: incident.titre,
+        statut: incident.statut,
+        priorite: incident.priorite,
+        date_declaration: incident.date_declaration,
+      })),
+      agUrgente,
+      prochaineAG: prochaineAG
+        ? {
+            id: prochaineAG.id,
+            titre: prochaineAG.titre,
+            date_ag: prochaineAG.date_ag,
+            statut: prochaineAG.statut,
+          }
+        : null,
+      joursAvantAG,
+    };
+    },
+    ['dashboard-syndic-snapshot', coproId],
+    { revalidate: 30, tags: [`dashboard-${coproId}`] },
+  )();
+}
+
+// ── Dashboard copropriétaire : snapshot personnel mis en cache ───────────────
+export function getCoproprietaireDashboardSnapshot(userId: string, coproId: string) {
+  return unstable_cache(
+    async () => {
+      if (!userId || !coproId || coproId === 'none') {
+      return {
+        fiche: null as null | { id: string; nom: string | null; prenom: string | null; raison_sociale: string | null; solde: number },
+        assembleesUpcoming: [] as Array<{ id: string; titre: string; date_ag: string; statut: string }>,
+        chargesImpayees: [] as Array<{ id: string; montant_du: number; appel: { id: string; titre: string; date_echeance: string | null } | null }>,
+        prochaineAG: null as { id: string; titre: string; date_ag: string; statut: string } | null,
+        joursAvantAG: null as number | null,
+        solde: 0,
+        displayFirstName: null as string | null,
+      };
+    }
+
+    const admin = createAdminClient();
+    const nowTs = Date.now();
+
+    const [
+      { data: fiche },
+      { data: assembleesUpcoming },
+    ] = await Promise.all([
+      admin
+        .from('coproprietaires')
+        .select('id, nom, prenom, raison_sociale, solde')
+        .eq('copropriete_id', coproId)
+        .eq('user_id', userId)
+        .maybeSingle(),
+      admin
+        .from('assemblees_generales')
+        .select('id, titre, date_ag, statut')
+        .eq('copropriete_id', coproId)
+        .gte('date_ag', new Date().toISOString().split('T')[0])
+        .neq('statut', 'terminee')
+        .neq('statut', 'annulee')
+        .order('date_ag', { ascending: true })
+        .limit(3),
+    ]);
+
+    const { data: chargesImpayees } = fiche
+      ? await admin
+          .from('lignes_appels_de_fonds')
+          .select('id, montant_du, appels_de_fonds!inner(id, titre, date_echeance)')
+          .eq('coproprietaire_id', fiche.id)
+          .eq('paye', false)
+          .limit(5)
+      : { data: null };
+
+    const prochaineAG = assembleesUpcoming?.[0] ?? null;
+    const joursAvantAG = prochaineAG
+      ? Math.ceil((new Date(prochaineAG.date_ag).getTime() - nowTs) / (1000 * 60 * 60 * 24))
+      : null;
+    const solde = fiche?.solde ?? 0;
+    const displayFirstName = (fiche?.raison_sociale ? fiche.raison_sociale : (fiche?.prenom ?? fiche?.nom ?? ''))
+      .split(' ')[0] || null;
+
+    return {
+      fiche: fiche
+        ? {
+            id: fiche.id,
+            nom: fiche.nom,
+            prenom: fiche.prenom,
+            raison_sociale: fiche.raison_sociale,
+            solde: fiche.solde ?? 0,
+          }
+        : null,
+      assembleesUpcoming: (assembleesUpcoming ?? []).map((ag) => ({
+        id: ag.id,
+        titre: ag.titre,
+        date_ag: ag.date_ag,
+        statut: ag.statut,
+      })),
+      chargesImpayees: (chargesImpayees ?? []).map((ligne) => {
+        const appel = ligne.appels_de_fonds as unknown as { id: string; titre: string; date_echeance: string | null };
+        return {
+          id: ligne.id,
+          montant_du: ligne.montant_du,
+          appel: appel
+            ? {
+                id: appel.id,
+                titre: appel.titre,
+                date_echeance: appel.date_echeance,
+              }
+            : null,
+        };
+      }),
+      prochaineAG: prochaineAG
+        ? {
+            id: prochaineAG.id,
+            titre: prochaineAG.titre,
+            date_ag: prochaineAG.date_ag,
+            statut: prochaineAG.statut,
+          }
+        : null,
+      joursAvantAG,
+      solde,
+      displayFirstName,
+    };
+    },
+    ['dashboard-coproprietaire-snapshot', userId, coproId],
+    { revalidate: 30, tags: [`dashboard-${coproId}`, `dashboard-user-${coproId}-${userId}`] },
+  )();
+}

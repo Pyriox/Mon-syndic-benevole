@@ -104,7 +104,7 @@ export default function AdminCoproActions({
     if (response.ok) {
       setEditOpen(false);
       setDone('Modifié');
-      setTimeout(() => router.refresh(), 800);
+      router.refresh();
       return;
     }
 
@@ -131,7 +131,7 @@ export default function AdminCoproActions({
     setPendingAction(null);
     if (response.ok) {
       setDone(successMessage);
-      setTimeout(() => router.refresh(), 800);
+      router.refresh();
       return true;
     }
 

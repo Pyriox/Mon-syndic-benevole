@@ -5,8 +5,7 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { CheckCircle, XCircle, MinusCircle, Plus, Trash2 } from 'lucide-react';
 import { formatEuros } from '@/lib/utils';
@@ -30,10 +29,16 @@ export default function VoteActions({
   statut,
   budgetPostes = [],
 }: VoteActionsProps) {
-  const router = useRouter();
   const supabase = createClient();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [displayedVotes, setDisplayedVotes] = useState({
+    voixPour,
+    voixContre,
+    voixAbstention,
+    statut,
+  });
+  const [displayedBudgetPostes, setDisplayedBudgetPostes] = useState<PosteBudget[]>(budgetPostes);
   const [form, setForm] = useState({
     voix_pour: String(voixPour),
     voix_contre: String(voixContre),
@@ -47,6 +52,23 @@ export default function VoteActions({
       : []
   );
   const [showPostes, setShowPostes] = useState(budgetPostes.length > 0);
+
+  useEffect(() => {
+    setDisplayedVotes({ voixPour, voixContre, voixAbstention, statut });
+    setDisplayedBudgetPostes(budgetPostes);
+    setForm({
+      voix_pour: String(voixPour),
+      voix_contre: String(voixContre),
+      voix_abstention: String(voixAbstention),
+      statut,
+    });
+    setPostes(
+      budgetPostes.length > 0
+        ? budgetPostes.map((p) => ({ libelle: p.libelle, montant: String(p.montant) }))
+        : []
+    );
+    setShowPostes(budgetPostes.length > 0);
+  }, [budgetPostes, statut, voixAbstention, voixContre, voixPour]);
 
   const totalBudget = postes.reduce((s, p) => s + (parseFloat(p.montant) || 0), 0);
   const addPoste = () => setPostes((prev) => [...prev, { libelle: '', montant: '' }]);
@@ -76,9 +98,15 @@ export default function VoteActions({
       budget_postes: postesValides.length > 0 ? postesValides : null,
     }).eq('id', resolutionId);
 
+    setDisplayedVotes({
+      voixPour: pour,
+      voixContre: contre,
+      voixAbstention: parseInt(form.voix_abstention) || 0,
+      statut: newStatut,
+    });
+    setDisplayedBudgetPostes(postesValides);
     setEditing(false);
     setLoading(false);
-    router.refresh();
   };
 
   if (!editing) {
@@ -89,27 +117,27 @@ export default function VoteActions({
           className="flex items-center gap-3 text-xs text-gray-400 hover:text-blue-600 transition-colors group"
         >
           <span className="flex items-center gap-1 text-green-600">
-            <CheckCircle size={12} /> {voixPour}
+            <CheckCircle size={12} /> {displayedVotes.voixPour}
           </span>
           <span className="flex items-center gap-1 text-red-500">
-            <XCircle size={12} /> {voixContre}
+            <XCircle size={12} /> {displayedVotes.voixContre}
           </span>
           <span className="flex items-center gap-1 text-gray-400">
-            <MinusCircle size={12} /> {voixAbstention}
+            <MinusCircle size={12} /> {displayedVotes.voixAbstention}
           </span>
           <span className="text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity text-[11px]">
             Modifier les votes
           </span>
         </button>
         {/* Affichage read-only des postes */}
-        {budgetPostes.length > 0 && (
+        {displayedBudgetPostes.length > 0 && (
           <div className="mt-2 border border-indigo-100 rounded-lg overflow-hidden">
             <div className="bg-indigo-50 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 uppercase tracking-wide">
-              Budget voté — {formatEuros(budgetPostes.reduce((s, p) => s + p.montant, 0))}
+              Budget voté — {formatEuros(displayedBudgetPostes.reduce((s, p) => s + p.montant, 0))}
             </div>
             <table className="w-full text-xs">
               <tbody>
-                {budgetPostes.map((p, i) => (
+                {displayedBudgetPostes.map((p, i) => (
                   <tr key={i} className="border-t border-gray-100">
                     <td className="px-3 py-1.5 text-gray-700">{p.libelle}</td>
                     <td className="px-3 py-1.5 text-right font-semibold text-gray-900">{formatEuros(p.montant)}</td>

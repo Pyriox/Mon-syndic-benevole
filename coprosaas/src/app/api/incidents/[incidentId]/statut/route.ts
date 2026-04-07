@@ -6,6 +6,7 @@ import { buildIncidentResoluEmail, buildIncidentResoluSubject } from '@/lib/emai
 import type { StatutIncident } from '@/types';
 import { trackResendSendResult } from '@/lib/email-delivery';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
+import { invalidateDashboardCache } from '@/lib/cached-queries';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -73,6 +74,8 @@ export async function PATCH(
   if (updateError) {
     return NextResponse.json({ error: 'Erreur lors de la mise à jour' }, { status: 500 });
   }
+
+  invalidateDashboardCache(incident.copropriete_id);
 
   // Notification email au déclarant si l'incident est résolu
   if (statut === 'resolu' && incident.declare_par) {

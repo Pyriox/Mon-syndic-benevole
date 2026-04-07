@@ -8,7 +8,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { formatEuros, LABELS_CATEGORIE } from '@/lib/utils';
 import {
@@ -56,10 +55,10 @@ interface AppelFondsPaiementProps {
   lignes: Ligne[];
   isSyndic: boolean;
   canWrite?: boolean;
+  onLignesChange?: (lignes: Ligne[]) => void;
 }
 
-export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite = true }: AppelFondsPaiementProps) {
-  const router = useRouter();
+export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite = true, onLignesChange }: AppelFondsPaiementProps) {
   const supabase = createClient();
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -84,14 +83,25 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
     return 'en_attente';
   };
 
+  const updateLignesState = (ligneId: string, updates: Partial<Ligne>) => {
+    onLignesChange?.(
+      lignes.map((current) => (current.id === ligneId ? { ...current, ...updates } : current))
+    );
+  };
+
   const handleConfirmPay = async (ligne: Ligne) => {
     setToggling(ligne.id);
     const date = payDate || todayStr;
 
-    await supabase.from('lignes_appels_de_fonds').update({
+    const { error: ligneError } = await supabase.from('lignes_appels_de_fonds').update({
       paye: true,
       date_paiement: date,
     }).eq('id', ligne.id);
+
+    if (ligneError) {
+      setToggling(null);
+      return;
+    }
 
     // Paiement reçu : la dette diminue (solde positif = doit, donc on soustrait)
     if (ligne.coproprietaires?.id) {
@@ -102,18 +112,23 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
       }).eq('id', ligne.coproprietaires.id);
     }
 
+    updateLignesState(ligne.id, { paye: true, date_paiement: date });
     setPayingId(null);
     setToggling(null);
-    router.refresh();
   };
 
   const handleUnpay = async (ligne: Ligne) => {
     setToggling(ligne.id);
 
-    await supabase.from('lignes_appels_de_fonds').update({
+    const { error: ligneError } = await supabase.from('lignes_appels_de_fonds').update({
       paye: false,
       date_paiement: null,
     }).eq('id', ligne.id);
+
+    if (ligneError) {
+      setToggling(null);
+      return;
+    }
 
     // Annulation paiement : la dette réapparaît (on additionne)
     if (ligne.coproprietaires?.id) {
@@ -124,8 +139,8 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
       }).eq('id', ligne.coproprietaires.id);
     }
 
+    updateLignesState(ligne.id, { paye: false, date_paiement: null });
     setToggling(null);
-    router.refresh();
   };
 
   const nbPayes = lignes.filter((l) => l.paye).length;

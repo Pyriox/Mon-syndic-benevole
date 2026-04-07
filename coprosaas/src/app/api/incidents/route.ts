@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { invalidateDashboardCache } from '@/lib/cached-queries';
 import type { NatureIncident, PrioriteIncident, TypeIncident } from '@/types';
 
 const VALID_NATURES: NatureIncident[] = ['incident', 'travaux'];
@@ -108,6 +109,8 @@ export async function POST(req: NextRequest) {
     console.error('[incidents/create] insert error:', error?.message);
     return NextResponse.json({ error: 'Erreur lors de la création du suivi' }, { status: 500 });
   }
+
+  invalidateDashboardCache(coproprieteId);
 
   return NextResponse.json({ ok: true, id: incident.id });
 }

@@ -100,7 +100,7 @@ export default function IncidentActions({ coproprietes, showLabel }: IncidentAct
 
       setLoading(false);
       closeModal();
-      router.refresh();
+      router.replace('/incidents');
     } catch {
       setError('Une erreur réseau est survenue. Réessayez.');
       setLoading(false);

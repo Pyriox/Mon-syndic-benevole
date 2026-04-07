@@ -81,7 +81,7 @@ export default function AdminCoproprietaireActions({ cp }: { cp: Coproprietaire 
     if (res.ok) {
       setEditOpen(false);
       setDone(true);
-      setTimeout(() => router.refresh(), 700);
+      router.refresh();
     } else {
       const { error: apiError } = await res.json();
       setError(apiError ?? 'Une erreur est survenue.');

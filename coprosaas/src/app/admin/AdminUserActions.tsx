@@ -80,7 +80,7 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
     if (response.ok) {
       setEditOpen(false);
       setDone('Modifié');
-      setTimeout(() => router.refresh(), 800);
+      router.refresh();
       return;
     }
 
@@ -141,7 +141,7 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
       }
 
       setDone(action === 'force_confirm' ? 'Compte vérifié' : isAdmin ? 'Admin retiré' : 'Admin accordé');
-      setTimeout(() => router.refresh(), 900);
+      router.refresh();
       return;
     }
 

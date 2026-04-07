@@ -18,12 +18,27 @@ interface Copropriete {
   nom: string;
 }
 
+export interface CoproprietaireListItem {
+  id: string;
+  nom: string | null;
+  prenom: string | null;
+  raison_sociale: string | null;
+  email: string;
+  telephone: string | null;
+  adresse: string | null;
+  code_postal: string | null;
+  ville: string | null;
+  solde: number;
+  user_id: string | null;
+}
+
 interface CoproprietaireActionsProps {
   coproprietes: Copropriete[];
   showLabel?: boolean;
+  onAdded?: (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => void;
 }
 
-export default function CoproprietaireActions({ coproprietes, showLabel }: CoproprietaireActionsProps) {
+export default function CoproprietaireActions({ coproprietes, showLabel, onAdded }: CoproprietaireActionsProps) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -105,12 +120,30 @@ export default function CoproprietaireActions({ coproprietes, showLabel }: Copro
       eventType: 'coproprietaire_added',
       label: `Copropriétaire ajouté — ${nom}`,
     }).catch(() => undefined);
+    const nextCoproprietaire: CoproprietaireListItem = {
+      id: cp.id,
+      nom: formData.nom.trim() || null,
+      prenom: formData.prenom.trim() || null,
+      raison_sociale: isSci ? formData.raison_sociale.trim() || null : null,
+      email: formData.email.trim().toLowerCase(),
+      telephone: formData.telephone.trim() || null,
+      adresse: formData.adresse.trim() || null,
+      code_postal: formData.code_postal.trim() || null,
+      ville: formData.ville.trim() || null,
+      solde: parseFloat(formData.solde_reprise) || 0,
+      user_id: null,
+    };
+
     setIsOpen(false);
     setLoading(false);
     setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '' });
     setIsSci(false);
     setSelectedLotIds([]);
-    router.refresh();
+    if (onAdded) {
+      onAdded(nextCoproprietaire, selectedLotIds);
+    } else {
+      router.refresh();
+    }
   };
 
   const handleClose = () => {
@@ -284,12 +317,14 @@ interface CoproprietaireEditProps {
     ville: string | null;
     raison_sociale?: string | null;
     solde: number;
+    user_id?: string | null;
   };
   lots: { id: string; numero: string; coproprietaire_id?: string | null }[];
   assignedLotIds: string[];
+  onSaved?: (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => void;
 }
 
-export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds }: CoproprietaireEditProps) {
+export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds, onSaved }: CoproprietaireEditProps) {
   const router = useRouter();
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -349,9 +384,27 @@ export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds }: Cop
       await supabase.from('lots').update({ coproprietaire_id: coproprietaire.id }).in('id', selectedLotIds);
     }
 
+    const nextCoproprietaire: CoproprietaireListItem = {
+      id: coproprietaire.id,
+      nom: formData.nom.trim() || null,
+      prenom: formData.prenom.trim() || null,
+      raison_sociale: isSci ? formData.raison_sociale.trim() || null : null,
+      email: formData.email.trim().toLowerCase(),
+      telephone: formData.telephone.trim() || null,
+      adresse: formData.adresse.trim() || null,
+      code_postal: formData.code_postal.trim() || null,
+      ville: formData.ville.trim() || null,
+      solde: formData.solde,
+      user_id: coproprietaire.user_id ?? null,
+    };
+
     setLoading(false);
     setIsOpen(false);
-    router.refresh();
+    if (onSaved) {
+      onSaved(nextCoproprietaire, selectedLotIds);
+    } else {
+      router.refresh();
+    }
   };
 
   return (
@@ -438,7 +491,17 @@ export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds }: Cop
 // ============================================================
 // Supprimer un copropriétaire
 // ============================================================
-export function CoproprietaireDelete({ id, nom }: { id: string; nom: string }) {
+export function CoproprietaireDelete({
+  id,
+  nom,
+  assignedLotIds = [],
+  onDeleted,
+}: {
+  id: string;
+  nom: string;
+  assignedLotIds?: string[];
+  onDeleted?: (id: string, freedLotIds: string[]) => void;
+}) {
   const router = useRouter();
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -449,7 +512,12 @@ export function CoproprietaireDelete({ id, nom }: { id: string; nom: string }) {
     await supabase.from('lots').update({ coproprietaire_id: null }).eq('coproprietaire_id', id);
     await supabase.from('coproprietaires').delete().eq('id', id);
     setIsOpen(false);
-    router.refresh();
+    setLoading(false);
+    if (onDeleted) {
+      onDeleted(id, assignedLotIds);
+    } else {
+      router.refresh();
+    }
   };
 
   return (

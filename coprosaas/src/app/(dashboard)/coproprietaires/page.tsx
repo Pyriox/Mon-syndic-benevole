@@ -74,7 +74,13 @@ export default async function CoproprietairesPage() {
   );
 
   // Lots disponibles pour la modale d'ajout/édition (tous, avec coproprietaire_id pour gérer les lots déjà attribués)
-  const lotsForSelect = (allLots ?? []).map((l) => ({ id: l.id, numero: l.numero, coproprietaire_id: l.coproprietaire_id }));
+  const lotsForSelect = (allLots ?? []).map((l) => ({
+    id: l.id,
+    numero: l.numero,
+    coproprietaire_id: l.coproprietaire_id,
+    type: l.type,
+    tantiemes: l.tantiemes,
+  }));
 
   const totalTantiemes = (allLots ?? []).reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

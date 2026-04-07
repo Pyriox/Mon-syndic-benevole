@@ -50,6 +50,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
   const [statut, setStatut] = useState(appel.statut ?? null);
   const [emailedAt, setEmailedAt] = useState<string | null>(appel.emailed_at ?? null);
   const [lignesCount, setLignesCount] = useState(lignes.length);
+  const [localLignes, setLocalLignes] = useState<Ligne[]>(lignes);
   const [regenerating, setRegenerating] = useState(false);
   const [regenMsg, setRegenMsg] = useState('');
   const [publishing, setPublishing] = useState(false);
@@ -69,7 +70,18 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
     setStatut(appel.statut ?? null);
     setEmailedAt(appel.emailed_at ?? null);
     setLignesCount(lignes.length);
-  }, [appel.emailed_at, appel.statut, lignes.length]);
+    setLocalLignes(lignes);
+  }, [appel.emailed_at, appel.statut, lignes]);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const echeance = new Date(appel.date_echeance);
+  echeance.setHours(0, 0, 0, 0);
+  const echeancePlusGrace = new Date(echeance);
+  echeancePlusGrace.setDate(echeancePlusGrace.getDate() + 15);
+  const displayedNbPayes = localLignes.filter((ligne) => ligne.paye).length;
+  const displayedNbImpayes = today > echeancePlusGrace ? localLignes.filter((ligne) => !ligne.paye).length : 0;
+  const displayedPctPaye = localLignes.length > 0 ? Math.round((displayedNbPayes / localLignes.length) * 100) : 0;
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -113,6 +125,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           const c = Array.isArray(l.coproprietaires) ? l.coproprietaires[0] ?? null : l.coproprietaires;
           return { ...l, coproprietaires: c as Ligne['coproprietaires'] };
         });
+        setLocalLignes(mappedLignes);
         setLignesCount(mappedLignes.length);
         const saveResult = await saveToDocuments(mappedLignes);
         if (!saveResult.ok) {
@@ -120,8 +133,6 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         }
         if (json.promptEmailSend) {
           setShowPublishEmailPrompt(true);
-        } else {
-          router.refresh();
         }
       }
     } catch {
@@ -193,7 +204,18 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           solde: Math.round(((cop?.solde ?? 0) - g.montant) * 100) / 100,
         }).eq('id', g.copId);
       }
-      router.refresh();
+
+      const { data: freshLignes } = await supabase
+        .from('lignes_appels_de_fonds')
+        .select('id, montant_du, regularisation_ajustement, paye, date_paiement, coproprietaires(id, nom, prenom)')
+        .eq('appel_de_fonds_id', appel.id);
+      const mappedLignes: Ligne[] = (freshLignes ?? []).map((ligne) => {
+        const copro = Array.isArray(ligne.coproprietaires) ? ligne.coproprietaires[0] ?? null : ligne.coproprietaires;
+        return { ...ligne, coproprietaires: copro as Ligne['coproprietaires'] };
+      });
+      setLocalLignes(mappedLignes);
+      setLignesCount(mappedLignes.length);
+      setRegenMsg('Répartition recalculée.');
     } finally {
       setRegenerating(false);
     }
@@ -201,7 +223,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
 
   const saveToDocuments = async (freshLignes?: Ligne[]): Promise<{ ok: boolean; error?: string }> => {
     try {
-      const effectiveLignes = freshLignes ?? lignes;
+      const effectiveLignes = freshLignes ?? localLignes;
       if (!appel.copropriete_id) return { ok: false, error: 'Copropriété introuvable pour archiver les avis.' };
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -308,7 +330,6 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         if (!saveResult.ok) {
           setSendMsg((prev) => `${prev} (envoi OK, archivage impossible: ${saveResult.error})`);
         }
-        router.refresh();
       }
     } catch {
       setSendMsg("Erreur réseau lors de l'envoi.");
@@ -318,7 +339,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
   };
 
   const typeAppel = appel.type_appel;
-  const barColor = pctPaye === 100 ? 'bg-green-500' : nbImpayes > 0 ? 'bg-red-500' : 'bg-blue-500';
+  const barColor = displayedPctPaye === 100 ? 'bg-green-500' : displayedNbImpayes > 0 ? 'bg-red-500' : 'bg-blue-500';
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
@@ -339,8 +360,8 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                 </span>
               )}
 
-              {nbImpayes > 0 && (
-                <Badge variant="danger">{nbImpayes} impayé{nbImpayes > 1 ? 's' : ''}</Badge>
+              {displayedNbImpayes > 0 && (
+                <Badge variant="danger">{displayedNbImpayes} impayé{displayedNbImpayes > 1 ? 's' : ''}</Badge>
               )}
             </div>
 
@@ -349,18 +370,18 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
               <span className="font-bold text-gray-900">{formatEuros(appel.montant_total)}</span>
               <span className="text-gray-300">·</span>
               <span className="text-gray-500">Échéance <span className="text-gray-700 font-medium">{formatDate(appel.date_echeance)}</span></span>
-              {lignes.length > 0 && (
+              {localLignes.length > 0 && (
                 <>
                   <span className="text-gray-300">·</span>
-                  <span className="text-gray-500">{nbPayes}/{lignes.length} payé{nbPayes > 1 ? 's' : ''}</span>
+                  <span className="text-gray-500">{displayedNbPayes}/{localLignes.length} payé{displayedNbPayes > 1 ? 's' : ''}</span>
                 </>
               )}
             </div>
 
             {/* Barre de progression */}
-            {lignes.length > 0 && (
+            {localLignes.length > 0 && (
               <div className="mt-2.5 w-full bg-gray-200 rounded-full h-2">
-                <div className={`h-2 rounded-full transition-all ${barColor}`} style={{ width: `${Math.max(pctPaye, pctPaye > 0 ? 2 : 0)}%` }} />
+                <div className={`h-2 rounded-full transition-all ${barColor}`} style={{ width: `${Math.max(displayedPctPaye, displayedPctPaye > 0 ? 2 : 0)}%` }} />
               </div>
             )}
           </div>
@@ -379,7 +400,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                   {publishing ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                   <span>{publishing ? 'Émission…' : 'Émettre'}</span>
                 </button>
-              ) : pctPaye < 100 ? (
+              ) : displayedPctPaye < 100 ? (
                 <button
                   type="button"
                   onClick={() => setShowEmailConfirm(true)}
@@ -490,7 +511,6 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
               type="button"
               onClick={() => {
                 setShowPublishEmailPrompt(false);
-                router.refresh();
               }}
               className="text-xs font-medium text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
             >
@@ -579,14 +599,14 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           )}
 
           {/* Suivi paiements */}
-          {lignes.length === 0 ? (
+          {localLignes.length === 0 ? (
             <div className="text-center py-4 space-y-3">
               {regenerating ? (
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                   <Loader2 size={14} className="animate-spin" />
                   <span>Génération de la répartition…</span>
                 </div>
-              ) : appel.statut === 'brouillon' ? (
+              ) : currentStatut === 'brouillon' ? (
                 <p className="text-sm text-gray-400">
                   La répartition sera générée automatiquement lors de l’émission.
                 </p>
@@ -615,9 +635,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           ) : (
             <AppelFondsPaiement
               appel={appel}
-              lignes={lignes}
+              lignes={localLignes}
               isSyndic={isSyndic}
               canWrite={canWrite}
+              onLignesChange={setLocalLignes}
             />
           )}
         </div>

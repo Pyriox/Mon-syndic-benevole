@@ -19,7 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { createClient } from '@/lib/supabase/client';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
-import { CoproprietaireEdit, CoproprietaireDelete, CoproprietaireInvite } from './CoproprietaireActions';
+import { CoproprietaireEdit, CoproprietaireDelete, CoproprietaireInvite, type CoproprietaireListItem } from './CoproprietaireActions';
 import { formatEuros } from '@/lib/utils';
 import { GripVertical, Mail, Phone, UserCheck } from 'lucide-react';
 
@@ -68,6 +68,8 @@ interface LotForSelect {
   id: string;
   numero: string;
   coproprietaire_id: string | null;
+  type?: string;
+  tantiemes?: number;
 }
 
 interface CoproprietairesTableProps {
@@ -268,12 +270,16 @@ function MobileCoproCard({
   lotsForSelect,
   totalTantiemes,
   currentUserId,
+  onSaveCoproprietaire,
+  onDeleteCoproprietaire,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
   lotsForSelect: LotForSelect[];
   totalTantiemes: number;
   currentUserId?: string;
+  onSaveCoproprietaire: (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => void;
+  onDeleteCoproprietaire: (id: string, freedLotIds: string[]) => void;
 }) {
   const { cpTantiemes, cpPercent } = computeTantiemes(ownedLots, totalTantiemes);
   const displayName = computeDisplayName(cp);
@@ -296,8 +302,14 @@ function MobileCoproCard({
             coproprietaire={{ ...cp, email: cp.email ?? '', telephone: cp.telephone ?? null, solde: cp.solde ?? 0 }}
             lots={lotsForSelect}
             assignedLotIds={ownedLots.map((l) => l.id)}
+            onSaved={onSaveCoproprietaire}
           />
-          <CoproprietaireDelete id={cp.id} nom={displayName} />
+          <CoproprietaireDelete
+            id={cp.id}
+            nom={displayName}
+            assignedLotIds={ownedLots.map((l) => l.id)}
+            onDeleted={onDeleteCoproprietaire}
+          />
         </div>
       </div>
 
@@ -321,12 +333,16 @@ function SortableCoproRow({
   lotsForSelect,
   totalTantiemes,
   currentUserId,
+  onSaveCoproprietaire,
+  onDeleteCoproprietaire,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
   lotsForSelect: LotForSelect[];
   totalTantiemes: number;
   currentUserId?: string;
+  onSaveCoproprietaire: (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => void;
+  onDeleteCoproprietaire: (id: string, freedLotIds: string[]) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: cp.id,
@@ -396,8 +412,14 @@ function SortableCoproRow({
             coproprietaire={{ ...cp, email: cp.email ?? '', telephone: cp.telephone ?? null, solde: cp.solde ?? 0 }}
             lots={lotsForSelect}
             assignedLotIds={ownedLots.map((l) => l.id)}
+            onSaved={onSaveCoproprietaire}
           />
-          <CoproprietaireDelete id={cp.id} nom={displayName} />
+          <CoproprietaireDelete
+            id={cp.id}
+            nom={displayName}
+            assignedLotIds={ownedLots.map((l) => l.id)}
+            onDeleted={onDeleteCoproprietaire}
+          />
         </div>
       </td>
     </tr>
@@ -416,11 +438,56 @@ export default function CoproprietairesTable({
   currentUserId,
 }: CoproprietairesTableProps) {
   const [coproprietaires, setCoproprietaires] = useState<CoproRow[]>(initialCoproprietaires);
+  const [lotsState, setLotsState] = useState<LotForSelect[]>(lotsForSelect);
   const supabase = createClient();
 
   useEffect(() => {
     setCoproprietaires(initialCoproprietaires);
   }, [initialCoproprietaires]);
+
+  useEffect(() => {
+    setLotsState(lotsForSelect);
+  }, [lotsForSelect]);
+
+  const lotsByOwnerState = lotsState.reduce<Record<string, LotEntry[]>>((acc, lot) => {
+    if (!lot.coproprietaire_id) return acc;
+    acc[lot.coproprietaire_id] = [
+      ...(acc[lot.coproprietaire_id] ?? []),
+      {
+        id: lot.id,
+        numero: lot.numero,
+        type: lot.type ?? '',
+        tantiemes: lot.tantiemes ?? 0,
+      },
+    ];
+    return acc;
+  }, {});
+
+  const handleSavedCoproprietaire = (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => {
+    setCoproprietaires((prev) => {
+      const exists = prev.some((current) => current.id === coproprietaire.id);
+      if (!exists) return [coproprietaire, ...prev];
+      return prev.map((current) => (current.id === coproprietaire.id ? { ...current, ...coproprietaire } : current));
+    });
+    setLotsState((prev) =>
+      prev.map((lot) => {
+        if (selectedLotIds.includes(lot.id)) {
+          return { ...lot, coproprietaire_id: coproprietaire.id };
+        }
+        if (lot.coproprietaire_id === coproprietaire.id) {
+          return { ...lot, coproprietaire_id: null };
+        }
+        return lot;
+      })
+    );
+  };
+
+  const handleDeletedCoproprietaire = (coproprietaireId: string, freedLotIds: string[]) => {
+    setCoproprietaires((prev) => prev.filter((current) => current.id !== coproprietaireId));
+    setLotsState((prev) =>
+      prev.map((lot) => (freedLotIds.includes(lot.id) ? { ...lot, coproprietaire_id: null } : lot))
+    );
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -493,10 +560,12 @@ export default function CoproprietairesTable({
           <MobileCoproCard
             key={cp.id}
             cp={cp}
-            ownedLots={lotsByOwner[cp.id] ?? []}
-            lotsForSelect={lotsForSelect}
+            ownedLots={lotsByOwnerState[cp.id] ?? []}
+            lotsForSelect={lotsState}
             totalTantiemes={totalTantiemes}
             currentUserId={currentUserId}
+            onSaveCoproprietaire={handleSavedCoproprietaire}
+            onDeleteCoproprietaire={handleDeletedCoproprietaire}
           />
         ))}
       </div>
@@ -525,10 +594,12 @@ export default function CoproprietairesTable({
                 <SortableCoproRow
                   key={cp.id}
                   cp={cp}
-                  ownedLots={lotsByOwner[cp.id] ?? []}
-                  lotsForSelect={lotsForSelect}
+                  ownedLots={lotsByOwnerState[cp.id] ?? []}
+                  lotsForSelect={lotsState}
                   totalTantiemes={totalTantiemes}
                   currentUserId={currentUserId}
+                  onSaveCoproprietaire={handleSavedCoproprietaire}
+                  onDeleteCoproprietaire={handleDeletedCoproprietaire}
                 />
               ))}
             </tbody>

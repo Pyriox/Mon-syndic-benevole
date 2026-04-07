@@ -237,8 +237,9 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
       label: `AG créée — ${titreFinal}`,
     }).catch(() => undefined);
 
+    const createdAgId = ag.id;
     resetAndClose();
-    router.refresh();
+    router.push(`/assemblees/${createdAgId}`);
   };
 
   const resetAndClose = () => {

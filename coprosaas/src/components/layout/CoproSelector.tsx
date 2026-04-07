@@ -27,7 +27,6 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
     if (!hasCookie) {
       startTransition(async () => {
         await selectCopropriete(selectedId);
-        router.refresh();
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -37,6 +36,7 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
 
   const handleSelect = (copro: UserCopropriete) => {
     setOpen(false);
+    if (copro.id === selectedId) return;
     startTransition(async () => {
       await selectCopropriete(copro.id);
       router.refresh();
