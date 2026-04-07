@@ -326,9 +326,11 @@ function FolderPicker({
 export function DocumentMenu({
   doc,
   dossiers,
+  readOnly = false,
 }: {
   doc: { id: string; nom: string };
   dossiers: { id: string; nom: string; parent_id?: string | null }[];
+  readOnly?: boolean;
 }) {
   const supabase = createClient();
 
@@ -395,15 +397,19 @@ export function DocumentMenu({
         >
           <Download size={14} />
         </a>
-        <button type="button" onClick={() => open('rename')} className={`${btnCls} hover:text-blue-600`} title="Renommer">
-          <Pencil size={14} />
-        </button>
-        <button type="button" onClick={() => open('move')} className={`${btnCls} hover:text-amber-600`} title="Déplacer">
-          <FolderInput size={14} />
-        </button>
-        <button type="button" onClick={() => open('delete')} className={`${btnCls} hover:text-red-600`} title="Supprimer">
-          <Trash2 size={14} />
-        </button>
+        {!readOnly && (
+          <>
+            <button type="button" onClick={() => open('rename')} className={`${btnCls} hover:text-blue-600`} title="Renommer">
+              <Pencil size={14} />
+            </button>
+            <button type="button" onClick={() => open('move')} className={`${btnCls} hover:text-amber-600`} title="Déplacer">
+              <FolderInput size={14} />
+            </button>
+            <button type="button" onClick={() => open('delete')} className={`${btnCls} hover:text-red-600`} title="Supprimer">
+              <Trash2 size={14} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Modal Renommer */}

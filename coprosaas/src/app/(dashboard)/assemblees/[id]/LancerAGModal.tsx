@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import { PlayCircle, UserCheck, UserX, Users } from 'lucide-react';
+import { AlertTriangle, PlayCircle, UserCheck, UserX, Users } from 'lucide-react';
 
 function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
   if (typeof window === 'undefined') return;
@@ -40,6 +40,7 @@ interface LancerAGModalProps {
   coproprieteId: string;
   existingPresences?: ExistingPresence[];
   mode?: 'launch' | 'edit';
+  convocationEnvoyeeLe?: string | null;
 }
 
 const STATUS_OPTIONS: { value: PresenceStatut; label: string; activeClass: string }[] = [
@@ -53,6 +54,7 @@ export default function LancerAGModal({
   coproprieteId,
   existingPresences = [],
   mode = 'launch',
+  convocationEnvoyeeLe = null,
 }: LancerAGModalProps) {
   const router = useRouter();
   const supabase = createClient();
@@ -60,6 +62,9 @@ export default function LancerAGModal({
   const [loading, setLoading] = useState(false);
   const [copros, setCopros] = useState<Copro[]>([]);
   const [presences, setPresences] = useState<Record<string, PresenceEntry>>({});
+  const isLaunch = mode === 'launch';
+  const requiresConvocationConfirmation = isLaunch && !convocationEnvoyeeLe;
+  const [confirmConvocationSent, setConfirmConvocationSent] = useState(!requiresConvocationConfirmation);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -83,6 +88,12 @@ export default function LancerAGModal({
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, coproprieteId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setConfirmConvocationSent(!requiresConvocationConfirmation);
+    }
+  }, [isOpen, requiresConvocationConfirmation]);
 
   const setStatut = (id: string, statut: PresenceStatut) =>
     setPresences((p) => ({ ...p, [id]: { ...p[id], statut } }));
@@ -122,13 +133,15 @@ export default function LancerAGModal({
     (c) => presences[c.id]?.statut === 'present' || presences[c.id]?.statut === 'represente',
   ).length;
 
-  const isLaunch = mode === 'launch';
+  const launchButtonLabel = isLaunch
+    ? (convocationEnvoyeeLe ? "Démarrer l'AG" : "Démarrer l'AG (si convocation déjà envoyée)")
+    : 'Présences';
 
   return (
     <>
       <Button variant="secondary" size="sm" onClick={() => setIsOpen(true)}>
         {isLaunch ? <PlayCircle size={14} /> : <Users size={14} />}
-        {isLaunch ? "Démarrer l'AG" : 'Présences'}
+        {launchButtonLabel}
       </Button>
 
       <Modal
@@ -138,6 +151,32 @@ export default function LancerAGModal({
         size="lg"
       >
         <div className="space-y-4">
+          {requiresConvocationConfirmation && (
+            <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Convocation à vérifier avant lancement</p>
+                  <p className="text-sm text-amber-700">
+                    Aucune convocation n&apos;a encore été tracée depuis la plateforme. Pour sécuriser le parcours,
+                    envoyez-la depuis cette page ou confirmez qu&apos;elle a déjà été transmise par un autre moyen.
+                  </p>
+                </div>
+              </div>
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={confirmConvocationSent}
+                  onChange={(e) => setConfirmConvocationSent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                />
+                <span className="text-sm text-amber-800">
+                  Je confirme que la convocation a déjà été envoyée à tous les copropriétaires.
+                </span>
+              </label>
+            </div>
+          )}
+
           {copros.length === 0 ? (
             <p className="text-sm text-gray-500 py-6 text-center">
               Chargement des copropriétaires…
@@ -208,7 +247,11 @@ export default function LancerAGModal({
           )}
 
           <div className="flex gap-3 pt-1">
-            <Button onClick={handleConfirm} loading={loading} disabled={copros.length === 0}>
+            <Button
+              onClick={handleConfirm}
+              loading={loading}
+              disabled={copros.length === 0 || (requiresConvocationConfirmation && !confirmConvocationSent)}
+            >
               {isLaunch && <PlayCircle size={14} />}
               {isLaunch ? "Lancer l'AG" : 'Enregistrer'}
             </Button>

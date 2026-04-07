@@ -98,6 +98,7 @@ export default async function AGDetailPage({ params }: Props) {
   const isVisio = ag.lieu === 'Visioconférence';
   const canVote = isSyndic && canWrite && (ag.statut === 'en_cours' || ag.statut === 'terminee');
   const canEdit = isSyndic && canWrite && (ag.statut === 'creation' || ag.statut === 'planifiee');
+  const needsConvocation = ag.statut === 'planifiee' && !ag.convocation_envoyee_le;
   const hasPresences = (presences ?? []).length > 0;
   const toutesResolutionsVotees =
     (resolutions ?? []).length > 0 &&
@@ -114,7 +115,7 @@ export default async function AGDetailPage({ params }: Props) {
     : ag.statut === 'creation'
       ? 'Étape suivante : valider la planification.'
       : ag.statut === 'planifiee' && !ag.convocation_envoyee_le
-        ? 'Étape suivante : envoyer la convocation.'
+        ? 'Action requise : envoyer la convocation avant de démarrer l’AG.'
         : ag.statut === 'planifiee'
           ? "Étape suivante : démarrer l'AG le jour J."
           : ag.statut === 'en_cours'
@@ -181,10 +182,17 @@ export default async function AGDetailPage({ params }: Props) {
         <div className="flex flex-col items-start sm:items-end gap-3 shrink-0">
 
           {/* Bouton principal de progression */}
-          <AGStatusActions agId={id} coproprieteId={ag.copropriete_id} currentStatut={ag.statut} quorumAtteint={quorumAtteintCalcule} toutesResolutionsVotees={toutesResolutionsVotees} />
+          <AGStatusActions
+            agId={id}
+            coproprieteId={ag.copropriete_id}
+            currentStatut={ag.statut}
+            quorumAtteint={quorumAtteintCalcule}
+            toutesResolutionsVotees={toutesResolutionsVotees}
+            convocationEnvoyeeLe={ag.convocation_envoyee_le ?? null}
+          />
 
           {/* Actions secondaires : e-mails */}
-          {(ag.statut === 'planifiee' || ag.statut === 'terminee') && (
+          {((ag.statut === 'planifiee' && !needsConvocation) || ag.statut === 'terminee') && (
             <div className="flex items-center gap-2">
               {ag.statut === 'planifiee' && (
                 <AGEnvoyerConvocation
@@ -202,7 +210,7 @@ export default async function AGDetailPage({ params }: Props) {
           )}
 
           {/* Documents PDF */}
-          {(ag.statut === 'planifiee' || ag.statut === 'terminee') && (
+          {((ag.statut === 'planifiee' && !needsConvocation) || ag.statut === 'terminee') && (
             <div className="flex items-center gap-2">
               {ag.statut === 'planifiee' && (
                 <ConvocationPDF ag={agWithCopropriete} resolutions={resolutions ?? []} />
@@ -233,6 +241,36 @@ export default async function AGDetailPage({ params }: Props) {
         </div>
         )}
       </div>
+
+      {needsConvocation && isSyndic && canWrite && (
+        <Card className="border-amber-200 bg-amber-50/70">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <Badge variant="warning">Action requise</Badge>
+              <div>
+                <p className="text-sm font-semibold text-amber-900">Envoyer la convocation</p>
+                <p className="text-sm text-amber-800">
+                  La planification est validée, mais la convocation n&apos;a pas encore été envoyée depuis CoproSaaS.
+                  Faites-le maintenant pour garder une trace d&apos;envoi et éviter un oubli avant le jour J.
+                </p>
+              </div>
+              <p className="text-xs text-amber-700">
+                Rappel : prévoyez le délai légal de 21 jours avant la tenue de l&apos;assemblée.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <AGEnvoyerConvocation
+                agId={id}
+                coproprieteId={ag.copropriete_id}
+                ag={agWithCopropriete}
+                resolutions={resolutions ?? []}
+                convocationEnvoyeeLe={ag.convocation_envoyee_le ?? null}
+              />
+              <ConvocationPDF ag={agWithCopropriete} resolutions={resolutions ?? []} />
+            </div>
+          </div>
+        </Card>
+      )}
 
       {ag.notes && (
         <Card>

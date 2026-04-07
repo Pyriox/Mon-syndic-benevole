@@ -260,7 +260,7 @@ export default async function LotsPage() {
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <OwnerAvatar name={ownerName} isMe={isMyLot} />
                               <span className="text-sm text-gray-700 truncate">{ownerName}</span>
-                              {owner?.user_id && !isMyLot && (
+                              {owner?.user_id && (
                                 <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
                                   <UserCheck size={10} />Inscrit
                                 </span>
@@ -349,7 +349,7 @@ export default async function LotsPage() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <OwnerAvatar name={ownerName} isMe={isMyLot} />
                             <span className="text-gray-700">{ownerName}</span>
-                            {owner?.user_id && !isMyLot && (
+                            {owner?.user_id && (
                               <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0">
                                 <UserCheck size={10} />Inscrit
                               </span>

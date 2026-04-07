@@ -84,7 +84,7 @@ export interface Coproprietaire {
   prenom: string;
   email: string;
   telephone: string | null;
-  solde: number;           // solde comptable (positif = créditeur)
+  solde: number;           // solde comptable (positif = montant dû, négatif = avance/crédit)
   created_at: string;
   // Relations jointes (optionnel)
   lot?: Lot;

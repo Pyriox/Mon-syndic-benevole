@@ -144,20 +144,24 @@ export async function CoproDashboardMain({ userId, coproId }: { userId: string; 
     );
   }
 
+  const hasDebt = data.solde > 0;
+  const hasCredit = data.solde < 0;
+  const displayedSolde = hasDebt ? -Math.abs(data.solde) : hasCredit ? Math.abs(data.solde) : 0;
+
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card className="flex items-center gap-4">
-          <div className={`p-3 rounded-xl shrink-0 ${data.solde >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-            <Scale size={24} className={data.solde >= 0 ? 'text-green-600' : 'text-red-600'} />
+          <div className={`p-3 rounded-xl shrink-0 ${hasDebt ? 'bg-red-100' : hasCredit ? 'bg-green-100' : 'bg-gray-100'}`}>
+            <Scale size={24} className={hasDebt ? 'text-red-600' : hasCredit ? 'text-green-600' : 'text-gray-500'} />
           </div>
           <div>
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Mon solde</p>
-            <p className={`text-2xl font-bold ${data.solde >= 0 ? 'text-green-700' : 'text-red-600'}`}>
-              {data.solde >= 0 ? '+' : ''}{formatEuros(data.solde)}
+            <p className={`text-2xl font-bold ${hasDebt ? 'text-red-600' : hasCredit ? 'text-green-700' : 'text-gray-900'}`}>
+              {hasCredit ? '+' : ''}{formatEuros(displayedSolde)}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {data.solde >= 0 ? 'Avance de trésorerie' : 'Charges à régler'}
+              {hasDebt ? 'Charges à régler' : hasCredit ? 'Avance de trésorerie' : 'Solde à jour'}
             </p>
           </div>
         </Card>

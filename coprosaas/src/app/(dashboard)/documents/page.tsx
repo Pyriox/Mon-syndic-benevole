@@ -108,10 +108,25 @@ export default async function DocumentsPage({ searchParams }: Props) {
       .order('created_at');
     const dossiers: Dossier[] = (rawDossiers ?? []) as unknown as Dossier[];
 
-    const { data: docCounts } = await supabase
+    const { data: myCoproprietaire } = await supabase
+      .from('coproprietaires')
+      .select('id')
+      .eq('copropriete_id', selectedCoproId ?? 'none')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const myCoproprietaireId = myCoproprietaire?.id ?? null;
+
+    let docCountsQuery = supabase
       .from('documents')
       .select('dossier_id')
       .eq('copropriete_id', selectedCoproId ?? 'none');
+
+    docCountsQuery = myCoproprietaireId
+      ? docCountsQuery.or(`coproprietaire_id.is.null,coproprietaire_id.eq.${myCoproprietaireId}`)
+      : docCountsQuery.is('coproprietaire_id', null);
+
+    const { data: docCounts } = await docCountsQuery;
     const countByDossier = (docCounts ?? []).reduce<Record<string, number>>((acc, doc) => {
       if (doc.dossier_id) acc[doc.dossier_id] = (acc[doc.dossier_id] ?? 0) + 1;
       return acc;
@@ -119,22 +134,37 @@ export default async function DocumentsPage({ searchParams }: Props) {
 
     // Dossiers visibles dans la vue courante
     const parentId = dossierId ?? null;
-    const visibleDossiers = parentId
+    const visibleDossiersBase = parentId
       ? dossiers.filter((d) => d.parent_id === parentId)
       : sortRootDossiers(dossiers.filter((d) => !d.parent_id));
+    const visibleDossiers = visibleDossiersBase.filter((d) => {
+      const hasChildFolders = dossiers.some((x) => x.parent_id === d.id);
+      const docCount = countByDossier[d.id] ?? 0;
+      return hasChildFolders || docCount > 0;
+    });
 
     // Documents du dossier courant (uniquement si on est dans un dossier terminal)
     const hasSubs = dossierId
       ? dossiers.some((d) => d.parent_id === dossierId)
       : false;
 
-    const { data: documents } = dossierId && !hasSubs
-      ? await supabase
+    let documentsQuery = dossierId && !hasSubs
+      ? supabase
           .from('documents')
           .select('id, nom, type, taille, created_at')
           .eq('copropriete_id', selectedCoproId ?? 'none')
           .eq('dossier_id', dossierId)
-          .order('created_at', { ascending: false })
+      : null;
+
+    if (documentsQuery) {
+      documentsQuery = myCoproprietaireId
+        ? documentsQuery.or(`coproprietaire_id.is.null,coproprietaire_id.eq.${myCoproprietaireId}`)
+        : documentsQuery.is('coproprietaire_id', null);
+      documentsQuery = documentsQuery.order('created_at', { ascending: false });
+    }
+
+    const { data: documents } = documentsQuery
+      ? await documentsQuery
       : { data: null };
 
     const breadcrumb = dossierId ? buildBreadcrumb(dossiers, dossierId) : [];
@@ -276,7 +306,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
                         <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{formatTaille(doc.taille)}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center">
-                            <DocumentMenu doc={{ id: doc.id, nom: doc.nom }} dossiers={dossiers} />
+                            <DocumentMenu doc={{ id: doc.id, nom: doc.nom }} dossiers={dossiers} readOnly />
                           </div>
                         </td>
                       </tr>

@@ -445,20 +445,58 @@ export function ResolutionEdit({
 
 export function ResolutionDelete({ resolutionId, onDeleted }: { resolutionId: string; onDeleted?: (resolutionId: string) => void }) {
   const supabase = createClient();
+  const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleDelete = async () => {
-    if (!confirm('Supprimer cette résolution ?')) return;
     setLoading(true);
+    setError('');
     const { error } = await supabase.from('resolutions').delete().eq('id', resolutionId);
     setLoading(false);
-    if (!error) onDeleted?.(resolutionId);
+
+    if (error) {
+      setError('Erreur : ' + error.message);
+      return;
+    }
+
+    setIsOpen(false);
+    onDeleted?.(resolutionId);
   };
 
   return (
-    <button onClick={handleDelete} disabled={loading}
-      className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50" title="Supprimer">
-      <Trash2 size={14} />
-    </button>
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        disabled={loading}
+        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+        title="Supprimer"
+      >
+        <Trash2 size={14} />
+      </button>
+
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Supprimer la résolution" size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 rounded-lg border border-red-100 bg-red-50 p-3">
+            <Trash2 size={16} className="mt-0.5 shrink-0 text-red-600" />
+            <p className="text-sm text-red-700">
+              Voulez-vous vraiment supprimer cette résolution ?
+              <strong> Cette action est irréversible.</strong>
+            </p>
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <div className="flex gap-3 pt-1">
+            <Button variant="danger" loading={loading} onClick={handleDelete}>
+              <Trash2 size={14} /> Supprimer définitivement
+            </Button>
+            <Button variant="secondary" onClick={() => setIsOpen(false)} disabled={loading}>
+              Annuler
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }

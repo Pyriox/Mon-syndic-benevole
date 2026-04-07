@@ -384,7 +384,7 @@ export function AGEnvoyerConvocation({
             {sendSummary.message}
           </span>
         )}
-        <Button variant={sentDate ? 'secondary' : 'secondary'} size="sm" onClick={() => setIsOpen(true)}>
+        <Button variant={sentDate ? 'secondary' : 'primary'} size="sm" onClick={() => setIsOpen(true)}>
           <Mail size={14} /> {sentDate ? 'Renvoyer la convocation' : 'Envoyer la convocation'}
         </Button>
       </div>
@@ -593,9 +593,17 @@ interface AGStatusActionsProps {
   currentStatut: string;
   quorumAtteint: boolean;
   toutesResolutionsVotees: boolean;
+  convocationEnvoyeeLe?: string | null;
 }
 
-export default function AGStatusActions({ agId, coproprieteId, currentStatut, quorumAtteint, toutesResolutionsVotees }: AGStatusActionsProps) {
+export default function AGStatusActions({
+  agId,
+  coproprieteId,
+  currentStatut,
+  quorumAtteint,
+  toutesResolutionsVotees,
+  convocationEnvoyeeLe,
+}: AGStatusActionsProps) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -646,8 +654,30 @@ export default function AGStatusActions({ agId, coproprieteId, currentStatut, qu
   }
 
   if (currentStatut === 'planifiee') {
+    const convocationMissing = !convocationEnvoyeeLe;
+
     return (
-      <LancerAGModal agId={agId} coproprieteId={coproprieteId} mode="launch" />
+      <div className="flex flex-col items-start sm:items-end gap-2">
+        {convocationMissing && (
+          <div className="max-w-sm rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left">
+            <div className="flex items-start gap-2">
+              <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-600" />
+              <div>
+                <p className="text-xs font-semibold text-amber-800">Action requise : envoyer la convocation</p>
+                <p className="text-xs text-amber-700">
+                  Le lancement de l&apos;AG demandera une confirmation tant que cette étape n&apos;est pas tracée.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        <LancerAGModal
+          agId={agId}
+          coproprieteId={coproprieteId}
+          mode="launch"
+          convocationEnvoyeeLe={convocationEnvoyeeLe ?? null}
+        />
+      </div>
     );
   }
 

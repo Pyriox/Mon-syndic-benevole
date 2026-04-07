@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export type EmailDeliveryStatus =
@@ -38,6 +39,16 @@ export type ResendSendResultLike = {
 };
 
 const RETRY_DELAY_MS = 6 * 60 * 60 * 1000;
+const STATUS_PRIORITY: Record<EmailDeliveryStatus, number> = {
+  queued: 0,
+  sent: 1,
+  delivered: 2,
+  opened: 3,
+  clicked: 4,
+  bounced: 5,
+  complained: 5,
+  failed: 5,
+};
 
 function normalizeProviderMessageId(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -172,7 +183,58 @@ export function mapProviderEventToStatus(providerEvent: string): EmailDeliverySt
   if (normalizedEvent.includes('complained') || normalizedEvent.includes('complaint')) return 'complained';
   if (normalizedEvent.includes('failed') || normalizedEvent.includes('fail')) return 'failed';
   if (normalizedEvent.includes('sent')) return 'sent';
+  if (normalizedEvent.includes('queued') || normalizedEvent.includes('scheduled')) return 'queued';
   return null;
+}
+
+function shouldRefreshFromProvider(status: EmailDeliveryStatus): boolean {
+  return status !== 'failed' && status !== 'bounced' && status !== 'complained';
+}
+
+function shouldApplyProviderStatus(currentStatus: EmailDeliveryStatus, nextStatus: EmailDeliveryStatus): boolean {
+  if (currentStatus === nextStatus) return false;
+  if (nextStatus === 'failed' || nextStatus === 'bounced' || nextStatus === 'complained') return true;
+  return STATUS_PRIORITY[nextStatus] >= STATUS_PRIORITY[currentStatus];
+}
+
+export type EmailDeliverySyncCandidate = {
+  id: string;
+  providerMessageId: string | null;
+  status: EmailDeliveryStatus;
+};
+
+export async function syncEmailDeliveriesWithResend(rows: EmailDeliverySyncCandidate[]): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || rows.length === 0) return;
+
+  const resend = new Resend(apiKey);
+  const admin = createAdminClient();
+  const seenProviderIds = new Set<string>();
+
+  const candidates = rows.filter((row) => {
+    const providerMessageId = normalizeProviderMessageId(row.providerMessageId);
+    if (!providerMessageId || seenProviderIds.has(providerMessageId)) return false;
+    if (!shouldRefreshFromProvider(row.status)) return false;
+    seenProviderIds.add(providerMessageId);
+    return true;
+  });
+
+  await Promise.allSettled(candidates.map(async (row) => {
+    const providerMessageId = normalizeProviderMessageId(row.providerMessageId);
+    if (!providerMessageId) return;
+
+    const result = await resend.emails.get(providerMessageId);
+    if (result.error) return;
+
+    const nextStatus = mapProviderEventToStatus(result.data?.last_event ?? '');
+    if (!nextStatus || !shouldApplyProviderStatus(row.status, nextStatus)) return;
+
+    await admin.from('email_deliveries').update({
+      ...buildStatusUpdate(nextStatus),
+      subject: result.data?.subject ?? null,
+      payload: (result.data ?? {}) as unknown as Record<string, unknown>,
+    }).eq('id', row.id);
+  }));
 }
 
 export async function applyProviderEvent(params: {

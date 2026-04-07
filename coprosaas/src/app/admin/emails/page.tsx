@@ -13,7 +13,7 @@ import AdminPagination from '../AdminPagination';
 import AdminSearch from '../AdminSearch';
 import AdminStatCard from '../AdminStatCard';
 import { isAdminUser } from '@/lib/admin-config';
-import type { EmailDeliveryStatus } from '@/lib/email-delivery';
+import { syncEmailDeliveriesWithResend, type EmailDeliveryStatus } from '@/lib/email-delivery';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
@@ -198,6 +198,22 @@ export default async function AdminEmailsPage({
   const PAGE_SIZE = 25;
 
   const admin = createAdminClient();
+
+  const { data: syncCandidates } = await admin
+    .from('email_deliveries')
+    .select('id, provider_message_id, status')
+    .not('provider_message_id', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(40);
+
+  await syncEmailDeliveriesWithResend(
+    ((syncCandidates ?? []) as Array<{ id: string; provider_message_id: string | null; status: EmailDeliveryStatus }>).map((row) => ({
+      id: row.id,
+      providerMessageId: row.provider_message_id,
+      status: row.status,
+    }))
+  );
+
   const searchClause = query
     ? `recipient_email.ilike.%${query}%,subject.ilike.%${query}%,template_key.ilike.%${query}%,legal_event_type.ilike.%${query}%,legal_reference.ilike.%${query}%,provider_message_id.ilike.%${query}%`
     : null;
@@ -274,7 +290,7 @@ export default async function AdminEmailsPage({
         <div>
           <h1 className="text-lg sm:text-xl font-bold text-gray-900">Suivi des e-mails</h1>
           <p className="mt-0.5 text-xs text-gray-500">
-            Vue métier issue de <code>email_deliveries</code> avec enrichissement des webhooks Resend quand ils sont configurés.
+            Vue métier issue de <code>email_deliveries</code>, resynchronisée avec Resend pour les envois récents.
           </p>
         </div>
         <Link
