@@ -1,17 +1,12 @@
-import { Loader2 } from 'lucide-react';
+import PageLoadingState from '@/components/ui/PageLoadingState';
 
 // Skeleton affiché instantanément pendant le chargement du tableau de bord
 export default function DashboardLoading() {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-        <Loader2 size={16} className="animate-spin text-blue-600" />
-        <div>
-          <p className="font-semibold">Ouverture de votre tableau de bord…</p>
-          <p className="text-xs text-blue-700/80">Vos données arrivent. Cela ne prend généralement qu’un instant.</p>
-        </div>
-      </div>
-
+    <PageLoadingState
+      title="Ouverture de votre tableau de bord…"
+      subtitle="Vos données arrivent. Cela ne prend généralement qu’un instant."
+    >
       <div className="animate-pulse space-y-6">
         {/* Titre */}
         <div className="h-7 w-56 bg-gray-200 rounded-lg" />
@@ -39,6 +34,6 @@ export default function DashboardLoading() {
           </div>
         </div>
       </div>
-    </div>
+    </PageLoadingState>
   );
 }
