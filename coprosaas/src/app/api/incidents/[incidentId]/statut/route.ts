@@ -24,6 +24,9 @@ export async function PATCH(
   const body = await req.json() as { statut: StatutIncident } & Record<string, unknown>;
   const { statut, ...extra } = body;
   if (!statut) return NextResponse.json({ error: 'statut requis' }, { status: 400 });
+  if (!['ouvert', 'devis_demande', 'devis_recu', 'en_cours', 'resolu'].includes(statut)) {
+    return NextResponse.json({ error: 'statut invalide' }, { status: 422 });
+  }
 
   const admin = createAdminClient();
 
@@ -43,8 +46,22 @@ export async function PATCH(
     .maybeSingle();
   if (!copro) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
 
-  // Mise à jour du statut
-  const payload: Record<string, unknown> = { statut, ...extra };
+  // Mise à jour du statut avec whitelist stricte des champs modifiables
+  const ALLOWED_EXTRA_FIELDS = new Set([
+    'priorite',
+    'type_incident',
+    'localisation',
+    'artisan_nom',
+    'artisan_contact',
+    'montant_devis',
+    'montant_final',
+    'date_intervention_prevue',
+    'notes_internes',
+  ]);
+  const safeExtra = Object.fromEntries(
+    Object.entries(extra).filter(([key]) => ALLOWED_EXTRA_FIELDS.has(key))
+  );
+  const payload: Record<string, unknown> = { statut, ...safeExtra };
   if (statut === 'resolu') payload.date_resolution = new Date().toISOString();
   if (statut === 'ouvert') payload.date_resolution = null;
 

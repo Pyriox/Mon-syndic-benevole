@@ -1,5 +1,6 @@
 'use server';
 
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -277,49 +278,16 @@ export async function cloturerExercice(exerciceId: string): Promise<Regularisati
   if (!exercice) return { error: 'Accès non autorisé' };
   if (exercice.statut === 'cloture') return { error: 'Exercice déjà clôturé.' };
 
-  // 1. Clôturer l'exercice
-  const { error } = await supabase
-    .from('exercices')
-    .update({ statut: 'cloture', cloture_at: new Date().toISOString() })
-    .eq('id', exerciceId);
+  const admin = createAdminClient();
+  const { error } = await admin.rpc('cloturer_regularisation_exercice', {
+    p_exercice_id: exerciceId,
+  });
 
-  if (error) return { error: error.message };
-
-  // 2. Lire les lignes de régularisation + solde actuel de chaque copropriétaire
-  const { data: lignes } = await supabase
-    .from('regularisation_lignes')
-    .select('coproprietaire_id, balance')
-    .eq('exercice_id', exerciceId);
-
-  // 3. Répercuter la balance sur coproprietaires.solde (additif)
-  // balance = montant_reel − montant_appele + solde_reprise
-  // On ADDITIONNE la balance à l’existant pour ne pas écraser les impayés d’autres exercices.
-  // Convention : balance > 0 → complément dû → débit (−) ; balance < 0 → trop-perçu → crédit (+)
-  if (lignes && lignes.length > 0) {
-    // Lire les soldes actuels en une seule requête
-    const copIds = lignes.map((l) => l.coproprietaire_id);
-    const { data: copros } = await supabase
-      .from('coproprietaires')
-      .select('id, solde')
-      .in('id', copIds);
-
-    const soldeActuel: Record<string, number> = Object.fromEntries(
-      (copros ?? []).map((c) => [c.id, c.solde ?? 0])
-    );
-
-    await Promise.all(
-      lignes.map((l) => {
-        // balance > 0 → complément dû → solde augmente (dette +)
-      // balance < 0 → trop-perçu  → solde diminue (crédit −)
-      const nouveauSolde = Math.round(
-          ((soldeActuel[l.coproprietaire_id] ?? 0) + l.balance) * 100
-        ) / 100;
-        return supabase
-          .from('coproprietaires')
-          .update({ solde: nouveauSolde })
-          .eq('id', l.coproprietaire_id);
-      })
-    );
+  if (error) {
+    if (error.message?.includes('EXERCICE_ALREADY_CLOSED_OR_MISSING')) {
+      return { error: 'Exercice déjà clôturé ou introuvable.' };
+    }
+    return { error: error.message };
   }
 
   revalidatePath('/regularisation');

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { hasMagicBytes } from '@/lib/utils-file';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE = 5 * 1024 * 1024; // 5 Mo
@@ -48,6 +49,10 @@ export async function POST(
   const ext = file.type === 'image/jpeg' ? 'jpg' : file.type.split('/')[1];
   const storagePath = `incidents/${incidentId}-${Date.now()}.${ext}`;
   const arrayBuffer = await file.arrayBuffer();
+
+  if (!hasMagicBytes(arrayBuffer, file.type)) {
+    return NextResponse.json({ error: 'Le contenu du fichier ne correspond pas au format déclaré.' }, { status: 400 });
+  }
 
   const { data: upload, error: uploadError } = await admin.storage
     .from('documents')

@@ -79,30 +79,37 @@ export async function POST(req: NextRequest) {
 </div>`;
 
   const subjectLine = `[Contact] ${subject}`;
-  const result = await resend.emails.send({
-    from: FROM,
-    to: [SUPPORT_EMAIL],
-    replyTo: email,
-    subject: subjectLine,
-    html,
-  });
+  let emailWarning = false;
 
-  const tracked = await trackResendSendResult(result, {
-    templateKey: 'contact_notification',
-    recipientEmail: SUPPORT_EMAIL,
-    subject: subjectLine,
-    legalEventType: 'contact_notification',
-    legalReference: email.trim().toLowerCase(),
-    payload: {
-      fromEmail: email.trim().toLowerCase(),
-      fromName: name.trim(),
-      userId: userId?.trim() || null,
-    },
-  });
+  try {
+    const result = await resend.emails.send({
+      from: FROM,
+      to: [SUPPORT_EMAIL],
+      replyTo: email,
+      subject: subjectLine,
+      html,
+    });
 
-  if (!tracked.ok) {
-    console.error('[contact] Resend error:', tracked.errorMessage);
-    return NextResponse.json({ message: 'Erreur envoi email' }, { status: 500 });
+    const tracked = await trackResendSendResult(result, {
+      templateKey: 'contact_notification',
+      recipientEmail: SUPPORT_EMAIL,
+      subject: subjectLine,
+      legalEventType: 'contact_notification',
+      legalReference: email.trim().toLowerCase(),
+      payload: {
+        fromEmail: email.trim().toLowerCase(),
+        fromName: name.trim(),
+        userId: userId?.trim() || null,
+      },
+    });
+
+    emailWarning = !tracked.ok;
+    if (emailWarning) {
+      console.error('[contact] Resend error:', tracked.errorMessage);
+    }
+  } catch (emailErr) {
+    emailWarning = true;
+    console.error('[contact] unexpected email error:', emailErr);
   }
 
   // ── Persister le ticket en base (best-effort, non bloquant) ──
@@ -152,7 +159,11 @@ export async function POST(req: NextRequest) {
     console.error('[contact] DB persist error:', dbErr);
   }
 
-  return NextResponse.json({ message: 'Envoyé', ticketId });
+  if (!ticketId && emailWarning) {
+    return NextResponse.json({ message: 'Erreur lors de l’envoi au support.' }, { status: 500 });
+  }
+
+  return NextResponse.json({ message: 'Envoyé', ticketId, emailWarning });
 }
 
 /** Échappe les caractères HTML pour éviter les injections dans le corps du mail */

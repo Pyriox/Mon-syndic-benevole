@@ -71,13 +71,40 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
   }
 
+  const admin = createAdminClient();
+
+  if (dossier_id) {
+    const { data: dossier } = await admin
+      .from('document_dossiers')
+      .select('id')
+      .eq('id', dossier_id)
+      .eq('syndic_id', user.id)
+      .maybeSingle();
+
+    if (!dossier) {
+      return NextResponse.json({ error: 'Dossier invalide pour cette copropriété.' }, { status: 400 });
+    }
+  }
+
+  if (coproprietaire_id) {
+    const { data: coproprietaire } = await admin
+      .from('coproprietaires')
+      .select('id')
+      .eq('id', coproprietaire_id)
+      .eq('copropriete_id', copropriete_id)
+      .maybeSingle();
+
+    if (!coproprietaire) {
+      return NextResponse.json({ error: 'Copropriétaire invalide pour ce document.' }, { status: 400 });
+    }
+  }
+
   // 3b. Vérification de l'abonnement actif
   if (!isSubscribed((copro as { id: string; plan: string | null }).plan)) {
     return NextResponse.json({ error: 'Abonnement requis pour uploader des documents' }, { status: 403 });
   }
 
   // 4. Upload via le client admin (bypasse la RLS du storage)
-  const admin = createAdminClient();
   // Extension issue du MIME type (pas du nom de fichier) pour éviter le spoofing
   const MIME_TO_EXT: Record<string, string> = {
     'application/pdf': 'pdf',
@@ -123,7 +150,7 @@ export async function POST(req: NextRequest) {
     dossier_id: dossier_id || null,
     nom: nom.trim(),
     type,
-    url: publicUrl,
+    url: uploadData.path,
     taille: file.size,
     uploaded_by: user.id,
     ...(coproprietaire_id ? { coproprietaire_id } : {}),
@@ -131,6 +158,9 @@ export async function POST(req: NextRequest) {
 
   if (dbError) {
     console.error('[upload-document] DB error:', dbError.message);
+    await admin.storage.from('documents').remove([uploadData.path]).catch((cleanupError) => {
+      console.error('[upload-document] cleanup error:', cleanupError);
+    });
     return NextResponse.json({ error: "Erreur lors de l'enregistrement du document." }, { status: 500 });
   }
 

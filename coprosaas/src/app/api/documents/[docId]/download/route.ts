@@ -42,7 +42,7 @@ export async function GET(
   // 2. Récupération du document et vérification d'accès
   const { data: doc } = await supabase
     .from('documents')
-    .select('id, url, copropriete_id, nom')
+    .select('id, url, copropriete_id, nom, coproprietaire_id')
     .eq('id', docId)
     .maybeSingle();
 
@@ -57,7 +57,11 @@ export async function GET(
     admin.from('coproprietaires').select('id').eq('copropriete_id', doc.copropriete_id).eq('user_id', user.id).maybeSingle(),
   ]);
 
-  if (!asSyndic && !asOwner) {
+  const isAllowedOwner = Boolean(
+    asOwner && (!doc.coproprietaire_id || asOwner.id === doc.coproprietaire_id)
+  );
+
+  if (!asSyndic && !isAllowedOwner) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
   }
 
@@ -68,8 +72,11 @@ export async function GET(
     .createSignedUrl(storagePath, 3600);
 
   if (signError || !signed?.signedUrl) {
-    // Fallback : si le bucket est public, rediriger vers l'URL originale
-    return NextResponse.redirect(doc.url);
+    console.error('[documents/download] signed URL error:', signError?.message ?? 'missing signed URL');
+    return NextResponse.json(
+      { error: 'Impossible de générer un lien de téléchargement sécurisé.' },
+      { status: 500 },
+    );
   }
 
   return NextResponse.redirect(signed.signedUrl);

@@ -7,13 +7,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 
-import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
-import type { NatureIncident, StatutIncident } from '@/types';
+import type { NatureIncident } from '@/types';
 
 interface Copropriete { id: string; nom: string; }
 
@@ -34,7 +33,6 @@ const INITIAL_FORM = {
 
 export default function IncidentActions({ coproprietes, showLabel }: IncidentActionsProps) {
   const router = useRouter();
-  const supabase = createClient();
 
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -77,36 +75,36 @@ export default function IncidentActions({ coproprietes, showLabel }: IncidentAct
     setLoading(true);
     setError('');
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setError('Vous devez être connecté pour créer un suivi.');
+    try {
+      const res = await fetch('/api/incidents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          copropriete_id: coproprietes[0]?.id ?? '',
+          titre: form.titre.trim(),
+          description: form.description.trim(),
+          nature: form.nature,
+          priorite: form.priorite,
+          type_incident: form.type_incident,
+          localisation: form.localisation.trim() || null,
+          date_intervention_prevue: form.date_intervention_prevue || null,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({})) as { error?: string };
+      if (!res.ok) {
+        setError(json.error ?? 'Erreur lors de la création du suivi.');
+        setLoading(false);
+        return;
+      }
+
       setLoading(false);
-      return;
-    }
-
-    const { error: dbErr } = await supabase.from('incidents').insert({
-      copropriete_id: coproprietes[0]?.id ?? '',
-      titre: form.titre.trim(),
-      description: form.description.trim(),
-      nature: form.nature,
-      priorite: form.priorite,
-      type_incident: form.type_incident,
-      localisation: form.localisation.trim() || null,
-      date_intervention_prevue: form.date_intervention_prevue || null,
-      statut: 'ouvert' as StatutIncident,
-      declare_par: user.id,
-      date_declaration: new Date().toISOString(),
-    });
-
-    if (dbErr) {
-      setError(`Erreur : ${dbErr.message}`);
+      closeModal();
+      router.refresh();
+    } catch {
+      setError('Une erreur réseau est survenue. Réessayez.');
       setLoading(false);
-      return;
     }
-
-    setLoading(false);
-    closeModal();
-    router.refresh();
   };
 
   return (

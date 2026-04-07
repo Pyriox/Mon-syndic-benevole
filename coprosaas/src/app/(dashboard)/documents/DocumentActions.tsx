@@ -156,7 +156,7 @@ export default function DocumentActions({ coproprietes, defaultDossierId, showLa
                   {isDragging ? 'Déposez le fichier ici' : 'Glissez-déposez votre fichier'}
                 </p>
                 <p className="text-sm text-gray-400 mt-0.5">ou <span className="text-blue-600 underline underline-offset-2">cliquez pour parcourir</span></p>
-                <p className="text-xs text-gray-400 mt-2">PDF, Word, Excel, images — max 10 Mo</p>
+                <p className="text-xs text-gray-400 mt-2">PDF, Word, Excel, images — max 20 Mo</p>
               </div>
               <input ref={inputRef} type="file" className="hidden" onChange={handleInput}
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif" />

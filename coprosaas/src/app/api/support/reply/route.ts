@@ -85,24 +85,35 @@ export async function POST(req: NextRequest) {
   });
 
   const subject = buildSupportReplyEmailSubject(ticket.subject);
-  const result = await resend.emails.send({
-    from:    FROM,
-    to:      [ticket.user_email],
-    subject,
-    html,
-  });
+  let emailWarning = false;
 
-  const tracked = await trackResendSendResult(result, {
-    templateKey: 'support_reply',
-    recipientEmail: ticket.user_email,
-    subject,
-    legalEventType: 'support_reply',
-    legalReference: ticket.id,
-    payload: { ticketId: ticket.id, adminUserId: user.id },
-  });
+  try {
+    const result = await resend.emails.send({
+      from:    FROM,
+      to:      [ticket.user_email],
+      subject,
+      html,
+    });
 
-  if (!tracked.ok) {
-    console.error('[support/reply] Resend error:', tracked.errorMessage);
+    const tracked = await trackResendSendResult(result, {
+      templateKey: 'support_reply',
+      recipientEmail: ticket.user_email,
+      subject,
+      legalEventType: 'support_reply',
+      legalReference: ticket.id,
+      payload: { ticketId: ticket.id, adminUserId: user.id },
+    });
+
+    emailWarning = !tracked.ok;
+    if (emailWarning) {
+      console.error('[support/reply] Resend error:', tracked.errorMessage);
+    }
+  } catch (emailErr) {
+    emailWarning = true;
+    console.error('[support/reply] unexpected email error:', emailErr);
+  }
+
+  if (emailWarning) {
     // Le message est sauvegardé — on signale l'échec d'email à l'admin
     return NextResponse.json({ message: 'Réponse enregistrée (email non envoyé)', emailWarning: true });
   }
