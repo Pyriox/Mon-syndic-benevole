@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import SiteLogo from '@/components/ui/SiteLogo';
 import CtaLink from '@/components/ui/CtaLink';
-import { Menu, X } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { Loader2, Menu, X } from 'lucide-react';
 
 const navLinks = [
   { href: '/#fonctionnalites', label: 'Fonctionnalités' },
@@ -14,7 +16,47 @@ const navLinks = [
 ];
 
 export default function LandingNav() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [accountHref, setAccountHref] = useState('/login');
+  const [accountLabel, setAccountLabel] = useState('Connexion');
+  const [navPending, setNavPending] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let active = true;
+
+    void router.prefetch('/login');
+    void router.prefetch('/dashboard');
+    void router.prefetch('/register');
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      const isAuthenticated = !!data.session;
+      setAccountHref(isAuthenticated ? '/dashboard' : '/login');
+      setAccountLabel(isAuthenticated ? 'Tableau de bord' : 'Connexion');
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const isAuthenticated = !!session;
+      setAccountHref(isAuthenticated ? '/dashboard' : '/login');
+      setAccountLabel(isAuthenticated ? 'Tableau de bord' : 'Connexion');
+    });
+
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
+
+  const handleAccountNavigation = async () => {
+    setNavPending(true);
+    setOpen(false);
+
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    router.push(data.session ? '/dashboard' : accountHref);
+  };
 
   return (
     <nav
@@ -39,9 +81,16 @@ export default function LandingNav() {
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" className="text-sm text-white/70 hover:text-white transition-colors">
-            Connexion
-          </Link>
+          <button
+            type="button"
+            onClick={handleAccountNavigation}
+            disabled={navPending}
+            aria-busy={navPending}
+            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors disabled:opacity-70"
+          >
+            {navPending ? <Loader2 size={14} className="animate-spin" /> : null}
+            {navPending ? 'Ouverture...' : accountLabel}
+          </button>
           <CtaLink
             href="/register"
             ctaLocation="nav_header"
@@ -84,13 +133,16 @@ export default function LandingNav() {
               {label}
             </Link>
           ))}
-          <Link
-            href="/login"
-            onClick={() => setOpen(false)}
-            className="text-sm text-white/70 hover:text-white py-2.5 transition-colors"
+          <button
+            type="button"
+            onClick={handleAccountNavigation}
+            disabled={navPending}
+            aria-busy={navPending}
+            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white py-2.5 transition-colors disabled:opacity-70"
           >
-            Connexion
-          </Link>
+            {navPending ? <Loader2 size={14} className="animate-spin" /> : null}
+            {navPending ? 'Ouverture...' : accountLabel}
+          </button>
         </div>
       )}
     </nav>
