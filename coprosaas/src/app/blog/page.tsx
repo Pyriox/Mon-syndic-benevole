@@ -10,14 +10,14 @@ export const dynamic = 'force-static';
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: 'Blog syndic bénévole — Guides pratiques et logiciel de gestion | Mon Syndic Bénévole',
+  title: 'Conseils syndic bénévole et gestion de copropriété | Blog',
   description:
-    'Guides pratiques pour syndic bénévole : obligations légales, appels de fonds, fonds de travaux ALUR, logiciel de gestion copropriété. Tout ce que vous devez savoir pour gérer sans cabinet professionnel.',
+    'Guides pratiques sur la copropriété : appels de fonds, AG, fonds de travaux ALUR, obligations du syndic bénévole et gestion sans syndic professionnel.',
   robots: { index: true, follow: true },
   openGraph: {
-    title: 'Blog syndic bénévole — Mon Syndic Bénévole',
+    title: 'Conseils syndic bénévole et gestion de copropriété | Blog',
     description:
-      'Guides pratiques et conseils pour gérer votre copropriété en tant que syndic bénévole. Logiciel de gestion à partir de 25 €/mois.',
+      'Guides pratiques sur la copropriété : appels de fonds, AG, fonds de travaux ALUR, obligations du syndic bénévole et gestion sans syndic professionnel.',
     url: 'https://www.mon-syndic-benevole.fr/blog',
     siteName: 'Mon Syndic Bénévole',
     locale: 'fr_FR',

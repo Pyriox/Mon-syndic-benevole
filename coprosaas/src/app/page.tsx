@@ -19,10 +19,10 @@ import PublicFooter from '@/components/layout/PublicFooter';
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
   title: {
-    absolute: 'Logiciel de gestion de copropriété pour syndic bénévole | Mon Syndic Bénévole',
+    absolute: 'Logiciel syndic bénévole : appels de fonds, AG, documents | Mon Syndic Bénévole',
   },
   description:
-    'Logiciel syndic bénévole : gérez charges, appels de fonds, AG, documents et incidents depuis un seul outil. 14 jours gratuits, puis à partir de 300 €/an.',
+    'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 300 €/an.',
   keywords: [
     'syndic bénévole',
     'logiciel syndic bénévole',
@@ -34,9 +34,9 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: 'https://www.mon-syndic-benevole.fr' },
   openGraph: {
-    title: 'Logiciel de gestion de copropriété pour syndic bénévole | Mon Syndic Bénévole',
+    title: 'Logiciel syndic bénévole : appels de fonds, AG, documents | Mon Syndic Bénévole',
     description:
-      'Logiciel syndic bénévole : gérez charges, appels de fonds, AG, documents et incidents depuis un seul outil. 14 jours gratuits, puis à partir de 300 €/an.',
+      'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 300 €/an.',
     url: 'https://www.mon-syndic-benevole.fr',
     siteName: 'Mon Syndic Bénévole',
     locale: 'fr_FR',
@@ -52,9 +52,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Logiciel de gestion de copropriété pour syndic bénévole | Mon Syndic Bénévole',
+    title: 'Logiciel syndic bénévole : appels de fonds, AG, documents | Mon Syndic Bénévole',
     description:
-      'Logiciel syndic bénévole : charges, appels de fonds, AG et documents. 14 jours gratuits, puis 300 €/an.',
+      'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 300 €/an.',
     images: ['/opengraph-image'],
   },
 };

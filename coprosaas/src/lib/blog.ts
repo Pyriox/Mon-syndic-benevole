@@ -18,9 +18,9 @@ export interface BlogPost {
 export const posts: BlogPost[] = [
   {
     slug: 'gerer-copropriete-sans-syndic-professionnel',
-    title: 'Gérer une copropriété sans syndic professionnel : est-ce vraiment possible ?',
+    title: 'Gérer une copropriété sans syndic professionnel : guide pratique',
     description:
-      'Gérer une copropriété sans syndic professionnel : responsabilités légales, avantages et étapes pratiques. Le guide complet du syndic bénévole.',
+      'Peut-on gérer une copropriété sans syndic professionnel ? Étapes, obligations, avantages, limites et outils utiles pour un syndic bénévole.',
     // 143 chars — dans la limite Google
     publishedAt: '2026-03-19',
     readingTime: 8,
@@ -76,9 +76,9 @@ export const posts: BlogPost[] = [
   },
   {
     slug: 'appel-de-fonds-copropriete-calcul-repartition',
-    title: 'Appel de fonds copropriété : comment le calculer et le répartir ?',
+    title: 'Appel de fonds copropriété : calcul, répartition et modèle',
     description:
-      "Appel de fonds copropriété : calcul selon les tantièmes, répartition charges générales et spéciales, régularisation annuelle et gestion des impayés. Guide pratique syndic bénévole.",
+      'Comment calculer un appel de fonds en copropriété ? Méthode, répartition par tantièmes, obligations et conseils pratiques pour syndic bénévole.',
     // 152 chars
     publishedAt: '2026-03-19',
     readingTime: 9,
@@ -128,9 +128,9 @@ export const posts: BlogPost[] = [
   },
   {
     slug: 'fonds-de-travaux-alur-obligations-montant-gestion',
-    title: 'Fonds de travaux ALUR : obligations, montant et gestion pratique',
+    title: 'Fonds de travaux ALUR : obligations, montant et gestion',
     description:
-      "Fonds de travaux ALUR obligatoire depuis 2017 : montant minimum 5 %, vote en AG, compte séparé, utilisation et cession de lot. Guide complet pour syndic bénévole.",
+      'Tout comprendre sur le fonds de travaux ALUR : montant minimum, copropriétés concernées, règles de gestion et impact pour un syndic bénévole.',
     // 150 chars
     publishedAt: '2026-03-19',
     readingTime: 8,
@@ -227,9 +227,9 @@ export const posts: BlogPost[] = [
   },
   {
     slug: 'obligations-syndic-benevole',
-    title: 'Obligations du syndic bénévole : la checklist légale complète',
+    title: 'Obligations du syndic bénévole : ce qu’il faut savoir',
     description:
-      'Obligations du syndic bénévole : administratives, financières, opérationnelles et d\'information. Checklist complète avec sources légales et risques en cas de manquement.',
+      'Quelles sont les obligations légales du syndic bénévole ? AG, comptabilité, documents, assurance, fonds travaux et responsabilités à connaître.',
     publishedAt: '2026-03-21',
     readingTime: 9,
     category: 'Guide pratique – Obligations légales',
@@ -273,9 +273,9 @@ export const posts: BlogPost[] = [
   },
   {
     slug: 'logiciel-syndic-benevole',
-    title: 'Logiciel syndic bénévole : fonctionnalités indispensables en 2026',
+    title: 'Logiciel syndic bénévole : comment choisir le bon outil ?',
     description:
-      'Logiciel syndic bénévole : les 6 fonctionnalités indispensables, pourquoi Excel ne suffit plus et comment choisir le bon outil pour gérer votre copropriété en 2026.',
+      'Quel logiciel choisir pour un syndic bénévole ? Comparez les fonctions essentielles : appels de fonds, AG, documents, charges et suivi des incidents.',
     publishedAt: '2026-03-21',
     readingTime: 9,
     category: 'Guide pratique – Outils & Logiciels',
