@@ -1,13 +1,10 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
 import CoproSettingsPanel from '../CoproSettingsPanel';
 import { formatDate } from '@/lib/utils';
-import { getLotLimit } from '@/lib/subscription';
-import { ArrowLeft, Building2, Hash, MapPin, Settings2 } from 'lucide-react';
+import { Building2, Hash, Settings2 } from 'lucide-react';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -62,37 +59,18 @@ export default async function CoproprieteParametragePage({ params }: Props) {
   const coproMap = Object.fromEntries((coproprietaires ?? []).map((c) => [c.id, c]));
 
   const lotCount = lots?.length ?? 0;
-  const lotLimit = getLotLimit(copro.plan, copro.plan_id);
-  const canAddLot = lotCount < lotLimit;
-  const batimentCount = new Set(
-    (lots ?? [])
-      .map((lot) => lot.batiment?.trim())
-      .filter((value): value is string => Boolean(value))
-  ).size;
+  const assignedLotsCount = (lots ?? []).filter((lot) => Object.keys(lot.tantiemes_groupes ?? {}).length > 0).length;
   const specialKeyCount = new Set(
     (lots ?? []).flatMap((lot) => Object.keys(lot.tantiemes_groupes ?? {}))
   ).size;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Link
-            href={`/coproprietes/${copro.id}`}
-            className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-          >
-            <ArrowLeft size={14} /> Retour à la vue d&apos;ensemble
-          </Link>
-          <h2 className="mt-2 text-2xl font-bold text-gray-900">Paramétrage de {copro.nom}</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Regroupez ici la fiche copropriété, les lots et les clés de répartition spéciales dans un écran dédié.
-          </p>
-        </div>
-        <Link href={`/coproprietes/${copro.id}`}>
-          <Button variant="secondary">
-            <ArrowLeft size={14} /> Vue d&apos;ensemble
-          </Button>
-        </Link>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Paramétrage de {copro.nom}</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Regroupez ici la fiche copropriété et les clés de répartition spéciales dans un écran dédié.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -107,11 +85,11 @@ export default async function CoproprieteParametragePage({ params }: Props) {
         </Card>
         <Card padding="sm" className="flex items-center gap-3">
           <div className="rounded-xl bg-indigo-50 p-2.5">
-            <MapPin size={18} className="text-indigo-600" />
+            <Hash size={18} className="text-indigo-600" />
           </div>
           <div>
-            <p className="text-xs text-gray-500">Bâtiments / entrées</p>
-            <p className="text-lg font-bold text-gray-900">{batimentCount}</p>
+            <p className="text-xs text-gray-500">Lots affectés</p>
+            <p className="text-lg font-bold text-gray-900">{assignedLotsCount}</p>
           </div>
         </Card>
         <Card padding="sm" className="flex items-center gap-3">
@@ -143,8 +121,6 @@ export default async function CoproprieteParametragePage({ params }: Props) {
         copropriete={copro}
         initialLots={lots ?? []}
         coproMap={coproMap}
-        canAddLot={canAddLot}
-        lotLimit={lotLimit === Infinity ? undefined : lotLimit}
       />
     </div>
   );

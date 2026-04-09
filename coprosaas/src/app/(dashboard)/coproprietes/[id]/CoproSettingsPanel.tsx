@@ -91,14 +91,10 @@ export default function CoproSettingsPanel({
   copropriete,
   initialLots,
   coproMap,
-  canAddLot,
-  lotLimit,
 }: {
   copropriete: CoproprieteSettings;
   initialLots: LotSettingRow[];
   coproMap: Record<string, CoproprietaireSummary>;
-  canAddLot: boolean;
-  lotLimit?: number;
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -266,16 +262,10 @@ export default function CoproSettingsPanel({
           <div>
             <h3 className="text-lg font-bold text-gray-900">Clés de répartition et affectation des lots</h3>
             <p className="mt-1 text-sm text-gray-600">
-              1. Créez vos clés spéciales. 2. Renseignez une valeur pour chaque lot concerné. Une cellule remplie signifie que le lot est attribué à cette clé.
+              Créez vos clés spéciales puis renseignez une valeur uniquement pour les lots concernés. Si la case est vide, le lot n&apos;est pas affecté à cette clé.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <LotActions
-              coproprieteId={copropriete.id}
-              showLabel
-              canAdd={canAddLot}
-              lotLimit={lotLimit}
-            />
             <Button type="button" onClick={handleSave} loading={saving}>
               <Save size={14} /> Enregistrer le paramétrage
             </Button>
@@ -286,8 +276,7 @@ export default function CoproSettingsPanel({
           <div className="flex items-start gap-2">
             <Info size={14} className="mt-0.5 shrink-0" />
             <p>
-              <strong>Bâtiment / entrée</strong> indique à quel ensemble physique le lot appartient.
-              Les colonnes à droite correspondent aux <strong>clés de répartition déjà créées</strong>. Saisir une base dans une cellule affecte automatiquement le lot à cette clé (ex. <em>Bâtiment B</em>, <em>Ascenseur C</em>, <em>Eau chaude</em>).
+              Les colonnes ci-dessous correspondent aux <strong>clés de répartition déjà créées</strong>. Saisir une base dans une cellule affecte automatiquement le lot à cette clé ; laisser vide signifie qu&apos;il n&apos;est pas concerné (ex. <em>Bâtiment B</em>, <em>Ascenseur C</em>, <em>Eau chaude</em>).
             </p>
           </div>
         </div>
@@ -331,7 +320,7 @@ export default function CoproSettingsPanel({
 
         {lots.length === 0 ? (
           <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
-            Ajoutez d&apos;abord vos lots pour commencer le paramétrage des clés de répartition.
+            Ajoutez d&apos;abord vos lots depuis la vue d&apos;ensemble de la copropriété, puis revenez ici pour définir les clés de répartition.
           </div>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
@@ -339,7 +328,6 @@ export default function CoproSettingsPanel({
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
                 <tr>
                   <th className="px-3 py-3 text-left font-semibold">Lot</th>
-                  <th className="px-3 py-3 text-left font-semibold">Bâtiment / entrée</th>
                   <th className="px-3 py-3 text-right font-semibold">Charges générales</th>
                   {keyNames.map((key) => (
                     <th key={key} className="px-3 py-3 text-right font-semibold min-w-[140px]">
@@ -374,15 +362,6 @@ export default function CoproSettingsPanel({
                             <p className="mt-1 text-xs text-gray-500">{ownerName}</p>
                           )}
                         </div>
-                      </td>
-                      <td className="px-3 py-3 min-w-[180px]">
-                        <input
-                          type="text"
-                          value={lot.batiment}
-                          onChange={(e) => handleLotChange(lot.id, 'batiment', e.target.value)}
-                          placeholder="Bâtiment A"
-                          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
-                        />
                       </td>
                       <td className="px-3 py-3 min-w-[130px]">
                         <input
@@ -439,7 +418,6 @@ export default function CoproSettingsPanel({
               <tfoot className="bg-slate-50 text-sm font-semibold text-slate-700">
                 <tr>
                   <td className="px-3 py-3">Base totale</td>
-                  <td className="px-3 py-3 text-gray-500">—</td>
                   <td className="px-3 py-3 text-right">{formatBase(generalTotal)}</td>
                   {keyNames.map((key) => (
                     <td key={`total-${key}`} className="px-3 py-3 text-right">{formatBase(totalsByKey[key] ?? 0)}</td>

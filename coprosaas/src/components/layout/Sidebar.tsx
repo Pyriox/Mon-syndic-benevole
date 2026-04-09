@@ -65,13 +65,13 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
           matchPrefix: selectedCoproId ? `/coproprietes/${selectedCoproId}` : '/coproprietes',
           excludePrefix: selectedCoproId ? `/coproprietes/${selectedCoproId}/parametrage` : undefined,
         },
+        { href: '/coproprietaires', label: 'Copropriétaires', icon: Users },
         {
           href: coproSettingsHref,
           label: 'Paramétrage',
           icon: Settings2,
           matchPrefix: selectedCoproId ? `/coproprietes/${selectedCoproId}/parametrage` : '/coproprietes',
         },
-        { href: '/coproprietaires', label: 'Copropriétaires', icon: Users },
       ],
     },
     {

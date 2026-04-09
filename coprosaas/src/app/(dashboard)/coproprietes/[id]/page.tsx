@@ -14,7 +14,6 @@ import TransfertSyndic from './TransfertSyndic';
 import { formatDate } from '@/lib/utils';
 import { getLotLimit } from '@/lib/subscription';
 import {
-  ArrowRight,
   Building2,
   CalendarDays,
   Hash,
@@ -152,47 +151,25 @@ export default async function CopropriétéDetailPage({ params }: Props) {
         </Card>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-        <Card>
-          <h3 className="text-lg font-bold text-gray-900">Vue d&apos;ensemble</h3>
-          <p className="mt-1 text-sm text-gray-600">
-            Cette page reste dédiée au suivi global et aux lots. Le paramétrage détaillé des clés de répartition a été déplacé sur une page séparée pour alléger l&apos;écran.
-          </p>
+      <Card>
+        <h3 className="text-lg font-bold text-gray-900">Vue d&apos;ensemble</h3>
+        <p className="mt-1 text-sm text-gray-600">
+          Cette page reste dédiée au suivi global et aux lots. Le paramétrage détaillé des clés de répartition est accessible via le bouton <strong>Paramétrage</strong> en haut de page et dans le menu.
+        </p>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-700">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Adresse</p>
-              <p className="mt-1">{copro.adresse}</p>
-              <p>{copro.code_postal} {copro.ville}</p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-700">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Répartition</p>
-              <p className="mt-1">{specialKeyCount > 0 ? `${specialKeyCount} clé(s) spéciale(s) configurée(s)` : 'Aucune clé spéciale pour le moment'}</p>
-              <p>{batimentCount > 0 ? `${batimentCount} bâtiment(s) / entrée(s) distinct(s)` : 'Aucun bâtiment ou entrée renseigné'}</p>
-            </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-700">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Adresse</p>
+            <p className="mt-1">{copro.adresse}</p>
+            <p>{copro.code_postal} {copro.ville}</p>
           </div>
-        </Card>
-
-        <Card>
-          <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-blue-50 p-2.5">
-              <Settings2 size={18} className="text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Paramétrage séparé</h3>
-              <p className="mt-1 text-sm text-gray-600">
-                Modifiez ici vos clés de répartition, la fiche copropriété et les bases par lot sur une page dédiée, plus lisible au quotidien.
-              </p>
-            </div>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-700">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Répartition</p>
+            <p className="mt-1">{specialKeyCount > 0 ? `${specialKeyCount} clé(s) spéciale(s) configurée(s)` : 'Aucune clé spéciale pour le moment'}</p>
+            <p>{batimentCount > 0 ? `${batimentCount} bâtiment(s) / entrée(s) distinct(s)` : 'Aucun bâtiment ou entrée renseigné'}</p>
           </div>
-
-          <Link href={`/coproprietes/${copro.id}/parametrage`} className="mt-4 inline-block">
-            <Button variant="secondary">
-              Ouvrir le paramétrage <ArrowRight size={14} />
-            </Button>
-          </Link>
-        </Card>
-      </div>
+        </div>
+      </Card>
 
       <div className="space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
