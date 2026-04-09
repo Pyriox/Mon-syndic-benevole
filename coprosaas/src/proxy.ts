@@ -32,10 +32,9 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Lecture de session cote proxy (plus rapide que getUser pour le routage)
-  // La validation stricte de l'utilisateur reste faite cote serveur dans le layout protege.
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  // Validation auth côté proxy : `getUser()` revalide la session et rafraîchit les cookies
+  // si nécessaire, ce qui évite les boucles intermittentes entre /login et /dashboard.
+  const { data: { user } } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
 
@@ -85,15 +84,9 @@ export async function proxy(request: NextRequest) {
   const isAuthEntryPage = pathname === '/login' || (pathname === '/register' && !isInvitationRegister);
 
   if (isAuthEntryPage && user) {
-    // `getSession()` peut refléter un cookie périmé. On revalide donc l'utilisateur
-    // avant de le renvoyer vers /dashboard pour éviter une boucle /login <-> /dashboard.
-    const { data: { user: verifiedUser }, error: verifiedUserError } = await supabase.auth.getUser();
-
-    if (verifiedUser && !verifiedUserError) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
-    }
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;

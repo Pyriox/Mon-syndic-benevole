@@ -81,4 +81,20 @@ describe('proxy auth flow', () => {
 
     expect(response.headers.get('location')).toBe('https://example.com/dashboard');
   });
+
+  it('laisse /dashboard accessible quand getUser retrouve une session à rafraîchir', async () => {
+    getSessionMock.mockResolvedValue({ data: { session: null } });
+    getUserMock.mockResolvedValue({
+      data: {
+        user: { id: 'user-2' },
+      },
+      error: null,
+    });
+
+    const { proxy } = await import('./proxy');
+    const response = await proxy(buildRequest('https://example.com/dashboard') as never);
+
+    expect(response.headers.get('location')).toBeNull();
+    expect(getUserMock).toHaveBeenCalledTimes(1);
+  });
 });
