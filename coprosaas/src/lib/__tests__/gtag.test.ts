@@ -103,7 +103,26 @@ describe('gtag helpers', () => {
     expect(window.dataLayer.filter((event) => event.event === 'virtual_pageview')).toHaveLength(1);
   });
 
-  it('sanitise les URLs d’auth avant envoi analytics sans perdre le type de flux', async () => {
+  it('n’envoie pas de pageview générique pour les routes internes du SaaS', async () => {
+    localStorage.setItem(
+      'cookie_consent',
+      JSON.stringify({
+        value: 'accepted',
+        timestamp: Date.now(),
+        preferences: { analytics: true, ads: true },
+      })
+    );
+
+    const { pageview } = await import('../gtag');
+
+    pageview('/dashboard');
+    pageview('/documents');
+    pageview('/login');
+
+    expect(window.dataLayer.filter((event) => event.event === 'virtual_pageview')).toHaveLength(0);
+  });
+
+  it('ignore les URLs d’auth sensibles dans les pageviews génériques', async () => {
     localStorage.setItem(
       'cookie_consent',
       JSON.stringify({
@@ -118,12 +137,7 @@ describe('gtag helpers', () => {
     pageview('/auth/confirm?token_hash=secret123&code=authcode&type=recovery&next=https://evil.example');
 
     const pageViewEvent = window.dataLayer.find((event) => event.event === 'virtual_pageview');
-    expect(pageViewEvent).toBeDefined();
-    expect(pageViewEvent).toEqual(
-      expect.objectContaining({
-        page_location: 'http://localhost:3000/auth/confirm?type=recovery',
-      })
-    );
+    expect(pageViewEvent).toBeUndefined();
   });
 
   it('autorise une nouvelle pageview sur la même URL après changement de consentement', async () => {

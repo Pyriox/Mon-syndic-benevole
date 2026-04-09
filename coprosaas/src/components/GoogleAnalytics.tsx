@@ -6,7 +6,7 @@
 
 import { useEffect, Suspense, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { pageview } from '@/lib/gtag';
+import { pageview, shouldTrackPageviewPath } from '@/lib/gtag';
 
 function TrackPageView() {
   const pathname = usePathname();
@@ -14,10 +14,8 @@ function TrackPageView() {
   const lastTrackedUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Ne pas tracker les pages admin
-    if (pathname.startsWith('/admin')) return;
-
     const url = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
+    if (!shouldTrackPageviewPath(url)) return;
     if (url === lastTrackedUrlRef.current) return;
 
     lastTrackedUrlRef.current = url;

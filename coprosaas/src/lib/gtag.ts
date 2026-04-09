@@ -133,6 +133,36 @@ function sanitizeUrlForAnalytics(url: string) {
 }
 
 const PAGEVIEW_DEDUPE_WINDOW_MS = 1500;
+const INTERNAL_PAGEVIEW_PREFIXES = [
+  '/admin',
+  '/dashboard',
+  '/coproprietes',
+  '/coproprietaires',
+  '/depenses',
+  '/appels-de-fonds',
+  '/documents',
+  '/assemblees',
+  '/incidents',
+  '/lots',
+  '/profil',
+  '/abonnement',
+  '/aide',
+  '/login',
+  '/register',
+  '/reset-password',
+  '/auth',
+] as const;
+
+export function shouldTrackPageviewPath(url: string): boolean {
+  try {
+    const parsed = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'https://www.mon-syndic-benevole.fr');
+    const pathname = parsed.pathname;
+
+    return !INTERNAL_PAGEVIEW_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  } catch {
+    return false;
+  }
+}
 
 function isDuplicatePageview(key: string) {
   if (typeof window === 'undefined') return false;
@@ -209,6 +239,8 @@ export function pageview(url: string) {
   if (typeof window === 'undefined') return;
 
   const sanitizedUrl = sanitizeUrlForAnalytics(url);
+  if (!shouldTrackPageviewPath(sanitizedUrl)) return;
+
   const payload = {
     page_location: window.location.origin + sanitizedUrl,
     page_title: document.title.slice(0, 120),

@@ -23,6 +23,7 @@ export default function AdminSidebar({ badges = {} }: { badges?: Record<string, 
       {NAV.map(({ href, label, icon: Icon, soon }) => {
         const active = pathname === href || pathname.startsWith(href + '/');
         const badge = badges[href] ?? 0;
+        const needsAttention = href === '/admin/support' && badge > 0;
         return (
           <Link
             key={href}
@@ -31,13 +32,15 @@ export default function AdminSidebar({ badges = {} }: { badges?: Record<string, 
             className={`shrink-0 min-w-[144px] md:min-w-0 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               active
                 ? 'bg-white shadow-sm text-gray-900 border border-gray-200'
-                : 'text-gray-500 hover:text-gray-800 hover:bg-white/70'
+                : needsAttention
+                  ? 'bg-red-50 text-red-700 border border-red-200 shadow-sm hover:bg-red-100'
+                  : 'text-gray-500 hover:text-gray-800 hover:bg-white/70'
             } ${soon ? 'opacity-50 pointer-events-none' : ''}`}
           >
-            <Icon size={15} className={active ? 'text-indigo-600' : 'text-gray-400'} />
+            <Icon size={15} className={active ? 'text-indigo-600' : needsAttention ? 'text-red-600' : 'text-gray-400'} />
             <span className="flex-1">{label}</span>
             {badge > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+              <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-white text-[10px] font-bold leading-none ${needsAttention ? 'bg-red-600 ring-4 ring-red-100' : 'bg-red-500'}`}>
                 {badge > 99 ? '99+' : badge}
               </span>
             )}

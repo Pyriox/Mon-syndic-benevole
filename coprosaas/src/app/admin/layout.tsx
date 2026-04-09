@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isAdminUser } from '@/lib/admin-config';
 import { createAdminClient } from '@/lib/supabase/admin';
 import Link from 'next/link';
+import { AlertCircle } from 'lucide-react';
 import SiteLogo from '@/components/ui/SiteLogo';
 import AdminLogout from './AdminLogout';
 import AdminSidebar from './AdminSidebar';
@@ -19,10 +20,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const admin = createAdminClient();
-  const { count: nbTicketsOuverts } = await admin
-    .from('support_tickets')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'ouvert');
+  const [{ count: nbTicketsOuverts }, { count: nbTicketsEnCours }] = await Promise.all([
+    admin
+      .from('support_tickets')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'ouvert'),
+    admin
+      .from('support_tickets')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'en_cours'),
+  ]);
+
+  const pendingSupportCount = (nbTicketsOuverts ?? 0) + (nbTicketsEnCours ?? 0);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -47,11 +56,29 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <AdminLogout />
           </div>
         </div>
+        {pendingSupportCount > 0 && (
+          <div className="border-t border-white/10 bg-gradient-to-r from-red-500/15 via-amber-500/10 to-transparent">
+            <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-2.5">
+              <Link
+                href={`/admin/support?status=${(nbTicketsOuverts ?? 0) > 0 ? 'ouvert' : 'en_cours'}`}
+                className="inline-flex flex-wrap items-center gap-2 rounded-full border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-50 hover:bg-red-500/15"
+              >
+                <AlertCircle size={14} className="text-red-200" />
+                {pendingSupportCount} ticket{pendingSupportCount > 1 ? 's' : ''} support à traiter
+                {(nbTicketsOuverts ?? 0) > 0 && (
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-red-100">
+                    {nbTicketsOuverts} nouveau{(nbTicketsOuverts ?? 0) > 1 ? 'x' : ''}
+                  </span>
+                )}
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Corps : sidebar + contenu */}
       <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col md:flex-row gap-4 md:gap-6 items-start">
-        <AdminSidebar badges={{ '/admin/support': nbTicketsOuverts ?? 0 }} />
+        <AdminSidebar badges={{ '/admin/support': pendingSupportCount }} />
         <main className="flex-1 min-w-0 w-full">
           {children}
         </main>
