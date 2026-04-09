@@ -82,10 +82,18 @@ export async function proxy(request: NextRequest) {
   // Exception : on laisse passer /register?token=... pour permettre l'acceptation
   // d'une invitation copropriétaire par un compte déjà existant.
   const isInvitationRegister = pathname === '/register' && request.nextUrl.searchParams.has('token');
-  if ((pathname === '/login' || (pathname === '/register' && !isInvitationRegister)) && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
+  const isAuthEntryPage = pathname === '/login' || (pathname === '/register' && !isInvitationRegister);
+
+  if (isAuthEntryPage && user) {
+    // `getSession()` peut refléter un cookie périmé. On revalide donc l'utilisateur
+    // avant de le renvoyer vers /dashboard pour éviter une boucle /login <-> /dashboard.
+    const { data: { user: verifiedUser }, error: verifiedUserError } = await supabase.auth.getUser();
+
+    if (verifiedUser && !verifiedUserError) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;
