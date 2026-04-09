@@ -138,7 +138,7 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
 
       const { data: lots } = await supabase
         .from('lots')
-        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition')
+        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes')
         .eq('copropriete_id', ag.copropriete_id);
 
       setAvailableRepartitionGroups(collectAvailableRepartitionGroups((lots ?? []).map((lot) => ({
@@ -410,7 +410,7 @@ export function ResolutionEdit({
 
       const { data: lots } = await supabase
         .from('lots')
-        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition')
+        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes')
         .eq('copropriete_id', ag.copropriete_id);
 
       setAvailableRepartitionGroups(collectAvailableRepartitionGroups((lots ?? []).map((lot) => ({

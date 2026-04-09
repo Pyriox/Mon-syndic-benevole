@@ -170,7 +170,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
       if (!appel.copropriete_id) { setRegenMsg('Copropriété introuvable.'); return; }
       const { data: lots } = await supabase
         .from('lots')
-        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition')
+        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes')
         .eq('copropriete_id', appel.copropriete_id);
 
       const lotsWithCopro = (lots ?? []).filter((l) => l.coproprietaire_id != null);

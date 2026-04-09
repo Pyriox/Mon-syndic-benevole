@@ -18,6 +18,7 @@ import {
   filterLotsByRepartitionScope,
   formatEuros,
   formatRepartitionScope,
+  getLotTantiemesForRepartitionScope,
   LABELS_CATEGORIE,
 } from '@/lib/utils';
 import { Plus, Calculator, Upload, Pencil, Trash2, Paperclip, X, ExternalLink } from 'lucide-react';
@@ -68,6 +69,7 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
     coproprietaire_id: string | null;
     batiment?: string | null;
     groupes_repartition?: string[] | null;
+    tantiemes_groupes?: Record<string, number> | null;
     coproprietaire?: { id: string; nom: string; prenom: string };
   }[]>([]);
 
@@ -89,7 +91,7 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
     const fetchLots = async () => {
       const { data } = await supabase
         .from('lots')
-        .select('id, numero, tantiemes, batiment, groupes_repartition, coproprietaires(id, nom, prenom)')
+        .select('id, numero, tantiemes, batiment, groupes_repartition, tantiemes_groupes, coproprietaires(id, nom, prenom)')
         .eq('copropriete_id', formData.copropriete_id);
 
       // Aplatir la relation (Supabase renvoie un tableau pour coproprietaires)
@@ -118,20 +120,24 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
   const availableRepartitionGroups = useMemo(() => collectAvailableRepartitionGroups(lots), [lots]);
 
   // Calcul de la répartition à afficher à l'utilisateur
-  const lotsRepartition = useMemo(() => {
-    const eligibleIds = new Set(
-      filterLotsByRepartitionScope(lots, formData.repartition_type, formData.repartition_cible)
-        .map((lot) => lot.id)
-    );
-
-    return lots.filter((lot) => eligibleIds.has(lot.id));
-  }, [formData.repartition_cible, formData.repartition_type, lots]);
-  const totalTantiemes = lotsRepartition.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+  const lotsRepartition = useMemo(
+    () => filterLotsByRepartitionScope(lots, formData.repartition_type, formData.repartition_cible),
+    [formData.repartition_cible, formData.repartition_type, lots],
+  );
+  const lotsRepartitionPonderee = useMemo(
+    () => lotsRepartition.map((lot) => ({
+      lot,
+      tantiemes: getLotTantiemesForRepartitionScope(lot, formData.repartition_type, formData.repartition_cible),
+    })),
+    [formData.repartition_cible, formData.repartition_type, lotsRepartition],
+  );
+  const totalTantiemes = lotsRepartitionPonderee.reduce((sum, row) => sum + row.tantiemes, 0);
   const montantNum = parseFloat(formData.montant) || 0;
 
-  const repartition = lotsRepartition.map((lot) => ({
+  const repartition = lotsRepartitionPonderee.map(({ lot, tantiemes }) => ({
     lot,
-    montant: calculerPart(montantNum, lot.tantiemes ?? 0, totalTantiemes),
+    tantiemes,
+    montant: calculerPart(montantNum, tantiemes, totalTantiemes),
   }));
 
   const handleSubmit = async (e: React.FormEvent) => {

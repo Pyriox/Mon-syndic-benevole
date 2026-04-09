@@ -52,7 +52,7 @@ export async function POST(
   // Lots avec copropriétaires assignés
   const { data: lots } = await supabase
     .from('lots')
-    .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition')
+    .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes')
     .eq('copropriete_id', appel.copropriete_id)
     .not('coproprietaire_id', 'is', null);
 

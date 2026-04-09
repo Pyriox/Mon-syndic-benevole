@@ -107,6 +107,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     coproprietaire_id: string | null;
     batiment?: string | null;
     groupes_repartition?: string[] | null;
+    tantiemes_groupes?: Record<string, number> | null;
     coproprietaire?: { id: string; nom: string; prenom: string };
   }[]>([]);
 
@@ -148,7 +149,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     if (!coproprieteId) return;
     supabase
       .from('lots')
-      .select('id, numero, tantiemes, batiment, groupes_repartition, coproprietaires(id, nom, prenom)')
+      .select('id, numero, tantiemes, batiment, groupes_repartition, tantiemes_groupes, coproprietaires(id, nom, prenom)')
       .eq('copropriete_id', coproprieteId)
       .then(({ data }) => {
         setLots((data ?? []).map((lot) => {

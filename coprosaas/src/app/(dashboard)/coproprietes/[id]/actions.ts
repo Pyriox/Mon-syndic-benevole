@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { invalidateLayoutCache, invalidateLotsCache } from '@/lib/cached-queries';
+import { sanitizeTantiemesGroupesMap } from '@/lib/utils';
 
 // ---- Ajouter ou modifier un lot ----
 export async function saveLot(data: {
@@ -14,6 +15,7 @@ export async function saveLot(data: {
   tantiemes: number;
   batiment?: string;
   groupesRepartition?: string[];
+  tantiemesGroupes?: Record<string, number>;
 }): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -29,11 +31,13 @@ export async function saveLot(data: {
   if (!copro) return { error: 'Accès non autorisé' };
 
   const normalizedBatiment = data.batiment?.trim() || null;
-  const normalizedGroups = Array.from(new Set(
-    (data.groupesRepartition ?? [])
+  const normalizedKeyTantiemes = sanitizeTantiemesGroupesMap(data.tantiemesGroupes ?? {});
+  const normalizedGroups = Array.from(new Set([
+    ...(data.groupesRepartition ?? [])
       .map((group) => group.trim())
-      .filter(Boolean)
-  ));
+      .filter(Boolean),
+    ...Object.keys(normalizedKeyTantiemes).filter((group) => group !== normalizedBatiment),
+  ]));
 
   if (data.lotId) {
     const { error } = await supabase
@@ -44,6 +48,7 @@ export async function saveLot(data: {
         tantiemes: data.tantiemes,
         batiment: normalizedBatiment,
         groupes_repartition: normalizedGroups,
+        tantiemes_groupes: normalizedKeyTantiemes,
       })
       .eq('id', data.lotId);
     if (error) return { error: error.message };
@@ -57,6 +62,7 @@ export async function saveLot(data: {
         tantiemes: data.tantiemes,
         batiment: normalizedBatiment,
         groupes_repartition: normalizedGroups,
+        tantiemes_groupes: normalizedKeyTantiemes,
       });
     if (error) return { error: error.message };
   }

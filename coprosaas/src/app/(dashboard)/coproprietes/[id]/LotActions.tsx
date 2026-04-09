@@ -13,6 +13,8 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
+import Textarea from '@/components/ui/Textarea';
+import { parseTantiemesGroupesInput, stringifyTantiemesGroupesInput } from '@/lib/utils';
 import { Plus, Pencil, Lock, Trash2, AlertTriangle } from 'lucide-react';
 
 const TYPE_OPTIONS = [
@@ -35,6 +37,7 @@ interface LotActionsProps {
     tantiemes: number;
     batiment?: string | null;
     groupes_repartition?: string[] | null;
+    tantiemes_groupes?: Record<string, number> | null;
   };
   // Limite de lots : undefined = pas de restriction (mode édition)
   canAdd?: boolean;
@@ -55,9 +58,10 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
     tantiemes: lot?.tantiemes?.toString() ?? '',
     batiment: lot?.batiment ?? '',
     groupesRepartition: (lot?.groupes_repartition ?? []).join(', '),
+    tantiemesGroupes: stringifyTantiemesGroupesInput(lot?.tantiemes_groupes),
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -65,6 +69,14 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    const tantiemesGroupes = parseTantiemesGroupesInput(formData.tantiemesGroupes);
+
+    if (formData.tantiemesGroupes.trim() && Object.keys(tantiemesGroupes).length === 0) {
+      setError('Format attendu pour les clés spéciales : Bâtiment B: 117');
+      setLoading(false);
+      return;
+    }
 
     const result = await saveLot({
       coproprieteId,
@@ -77,6 +89,7 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
         .split(',')
         .map((group) => group.trim())
         .filter(Boolean),
+      tantiemesGroupes,
     });
 
     if (result.error) { setError('Erreur : ' + result.error); setLoading(false); return; }
@@ -90,6 +103,7 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
         tantiemes: '',
         batiment: '',
         groupesRepartition: '',
+        tantiemesGroupes: '',
       });
     }
     router.refresh();
@@ -103,6 +117,7 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
       tantiemes: lot?.tantiemes?.toString() ?? '',
       batiment: lot?.batiment ?? '',
       groupesRepartition: (lot?.groupes_repartition ?? []).join(', '),
+      tantiemesGroupes: stringifyTantiemesGroupesInput(lot?.tantiemes_groupes),
     });
     setError('');
     setLoading(false);
@@ -175,11 +190,21 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
             value={formData.groupesRepartition}
             onChange={handleChange}
             placeholder="Ascenseur, Eau bâtiment B"
-            hint="Séparez les groupes par des virgules pour créer des clés spéciales simples"
+            hint="Séparez les groupes par des virgules pour indiquer quels lots sont concernés"
+          />
+
+          <Textarea
+            label="Clés spéciales indépendantes (optionnel)"
+            name="tantiemesGroupes"
+            value={formData.tantiemesGroupes}
+            onChange={handleChange}
+            rows={3}
+            placeholder={"Bâtiment B: 117\nAscenseur B: 45"}
+            hint="Une ligne par clé : Nom du groupe : tantièmes spéciaux. Laissez vide pour réutiliser les tantièmes généraux."
           />
 
           <Input
-            label="Tantièmes"
+            label="Tantièmes généraux"
             name="tantiemes"
             type="number"
             min="0"

@@ -213,6 +213,7 @@ export interface RepartitionLotLike {
   coproprietaire_id: string | null;
   batiment?: string | null;
   groupes_repartition?: string[] | null;
+  tantiemes_groupes?: Record<string, number> | null;
 }
 
 export interface RepartitionPosteInput {
@@ -230,6 +231,77 @@ function normalizeRepartitionLabel(value: string | null | undefined): string | n
   if (!value) return null;
   const normalized = value.trim().replace(/\s+/g, ' ');
   return normalized || null;
+}
+
+export type TantiemesGroupesMap = Record<string, number>;
+
+export function sanitizeTantiemesGroupesMap(value: unknown): TantiemesGroupesMap {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .map(([rawKey, rawValue]) => {
+      const key = normalizeRepartitionLabel(rawKey);
+      const amount = typeof rawValue === 'number'
+        ? rawValue
+        : Number.parseFloat(String(rawValue ?? '').replace(',', '.'));
+
+      if (!key || !Number.isFinite(amount) || amount <= 0) return null;
+      return [key, Math.round(amount * 100) / 100] as const;
+    })
+    .filter(Boolean) as Array<readonly [string, number]>;
+
+  return Object.fromEntries(entries);
+}
+
+export function parseTantiemesGroupesInput(input: string | null | undefined): TantiemesGroupesMap {
+  if (!input) return {};
+
+  const parsedEntries = input
+    .split(/\r?\n|;/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const separatorIndex = line.includes(':') ? line.indexOf(':') : line.indexOf('=');
+      if (separatorIndex < 0) return null;
+
+      const key = normalizeRepartitionLabel(line.slice(0, separatorIndex));
+      const rawValue = line.slice(separatorIndex + 1).trim().replace(',', '.');
+      const amount = Number.parseFloat(rawValue);
+
+      if (!key || !Number.isFinite(amount) || amount <= 0) return null;
+      return [key, Math.round(amount * 100) / 100] as const;
+    })
+    .filter(Boolean) as Array<readonly [string, number]>;
+
+  return Object.fromEntries(parsedEntries);
+}
+
+export function stringifyTantiemesGroupesInput(value: unknown): string {
+  const map = sanitizeTantiemesGroupesMap(value);
+
+  return Object.entries(map)
+    .sort(([a], [b]) => a.localeCompare(b, 'fr'))
+    .map(([key, amount]) => `${key}: ${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(amount)}`)
+    .join('\n');
+}
+
+function hasPositiveRepartitionWeight(lot: RepartitionLotLike): boolean {
+  return (lot.tantiemes ?? 0) > 0 || Object.keys(sanitizeTantiemesGroupesMap(lot.tantiemes_groupes)).length > 0;
+}
+
+export function getLotTantiemesForRepartitionScope(
+  lot: RepartitionLotLike,
+  type?: RepartitionType | null,
+  target?: string | null,
+): number {
+  const fallbackTantiemes = Number(lot.tantiemes ?? 0);
+  if (type !== 'groupe') return fallbackTantiemes;
+
+  const normalizedTarget = normalizeRepartitionLabel(target);
+  if (!normalizedTarget) return fallbackTantiemes;
+
+  const customTantiemes = sanitizeTantiemesGroupesMap(lot.tantiemes_groupes)[normalizedTarget];
+  return typeof customTantiemes === 'number' && customTantiemes > 0 ? customTantiemes : fallbackTantiemes;
 }
 
 export function parseBudgetPostesFromDescription(description: string | null | undefined): BudgetPosteDescription[] {
@@ -300,12 +372,12 @@ export function formatRepartitionScope(type?: RepartitionType | null, target?: s
   return 'Charges communes';
 }
 
-export function filterLotsByRepartitionScope(
-  lots: RepartitionLotLike[],
+export function filterLotsByRepartitionScope<T extends RepartitionLotLike>(
+  lots: T[],
   type?: RepartitionType | null,
   target?: string | null,
-): RepartitionLotLike[] {
-  const eligibleLots = lots.filter((lot) => lot.coproprietaire_id && (lot.tantiemes ?? 0) > 0);
+): T[] {
+  const eligibleLots = lots.filter((lot) => lot.coproprietaire_id && hasPositiveRepartitionWeight(lot));
   if (type !== 'groupe') return eligibleLots;
 
   const normalizedTarget = normalizeRepartitionLabel(target);
@@ -344,7 +416,7 @@ export function repartitionParPostes(
   postes: RepartitionPosteInput[],
 ) {
   const postesValides = postes.filter((poste) => (poste.montant ?? 0) > 0);
-  const lotsEligibles = lots.filter((lot) => lot.coproprietaire_id && (lot.tantiemes ?? 0) > 0);
+  const lotsEligibles = lots.filter((lot) => lot.coproprietaire_id && hasPositiveRepartitionWeight(lot));
 
   if (lotsEligibles.length === 0) return [] as Array<{ copId: string; lotId: string | null; tantiemes: number; montant: number }>;
 
@@ -355,7 +427,11 @@ export function repartitionParPostes(
   const amountsByOwner = new Map<string, { copId: string; lotId: string | null; tantiemes: number; montant: number }>();
 
   for (const poste of postesValides) {
-    const scopedLots = filterLotsByRepartitionScope(lotsEligibles, poste.repartition_type ?? 'generale', poste.repartition_cible ?? null);
+    const scopedLots = filterLotsByRepartitionScope(lotsEligibles, poste.repartition_type ?? 'generale', poste.repartition_cible ?? null)
+      .map((lot) => ({
+        ...lot,
+        tantiemes: getLotTantiemesForRepartitionScope(lot, poste.repartition_type ?? 'generale', poste.repartition_cible ?? null),
+      }));
     const groupedLots = groupLotsByCoproprietaire(scopedLots);
 
     for (const share of repartirMontant(poste.montant, groupedLots)) {

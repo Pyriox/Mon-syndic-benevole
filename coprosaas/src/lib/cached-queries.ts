@@ -82,7 +82,7 @@ export function getLots(coproId: string) {
       const admin = createAdminClient();
       const { data } = await admin
         .from('lots')
-        .select('id, numero, type, tantiemes, coproprietaire_id, batiment, groupes_repartition')
+        .select('id, numero, type, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes')
         .eq('copropriete_id', coproId)
         .order('position', { ascending: true, nullsFirst: false });
       return data ?? [];

@@ -65,6 +65,7 @@ interface LotRow {
   coproprietaire_id: string | null;
   batiment?: string | null;
   groupes_repartition?: string[] | null;
+  tantiemes_groupes?: Record<string, number> | null;
 }
 
 interface CoproEntry {
@@ -136,7 +137,7 @@ function SortableLotRow({
           </div>
           <div>
             <span className="font-semibold text-gray-900">{lot.numero}</span>
-            {(lot.batiment || (lot.groupes_repartition?.length ?? 0) > 0) && (
+            {(lot.batiment || (lot.groupes_repartition?.length ?? 0) > 0 || Object.keys(lot.tantiemes_groupes ?? {}).length > 0) && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {lot.batiment && (
                   <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
@@ -146,6 +147,11 @@ function SortableLotRow({
                 {(lot.groupes_repartition ?? []).slice(0, 2).map((group) => (
                   <span key={group} className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
                     {group}
+                  </span>
+                ))}
+                {Object.entries(lot.tantiemes_groupes ?? {}).slice(0, 2).map(([group, amount]) => (
+                  <span key={`${group}-${amount}`} className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                    {group} · {amount}/1000
                   </span>
                 ))}
               </div>
@@ -193,6 +199,7 @@ function SortableLotRow({
               tantiemes: lot.tantiemes,
               batiment: lot.batiment,
               groupes_repartition: lot.groupes_repartition,
+              tantiemes_groupes: lot.tantiemes_groupes,
             }}
           />
           <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} />
@@ -254,7 +261,7 @@ function SortableLotCard({
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="font-semibold text-gray-900 truncate">Lot {lot.numero}</p>
-              {(lot.batiment || (lot.groupes_repartition?.length ?? 0) > 0) && (
+              {(lot.batiment || (lot.groupes_repartition?.length ?? 0) > 0 || Object.keys(lot.tantiemes_groupes ?? {}).length > 0) && (
                 <div className="mt-1 flex flex-wrap gap-1">
                   {lot.batiment && (
                     <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
@@ -264,6 +271,11 @@ function SortableLotCard({
                   {(lot.groupes_repartition ?? []).slice(0, 2).map((group) => (
                     <span key={group} className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
                       {group}
+                    </span>
+                  ))}
+                  {Object.entries(lot.tantiemes_groupes ?? {}).slice(0, 2).map(([group, amount]) => (
+                    <span key={`${group}-${amount}`} className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                      {group} · {amount}/1000
                     </span>
                   ))}
                 </div>
@@ -305,6 +317,7 @@ function SortableLotCard({
                   tantiemes: lot.tantiemes,
                   batiment: lot.batiment,
                   groupes_repartition: lot.groupes_repartition,
+                  tantiemes_groupes: lot.tantiemes_groupes,
                 }}
               />
               <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} />

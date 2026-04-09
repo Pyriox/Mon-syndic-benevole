@@ -59,6 +59,38 @@ describe('repartition spéciale par groupes', () => {
     ]);
   });
 
+  it('utilise une clé indépendante quand des tantièmes spéciaux sont définis sur le groupe', () => {
+    const lotsAvecCleIndependante = [
+      {
+        id: 'lot-b2',
+        numero: 'B2',
+        tantiemes: 39,
+        coproprietaire_id: 'copro-b1',
+        batiment: 'Bâtiment B',
+        tantiemes_groupes: { 'Bâtiment B': 117 },
+      },
+      {
+        id: 'lot-b3',
+        numero: 'B3',
+        tantiemes: 61,
+        coproprietaire_id: 'copro-b2',
+        batiment: 'Bâtiment B',
+        tantiemes_groupes: { 'Bâtiment B': 883 },
+      },
+    ] as RepartitionLotLike[];
+
+    const postes: RepartitionPosteInput[] = [
+      { libelle: 'Travaux bâtiment B', montant: 1000, repartition_type: 'groupe', repartition_cible: 'Bâtiment B' },
+    ];
+
+    const repartition = repartitionParPostes(1000, lotsAvecCleIndependante, postes);
+
+    expect(repartition).toEqual([
+      expect.objectContaining({ copId: 'copro-b1', montant: 117 }),
+      expect.objectContaining({ copId: 'copro-b2', montant: 883 }),
+    ]);
+  });
+
   it('retombe sur une répartition générale si aucun groupe spécial ne correspond', () => {
     const postes: RepartitionPosteInput[] = [
       { libelle: 'Budget prévisionnel', montant: 90, repartition_type: 'groupe', repartition_cible: 'Bâtiment C' },

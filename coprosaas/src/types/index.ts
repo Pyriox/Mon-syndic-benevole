@@ -73,6 +73,7 @@ export interface Lot {
   tantiemes: number;    // quote-part sur 1000 par exemple
   batiment?: string | null;
   groupes_repartition?: string[] | null;
+  tantiemes_groupes?: Record<string, number> | null;
   created_at: string;
 }
 
