@@ -75,7 +75,9 @@ export async function saveLot(data: {
     if (error) return { error: error.message };
   }
 
+  revalidatePath('/coproprietes');
   revalidatePath(`/coproprietes/${data.coproprieteId}`);
+  revalidatePath(`/coproprietes/${data.coproprieteId}/parametrage`);
   invalidateLotsCache(data.coproprieteId);
   return {};
 }
@@ -98,7 +100,9 @@ export async function deleteLot(lotId: string, coproprieteId: string): Promise<{
   const { error } = await supabase.from('lots').delete().eq('id', lotId);
   if (error) return { error: error.message };
 
+  revalidatePath('/coproprietes');
   revalidatePath(`/coproprietes/${coproprieteId}`);
+  revalidatePath(`/coproprietes/${coproprieteId}/parametrage`);
   invalidateLotsCache(coproprieteId);
   return {};
 }
@@ -157,7 +161,9 @@ export async function saveCoproprieteSettings(data: {
     }
   }
 
+  revalidatePath('/coproprietes');
   revalidatePath(`/coproprietes/${data.coproprieteId}`);
+  revalidatePath(`/coproprietes/${data.coproprieteId}/parametrage`);
   invalidateLotsCache(data.coproprieteId);
   invalidateLayoutCache(user.id);
   return {};
@@ -182,7 +188,9 @@ export async function updateCopropriete(data: {
     .eq('syndic_id', user.id);
   if (error) return { error: error.message };
 
+  revalidatePath('/coproprietes');
   revalidatePath(`/coproprietes/${data.coproprieteId}`);
+  revalidatePath(`/coproprietes/${data.coproprieteId}/parametrage`);
   // Le nom / l'adresse de la copro apparaissent dans la sidebar du layout
   invalidateLayoutCache(user.id);
   return {};

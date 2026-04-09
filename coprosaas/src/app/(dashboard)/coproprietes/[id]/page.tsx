@@ -1,17 +1,28 @@
 // ============================================================
-// Page : Détail d'une copropriété + gestion des lots
+// Page : Vue d'ensemble d'une copropriété
 // ============================================================
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 import CoproDelete from './CoproDelete';
-import CoproSettingsPanel from './CoproSettingsPanel';
+import LotActions from './LotActions';
 import LotsTable from './LotsTable';
 import TransfertSyndic from './TransfertSyndic';
 import { formatDate } from '@/lib/utils';
 import { getLotLimit } from '@/lib/subscription';
-import { MapPin, Hash, CalendarDays, Layers, UserCheck, Building2 } from 'lucide-react';
+import {
+  ArrowRight,
+  Building2,
+  CalendarDays,
+  Hash,
+  Layers,
+  MapPin,
+  Settings2,
+  UserCheck,
+} from 'lucide-react';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -44,115 +55,184 @@ export default async function CopropriétéDetailPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Récupération de la copropriété
   const { data: copro } = await supabase
     .from('coproprietes')
     .select('id, nom, adresse, code_postal, ville, created_at, plan, plan_id')
     .eq('id', id)
-    .eq('syndic_id', user.id)   // Sécurité : seul le syndic propriétaire peut voir
+    .eq('syndic_id', user.id)
     .single();
 
   if (!copro) notFound();
 
-  // Récupération des lots (sans join implicite pour éviter les problèmes de FK)
   const { data: lots } = await supabase
     .from('lots')
     .select('id, numero, type, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes, position')
     .eq('copropriete_id', id)
     .order('position', { ascending: true, nullsFirst: false });
 
-  // Copropriétaires de cette copropriété (pour afficher le nom dans le tableau)
   const { data: coproprietaires } = await supabase
     .from('coproprietaires')
     .select('id, nom, prenom, raison_sociale, user_id')
     .eq('copropriete_id', id);
   const coproMap = Object.fromEntries((coproprietaires ?? []).map((c) => [c.id, c]));
 
-  // Calcul du total des tantièmes
   const totalTantiemes = lots?.reduce((sum, lot) => sum + (lot.tantiemes ?? 0), 0) ?? 0;
-
-  // Limite de lots selon le plan d'abonnement
   const lotCount = lots?.length ?? 0;
-  const nbAttribues = (lots ?? []).filter(l => l.coproprietaire_id).length;
+  const nbAttribues = (lots ?? []).filter((lot) => lot.coproprietaire_id).length;
   const lotLimit = getLotLimit(copro.plan, copro.plan_id);
   const canAddLot = lotCount < lotLimit;
+  const batimentCount = new Set(
+    (lots ?? [])
+      .map((lot) => lot.batiment?.trim())
+      .filter((value): value is string => Boolean(value))
+  ).size;
+  const specialKeyCount = new Set(
+    (lots ?? []).flatMap((lot) => Object.keys(lot.tantiemes_groupes ?? {}))
+  ).size;
 
   return (
     <div className="space-y-6">
-
-
-      {/* En-tête */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{copro.nom}</h2>
-          <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-500">
+          <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500">
             <span className="flex items-center gap-1">
               <MapPin size={14} /> {copro.adresse}, {copro.code_postal} {copro.ville}
             </span>
             <span className="flex items-center gap-1">
-              <Hash size={14} /> {lots?.length ?? 0} lots
+              <Hash size={14} /> {lotCount} lots
             </span>
             <span className="flex items-center gap-1">
               <CalendarDays size={14} /> Créée le {formatDate(copro.created_at)}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href={`/coproprietes/${copro.id}/parametrage`}>
+            <Button variant="secondary">
+              <Settings2 size={14} /> Paramétrage
+            </Button>
+          </Link>
           <TransfertSyndic coproprieteId={copro.id} coproprieteNom={copro.nom} />
           <CoproDelete coproprieteId={copro.id} coproprieteNom={copro.nom} />
         </div>
       </div>
 
-      {/* Stats lots */}
-      {lots && lots.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <Card padding="sm" className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 rounded-lg shrink-0"><Layers size={18} className="text-blue-500" /></div>
-            <div>
-              <p className="text-xs text-gray-500">Lots</p>
-              <p className="text-lg font-bold text-gray-900 leading-tight">{lotCount}</p>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Card padding="sm" className="flex items-center gap-3">
+          <div className="rounded-lg bg-blue-50 p-2 shrink-0"><Layers size={18} className="text-blue-500" /></div>
+          <div>
+            <p className="text-xs text-gray-500">Lots</p>
+            <p className="text-lg font-bold leading-tight text-gray-900">{lotCount}</p>
+          </div>
+        </Card>
+        <Card padding="sm" className="flex items-center gap-3">
+          <div className="rounded-lg bg-green-50 p-2 shrink-0"><UserCheck size={18} className="text-green-600" /></div>
+          <div>
+            <p className="text-xs text-gray-500">Attribués</p>
+            <p className="text-lg font-bold leading-tight text-gray-900">
+              {nbAttribues} <span className="text-sm font-normal text-gray-500">/ {lotCount}</span>
+            </p>
+          </div>
+        </Card>
+        <Card padding="sm" className="flex items-center gap-3">
+          <div className="rounded-lg bg-purple-50 p-2 shrink-0"><Building2 size={18} className="text-purple-500" /></div>
+          <div>
+            <p className="text-xs text-gray-500">Tantièmes totaux</p>
+            <p className="text-lg font-bold leading-tight text-gray-900">{totalTantiemes}</p>
+          </div>
+        </Card>
+        <Card padding="sm" className="col-span-2 flex items-center gap-3 lg:col-span-1">
+          <div className="rounded-lg bg-amber-50 p-2 shrink-0"><Settings2 size={18} className="text-amber-600" /></div>
+          <div>
+            <p className="text-xs text-gray-500">Clés spéciales</p>
+            <p className="text-lg font-bold leading-tight text-gray-900">{specialKeyCount}</p>
+            <p className="text-xs text-gray-500">{batimentCount} bâtiment{batimentCount > 1 ? 's' : ''} / entrée{batimentCount > 1 ? 's' : ''}</p>
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+        <Card>
+          <h3 className="text-lg font-bold text-gray-900">Vue d&apos;ensemble</h3>
+          <p className="mt-1 text-sm text-gray-600">
+            Cette page reste dédiée au suivi global et aux lots. Le paramétrage détaillé des clés de répartition a été déplacé sur une page séparée pour alléger l&apos;écran.
+          </p>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-700">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Adresse</p>
+              <p className="mt-1">{copro.adresse}</p>
+              <p>{copro.code_postal} {copro.ville}</p>
             </div>
-          </Card>
-          <Card padding="sm" className="flex items-center gap-3">
-            <div className="p-2 bg-green-50 rounded-lg shrink-0"><UserCheck size={18} className="text-green-600" /></div>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-700">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Répartition</p>
+              <p className="mt-1">{specialKeyCount > 0 ? `${specialKeyCount} clé(s) spéciale(s) configurée(s)` : 'Aucune clé spéciale pour le moment'}</p>
+              <p>{batimentCount > 0 ? `${batimentCount} bâtiment(s) / entrée(s) distinct(s)` : 'Aucun bâtiment ou entrée renseigné'}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-blue-50 p-2.5">
+              <Settings2 size={18} className="text-blue-600" />
+            </div>
             <div>
-              <p className="text-xs text-gray-500">Attribués</p>
-              <p className="text-lg font-bold text-gray-900 leading-tight">
-                {nbAttribues} <span className="text-sm font-normal text-gray-500">/ {lotCount}</span>
+              <h3 className="text-lg font-bold text-gray-900">Paramétrage séparé</h3>
+              <p className="mt-1 text-sm text-gray-600">
+                Modifiez ici vos clés de répartition, la fiche copropriété et les bases par lot sur une page dédiée, plus lisible au quotidien.
               </p>
             </div>
+          </div>
+
+          <Link href={`/coproprietes/${copro.id}/parametrage`} className="mt-4 inline-block">
+            <Button variant="secondary">
+              Ouvrir le paramétrage <ArrowRight size={14} />
+            </Button>
+          </Link>
+        </Card>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Lots de la copropriété</h3>
+            <p className="text-sm text-gray-500">Ajoutez, modifiez et réordonnez vos lots sans mélanger ce tableau avec le paramétrage financier.</p>
+          </div>
+          <LotActions
+            coproprieteId={copro.id}
+            showLabel
+            canAdd={canAddLot}
+            lotLimit={lotLimit === Infinity ? undefined : lotLimit}
+          />
+        </div>
+
+        {lotCount > 0 ? (
+          <Card>
+            <LotsTable initialLots={lots ?? []} coproMap={coproMap} coproprieteId={id} currentUserId={user.id} />
           </Card>
-          <Card padding="sm" className="flex items-center gap-3 col-span-2 sm:col-span-1">
-            <div className="p-2 bg-purple-50 rounded-lg shrink-0"><Building2 size={18} className="text-purple-500" /></div>
-            <div>
-              <p className="text-xs text-gray-500">Tantièmes totaux</p>
-              <p className="text-lg font-bold text-gray-900 leading-tight">{totalTantiemes}</p>
+        ) : (
+          <Card>
+            <div className="space-y-3 text-sm text-gray-600">
+              <p>Aucun lot n&apos;est encore enregistré pour cette copropriété.</p>
+              <div className="flex flex-wrap gap-2">
+                <LotActions
+                  coproprieteId={copro.id}
+                  showLabel
+                  canAdd={canAddLot}
+                  lotLimit={lotLimit === Infinity ? undefined : lotLimit}
+                />
+                <Link href={`/coproprietes/${copro.id}/parametrage`}>
+                  <Button variant="secondary">
+                    <Settings2 size={14} /> Ouvrir le paramétrage
+                  </Button>
+                </Link>
+              </div>
             </div>
           </Card>
-        </div>
-      )}
-
-      <CoproSettingsPanel
-        key={`${copro.id}:${JSON.stringify(lots ?? [])}:${copro.nom}:${copro.adresse}:${copro.code_postal}:${copro.ville}`}
-        copropriete={copro}
-        initialLots={lots ?? []}
-        coproMap={coproMap}
-        canAddLot={canAddLot}
-        lotLimit={lotLimit === Infinity ? undefined : lotLimit}
-      />
-
-      {lots && lots.length > 0 && (
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Aperçu des lots</h3>
-            <p className="text-sm text-gray-500">Vous pouvez encore réordonner les lots visuellement si besoin.</p>
-          </div>
-          <Card>
-            <LotsTable initialLots={lots} coproMap={coproMap} coproprieteId={id} currentUserId={user.id} />
-          </Card>
-        </div>
-      )}
-
+        )}
+      </div>
     </div>
   );
 }

@@ -184,7 +184,7 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
           />
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            Les clés de répartition spéciales se règlent ensuite dans le tableau de paramétrage de la copropriété.
+            Les clés de répartition spéciales se règlent désormais dans la page <strong>Paramétrage</strong> de la copropriété.
           </div>
 
           <Input
