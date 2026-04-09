@@ -55,12 +55,14 @@ function LoginForm() {
   const formStartedRef = useRef(false);
   const formSubmittedRef = useRef(false);
   useEffect(() => {
+    void router.prefetch('/dashboard');
+
     return () => {
       if (formStartedRef.current && !formSubmittedRef.current) {
         trackAnonymousEvent('form_abandonment', { form: 'login' });
       }
     };
-  }, []);
+  }, [router]);
 
   const setEmailTracked = (v: string) => { if (v) formStartedRef.current = true; setEmail(v); };
   const setPasswordTracked = (v: string) => { if (v) formStartedRef.current = true; setPassword(v); };
@@ -85,21 +87,35 @@ function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+
     formSubmittedRef.current = true;
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setError('Veuillez renseigner votre adresse email.');
+      return;
+    }
+
+    if (normalizedEmail !== email) {
+      setEmail(normalizedEmail);
+    }
+
     setLoading(true);
     setError('');
+    setSuccess('');
     setUnconfirmedEmail('');
     setResendSent(false);
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
     if (authError) {
       if (authError.message === 'Email not confirmed') {
-        setUnconfirmedEmail(email);
+        setUnconfirmedEmail(normalizedEmail);
         trackAnonymousEvent('login_error', { error: 'email_not_confirmed' });
       } else {
         setError('Email ou mot de passe incorrect. Veuillez réessayer.');
         trackAnonymousEvent('login_error', { error: 'invalid_credentials' });
         void logEventForEmail({
-          email,
+          email: normalizedEmail,
           eventType: 'login_failed',
           severity: 'warning',
           label: 'Échec de connexion (identifiants invalides)',
@@ -138,17 +154,20 @@ function LoginForm() {
       anonymousEvent: 'login_anonymous',
       params: { method: 'email' },
     });
-    void logEventForEmail({ email, eventType: 'login_success', label: 'Connexion réussie' }).catch(() => undefined);
+    void logEventForEmail({ email: normalizedEmail, eventType: 'login_success', label: 'Connexion réussie' }).catch(() => undefined);
     router.replace('/dashboard');
   };
 
   const handleResendConfirmation = async () => {
+    const normalizedEmail = unconfirmedEmail.trim().toLowerCase();
+    if (!normalizedEmail) return;
+
     setResendLoading(true);
-    const { error: resendError } = await supabase.auth.resend({ type: 'signup', email: unconfirmedEmail });
+    const { error: resendError } = await supabase.auth.resend({ type: 'signup', email: normalizedEmail });
     setResendLoading(false);
     if (!resendError) {
       void logEventForEmail({
-        email: unconfirmedEmail,
+        email: normalizedEmail,
         eventType: 'email_confirmation_resent',
         label: 'Email de confirmation renvoyé',
       }).catch(() => undefined);
@@ -158,13 +177,25 @@ function LoginForm() {
 
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (resetLoading) return;
+
+    const normalizedEmail = resetEmail.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setResetError('Veuillez renseigner votre adresse email.');
+      return;
+    }
+
+    if (normalizedEmail !== resetEmail) {
+      setResetEmail(normalizedEmail);
+    }
+
     setResetLoading(true);
     setResetError('');
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resetEmail }),
+        body: JSON.stringify({ email: normalizedEmail }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as { message?: string };

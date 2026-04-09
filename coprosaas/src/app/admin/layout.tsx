@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isAdminUser } from '@/lib/admin-config';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getSupportAttentionSummary } from '@/lib/admin-support';
 import Link from 'next/link';
 import { AlertCircle } from 'lucide-react';
 import SiteLogo from '@/components/ui/SiteLogo';
@@ -20,18 +21,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const admin = createAdminClient();
-  const [{ count: nbTicketsOuverts }, { count: nbTicketsEnCours }] = await Promise.all([
-    admin
-      .from('support_tickets')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'ouvert'),
-    admin
-      .from('support_tickets')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'en_cours'),
-  ]);
-
-  const pendingSupportCount = (nbTicketsOuverts ?? 0) + (nbTicketsEnCours ?? 0);
+  const {
+    pendingCount: pendingSupportCount,
+    openCount: nbTicketsOuverts,
+    inProgressCount: nbTicketsEnCours,
+  } = await getSupportAttentionSummary(admin);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -67,7 +61,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 {pendingSupportCount} ticket{pendingSupportCount > 1 ? 's' : ''} support à traiter
                 {(nbTicketsOuverts ?? 0) > 0 && (
                   <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-red-100">
-                    {nbTicketsOuverts} nouveau{(nbTicketsOuverts ?? 0) > 1 ? 'x' : ''}
+                    {nbTicketsOuverts} ouvert{(nbTicketsOuverts ?? 0) > 1 ? 's' : ''}
+                  </span>
+                )}
+                {(nbTicketsEnCours ?? 0) > 0 && (
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-red-100">
+                    {nbTicketsEnCours} en cours
                   </span>
                 )}
               </Link>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SiteLogo from '@/components/ui/SiteLogo';
@@ -30,14 +31,14 @@ export default function LandingNav() {
     void router.prefetch('/dashboard');
     void router.prefetch('/register');
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then((result) => {
       if (!active) return;
-      const isAuthenticated = !!data.session;
+      const isAuthenticated = !!result.data.session;
       setAccountHref(isAuthenticated ? '/dashboard' : '/login');
       setAccountLabel(isAuthenticated ? 'Tableau de bord' : 'Connexion');
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       const isAuthenticated = !!session;
       setAccountHref(isAuthenticated ? '/dashboard' : '/login');
       setAccountLabel(isAuthenticated ? 'Tableau de bord' : 'Connexion');
@@ -49,13 +50,10 @@ export default function LandingNav() {
     };
   }, [router]);
 
-  const handleAccountNavigation = async () => {
+  const handleAccountNavigation = () => {
     setNavPending(true);
     setOpen(false);
-
-    const supabase = createClient();
-    const { data } = await supabase.auth.getSession();
-    router.push(data.session ? '/dashboard' : accountHref);
+    router.push(accountHref);
   };
 
   return (

@@ -28,7 +28,14 @@ interface LotActionsProps {
   coproprieteId: string;
   showLabel?: boolean;
   // Présent en mode modification
-  lot?: { id: string; numero: string; type: string; tantiemes: number };
+  lot?: {
+    id: string;
+    numero: string;
+    type: string;
+    tantiemes: number;
+    batiment?: string | null;
+    groupes_repartition?: string[] | null;
+  };
   // Limite de lots : undefined = pas de restriction (mode édition)
   canAdd?: boolean;
   lotLimit?: number;
@@ -46,6 +53,8 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
     numero: lot?.numero ?? '',
     type: lot?.type ?? 'appartement',
     tantiemes: lot?.tantiemes?.toString() ?? '',
+    batiment: lot?.batiment ?? '',
+    groupesRepartition: (lot?.groupes_repartition ?? []).join(', '),
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -63,13 +72,26 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
       numero: formData.numero.trim(),
       type: formData.type,
       tantiemes: parseFloat(formData.tantiemes) || 0,
+      batiment: formData.batiment,
+      groupesRepartition: formData.groupesRepartition
+        .split(',')
+        .map((group) => group.trim())
+        .filter(Boolean),
     });
 
     if (result.error) { setError('Erreur : ' + result.error); setLoading(false); return; }
 
     setLoading(false);
     setIsOpen(false);
-    if (!isEdit) setFormData({ numero: '', type: 'appartement', tantiemes: '' });
+    if (!isEdit) {
+      setFormData({
+        numero: '',
+        type: 'appartement',
+        tantiemes: '',
+        batiment: '',
+        groupesRepartition: '',
+      });
+    }
     router.refresh();
   };
 
@@ -79,6 +101,8 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
       numero: lot?.numero ?? '',
       type: lot?.type ?? 'appartement',
       tantiemes: lot?.tantiemes?.toString() ?? '',
+      batiment: lot?.batiment ?? '',
+      groupesRepartition: (lot?.groupes_repartition ?? []).join(', '),
     });
     setError('');
     setLoading(false);
@@ -134,6 +158,24 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
             onChange={handleChange}
             options={TYPE_OPTIONS}
             required
+          />
+
+          <Input
+            label="Bâtiment / entrée (optionnel)"
+            name="batiment"
+            value={formData.batiment}
+            onChange={handleChange}
+            placeholder="Bâtiment A"
+            hint="Pratique pour les charges par bâtiment, entrée ou cage d'escalier"
+          />
+
+          <Input
+            label="Groupes spéciaux (optionnel)"
+            name="groupesRepartition"
+            value={formData.groupesRepartition}
+            onChange={handleChange}
+            placeholder="Ascenseur, Eau bâtiment B"
+            hint="Séparez les groupes par des virgules pour créer des clés spéciales simples"
           />
 
           <Input

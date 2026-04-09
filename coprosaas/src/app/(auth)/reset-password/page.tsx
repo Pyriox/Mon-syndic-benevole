@@ -60,8 +60,8 @@ function ResetPasswordForm() {
 
     // Pas de token_hash : l'utilisateur est peut-être arrivé directement
     // ou via un flow implicite avec une session déjà établie.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    void supabase.auth.getSession().then((result) => {
+      if (result.data.session) {
         setStage('form');
       } else {
         setStage('invalid');

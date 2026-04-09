@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -12,14 +12,53 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
-import { formatEuros, TYPES_RESOLUTION } from '@/lib/utils';
+import { collectAvailableRepartitionGroups, formatEuros, TYPES_RESOLUTION } from '@/lib/utils';
 
 function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
   if (typeof window === 'undefined') return;
   router.replace(`${window.location.pathname}${window.location.search}`);
 }
 
-type PosteBudget = { libelle: string; montant: number };
+type PosteBudget = {
+  libelle: string;
+  montant: number;
+  repartition_type?: 'generale' | 'groupe' | null;
+  repartition_cible?: string | null;
+};
+
+type PosteBudgetForm = {
+  libelle: string;
+  montant: string;
+  repartition_type: 'generale' | 'groupe';
+  repartition_cible: string;
+};
+
+const EMPTY_BUDGET_POSTE_FORM: PosteBudgetForm = {
+  libelle: '',
+  montant: '',
+  repartition_type: 'generale',
+  repartition_cible: '',
+};
+
+function mapBudgetPostesToForm(postes?: PosteBudget[] | null): PosteBudgetForm[] {
+  return (postes ?? []).map((poste) => ({
+    libelle: poste.libelle,
+    montant: String(poste.montant),
+    repartition_type: poste.repartition_type === 'groupe' ? 'groupe' : 'generale',
+    repartition_cible: poste.repartition_cible ?? '',
+  }));
+}
+
+function buildBudgetPostesPayload(postes: PosteBudgetForm[]): PosteBudget[] {
+  return postes
+    .filter((poste) => poste.libelle.trim())
+    .map((poste) => ({
+      libelle: poste.libelle.trim(),
+      montant: parseFloat(poste.montant) || 0,
+      repartition_type: poste.repartition_type,
+      repartition_cible: poste.repartition_type === 'groupe' ? (poste.repartition_cible || null) : null,
+    }));
+}
 
 interface ResolutionActionsProps {
   agId: string;
@@ -76,10 +115,42 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
     majorite: '',
     statut: 'en_attente',
   });
-  const [budgetPostes, setBudgetPostes] = useState<{ libelle: string; montant: string }[]>([]);
+  const [budgetPostes, setBudgetPostes] = useState<PosteBudgetForm[]>([]);
   const [fondsTravaux, setFondsTravaux] = useState('');
+  const [availableRepartitionGroups, setAvailableRepartitionGroups] = useState<string[]>([]);
 
   const typeConfig = TYPES_RESOLUTION[typeResolution] ?? TYPES_RESOLUTION['libre'];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadGroups = async () => {
+      const { data: ag } = await supabase
+        .from('assemblees_generales')
+        .select('copropriete_id')
+        .eq('id', agId)
+        .maybeSingle();
+
+      if (!ag?.copropriete_id) {
+        setAvailableRepartitionGroups([]);
+        return;
+      }
+
+      const { data: lots } = await supabase
+        .from('lots')
+        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition')
+        .eq('copropriete_id', ag.copropriete_id);
+
+      setAvailableRepartitionGroups(collectAvailableRepartitionGroups((lots ?? []).map((lot) => ({
+        ...lot,
+        coproprietaire_id: lot.coproprietaire_id ?? null,
+        batiment: lot.batiment ?? null,
+        groupes_repartition: lot.groupes_repartition ?? [],
+      }))));
+    };
+
+    void loadGroups();
+  }, [agId, isOpen, supabase]);
 
   const handleTypeChange = (newType: string) => {
     setTypeResolution(newType);
@@ -91,7 +162,7 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
         majorite: cfg.majorite,
       }));
       if (cfg.hasBudget && budgetPostes.length === 0) {
-        setBudgetPostes([{ libelle: '', montant: '' }]);
+        setBudgetPostes([{ ...EMPTY_BUDGET_POSTE_FORM }]);
       }
     }
   };
@@ -106,7 +177,7 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
     setError('');
 
     const postesValides = typeConfig.hasBudget
-      ? budgetPostes.filter((p) => p.libelle.trim()).map((p) => ({ libelle: p.libelle.trim(), montant: parseFloat(p.montant) || 0 }))
+      ? buildBudgetPostesPayload(budgetPostes)
       : [];
 
     const { error: dbError } = await supabase.from('resolutions').insert({
@@ -196,25 +267,45 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-700">Postes de dépenses {typeConfig.optional ? '(optionnel)' : <span className="text-red-500">*</span>}</label>
-                <button type="button" onClick={() => setBudgetPostes((p) => [...p, { libelle: '', montant: '' }])}
+                <button type="button" onClick={() => setBudgetPostes((p) => [...p, { ...EMPTY_BUDGET_POSTE_FORM }])}
                   className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
                   <Plus size={12} /> Ajouter un poste
                 </button>
               </div>
               <div className="space-y-2 border border-gray-200 rounded-xl p-3 bg-gray-50">
+                <div className="rounded-lg border border-indigo-100 bg-white px-3 py-2 text-[11px] text-indigo-700">
+                  Par défaut, chaque ligne est répartie en <span className="font-semibold">charges communes</span>.
+                  {availableRepartitionGroups.length > 0
+                    ? ` Vous pouvez aussi viser : ${availableRepartitionGroups.join(', ')}.`
+                    : ' Ajoutez simplement un bâtiment ou un groupe dans vos lots pour créer une clé spéciale.'}
+                </div>
                 {budgetPostes.length === 0 && (
                   <p className="text-xs text-gray-400 text-center py-1">Aucun poste ajouté</p>
                 )}
                 {budgetPostes.map((p, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
+                  <div key={i} className="grid grid-cols-[1fr_7rem_12rem_auto] gap-2 items-center">
                     <input type="text" placeholder="Libellé du poste" value={p.libelle}
                       onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? { ...x, libelle: e.target.value } : x))}
                       className="text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                     <input type="number" placeholder="0.00" min="0" step="0.01" value={p.montant}
                       onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? { ...x, montant: e.target.value } : x))}
-                      className="w-28 text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
+                    <select
+                      value={p.repartition_type === 'groupe' && p.repartition_cible ? `groupe:${p.repartition_cible}` : 'generale'}
+                      onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? {
+                        ...x,
+                        repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
+                        repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : '',
+                      } : x))}
+                      className="text-sm rounded-lg border border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="generale">Charges communes</option>
+                      {availableRepartitionGroups.map((group) => (
+                        <option key={group} value={`groupe:${group}`}>Seulement {group}</option>
+                      ))}
+                    </select>
                     <button type="button" onClick={() => setBudgetPostes((prev) => prev.filter((_, idx) => idx !== i))}
                       className="p-1 text-gray-400 hover:text-red-500 transition-colors">
                       <Trash2 size={14} />
@@ -282,13 +373,56 @@ export function ResolutionEdit({
     voix_contre: String(resolution.voix_contre),
     voix_abstention: String(resolution.voix_abstention),
   });
-  const [budgetPostes, setBudgetPostes] = useState<{ libelle: string; montant: string }[]>(
-    (resolution.budget_postes ?? []).map((p) => ({ libelle: p.libelle, montant: String(p.montant) }))
+  const [budgetPostes, setBudgetPostes] = useState<PosteBudgetForm[]>(
+    mapBudgetPostesToForm(resolution.budget_postes ?? [])
   );
   const [fondsTravaux, setFondsTravaux] = useState(resolution.fonds_travaux_montant ? String(resolution.fonds_travaux_montant) : '');
+  const [availableRepartitionGroups, setAvailableRepartitionGroups] = useState<string[]>([]);
 
   const typeResolution = resolution.type_resolution ?? 'libre';
   const typeConfig = TYPES_RESOLUTION[typeResolution] ?? TYPES_RESOLUTION['libre'];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadGroups = async () => {
+      const { data: currentResolution } = await supabase
+        .from('resolutions')
+        .select('ag_id')
+        .eq('id', resolution.id)
+        .maybeSingle();
+
+      if (!currentResolution?.ag_id) {
+        setAvailableRepartitionGroups([]);
+        return;
+      }
+
+      const { data: ag } = await supabase
+        .from('assemblees_generales')
+        .select('copropriete_id')
+        .eq('id', currentResolution.ag_id)
+        .maybeSingle();
+
+      if (!ag?.copropriete_id) {
+        setAvailableRepartitionGroups([]);
+        return;
+      }
+
+      const { data: lots } = await supabase
+        .from('lots')
+        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition')
+        .eq('copropriete_id', ag.copropriete_id);
+
+      setAvailableRepartitionGroups(collectAvailableRepartitionGroups((lots ?? []).map((lot) => ({
+        ...lot,
+        coproprietaire_id: lot.coproprietaire_id ?? null,
+        batiment: lot.batiment ?? null,
+        groupes_repartition: lot.groupes_repartition ?? [],
+      }))));
+    };
+
+    void loadGroups();
+  }, [isOpen, resolution.id, supabase]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -300,7 +434,7 @@ export function ResolutionEdit({
     setError('');
 
     const editPostesValides = typeConfig.hasBudget
-      ? budgetPostes.filter((p) => p.libelle.trim()).map((p) => ({ libelle: p.libelle.trim(), montant: parseFloat(p.montant) || 0 }))
+      ? buildBudgetPostesPayload(budgetPostes)
       : (resolution.budget_postes ?? []);
 
     const nextStatut = isPreLaunch ? 'en_attente' : formData.statut;
@@ -389,22 +523,42 @@ export function ResolutionEdit({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-700">Postes de dépenses</label>
-                <button type="button" onClick={() => setBudgetPostes((p) => [...p, { libelle: '', montant: '' }])}
+                <button type="button" onClick={() => setBudgetPostes((p) => [...p, { ...EMPTY_BUDGET_POSTE_FORM }])}
                   className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
                   <Plus size={12} /> Ajouter
                 </button>
               </div>
               <div className="space-y-2 border border-gray-200 rounded-xl p-3 bg-gray-50">
+                <div className="rounded-lg border border-indigo-100 bg-white px-3 py-2 text-[11px] text-indigo-700">
+                  Charges communes par défaut.
+                  {availableRepartitionGroups.length > 0
+                    ? ` Vous pouvez cibler : ${availableRepartitionGroups.join(', ')}.`
+                    : ' Ajoutez simplement un bâtiment ou un groupe dans vos lots pour créer une clé spéciale.'}
+                </div>
                 {budgetPostes.map((p, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
+                  <div key={i} className="grid grid-cols-[1fr_7rem_12rem_auto] gap-2 items-center">
                     <input type="text" value={p.libelle}
                       onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? { ...x, libelle: e.target.value } : x))}
                       className="text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                     <input type="number" min="0" step="0.01" value={p.montant}
                       onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? { ...x, montant: e.target.value } : x))}
-                      className="w-28 text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
+                    <select
+                      value={p.repartition_type === 'groupe' && p.repartition_cible ? `groupe:${p.repartition_cible}` : 'generale'}
+                      onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? {
+                        ...x,
+                        repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
+                        repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : '',
+                      } : x))}
+                      className="text-sm rounded-lg border border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="generale">Charges communes</option>
+                      {availableRepartitionGroups.map((group) => (
+                        <option key={group} value={`groupe:${group}`}>Seulement {group}</option>
+                      ))}
+                    </select>
                     <button type="button" onClick={() => setBudgetPostes((prev) => prev.filter((_, idx) => idx !== i))}
                       className="p-1 text-gray-400 hover:text-red-500 transition-colors">
                       <Trash2 size={14} />

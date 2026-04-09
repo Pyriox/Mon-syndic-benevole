@@ -24,7 +24,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, CheckCircle, XCircle } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
-import { TYPES_RESOLUTION } from '@/lib/utils';
+import { formatRepartitionScope, TYPES_RESOLUTION } from '@/lib/utils';
 import { ResolutionEdit, ResolutionDelete } from './ResolutionActions';
 import VoteParCopro from './VoteParCopro';
 import VoteActions from './VoteActions';
@@ -41,7 +41,12 @@ type AnyResolution = {
   voix_contre: number;
   voix_abstention: number;
   type_resolution?: string | null;
-  budget_postes?: { libelle: string; montant: number }[] | null;
+  budget_postes?: {
+    libelle: string;
+    montant: number;
+    repartition_type?: 'generale' | 'groupe' | null;
+    repartition_cible?: string | null;
+  }[] | null;
   fonds_travaux_montant?: number | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   designation_resultats?: any[] | null;
@@ -265,7 +270,12 @@ function SortableCard({
                     <tbody>
                       {(res.budget_postes ?? []).map((p, i) => (
                         <tr key={i} className="border-t border-gray-100">
-                          <td className="px-3 py-1.5 text-gray-700">{p.libelle}</td>
+                          <td className="px-3 py-1.5 text-gray-700">
+                            <div>
+                              <div>{p.libelle}</div>
+                              <div className="text-[10px] text-gray-400">{formatRepartitionScope(p.repartition_type, p.repartition_cible)}</div>
+                            </div>
+                          </td>
                           <td className="px-3 py-1.5 text-right font-semibold text-gray-900">
                             {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(p.montant)}
                           </td>

@@ -12,20 +12,42 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
-import { formatEuros, calculerPart, repartirMontant } from '@/lib/utils';
+import {
+  collectAvailableRepartitionGroups,
+  formatEuros,
+  formatRepartitionScope,
+  repartitionParPostes,
+} from '@/lib/utils';
 import { Plus, Trash2, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 
 interface Copropriete { id: string; nom: string; }
 interface AppelFondsActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; }
 
-interface Poste { libelle: string; categorie: string; montant: string; }
-const POSTE_VIDE: Poste = { libelle: '', categorie: 'autre', montant: '' };
+interface Poste {
+  libelle: string;
+  categorie: string;
+  montant: string;
+  repartition_type?: 'generale' | 'groupe';
+  repartition_cible?: string | null;
+}
+const POSTE_VIDE: Poste = {
+  libelle: '',
+  categorie: 'autre',
+  montant: '',
+  repartition_type: 'generale',
+  repartition_cible: null,
+};
 
 interface BudgetResolution {
   id: string;
   titre: string;
   type_resolution: string | null;
-  budget_postes: { libelle: string; montant: number }[] | null;
+  budget_postes: {
+    libelle: string;
+    montant: number;
+    repartition_type?: 'generale' | 'groupe' | null;
+    repartition_cible?: string | null;
+  }[] | null;
   fonds_travaux_montant: number | null;
 }
 
@@ -79,7 +101,12 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   const [error, setError] = useState('');
 
   const [lots, setLots] = useState<{
-    id: string; numero: string; tantiemes: number;
+    id: string;
+    numero: string;
+    tantiemes: number;
+    coproprietaire_id: string | null;
+    batiment?: string | null;
+    groupes_repartition?: string[] | null;
     coproprietaire?: { id: string; nom: string; prenom: string };
   }[]>([]);
 
@@ -114,20 +141,27 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   const [genDateDebut, setGenDateDebut] = useState('');
   const [genPeriodicite, setGenPeriodicite] = useState<'mensuel' | 'trimestriel' | 'semestriel' | 'annuel'>('trimestriel');
 
+  const availableRepartitionGroups = useMemo(() => collectAvailableRepartitionGroups(lots), [lots]);
+
   // -- Charger les lots ----------------------------------------
   useEffect(() => {
     if (!coproprieteId) return;
     supabase
       .from('lots')
-      .select('id, numero, tantiemes, coproprietaires(id, nom, prenom)')
+      .select('id, numero, tantiemes, batiment, groupes_repartition, coproprietaires(id, nom, prenom)')
       .eq('copropriete_id', coproprieteId)
       .then(({ data }) => {
-        setLots((data ?? []).map((lot) => ({
-          ...lot,
-          coproprietaire: Array.isArray(lot.coproprietaires)
+        setLots((data ?? []).map((lot) => {
+          const coproprietaire = Array.isArray(lot.coproprietaires)
             ? lot.coproprietaires[0]
-            : (lot.coproprietaires as unknown as { id: string; nom: string; prenom: string } | undefined),
-        })));
+            : (lot.coproprietaires as unknown as { id: string; nom: string; prenom: string } | undefined);
+
+          return {
+            ...lot,
+            coproprietaire_id: coproprietaire?.id ?? null,
+            coproprietaire,
+          };
+        }));
       });
   }, [coproprieteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -150,7 +184,13 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       if (res.type_resolution === 'budget_previsionnel' || res.type_resolution === 'revision_budget') {
         hasBudgetPrev = true;
         if (res.budget_postes?.length) {
-          newPostes.push(...res.budget_postes.map((p) => ({ libelle: p.libelle, categorie: 'autre', montant: String(p.montant) })));
+          newPostes.push(...res.budget_postes.map((p) => ({
+            libelle: p.libelle,
+            categorie: 'autre',
+            montant: String(p.montant),
+            repartition_type: p.repartition_type ?? 'generale',
+            repartition_cible: p.repartition_cible ?? null,
+          })));
         }
       }
       if (res.type_resolution === 'fonds_travaux' && res.fonds_travaux_montant) {
@@ -260,7 +300,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                 id: r.id,
                 titre: r.titre,
                 type_resolution: r.type_resolution,
-                budget_postes: r.budget_postes as { libelle: string; montant: number }[] | null,
+                budget_postes: r.budget_postes as BudgetResolution['budget_postes'],
                 fonds_travaux_montant: r.fonds_travaux_montant,
               })),
           };
@@ -321,10 +361,37 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
   };
 
   // -- Calculs -------------------------------------------------
-  const totalTantiemsVal = lots.reduce((s, l) => s + (l.tantiemes ?? 0), 0);
   const montantTotal = postes.reduce((s, p) => p.categorie === 'fonds_travaux_alur' ? s : s + (parseFloat(p.montant) || 0), 0);
   const montantFTEffectif = agImportee ? montantFondsTravaux : (parseFloat(montantFTManuel) || 0);
   const totalBudgetAvecFT = roundToCents(montantTotal + montantFTEffectif);
+  const postesPourRepartition = useMemo(() => {
+    const validPostes = postes
+      .filter((poste) => poste.libelle.trim() && (parseFloat(poste.montant) || 0) > 0)
+      .map((poste) => ({
+        libelle: poste.libelle.trim(),
+        categorie: poste.categorie,
+        montant: parseFloat(poste.montant) || 0,
+        repartition_type: poste.repartition_type ?? 'generale',
+        repartition_cible: poste.repartition_type === 'groupe' ? (poste.repartition_cible ?? null) : null,
+      }));
+
+    if (
+      !agImportee
+      && typeAppelExceptionnel === 'budget_previsionnel'
+      && montantFTEffectif > 0
+      && !validPostes.some((poste) => poste.categorie === 'fonds_travaux_alur')
+    ) {
+      validPostes.push({
+        libelle: 'Fonds de travaux (ALUR)',
+        categorie: 'fonds_travaux_alur',
+        montant: montantFTEffectif,
+        repartition_type: 'generale',
+        repartition_cible: null,
+      });
+    }
+
+    return validPostes;
+  }, [agImportee, montantFTEffectif, postes, typeAppelExceptionnel]);
   const totalEcheancier = useEcheancier
     ? roundToCents(editableVersements.reduce((s, v) => s + (parseFloat(v.montant) || 0), 0))
     : totalBudgetAvecFT;
@@ -369,22 +436,21 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     });
   };
 
-  // Regrouper les lots par copropriétaire (cumul des tantièmes si multi-lots)
   const repartition = useMemo(() => {
-    const map = new Map<string, { copId: string; cop: { id: string; nom: string; prenom: string }; tantiemes: number; lotId: string | null }>();
+    const coproById = new Map<string, { id: string; nom: string; prenom: string }>();
     for (const lot of lots) {
-      if (!lot.coproprietaire) continue;
-      const copId = lot.coproprietaire.id;
-      if (map.has(copId)) {
-        const e = map.get(copId)!;
-        e.tantiemes += lot.tantiemes ?? 0;
-        e.lotId = null; // plusieurs lots → pas de lot_id unique
-      } else {
-        map.set(copId, { copId, cop: lot.coproprietaire, tantiemes: lot.tantiemes ?? 0, lotId: lot.id });
+      if (lot.coproprietaire) {
+        coproById.set(lot.coproprietaire.id, lot.coproprietaire);
       }
     }
-    return repartirMontant(montantTotal, Array.from(map.values()));
-  }, [lots, montantTotal, totalTantiemsVal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const rows = repartitionParPostes(totalBudgetAvecFT, lots, postesPourRepartition).map((row) => ({
+      ...row,
+      cop: coproById.get(row.copId),
+    }));
+
+    return rows.filter((row): row is (typeof rows)[number] & { cop: { id: string; nom: string; prenom: string } } => Boolean(row.cop));
+  }, [lots, postesPourRepartition, totalBudgetAvecFT]);
 
   const typeAppel = isExceptionnel ? typeAppelExceptionnel
     : agImportee?.resolutions.find((r) => r.id === resolutionLieeId)?.type_resolution ?? 'exceptionnel';
@@ -397,7 +463,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     setLoading(true);
     setError('');
 
-    const postesValides = postes.filter((p) => p.libelle.trim() && parseFloat(p.montant) > 0);
+    const postesValides = postesPourRepartition;
     if (postesValides.length === 0) {
       setError('Ajoutez au moins un poste avec un montant.');
       setLoading(false);
@@ -460,7 +526,8 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
               : 0,
             date_echeance: vers.date,
             description: JSON.stringify(postesValides.map((p) => ({
-              ...p, montant: String(Math.round(parseFloat(p.montant) * shareRatio * 100) / 100),
+              ...p,
+              montant: Math.round(p.montant * shareRatio * 100) / 100,
             }))),
             ag_resolution_id: resolutionLieeId || null,
             type_appel: typeAppel,
@@ -687,17 +754,45 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
                 {postesExpanded && (
                   <div className="p-3 space-y-2 border-t border-gray-200 bg-white">
-                    <div className="grid grid-cols-[1fr_auto] gap-2 text-xs text-gray-400 px-1">
-                      <span>Libellé</span><span className="w-28 text-right pr-8">Montant (€)</span>
+                    <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                      <p className="font-medium">Par défaut, chaque ligne est répartie en charges communes.</p>
+                      <p className="mt-0.5 text-blue-600">
+                        Vous pouvez cibler un bâtiment ou un groupe spécial si besoin.
+                        {availableRepartitionGroups.length === 0
+                          ? ' Commencez simplement par renseigner un bâtiment dans vos lots.'
+                          : ` Groupes disponibles : ${availableRepartitionGroups.join(', ')}.`}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-[1fr_7rem_12rem_auto] gap-2 text-xs text-gray-400 px-1">
+                      <span>Libellé</span>
+                      <span className="text-right">Montant (€)</span>
+                      <span>Répartition</span>
+                      <span />
                     </div>
                     {postes.map((poste, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
+                      <div key={idx} className="grid grid-cols-[1fr_7rem_12rem_auto] items-center gap-2">
                         <input type="text" placeholder="Ex : Entretien ascenseur" value={poste.libelle}
                           onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? { ...x, libelle: e.target.value } : x))}
-                          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         <input type="number" min="0" step="0.01" placeholder="0,00" value={poste.montant}
                           onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? { ...x, montant: e.target.value } : x))}
-                          className="w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <select
+                          value={poste.repartition_type === 'groupe' && poste.repartition_cible ? `groupe:${poste.repartition_cible}` : 'generale'}
+                          onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? {
+                            ...x,
+                            repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
+                            repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : null,
+                          } : x))}
+                          className="rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="generale">Charges communes</option>
+                          {availableRepartitionGroups.map((group) => (
+                            <option key={group} value={`groupe:${group}`}>
+                              Seulement {group}
+                            </option>
+                          ))}
+                        </select>
                         {postes.length > 1 && (
                           <button type="button" onClick={() => setPostes((p) => p.filter((_, i) => i !== idx))}
                             className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
@@ -858,7 +953,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
               )}
 
               {/* ── Aperçu répartition ──────────────────────── */}
-              {montantTotal > 0 && repartition.length > 0 && (
+              {totalBudgetAvecFT > 0 && repartition.length > 0 && (
                 <div className="border border-gray-200 rounded-xl overflow-hidden">
                   <button type="button" onClick={() => setRepartitionExpanded((v) => !v)}
                     className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -874,8 +969,17 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                     </div>
                   </button>
                   {repartitionExpanded && (
-                    <table className="w-full text-xs border-t border-gray-200">
-                      <tbody>
+                    <div className="border-t border-gray-200">
+                      {postesPourRepartition.some((poste) => poste.repartition_type === 'groupe') && (
+                        <div className="bg-blue-50 px-4 py-2 text-[11px] text-blue-700">
+                          Clés spéciales : {postesPourRepartition
+                            .filter((poste) => poste.repartition_type === 'groupe')
+                            .map((poste) => `${poste.libelle} → ${formatRepartitionScope(poste.repartition_type, poste.repartition_cible)}`)
+                            .join(' · ')}
+                        </div>
+                      )}
+                      <table className="w-full text-xs">
+                        <tbody>
                         {repartition.map((r) => (
                           <tr key={r.copId} className="border-t border-gray-100 hover:bg-gray-50">
                             <td className="px-4 py-2 font-medium text-gray-700">
@@ -886,8 +990,9 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                             </td>
                           </tr>
                         ))}
-                      </tbody>
-                    </table>
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </div>
               )}

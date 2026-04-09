@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { parseBudgetPostesFromDescription, repartitionParPostes } from '@/lib/utils';
 import { isSubscribed } from '@/lib/subscription';
 
 export async function POST(
@@ -51,7 +52,7 @@ export async function POST(
   // Lots avec copropriétaires assignés
   const { data: lots } = await supabase
     .from('lots')
-    .select('id, tantiemes, coproprietaire_id')
+    .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition')
     .eq('copropriete_id', appel.copropriete_id)
     .not('coproprietaire_id', 'is', null);
 
@@ -66,23 +67,21 @@ export async function POST(
     return NextResponse.json({ message: 'La somme des tantièmes est zéro.' }, { status: 422 });
   }
 
-  // Répartition par copropriétaire (cumul si multi-lots)
-  const coprMap = new Map<string, { tantiemes: number; lotId: string | null }>();
-  for (const lot of lots) {
-    const copId = lot.coproprietaire_id as string;
-    if (coprMap.has(copId)) {
-      const e = coprMap.get(copId)!;
-      e.tantiemes += lot.tantiemes ?? 0;
-      e.lotId = null;
-    } else {
-      coprMap.set(copId, { tantiemes: lot.tantiemes ?? 0, lotId: lot.id });
-    }
+  const postes = parseBudgetPostesFromDescription(appel.description);
+  if (
+    (appel.montant_fonds_travaux ?? 0) > 0
+    && !postes.some((poste) => poste.categorie === 'fonds_travaux_alur' || /fonds\s+de\s+travaux/i.test(poste.libelle))
+  ) {
+    postes.push({
+      libelle: 'Fonds de travaux (ALUR)',
+      categorie: 'fonds_travaux_alur',
+      montant: appel.montant_fonds_travaux,
+      repartition_type: 'generale',
+      repartition_cible: null,
+    });
   }
-  const repartition = Array.from(coprMap.entries()).map(([copId, e]) => ({
-    copId,
-    lotId: e.lotId,
-    montant: Math.round((appel.montant_total * e.tantiemes / totalTantiemes) * 100) / 100,
-  }));
+
+  const repartition = repartitionParPostes(appel.montant_total, lots, postes);
 
   // Supprimer les lignes existantes si récréation
   await supabase.from('lignes_appels_de_fonds').delete().eq('appel_de_fonds_id', appelId);

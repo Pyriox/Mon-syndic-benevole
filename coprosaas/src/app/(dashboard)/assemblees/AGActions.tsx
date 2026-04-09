@@ -4,7 +4,7 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -12,7 +12,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
-import { formatEuros, getDefaultFundingCallDate, toParisISOString } from '@/lib/utils';
+import { collectAvailableRepartitionGroups, formatEuros, getDefaultFundingCallDate, toParisISOString } from '@/lib/utils';
 import {
   Plus, AlertTriangle, Video, Calendar, Zap,
   ChevronDown, ChevronUp, Trash2, Users, Check,
@@ -25,6 +25,20 @@ interface AGActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; }
 // Types du wizard
 // -------------------------------------------------------
 type WizardStep = 1 | 2;
+
+type WizardBudgetPoste = {
+  libelle: string;
+  montant: string;
+  repartition_type?: 'generale' | 'groupe';
+  repartition_cible?: string;
+};
+
+const EMPTY_BUDGET_POSTE: WizardBudgetPoste = {
+  libelle: '',
+  montant: '',
+  repartition_type: 'generale',
+  repartition_cible: '',
+};
 
 interface WizardResolution {
   id: string;
@@ -39,7 +53,7 @@ interface WizardResolution {
   hasFondsTravaux: boolean;
   isDesignation: boolean;
   hasEcheancier?: boolean;
-  budgetPostes: { libelle: string; montant: string }[];
+  budgetPostes: WizardBudgetPoste[];
   fondsTravaux: string;
   echeancierDates: string[];
   expanded: boolean;
@@ -101,7 +115,7 @@ function initResolutions(type: 'ordinaire' | 'exceptionnelle', referenceYear: nu
   return templates.map((t) => ({
     ...t,
     inclure: !t.optional || t.type_resolution === 'designation_syndic',
-    budgetPostes: t.hasBudget ? [{ libelle: '', montant: '' }] : [],
+    budgetPostes: t.hasBudget ? [{ ...EMPTY_BUDGET_POSTE }] : [],
     fondsTravaux: '',
     echeancierDates: t.hasEcheancier ? [''] : [],
     expanded: t.hasBudget || t.hasFondsTravaux || !!t.hasEcheancier,
@@ -142,6 +156,27 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
 
   // -- Étape 2 --
   const [resolutions, setResolutions] = useState<WizardResolution[]>([]);
+  const [availableRepartitionGroups, setAvailableRepartitionGroups] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!isOpen || !formData.copropriete_id) return;
+
+    const loadGroups = async () => {
+      const { data: lots } = await supabase
+        .from('lots')
+        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition')
+        .eq('copropriete_id', formData.copropriete_id);
+
+      setAvailableRepartitionGroups(collectAvailableRepartitionGroups((lots ?? []).map((lot) => ({
+        ...lot,
+        coproprietaire_id: lot.coproprietaire_id ?? null,
+        batiment: lot.batiment ?? null,
+        groupes_repartition: lot.groupes_repartition ?? [],
+      }))));
+    };
+
+    void loadGroups();
+  }, [formData.copropriete_id, isOpen, supabase]);
 
   // -- Helpers --
   const updateDateTime = (d: string, h: string, m: string) =>
@@ -215,7 +250,12 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
         const postesValides = r.hasBudget
           ? r.budgetPostes
               .filter((p) => p.libelle.trim())
-              .map((p) => ({ libelle: p.libelle.trim(), montant: parseFloat(p.montant) || 0 }))
+              .map((p) => ({
+                libelle: p.libelle.trim(),
+                montant: parseFloat(p.montant) || 0,
+                repartition_type: p.repartition_type === 'groupe' ? 'groupe' : 'generale',
+                repartition_cible: p.repartition_type === 'groupe' ? (p.repartition_cible || null) : null,
+              }))
           : r.hasEcheancier
             ? r.echeancierDates.filter((d) => d.trim()).map((d) => ({ libelle: d, montant: 0 }))
             : [];
@@ -568,17 +608,23 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                           Postes du budget <span className="text-gray-400 font-normal">(vous pouvez compléter plus tard)</span>
                         </label>
                         <button type="button"
-                          onClick={() => updateResolution(r.id, { budgetPostes: [...r.budgetPostes, { libelle: '', montant: '' }] })}
+                          onClick={() => updateResolution(r.id, { budgetPostes: [...r.budgetPostes, { ...EMPTY_BUDGET_POSTE }] })}
                           className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-medium">
                           <Plus size={12} /> Ajouter un poste
                         </button>
                       </div>
                       <div className="space-y-1.5 bg-white/60 rounded-lg p-2 border border-indigo-100">
+                        <div className="rounded-lg border border-indigo-100 bg-white px-3 py-2 text-[11px] text-indigo-700">
+                          Charges communes par défaut.
+                          {availableRepartitionGroups.length > 0
+                            ? ` Vous pouvez aussi cibler : ${availableRepartitionGroups.join(', ')}.`
+                            : ' Ajoutez simplement un bâtiment ou un groupe dans vos lots pour créer une clé spéciale.'}
+                        </div>
                         {r.budgetPostes.length === 0 && (
                           <p className="text-xs text-gray-400 text-center py-2">Aucun poste — cliquez sur &quot;Ajouter un poste&quot;</p>
                         )}
                         {r.budgetPostes.map((p, i) => (
-                          <div key={i} className="grid grid-cols-[1fr_auto_auto] gap-1.5 items-center">
+                          <div key={i} className="grid grid-cols-[1fr_7rem_12rem_auto] gap-1.5 items-center">
                             <input type="text" placeholder="Ex : Gardiennage, Entretien ascenseur..."
                               value={p.libelle}
                               onChange={(e) => updateResolution(r.id, {
@@ -590,7 +636,23 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                               onChange={(e) => updateResolution(r.id, {
                                 budgetPostes: r.budgetPostes.map((x, idx) => idx === i ? { ...x, montant: e.target.value } : x),
                               })}
-                              className="w-24 text-xs rounded-lg border border-indigo-200 bg-white px-2 py-1.5 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                              className="w-full text-xs rounded-lg border border-indigo-200 bg-white px-2 py-1.5 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            <select
+                              value={p.repartition_type === 'groupe' && p.repartition_cible ? `groupe:${p.repartition_cible}` : 'generale'}
+                              onChange={(e) => updateResolution(r.id, {
+                                budgetPostes: r.budgetPostes.map((x, idx) => idx === i ? {
+                                  ...x,
+                                  repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
+                                  repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : '',
+                                } : x),
+                              })}
+                              className="text-xs rounded-lg border border-indigo-200 bg-white px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <option value="generale">Charges communes</option>
+                              {availableRepartitionGroups.map((group) => (
+                                <option key={group} value={`groupe:${group}`}>Seulement {group}</option>
+                              ))}
+                            </select>
                             <button type="button"
                               onClick={() => updateResolution(r.id, { budgetPostes: r.budgetPostes.filter((_, idx) => idx !== i) })}
                               className="p-1 text-indigo-400 hover:text-red-500 transition-colors">

@@ -204,6 +204,189 @@ export function repartirMontant<T extends { tantiemes: number }>(
   return result;
 }
 
+export type RepartitionType = 'generale' | 'groupe';
+
+export interface RepartitionLotLike {
+  id: string;
+  numero?: string | null;
+  tantiemes: number;
+  coproprietaire_id: string | null;
+  batiment?: string | null;
+  groupes_repartition?: string[] | null;
+}
+
+export interface RepartitionPosteInput {
+  libelle: string;
+  montant: number;
+  repartition_type?: RepartitionType | null;
+  repartition_cible?: string | null;
+}
+
+export interface BudgetPosteDescription extends RepartitionPosteInput {
+  categorie?: string | null;
+}
+
+function normalizeRepartitionLabel(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const normalized = value.trim().replace(/\s+/g, ' ');
+  return normalized || null;
+}
+
+export function parseBudgetPostesFromDescription(description: string | null | undefined): BudgetPosteDescription[] {
+  if (!description) return [];
+
+  try {
+    const parsed = JSON.parse(description);
+    if (!Array.isArray(parsed)) return [];
+
+    const normalized = parsed
+      .map((poste) => {
+        if (!poste || typeof poste !== 'object') return null;
+
+        const raw = poste as Record<string, unknown>;
+        const libelle = typeof raw.libelle === 'string' ? raw.libelle.trim() : '';
+        const montant = typeof raw.montant === 'number'
+          ? raw.montant
+          : Number.parseFloat(String(raw.montant ?? '0'));
+        const repartitionType = raw.repartition_type === 'groupe' ? 'groupe' : 'generale';
+        const repartitionCible = normalizeRepartitionLabel(
+          typeof raw.repartition_cible === 'string' ? raw.repartition_cible : null
+        );
+
+        if (!libelle || !(montant > 0)) return null;
+
+        return {
+          libelle,
+          montant,
+          categorie: typeof raw.categorie === 'string' ? raw.categorie : null,
+          repartition_type: repartitionType,
+          repartition_cible: repartitionType === 'groupe' ? repartitionCible : null,
+        } as BudgetPosteDescription;
+      })
+      .filter(Boolean) as BudgetPosteDescription[];
+
+    return normalized;
+  } catch {
+    return [];
+  }
+}
+
+export function getLotRepartitionGroups(lot: Pick<RepartitionLotLike, 'batiment' | 'groupes_repartition'>): string[] {
+  const groups = [
+    normalizeRepartitionLabel(lot.batiment ?? null),
+    ...((lot.groupes_repartition ?? []).map((group) => normalizeRepartitionLabel(group)).filter(Boolean) as string[]),
+  ];
+
+  return Array.from(new Set(groups.filter((group): group is string => Boolean(group)))).sort((a, b) => a.localeCompare(b, 'fr'));
+}
+
+export function collectAvailableRepartitionGroups(lots: RepartitionLotLike[]): string[] {
+  const seen = new Set<string>();
+
+  for (const lot of lots) {
+    for (const group of getLotRepartitionGroups(lot)) {
+      seen.add(group);
+    }
+  }
+
+  return Array.from(seen).sort((a, b) => a.localeCompare(b, 'fr'));
+}
+
+export function formatRepartitionScope(type?: RepartitionType | null, target?: string | null): string {
+  if (type === 'groupe') {
+    return normalizeRepartitionLabel(target) ?? 'Clé spéciale';
+  }
+
+  return 'Charges communes';
+}
+
+export function filterLotsByRepartitionScope(
+  lots: RepartitionLotLike[],
+  type?: RepartitionType | null,
+  target?: string | null,
+): RepartitionLotLike[] {
+  const eligibleLots = lots.filter((lot) => lot.coproprietaire_id && (lot.tantiemes ?? 0) > 0);
+  if (type !== 'groupe') return eligibleLots;
+
+  const normalizedTarget = normalizeRepartitionLabel(target);
+  if (!normalizedTarget) return eligibleLots;
+
+  const scopedLots = eligibleLots.filter((lot) => getLotRepartitionGroups(lot).includes(normalizedTarget));
+  return scopedLots.length > 0 ? scopedLots : eligibleLots;
+}
+
+export function groupLotsByCoproprietaire<T extends { id: string; tantiemes: number; coproprietaire_id: string | null }>(lots: T[]) {
+  const coproMap = new Map<string, { copId: string; lotId: string | null; tantiemes: number }>();
+
+  for (const lot of lots) {
+    if (!lot.coproprietaire_id) continue;
+
+    if (coproMap.has(lot.coproprietaire_id)) {
+      const existing = coproMap.get(lot.coproprietaire_id)!;
+      existing.tantiemes += lot.tantiemes ?? 0;
+      existing.lotId = null;
+      continue;
+    }
+
+    coproMap.set(lot.coproprietaire_id, {
+      copId: lot.coproprietaire_id,
+      lotId: lot.id,
+      tantiemes: lot.tantiemes ?? 0,
+    });
+  }
+
+  return Array.from(coproMap.values());
+}
+
+export function repartitionParPostes(
+  montantTotal: number,
+  lots: RepartitionLotLike[],
+  postes: RepartitionPosteInput[],
+) {
+  const postesValides = postes.filter((poste) => (poste.montant ?? 0) > 0);
+  const lotsEligibles = lots.filter((lot) => lot.coproprietaire_id && (lot.tantiemes ?? 0) > 0);
+
+  if (lotsEligibles.length === 0) return [] as Array<{ copId: string; lotId: string | null; tantiemes: number; montant: number }>;
+
+  if (postesValides.length === 0) {
+    return repartirMontant(montantTotal, groupLotsByCoproprietaire(lotsEligibles));
+  }
+
+  const amountsByOwner = new Map<string, { copId: string; lotId: string | null; tantiemes: number; montant: number }>();
+
+  for (const poste of postesValides) {
+    const scopedLots = filterLotsByRepartitionScope(lotsEligibles, poste.repartition_type ?? 'generale', poste.repartition_cible ?? null);
+    const groupedLots = groupLotsByCoproprietaire(scopedLots);
+
+    for (const share of repartirMontant(poste.montant, groupedLots)) {
+      if (amountsByOwner.has(share.copId)) {
+        const existing = amountsByOwner.get(share.copId)!;
+        existing.montant = Math.round((existing.montant + share.montant) * 100) / 100;
+      } else {
+        amountsByOwner.set(share.copId, { ...share });
+      }
+    }
+  }
+
+  const result = Array.from(amountsByOwner.values());
+  const distributedTotal = Math.round(result.reduce((sum, row) => sum + row.montant, 0) * 100) / 100;
+  const targetTotal = Math.round(((montantTotal > 0 ? montantTotal : postesValides.reduce((sum, poste) => sum + poste.montant, 0))) * 100) / 100;
+  const diff = Math.round((targetTotal - distributedTotal) * 100) / 100;
+
+  if (diff !== 0 && result.length > 0) {
+    let refIndex = 0;
+    for (let index = 1; index < result.length; index += 1) {
+      if (result[index].tantiemes > result[refIndex].tantiemes) refIndex = index;
+    }
+    result[refIndex] = {
+      ...result[refIndex],
+      montant: Math.round((result[refIndex].montant + diff) * 100) / 100,
+    };
+  }
+
+  return result;
+}
+
 // ---- Calcul du total des tantièmes d'une copropriété ----
 export function totalTantiemes(lots: { tantiemes: number }[]): number {
   return lots.reduce((sum, lot) => sum + lot.tantiemes, 0);

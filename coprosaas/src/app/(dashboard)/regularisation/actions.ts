@@ -154,13 +154,34 @@ export async function calculerRegularisation(exerciceId: string): Promise<Regula
   // Dépenses réelles de l'exercice (hors fonds_travaux_alur)
   const { data: depenses } = await supabase
     .from('depenses')
-    .select('montant')
+    .select('id, montant')
     .eq('copropriete_id', coproprieteId)
     .gte('date_depense', exercice.date_debut)
     .lte('date_depense', exercice.date_fin)
     .neq('categorie', 'fonds_travaux_alur');
 
-  const totalReelles = (depenses ?? []).reduce((s, d) => s + d.montant, 0);
+  const depenseIds = (depenses ?? []).map((depense) => depense.id);
+  const montantReelByOwner: Record<string, number> = {};
+  let hasScopedExpenseRepartition = false;
+
+  if (depenseIds.length > 0) {
+    const { data: repartitionsDepenses } = await supabase
+      .from('repartitions_depenses')
+      .select('coproprietaire_id, montant_du')
+      .in('depense_id', depenseIds);
+
+    if ((repartitionsDepenses?.length ?? 0) > 0) {
+      hasScopedExpenseRepartition = true;
+      for (const ligne of repartitionsDepenses ?? []) {
+        if (ligne.coproprietaire_id) {
+          montantReelByOwner[ligne.coproprietaire_id] =
+            (montantReelByOwner[ligne.coproprietaire_id] ?? 0) + (ligne.montant_du ?? 0);
+        }
+      }
+    }
+  }
+
+  const totalReellesFallback = (depenses ?? []).reduce((s, d) => s + d.montant, 0);
 
   // Récupérer les soldes_reprise et modes existants pour les préserver
   const { data: existingLignes } = await supabase
@@ -179,7 +200,9 @@ export async function calculerRegularisation(exerciceId: string): Promise<Regula
   const rows = (coproprietaires ?? []).map((c) => {
     const tant = tantByOwner[c.id] ?? 0;
     const pct = totalTantiemes > 0 ? tant / totalTantiemes : 0;
-    const montantReel = Math.round(totalReelles * pct * 100) / 100;
+    const montantReel = hasScopedExpenseRepartition
+      ? Math.round((montantReelByOwner[c.id] ?? 0) * 100) / 100
+      : Math.round(totalReellesFallback * pct * 100) / 100;
     const montantAppele = Math.round((montantAppeleByOwner[c.id] ?? 0) * 100) / 100;
 
     return {

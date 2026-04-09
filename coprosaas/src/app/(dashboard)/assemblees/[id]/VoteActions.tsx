@@ -5,12 +5,17 @@
 // ============================================================
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { CheckCircle, XCircle, MinusCircle, Plus, Trash2 } from 'lucide-react';
-import { formatEuros } from '@/lib/utils';
+import { formatEuros, formatRepartitionScope } from '@/lib/utils';
 
-type PosteBudget = { libelle: string; montant: number };
+type PosteBudget = {
+  libelle: string;
+  montant: number;
+  repartition_type?: 'generale' | 'groupe' | null;
+  repartition_cible?: string | null;
+};
 
 interface VoteActionsProps {
   resolutionId: string;
@@ -32,13 +37,10 @@ export default function VoteActions({
   const supabase = createClient();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [displayedVotes, setDisplayedVotes] = useState({
-    voixPour,
-    voixContre,
-    voixAbstention,
-    statut,
-  });
-  const [displayedBudgetPostes, setDisplayedBudgetPostes] = useState<PosteBudget[]>(budgetPostes);
+  const [optimisticState, setOptimisticState] = useState<{
+    votes: { voixPour: number; voixContre: number; voixAbstention: number; statut: string };
+    budgetPostes: PosteBudget[];
+  } | null>(null);
   const [form, setForm] = useState({
     voix_pour: String(voixPour),
     voix_contre: String(voixContre),
@@ -46,32 +48,59 @@ export default function VoteActions({
     statut,
   });
 
-  const [postes, setPostes] = useState<{ libelle: string; montant: string }[]>(
+  const [postes, setPostes] = useState<{
+    libelle: string;
+    montant: string;
+    repartition_type: 'generale' | 'groupe';
+    repartition_cible: string;
+  }[]>(
     budgetPostes.length > 0
-      ? budgetPostes.map((p) => ({ libelle: p.libelle, montant: String(p.montant) }))
+      ? budgetPostes.map((p) => ({
+        libelle: p.libelle,
+        montant: String(p.montant),
+        repartition_type: p.repartition_type === 'groupe' ? 'groupe' : 'generale',
+        repartition_cible: p.repartition_cible ?? '',
+      }))
       : []
   );
   const [showPostes, setShowPostes] = useState(budgetPostes.length > 0);
 
-  useEffect(() => {
-    setDisplayedVotes({ voixPour, voixContre, voixAbstention, statut });
-    setDisplayedBudgetPostes(budgetPostes);
+  const displayedVotes = optimisticState?.votes ?? {
+    voixPour,
+    voixContre,
+    voixAbstention,
+    statut,
+  };
+  const displayedBudgetPostes = optimisticState?.budgetPostes ?? budgetPostes;
+
+  const openEditor = () => {
     setForm({
-      voix_pour: String(voixPour),
-      voix_contre: String(voixContre),
-      voix_abstention: String(voixAbstention),
-      statut,
+      voix_pour: String(displayedVotes.voixPour),
+      voix_contre: String(displayedVotes.voixContre),
+      voix_abstention: String(displayedVotes.voixAbstention),
+      statut: displayedVotes.statut,
     });
     setPostes(
-      budgetPostes.length > 0
-        ? budgetPostes.map((p) => ({ libelle: p.libelle, montant: String(p.montant) }))
+      displayedBudgetPostes.length > 0
+        ? displayedBudgetPostes.map((p) => ({
+          libelle: p.libelle,
+          montant: String(p.montant),
+          repartition_type: p.repartition_type === 'groupe' ? 'groupe' : 'generale',
+          repartition_cible: p.repartition_cible ?? '',
+        }))
         : []
     );
-    setShowPostes(budgetPostes.length > 0);
-  }, [budgetPostes, statut, voixAbstention, voixContre, voixPour]);
+    setShowPostes(displayedBudgetPostes.length > 0);
+    setEditing(true);
+  };
 
   const totalBudget = postes.reduce((s, p) => s + (parseFloat(p.montant) || 0), 0);
-  const addPoste = () => setPostes((prev) => [...prev, { libelle: '', montant: '' }]);
+  const addPoste = () => setPostes((prev) => [...prev, {
+    libelle: '',
+    montant: '',
+    repartition_type: 'generale',
+    repartition_cible: '',
+  }]);
   const removePoste = (i: number) => setPostes((prev) => prev.filter((_, idx) => idx !== i));
   const updatePoste = (i: number, field: 'libelle' | 'montant', val: string) =>
     setPostes((prev) => prev.map((p, idx) => (idx === i ? { ...p, [field]: val } : p)));
@@ -87,7 +116,12 @@ export default function VoteActions({
     }
 
     const postesValides = showPostes
-      ? postes.filter((p) => p.libelle.trim()).map((p) => ({ libelle: p.libelle.trim(), montant: parseFloat(p.montant) || 0 }))
+      ? postes.filter((p) => p.libelle.trim()).map((p) => ({
+        libelle: p.libelle.trim(),
+        montant: parseFloat(p.montant) || 0,
+        repartition_type: p.repartition_type,
+        repartition_cible: p.repartition_type === 'groupe' ? (p.repartition_cible || null) : null,
+      }))
       : [];
 
     await supabase.from('resolutions').update({
@@ -98,13 +132,15 @@ export default function VoteActions({
       budget_postes: postesValides.length > 0 ? postesValides : null,
     }).eq('id', resolutionId);
 
-    setDisplayedVotes({
-      voixPour: pour,
-      voixContre: contre,
-      voixAbstention: parseInt(form.voix_abstention) || 0,
-      statut: newStatut,
+    setOptimisticState({
+      votes: {
+        voixPour: pour,
+        voixContre: contre,
+        voixAbstention: parseInt(form.voix_abstention) || 0,
+        statut: newStatut,
+      },
+      budgetPostes: postesValides,
     });
-    setDisplayedBudgetPostes(postesValides);
     setEditing(false);
     setLoading(false);
   };
@@ -113,7 +149,7 @@ export default function VoteActions({
     return (
       <div className="mt-2">
         <button
-          onClick={() => setEditing(true)}
+          onClick={openEditor}
           className="flex items-center gap-3 text-xs text-gray-400 hover:text-blue-600 transition-colors group"
         >
           <span className="flex items-center gap-1 text-green-600">
@@ -139,7 +175,12 @@ export default function VoteActions({
               <tbody>
                 {displayedBudgetPostes.map((p, i) => (
                   <tr key={i} className="border-t border-gray-100">
-                    <td className="px-3 py-1.5 text-gray-700">{p.libelle}</td>
+                    <td className="px-3 py-1.5 text-gray-700">
+                      <div>
+                        <div>{p.libelle}</div>
+                        <div className="text-[10px] text-gray-400">{formatRepartitionScope(p.repartition_type, p.repartition_cible)}</div>
+                      </div>
+                    </td>
                     <td className="px-3 py-1.5 text-right font-semibold text-gray-900">{formatEuros(p.montant)}</td>
                   </tr>
                 ))}

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
+import { getSupportAttentionSummary } from '@/lib/admin-support';
 import { formatRelativeDayLabel } from '@/lib/admin-date';
 import { formatAdminCurrency } from '@/lib/admin-format';
 import AdminStatCard from '../AdminStatCard';
@@ -57,6 +58,7 @@ export default async function AdminDashboardPage() {
     { data: lotsParCopro },
     { data: coproprietairesParCopro },
     { data: agParCopro },
+    supportAttention,
   ] = await Promise.all([
     admin.from('lots').select('id', { count: 'exact', head: true }),
     admin.from('coproprietaires').select('id', { count: 'exact', head: true }),
@@ -70,6 +72,7 @@ export default async function AdminDashboardPage() {
     admin.from('lots').select('copropriete_id'),
     admin.from('coproprietaires').select('copropriete_id'),
     admin.from('assemblees_generales').select('copropriete_id'),
+    getSupportAttentionSummary(admin),
   ]);
 
   const { data: adminRows } = await admin.from('admin_users').select('user_id');
@@ -199,10 +202,10 @@ export default async function AdminDashboardPage() {
   const alertInvitationsExpirees = (invitations ?? []).filter((inv) => inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date());
   const alertCoprosWithoutLots = coprosTyped.filter((c) => (lotsCount[c.id] ?? 0) === 0);
   const alertPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du');
-  const nbTicketsOuverts = (ticketsSupport ?? []).filter((t) => (t as { status: string }).status === 'ouvert').length;
-  const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertCoprosWithoutLots.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length + nbTicketsOuverts;
+  const pendingSupportCount = supportAttention.pendingCount;
+  const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertCoprosWithoutLots.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length + pendingSupportCount;
   const priorityActions = [
-    nbTicketsOuverts > 0 ? { label: 'Tickets support', value: nbTicketsOuverts, href: '/admin/support', tone: 'indigo' } : null,
+    pendingSupportCount > 0 ? { label: 'Tickets support', value: pendingSupportCount, href: '/admin/support', tone: 'indigo' } : null,
     alertPasseDu.length > 0 ? { label: 'Abonnements impayés', value: alertPasseDu.length, href: '/admin/abonnements', tone: 'red' } : null,
     upcomingRenewals.length > 0 ? { label: 'Renouvellements < 14j', value: upcomingRenewals.length, href: '/admin/abonnements', tone: 'amber' } : null,
     alertNonConfirmedOld.length > 0 ? { label: 'Comptes non vérifiés > 7j', value: alertNonConfirmedOld.length, href: '/admin/utilisateurs', tone: 'orange' } : null,
@@ -349,12 +352,13 @@ export default async function AdminDashboardPage() {
             {nbAlertes} alerte{nbAlertes > 1 ? 's' : ''}
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
-            {nbTicketsOuverts > 0 && (
+            {pendingSupportCount > 0 && (
               <div className="flex items-start gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-3">
                 <LifeBuoy size={14} className="text-indigo-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-indigo-800">{nbTicketsOuverts} ticket{nbTicketsOuverts > 1 ? 's' : ''} support en attente</p>
-                  <Link href="/admin/support" className="text-xs text-indigo-600 mt-0.5 hover:underline">Voir les tickets</Link>
+                  <p className="text-sm font-semibold text-indigo-800">{pendingSupportCount} ticket{pendingSupportCount > 1 ? 's' : ''} support à traiter</p>
+                  <p className="text-xs text-indigo-600 mt-0.5">Dernier message client ou ticket encore sans réponse.</p>
+                  <Link href="/admin/support" className="text-xs text-indigo-600 mt-1 inline-block hover:underline">Voir les tickets</Link>
                 </div>
               </div>
             )}
@@ -437,8 +441,8 @@ export default async function AdminDashboardPage() {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
             <LifeBuoy size={12} />
             Tickets support
-            {nbTicketsOuverts > 0 && (
-              <span className="ml-1 bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{nbTicketsOuverts}</span>
+            {pendingSupportCount > 0 && (
+              <span className="ml-1 bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{pendingSupportCount}</span>
             )}
           </p>
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

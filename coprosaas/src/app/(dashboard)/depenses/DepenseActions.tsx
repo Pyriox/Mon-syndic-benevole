@@ -4,7 +4,7 @@
 // ============================================================
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -12,7 +12,14 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
-import { formatEuros, calculerPart, LABELS_CATEGORIE } from '@/lib/utils';
+import {
+  calculerPart,
+  collectAvailableRepartitionGroups,
+  filterLotsByRepartitionScope,
+  formatEuros,
+  formatRepartitionScope,
+  LABELS_CATEGORIE,
+} from '@/lib/utils';
 import { Plus, Calculator, Upload, Pencil, Trash2, Paperclip, X, ExternalLink } from 'lucide-react';
 
 interface Copropriete {
@@ -29,6 +36,8 @@ interface Depense {
   date_depense: string;
   description: string | null;
   piece_jointe_url: string | null;
+  repartition_type?: 'generale' | 'groupe';
+  repartition_cible?: string | null;
 }
 
 interface DepenseActionsProps {
@@ -52,7 +61,15 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Données chargées dynamiquement
-  const [lots, setLots] = useState<{ id: string; numero: string; tantiemes: number; coproprietaire?: { id: string; nom: string; prenom: string } }[]>([]);
+  const [lots, setLots] = useState<{
+    id: string;
+    numero: string;
+    tantiemes: number;
+    coproprietaire_id: string | null;
+    batiment?: string | null;
+    groupes_repartition?: string[] | null;
+    coproprietaire?: { id: string; nom: string; prenom: string };
+  }[]>([]);
 
   const [formData, setFormData] = useState({
     copropriete_id: depense?.copropriete_id ?? coproprietes[0]?.id ?? '',
@@ -61,6 +78,8 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
     montant: depense ? String(depense.montant) : '',
     date_depense: depense?.date_depense ?? new Date().toISOString().split('T')[0],
     description: depense?.description ?? '',
+    repartition_type: depense?.repartition_type ?? 'generale',
+    repartition_cible: depense?.repartition_cible ?? '',
   });
 
   // Chargement des lots avec leurs copropriétaires quand la copropriété change
@@ -70,16 +89,21 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
     const fetchLots = async () => {
       const { data } = await supabase
         .from('lots')
-        .select('id, numero, tantiemes, coproprietaires(id, nom, prenom)')
+        .select('id, numero, tantiemes, batiment, groupes_repartition, coproprietaires(id, nom, prenom)')
         .eq('copropriete_id', formData.copropriete_id);
 
       // Aplatir la relation (Supabase renvoie un tableau pour coproprietaires)
-      const lotsFlat = (data ?? []).map((lot) => ({
-        ...lot,
-        coproprietaire: Array.isArray(lot.coproprietaires)
+      const lotsFlat = (data ?? []).map((lot) => {
+        const coproprietaire = Array.isArray(lot.coproprietaires)
           ? lot.coproprietaires[0]
-          : lot.coproprietaires,
-      }));
+          : lot.coproprietaires;
+
+        return {
+          ...lot,
+          coproprietaire_id: coproprietaire?.id ?? null,
+          coproprietaire,
+        };
+      });
 
       setLots(lotsFlat);
     };
@@ -91,11 +115,21 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const availableRepartitionGroups = useMemo(() => collectAvailableRepartitionGroups(lots), [lots]);
+
   // Calcul de la répartition à afficher à l'utilisateur
-  const totalTantiemes = lots.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+  const lotsRepartition = useMemo(() => {
+    const eligibleIds = new Set(
+      filterLotsByRepartitionScope(lots, formData.repartition_type, formData.repartition_cible)
+        .map((lot) => lot.id)
+    );
+
+    return lots.filter((lot) => eligibleIds.has(lot.id));
+  }, [formData.repartition_cible, formData.repartition_type, lots]);
+  const totalTantiemes = lotsRepartition.reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
   const montantNum = parseFloat(formData.montant) || 0;
 
-  const repartition = lots.map((lot) => ({
+  const repartition = lotsRepartition.map((lot) => ({
     lot,
     montant: calculerPart(montantNum, lot.tantiemes ?? 0, totalTantiemes),
   }));
@@ -107,6 +141,10 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+
+    const repartitionCible = formData.repartition_type === 'groupe'
+      ? (formData.repartition_cible || null)
+      : null;
 
     // 1. Upload pièce jointe si présente
     let pieceJointeUrl: string | null = null;
@@ -137,6 +175,8 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
         montant: montantNum,
         date_depense: formData.date_depense,
         description: formData.description.trim() || null,
+        repartition_type: formData.repartition_type,
+        repartition_cible: repartitionCible,
       };
       if (pieceJointeUrl) updatePayload.piece_jointe_url = pieceJointeUrl;
       if (!pieceJointeActuelle && !pieceJointeUrl) updatePayload.piece_jointe_url = null;
@@ -151,6 +191,22 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
         setLoading(false);
         return;
       }
+
+      await supabase.from('repartitions_depenses').delete().eq('depense_id', depense.id);
+      const lignes = repartition
+        .filter((r) => r.lot.coproprietaire)
+        .map((r) => ({
+          depense_id: depense.id,
+          coproprietaire_id: r.lot.coproprietaire!.id,
+          lot_id: r.lot.id,
+          montant_du: r.montant,
+          paye: false,
+          date_paiement: null,
+        }));
+
+      if (lignes.length > 0) {
+        await supabase.from('repartitions_depenses').insert(lignes);
+      }
     } else {
       // Mode création : insertion de la dépense + répartitions
       const { data: newDepense, error: depError } = await supabase
@@ -163,6 +219,8 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
           date_depense: formData.date_depense,
           description: formData.description.trim() || null,
           piece_jointe_url: pieceJointeUrl,
+          repartition_type: formData.repartition_type,
+          repartition_cible: repartitionCible,
           created_by: user.id,
         })
         .select('id')
@@ -203,6 +261,8 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
         montant: '',
         date_depense: new Date().toISOString().split('T')[0],
         description: '',
+        repartition_type: 'generale',
+        repartition_cible: '',
       });
     }
     router.refresh();
@@ -270,6 +330,30 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
               onChange={handleChange}
               required
             />
+          </div>
+
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 space-y-2">
+            <Select
+              label="Répartition de la dépense"
+              name="repartition_type"
+              value={formData.repartition_type === 'groupe' && formData.repartition_cible ? `groupe:${formData.repartition_cible}` : 'generale'}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  repartition_type: value.startsWith('groupe:') ? 'groupe' : 'generale',
+                  repartition_cible: value.startsWith('groupe:') ? value.slice(7) : '',
+                }));
+              }}
+              options={[
+                { value: 'generale', label: 'Charges communes' },
+                ...availableRepartitionGroups.map((group) => ({ value: `groupe:${group}`, label: `Seulement ${group}` })),
+              ]}
+              required
+            />
+            <p className="text-xs text-blue-700">
+              Cette dépense sera imputée selon : <span className="font-semibold">{formatRepartitionScope(formData.repartition_type, formData.repartition_cible)}</span>
+            </p>
           </div>
 
           <Textarea
@@ -341,11 +425,14 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
                 className="text-sm text-blue-600 hover:underline flex items-center gap-1"
               >
                 <Calculator size={14} />
-                {showRepartition ? 'Masquer' : 'Voir'} la répartition calculée ({lots.length} lots, {totalTantiemes} tantièmes)
+                {showRepartition ? 'Masquer' : 'Voir'} la répartition calculée ({repartition.length} lots concernés, {totalTantiemes} tantièmes)
               </button>
 
               {showRepartition && (
                 <div className="mt-3 border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-blue-50 px-3 py-2 text-[11px] text-blue-700 border-b border-blue-100">
+                    Clé utilisée : {formatRepartitionScope(formData.repartition_type, formData.repartition_cible)}
+                  </div>
                   <table className="w-full text-xs">
                     <thead className="bg-gray-50">
                       <tr>

@@ -4,12 +4,25 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw, Send, Trash2 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
-import { formatEuros, formatDate, LABELS_CATEGORIE, repartirMontant } from '@/lib/utils';
+import {
+  formatEuros,
+  formatDate,
+  formatRepartitionScope,
+  LABELS_CATEGORIE,
+  parseBudgetPostesFromDescription,
+  repartitionParPostes,
+} from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import AppelFondsPDF, { buildAvisPersonnelPDF, type AvisPersonnelInput } from './AppelFondsPDF';
 import AppelFondsPaiement, { type Ligne } from './AppelFondsPaiement';
 
-interface Poste { libelle: string; categorie: string; montant: number }
+interface Poste {
+  libelle: string;
+  categorie: string;
+  montant: number;
+  repartition_type?: 'generale' | 'groupe' | null;
+  repartition_cible?: string | null;
+}
 
 const LABELS_TYPE_APPEL: Record<string, string> = {
   budget_previsionnel: 'Budget prévisionnel',
@@ -157,7 +170,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
       if (!appel.copropriete_id) { setRegenMsg('Copropriété introuvable.'); return; }
       const { data: lots } = await supabase
         .from('lots')
-        .select('id, tantiemes, coproprietaire_id')
+        .select('id, tantiemes, coproprietaire_id, batiment, groupes_repartition')
         .eq('copropriete_id', appel.copropriete_id);
 
       const lotsWithCopro = (lots ?? []).filter((l) => l.coproprietaire_id != null);
@@ -166,24 +179,21 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         setRegenMsg('Aucun lot avec copropriétaire assigné trouvé. Assignez d’abord des copropriétaires aux lots.');
         return;
       }
-      const totalTantiemes = lotsWithCopro.reduce((s, l) => s + (l.tantiemes ?? 0), 0);
-
-      // Regrouper par copropriétaire (cumul des tantièmes si multi-lots)
-      const coprMap = new Map<string, { tantiemes: number; lotId: string | null }>();
-      for (const lot of lotsWithCopro) {
-        const copId = lot.coproprietaire_id as string;
-        if (coprMap.has(copId)) {
-          const e = coprMap.get(copId)!;
-          e.tantiemes += lot.tantiemes ?? 0;
-          e.lotId = null;
-        } else {
-          coprMap.set(copId, { tantiemes: lot.tantiemes ?? 0, lotId: lot.id });
-        }
+      const postes = parseBudgetPostesFromDescription(appel.description);
+      if (
+        (appel.montant_fonds_travaux ?? 0) > 0
+        && !postes.some((poste) => poste.categorie === 'fonds_travaux_alur' || /fonds\s+de\s+travaux/i.test(poste.libelle))
+      ) {
+        postes.push({
+          libelle: 'Fonds de travaux (ALUR)',
+          categorie: 'fonds_travaux_alur',
+          montant: appel.montant_fonds_travaux ?? 0,
+          repartition_type: 'generale',
+          repartition_cible: null,
+        });
       }
-      const grouped = repartirMontant(
-        appel.montant_total,
-        Array.from(coprMap.entries()).map(([copId, e]) => ({ copId, lotId: e.lotId, tantiemes: e.tantiemes }))
-      );
+
+      const grouped = repartitionParPostes(appel.montant_total, lotsWithCopro, postes);
 
       const { error } = await supabase.from('lignes_appels_de_fonds').insert(
         grouped.map((g) => ({
@@ -572,16 +582,19 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
               <div className="border border-gray-200 rounded-xl overflow-hidden">
                 {postes.map((p, i) => (
                   <div key={i} className={`flex items-center justify-between px-3 py-2 text-xs ${i > 0 ? 'border-t border-gray-100' : ''} bg-white`}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-medium text-gray-800 truncate">{p.libelle}</span>
-                      <span className="text-gray-400 shrink-0">
-                        {LABELS_CATEGORIE[p.categorie as keyof typeof LABELS_CATEGORIE] ?? p.categorie}
-                      </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-medium text-gray-800 truncate">{p.libelle}</span>
+                        <span className="text-gray-400 shrink-0">
+                          {LABELS_CATEGORIE[p.categorie as keyof typeof LABELS_CATEGORIE] ?? p.categorie}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-gray-400">{formatRepartitionScope(p.repartition_type, p.repartition_cible)}</div>
                     </div>
                     <span className="font-semibold text-gray-900 tabular-nums shrink-0 ml-3">{formatEuros(p.montant)}</span>
                   </div>
                 ))}
-                {(appel.montant_fonds_travaux ?? 0) > 0 && (
+                {(appel.montant_fonds_travaux ?? 0) > 0 && !postes.some((p) => p.categorie === 'fonds_travaux_alur') && (
                   <div className="flex items-center justify-between px-3 py-2 text-xs border-t border-amber-100 bg-amber-50">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="font-medium text-amber-800">Fonds travaux ALUR</span>

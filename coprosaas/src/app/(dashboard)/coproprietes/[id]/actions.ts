@@ -12,6 +12,8 @@ export async function saveLot(data: {
   numero: string;
   type: string;
   tantiemes: number;
+  batiment?: string;
+  groupesRepartition?: string[];
 }): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -26,16 +28,36 @@ export async function saveLot(data: {
     .maybeSingle();
   if (!copro) return { error: 'Accès non autorisé' };
 
+  const normalizedBatiment = data.batiment?.trim() || null;
+  const normalizedGroups = Array.from(new Set(
+    (data.groupesRepartition ?? [])
+      .map((group) => group.trim())
+      .filter(Boolean)
+  ));
+
   if (data.lotId) {
     const { error } = await supabase
       .from('lots')
-      .update({ numero: data.numero, type: data.type, tantiemes: data.tantiemes })
+      .update({
+        numero: data.numero,
+        type: data.type,
+        tantiemes: data.tantiemes,
+        batiment: normalizedBatiment,
+        groupes_repartition: normalizedGroups,
+      })
       .eq('id', data.lotId);
     if (error) return { error: error.message };
   } else {
     const { error } = await supabase
       .from('lots')
-      .insert({ copropriete_id: data.coproprieteId, numero: data.numero, type: data.type, tantiemes: data.tantiemes });
+      .insert({
+        copropriete_id: data.coproprieteId,
+        numero: data.numero,
+        type: data.type,
+        tantiemes: data.tantiemes,
+        batiment: normalizedBatiment,
+        groupes_repartition: normalizedGroups,
+      });
     if (error) return { error: error.message };
   }
 

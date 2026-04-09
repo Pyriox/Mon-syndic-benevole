@@ -67,7 +67,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
     const [{ data: depenses }, { data: lots }, { data: coproprietaires }] = await Promise.all([
       admin
         .from('depenses')
-        .select('id, titre, description, montant, date_depense, categorie, piece_jointe_url')
+        .select('id, titre, description, montant, date_depense, categorie, piece_jointe_url, repartition_type, repartition_cible')
         .eq('copropriete_id', scopeId)
         .gte('date_depense', `${annee}-01-01`)
         .lt('date_depense', `${annee + 1}-01-01`)
@@ -284,7 +284,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
       .maybeSingle(),
     supabase
       .from('depenses')
-      .select('id, copropriete_id, titre, description, montant, date_depense, categorie, piece_jointe_url')
+      .select('id, copropriete_id, titre, description, montant, date_depense, categorie, piece_jointe_url, repartition_type, repartition_cible')
       .eq('copropriete_id', scopeId)
       .gte('date_depense', `${annee}-01-01`)
       .lt('date_depense', `${annee + 1}-01-01`)

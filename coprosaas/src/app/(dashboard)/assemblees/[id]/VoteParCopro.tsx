@@ -29,7 +29,12 @@ interface VoteParCoproProps {
   coproprietaires: Copro[];
   canEdit: boolean;
   designationResultats?: { id: string; nom: string; prenom: string }[] | null;
-  initialBudgetPostes?: { libelle: string; montant: number }[] | null;
+  initialBudgetPostes?: {
+    libelle: string;
+    montant: number;
+    repartition_type?: 'generale' | 'groupe' | null;
+    repartition_cible?: string | null;
+  }[] | null;
   initialFondsTravaux?: number | null;
 }
 
@@ -79,8 +84,18 @@ export default function VoteParCopro({
   });
   const isSyndic = typeResolution === 'designation_syndic';
 
-  const [budgetPostes, setBudgetPostes] = useState<{ libelle: string; montant: string }[]>(() =>
-    (initialBudgetPostes ?? []).map((p) => ({ libelle: p.libelle, montant: String(p.montant) }))
+  const [budgetPostes, setBudgetPostes] = useState<{
+    libelle: string;
+    montant: string;
+    repartition_type: 'generale' | 'groupe';
+    repartition_cible: string;
+  }[]>(() =>
+    (initialBudgetPostes ?? []).map((p) => ({
+      libelle: p.libelle,
+      montant: String(p.montant),
+      repartition_type: p.repartition_type === 'groupe' ? 'groupe' : 'generale',
+      repartition_cible: p.repartition_cible ?? '',
+    }))
   );
 
   const [fondsTravaux, setFondsTravaux] = useState(
@@ -89,7 +104,12 @@ export default function VoteParCopro({
 
   const [passerelleActive, setPasserelleActive] = useState(false);
   const [savedDesignationResultats, setSavedDesignationResultats] = useState<{ id: string; nom: string; prenom: string }[] | null | undefined>(undefined);
-  const [savedBudgetPostes, setSavedBudgetPostes] = useState<{ libelle: string; montant: number }[] | null | undefined>(undefined);
+  const [savedBudgetPostes, setSavedBudgetPostes] = useState<{
+    libelle: string;
+    montant: number;
+    repartition_type?: 'generale' | 'groupe' | null;
+    repartition_cible?: string | null;
+  }[] | null | undefined>(undefined);
   const [savedFondsTravaux, setSavedFondsTravaux] = useState<number | null | undefined>(undefined);
 
   const [dirty,   setDirty]   = useState(false);
@@ -191,7 +211,12 @@ export default function VoteParCopro({
 
     const extraFields: Record<string, unknown> = {};
     if (hasBudget) {
-      const pv = budgetPostes.filter((p) => p.libelle.trim()).map((p) => ({ libelle: p.libelle.trim(), montant: parseFloat(p.montant) || 0 }));
+      const pv = budgetPostes.filter((p) => p.libelle.trim()).map((p) => ({
+        libelle: p.libelle.trim(),
+        montant: parseFloat(p.montant) || 0,
+        repartition_type: p.repartition_type,
+        repartition_cible: p.repartition_type === 'groupe' ? (p.repartition_cible || null) : null,
+      }));
       extraFields.budget_postes = pv.length > 0 ? pv : null;
     }
     if (hasFondsTravaux) extraFields.fonds_travaux_montant = fondsTravaux ? parseFloat(fondsTravaux) : null;
@@ -202,7 +227,12 @@ export default function VoteParCopro({
 
     setSavedBudgetPostes(
       hasBudget
-        ? budgetPostes.filter((p) => p.libelle.trim()).map((p) => ({ libelle: p.libelle.trim(), montant: parseFloat(p.montant) || 0 }))
+        ? budgetPostes.filter((p) => p.libelle.trim()).map((p) => ({
+          libelle: p.libelle.trim(),
+          montant: parseFloat(p.montant) || 0,
+          repartition_type: p.repartition_type,
+          repartition_cible: p.repartition_type === 'groupe' ? (p.repartition_cible || null) : null,
+        }))
         : []
     );
     setSavedFondsTravaux(hasFondsTravaux ? (fondsTravaux ? parseFloat(fondsTravaux) : null) : null);
@@ -526,7 +556,16 @@ export default function VoteParCopro({
               Postes du budget{typeConfig?.optional ? ' (optionnel)' : ''}
             </label>
             <button type="button"
-              onClick={() => { setBudgetPostes((p) => [...p, { libelle: '', montant: '' }]); setDirty(true); setSaved(false); }}
+              onClick={() => {
+                setBudgetPostes((p) => [...p, {
+                  libelle: '',
+                  montant: '',
+                  repartition_type: 'generale',
+                  repartition_cible: '',
+                }]);
+                setDirty(true);
+                setSaved(false);
+              }}
               className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
               <Plus size={12} /> Ajouter
             </button>

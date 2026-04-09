@@ -63,6 +63,8 @@ interface LotRow {
   type: string;
   tantiemes: number;
   coproprietaire_id: string | null;
+  batiment?: string | null;
+  groupes_repartition?: string[] | null;
 }
 
 interface CoproEntry {
@@ -132,7 +134,23 @@ function SortableLotRow({
           <div className={`p-1.5 ${cfg.bgColor} rounded-lg`}>
             <Icon size={14} className={cfg.iconColor} />
           </div>
-          <span className="font-semibold text-gray-900">{lot.numero}</span>
+          <div>
+            <span className="font-semibold text-gray-900">{lot.numero}</span>
+            {(lot.batiment || (lot.groupes_repartition?.length ?? 0) > 0) && (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {lot.batiment && (
+                  <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
+                    {lot.batiment}
+                  </span>
+                )}
+                {(lot.groupes_repartition ?? []).slice(0, 2).map((group) => (
+                  <span key={group} className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                    {group}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </td>
       {/* Type */}
@@ -168,7 +186,14 @@ function SortableLotRow({
         <div className="flex items-center justify-end gap-1">
           <LotActions
             coproprieteId={coproprieteId}
-            lot={{ id: lot.id, numero: lot.numero, type: lot.type, tantiemes: lot.tantiemes }}
+            lot={{
+              id: lot.id,
+              numero: lot.numero,
+              type: lot.type,
+              tantiemes: lot.tantiemes,
+              batiment: lot.batiment,
+              groupes_repartition: lot.groupes_repartition,
+            }}
           />
           <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} />
         </div>
@@ -227,7 +252,23 @@ function SortableLotCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <p className="font-semibold text-gray-900 truncate">Lot {lot.numero}</p>
+            <div>
+              <p className="font-semibold text-gray-900 truncate">Lot {lot.numero}</p>
+              {(lot.batiment || (lot.groupes_repartition?.length ?? 0) > 0) && (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {lot.batiment && (
+                    <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
+                      {lot.batiment}
+                    </span>
+                  )}
+                  {(lot.groupes_repartition ?? []).slice(0, 2).map((group) => (
+                    <span key={group} className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                      {group}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${cfg.badgeBg} ${cfg.badgeText}`}>
               {cfg.label}
             </span>
@@ -257,7 +298,14 @@ function SortableLotCard({
             <div className="flex items-center gap-1 shrink-0">
               <LotActions
                 coproprieteId={coproprieteId}
-                lot={{ id: lot.id, numero: lot.numero, type: lot.type, tantiemes: lot.tantiemes }}
+                lot={{
+                  id: lot.id,
+                  numero: lot.numero,
+                  type: lot.type,
+                  tantiemes: lot.tantiemes,
+                  batiment: lot.batiment,
+                  groupes_repartition: lot.groupes_repartition,
+                }}
               />
               <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} />
             </div>

@@ -71,6 +71,8 @@ export interface Lot {
   numero: string;       // ex: "Apt 3B"
   type: string;         // ex: "appartement", "parking", "cave"
   tantiemes: number;    // quote-part sur 1000 par exemple
+  batiment?: string | null;
+  groupes_repartition?: string[] | null;
   created_at: string;
 }
 
@@ -113,6 +115,8 @@ export interface Depense {
   date_depense: string;     // ISO date string
   description: string | null;
   piece_jointe_url: string | null;
+  repartition_type?: 'generale' | 'groupe';
+  repartition_cible?: string | null;
   created_by: string;       // UUID syndic
   created_at: string;
 }
