@@ -16,6 +16,7 @@ import { isAdminUser } from '@/lib/admin-config';
 import { backfillEmailDeliveriesFromResend, syncEmailDeliveriesWithResend, type EmailDeliveryStatus } from '@/lib/email-delivery';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { formatDateTime } from '@/lib/utils';
 
 type DeliveryStatusFilter = EmailDeliveryStatus | 'all';
 
@@ -82,17 +83,6 @@ const ALL_STATUSES: EmailDeliveryStatus[] = [
 
 const TROUBLE_STATUSES = new Set<EmailDeliveryStatus>(['failed', 'bounced', 'complained']);
 const PENDING_STATUSES = new Set<EmailDeliveryStatus>(['queued', 'sent']);
-
-function formatDateTime(value: string | null): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 function isOnOrAfter(value: string | null, thresholdMs: number): boolean {
   if (!value) return false;
