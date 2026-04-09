@@ -46,6 +46,10 @@ interface LotActionsProps {
 export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotLimit }: LotActionsProps) {
   const router = useRouter();
   const isEdit = Boolean(lot);
+  const assignedKeys = Array.from(new Set([
+    ...((lot?.groupes_repartition ?? []).filter(Boolean)),
+    ...Object.keys(lot?.tantiemes_groupes ?? {}),
+  ])).sort((a, b) => a.localeCompare(b, 'fr'));
 
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -182,6 +186,12 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
             placeholder="Bâtiment A"
             hint="Pratique pour les charges par bâtiment, entrée ou cage d'escalier"
           />
+
+          {assignedKeys.length > 0 && (
+            <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+              <strong>Clés actuellement attribuées :</strong> {assignedKeys.join(', ')}
+            </div>
+          )}
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
             Les clés de répartition spéciales se règlent désormais dans la page <strong>Paramétrage</strong> de la copropriété.

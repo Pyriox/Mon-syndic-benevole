@@ -19,6 +19,7 @@ import {
   HelpCircle,
   X,
   ArrowLeftRight,
+  Settings2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -44,8 +45,9 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
     router.push('/');
   };
 
-  // Sections dynamiques : le lien "Lots" pointe vers la copropriété sélectionnée
+  // Sections dynamiques : les liens pointent vers la copropriété sélectionnée
   const coproDetailHref = selectedCoproId ? `/coproprietes/${selectedCoproId}` : '/coproprietes';
+  const coproSettingsHref = selectedCoproId ? `/coproprietes/${selectedCoproId}/parametrage` : '/coproprietes';
 
   const syndicNav = [
     {
@@ -56,7 +58,19 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
     {
       label: 'Copropriété',
       items: [
-        { href: coproDetailHref, label: 'Lots & bâtiment', icon: Building2, matchPrefix: '/coproprietes' },
+        {
+          href: coproDetailHref,
+          label: 'Lots & bâtiment',
+          icon: Building2,
+          matchPrefix: selectedCoproId ? `/coproprietes/${selectedCoproId}` : '/coproprietes',
+          excludePrefix: selectedCoproId ? `/coproprietes/${selectedCoproId}/parametrage` : undefined,
+        },
+        {
+          href: coproSettingsHref,
+          label: 'Paramétrage',
+          icon: Settings2,
+          matchPrefix: selectedCoproId ? `/coproprietes/${selectedCoproId}/parametrage` : '/coproprietes',
+        },
         { href: '/coproprietaires', label: 'Copropriétaires', icon: Users },
       ],
     },
@@ -110,9 +124,23 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
 
   const navSections = userRole === 'syndic' ? syndicNav : coproprietaireNav;
 
-  const NavLink = ({ href, label, icon: Icon, matchPrefix }: { href: string; label: string; icon: React.ElementType; matchPrefix?: string }) => {
+  const NavLink = ({
+    href,
+    label,
+    icon: Icon,
+    matchPrefix,
+    excludePrefix,
+  }: {
+    href: string;
+    label: string;
+    icon: React.ElementType;
+    matchPrefix?: string;
+    excludePrefix?: string;
+  }) => {
     const prefix = matchPrefix ?? href;
-    const isActive = pathname === href || pathname.startsWith(prefix + '/') || pathname === prefix;
+    const matchesPrefix = pathname === href || pathname.startsWith(prefix + '/') || pathname === prefix;
+    const isExcluded = excludePrefix ? pathname === excludePrefix || pathname.startsWith(excludePrefix + '/') : false;
+    const isActive = matchesPrefix && !isExcluded;
     return (
       <Link
         href={href}

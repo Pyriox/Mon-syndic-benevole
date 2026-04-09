@@ -244,9 +244,9 @@ export default function CoproSettingsPanel({
             <Settings2 size={18} className="text-blue-600" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-lg font-bold text-gray-900">Paramétrage centralisé de la copropriété</h3>
+            <h3 className="text-lg font-bold text-gray-900">Paramétrage de la copropriété</h3>
             <p className="mt-1 text-sm text-gray-600">
-              Renseignez ici les informations générales, les lots et les clés de répartition spéciales.
+              Créez ici vos clés de répartition spéciales puis attribuez-les aux lots concernés en renseignant leur base.
               Ce paramétrage est ensuite repris automatiquement dans l&apos;AG, les appels de fonds,
               les dépenses et la régularisation.
             </p>
@@ -264,9 +264,9 @@ export default function CoproSettingsPanel({
       <Card>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Lots et clés de répartition</h3>
+            <h3 className="text-lg font-bold text-gray-900">Clés de répartition et affectation des lots</h3>
             <p className="mt-1 text-sm text-gray-600">
-              Laissez une cellule vide si le lot n&apos;est pas concerné. Chaque colonne sert de base indépendante pour les charges spéciales.
+              1. Créez vos clés spéciales. 2. Renseignez une valeur pour chaque lot concerné. Une cellule remplie signifie que le lot est attribué à cette clé.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -287,7 +287,7 @@ export default function CoproSettingsPanel({
             <Info size={14} className="mt-0.5 shrink-0" />
             <p>
               <strong>Bâtiment / entrée</strong> indique à quel ensemble physique le lot appartient.
-              Les colonnes à droite correspondent aux <strong>clés de répartition</strong> (ex. <em>Bâtiment B</em>, <em>Ascenseur C</em>, <em>Eau chaude</em>).
+              Les colonnes à droite correspondent aux <strong>clés de répartition déjà créées</strong>. Saisir une base dans une cellule affecte automatiquement le lot à cette clé (ex. <em>Bâtiment B</em>, <em>Ascenseur C</em>, <em>Eau chaude</em>).
             </p>
           </div>
         </div>
