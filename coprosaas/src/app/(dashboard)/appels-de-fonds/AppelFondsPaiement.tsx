@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import { formatEuros, LABELS_CATEGORIE } from '@/lib/utils';
 import {
   CheckCircle, Clock, XCircle, Loader2,
@@ -113,6 +114,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
     }
 
     updateLignesState(ligne.id, { paye: true, date_paiement: date });
+    await revalidateCoproFinance(appel.copropriete_id);
     setPayingId(null);
     setToggling(null);
   };
@@ -140,6 +142,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
     }
 
     updateLignesState(ligne.id, { paye: false, date_paiement: null });
+    await revalidateCoproFinance(appel.copropriete_id);
     setToggling(null);
   };
 

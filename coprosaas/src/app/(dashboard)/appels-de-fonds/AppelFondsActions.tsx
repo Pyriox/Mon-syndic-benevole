@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
+import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import {
   collectAvailableRepartitionGroups,
   formatEuros,
@@ -578,6 +579,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
       eventType: 'appel_fonds_created',
       label: `${nb} appel${nb > 1 ? 's' : ''} de fonds créé${nb > 1 ? 's' : ''} — ${titre.trim()}`,
     }).catch(() => undefined);
+    await revalidateCoproFinance(coproprieteId);
     router.refresh();
   };
 

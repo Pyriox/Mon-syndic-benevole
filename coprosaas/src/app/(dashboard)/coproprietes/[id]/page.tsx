@@ -151,26 +151,6 @@ export default async function CopropriétéDetailPage({ params }: Props) {
         </Card>
       </div>
 
-      <Card>
-        <h3 className="text-lg font-bold text-gray-900">Vue d&apos;ensemble</h3>
-        <p className="mt-1 text-sm text-gray-600">
-          Cette page reste dédiée au suivi global et aux lots. Le paramétrage détaillé des clés de répartition est accessible via le bouton <strong>Paramétrage</strong> en haut de page et dans le menu.
-        </p>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-700">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Adresse</p>
-            <p className="mt-1">{copro.adresse}</p>
-            <p>{copro.code_postal} {copro.ville}</p>
-          </div>
-          <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-700">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Répartition</p>
-            <p className="mt-1">{specialKeyCount > 0 ? `${specialKeyCount} clé(s) spéciale(s) configurée(s)` : 'Aucune clé spéciale pour le moment'}</p>
-            <p>{batimentCount > 0 ? `${batimentCount} bâtiment(s) / entrée(s) distinct(s)` : 'Aucun bâtiment ou entrée renseigné'}</p>
-          </div>
-        </div>
-      </Card>
-
       <div className="space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>

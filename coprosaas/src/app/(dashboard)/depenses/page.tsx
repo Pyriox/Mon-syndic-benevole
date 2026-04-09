@@ -414,7 +414,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                           }}
                         />
                       )}
-                      {canWrite && <DepenseDelete depenseId={d.id} />}
+                      {canWrite && <DepenseDelete depenseId={d.id} coproprieteId={d.copropriete_id} />}
                     </div>
                   </div>
                 </div>
@@ -488,7 +488,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                               }}
                             />
                           )}
-                          {canWrite && <DepenseDelete depenseId={d.id} />}
+                          {canWrite && <DepenseDelete depenseId={d.id} coproprieteId={d.copropriete_id} />}
                         </div>
                       </td>
                     </tr>

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import LotActions, { LotDelete } from './LotActions';
 import { saveCoproprieteSettings } from './actions';
 import { collectAvailableRepartitionGroups, sanitizeTantiemesGroupesMap } from '@/lib/utils';
 import { Info, Plus, Save, Settings2, X } from 'lucide-react';
@@ -262,7 +261,7 @@ export default function CoproSettingsPanel({
           <div>
             <h3 className="text-lg font-bold text-gray-900">Clés de répartition et affectation des lots</h3>
             <p className="mt-1 text-sm text-gray-600">
-              Créez vos clés spéciales puis renseignez une valeur uniquement pour les lots concernés. Si la case est vide, le lot n&apos;est pas affecté à cette clé.
+              Créez vos clés spéciales puis renseignez une valeur uniquement pour les lots concernés. Si la case est vide, le lot n&apos;est pas affecté à cette clé. L&apos;ajout, la modification et la suppression des lots se font depuis la page Copropriétés.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -324,7 +323,7 @@ export default function CoproSettingsPanel({
           </div>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
-            <table className="min-w-[920px] w-full text-sm">
+            <table className="min-w-[820px] w-full text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
                 <tr>
                   <th className="px-3 py-3 text-left font-semibold">Lot</th>
@@ -344,7 +343,6 @@ export default function CoproSettingsPanel({
                       </div>
                     </th>
                   ))}
-                  <th className="px-3 py-3 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
@@ -386,31 +384,6 @@ export default function CoproSettingsPanel({
                           />
                         </td>
                       ))}
-                      <td className="px-3 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <LotActions
-                            coproprieteId={copropriete.id}
-                            lot={{
-                              id: lot.id,
-                              numero: lot.numero,
-                              type: lot.type,
-                              tantiemes: Number.parseFloat(lot.tantiemes.replace(',', '.')) || 0,
-                              batiment: lot.batiment,
-                              groupes_repartition: keyNames.filter((key) => Number.parseFloat((lot.keyValues[key] ?? '').replace(',', '.')) > 0),
-                              tantiemes_groupes: Object.fromEntries(
-                                keyNames
-                                  .map((key) => {
-                                    const amount = Number.parseFloat((lot.keyValues[key] ?? '').replace(',', '.'));
-                                    if (!Number.isFinite(amount) || amount <= 0) return null;
-                                    return [key, amount] as const;
-                                  })
-                                  .filter(Boolean) as Array<readonly [string, number]>
-                              ),
-                            }}
-                          />
-                          <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={copropriete.id} />
-                        </div>
-                      </td>
                     </tr>
                   );
                 })}
@@ -422,7 +395,6 @@ export default function CoproSettingsPanel({
                   {keyNames.map((key) => (
                     <td key={`total-${key}`} className="px-3 py-3 text-right">{formatBase(totalsByKey[key] ?? 0)}</td>
                   ))}
-                  <td className="px-3 py-3 text-right text-gray-500">—</td>
                 </tr>
               </tfoot>
             </table>

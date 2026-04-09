@@ -12,6 +12,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
+import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import {
   calculerPart,
   collectAvailableRepartitionGroups,
@@ -271,6 +272,7 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
         repartition_cible: '',
       });
     }
+    await revalidateCoproFinance(formData.copropriete_id);
     router.refresh();
   };
 
@@ -482,7 +484,7 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
 
 // ── Named export : suppression d'une dépense ──────────────────────────────────
 
-export function DepenseDelete({ depenseId }: { depenseId: string }) {
+export function DepenseDelete({ depenseId, coproprieteId }: { depenseId: string; coproprieteId?: string }) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -492,6 +494,7 @@ export function DepenseDelete({ depenseId }: { depenseId: string }) {
     setLoading(true);
     await supabase.from('repartitions_depenses').delete().eq('depense_id', depenseId);
     await supabase.from('depenses').delete().eq('id', depenseId);
+    await revalidateCoproFinance(coproprieteId);
     router.refresh();
   };
 

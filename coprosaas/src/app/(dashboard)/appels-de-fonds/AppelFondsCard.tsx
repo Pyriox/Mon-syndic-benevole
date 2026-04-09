@@ -13,6 +13,7 @@ import {
   repartitionParPostes,
 } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import AppelFondsPDF, { buildAvisPersonnelPDF, type AvisPersonnelInput } from './AppelFondsPDF';
 import AppelFondsPaiement, { type Ligne } from './AppelFondsPaiement';
 
@@ -103,6 +104,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
       const res = await fetch(`/api/appels-de-fonds/${appel.id}`, { method: 'DELETE' });
       const json = await res.json();
       if (res.ok) {
+        await revalidateCoproFinance(appel.copropriete_id);
         router.refresh();
       } else {
         setDeleteMsg(json.message ?? 'Erreur lors de la suppression.');
@@ -144,6 +146,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         if (!saveResult.ok) {
           setPublishMsg((prev) => `${prev} (publication OK, archivage impossible: ${saveResult.error})`);
         }
+        await revalidateCoproFinance(appel.copropriete_id);
         if (json.promptEmailSend) {
           setShowPublishEmailPrompt(true);
         }
