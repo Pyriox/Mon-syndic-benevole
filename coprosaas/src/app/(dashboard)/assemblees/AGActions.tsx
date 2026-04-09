@@ -618,7 +618,7 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                           Charges communes par défaut.
                           {availableRepartitionGroups.length > 0
                             ? ` Vous pouvez aussi cibler : ${availableRepartitionGroups.join(', ')}.`
-                            : ' Ajoutez simplement un bâtiment ou un groupe dans vos lots pour créer une clé spéciale.'}
+                            : ' Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'}
                         </div>
                         {r.budgetPostes.length === 0 && (
                           <p className="text-xs text-gray-400 text-center py-2">Aucun poste — cliquez sur &quot;Ajouter un poste&quot;</p>

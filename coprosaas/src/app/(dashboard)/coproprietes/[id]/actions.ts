@@ -39,7 +39,7 @@ export async function saveLot(data: {
   lotId?: string;
   numero: string;
   type: string;
-  tantiemes: number;
+  tantiemes?: number;
   batiment?: string;
   groupesRepartition?: string[];
   tantiemesGroupes?: Record<string, number>;
@@ -57,15 +57,21 @@ export async function saveLot(data: {
     .maybeSingle();
   if (!copro) return { error: 'Accès non autorisé' };
 
-  const payload = buildLotSettingsPayload(data);
-
   if (data.lotId) {
     const { error } = await supabase
       .from('lots')
-      .update(payload)
+      .update({
+        numero: data.numero.trim(),
+        type: data.type,
+      })
       .eq('id', data.lotId);
     if (error) return { error: error.message };
   } else {
+    const payload = buildLotSettingsPayload({
+      ...data,
+      tantiemes: data.tantiemes ?? 0,
+    });
+
     const { error } = await supabase
       .from('lots')
       .insert({

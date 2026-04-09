@@ -343,10 +343,12 @@ export function parseBudgetPostesFromDescription(description: string | null | un
   }
 }
 
-export function getLotRepartitionGroups(lot: Pick<RepartitionLotLike, 'batiment' | 'groupes_repartition'>): string[] {
+export function getLotRepartitionGroups(
+  lot: Pick<RepartitionLotLike, 'groupes_repartition' | 'tantiemes_groupes'>
+): string[] {
   const groups = [
-    normalizeRepartitionLabel(lot.batiment ?? null),
     ...((lot.groupes_repartition ?? []).map((group) => normalizeRepartitionLabel(group)).filter(Boolean) as string[]),
+    ...Object.keys(sanitizeTantiemesGroupesMap(lot.tantiemes_groupes)),
   ];
 
   return Array.from(new Set(groups.filter((group): group is string => Boolean(group)))).sort((a, b) => a.localeCompare(b, 'fr'));

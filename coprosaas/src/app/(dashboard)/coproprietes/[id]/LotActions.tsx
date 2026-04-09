@@ -13,7 +13,6 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { parseTantiemesGroupesInput, stringifyTantiemesGroupesInput } from '@/lib/utils';
 import { Plus, Pencil, Lock, Trash2, AlertTriangle } from 'lucide-react';
 
 const TYPE_OPTIONS = [
@@ -58,10 +57,6 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
   const [formData, setFormData] = useState({
     numero: lot?.numero ?? '',
     type: lot?.type ?? 'appartement',
-    tantiemes: lot?.tantiemes?.toString() ?? '',
-    batiment: lot?.batiment ?? '',
-    groupesRepartition: (lot?.groupes_repartition ?? []).join(', '),
-    tantiemesGroupes: stringifyTantiemesGroupesInput(lot?.tantiemes_groupes),
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -73,26 +68,11 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
     setLoading(true);
     setError('');
 
-    const tantiemesGroupes = parseTantiemesGroupesInput(formData.tantiemesGroupes);
-
-    if (formData.tantiemesGroupes.trim() && Object.keys(tantiemesGroupes).length === 0) {
-      setError('Format attendu pour les clés spéciales : Bâtiment B: 117');
-      setLoading(false);
-      return;
-    }
-
     const result = await saveLot({
       coproprieteId,
       lotId: isEdit ? lot!.id : undefined,
       numero: formData.numero.trim(),
       type: formData.type,
-      tantiemes: parseFloat(formData.tantiemes) || 0,
-      batiment: formData.batiment,
-      groupesRepartition: formData.groupesRepartition
-        .split(',')
-        .map((group) => group.trim())
-        .filter(Boolean),
-      tantiemesGroupes,
     });
 
     if (result.error) { setError('Erreur : ' + result.error); setLoading(false); return; }
@@ -103,10 +83,6 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
       setFormData({
         numero: '',
         type: 'appartement',
-        tantiemes: '',
-        batiment: '',
-        groupesRepartition: '',
-        tantiemesGroupes: '',
       });
     }
     router.refresh();
@@ -117,10 +93,6 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
     setFormData({
       numero: lot?.numero ?? '',
       type: lot?.type ?? 'appartement',
-      tantiemes: lot?.tantiemes?.toString() ?? '',
-      batiment: lot?.batiment ?? '',
-      groupesRepartition: (lot?.groupes_repartition ?? []).join(', '),
-      tantiemesGroupes: stringifyTantiemesGroupesInput(lot?.tantiemes_groupes),
     });
     setError('');
     setLoading(false);
@@ -178,15 +150,6 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
             required
           />
 
-          <Input
-            label="Bâtiment / entrée (optionnel)"
-            name="batiment"
-            value={formData.batiment}
-            onChange={handleChange}
-            placeholder="Bâtiment A"
-            hint="Pratique pour les charges par bâtiment, entrée ou cage d'escalier"
-          />
-
           {assignedKeys.length > 0 && (
             <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
               <strong>Clés actuellement attribuées :</strong> {assignedKeys.join(', ')}
@@ -194,21 +157,8 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
           )}
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            Les clés de répartition spéciales se règlent désormais dans la page <strong>Paramétrage</strong> de la copropriété.
+            Les tantièmes généraux et les clés de répartition se règlent désormais dans la page <strong>Paramétrage</strong> de la copropriété.
           </div>
-
-          <Input
-            label="Tantièmes généraux"
-            name="tantiemes"
-            type="number"
-            min="0"
-            step="0.01"
-            value={formData.tantiemes}
-            onChange={handleChange}
-            placeholder="120"
-            hint="Quote-part sur le total des tantièmes de la copropriété"
-            required
-          />
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 

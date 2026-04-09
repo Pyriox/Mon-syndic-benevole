@@ -15,7 +15,7 @@ const lots: RepartitionLotLike[] = [
     tantiemes: 100,
     coproprietaire_id: 'copro-a',
     batiment: 'Bâtiment A',
-    groupes_repartition: ['Ascenseur A'],
+    groupes_repartition: ['Ascenseur A', 'Bâtiment A'],
   },
   {
     id: 'lot-a2',
@@ -23,7 +23,7 @@ const lots: RepartitionLotLike[] = [
     tantiemes: 100,
     coproprietaire_id: 'copro-a',
     batiment: 'Bâtiment A',
-    groupes_repartition: ['Ascenseur A'],
+    groupes_repartition: ['Ascenseur A', 'Bâtiment A'],
   },
   {
     id: 'lot-b1',
@@ -31,18 +31,31 @@ const lots: RepartitionLotLike[] = [
     tantiemes: 200,
     coproprietaire_id: 'copro-b',
     batiment: 'Bâtiment B',
-    groupes_repartition: ['Ascenseur B'],
+    groupes_repartition: ['Ascenseur B', 'Bâtiment B'],
   },
 ];
 
 describe('repartition spéciale par groupes', () => {
-  it('liste les groupes disponibles à partir des bâtiments et groupes spéciaux des lots', () => {
+  it('liste les groupes disponibles explicitement configurés sur les lots', () => {
     expect(collectAvailableRepartitionGroups(lots)).toEqual([
       'Ascenseur A',
       'Ascenseur B',
       'Bâtiment A',
       'Bâtiment B',
     ]);
+  });
+
+  it('n’ajoute pas automatiquement le bâtiment comme clé spéciale', () => {
+    expect(collectAvailableRepartitionGroups([
+      {
+        id: 'lot-c1',
+        numero: 'C1',
+        tantiemes: 100,
+        coproprietaire_id: 'copro-c',
+        batiment: 'Bâtiment C',
+        groupes_repartition: [],
+      },
+    ])).toEqual([]);
   });
 
   it('cumule correctement un budget général et une sous-ligne spéciale bâtiment', () => {

@@ -155,7 +155,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Lots de la copropriété</h3>
-            <p className="text-sm text-gray-500">Ajoutez, modifiez et réordonnez vos lots sans mélanger ce tableau avec le paramétrage financier.</p>
+            <p className="text-sm text-gray-500">Créez, identifiez et réordonnez vos lots ici. Les tantièmes généraux et les clés spéciales se règlent ensuite dans le <strong>Paramétrage</strong>.</p>
           </div>
           <LotActions
             coproprieteId={copro.id}

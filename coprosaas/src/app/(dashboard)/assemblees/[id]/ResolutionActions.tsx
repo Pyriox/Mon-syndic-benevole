@@ -277,7 +277,7 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
                   Par défaut, chaque ligne est répartie en <span className="font-semibold">charges communes</span>.
                   {availableRepartitionGroups.length > 0
                     ? ` Vous pouvez aussi viser : ${availableRepartitionGroups.join(', ')}.`
-                    : ' Ajoutez simplement un bâtiment ou un groupe dans vos lots pour créer une clé spéciale.'}
+                    : ' Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'}
                 </div>
                 {budgetPostes.length === 0 && (
                   <p className="text-xs text-gray-400 text-center py-1">Aucun poste ajouté</p>
@@ -533,7 +533,7 @@ export function ResolutionEdit({
                   Charges communes par défaut.
                   {availableRepartitionGroups.length > 0
                     ? ` Vous pouvez cibler : ${availableRepartitionGroups.join(', ')}.`
-                    : ' Ajoutez simplement un bâtiment ou un groupe dans vos lots pour créer une clé spéciale.'}
+                    : ' Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'}
                 </div>
                 {budgetPostes.map((p, i) => (
                   <div key={i} className="grid grid-cols-[1fr_7rem_12rem_auto] gap-2 items-center">

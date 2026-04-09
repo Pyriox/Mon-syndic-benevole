@@ -53,18 +53,7 @@ function formatBase(value: number): string {
 }
 
 function deriveKeyNames(lots: LotSettingRow[]): string[] {
-  const keys = new Set<string>(collectAvailableRepartitionGroups(lots));
-
-  for (const lot of lots) {
-    const batiment = normalizeKeyLabel(lot.batiment);
-    if (batiment) keys.add(batiment);
-
-    for (const [key, amount] of Object.entries(sanitizeTantiemesGroupesMap(lot.tantiemes_groupes))) {
-      if (amount > 0) keys.add(key);
-    }
-  }
-
-  return Array.from(keys).sort((a, b) => a.localeCompare(b, 'fr'));
+  return collectAvailableRepartitionGroups(lots);
 }
 
 function buildEditableLots(lots: LotSettingRow[], keyNames: string[]): EditableLotRow[] {
@@ -259,9 +248,9 @@ export default function CoproSettingsPanel({
       <Card>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Clés de répartition et affectation des lots</h3>
+            <h3 className="text-lg font-bold text-gray-900">Tantièmes généraux et clés de répartition</h3>
             <p className="mt-1 text-sm text-gray-600">
-              Créez vos clés spéciales puis renseignez une valeur uniquement pour les lots concernés. Si la case est vide, le lot n&apos;est pas affecté à cette clé. L&apos;ajout, la modification et la suppression des lots se font depuis la page Copropriétés.
+              Renseignez ici la base générale de chaque lot, puis ajoutez si besoin des clés spéciales pour les seuls lots concernés. Si la case est vide, le lot n&apos;est pas affecté à cette clé. L&apos;ajout, la modification et la suppression des lots se font depuis la page Copropriétés.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -319,7 +308,7 @@ export default function CoproSettingsPanel({
 
         {lots.length === 0 ? (
           <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
-            Ajoutez d&apos;abord vos lots depuis la vue d&apos;ensemble de la copropriété, puis revenez ici pour définir les clés de répartition.
+            Ajoutez d&apos;abord vos lots depuis la vue d&apos;ensemble de la copropriété, puis revenez ici pour définir les tantièmes généraux et les clés de répartition.
           </div>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
