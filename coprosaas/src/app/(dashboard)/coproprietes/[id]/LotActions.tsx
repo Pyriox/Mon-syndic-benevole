@@ -13,7 +13,6 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import Textarea from '@/components/ui/Textarea';
 import { parseTantiemesGroupesInput, stringifyTantiemesGroupesInput } from '@/lib/utils';
 import { Plus, Pencil, Lock, Trash2, AlertTriangle } from 'lucide-react';
 
@@ -184,24 +183,9 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
             hint="Pratique pour les charges par bâtiment, entrée ou cage d'escalier"
           />
 
-          <Input
-            label="Groupes spéciaux (optionnel)"
-            name="groupesRepartition"
-            value={formData.groupesRepartition}
-            onChange={handleChange}
-            placeholder="Ascenseur, Eau bâtiment B"
-            hint="Séparez les groupes par des virgules pour indiquer quels lots sont concernés"
-          />
-
-          <Textarea
-            label="Clés spéciales indépendantes (optionnel)"
-            name="tantiemesGroupes"
-            value={formData.tantiemesGroupes}
-            onChange={handleChange}
-            rows={3}
-            placeholder={"Bâtiment B: 117\nAscenseur B: 45"}
-            hint="Une ligne par clé : Nom du groupe : tantièmes spéciaux. Laissez vide pour réutiliser les tantièmes généraux."
-          />
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+            Les clés de répartition spéciales se règlent ensuite dans le tableau de paramétrage de la copropriété.
+          </div>
 
           <Input
             label="Tantièmes généraux"

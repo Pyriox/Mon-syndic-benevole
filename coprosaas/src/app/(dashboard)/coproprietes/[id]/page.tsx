@@ -5,11 +5,9 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import Card from '@/components/ui/Card';
-import EmptyState from '@/components/ui/EmptyState';
-import LotActions from './LotActions';
-import LotsTable from './LotsTable';
 import CoproDelete from './CoproDelete';
-import CoproEdit from './CoproEdit';
+import CoproSettingsPanel from './CoproSettingsPanel';
+import LotsTable from './LotsTable';
 import TransfertSyndic from './TransfertSyndic';
 import { formatDate } from '@/lib/utils';
 import { getLotLimit } from '@/lib/subscription';
@@ -59,7 +57,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
   // Récupération des lots (sans join implicite pour éviter les problèmes de FK)
   const { data: lots } = await supabase
     .from('lots')
-    .select('id, numero, type, tantiemes, coproprietaire_id, position')
+    .select('id, numero, type, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes, position')
     .eq('copropriete_id', id)
     .order('position', { ascending: true, nullsFirst: false });
 
@@ -100,25 +98,9 @@ export default async function CopropriétéDetailPage({ params }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <CoproEdit
-            coproprieteId={copro.id}
-            initialNom={copro.nom}
-            initialAdresse={copro.adresse}
-            initialCodePostal={copro.code_postal}
-            initialVille={copro.ville}
-          />
           <TransfertSyndic coproprieteId={copro.id} coproprieteNom={copro.nom} />
           <CoproDelete coproprieteId={copro.id} coproprieteNom={copro.nom} />
         </div>
-      </div>
-
-      {/* Section Lots — titre + bouton */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-xl font-bold text-gray-900">Lots</h3>
-          <p className="text-gray-500 mt-1">{lotCount} lot(s)</p>
-        </div>
-        {lots && lots.length > 0 && <LotActions coproprieteId={id} canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} />}
       </div>
 
       {/* Stats lots */}
@@ -150,19 +132,26 @@ export default async function CopropriétéDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Tableau des lots */}
-      {lots && lots.length > 0 ? (
-        <Card>
-          <LotsTable initialLots={lots} coproMap={coproMap} coproprieteId={id} currentUserId={user.id} />
-        </Card>
-      ) : (
-        <EmptyState
-          title="Aucun lot"
-          description="Ajoutez les lots de cette copropriété (appartements, parkings, caves...)."
-          action={<LotActions coproprieteId={id} showLabel canAdd={canAddLot} lotLimit={lotLimit === Infinity ? undefined : lotLimit} />}
-        />
-      )}
+      <CoproSettingsPanel
+        key={`${copro.id}:${JSON.stringify(lots ?? [])}:${copro.nom}:${copro.adresse}:${copro.code_postal}:${copro.ville}`}
+        copropriete={copro}
+        initialLots={lots ?? []}
+        coproMap={coproMap}
+        canAddLot={canAddLot}
+        lotLimit={lotLimit === Infinity ? undefined : lotLimit}
+      />
 
+      {lots && lots.length > 0 && (
+        <div className="space-y-3">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Aperçu des lots</h3>
+            <p className="text-sm text-gray-500">Vous pouvez encore réordonner les lots visuellement si besoin.</p>
+          </div>
+          <Card>
+            <LotsTable initialLots={lots} coproMap={coproMap} coproprieteId={id} currentUserId={user.id} />
+          </Card>
+        </div>
+      )}
 
     </div>
   );

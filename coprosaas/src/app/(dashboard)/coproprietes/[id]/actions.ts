@@ -6,6 +6,33 @@ import { redirect } from 'next/navigation';
 import { invalidateLayoutCache, invalidateLotsCache } from '@/lib/cached-queries';
 import { sanitizeTantiemesGroupesMap } from '@/lib/utils';
 
+function buildLotSettingsPayload(data: {
+  numero: string;
+  type: string;
+  tantiemes: number;
+  batiment?: string | null;
+  groupesRepartition?: string[];
+  tantiemesGroupes?: Record<string, number>;
+}) {
+  const normalizedBatiment = data.batiment?.trim() || null;
+  const normalizedKeyTantiemes = sanitizeTantiemesGroupesMap(data.tantiemesGroupes ?? {});
+  const normalizedGroups = Array.from(new Set([
+    ...(data.groupesRepartition ?? [])
+      .map((group) => group.trim())
+      .filter(Boolean),
+    ...Object.keys(normalizedKeyTantiemes).filter((group) => group !== normalizedBatiment),
+  ])).sort((a, b) => a.localeCompare(b, 'fr'));
+
+  return {
+    numero: data.numero.trim(),
+    type: data.type,
+    tantiemes: data.tantiemes,
+    batiment: normalizedBatiment,
+    groupes_repartition: normalizedGroups,
+    tantiemes_groupes: normalizedKeyTantiemes,
+  };
+}
+
 // ---- Ajouter ou modifier un lot ----
 export async function saveLot(data: {
   coproprieteId: string;
@@ -30,26 +57,12 @@ export async function saveLot(data: {
     .maybeSingle();
   if (!copro) return { error: 'Accès non autorisé' };
 
-  const normalizedBatiment = data.batiment?.trim() || null;
-  const normalizedKeyTantiemes = sanitizeTantiemesGroupesMap(data.tantiemesGroupes ?? {});
-  const normalizedGroups = Array.from(new Set([
-    ...(data.groupesRepartition ?? [])
-      .map((group) => group.trim())
-      .filter(Boolean),
-    ...Object.keys(normalizedKeyTantiemes).filter((group) => group !== normalizedBatiment),
-  ]));
+  const payload = buildLotSettingsPayload(data);
 
   if (data.lotId) {
     const { error } = await supabase
       .from('lots')
-      .update({
-        numero: data.numero,
-        type: data.type,
-        tantiemes: data.tantiemes,
-        batiment: normalizedBatiment,
-        groupes_repartition: normalizedGroups,
-        tantiemes_groupes: normalizedKeyTantiemes,
-      })
+      .update(payload)
       .eq('id', data.lotId);
     if (error) return { error: error.message };
   } else {
@@ -57,12 +70,7 @@ export async function saveLot(data: {
       .from('lots')
       .insert({
         copropriete_id: data.coproprieteId,
-        numero: data.numero,
-        type: data.type,
-        tantiemes: data.tantiemes,
-        batiment: normalizedBatiment,
-        groupes_repartition: normalizedGroups,
-        tantiemes_groupes: normalizedKeyTantiemes,
+        ...payload,
       });
     if (error) return { error: error.message };
   }
@@ -92,6 +100,66 @@ export async function deleteLot(lotId: string, coproprieteId: string): Promise<{
 
   revalidatePath(`/coproprietes/${coproprieteId}`);
   invalidateLotsCache(coproprieteId);
+  return {};
+}
+
+export async function saveCoproprieteSettings(data: {
+  coproprieteId: string;
+  nom: string;
+  adresse: string;
+  code_postal: string;
+  ville: string;
+  lots: Array<{
+    id: string;
+    numero: string;
+    type: string;
+    tantiemes: number;
+    batiment?: string | null;
+    groupesRepartition?: string[];
+    tantiemesGroupes?: Record<string, number>;
+  }>;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: copro } = await supabase
+    .from('coproprietes')
+    .select('id')
+    .eq('id', data.coproprieteId)
+    .eq('syndic_id', user.id)
+    .maybeSingle();
+  if (!copro) return { error: 'Accès non autorisé' };
+
+  const { error: coproError } = await supabase
+    .from('coproprietes')
+    .update({
+      nom: data.nom.trim(),
+      adresse: data.adresse.trim(),
+      code_postal: data.code_postal.trim(),
+      ville: data.ville.trim(),
+    })
+    .eq('id', data.coproprieteId)
+    .eq('syndic_id', user.id);
+
+  if (coproError) return { error: coproError.message };
+
+  for (const lot of data.lots) {
+    const payload = buildLotSettingsPayload(lot);
+    const { error: lotError } = await supabase
+      .from('lots')
+      .update(payload)
+      .eq('id', lot.id)
+      .eq('copropriete_id', data.coproprieteId);
+
+    if (lotError) {
+      return { error: `Lot ${lot.numero} : ${lotError.message}` };
+    }
+  }
+
+  revalidatePath(`/coproprietes/${data.coproprieteId}`);
+  invalidateLotsCache(data.coproprieteId);
+  invalidateLayoutCache(user.id);
   return {};
 }
 
