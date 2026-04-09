@@ -13,7 +13,7 @@ import AdminPagination from '../AdminPagination';
 import AdminSearch from '../AdminSearch';
 import AdminStatCard from '../AdminStatCard';
 import { isAdminUser } from '@/lib/admin-config';
-import { syncEmailDeliveriesWithResend, type EmailDeliveryStatus } from '@/lib/email-delivery';
+import { backfillEmailDeliveriesFromResend, syncEmailDeliveriesWithResend, type EmailDeliveryStatus } from '@/lib/email-delivery';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
@@ -155,6 +155,8 @@ function templateLabel(templateKey: string | null): string {
     ag_pv: 'Procès-verbal AG',
     ag_ended_syndic_notification: 'Notification fin d’AG',
     invitation: 'Invitation copropriétaire',
+    signup_confirmation: 'Confirmation de compte',
+    resend_import: 'Email Resend importé',
     support_reply: 'Réponse support',
     support_client_reply_notification: 'Réponse client support',
     welcome: 'Bienvenue / confirmation',
@@ -198,6 +200,11 @@ export default async function AdminEmailsPage({
   const PAGE_SIZE = 25;
 
   const admin = createAdminClient();
+
+  await backfillEmailDeliveriesFromResend({
+    limit: 100,
+    searchQuery: query || undefined,
+  });
 
   const { data: syncCandidates } = await admin
     .from('email_deliveries')

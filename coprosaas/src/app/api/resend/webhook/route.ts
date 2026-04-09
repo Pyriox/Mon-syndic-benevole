@@ -105,6 +105,7 @@ export async function POST(req: NextRequest) {
     payload: (event.data ?? {}) as Record<string, unknown>,
     recipientEmail: extractRecipientEmail(event),
     subject: typeof event.data?.subject === 'string' ? event.data.subject : null,
+    createdAt: event.created_at,
   });
 
   if (delivery && isAlertStatus(newStatus)) {
