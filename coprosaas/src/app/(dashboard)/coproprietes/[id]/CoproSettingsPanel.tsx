@@ -573,12 +573,6 @@ export default function CoproSettingsPanel({
             </div>
           </div>
 
-          {!specialChargesEnabled && (
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
-              Les clés spéciales sont visibles en lecture seule. Pour les modifier ou en créer de nouvelles, activez l&apos;option <strong>Charges spéciales</strong> dans <a href="/abonnement" className="font-semibold underline underline-offset-2">Abonnement</a>.
-            </div>
-          )}
-
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
               Base générale · {formatBase(generalTotal)}

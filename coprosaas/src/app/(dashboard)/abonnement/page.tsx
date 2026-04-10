@@ -9,11 +9,13 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { extractStripeSubscriptionSnapshot, mapStripeAddonStatus, mapStripeSubscriptionStatus, stripe } from '@/lib/stripe';
+import { extractStripeSubscriptionSnapshot, mapStripeSubscriptionStatus, stripe } from '@/lib/stripe';
+import { syncCoproAddonsFromSnapshot } from '@/lib/stripe-addon-management';
 import { hasChargesSpecialesAddon, type CoproAddon } from '@/lib/subscription';
 import CheckoutButton from './CheckoutButton';
 import SubscriptionSuccessTracker from './SubscriptionSuccessTracker';
-import { AlertCircle, CheckCircle, Clock, Lock, Settings2, Sparkles } from 'lucide-react';
+import AddonBillingButton from './AddonBillingButton';
+import { AlertCircle, CheckCircle, Clock, Lock, Settings2 } from 'lucide-react';
 
 const FEATURES = [
   'Copropriétaires illimités',
@@ -61,45 +63,6 @@ const PLANS = [
 
 type PlanId = (typeof PLANS)[number]['id'];
 const PLAN_IDS = PLANS.map((p) => p.id) as PlanId[];
-const KNOWN_ADDON_KEYS = ['charges_speciales'] as const;
-
-async function syncCoproAddons(coproId: string, addons: CoproAddon[], subscriptionId?: string | null) {
-  const admin = createAdminClient();
-  const seenKeys = new Set<string>();
-
-  for (const addon of addons) {
-    seenKeys.add(addon.addon_key);
-    await admin
-      .from('copro_addons')
-      .upsert({
-        copropriete_id: coproId,
-        addon_key: addon.addon_key,
-        status: mapStripeAddonStatus(addon.status ?? 'inactive'),
-        stripe_subscription_id: subscriptionId ?? null,
-        stripe_subscription_item_id: addon.stripe_subscription_item_id ?? null,
-        stripe_price_id: addon.stripe_price_id ?? null,
-        current_period_end: addon.current_period_end ?? null,
-        cancel_at_period_end: addon.cancel_at_period_end ?? false,
-      }, { onConflict: 'copropriete_id,addon_key' });
-  }
-
-  for (const addonKey of KNOWN_ADDON_KEYS) {
-    if (seenKeys.has(addonKey)) continue;
-
-    await admin
-      .from('copro_addons')
-      .upsert({
-        copropriete_id: coproId,
-        addon_key: addonKey,
-        status: 'inactive',
-        stripe_subscription_id: subscriptionId ?? null,
-        stripe_subscription_item_id: null,
-        stripe_price_id: null,
-        current_period_end: null,
-        cancel_at_period_end: false,
-      }, { onConflict: 'copropriete_id,addon_key' });
-  }
-}
 
 // ── Synchronise les données Stripe vers la table coproprietes ─────────────
 async function doStripeSync(coproId: string): Promise<boolean> {
@@ -143,7 +106,7 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     .sort((a, b) => b.created - a.created)[0];
 
   if (!validSub) {
-    await syncCoproAddons(coproId, []);
+    await syncCoproAddonsFromSnapshot(coproId, null);
     return false;
   }
 
@@ -166,18 +129,7 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     return false;
   }
 
-  await syncCoproAddons(
-    coproId,
-    subscriptionSnapshot.addons.map((addon) => ({
-      addon_key: addon.addonKey,
-      status: addon.status,
-      current_period_end: addon.currentPeriodEnd,
-      cancel_at_period_end: addon.cancelAtPeriodEnd,
-      stripe_price_id: addon.priceId,
-      stripe_subscription_item_id: addon.subscriptionItemId,
-    })),
-    subscriptionSnapshot.subscriptionId,
-  );
+  await syncCoproAddonsFromSnapshot(coproId, subscriptionSnapshot);
 
   void customerFoundViaStripe; // stripe_customer_id persisté en DB si trouvé via Stripe search
   return true;
@@ -193,9 +145,10 @@ export default async function AbonnementPage({
     synced?: string;
     coproId?: string;
     error?: string;
+    addon?: string;
   }>;
 }) {
-  const { success, canceled, synced, coproId, error: pageError } = await searchParams;
+  const { success, canceled, synced, coproId, error: pageError, addon } = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -335,6 +288,28 @@ export default async function AbonnementPage({
             <AlertCircle size={16} className="text-amber-600 shrink-0" />
             <p className="text-sm text-amber-700">
               Paiement annulé. Votre abonnement n&apos;a pas été modifié.
+            </p>
+          </div>
+        )}
+
+        {addon === 'enabled' && (
+          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <CheckCircle size={16} className="text-green-600 shrink-0" />
+            <p className="text-sm text-green-800">
+              {syncedCopro
+                ? `Option Charges spéciales activée pour « ${syncedCopro.nom} ».`
+                : 'Option Charges spéciales activée avec succès.'}
+            </p>
+          </div>
+        )}
+
+        {addon === 'disabled' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <AlertCircle size={16} className="text-amber-600 shrink-0" />
+            <p className="text-sm text-amber-800">
+              {syncedCopro
+                ? `La résiliation de l’option Charges spéciales est programmée pour « ${syncedCopro.nom} » à la prochaine échéance.`
+                : 'La résiliation de l’option Charges spéciales est programmée à la prochaine échéance.'}
             </p>
           </div>
         )}
@@ -565,9 +540,15 @@ export default async function AbonnementPage({
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-sm font-semibold text-gray-900">Option Charges spéciales</h3>
                       {hasChargesAddon ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                          <CheckCircle size={11} /> Active
-                        </span>
+                        chargesSpecialesAddon?.cancel_at_period_end ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                            <Clock size={11} /> Arrêt programmé
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                            <CheckCircle size={11} /> Active
+                          </span>
+                        )
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                           <Lock size={11} /> Non activée
@@ -597,22 +578,19 @@ export default async function AbonnementPage({
                     )}
                   </div>
 
-                  <div className="lg:w-64">
+                  <div className="lg:w-72">
                     {isSubscribed || isPastDue ? (
                       hasStripeCustomer ? (
-                        <form action={portalAction} className="space-y-2">
-                          <input type="hidden" name="coproId" value={copro.id} />
-                          <button
-                            type="submit"
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-                          >
-                            <Sparkles size={14} />
-                            {hasChargesAddon ? 'Gérer l’option' : 'Activer l’option'}
-                          </button>
+                        <div className="space-y-2">
+                          <AddonBillingButton
+                            coproprieteid={copro.id}
+                            enabled={hasChargesAddon}
+                            scheduledForCancellation={Boolean(chargesSpecialesAddon?.cancel_at_period_end)}
+                          />
                           <p className="text-xs text-gray-500">
-                            Le lien ouvre votre portail Stripe pour activer, conserver ou arrêter l&apos;option en fin de période.
+                            Cette action met à jour directement votre abonnement Stripe. Le portail ci-dessous reste disponible pour vos factures et moyens de paiement.
                           </p>
-                        </form>
+                        </div>
                       ) : (
                         <p className="text-xs text-gray-500">Le compte Stripe sera disponible juste après l&apos;activation de l&apos;abonnement principal.</p>
                       )

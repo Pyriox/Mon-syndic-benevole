@@ -80,12 +80,6 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
           : 'Retrouvez ici les dates d’AG, les convocations et les résolutions liées à votre copropriété.'}
       </PageHelp>
 
-      {isSyndic && canWrite && !specialChargesEnabled && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Les budgets d&apos;AG avec clé spéciale sont réservés à l&apos;option <strong>Charges spéciales</strong>. Vous pouvez l&apos;activer depuis <Link href="/abonnement" className="font-semibold underline underline-offset-2">Abonnement</Link>.
-        </div>
-      )}
-
       {assemblees && assemblees.length > 0 ? (
         <div className="space-y-3">
           {assemblees.map((ag) => (

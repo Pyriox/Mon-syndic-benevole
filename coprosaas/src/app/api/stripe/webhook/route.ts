@@ -2,7 +2,8 @@
 // Reçoit les événements Stripe et met à jour la table coproprietes en conséquence.
 // UN abonnement Stripe = UNE copropriété.
 import { NextRequest, NextResponse } from 'next/server';
-import { extractStripeSubscriptionSnapshot, mapStripeAddonStatus, mapStripeSubscriptionStatus, stripe, type StripeSubscriptionSnapshot } from '@/lib/stripe';
+import { extractStripeSubscriptionSnapshot, mapStripeSubscriptionStatus, stripe, type StripeSubscriptionSnapshot } from '@/lib/stripe';
+import { syncCoproAddonsFromSnapshot } from '@/lib/stripe-addon-management';
 import { createAdminClient } from '@/lib/supabase/admin';
 import Stripe from 'stripe';
 import { Resend } from 'resend';
@@ -21,7 +22,6 @@ import { getCanonicalSiteUrl } from '@/lib/site-url';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 const SITE_URL = getCanonicalSiteUrl();
-const KNOWN_ADDON_KEYS = ['charges_speciales'] as const;
 
 function getPlanLabel(planId: string | null | undefined): string {
   if (planId === 'illimite') return 'Illimité';
@@ -123,41 +123,7 @@ async function updateCoproSubscription(coproId: string, data: {
 }
 
 async function syncCoproAddons(coproId: string, snapshot: StripeSubscriptionSnapshot | null) {
-  const supabase = createAdminClient();
-  const seenAddonKeys = new Set<string>();
-
-  for (const addon of snapshot?.addons ?? []) {
-    seenAddonKeys.add(addon.addonKey);
-    await supabase
-      .from('copro_addons')
-      .upsert({
-        copropriete_id: coproId,
-        addon_key: addon.addonKey,
-        status: mapStripeAddonStatus(addon.status),
-        stripe_subscription_id: snapshot?.subscriptionId ?? null,
-        stripe_subscription_item_id: addon.subscriptionItemId,
-        stripe_price_id: addon.priceId,
-        current_period_end: addon.currentPeriodEnd,
-        cancel_at_period_end: addon.cancelAtPeriodEnd,
-      }, { onConflict: 'copropriete_id,addon_key' });
-  }
-
-  for (const addonKey of KNOWN_ADDON_KEYS) {
-    if (seenAddonKeys.has(addonKey)) continue;
-
-    await supabase
-      .from('copro_addons')
-      .upsert({
-        copropriete_id: coproId,
-        addon_key: addonKey,
-        status: 'inactive',
-        stripe_subscription_id: snapshot?.subscriptionId ?? null,
-        stripe_subscription_item_id: null,
-        stripe_price_id: null,
-        current_period_end: snapshot?.currentPeriodEnd ?? null,
-        cancel_at_period_end: false,
-      }, { onConflict: 'copropriete_id,addon_key' });
-  }
+  await syncCoproAddonsFromSnapshot(coproId, snapshot);
 }
 
 export async function POST(req: NextRequest) {

@@ -389,12 +389,6 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
         Enregistrez ici les factures et charges réellement payées par la copropriété pour suivre l’exécution du budget et préparer la régularisation annuelle.
       </PageHelp>
 
-      {canWrite && !specialChargesEnabled && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          La répartition par bâtiment ou clé spéciale est verrouillée tant que l&apos;option <strong>Charges spéciales</strong> n&apos;est pas activée dans <Link href="/abonnement" className="font-semibold underline underline-offset-2">Abonnement</Link>.
-        </div>
-      )}
-
       {depenses && depenses.length > 0 ? (
         <>
           {/* Mobile cards */}

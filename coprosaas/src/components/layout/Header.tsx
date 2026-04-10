@@ -119,24 +119,56 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
 
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {onMenuOpen && (
-              <button
-                type="button"
-                onClick={onMenuOpen}
-                className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors"
-                aria-label="Ouvrir le menu"
-              >
-                <Menu size={18} />
-              </button>
-            )}
-            <h1 className="text-sm md:text-xl font-semibold text-gray-900 truncate leading-tight">{title}</h1>
-          </div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2 min-w-0 flex-1">
+          {onMenuOpen && (
+            <button
+              type="button"
+              onClick={onMenuOpen}
+              className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+              aria-label="Ouvrir le menu"
+            >
+              <Menu size={18} />
+            </button>
+          )}
 
-          {/* Zone droite */}
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-sm md:text-xl font-semibold text-gray-900 truncate leading-tight">{title}</h1>
+            {canSwitchView && (
+              <div className="mt-2 flex items-center justify-start">
+                <div className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 p-1">
+                  <button
+                    type="button"
+                    onClick={() => handleViewSwitch('syndic')}
+                    disabled={switchPending}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                      userRole === 'syndic' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                    )}
+                  >
+                    <Crown size={13} />
+                    Syndic
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleViewSwitch('copropriétaire')}
+                    disabled={switchPending}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                      userRole === 'copropriétaire' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                    )}
+                  >
+                    <User size={13} />
+                    Copropriétaire
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Zone droite */}
+        <div className="flex items-center gap-2 md:gap-3">
           {/* Cloche notifications */}
           <div ref={ref} className="relative">
             <button
@@ -245,39 +277,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
               </span>
             )}
           </div>
-          </div>
         </div>
-
-        {canSwitchView && (
-          <div className="flex items-center justify-start md:justify-end">
-            <div className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 p-1">
-              <button
-                type="button"
-                onClick={() => handleViewSwitch('syndic')}
-                disabled={switchPending}
-                className={cn(
-                  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
-                  userRole === 'syndic' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                )}
-              >
-                <Crown size={13} />
-                Syndic
-              </button>
-              <button
-                type="button"
-                onClick={() => handleViewSwitch('copropriétaire')}
-                disabled={switchPending}
-                className={cn(
-                  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
-                  userRole === 'copropriétaire' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                )}
-              >
-                <User size={13} />
-                Copropriétaire
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );

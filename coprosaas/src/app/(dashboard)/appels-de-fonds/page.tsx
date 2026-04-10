@@ -6,7 +6,6 @@ export const metadata: Metadata = { title: 'Appels de fonds' };
 
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
-import Link from 'next/link';
 import EmptyState from '@/components/ui/EmptyState';
 import AppelFondsActions from './AppelFondsActions';
 import AppelFondsCard from './AppelFondsCard';
@@ -161,12 +160,6 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
           ? 'Les appels de fonds correspondent aux provisions demandées aux copropriétaires pour financer le budget voté en AG et les dépenses à venir.'
           : 'Consultez ici vos avis de paiement, leurs échéances et l’état de vos règlements pour l’exercice en cours.'}
       </PageHelp>
-
-      {isSyndic && canWrite && !specialChargesEnabled && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Les appels ciblés par bâtiment ou clé spéciale nécessitent l&apos;option <strong>Charges spéciales</strong>. Vous pouvez l&apos;activer depuis <Link href="/abonnement" className="font-semibold underline underline-offset-2">Abonnement</Link>.
-        </div>
-      )}
 
       {totalCount > 0 ? (
         <div className="space-y-3">

@@ -6,9 +6,8 @@ type PriceLike = {
   lookup_key?: string | null;
   nickname?: string | null;
   metadata?: Record<string, string> | null;
-  product?: string | { metadata?: Record<string, string> | null } | null;
+  product?: string | Record<string, unknown> | null;
 };
-
 export type StripeSubscriptionAddonSnapshot = {
   addonKey: CoproAddonKey;
   priceId: string | null;
@@ -69,9 +68,9 @@ function normalizeBillingSlug(value?: string | null): string {
     .replace(/^_+|_+$/g, '');
 }
 
-function readProductMetadata(price?: PriceLike | null): Record<string, string> | null {
+function readProductMetadata(price?: PriceLike | Stripe.Price | null): Record<string, string> | null {
   if (!price || !price.product || typeof price.product === 'string') return null;
-  return price.product.metadata ?? null;
+  return ((price.product as { metadata?: Record<string, string> | null }).metadata) ?? null;
 }
 
 function isBasePlanId(value?: string | null): value is BasePlanId {
@@ -90,7 +89,7 @@ function pickKnownKey(candidates: Array<string | null | undefined>, knownKeys: r
   return null;
 }
 
-export function getPlanIdFromPrice(price?: string | PriceLike | null): BasePlanId | null {
+export function getPlanIdFromPrice(price?: string | PriceLike | Stripe.Price | null): BasePlanId | null {
   if (!price) return null;
 
   if (typeof price === 'string') {
@@ -113,7 +112,7 @@ export function getPlanIdFromPrice(price?: string | PriceLike | null): BasePlanI
   return isBasePlanId(fromKnownKey) ? fromKnownKey : null;
 }
 
-export function getAddonKeyFromPrice(price?: string | PriceLike | null): CoproAddonKey | null {
+export function getAddonKeyFromPrice(price?: string | PriceLike | Stripe.Price | null): CoproAddonKey | null {
   if (!price) return null;
 
   if (typeof price === 'string') {
