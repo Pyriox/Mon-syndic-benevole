@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { extractStripeSubscriptionSnapshot, mapStripeSubscriptionStatus, stripe } from '@/lib/stripe';
+import { extractStripeSubscriptionSnapshot, mapStripeSubscriptionStatus, STRIPE_ADDON_PRICES, stripe } from '@/lib/stripe';
 import { syncCoproAddonsFromSnapshot } from '@/lib/stripe-addon-management';
 import { hasChargesSpecialesAddon, type CoproAddon } from '@/lib/subscription';
 import CheckoutButton from './CheckoutButton';
@@ -62,7 +62,66 @@ const PLANS = [
 ] as const;
 
 type PlanId = (typeof PLANS)[number]['id'];
+type AddonPricingDetails = {
+  headline: string;
+  subline: string;
+  note: string;
+};
+
 const PLAN_IDS = PLANS.map((p) => p.id) as PlanId[];
+
+function formatMoney(amount: number, currency: string = 'EUR'): string {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+async function getChargesSpecialesPricing(): Promise<AddonPricingDetails> {
+  const fallback: AddonPricingDetails = {
+    headline: 'Tarif affiché avant validation',
+    subline: 'ajouté à l’abonnement principal',
+    note: 'Le montant exact est rappelé au moment de la confirmation avant souscription.',
+  };
+
+  const priceId = STRIPE_ADDON_PRICES.charges_speciales;
+  if (!priceId) return fallback;
+
+  try {
+    const price = await stripe.prices.retrieve(priceId);
+    const unitAmount = typeof price.unit_amount === 'number' ? price.unit_amount / 100 : null;
+    const currency = (price.currency ?? 'eur').toUpperCase();
+
+    if (unitAmount === null) return fallback;
+
+    if (price.recurring?.interval === 'year') {
+      return {
+        headline: `${formatMoney(unitAmount, currency)}/an`,
+        subline: `soit ${formatMoney(unitAmount / 12, currency)}/mois`,
+        note: 'Ajoutée à l’abonnement principal de la copropriété, avec prorata automatique sur la période restante.',
+      };
+    }
+
+    if (price.recurring?.interval === 'month') {
+      return {
+        headline: `${formatMoney(unitAmount, currency)}/mois`,
+        subline: `soit ${formatMoney(unitAmount * 12, currency)}/an`,
+        note: 'Facturation mensuelle ajoutée à l’abonnement principal de la copropriété.',
+      };
+    }
+
+    return {
+      headline: formatMoney(unitAmount, currency),
+      subline: 'facturation récurrente via Stripe',
+      note: 'Ce montant sera ajouté à l’abonnement principal de la copropriété.',
+    };
+  } catch (error) {
+    console.error('[abonnement] Impossible de récupérer le tarif de l’option Charges spéciales', error);
+    return fallback;
+  }
+}
 
 // ── Synchronise les données Stripe vers la table coproprietes ─────────────
 async function doStripeSync(coproId: string): Promise<boolean> {
@@ -250,6 +309,7 @@ export default async function AbonnementPage({
   const syncedCopro = coproId
     ? (coproprietes ?? []).find((c) => c.id === coproId)
     : null;
+  const chargesAddonPricing = await getChargesSpecialesPricing();
 
   return (
     <div className="min-h-full py-8 px-4">
@@ -558,6 +618,12 @@ export default async function AbonnementPage({
                     <p className="text-sm text-gray-600">
                       Débloque les répartitions par bâtiment, ascenseur, parking ou toute autre clé spéciale de votre copropriété.
                     </p>
+                    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tarif de l’option</p>
+                      <p className="mt-1 text-2xl font-bold text-slate-900">{chargesAddonPricing.headline}</p>
+                      <p className="text-xs text-slate-600">{chargesAddonPricing.subline}</p>
+                      <p className="mt-1 text-xs text-slate-500">{chargesAddonPricing.note}</p>
+                    </div>
                     <ul className="space-y-1 text-xs text-gray-500">
                       <li>• Paramétrage des clés spéciales dans <strong>Paramétrage</strong></li>
                       <li>• Dépenses, budgets d&apos;AG et appels de fonds ciblés</li>
@@ -584,11 +650,16 @@ export default async function AbonnementPage({
                         <div className="space-y-2">
                           <AddonBillingButton
                             coproprieteid={copro.id}
+                            coproName={copro.nom}
                             enabled={hasChargesAddon}
                             scheduledForCancellation={Boolean(chargesSpecialesAddon?.cancel_at_period_end)}
+                            priceHeadline={chargesAddonPricing.headline}
+                            priceSubline={chargesAddonPricing.subline}
+                            priceNote={chargesAddonPricing.note}
+                            currentPeriodEnd={chargesSpecialesAddon?.current_period_end ?? copro.plan_period_end ?? null}
                           />
                           <p className="text-xs text-gray-500">
-                            Cette action met à jour directement votre abonnement Stripe. Le portail ci-dessous reste disponible pour vos factures et moyens de paiement.
+                            Un récapitulatif du tarif et des conséquences de votre choix s&apos;affiche avant validation. Le portail ci-dessous reste disponible pour vos factures et moyens de paiement.
                           </p>
                         </div>
                       ) : (
