@@ -448,21 +448,28 @@ export default function CoproSettingsPanel({
             </div>
           )}
 
-          <div className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,30rem)_auto] xl:items-end">
-            <div className="max-w-xl">
-              <Input
-                label="Ajouter une clé spéciale"
-                value={newKeyName}
-                onChange={(e) => setNewKeyName(e.target.value)}
-                placeholder="Ex. Ascenseur, Eau chaude, Parking"
-                hint="Saisissez librement une clé utile à votre copropriété. Exemples courants : ascenseur, chauffage, parking, bâtiment A."
-              />
-            </div>
-            <div className="xl:pb-[1px]">
-              <Button type="button" variant="secondary" onClick={handleAddKey}>
-                <Plus size={14} /> Ajouter la clé
-              </Button>
-            </div>
+          <div className="mt-4 max-w-2xl">
+            <label htmlFor="new-special-key" className="block">
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Ajouter une clé spéciale
+              </span>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  id="new-special-key"
+                  type="text"
+                  value={newKeyName}
+                  onChange={(e) => setNewKeyName(e.target.value)}
+                  placeholder="Ex. Ascenseur, Eau chaude, Parking"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
+                />
+                <Button type="button" variant="secondary" onClick={handleAddKey} className="sm:self-stretch">
+                  <Plus size={14} /> Ajouter la clé
+                </Button>
+              </div>
+            </label>
+            <p className="mt-1.5 text-xs text-gray-500">
+              Saisissez librement une clé utile à votre copropriété. Exemples courants : ascenseur, chauffage, parking, bâtiment A.
+            </p>
           </div>
 
           {keyNames.length > 0 && (
@@ -559,14 +566,14 @@ export default function CoproSettingsPanel({
                         key={lot.id}
                         className="rounded-xl border border-gray-200 bg-white px-3 py-3 shadow-sm"
                       >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="min-w-0">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-6">
+                          <div className="min-w-0 flex-1">
                             <p className="font-semibold text-gray-900">{lot.numero}</p>
                             <p className="text-xs text-gray-500">{getLotTypeLabel(lot.type)}</p>
                             {ownerName && <p className="mt-1 text-xs text-gray-500">{ownerName}</p>}
                           </div>
 
-                          <label className="block w-full sm:w-[180px]">
+                          <label className="block w-full md:w-[220px] md:shrink-0">
                             <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Charges générales</span>
                             <input
                               type="number"
