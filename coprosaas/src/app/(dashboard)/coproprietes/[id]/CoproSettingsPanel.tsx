@@ -413,8 +413,8 @@ export default function CoproSettingsPanel({
   };
 
   return (
-    <div className={cn('space-y-5', isDirty && 'pb-32')}>
-      <div className="sticky top-3 z-20">
+    <div className="space-y-5">
+      <div className="sticky top-3 z-30 space-y-3">
         <Card className="border-blue-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
@@ -473,6 +473,33 @@ export default function CoproSettingsPanel({
             </div>
           </div>
         </Card>
+
+        {isDirty && (
+          <Card className="border-amber-200 bg-amber-50/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-amber-50/90">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-amber-900">Enregistrez avant de quitter cette page</p>
+                <p className="text-xs text-amber-800">
+                  Vos dernières modifications seront perdues si vous changez d’écran sans enregistrer.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Button type="button" variant="secondary" onClick={handleResetChanges}>
+                  Annuler mes modifications
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    void handleSave();
+                  }}
+                  loading={saving}
+                >
+                  <Save size={14} /> Enregistrer maintenant
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
 
       {error && (
@@ -484,37 +511,6 @@ export default function CoproSettingsPanel({
       {success && (
         <div className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
           {success}
-        </div>
-      )}
-
-      {isDirty && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 px-4">
-          <div className="mx-auto max-w-4xl pointer-events-auto">
-            <Card className="border-amber-200 bg-amber-50/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-amber-50/90">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-amber-900">Enregistrez avant de quitter cette page</p>
-                  <p className="text-xs text-amber-800">
-                    Vos dernières modifications seront perdues si vous changez d’écran sans enregistrer.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <Button type="button" variant="secondary" onClick={handleResetChanges}>
-                    Annuler mes modifications
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      void handleSave();
-                    }}
-                    loading={saving}
-                  >
-                    <Save size={14} /> Enregistrer maintenant
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
         </div>
       )}
 
@@ -607,7 +603,7 @@ export default function CoproSettingsPanel({
                   placeholder="Ex. Ascenseur, Eau chaude, Parking"
                   className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
                 />
-                <Button type="button" variant="secondary" onClick={handleAddKey} className="sm:self-stretch">
+                <Button type="button" variant="secondary" onClick={handleAddKey} className="shrink-0 whitespace-nowrap">
                   <Plus size={14} /> Ajouter la clé
                 </Button>
               </div>

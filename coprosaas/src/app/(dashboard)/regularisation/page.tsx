@@ -153,12 +153,12 @@ export default async function RegularisationPage({
               <Card>
                 <p className="text-xs text-gray-500 mb-1">Provisions appelées</p>
                 <p className="text-xl font-bold text-gray-900">{formatEuros(totalAppele)}</p>
-                <p className="text-xs text-gray-500 mb-1">charges courantes + appels exceptionnels</p>
+                <p className="text-xs text-gray-500 mb-1">Charges courantes + appels exceptionnels</p>
               </Card>
               <Card>
                 <p className="text-xs text-gray-500 mb-1">Dépenses réelles</p>
                 <p className="text-xl font-bold text-gray-900">{formatEuros(totalReel)}</p>
-                <p className="text-xs text-gray-500 mb-1">fonds ALUR suivi séparément</p>
+                <p className="text-xs text-gray-500 mb-1">Fonds ALUR suivi séparément</p>
               </Card>
               <Card>
                 <p className="text-xs text-gray-500 mb-1">Solde net</p>
@@ -176,12 +176,12 @@ export default async function RegularisationPage({
           <div className="flex items-start gap-2.5 p-3 bg-blue-50 rounded-xl text-sm text-blue-700">
             <Info size={16} className="shrink-0 mt-0.5" />
             <p>
-              Le <strong>fonds de travaux ALUR</strong> reste suivi à part : c&apos;est une épargne obligatoire,
-              pas une charge annuelle à régulariser. En revanche, les <strong>appels exceptionnels de travaux</strong>
-              sont bien pris en compte sur l&apos;exercice. Si un copropriétaire ne paie pas, la somme reste de toute
-              façon due dans son <strong>solde copropriétaire</strong>. Ici, un solde <strong className="text-red-600">négatif</strong>
+              Le <strong>fonds de travaux ALUR</strong> reste suivi à part&nbsp;: c&apos;est une épargne obligatoire,
+              et non une charge annuelle à régulariser. En revanche, les <strong>appels exceptionnels de travaux</strong>
+              sont bien pris en compte sur l&apos;exercice. Si un copropriétaire ne paie pas, la somme reste malgré tout
+              due dans son <strong>solde copropriétaire</strong>. Ici, un solde <strong className="text-red-600">négatif</strong>
               signifie qu&apos;il doit encore un complément&nbsp;; un solde <strong className="text-green-600">positif</strong>
-              signifie qu&apos;il a un crédit.
+              signifie qu&apos;il dispose d&apos;un crédit.
             </p>
           </div>
 

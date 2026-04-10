@@ -180,10 +180,9 @@ export default function RegularisationTable({ lignes, isCloture, isSyndic, canWr
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 flex items-start gap-2">
           <span className="font-semibold shrink-0">1ère année ?</span>
           <span>
-            Si vous venez d&apos;une autre plateforme, saisissez le <strong>solde de reprise</strong> de
-            chaque copropriétaire issu de votre ancienne gestion.
-            Ce montant est intégré dans le solde final&nbsp;:
-            <strong>négatif</strong> = il vous doit encore de l&apos;argent&nbsp;; <strong>positif</strong> = il a un crédit à récupérer.
+            Si vous venez d&apos;une autre plateforme, saisissez le <strong>solde de reprise</strong> de chaque
+            copropriétaire issu de votre ancienne gestion. Ce montant est intégré dans le solde final&nbsp;:
+            <strong> négatif</strong> = il vous doit encore de l&apos;argent&nbsp;; <strong> positif</strong> = il a un crédit à récupérer.
           </span>
         </div>
       )}
