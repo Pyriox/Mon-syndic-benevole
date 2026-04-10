@@ -132,8 +132,8 @@ const FAQ: { question: string; answer: string; category: keyof typeof CATEGORIES
   },
   {
     category: 'app',
-    question: "Mes données sont-elles sécurisées et sauvegardées ?",
-    answer: "Les données sont hébergées sur des serveurs européens, chiffrées en transit (HTTPS) et au repos. Des sauvegardes automatiques quotidiennes sont effectuées. Vous pouvez télécharger à tout moment les PDF générés (convocations, PV, appels de fonds) depuis chaque section.",
+    question: 'Où régler les tantièmes et les clés de répartition spéciales ?',
+    answer: 'Depuis la page de la copropriété, ouvrez « Paramétrage », puis l’onglet « Répartition des charges ». C’est ici que vous ajustez les tantièmes généraux, ajoutez les clés spéciales (ascenseur, bâtiment, parking…) et vérifiez les bases utilisées dans les appels de fonds, les dépenses et la régularisation.',
   },
 ];
 
@@ -164,9 +164,9 @@ const FAQ_COPRO: { question: string; answer: string; category: keyof typeof CATE
     answer: 'La prochaine assemblée générale apparaît sur votre tableau de bord dès qu’elle est planifiée. Vous pouvez également consulter la page « Assemblées » pour retrouver la date, le lieu et les résolutions.',
   },
   {
-    category: 'app',
-    question: 'Pourquoi je ne peux pas renommer, déplacer ou supprimer un document ?',
-    answer: 'Ces actions sont réservées au syndic. En vue copropriétaire, vous pouvez uniquement consulter et télécharger les documents qui vous sont partagés.',
+    category: 'finances',
+    question: 'À quoi correspond la régularisation annuelle ?',
+    answer: 'En fin d’exercice, le syndic compare les provisions appelées et les dépenses réelles. Si le résultat est négatif, un complément reste à payer ; s’il est positif, un crédit est enregistré en votre faveur.',
   },
   {
     category: 'app',
@@ -423,14 +423,14 @@ export default function AidePage() {
   const subjectChips = isCoproView ? SUBJECT_CHIPS_COPRO : SUBJECT_CHIPS;
   const resourceLinks = isCoproView
     ? [
-        { label: 'Service-public.fr – copropriété', url: 'https://www.service-public.fr/particuliers/vosdroits/N31337' },
-        { label: 'ANIL – charges et répartition en copropriété', url: 'https://www.anil.org/votre-projet/vous-etes-proprietaire/copropriete/charges-de-copropriete/' },
-        { label: 'ANIL – assemblée générale des copropriétaires', url: 'https://www.anil.org/votre-projet/vous-etes-proprietaire/copropriete/assemblee-generale/' },
+        { label: 'Service Public – acteurs de la copropriété', url: 'https://www.service-public.gouv.fr/particuliers/vosdroits/N31338' },
+        { label: 'ANIL – en copropriété', url: 'https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/' },
+        { label: 'ANIL – assemblée générale des copropriétaires', url: 'https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/assemblee-generale/' },
       ]
     : [
         { label: 'Legifrance – loi du 10 juillet 1965', url: 'https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256' },
-        { label: 'ANIL – le syndic en copropriété',     url: 'https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/' },
-        { label: 'Service-public.fr – copropriété',     url: 'https://www.service-public.fr/particuliers/vosdroits/N31337' },
+        { label: 'ANIL – le syndic en copropriété', url: 'https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/' },
+        { label: 'Service Public – syndic de copropriété', url: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F2608' },
       ];
   const cycleSteps = isCoproView
     ? [
@@ -512,7 +512,7 @@ export default function AidePage() {
         <p className="text-gray-500 mt-1 text-sm">
           {isCoproView
             ? `Réponses utiles pour consulter votre espace, vos documents et votre solde${selectedCoproName ? ` — ${selectedCoproName}` : ''}.`
-            : 'Questions fréquentes, support et comprendre le fonctionnement annuel.'}
+            : 'Retrouvez ici les réponses essentielles sur la gestion, l’application et le support.'}
         </p>
       </div>
 
@@ -539,7 +539,7 @@ export default function AidePage() {
           <div>
             <h2 className="text-base font-semibold text-gray-900">Questions fréquentes</h2>
             <p className="text-xs text-gray-400">
-              {isCoproView ? 'Réponses utiles pour votre espace copropriétaire' : 'Sur le syndic bénévole et l&apos;application'}
+              {isCoproView ? 'Réponses utiles pour votre espace copropriétaire' : "Questions sur le syndic bénévole et l'application"}
             </p>
           </div>
         </div>
@@ -930,9 +930,9 @@ export default function AidePage() {
               <div>
                 <p className="text-xs font-semibold text-amber-800">Première année sur Mon Syndic Bénévole ?</p>
                 <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                  Les appels de fonds de l&apos;exercice en cours ont probablement été gérés sur une autre plateforme.
-                  Vous pouvez les re-saisir manuellement (même pour un seul appel global annuel) pour que le dashboard
-                  affiche les bonnes provisions et impayés. Les T1/T2 déjà payés peuvent être marqués payés
+                  Les appels de fonds de l'exercice en cours ont probablement été gérés sur une autre plateforme.
+                  Vous pouvez les re-saisir manuellement (même sous la forme d’un seul appel global annuel) pour que le tableau de bord
+                  affiche les bonnes provisions et les bons impayés. Les T1/T2 déjà réglés peuvent être marqués comme payés
                   directement après publication.
                 </p>
                 <a

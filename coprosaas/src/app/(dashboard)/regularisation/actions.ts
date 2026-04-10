@@ -125,14 +125,13 @@ export async function calculerRegularisation(exerciceId: string): Promise<Regula
     }
   }
 
-  // Appels de fonds de l'exercice (hors fonds_travaux) → filtrés par date_echeance
+  // Appels de fonds de l'exercice (y compris fonds_travaux) → filtrés par date_echeance
   const { data: appels } = await supabase
     .from('appels_de_fonds')
     .select('id')
     .eq('copropriete_id', coproprieteId)
     .gte('date_echeance', exercice.date_debut)
-    .lte('date_echeance', exercice.date_fin)
-    .or('type_appel.is.null,type_appel.neq.fonds_travaux');
+    .lte('date_echeance', exercice.date_fin);
 
   const appelIds = (appels ?? []).map((a) => a.id);
   const montantAppeleByOwner: Record<string, number> = {};
@@ -151,14 +150,13 @@ export async function calculerRegularisation(exerciceId: string): Promise<Regula
     }
   }
 
-  // Dépenses réelles de l'exercice (hors fonds_travaux_alur)
+  // Dépenses réelles de l'exercice (y compris fonds_travaux_alur)
   const { data: depenses } = await supabase
     .from('depenses')
     .select('id, montant')
     .eq('copropriete_id', coproprieteId)
     .gte('date_depense', exercice.date_debut)
-    .lte('date_depense', exercice.date_fin)
-    .neq('categorie', 'fonds_travaux_alur');
+    .lte('date_depense', exercice.date_fin);
 
   const depenseIds = (depenses ?? []).map((depense) => depense.id);
   const montantReelByOwner: Record<string, number> = {};

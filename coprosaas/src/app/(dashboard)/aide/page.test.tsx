@@ -102,4 +102,19 @@ describe('AidePage', () => {
     expect(screen.getByText(/Comment inviter mes copropriétaires sur la plateforme/i)).not.toBeNull();
     expect(screen.queryByText(/Comment consulter mon solde/i)).toBeNull();
   });
+
+  it('affiche une aide syndic lisible et pertinente sur le paramétrage', async () => {
+    mockScenario = 'syndic-and-copro';
+    const { default: AidePage } = await import('./page');
+
+    render(<AidePage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Questions fréquentes/i })).not.toBeNull();
+    });
+
+    expect(screen.getByText(/Questions sur le syndic bénévole et l'application/i)).not.toBeNull();
+    expect(screen.getByText(/Où régler les tantièmes et les clés de répartition spéciales/i)).not.toBeNull();
+    expect(screen.queryByText(/l&apos;application/i)).toBeNull();
+  });
 });

@@ -51,6 +51,8 @@ function mockRegularisationClient({
   repartitionsDepenses: Array<{ coproprietaire_id: string; montant_du: number }>;
 }) {
   const regularisationUpsert = vi.fn().mockResolvedValue({ error: null });
+  const appelsChain = createResultChain([{ id: 'appel_1' }]);
+  const depensesChain = createResultChain([{ id: 'dep_1', montant: 100 }]);
 
   createClientMock.mockResolvedValue({
     auth: {
@@ -86,7 +88,7 @@ function mockRegularisationClient({
       }
 
       if (table === 'appels_de_fonds') {
-        return createResultChain([{ id: 'appel_1' }]);
+        return appelsChain;
       }
 
       if (table === 'lignes_appels_de_fonds') {
@@ -97,7 +99,7 @@ function mockRegularisationClient({
       }
 
       if (table === 'depenses') {
-        return createResultChain([{ id: 'dep_1', montant: 100 }]);
+        return depensesChain;
       }
 
       if (table === 'repartitions_depenses') {
@@ -114,7 +116,7 @@ function mockRegularisationClient({
     }),
   });
 
-  return { regularisationUpsert };
+  return { regularisationUpsert, appelsChain, depensesChain };
 }
 
 describe('regularisation actions', () => {
@@ -154,6 +156,22 @@ describe('regularisation actions', () => {
       expect.objectContaining({ coproprietaire_id: 'copro_a', montant_appele: 50, montant_reel: 50 }),
       expect.objectContaining({ coproprietaire_id: 'copro_b', montant_appele: 50, montant_reel: 50 }),
     ], { onConflict: 'exercice_id,coproprietaire_id' });
+  });
+
+  it('inclut le fonds travaux ALUR dans la régularisation annuelle', async () => {
+    const { appelsChain, depensesChain } = mockRegularisationClient({
+      repartitionsDepenses: [
+        { coproprietaire_id: 'copro_a', montant_du: 60 },
+        { coproprietaire_id: 'copro_b', montant_du: 40 },
+      ],
+    });
+
+    const { calculerRegularisation } = await import('./actions');
+    const result = await calculerRegularisation('ex_1');
+
+    expect(result).toEqual({});
+    expect(appelsChain.or).not.toHaveBeenCalled();
+    expect(depensesChain.neq).not.toHaveBeenCalledWith('categorie', 'fonds_travaux_alur');
   });
 
   it('utilise la RPC atomique pour cloturer l’exercice', async () => {
