@@ -109,10 +109,12 @@ export default function CoproSettingsPanel({
   copropriete,
   initialLots,
   coproMap,
+  specialChargesEnabled = true,
 }: {
   copropriete: CoproprieteSettings;
   initialLots: LotSettingRow[];
   coproMap: Record<string, CoproprietaireSummary>;
+  specialChargesEnabled?: boolean;
 }) {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<'repartition' | 'copro'>('repartition');
@@ -268,6 +270,12 @@ export default function CoproSettingsPanel({
   };
 
   const handleKeyValueChange = (lotId: string, key: string, value: string) => {
+    if (!specialChargesEnabled) {
+      setError('Activez l’option Charges spéciales pour modifier ces clés de répartition.');
+      setSuccess('');
+      return;
+    }
+
     setLots((prev) => prev.map((lot) => (
       lot.id === lotId
         ? { ...lot, keyValues: { ...lot.keyValues, [key]: value } }
@@ -278,6 +286,12 @@ export default function CoproSettingsPanel({
   };
 
   const handleAddKey = () => {
+    if (!specialChargesEnabled) {
+      setError('Activez l’option Charges spéciales pour ajouter une clé de répartition.');
+      setActiveSection('repartition');
+      return;
+    }
+
     const normalized = normalizeKeyLabel(newKeyName);
     if (!normalized) return;
 
@@ -299,6 +313,12 @@ export default function CoproSettingsPanel({
   };
 
   const handleRemoveKey = (keyToRemove: string) => {
+    if (!specialChargesEnabled) {
+      setError('Activez l’option Charges spéciales pour modifier les clés existantes.');
+      setActiveSection('repartition');
+      return;
+    }
+
     setKeyNames((prev) => prev.filter((key) => key !== keyToRemove));
     setLots((prev) => prev.map((lot) => {
       const nextValues = { ...lot.keyValues };
@@ -553,6 +573,12 @@ export default function CoproSettingsPanel({
             </div>
           </div>
 
+          {!specialChargesEnabled && (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
+              Les clés spéciales sont visibles en lecture seule. Pour les modifier ou en créer de nouvelles, activez l&apos;option <strong>Charges spéciales</strong> dans <a href="/abonnement" className="font-semibold underline underline-offset-2">Abonnement</a>.
+            </div>
+          )}
+
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
               Base générale · {formatBase(generalTotal)}
@@ -601,9 +627,10 @@ export default function CoproSettingsPanel({
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
                   placeholder="Ex. Ascenseur, Eau chaude, Parking"
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
+                  disabled={!specialChargesEnabled}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
                 />
-                <Button type="button" variant="secondary" onClick={handleAddKey} className="shrink-0 whitespace-nowrap">
+                <Button type="button" variant="secondary" onClick={handleAddKey} className="shrink-0 whitespace-nowrap" disabled={!specialChargesEnabled}>
                   <Plus size={14} /> Ajouter la clé
                 </Button>
               </div>
@@ -622,7 +649,8 @@ export default function CoproSettingsPanel({
                   <button
                     type="button"
                     onClick={() => handleRemoveKey(key)}
-                    className="rounded p-0.5 text-blue-500 hover:bg-white hover:text-red-600"
+                    disabled={!specialChargesEnabled}
+                    className="rounded p-0.5 text-blue-500 hover:bg-white hover:text-red-600 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent"
                     title={`Retirer la clé ${key}`}
                   >
                     <X size={11} />
@@ -785,7 +813,8 @@ export default function CoproSettingsPanel({
                                   value={lot.keyValues[key] ?? ''}
                                   onChange={(e) => handleKeyValueChange(lot.id, key, e.target.value)}
                                   placeholder="0"
-                                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
+                                  disabled={!specialChargesEnabled}
+                                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
                                 />
                               </td>
                             ))}

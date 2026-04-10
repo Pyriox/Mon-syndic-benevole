@@ -9,10 +9,11 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { stripe } from '@/lib/stripe';
+import { extractStripeSubscriptionSnapshot, mapStripeAddonStatus, mapStripeSubscriptionStatus, stripe } from '@/lib/stripe';
+import { hasChargesSpecialesAddon, type CoproAddon } from '@/lib/subscription';
 import CheckoutButton from './CheckoutButton';
 import SubscriptionSuccessTracker from './SubscriptionSuccessTracker';
-import { AlertCircle, CheckCircle, Clock, Lock, Settings2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, Lock, Settings2, Sparkles } from 'lucide-react';
 
 const FEATURES = [
   'Copropriétaires illimités',
@@ -60,6 +61,45 @@ const PLANS = [
 
 type PlanId = (typeof PLANS)[number]['id'];
 const PLAN_IDS = PLANS.map((p) => p.id) as PlanId[];
+const KNOWN_ADDON_KEYS = ['charges_speciales'] as const;
+
+async function syncCoproAddons(coproId: string, addons: CoproAddon[], subscriptionId?: string | null) {
+  const admin = createAdminClient();
+  const seenKeys = new Set<string>();
+
+  for (const addon of addons) {
+    seenKeys.add(addon.addon_key);
+    await admin
+      .from('copro_addons')
+      .upsert({
+        copropriete_id: coproId,
+        addon_key: addon.addon_key,
+        status: mapStripeAddonStatus(addon.status ?? 'inactive'),
+        stripe_subscription_id: subscriptionId ?? null,
+        stripe_subscription_item_id: addon.stripe_subscription_item_id ?? null,
+        stripe_price_id: addon.stripe_price_id ?? null,
+        current_period_end: addon.current_period_end ?? null,
+        cancel_at_period_end: addon.cancel_at_period_end ?? false,
+      }, { onConflict: 'copropriete_id,addon_key' });
+  }
+
+  for (const addonKey of KNOWN_ADDON_KEYS) {
+    if (seenKeys.has(addonKey)) continue;
+
+    await admin
+      .from('copro_addons')
+      .upsert({
+        copropriete_id: coproId,
+        addon_key: addonKey,
+        status: 'inactive',
+        stripe_subscription_id: subscriptionId ?? null,
+        stripe_subscription_item_id: null,
+        stripe_price_id: null,
+        current_period_end: null,
+        cancel_at_period_end: false,
+      }, { onConflict: 'copropriete_id,addon_key' });
+  }
+}
 
 // ── Synchronise les données Stripe vers la table coproprietes ─────────────
 async function doStripeSync(coproId: string): Promise<boolean> {
@@ -103,40 +143,21 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     .sort((a, b) => b.created - a.created)[0];
 
   if (!validSub) {
+    await syncCoproAddons(coproId, []);
     return false;
   }
 
-  // trialing = essai (14j avec CB enregistrée) ; active = abonné payant
-  const plan =
-    validSub.status === 'active'    ? 'actif'
-    : validSub.status === 'trialing' ? 'essai'
-    : validSub.status === 'past_due' ? 'passe_du'
-    : 'actif';
-
-  // current_period_end peut être absent ou 0 dans certaines versions de l'API Stripe
-  const rawSub = validSub as unknown as Record<string, unknown>;
-  const rawItems = rawSub['items'] as { data: { price: { id: string } }[] } | undefined;
-  const rawMeta = (rawSub['metadata'] as Record<string, string>) ?? {};
-  const subId = rawSub['id'] as string;
-
-  const periodEndTimestamp: number =
-    (rawSub['current_period_end'] as number) ||
-    (rawSub['billing_cycle_anchor'] as number) ||
-    0;
-
-  const periodEndIso: string | null =
-    periodEndTimestamp > 0
-      ? (() => { try { return new Date(periodEndTimestamp * 1000).toISOString(); } catch { return null; } })()
-      : null;
+  const subscriptionSnapshot = extractStripeSubscriptionSnapshot(validSub);
+  const plan = mapStripeSubscriptionStatus(subscriptionSnapshot.status);
 
   const { error: updateErr } = await admin
     .from('coproprietes')
     .update({
-      stripe_customer_id:     customerId,
-      stripe_subscription_id: subId,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscriptionSnapshot.subscriptionId,
       plan,
-      plan_id:         rawMeta?.plan_id ?? rawItems?.data[0]?.price.id ?? null,
-      plan_period_end: periodEndIso,
+      plan_id: subscriptionSnapshot.planId,
+      plan_period_end: subscriptionSnapshot.currentPeriodEnd,
     })
     .eq('id', coproId);
 
@@ -144,6 +165,19 @@ async function doStripeSync(coproId: string): Promise<boolean> {
     console.error('[doStripeSync] Erreur UPDATE coproprietes');
     return false;
   }
+
+  await syncCoproAddons(
+    coproId,
+    subscriptionSnapshot.addons.map((addon) => ({
+      addon_key: addon.addonKey,
+      status: addon.status,
+      current_period_end: addon.currentPeriodEnd,
+      cancel_at_period_end: addon.cancelAtPeriodEnd,
+      stripe_price_id: addon.priceId,
+      stripe_subscription_item_id: addon.subscriptionItemId,
+    })),
+    subscriptionSnapshot.subscriptionId,
+  );
 
   void customerFoundViaStripe; // stripe_customer_id persisté en DB si trouvé via Stripe search
   return true;
@@ -193,14 +227,28 @@ export default async function AbonnementPage({
     .order('nom');
 
   const coproIds = (coproprietes ?? []).map((c) => c.id);
-  const { data: lotsData } = await admin
-    .from('lots')
-    .select('copropriete_id')
-    .in('copropriete_id', coproIds.length ? coproIds : ['none']);
+  const [{ data: lotsData }, { data: coproAddons }] = await Promise.all([
+    admin
+      .from('lots')
+      .select('copropriete_id')
+      .in('copropriete_id', coproIds.length ? coproIds : ['00000000-0000-0000-0000-000000000000']),
+    admin
+      .from('copro_addons')
+      .select('copropriete_id, addon_key, status, current_period_end, cancel_at_period_end, stripe_price_id, stripe_subscription_item_id')
+      .in('copropriete_id', coproIds.length ? coproIds : ['00000000-0000-0000-0000-000000000000']),
+  ]);
 
   const lotCountByCopro: Record<string, number> = {};
   for (const lot of lotsData ?? []) {
     lotCountByCopro[lot.copropriete_id] = (lotCountByCopro[lot.copropriete_id] ?? 0) + 1;
+  }
+
+  const addonsByCopro: Record<string, CoproAddon[]> = {};
+  for (const addon of coproAddons ?? []) {
+    if (!addonsByCopro[addon.copropriete_id]) {
+      addonsByCopro[addon.copropriete_id] = [];
+    }
+    addonsByCopro[addon.copropriete_id].push(addon);
   }
 
   // ── Actions serveur ───────────────────────────────────────────────────
@@ -336,6 +384,9 @@ export default async function AbonnementPage({
           const currentPlanId = PLAN_IDS.find((p) => p === copro.plan_id);
           const recommendedPlan =
             totalLots <= 10 ? 'essentiel' : totalLots <= 20 ? 'confort' : 'illimite';
+          const coproAddonRows = addonsByCopro[copro.id] ?? [];
+          const chargesSpecialesAddon = coproAddonRows.find((addon) => addon.addon_key === 'charges_speciales') ?? null;
+          const hasChargesAddon = hasChargesSpecialesAddon(coproAddonRows);
 
           return (
             <section key={copro.id} className="space-y-5">
@@ -506,6 +557,70 @@ export default async function AbonnementPage({
                     </div>
                   );
                 })}
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-900">Option Charges spéciales</h3>
+                      {hasChargesAddon ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                          <CheckCircle size={11} /> Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                          <Lock size={11} /> Non activée
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Débloque les répartitions par bâtiment, ascenseur, parking ou toute autre clé spéciale de votre copropriété.
+                    </p>
+                    <ul className="space-y-1 text-xs text-gray-500">
+                      <li>• Paramétrage des clés spéciales dans <strong>Paramétrage</strong></li>
+                      <li>• Dépenses, budgets d&apos;AG et appels de fonds ciblés</li>
+                      <li>• Activation à tout moment avec prorata automatique</li>
+                    </ul>
+                    {chargesSpecialesAddon?.cancel_at_period_end && chargesSpecialesAddon.current_period_end && (
+                      <p className="text-xs text-amber-700">
+                        Résiliation programmée à l&apos;échéance du{' '}
+                        <span className="font-semibold">
+                          {new Date(chargesSpecialesAddon.current_period_end).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </span>
+                        .
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="lg:w-64">
+                    {isSubscribed || isPastDue ? (
+                      hasStripeCustomer ? (
+                        <form action={portalAction} className="space-y-2">
+                          <input type="hidden" name="coproId" value={copro.id} />
+                          <button
+                            type="submit"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                          >
+                            <Sparkles size={14} />
+                            {hasChargesAddon ? 'Gérer l’option' : 'Activer l’option'}
+                          </button>
+                          <p className="text-xs text-gray-500">
+                            Le lien ouvre votre portail Stripe pour activer, conserver ou arrêter l&apos;option en fin de période.
+                          </p>
+                        </form>
+                      ) : (
+                        <p className="text-xs text-gray-500">Le compte Stripe sera disponible juste après l&apos;activation de l&apos;abonnement principal.</p>
+                      )
+                    ) : (
+                      <p className="text-xs text-gray-500">Activez d&apos;abord un abonnement principal pour ajouter cette option à la copropriété.</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Lien gérer l'abonnement & factures */}

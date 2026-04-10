@@ -64,6 +64,7 @@ interface ResolutionActionsProps {
   agId: string;
   showLabel?: boolean;
   nextNumero?: number;
+  specialChargesEnabled?: boolean;
 }
 
 const TYPE_OPTIONS = [
@@ -100,7 +101,7 @@ const HINTS: Record<string, string> = {
   conseil_syndical:    '👥 Désignation ou renouvellement du conseil syndical — facultatif.',
 };
 
-export default function ResolutionActions({ agId, showLabel, nextNumero }: ResolutionActionsProps) {
+export default function ResolutionActions({ agId, showLabel, nextNumero, specialChargesEnabled = true }: ResolutionActionsProps) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -179,6 +180,12 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
     const postesValides = typeConfig.hasBudget
       ? buildBudgetPostesPayload(budgetPostes)
       : [];
+
+    if (!specialChargesEnabled && postesValides.some((poste) => poste.repartition_type === 'groupe' && Boolean(poste.repartition_cible))) {
+      setError('Activez l’option Charges spéciales pour enregistrer une résolution avec clé spéciale.');
+      setLoading(false);
+      return;
+    }
 
     const { error: dbError } = await supabase.from('resolutions').insert({
       ag_id: agId,
@@ -273,11 +280,14 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
                 </button>
               </div>
               <div className="space-y-2 border border-gray-200 rounded-xl p-3 bg-gray-50">
-                <div className="rounded-lg border border-indigo-100 bg-white px-3 py-2 text-[11px] text-indigo-700">
-                  Par défaut, chaque ligne est répartie en <span className="font-semibold">charges communes</span>.
-                  {availableRepartitionGroups.length > 0
-                    ? ` Vous pouvez aussi viser : ${availableRepartitionGroups.join(', ')}.`
-                    : ' Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'}
+                <div className={`rounded-lg border bg-white px-3 py-2 text-[11px] ${specialChargesEnabled ? 'border-indigo-100 text-indigo-700' : 'border-amber-200 text-amber-800'}`}>
+                  {specialChargesEnabled
+                    ? (
+                      availableRepartitionGroups.length > 0
+                        ? `Par défaut, chaque ligne est répartie en charges communes. Vous pouvez aussi viser : ${availableRepartitionGroups.join(', ')}.`
+                        : 'Par défaut, chaque ligne est répartie en charges communes. Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'
+                    )
+                    : 'Les clés spéciales sont réservées à l’option payante Charges spéciales. Vous pouvez garder une résolution entièrement en charges communes.'}
                 </div>
                 {budgetPostes.length === 0 && (
                   <p className="text-xs text-gray-400 text-center py-1">Aucun poste ajouté</p>
@@ -302,7 +312,10 @@ export default function ResolutionActions({ agId, showLabel, nextNumero }: Resol
                       className="text-sm rounded-lg border border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="generale">Charges communes</option>
-                      {availableRepartitionGroups.map((group) => (
+                      {!specialChargesEnabled && p.repartition_type === 'groupe' && p.repartition_cible && (
+                        <option value={`groupe:${p.repartition_cible}`}>Lecture seule · {p.repartition_cible}</option>
+                      )}
+                      {specialChargesEnabled && availableRepartitionGroups.map((group) => (
                         <option key={group} value={`groupe:${group}`}>Seulement {group}</option>
                       ))}
                     </select>
@@ -354,10 +367,12 @@ export function ResolutionEdit({
   resolution,
   agStatut,
   onUpdated,
+  specialChargesEnabled = true,
 }: {
   resolution: Resolution;
   agStatut?: string;
   onUpdated?: (resolution: Resolution) => void;
+  specialChargesEnabled?: boolean;
 }) {
   const isPreLaunch = agStatut === 'creation' || agStatut === 'planifiee';
   const supabase = createClient();
@@ -436,6 +451,13 @@ export function ResolutionEdit({
     const editPostesValides = typeConfig.hasBudget
       ? buildBudgetPostesPayload(budgetPostes)
       : (resolution.budget_postes ?? []);
+    const specialBudgetChanged = JSON.stringify(editPostesValides) !== JSON.stringify(resolution.budget_postes ?? []);
+
+    if (!specialChargesEnabled && specialBudgetChanged && editPostesValides.some((poste) => poste.repartition_type === 'groupe' && Boolean(poste.repartition_cible))) {
+      setError('Activez l’option Charges spéciales pour modifier une clé spéciale dans cette résolution.');
+      setLoading(false);
+      return;
+    }
 
     const nextStatut = isPreLaunch ? 'en_attente' : formData.statut;
     const nextVoixPour = isPreLaunch ? 0 : (parseInt(formData.voix_pour) || 0);
@@ -529,11 +551,14 @@ export function ResolutionEdit({
                 </button>
               </div>
               <div className="space-y-2 border border-gray-200 rounded-xl p-3 bg-gray-50">
-                <div className="rounded-lg border border-indigo-100 bg-white px-3 py-2 text-[11px] text-indigo-700">
-                  Charges communes par défaut.
-                  {availableRepartitionGroups.length > 0
-                    ? ` Vous pouvez cibler : ${availableRepartitionGroups.join(', ')}.`
-                    : ' Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'}
+                <div className={`rounded-lg border bg-white px-3 py-2 text-[11px] ${specialChargesEnabled ? 'border-indigo-100 text-indigo-700' : 'border-amber-200 text-amber-800'}`}>
+                  {specialChargesEnabled
+                    ? (
+                      availableRepartitionGroups.length > 0
+                        ? `Charges communes par défaut. Vous pouvez cibler : ${availableRepartitionGroups.join(', ')}.`
+                        : 'Charges communes par défaut. Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'
+                    )
+                    : 'Les clés spéciales sont réservées à l’option payante Charges spéciales. Vous pouvez revenir à une répartition générale si besoin.'}
                 </div>
                 {budgetPostes.map((p, i) => (
                   <div key={i} className="grid grid-cols-[1fr_7rem_12rem_auto] gap-2 items-center">
@@ -555,7 +580,10 @@ export function ResolutionEdit({
                       className="text-sm rounded-lg border border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="generale">Charges communes</option>
-                      {availableRepartitionGroups.map((group) => (
+                      {!specialChargesEnabled && p.repartition_type === 'groupe' && p.repartition_cible && (
+                        <option value={`groupe:${p.repartition_cible}`}>Lecture seule · {p.repartition_cible}</option>
+                      )}
+                      {specialChargesEnabled && availableRepartitionGroups.map((group) => (
                         <option key={group} value={`groupe:${group}`}>Seulement {group}</option>
                       ))}
                     </select>

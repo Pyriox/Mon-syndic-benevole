@@ -14,7 +14,7 @@ import AnneeSelector from '@/components/ui/AnneeSelector';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 import { Receipt, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { isSubscribed } from '@/lib/subscription';
+import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import PageHelp from '@/components/ui/PageHelp';
@@ -279,7 +279,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
 
   // Toutes les données syndic en parallèle
   const scopeId = selectedCoproId ?? 'none';
-  const [{ data: depDossierRaw }, { data: depenses }, { data: lots }, { data: coproprietaires }] = await Promise.all([
+  const [{ data: depDossierRaw }, { data: depenses }, { data: lots }, { data: coproprietaires }, { data: coproAddons }] = await Promise.all([
     // Dossier "Dépenses" pour lier les pièces jointes
     supabase
       .from('document_dossiers')
@@ -305,7 +305,13 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
       .select('id, nom, prenom, raison_sociale')
       .eq('copropriete_id', scopeId)
       .order('nom'),
+    supabase
+      .from('copro_addons')
+      .select('addon_key, status, current_period_end, cancel_at_period_end')
+      .eq('copropriete_id', scopeId),
   ]);
+
+  const specialChargesEnabled = hasChargesSpecialesAddon(coproAddons ?? []);
 
   // Créer le dossier "Dépenses" s'il n'existe pas encore
   let depDossier = depDossierRaw;
@@ -375,13 +381,19 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {canWrite ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} /> : <UpgradeBanner compact />}
+          {canWrite ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} specialChargesEnabled={specialChargesEnabled} /> : <UpgradeBanner compact />}
         </div>
       </div>
 
       <PageHelp>
         Enregistrez ici les factures et charges réellement payées par la copropriété pour suivre l’exécution du budget et préparer la régularisation annuelle.
       </PageHelp>
+
+      {canWrite && !specialChargesEnabled && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          La répartition par bâtiment ou clé spéciale est verrouillée tant que l&apos;option <strong>Charges spéciales</strong> n&apos;est pas activée dans <Link href="/abonnement" className="font-semibold underline underline-offset-2">Abonnement</Link>.
+        </div>
+      )}
 
       {depenses && depenses.length > 0 ? (
         <>
@@ -420,7 +432,10 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                             date_depense: d.date_depense,
                             description: d.description ?? null,
                             piece_jointe_url: d.piece_jointe_url ?? null,
+                            repartition_type: d.repartition_type ?? 'generale',
+                            repartition_cible: d.repartition_cible ?? null,
                           }}
+                          specialChargesEnabled={specialChargesEnabled}
                         />
                       )}
                       {canWrite && <DepenseDelete depenseId={d.id} coproprieteId={d.copropriete_id} />}
@@ -494,7 +509,10 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                                 date_depense: d.date_depense,
                                 description: d.description ?? null,
                                 piece_jointe_url: d.piece_jointe_url ?? null,
+                                repartition_type: d.repartition_type ?? 'generale',
+                                repartition_cible: d.repartition_cible ?? null,
                               }}
+                              specialChargesEnabled={specialChargesEnabled}
                             />
                           )}
                           {canWrite && <DepenseDelete depenseId={d.id} coproprieteId={d.copropriete_id} />}
@@ -548,7 +566,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
           icon={<Receipt size={48} strokeWidth={1.5} />}
           title="Aucune dépense enregistrée"
           description="Ajoutez vos dépenses pour calculer automatiquement la répartition entre copropriétaires."
-          action={canWrite ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} showLabel /> : <UpgradeBanner />}
+          action={canWrite ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} showLabel specialChargesEnabled={specialChargesEnabled} /> : <UpgradeBanner />}
         />
       )}
 

@@ -2,7 +2,7 @@
 // Reçoit les événements Stripe et met à jour la table coproprietes en conséquence.
 // UN abonnement Stripe = UNE copropriété.
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { extractStripeSubscriptionSnapshot, mapStripeAddonStatus, mapStripeSubscriptionStatus, stripe, type StripeSubscriptionSnapshot } from '@/lib/stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
 import Stripe from 'stripe';
 import { Resend } from 'resend';
@@ -21,6 +21,7 @@ import { getCanonicalSiteUrl } from '@/lib/site-url';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 const SITE_URL = getCanonicalSiteUrl();
+const KNOWN_ADDON_KEYS = ['charges_speciales'] as const;
 
 function getPlanLabel(planId: string | null | undefined): string {
   if (planId === 'illimite') return 'Illimité';
@@ -121,6 +122,44 @@ async function updateCoproSubscription(coproId: string, data: {
     .eq('id', coproId);
 }
 
+async function syncCoproAddons(coproId: string, snapshot: StripeSubscriptionSnapshot | null) {
+  const supabase = createAdminClient();
+  const seenAddonKeys = new Set<string>();
+
+  for (const addon of snapshot?.addons ?? []) {
+    seenAddonKeys.add(addon.addonKey);
+    await supabase
+      .from('copro_addons')
+      .upsert({
+        copropriete_id: coproId,
+        addon_key: addon.addonKey,
+        status: mapStripeAddonStatus(addon.status),
+        stripe_subscription_id: snapshot?.subscriptionId ?? null,
+        stripe_subscription_item_id: addon.subscriptionItemId,
+        stripe_price_id: addon.priceId,
+        current_period_end: addon.currentPeriodEnd,
+        cancel_at_period_end: addon.cancelAtPeriodEnd,
+      }, { onConflict: 'copropriete_id,addon_key' });
+  }
+
+  for (const addonKey of KNOWN_ADDON_KEYS) {
+    if (seenAddonKeys.has(addonKey)) continue;
+
+    await supabase
+      .from('copro_addons')
+      .upsert({
+        copropriete_id: coproId,
+        addon_key: addonKey,
+        status: 'inactive',
+        stripe_subscription_id: snapshot?.subscriptionId ?? null,
+        stripe_subscription_item_id: null,
+        stripe_price_id: null,
+        current_period_end: snapshot?.currentPeriodEnd ?? null,
+        cancel_at_period_end: false,
+      }, { onConflict: 'copropriete_id,addon_key' });
+  }
+}
+
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
   const sig = req.headers.get('stripe-signature');
@@ -150,24 +189,23 @@ export async function POST(req: NextRequest) {
         let periodEnd: string | null = null;
         let subId: string | undefined;
         let subPlan: 'actif' | 'essai' = 'actif';
+        let subscriptionSnapshot: StripeSubscriptionSnapshot | null = null;
         if (session.subscription) {
-          const sub = await stripe.subscriptions.retrieve(
-            session.subscription as string,
-          ) as unknown as Record<string, unknown>;
-          subId = sub['id'] as string;
-          const ts = sub['current_period_end'] as number | undefined;
-          periodEnd = ts && ts > 0 ? (() => { try { return new Date(ts * 1000).toISOString(); } catch { return null; } })() : null;
-          // trialing = essai (14j) ; active = abonnement payé
-          subPlan = (sub['status'] as string) === 'trialing' ? 'essai' : 'actif';
+          const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+          subscriptionSnapshot = extractStripeSubscriptionSnapshot(sub);
+          subId = subscriptionSnapshot.subscriptionId ?? undefined;
+          periodEnd = subscriptionSnapshot.currentPeriodEnd;
+          subPlan = mapStripeSubscriptionStatus(subscriptionSnapshot.status) === 'essai' ? 'essai' : 'actif';
         }
 
         await updateCoproSubscription(coproId, {
-          stripe_customer_id:     session.customer as string,
+          stripe_customer_id: session.customer as string,
           stripe_subscription_id: subId,
-          plan_id:                session.metadata?.plan_id,
-          plan:                   subPlan,
-          plan_period_end:        periodEnd,
+          plan_id: subscriptionSnapshot?.planId ?? session.metadata?.plan_id ?? null,
+          plan: subPlan,
+          plan_period_end: periodEnd,
         });
+        await syncCoproAddons(coproId, subscriptionSnapshot);
 
         // Marquer l'essai comme utilisé + envoyer email de confirmation
         const userId = session.metadata?.supabase_user_id;
@@ -241,21 +279,18 @@ export async function POST(req: NextRequest) {
         if (!coproId) break;
 
         const subStatus = sub['status'] as string;
-        const plan = subStatus === 'active'   ? 'actif'
-          : subStatus === 'past_due' ? 'passe_du'
-          : subStatus === 'trialing' ? 'essai'   // période d'essai (14j après saisie CB)
-          : 'inactif';
-
-        const ts = (sub['current_period_end'] as number | undefined) || 0;
-        const periodEnd = ts > 0 ? (() => { try { return new Date(ts * 1000).toISOString(); } catch { return null; } })() : null;
+        const subscriptionSnapshot = extractStripeSubscriptionSnapshot(sub);
+        const plan = mapStripeSubscriptionStatus(subStatus);
+        const periodEnd = subscriptionSnapshot.currentPeriodEnd;
 
         await updateCoproSubscription(coproId, {
-          stripe_customer_id:     sub['customer'] as string,
+          stripe_customer_id: sub['customer'] as string,
           stripe_subscription_id: sub['id'] as string,
-          plan_id:                subMeta?.plan_id ?? null,
-          plan:                   plan as 'actif' | 'inactif' | 'passe_du' | 'essai' | 'resilie',
-          plan_period_end:        periodEnd,
+          plan_id: subscriptionSnapshot.planId ?? subMeta?.plan_id ?? null,
+          plan: plan as 'actif' | 'inactif' | 'passe_du' | 'essai' | 'resilie',
+          plan_period_end: periodEnd,
         });
+        await syncCoproAddons(coproId, subscriptionSnapshot);
 
         // Email : essai → payant ou renouvellement
         const prev = (event.data.previous_attributes ?? {}) as Record<string, unknown>;
@@ -319,12 +354,13 @@ export async function POST(req: NextRequest) {
         if (!coproId) break;
 
         await updateCoproSubscription(coproId, {
-          stripe_customer_id:     sub.customer as string,
+          stripe_customer_id: sub.customer as string,
           stripe_subscription_id: null,
-          plan_id:                null,
-          plan:                   'resilie',
-          plan_period_end:        null,
+          plan_id: null,
+          plan: 'resilie',
+          plan_period_end: null,
         });
+        await syncCoproAddons(coproId, null);
 
         // Email : abonnement résilié
         try {
@@ -374,12 +410,13 @@ export async function POST(req: NextRequest) {
         if (!copro) break;
 
         await updateCoproSubscription(copro.id, {
-          stripe_customer_id:     undefined,
+          stripe_customer_id: undefined,
           stripe_subscription_id: null,
-          plan_id:                null,
-          plan:                   'inactif',
-          plan_period_end:        null,
+          plan_id: null,
+          plan: 'inactif',
+          plan_period_end: null,
         });
+        await syncCoproAddons(copro.id, null);
         // Effacer le stripe_customer_id (updateCoproSubscription ne le met pas à null)
         await supabase
           .from('coproprietes')

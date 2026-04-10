@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .maybeSingle();
 
   return {
-    title: copro?.nom ? `${copro.nom}` : 'Copropriete',
+    title: copro?.nom ? `Lots & bâtiment — ${copro.nom}` : 'Lots & bâtiment',
   };
 }
 
@@ -94,7 +94,8 @@ export default async function CopropriétéDetailPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{copro.nom}</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Lots & bâtiment</h2>
+          <p className="mt-1 text-sm font-medium text-gray-600">{copro.nom}</p>
           <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500">
             <span className="flex items-center gap-1">
               <MapPin size={14} /> {copro.adresse}, {copro.code_postal} {copro.ville}

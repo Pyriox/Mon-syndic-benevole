@@ -6,13 +6,14 @@ export const metadata: Metadata = { title: 'Appels de fonds' };
 
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
+import Link from 'next/link';
 import EmptyState from '@/components/ui/EmptyState';
 import AppelFondsActions from './AppelFondsActions';
 import AppelFondsCard from './AppelFondsCard';
 import AppelFondsSerieCard from './AppelFondsSerieCard';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { Wallet } from 'lucide-react';
-import { isSubscribed } from '@/lib/subscription';
+import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import PageHelp from '@/components/ui/PageHelp';
@@ -45,19 +46,26 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
 
-  const { data: appels } = await db
-    .from('appels_de_fonds')
-    .select('*, coproprietes(nom), lignes_appels_de_fonds(id, montant_du, regularisation_ajustement, paye, date_paiement, coproprietaires(id, nom, prenom))')
-    .eq('copropriete_id', selectedCoproId ?? 'none')
-    .gte('date_echeance', `${annee}-01-01`)
-    .lt('date_echeance', `${annee + 1}-01-01`)
-    .order('date_echeance', { ascending: true });
+  const [{ data: appels }, { data: coproAddons }] = await Promise.all([
+    db
+      .from('appels_de_fonds')
+      .select('*, coproprietes(nom), lignes_appels_de_fonds(id, montant_du, regularisation_ajustement, paye, date_paiement, coproprietaires(id, nom, prenom))')
+      .eq('copropriete_id', selectedCoproId ?? 'none')
+      .gte('date_echeance', `${annee}-01-01`)
+      .lt('date_echeance', `${annee + 1}-01-01`)
+      .order('date_echeance', { ascending: true }),
+    db
+      .from('copro_addons')
+      .select('addon_key, status, current_period_end, cancel_at_period_end')
+      .eq('copropriete_id', selectedCoproId ?? 'none'),
+  ]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   // role === null = nouveau compte sans copropriété → traité comme syndic (cohérent avec le layout)
   const isSyndic = userRole === 'syndic' || userRole === null;
   const canWrite = isSubscribed(copropriete?.plan);
+  const specialChargesEnabled = hasChargesSpecialesAddon(coproAddons ?? []);
 
   // ── Calculer les stats par appel ──────────────────────────────────────────
   type AppelWithStats = {
@@ -144,7 +152,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {isSyndic && totalCount > 0 && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
+          {isSyndic && totalCount > 0 && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} specialChargesEnabled={specialChargesEnabled} /> : <UpgradeBanner compact />)}
         </div>
       </div>
 
@@ -153,6 +161,12 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
           ? 'Les appels de fonds correspondent aux provisions demandées aux copropriétaires pour financer le budget voté en AG et les dépenses à venir.'
           : 'Consultez ici vos avis de paiement, leurs échéances et l’état de vos règlements pour l’exercice en cours.'}
       </PageHelp>
+
+      {isSyndic && canWrite && !specialChargesEnabled && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Les appels ciblés par bâtiment ou clé spéciale nécessitent l&apos;option <strong>Charges spéciales</strong>. Vous pouvez l&apos;activer depuis <Link href="/abonnement" className="font-semibold underline underline-offset-2">Abonnement</Link>.
+        </div>
+      )}
 
       {totalCount > 0 ? (
         <div className="space-y-3">
@@ -209,7 +223,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
           icon={<Wallet size={48} strokeWidth={1.5} />}
           title="Aucun appel de fonds"
           description={isSyndic ? "Créez un appel de fonds pour répartir les charges entre les copropriétaires." : undefined}
-          action={isSyndic && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />)}
+          action={isSyndic && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} showLabel specialChargesEnabled={specialChargesEnabled} /> : <UpgradeBanner />)}
         />
       )}
     </div>

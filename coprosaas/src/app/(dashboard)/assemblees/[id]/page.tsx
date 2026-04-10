@@ -16,7 +16,7 @@ import { AGDelete, AGAnnuler, AGEnvoyerPV, AGEnvoyerConvocation, AGEditInfos } f
 import PresencePanel from './PresencePanel';
 import { formatDate, formatTime, LABELS_STATUT_AG } from '@/lib/utils';
 import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video } from 'lucide-react';
-import { isSubscribed } from '@/lib/subscription';
+import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import { PVPDF, ConvocationPDF } from './PDFButtons';
 
@@ -51,6 +51,7 @@ export default async function AGDetailPage({ params }: Props) {
     { data: coproprietaires },
     { data: lotsData },
     { data: presences },
+    { data: coproAddons },
   ] = await Promise.all([
     db
       .from('resolutions')
@@ -73,6 +74,10 @@ export default async function AGDetailPage({ params }: Props) {
       .from('ag_presences')
       .select('coproprietaire_id, statut, represente_par_id')
       .eq('ag_id', id),
+    db
+      .from('copro_addons')
+      .select('addon_key, status, current_period_end, cancel_at_period_end')
+      .eq('copropriete_id', ag.copropriete_id),
   ]);
 
   // Calcul des tantièmes (utilisé pour quorum et votes)
@@ -96,6 +101,7 @@ export default async function AGDetailPage({ params }: Props) {
   }
 
   const isVisio = ag.lieu === 'Visioconférence';
+  const specialChargesEnabled = hasChargesSpecialesAddon(coproAddons ?? []);
   const canVote = isSyndic && canWrite && (ag.statut === 'en_cours' || ag.statut === 'terminee');
   const canEdit = isSyndic && canWrite && (ag.statut === 'creation' || ag.statut === 'planifiee');
   const needsConvocation = ag.statut === 'planifiee' && !ag.convocation_envoyee_le;
@@ -366,7 +372,7 @@ export default async function AGDetailPage({ params }: Props) {
         <CardHeader
           title="Résolutions"
           description={`${resolutions?.length ?? 0} résolution(s)${canVote && hasPresences ? ' — sélectionnez le vote de chaque copropriétaire' : ''}`}
-          actions={canEdit ? <ResolutionActions agId={id} nextNumero={(resolutions ?? []).length + 1} /> : undefined}
+          actions={canEdit ? <ResolutionActions agId={id} nextNumero={(resolutions ?? []).length + 1} specialChargesEnabled={specialChargesEnabled} /> : undefined}
         />
 
         {/* Barre de progression des résolutions */}
@@ -408,12 +414,13 @@ export default async function AGDetailPage({ params }: Props) {
             coproprietaires={coproprietaires ?? []}
             tantiemesMap={tantiemesMap}
             totalTantiemes={totalTantiemes}
+            specialChargesEnabled={specialChargesEnabled}
           />
         ) : (
           <EmptyState
             title="Aucune résolution"
             description="Ajoutez les points à l'ordre du jour."
-            action={canEdit ? <ResolutionActions agId={id} showLabel /> : undefined}
+            action={canEdit ? <ResolutionActions agId={id} showLabel specialChargesEnabled={specialChargesEnabled} /> : undefined}
           />
         )}
       </Card>

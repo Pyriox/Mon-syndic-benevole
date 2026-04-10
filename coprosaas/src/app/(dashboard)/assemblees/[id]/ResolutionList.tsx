@@ -67,6 +67,7 @@ interface ResolutionListProps {
   coproprietaires: any[];
   tantiemesMap: Record<string, number>;
   totalTantiemes: number;
+  specialChargesEnabled?: boolean;
 }
 
 const badgeVariant = (statut: string): 'success' | 'danger' | 'warning' | 'default' => {
@@ -93,6 +94,7 @@ function SortableCard({
   coproprietaires,
   tantiemesMap,
   totalTantiemes,
+  specialChargesEnabled,
   onResolutionUpdated,
   onResolutionDeleted,
 }: {
@@ -290,7 +292,7 @@ function SortableCard({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          {canEdit && <ResolutionEdit resolution={res} agStatut={agStatut} onUpdated={onResolutionUpdated} />}
+          {canEdit && <ResolutionEdit resolution={res} agStatut={agStatut} onUpdated={onResolutionUpdated} specialChargesEnabled={specialChargesEnabled} />}
           {canEdit && <ResolutionDelete resolutionId={res.id} onDeleted={onResolutionDeleted} />}
         </div>
       </div>

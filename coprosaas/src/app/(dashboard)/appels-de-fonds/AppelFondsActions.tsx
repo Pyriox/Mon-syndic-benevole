@@ -22,7 +22,7 @@ import {
 import { Plus, Trash2, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 
 interface Copropriete { id: string; nom: string; }
-interface AppelFondsActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; }
+interface AppelFondsActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; specialChargesEnabled?: boolean; }
 
 interface Poste {
   libelle: string;
@@ -93,7 +93,7 @@ function detectPeriodicite(dates: string[]): 'mensuel' | 'trimestriel' | 'semest
   return 'annuel';
 }
 
-export default function AppelFondsActions({ coproprietes, showLabel }: AppelFondsActionsProps) {
+export default function AppelFondsActions({ coproprietes, showLabel, specialChargesEnabled = true }: AppelFondsActionsProps) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -458,6 +458,7 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     : agImportee?.resolutions.find((r) => r.id === resolutionLieeId)?.type_resolution ?? 'exceptionnel';
 
   const finalDatesCount = useEcheancier ? editableVersements.length : 1;
+  const hasLockedSpecialScopes = !specialChargesEnabled && postesPourRepartition.some((poste) => poste.repartition_type === 'groupe');
 
   // -- Soumission ----------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
@@ -468,6 +469,11 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
     const postesValides = postesPourRepartition;
     if (postesValides.length === 0) {
       setError('Ajoutez au moins un poste avec un montant.');
+      setLoading(false);
+      return;
+    }
+    if (!specialChargesEnabled && postesValides.some((poste) => poste.repartition_type === 'groupe')) {
+      setError('Activez l’option Charges spéciales pour créer un appel ciblé par bâtiment ou groupe.');
       setLoading(false);
       return;
     }
@@ -757,13 +763,16 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
 
                 {postesExpanded && (
                   <div className="p-3 space-y-2 border-t border-gray-200 bg-white">
-                    <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                    <div className={`rounded-lg px-3 py-2 text-xs ${specialChargesEnabled ? 'border border-blue-100 bg-blue-50 text-blue-700' : 'border border-amber-200 bg-amber-50 text-amber-800'}`}>
                       <p className="font-medium">Par défaut, chaque ligne est répartie en charges communes.</p>
-                      <p className="mt-0.5 text-blue-600">
-                        Vous pouvez cibler un bâtiment ou un groupe spécial si besoin.
-                        {availableRepartitionGroups.length === 0
-                          ? ' Commencez simplement par renseigner un bâtiment dans vos lots.'
-                          : ` Groupes disponibles : ${availableRepartitionGroups.join(', ')}.`}
+                      <p className={`mt-0.5 ${specialChargesEnabled ? 'text-blue-600' : 'text-amber-700'}`}>
+                        {specialChargesEnabled
+                          ? (
+                            availableRepartitionGroups.length === 0
+                              ? 'Commencez simplement par renseigner un bâtiment dans vos lots.'
+                              : `Vous pouvez aussi cibler : ${availableRepartitionGroups.join(', ')}.`
+                          )
+                          : 'Les répartitions spéciales sont réservées à l’option payante Charges spéciales. Vous pouvez néanmoins conserver des charges communes.'}
                       </p>
                     </div>
                     <div className="grid grid-cols-[1fr_7rem_12rem_auto] gap-2 text-xs text-gray-400 px-1">
@@ -790,7 +799,12 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                           className="rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="generale">Charges communes</option>
-                          {availableRepartitionGroups.map((group) => (
+                          {!specialChargesEnabled && poste.repartition_type === 'groupe' && poste.repartition_cible && (
+                            <option value={`groupe:${poste.repartition_cible}`}>
+                              Lecture seule · {poste.repartition_cible}
+                            </option>
+                          )}
+                          {specialChargesEnabled && availableRepartitionGroups.map((group) => (
                             <option key={group} value={`groupe:${group}`}>
                               Seulement {group}
                             </option>
@@ -808,6 +822,11 @@ export default function AppelFondsActions({ coproprietes, showLabel }: AppelFond
                       className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 pt-1">
                       <Plus size={13} /> Ajouter un poste
                     </button>
+                    {hasLockedSpecialScopes && (
+                      <p className="text-xs text-amber-700">
+                        Cet appel contient encore une clé spéciale. Activez l’option correspondante ou repassez les lignes concernées en charges communes pour continuer.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

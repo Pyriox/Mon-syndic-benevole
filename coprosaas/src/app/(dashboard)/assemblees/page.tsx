@@ -14,7 +14,7 @@ import AGActions from './AGActions';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { formatDate, LABELS_STATUT_AG } from '@/lib/utils';
 import { CalendarDays, MapPin, ChevronRight } from 'lucide-react';
-import { isSubscribed } from '@/lib/subscription';
+import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import PageHelp from '@/components/ui/PageHelp';
@@ -28,13 +28,19 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
 
-  const { data: assemblees } = await supabase
-    .from('assemblees_generales')
-    .select('*, coproprietes(nom), resolutions(id)')
-    .eq('copropriete_id', selectedCoproId ?? 'none')
-    .gte('date_ag', `${annee}-01-01`)
-    .lt('date_ag', `${annee + 1}-01-01`)
-    .order('date_ag', { ascending: false });
+  const [{ data: assemblees }, { data: coproAddons }] = await Promise.all([
+    supabase
+      .from('assemblees_generales')
+      .select('*, coproprietes(nom), resolutions(id)')
+      .eq('copropriete_id', selectedCoproId ?? 'none')
+      .gte('date_ag', `${annee}-01-01`)
+      .lt('date_ag', `${annee + 1}-01-01`)
+      .order('date_ag', { ascending: false }),
+    supabase
+      .from('copro_addons')
+      .select('addon_key, status, current_period_end, cancel_at_period_end')
+      .eq('copropriete_id', selectedCoproId ?? 'none'),
+  ]);
 
   const badgeVariant = (statut: string): 'default' | 'info' | 'warning' | 'success' | 'danger' => {
     const map: Record<string, 'default' | 'info' | 'warning' | 'success' | 'danger'> = {
@@ -50,6 +56,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
   // role === null = nouveau compte sans copropriété → traité comme syndic (cohérent avec le layout)
   const isSyndic = userRole === 'syndic' || userRole === null;
   const canWrite = isSubscribed(copropriete?.plan);
+  const specialChargesEnabled = hasChargesSpecialesAddon(coproAddons ?? []);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -63,7 +70,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {isSyndic && (assemblees?.length ?? 0) > 0 && (canWrite ? <AGActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
+          {isSyndic && (assemblees?.length ?? 0) > 0 && (canWrite ? <AGActions coproprietes={coproprietes ?? []} specialChargesEnabled={specialChargesEnabled} /> : <UpgradeBanner compact />)}
         </div>
       </div>
 
@@ -72,6 +79,12 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
           ? 'Préparez ici l’ordre du jour, suivez le déroulé de l’assemblée générale et conservez les résolutions et procès-verbaux.'
           : 'Retrouvez ici les dates d’AG, les convocations et les résolutions liées à votre copropriété.'}
       </PageHelp>
+
+      {isSyndic && canWrite && !specialChargesEnabled && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Les budgets d&apos;AG avec clé spéciale sont réservés à l&apos;option <strong>Charges spéciales</strong>. Vous pouvez l&apos;activer depuis <Link href="/abonnement" className="font-semibold underline underline-offset-2">Abonnement</Link>.
+        </div>
+      )}
 
       {assemblees && assemblees.length > 0 ? (
         <div className="space-y-3">
@@ -116,7 +129,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
           icon={<CalendarDays size={48} strokeWidth={1.5} />}
           title="Aucune assemblée générale"
           description={isSyndic ? "Planifiez vos AG, gérez les résolutions et générez les procès-verbaux." : undefined}
-          action={isSyndic && (canWrite ? <AGActions coproprietes={coproprietes ?? []} showLabel /> : <UpgradeBanner />)}
+          action={isSyndic && (canWrite ? <AGActions coproprietes={coproprietes ?? []} showLabel specialChargesEnabled={specialChargesEnabled} /> : <UpgradeBanner />)}
         />
       )}
     </div>

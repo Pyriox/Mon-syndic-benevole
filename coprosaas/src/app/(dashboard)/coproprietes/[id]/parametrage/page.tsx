@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
+import { hasChargesSpecialesAddon } from '@/lib/subscription';
 import CoproSettingsPanel from '../CoproSettingsPanel';
 
 interface Props {
@@ -24,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .maybeSingle();
 
   return {
-    title: copro?.nom ? `${copro.nom} — Paramétrage` : 'Parametrage copropriete',
+    title: copro?.nom ? `Paramétrage — ${copro.nom}` : 'Paramétrage',
   };
 }
 
@@ -49,12 +51,19 @@ export default async function CoproprieteParametragePage({ params }: Props) {
     .eq('copropriete_id', id)
     .order('position', { ascending: true, nullsFirst: false });
 
-  const { data: coproprietaires } = await supabase
-    .from('coproprietaires')
-    .select('id, nom, prenom, raison_sociale, user_id')
-    .eq('copropriete_id', id);
+  const [{ data: coproprietaires }, { data: coproAddons }] = await Promise.all([
+    supabase
+      .from('coproprietaires')
+      .select('id, nom, prenom, raison_sociale, user_id')
+      .eq('copropriete_id', id),
+    supabase
+      .from('copro_addons')
+      .select('addon_key, status, current_period_end, cancel_at_period_end')
+      .eq('copropriete_id', id),
+  ]);
   const coproMap = Object.fromEntries((coproprietaires ?? []).map((c) => [c.id, c]));
 
+  const specialChargesEnabled = hasChargesSpecialesAddon(coproAddons ?? []);
   const lotCount = lots?.length ?? 0;
   const assignedLotsCount = (lots ?? []).filter((lot) => Object.keys(lot.tantiemes_groupes ?? {}).length > 0).length;
   const specialKeyCount = new Set(
@@ -64,7 +73,8 @@ export default async function CoproprieteParametragePage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Paramétrage de {copro.nom}</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Paramétrage</h2>
+        <p className="mt-1 text-sm font-medium text-gray-600">{copro.nom}</p>
         <p className="mt-1 text-sm text-gray-600">
           Utilisez <strong>Répartition des charges</strong> pour les tantièmes et <strong>Fiche copropriété</strong> pour les informations d’identité.
         </p>
@@ -73,6 +83,15 @@ export default async function CoproprieteParametragePage({ params }: Props) {
           <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">{assignedLotsCount} lots avec clé spéciale</span>
           <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">{specialKeyCount} clés spéciales</span>
         </div>
+        {!specialChargesEnabled && (
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Les clés de répartition spéciales font partie de l&apos;option payante <strong>Charges spéciales</strong>.{' '}
+            <Link href="/abonnement" className="font-semibold underline underline-offset-2">
+              L&apos;activer depuis l&apos;abonnement
+            </Link>
+            .
+          </div>
+        )}
       </div>
 
       <CoproSettingsPanel
@@ -80,6 +99,7 @@ export default async function CoproprieteParametragePage({ params }: Props) {
         copropriete={copro}
         initialLots={lots ?? []}
         coproMap={coproMap}
+        specialChargesEnabled={specialChargesEnabled}
       />
     </div>
   );

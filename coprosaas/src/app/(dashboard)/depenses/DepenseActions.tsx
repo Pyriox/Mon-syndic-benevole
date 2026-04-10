@@ -47,9 +47,16 @@ interface DepenseActionsProps {
   depensesDossierId?: string;
   depense?: Depense;
   showLabel?: boolean;
+  specialChargesEnabled?: boolean;
 }
 
-export default function DepenseActions({ coproprietes, depensesDossierId, depense, showLabel }: DepenseActionsProps) {
+export default function DepenseActions({
+  coproprietes,
+  depensesDossierId,
+  depense,
+  showLabel,
+  specialChargesEnabled = true,
+}: DepenseActionsProps) {
   const router = useRouter();
   const supabase = createClient();
   const isEdit = !!depense;
@@ -119,6 +126,20 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
   };
 
   const availableRepartitionGroups = useMemo(() => collectAvailableRepartitionGroups(lots), [lots]);
+  const repartitionOptions = useMemo(() => {
+    const options = [{ value: 'generale', label: 'Charges communes' }];
+
+    if (specialChargesEnabled) {
+      options.push(...availableRepartitionGroups.map((group) => ({ value: `groupe:${group}`, label: `Seulement ${group}` })));
+    } else if (formData.repartition_type === 'groupe' && formData.repartition_cible) {
+      options.push({
+        value: `groupe:${formData.repartition_cible}`,
+        label: `Lecture seule · ${formData.repartition_cible}`,
+      });
+    }
+
+    return options;
+  }, [availableRepartitionGroups, formData.repartition_cible, formData.repartition_type, specialChargesEnabled]);
 
   // Calcul de la répartition à afficher à l'utilisateur
   const lotsRepartition = useMemo(
@@ -152,6 +173,17 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
     const repartitionCible = formData.repartition_type === 'groupe'
       ? (formData.repartition_cible || null)
       : null;
+    const changesSpecialScope = formData.repartition_type === 'groupe' && (
+      !isEdit
+      || depense?.repartition_type !== formData.repartition_type
+      || (depense?.repartition_cible ?? null) !== repartitionCible
+    );
+
+    if (!specialChargesEnabled && changesSpecialScope) {
+      setError('Activez l’option Charges spéciales pour utiliser une répartition par bâtiment ou groupe.');
+      setLoading(false);
+      return;
+    }
 
     // 1. Upload pièce jointe si présente
     let pieceJointeUrl: string | null = null;
@@ -340,7 +372,7 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
             />
           </div>
 
-          <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 space-y-2">
+          <div className={`rounded-xl border p-3 space-y-2 ${specialChargesEnabled ? 'border-blue-100 bg-blue-50' : 'border-amber-200 bg-amber-50'}`}>
             <Select
               label="Répartition de la dépense"
               name="repartition_type"
@@ -353,15 +385,17 @@ export default function DepenseActions({ coproprietes, depensesDossierId, depens
                   repartition_cible: value.startsWith('groupe:') ? value.slice(7) : '',
                 }));
               }}
-              options={[
-                { value: 'generale', label: 'Charges communes' },
-                ...availableRepartitionGroups.map((group) => ({ value: `groupe:${group}`, label: `Seulement ${group}` })),
-              ]}
+              options={repartitionOptions}
               required
             />
-            <p className="text-xs text-blue-700">
+            <p className={`text-xs ${specialChargesEnabled ? 'text-blue-700' : 'text-amber-800'}`}>
               Cette dépense sera imputée selon : <span className="font-semibold">{formatRepartitionScope(formData.repartition_type, formData.repartition_cible)}</span>
             </p>
+            {!specialChargesEnabled && (
+              <p className="text-xs text-amber-700">
+                Les répartitions spéciales par bâtiment, ascenseur ou parking sont réservées à l’option payante <strong>Charges spéciales</strong>.
+              </p>
+            )}
           </div>
 
           <Textarea

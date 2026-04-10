@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 interface Copropriete { id: string; nom: string; }
-interface AGActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; }
+interface AGActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; specialChargesEnabled?: boolean; }
 
 // -------------------------------------------------------
 // Types du wizard
@@ -131,7 +131,7 @@ const MAJORITE_CHIPS: Record<string, string> = {
 // -------------------------------------------------------
 // Composant principal
 // -------------------------------------------------------
-export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
+export default function AGActions({ coproprietes, showLabel, specialChargesEnabled = true }: AGActionsProps) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -201,6 +201,9 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
     .filter((r) => r.inclure && r.hasBudget && r.id !== 'r9')
     .flatMap((r) => r.budgetPostes)
     .reduce((s, p) => s + (parseFloat(p.montant) || 0), 0);
+  const hasLockedSpecialBudget = !specialChargesEnabled && resolutions.some((resolution) =>
+    resolution.inclure && resolution.budgetPostes.some((poste) => poste.repartition_type === 'groupe' && Boolean(poste.repartition_cible))
+  );
 
   // -- Navigation --
   const handleNextStep = (e: React.FormEvent) => {
@@ -217,6 +220,14 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
+
+    if (!specialChargesEnabled && resolutions.some((resolution) =>
+      resolution.inclure && resolution.budgetPostes.some((poste) => poste.repartition_type === 'groupe' && Boolean(poste.repartition_cible))
+    )) {
+      setError('Activez l’option Charges spéciales pour enregistrer un budget d’AG avec clé spéciale.');
+      setLoading(false);
+      return;
+    }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -614,12 +625,20 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                         </button>
                       </div>
                       <div className="space-y-1.5 bg-white/60 rounded-lg p-2 border border-indigo-100">
-                        <div className="rounded-lg border border-indigo-100 bg-white px-3 py-2 text-[11px] text-indigo-700">
-                          Charges communes par défaut.
-                          {availableRepartitionGroups.length > 0
-                            ? ` Vous pouvez aussi cibler : ${availableRepartitionGroups.join(', ')}.`
-                            : ' Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'}
+                        <div className={`rounded-lg border bg-white px-3 py-2 text-[11px] ${specialChargesEnabled ? 'border-indigo-100 text-indigo-700' : 'border-amber-200 text-amber-800'}`}>
+                          {specialChargesEnabled
+                            ? (
+                              availableRepartitionGroups.length > 0
+                                ? `Charges communes par défaut. Vous pouvez aussi cibler : ${availableRepartitionGroups.join(', ')}.`
+                                : 'Charges communes par défaut. Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'
+                            )
+                            : 'Les clés spéciales sont réservées à l’option payante Charges spéciales. Vous pouvez garder un budget entièrement en charges communes.'}
                         </div>
+                        {hasLockedSpecialBudget && (
+                          <p className="text-[11px] text-amber-700 px-1">
+                            Certaines lignes utilisent encore une clé spéciale. Activez l’option dédiée ou repassez-les en charges communes pour poursuivre.
+                          </p>
+                        )}
                         {r.budgetPostes.length === 0 && (
                           <p className="text-xs text-gray-400 text-center py-2">Aucun poste — cliquez sur &quot;Ajouter un poste&quot;</p>
                         )}
@@ -649,7 +668,10 @@ export default function AGActions({ coproprietes, showLabel }: AGActionsProps) {
                               className="text-xs rounded-lg border border-indigo-200 bg-white px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
                               <option value="generale">Charges communes</option>
-                              {availableRepartitionGroups.map((group) => (
+                              {!specialChargesEnabled && p.repartition_type === 'groupe' && p.repartition_cible && (
+                                <option value={`groupe:${p.repartition_cible}`}>Lecture seule · {p.repartition_cible}</option>
+                              )}
+                              {specialChargesEnabled && availableRepartitionGroups.map((group) => (
                                 <option key={group} value={`groupe:${group}`}>Seulement {group}</option>
                               ))}
                             </select>
