@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Modal from '@/components/ui/Modal';
 import { saveCoproprieteSettings } from './actions';
 import { cn, collectAvailableRepartitionGroups, sanitizeTantiemesGroupesMap } from '@/lib/utils';
 import {
@@ -122,6 +123,8 @@ export default function CoproSettingsPanel({
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [assignmentFilter, setAssignmentFilter] = useState<'all' | 'configured' | 'unconfigured' | 'missing-general'>('all');
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
 
   const initialKeyNames = useMemo(() => deriveKeyNames(initialLots), [initialLots]);
   const initialEditableLots = useMemo(() => buildEditableLots(initialLots, initialKeyNames), [initialKeyNames, initialLots]);
@@ -158,12 +161,11 @@ export default function CoproSettingsPanel({
   const isDirty = currentSnapshot !== savedSnapshot;
 
   useEffect(() => {
-    if (!isDirty) return undefined;
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = '';
-    };
+    if (!isDirty) {
+      setLeaveModalOpen(false);
+      setPendingNavigationHref(null);
+      return undefined;
+    }
 
     const handleDocumentClick = (event: MouseEvent) => {
       const target = event.target;
@@ -179,21 +181,15 @@ export default function CoproSettingsPanel({
       const nextUrl = new URL(link.href, window.location.href);
       if (nextUrl.href === window.location.href) return;
 
-      const shouldLeave = window.confirm(
-        'Vous avez des modifications non enregistrées. Enregistrez avant de quitter cette page, sinon elles seront perdues.'
-      );
-
-      if (!shouldLeave) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
+      event.preventDefault();
+      event.stopPropagation();
+      setPendingNavigationHref(nextUrl.toString());
+      setLeaveModalOpen(true);
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('click', handleDocumentClick, true);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('click', handleDocumentClick, true);
     };
   }, [isDirty]);
@@ -325,9 +321,34 @@ export default function CoproSettingsPanel({
     setLots(parsed.lots);
     setError('');
     setSuccess('');
+    setLeaveModalOpen(false);
+    setPendingNavigationHref(null);
   };
 
-  const handleSave = async () => {
+  const closeLeaveModal = () => {
+    if (saving) return;
+    setLeaveModalOpen(false);
+    setPendingNavigationHref(null);
+  };
+
+  const proceedToPendingNavigation = () => {
+    if (!pendingNavigationHref) return;
+
+    const nextUrl = new URL(pendingNavigationHref, window.location.href);
+    const isInternal = nextUrl.origin === window.location.origin;
+
+    setLeaveModalOpen(false);
+    setPendingNavigationHref(null);
+
+    if (isInternal) {
+      router.push(`${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+      return;
+    }
+
+    window.location.assign(nextUrl.toString());
+  };
+
+  const handleSave = async (navigateAfterSave = false) => {
     setSaving(true);
     setError('');
     setSuccess('');
@@ -382,11 +403,17 @@ export default function CoproSettingsPanel({
     setSavedSnapshot(currentSnapshot);
     setSuccess('Paramétrage enregistré. Les AG, appels de fonds et régularisations utiliseront ces clés.');
     setSaving(false);
+
+    if (navigateAfterSave) {
+      proceedToPendingNavigation();
+      return;
+    }
+
     router.refresh();
   };
 
   return (
-    <div className="space-y-5">
+    <div className={cn('space-y-5', isDirty && 'pb-32')}>
       <div className="sticky top-3 z-20">
         <Card className="border-blue-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -454,27 +481,48 @@ export default function CoproSettingsPanel({
       )}
 
       {isDirty && (
-        <div className="sticky bottom-3 z-30">
-          <Card className="border-amber-200 bg-amber-50/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-amber-50/90">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-amber-900">Enregistrez avant de quitter cette page</p>
-                <p className="text-xs text-amber-800">
-                  Vos dernières modifications seront perdues si vous changez d’écran sans enregistrer.
-                </p>
+        <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 px-4">
+          <div className="mx-auto max-w-4xl pointer-events-auto">
+            <Card className="border-amber-200 bg-amber-50/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-amber-50/90">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">Enregistrez avant de quitter cette page</p>
+                  <p className="text-xs text-amber-800">
+                    Vos dernières modifications seront perdues si vous changez d’écran sans enregistrer.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Button type="button" variant="secondary" onClick={handleResetChanges}>
+                    Annuler mes modifications
+                  </Button>
+                  <Button type="button" onClick={() => handleSave()} loading={saving}>
+                    <Save size={14} /> Enregistrer maintenant
+                  </Button>
+                </div>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Button type="button" variant="secondary" onClick={handleResetChanges}>
-                  Annuler mes modifications
-                </Button>
-                <Button type="button" onClick={handleSave} loading={saving}>
-                  <Save size={14} /> Enregistrer maintenant
-                </Button>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
       )}
+
+      <Modal isOpen={leaveModalOpen} onClose={closeLeaveModal} title="Modifications non enregistrées" size="sm">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            Vous avez des modifications non enregistrées. Enregistrez-les maintenant ou quittez la page en les abandonnant.
+          </p>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="secondary" onClick={closeLeaveModal}>
+              Rester sur la page
+            </Button>
+            <Button type="button" variant="secondary" onClick={proceedToPendingNavigation}>
+              Quitter sans enregistrer
+            </Button>
+            <Button type="button" onClick={() => handleSave(true)} loading={saving}>
+              <Save size={14} /> Enregistrer et quitter
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {activeSection === 'repartition' ? (
         <Card className="border-blue-200 shadow-sm">

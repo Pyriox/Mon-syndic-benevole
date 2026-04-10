@@ -82,6 +82,34 @@ describe('CoproSettingsPanel', () => {
     expect(screen.getByRole('button', { name: /Annuler mes modifications/i })).toBeTruthy();
   });
 
+  it('ouvre une modale in-app avant de quitter la page avec des changements non enregistrés', async () => {
+    const { default: CoproSettingsPanel } = await import('./CoproSettingsPanel');
+
+    render(
+      <CoproSettingsPanel
+        copropriete={copropriete}
+        initialLots={initialLots}
+        coproMap={coproMap}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Fiche copropriété/i }));
+    fireEvent.change(screen.getByLabelText(/Nom de la copropriété/i), {
+      target: { value: 'Résidence des Lilas — B' },
+    });
+
+    const link = document.createElement('a');
+    link.href = '/dashboard';
+    link.textContent = 'Retour au tableau de bord';
+    document.body.appendChild(link);
+
+    fireEvent.click(link);
+
+    expect(screen.getByText(/Vous avez des modifications non enregistrées/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Rester sur la page/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Quitter sans enregistrer/i })).toBeTruthy();
+  });
+
   it('permet de filtrer les lots et d’ajouter manuellement une clé spéciale', async () => {
     const { default: CoproSettingsPanel } = await import('./CoproSettingsPanel');
 
