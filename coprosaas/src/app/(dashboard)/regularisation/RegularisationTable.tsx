@@ -47,14 +47,17 @@ function ownerName(c: LigneRaw['coproprietaires']): string {
 
 // ── Solde coloré ──────────────────────────────────────────────────────────────
 function BalanceCell({ balance, bold }: { balance: number; bold?: boolean }) {
-  const isPos = balance > 0;
-  const isNeg = balance < 0;
+  const normalized = Math.abs(balance) < 0.005 ? 0 : balance;
+  const displayBalance = Math.abs(normalized) < 0.005 ? 0 : -normalized;
+  const isCredit = displayBalance > 0;
+  const isDebit = displayBalance < 0;
+
   return (
-    <span className={`${bold ? 'text-base' : 'text-sm'} font-bold inline-flex items-center gap-1 ${isPos ? 'text-red-600' : isNeg ? 'text-green-600' : 'text-gray-400'}`}>
-      {isPos && <TrendingUp size={13} />}
-      {isNeg && <TrendingDown size={13} />}
-      {!isPos && !isNeg && <Minus size={13} />}
-      {isPos ? '+' : ''}{formatEuros(balance)}
+    <span className={`${bold ? 'text-base' : 'text-sm'} font-bold inline-flex items-center gap-1 ${isCredit ? 'text-green-600' : isDebit ? 'text-red-600' : 'text-gray-400'}`}>
+      {isCredit && <TrendingUp size={13} />}
+      {isDebit && <TrendingDown size={13} />}
+      {!isCredit && !isDebit && <Minus size={13} />}
+      {isCredit ? '+' : ''}{formatEuros(displayBalance)}
     </span>
   );
 }
@@ -180,7 +183,7 @@ export default function RegularisationTable({ lignes, isCloture, isSyndic, canWr
             Si vous venez d&apos;une autre plateforme, saisissez le <strong>solde de reprise</strong> de
             chaque copropriétaire issu de votre ancienne gestion.
             Ce montant est intégré dans le solde final&nbsp;:
-            positif = il vous doit encore de l&apos;argent&nbsp;; négatif = vous lui en devez.
+            <strong>négatif</strong> = il vous doit encore de l&apos;argent&nbsp;; <strong>positif</strong> = il a un crédit à récupérer.
           </span>
         </div>
       )}

@@ -62,6 +62,7 @@ export default async function RegularisationPage({
   const totalAppele = (lignes ?? []).reduce((s, l) => s + l.montant_appele, 0);
   const totalReel = (lignes ?? []).reduce((s, l) => s + l.montant_reel, 0);
   const totalBalance = (lignes ?? []).reduce((s, l) => s + l.balance, 0);
+  const displayTotalBalance = Math.abs(totalBalance) < 0.005 ? 0 : -totalBalance;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -152,20 +153,20 @@ export default async function RegularisationPage({
               <Card>
                 <p className="text-xs text-gray-500 mb-1">Provisions appelées</p>
                 <p className="text-xl font-bold text-gray-900">{formatEuros(totalAppele)}</p>
-                <p className="text-xs text-gray-500 mb-1">hors fonds de travaux</p>
+                <p className="text-xs text-gray-500 mb-1">charges courantes + appels exceptionnels</p>
               </Card>
               <Card>
                 <p className="text-xs text-gray-500 mb-1">Dépenses réelles</p>
                 <p className="text-xl font-bold text-gray-900">{formatEuros(totalReel)}</p>
-                <p className="text-xs text-gray-500 mb-1">hors fonds ALUR</p>
+                <p className="text-xs text-gray-500 mb-1">fonds ALUR suivi séparément</p>
               </Card>
               <Card>
-                <p className="text-xs text-gray-500 mb-1">Écart global</p>
-                <p className={`text-xl font-bold ${totalBalance > 0 ? 'text-red-600' : totalBalance < 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                  {totalBalance > 0 ? '+' : ''}{formatEuros(totalBalance)}
+                <p className="text-xs text-gray-500 mb-1">Solde net</p>
+                <p className={`text-xl font-bold ${displayTotalBalance < 0 ? 'text-red-600' : displayTotalBalance > 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                  {displayTotalBalance > 0 ? '+' : ''}{formatEuros(displayTotalBalance)}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {totalBalance > 0 ? 'à récupérer' : totalBalance < 0 ? 'à reverser / créditer' : 'équilibré'}
+                  {displayTotalBalance < 0 ? 'complément encore dû' : displayTotalBalance > 0 ? 'crédit à reverser / reporter' : 'équilibré'}
                 </p>
               </Card>
             </div>
@@ -175,11 +176,12 @@ export default async function RegularisationPage({
           <div className="flex items-start gap-2.5 p-3 bg-blue-50 rounded-xl text-sm text-blue-700">
             <Info size={16} className="shrink-0 mt-0.5" />
             <p>
-              Les provisions du <strong>fonds de travaux ALUR</strong> et les appels de type{' '}
-              <strong>fonds de travaux</strong> sont exclus du calcul.
-              Un solde <strong className="text-red-600">positif</strong> signifie que le copropriétaire
-              doit un complément&nbsp;; un solde <strong className="text-green-600">négatif</strong>{' '}
-              signifie qu&apos;il a un crédit (trop-perçu).
+              Le <strong>fonds de travaux ALUR</strong> reste suivi à part : c&apos;est une épargne obligatoire,
+              pas une charge annuelle à régulariser. En revanche, les <strong>appels exceptionnels de travaux</strong>
+              sont bien pris en compte sur l&apos;exercice. Si un copropriétaire ne paie pas, la somme reste de toute
+              façon due dans son <strong>solde copropriétaire</strong>. Ici, un solde <strong className="text-red-600">négatif</strong>
+              signifie qu&apos;il doit encore un complément&nbsp;; un solde <strong className="text-green-600">positif</strong>
+              signifie qu&apos;il a un crédit.
             </p>
           </div>
 
