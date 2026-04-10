@@ -13,6 +13,7 @@ import {
 // ── Types ──────────────────────────────────────────────────
 
 type TicketStatus = 'ouvert' | 'en_cours' | 'resolu';
+type TicketReadState = 'waiting_support' | 'client_unread' | 'client_read' | 'no_messages';
 
 interface Ticket {
   id: string;
@@ -22,6 +23,10 @@ interface Ticket {
   status: TicketStatus;
   created_at: string;
   updated_at: string;
+  last_message_author?: 'client' | 'admin' | null;
+  last_message_at?: string | null;
+  read_state?: TicketReadState;
+  has_unread_admin_messages?: boolean;
 }
 
 interface Message {
@@ -30,6 +35,7 @@ interface Message {
   author: 'client' | 'admin';
   content: string;
   created_at: string;
+  client_read?: boolean | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────
@@ -40,12 +46,28 @@ const STATUS_CFG: Record<TicketStatus, { label: string; bg: string; text: string
   resolu:   { label: 'Résolu',    bg: 'bg-green-50',  text: 'text-green-700',  dot: 'bg-green-500' },
 };
 
+const READ_STATE_CFG: Record<TicketReadState, { label: string; tone: string }> = {
+  waiting_support: { label: 'En attente du support', tone: 'bg-slate-100 text-slate-700' },
+  client_unread:   { label: 'Non lu par le client',  tone: 'bg-amber-50 text-amber-700' },
+  client_read:     { label: 'Lu par le client',      tone: 'bg-emerald-50 text-emerald-700' },
+  no_messages:     { label: 'Nouveau ticket',         tone: 'bg-blue-50 text-blue-700' },
+};
+
 function StatusBadge({ status }: { status: TicketStatus }) {
   const c = STATUS_CFG[status];
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${c.bg} ${c.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
       {c.label}
+    </span>
+  );
+}
+
+function ReadStateBadge({ readState }: { readState: TicketReadState | undefined }) {
+  const cfg = READ_STATE_CFG[readState ?? 'no_messages'];
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${cfg.tone}`}>
+      {cfg.label}
     </span>
   );
 }
@@ -161,6 +183,7 @@ export default function AdminSupportShell({
       if (d.emailWarning) setSendEmailWarning(true);
       setReply('');
       // Optimistic update
+      const nowIso = new Date().toISOString();
       setMessages((prev) => [
         ...prev,
         {
@@ -168,13 +191,21 @@ export default function AdminSupportShell({
           ticket_id: selectedId,
           author: 'admin',
           content: reply.trim(),
-          created_at: new Date().toISOString(),
+          created_at: nowIso,
+          client_read: false,
         },
       ]);
-      // Update ticket status to en_cours if ouvert
       setTickets((prev) => prev.map((t) =>
-        t.id === selectedId && t.status === 'ouvert'
-          ? { ...t, status: 'en_cours', updated_at: new Date().toISOString() }
+        t.id === selectedId
+          ? {
+              ...t,
+              status: t.status === 'ouvert' ? 'en_cours' : t.status,
+              updated_at: nowIso,
+              last_message_author: 'admin',
+              last_message_at: nowIso,
+              read_state: 'client_unread',
+              has_unread_admin_messages: true,
+            }
           : t
       ));
     } catch (err: unknown) {
@@ -336,7 +367,10 @@ export default function AdminSupportShell({
                 </div>
                 <p className="text-[11px] text-gray-500 truncate mb-1">{t.user_email}</p>
                 <p className="text-xs text-gray-600 truncate mb-1.5">{t.subject}</p>
-                <StatusBadge status={t.status} />
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <StatusBadge status={t.status} />
+                  <ReadStateBadge readState={t.read_state} />
+                </div>
               </button>
             ))}
             {filteredTickets.length > PAGE_SIZE && (
@@ -385,6 +419,7 @@ export default function AdminSupportShell({
                     {' · '}créé le {formatDateFull(selectedTicket.created_at)}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                    <ReadStateBadge readState={selectedTicket.read_state} />
                     <Link href={`/admin/utilisateurs?q=${encodeURIComponent(selectedTicket.user_email)}`} className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-1 font-medium text-indigo-700 hover:border-indigo-300">
                       <User size={11} /> Voir l’utilisateur
                     </Link>
@@ -503,6 +538,11 @@ function MessageBubble({ msg }: { msg: Message }) {
           {new Date(msg.created_at).toLocaleString('fr-FR', {
             day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
           })}
+          {isAdmin && (
+            <span className={`ml-1.5 font-medium ${msg.client_read ? 'text-emerald-600' : 'text-amber-600'}`}>
+              · {msg.client_read ? 'Lu' : 'Non lu'}
+            </span>
+          )}
         </span>
       </div>
     </div>

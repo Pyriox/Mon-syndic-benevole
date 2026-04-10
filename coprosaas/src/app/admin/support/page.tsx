@@ -8,6 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import AdminSupportShell from './AdminSupportShell';
 
 import { isAdminUser } from '@/lib/admin-config';
+import { getAdminSupportTickets } from '@/lib/admin-support';
 
 export default async function AdminSupportPage({
   searchParams,
@@ -22,15 +23,11 @@ export default async function AdminSupportPage({
   const { q, status, ticket } = await searchParams;
   const admin = createAdminClient();
 
-  // Charger tous les tickets avec le dernier message
-  const { data: tickets } = await admin
-    .from('support_tickets')
-    .select('id, user_email, user_name, subject, status, created_at, updated_at')
-    .order('updated_at', { ascending: false });
+  const tickets = await getAdminSupportTickets(admin);
 
   return (
     <AdminSupportShell
-      initialTickets={tickets ?? []}
+      initialTickets={tickets}
       initialSearch={q ?? ''}
       initialFilterStatus={status === 'ouvert' || status === 'en_cours' || status === 'resolu' ? status : 'all'}
       initialTicketId={ticket ?? null}

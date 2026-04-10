@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await admin
     .from('support_messages')
-    .select('id, ticket_id, author, content, created_at')
+    .select('id, ticket_id, author, content, created_at, client_read')
     .eq('ticket_id', ticketId.trim())
     .order('created_at', { ascending: true });
 

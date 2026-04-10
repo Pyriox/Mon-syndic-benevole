@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 import { isAdminUser } from '@/lib/admin-config';
+import { getAdminSupportTickets } from '@/lib/admin-support';
 
 export async function GET() {
   const supabase = await createClient();
@@ -16,14 +17,6 @@ export async function GET() {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 403 });
   }
 
-  const { data, error } = await admin
-    .from('support_tickets')
-    .select('id, user_email, user_name, subject, status, created_at, updated_at')
-    .order('updated_at', { ascending: false });
-
-  if (error) {
-    return NextResponse.json({ message: 'Erreur base de données' }, { status: 500 });
-  }
-
-  return NextResponse.json(data ?? []);
+  const tickets = await getAdminSupportTickets(admin);
+  return NextResponse.json(tickets);
 }
