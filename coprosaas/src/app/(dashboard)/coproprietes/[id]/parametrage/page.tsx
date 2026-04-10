@@ -1,10 +1,7 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
-import Card from '@/components/ui/Card';
 import CoproSettingsPanel from '../CoproSettingsPanel';
-import { formatDate } from '@/lib/utils';
-import { Building2, Hash, Settings2 } from 'lucide-react';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -65,56 +62,18 @@ export default async function CoproprieteParametragePage({ params }: Props) {
   ).size;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Paramétrage de {copro.nom}</h2>
         <p className="mt-1 text-sm text-gray-600">
-          Regroupez ici la fiche copropriété et les clés de répartition spéciales dans un écran dédié.
+          Utilisez <strong>Répartition des charges</strong> pour les tantièmes et <strong>Fiche copropriété</strong> pour les informations d’identité.
         </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Card padding="sm" className="flex items-center gap-3">
-          <div className="rounded-xl bg-blue-50 p-2.5">
-            <Building2 size={18} className="text-blue-600" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Lots</p>
-            <p className="text-lg font-bold text-gray-900">{lotCount}</p>
-          </div>
-        </Card>
-        <Card padding="sm" className="flex items-center gap-3">
-          <div className="rounded-xl bg-indigo-50 p-2.5">
-            <Hash size={18} className="text-indigo-600" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Lots affectés</p>
-            <p className="text-lg font-bold text-gray-900">{assignedLotsCount}</p>
-          </div>
-        </Card>
-        <Card padding="sm" className="flex items-center gap-3">
-          <div className="rounded-xl bg-amber-50 p-2.5">
-            <Settings2 size={18} className="text-amber-600" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Clés spéciales</p>
-            <p className="text-lg font-bold text-gray-900">{specialKeyCount}</p>
-          </div>
-        </Card>
-      </div>
-
-      <Card>
-        <div className="flex flex-col gap-2 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="font-semibold text-gray-900">{copro.nom}</p>
-            <p>{copro.adresse}, {copro.code_postal} {copro.ville}</p>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-gray-500">
-            <span className="inline-flex items-center gap-1"><Hash size={13} /> {lotCount} lots</span>
-            <span>Créée le {formatDate(copro.created_at)}</span>
-          </div>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{lotCount} lots</span>
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">{assignedLotsCount} lots avec clé spéciale</span>
+          <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">{specialKeyCount} clés spéciales</span>
         </div>
-      </Card>
+      </div>
 
       <CoproSettingsPanel
         key={`${copro.id}:${JSON.stringify(lots ?? [])}:${copro.nom}:${copro.adresse}:${copro.code_postal}:${copro.ville}`}

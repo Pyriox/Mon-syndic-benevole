@@ -389,8 +389,20 @@ export default function CoproSettingsPanel({
         </Card>
       </div>
 
-      <div className="flex flex-col gap-5">
-        <Card className={cn(activeSection === 'repartition' ? 'border-blue-200 shadow-sm' : 'border-gray-200')}>
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      {activeSection === 'repartition' ? (
+        <Card className="border-blue-200 shadow-sm">
           <div className="flex items-start gap-3">
             <div className="rounded-xl bg-blue-50 p-2.5">
               <Settings2 size={18} className="text-blue-600" />
@@ -398,53 +410,36 @@ export default function CoproSettingsPanel({
             <div className="min-w-0">
               <h3 className="text-lg font-bold text-gray-900">Répartition des charges</h3>
               <p className="mt-1 text-sm text-gray-600">
-                Définissez ici les tantièmes généraux et les clés spéciales utilisées automatiquement dans l&apos;AG,
-                les appels de fonds, les dépenses et la régularisation.
+                Indiquez seulement les bases utiles : les tantièmes généraux pour tous les lots, puis les clés spéciales pour les seuls lots concernés.
               </p>
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Base générale</p>
-              <p className="mt-1 text-xl font-bold text-slate-900">{formatBase(generalTotal)}</p>
-              <p className="text-xs text-slate-500">Total des tantièmes généraux</p>
-            </div>
-            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Lots avec clé spéciale</p>
-              <p className="mt-1 text-xl font-bold text-blue-900">{configuredLotsCount} / {lots.length}</p>
-              <p className="text-xs text-blue-700">Lots déjà affectés à au moins une clé</p>
-            </div>
-            <div className={cn(
-              'rounded-xl border px-4 py-3',
-              visibleValidationIssues > 0 ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50',
-            )}>
-              <p className={cn(
-                'text-xs font-semibold uppercase tracking-wide',
-                visibleValidationIssues > 0 ? 'text-amber-700' : 'text-emerald-700',
-              )}>
-                Vérification métier
-              </p>
-              <p className={cn(
-                'mt-1 text-xl font-bold',
-                visibleValidationIssues > 0 ? 'text-amber-900' : 'text-emerald-900',
-              )}>
-                {visibleValidationIssues}
-              </p>
-              <p className={cn(
-                'text-xs',
-                visibleValidationIssues > 0 ? 'text-amber-700' : 'text-emerald-700',
-              )}>
-                {visibleValidationIssues > 0 ? 'élément(s) à corriger' : 'configuration cohérente'}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+              Base générale · {formatBase(generalTotal)}
+            </span>
+            <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+              Lots avec clé spéciale · {configuredLotsCount}/{lots.length}
+            </span>
+            {visibleValidationIssues > 0 && (
+              <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+                {visibleValidationIssues} point{visibleValidationIssues > 1 ? 's' : ''} à vérifier
+              </span>
+            )}
+          </div>
+
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
+            <div className="flex items-start gap-2">
+              <Info size={16} className="mt-0.5 shrink-0 text-slate-500" />
+              <p>
+                Laissez une cellule vide si le lot n’est pas concerné par la clé. Exemple : une clé <em>Ascenseur</em> ne s’applique qu’aux lots desservis.
               </p>
             </div>
           </div>
 
-          <div className={cn(
-            'mt-4 rounded-xl border px-3 py-2 text-sm',
-            visibleValidationIssues > 0 ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800',
-          )}>
-            {visibleValidationIssues > 0 ? (
+          {visibleValidationIssues > 0 && (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
               <div className="space-y-1">
                 {lotsWithoutGeneralBase.length > 0 && (
                   <p>• {lotsWithoutGeneralBase.length} lot{lotsWithoutGeneralBase.length > 1 ? 's' : ''} sans tantièmes généraux.</p>
@@ -453,92 +448,62 @@ export default function CoproSettingsPanel({
                   <p>• {emptyKeyNames.length} clé{emptyKeyNames.length > 1 ? 's' : ''} sans base affectée : {emptyKeyNames.join(', ')}.</p>
                 )}
               </div>
-            ) : (
-              <p>Tout est cohérent : chaque lot a une base générale et chaque clé spéciale comporte au moins un lot concerné.</p>
-            )}
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr]">
-            <div className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-              <div className="flex items-start gap-2">
-                <Info size={16} className="mt-0.5 shrink-0 text-amber-700" />
-                <div>
-                  <p className="font-semibold">Comment lire ce tableau ?</p>
-                  <p className="mt-1 text-amber-800">
-                    Une cellule vide signifie que le lot n’est pas concerné par la clé. Exemple : <em>Ascenseur</em> ne concerne que les lots desservis ; <em>Bâtiment B</em> ne concerne que ce bâtiment.
-                  </p>
-                </div>
-              </div>
             </div>
+          )}
 
-            <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-3 text-sm text-blue-900">
-              <div className="flex items-start gap-2">
-                <Sparkles size={16} className="mt-0.5 shrink-0 text-blue-700" />
-                <div>
-                  <p className="font-semibold">Modèles fréquents</p>
-                  <p className="mt-1 text-blue-800">Cliquez sur un modèle pour préremplir rapidement le champ d’ajout.</p>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {KEY_TEMPLATES.map((template) => (
-                  <button
-                    key={template}
-                    type="button"
-                    onClick={() => {
-                      setNewKeyName(template);
-                      setError('');
-                      setSuccess('');
-                    }}
-                    className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-medium text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100"
-                  >
-                    {template}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-end">
+          <div className="mt-4 flex flex-col gap-2 lg:flex-row lg:items-end">
             <div className="flex-1">
               <Input
                 label="Ajouter une clé spéciale"
                 value={newKeyName}
                 onChange={(e) => setNewKeyName(e.target.value)}
                 placeholder="Ex. Ascenseur C, Eau chaude, Bâtiment B"
-                hint="Cliquez sur un modèle fréquent ou saisissez votre propre clé."
+                hint="Ajoutez uniquement les clés réellement utiles à votre copropriété."
               />
             </div>
-            <Button type="button" variant="secondary" onClick={handleAddKey} className="md:mb-[1px]">
+            <Button type="button" variant="secondary" onClick={handleAddKey} className="lg:mb-[1px]">
               <Plus size={14} /> Ajouter la clé
             </Button>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-              Charges générales · base {formatBase(generalTotal)}
-            </span>
-            {keyNames.map((key) => (
-              <span key={key} className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                {key} · base {formatBase(totalsByKey[key] ?? 0)}
-              </span>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {KEY_TEMPLATES.map((template) => (
+              <button
+                key={template}
+                type="button"
+                onClick={() => {
+                  setNewKeyName(template);
+                  setError('');
+                  setSuccess('');
+                }}
+                className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-medium text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100"
+              >
+                {template}
+              </button>
             ))}
           </div>
 
-          {error && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-              {success}
+          {keyNames.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {keyNames.map((key) => (
+                <span key={key} className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                  <span>{key} · base {formatBase(totalsByKey[key] ?? 0)}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveKey(key)}
+                    className="rounded p-0.5 text-blue-500 hover:bg-white hover:text-red-600"
+                    title={`Retirer la clé ${key}`}
+                  >
+                    <X size={11} />
+                  </button>
+                </span>
+              ))}
             </div>
           )}
 
           {lots.length === 0 ? (
             <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
-              Ajoutez d&apos;abord vos lots depuis la vue d&apos;ensemble de la copropriété, puis revenez ici pour définir les tantièmes généraux et les clés de répartition.
+              Ajoutez d&apos;abord vos lots depuis la vue d&apos;ensemble de la copropriété, puis revenez ici pour définir les bases de répartition.
             </div>
           ) : (
             <>
@@ -608,19 +573,7 @@ export default function CoproSettingsPanel({
                       <th className="sticky left-0 z-10 bg-slate-50 px-3 py-3 text-left font-semibold">Lot</th>
                       <th className="px-3 py-3 text-right font-semibold">Charges générales</th>
                       {keyNames.map((key) => (
-                        <th key={key} className="px-3 py-3 text-right font-semibold min-w-[140px]">
-                          <div className="flex items-center justify-end gap-1">
-                            <span>{key}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveKey(key)}
-                              className="rounded p-0.5 text-gray-400 hover:bg-white hover:text-red-600"
-                              title={`Retirer la clé ${key}`}
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        </th>
+                        <th key={key} className="px-3 py-3 text-right font-semibold min-w-[140px]">{key}</th>
                       ))}
                     </tr>
                   </thead>
@@ -634,9 +587,7 @@ export default function CoproSettingsPanel({
                             <div className="min-w-[200px]">
                               <p className="font-semibold text-gray-900">{lot.numero}</p>
                               <p className="text-xs text-gray-500">{getLotTypeLabel(lot.type)}</p>
-                              {ownerName && (
-                                <p className="mt-1 text-xs text-gray-500">{ownerName}</p>
-                              )}
+                              {ownerName && <p className="mt-1 text-xs text-gray-500">{ownerName}</p>}
                             </div>
                           </td>
                           <td className="px-3 py-3 min-w-[130px]">
@@ -683,8 +634,8 @@ export default function CoproSettingsPanel({
             </>
           )}
         </Card>
-
-        <Card className={cn(activeSection === 'copro' ? 'border-blue-200 shadow-sm' : 'border-gray-200')}>
+      ) : (
+        <Card className="border-blue-200 shadow-sm">
           <div className="flex items-start gap-3">
             <div className="rounded-xl bg-slate-100 p-2.5">
               <Settings2 size={18} className="text-slate-700" />
@@ -692,9 +643,13 @@ export default function CoproSettingsPanel({
             <div className="min-w-0">
               <h3 className="text-lg font-bold text-gray-900">Fiche copropriété</h3>
               <p className="mt-1 text-sm text-gray-600">
-                Centralisez ici les informations d’identité de la copropriété. Elles seront reprises dans les documents générés.
+                Modifiez ici uniquement les informations d’identité de la copropriété qui seront reprises dans les documents générés.
               </p>
             </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
+            Gardez une adresse et un nom à jour : ces informations sont utilisées dans les appels de fonds, convocations et autres documents officiels.
           </div>
 
           <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -704,7 +659,7 @@ export default function CoproSettingsPanel({
             <Input label="Ville" name="ville" value={coproForm.ville} onChange={handleCoproChange} required />
           </div>
         </Card>
-      </div>
+      )}
     </div>
   );
 }

@@ -70,6 +70,8 @@ describe('CoproSettingsPanel', () => {
 
     expect(screen.getByText(/Aucun changement en attente/i)).toBeTruthy();
 
+    fireEvent.click(screen.getByRole('button', { name: /Fiche copropriété/i }));
+
     fireEvent.change(screen.getByLabelText(/Nom de la copropriété/i), {
       target: { value: 'Résidence des Lilas — B' },
     });
@@ -99,5 +101,24 @@ describe('CoproSettingsPanel', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /Ascenseur/i })[0]);
 
     expect(screen.getByDisplayValue('Ascenseur')).toBeTruthy();
+  });
+
+  it('bascule réellement entre la répartition et la fiche copropriété', async () => {
+    const { default: CoproSettingsPanel } = await import('./CoproSettingsPanel');
+
+    render(
+      <CoproSettingsPanel
+        copropriete={copropriete}
+        initialLots={initialLots}
+        coproMap={coproMap}
+      />,
+    );
+
+    expect(screen.getByPlaceholderText(/Rechercher un lot/i)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Fiche copropriété/i }));
+
+    expect(screen.queryByPlaceholderText(/Rechercher un lot/i)).toBeNull();
+    expect(screen.getByLabelText(/Nom de la copropriété/i)).toBeTruthy();
   });
 });
