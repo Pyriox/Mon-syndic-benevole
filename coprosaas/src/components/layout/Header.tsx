@@ -3,14 +3,18 @@
 // ============================================================
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 import Link from 'next/link';
-import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { AppNotification } from '@/types';
+import { hasDualDashboardView, toDashboardViewMode } from '@/lib/dashboard-view-mode';
+import type { AppNotification, Role } from '@/types';
 
 interface HeaderProps {
   title: string;
+  userRole: Role;
+  availableViewRoles: Role[];
   userName?: string;
   notifications?: AppNotification[];
   onMenuOpen?: () => void;
@@ -30,10 +34,13 @@ const colorBySeverity = {
   info: 'text-blue-500 bg-blue-50',
 };
 
-export default function Header({ title, userName, notifications = [], onMenuOpen }: HeaderProps) {
+export default function Header({ title, userRole, availableViewRoles, userName, notifications = [], onMenuOpen }: HeaderProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [switchPending, startSwitchTransition] = useTransition();
   const [items, setItems] = useState<AppNotification[]>(notifications);
   const ref = useRef<HTMLDivElement>(null);
+  const canSwitchView = hasDualDashboardView(availableViewRoles);
 
   useEffect(() => {
     setItems(notifications);
@@ -101,14 +108,35 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
     });
   };
 
+  const handleViewSwitch = (nextRole: Role) => {
+    if (nextRole === userRole) return;
+
+    startSwitchTransition(() => {
+      document.cookie = `dashboard_view_mode=${toDashboardViewMode(nextRole)}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=strict`;
+      router.refresh();
+    });
+  };
+
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
-      <div className="flex items-center justify-between gap-2">
-        {/* Titre : taille réduite sur mobile pour laisser de la place */}
-        <h1 className="text-sm md:text-xl font-semibold text-gray-900 truncate flex-1 leading-tight">{title}</h1>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {onMenuOpen && (
+              <button
+                type="button"
+                onClick={onMenuOpen}
+                className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+                aria-label="Ouvrir le menu"
+              >
+                <Menu size={18} />
+              </button>
+            )}
+            <h1 className="text-sm md:text-xl font-semibold text-gray-900 truncate leading-tight">{title}</h1>
+          </div>
 
-        {/* Zone droite */}
-        <div className="flex items-center gap-2 md:gap-3">
+          {/* Zone droite */}
+          <div className="flex items-center gap-2 md:gap-3">
           {/* Cloche notifications */}
           <div ref={ref} className="relative">
             <button
@@ -217,7 +245,39 @@ export default function Header({ title, userName, notifications = [], onMenuOpen
               </span>
             )}
           </div>
+          </div>
         </div>
+
+        {canSwitchView && (
+          <div className="flex items-center justify-start md:justify-end">
+            <div className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 p-1">
+              <button
+                type="button"
+                onClick={() => handleViewSwitch('syndic')}
+                disabled={switchPending}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                  userRole === 'syndic' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                )}
+              >
+                <Crown size={13} />
+                Syndic
+              </button>
+              <button
+                type="button"
+                onClick={() => handleViewSwitch('copropriétaire')}
+                disabled={switchPending}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                  userRole === 'copropriétaire' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                )}
+              >
+                <User size={13} />
+                Copropriétaire
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

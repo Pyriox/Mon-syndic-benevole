@@ -21,6 +21,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+import { normalizeDashboardViewMode, resolveDashboardRole } from '@/lib/dashboard-view-mode';
 
 export type CoproRole = 'syndic' | 'copropriétaire';
 
@@ -47,6 +48,7 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
   const admin = createAdminClient();
   const cookieStore = await cookies();
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
+  const preferredViewMode = normalizeDashboardViewMode(cookieStore.get('dashboard_view_mode')?.value ?? null);
   const normalizedEmail = user.email?.trim().toLowerCase() ?? '';
 
   // Pas de cookie : fallback sur la première copropriété accessible
@@ -79,19 +81,22 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
         : Promise.resolve({ data: null }),
     ]);
 
-    if (firstSyndic) {
+    const firstCoproRelation = firstCopro?.coproprietes ?? firstCoproByEmail?.coproprietes ?? null;
+    const firstCoproData = (Array.isArray(firstCoproRelation) ? firstCoproRelation[0] : firstCoproRelation) as CoproInfo | null;
+    const resolvedRole = resolveDashboardRole({
+      preferredMode: preferredViewMode,
+      hasSyndicAccess: Boolean(firstSyndic),
+      hasCoproAccess: Boolean(firstCoproData),
+      defaultRole: 'syndic',
+    });
+
+    if (resolvedRole === 'syndic' && firstSyndic) {
       if (allowedRoles && !allowedRoles.includes('syndic')) redirect('/dashboard');
       return { user, selectedCoproId: firstSyndic.id, role: 'syndic', copro: firstSyndic };
     }
-    if (firstCopro?.coproprietes) {
-      const copro = firstCopro.coproprietes as unknown as CoproInfo;
+    if (resolvedRole === 'copropriétaire' && firstCoproData) {
       if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
-      return { user, selectedCoproId: copro.id, role: 'copropriétaire', copro };
-    }
-    if (firstCoproByEmail?.coproprietes) {
-      const copro = firstCoproByEmail.coproprietes as unknown as CoproInfo;
-      if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
-      return { user, selectedCoproId: copro.id, role: 'copropriétaire', copro };
+      return { user, selectedCoproId: firstCoproData.id, role: 'copropriétaire', copro: firstCoproData };
     }
 
     // Aucune copropriété accessible
@@ -124,21 +129,23 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
       : Promise.resolve({ data: null }),
   ]);
 
-  if (asSyndic) {
+  const coproRelation = asCopro?.coproprietes ?? asCoproByEmail?.coproprietes ?? null;
+  const coproData = (Array.isArray(coproRelation) ? coproRelation[0] : coproRelation) as CoproInfo | null;
+  const resolvedRole = resolveDashboardRole({
+    preferredMode: preferredViewMode,
+    hasSyndicAccess: Boolean(asSyndic),
+    hasCoproAccess: Boolean(coproData),
+    defaultRole: 'syndic',
+  });
+
+  if (resolvedRole === 'syndic' && asSyndic) {
     if (allowedRoles && !allowedRoles.includes('syndic')) redirect('/dashboard');
     return { user, selectedCoproId, role: 'syndic', copro: asSyndic };
   }
 
-  if (asCopro?.coproprietes) {
-    const copro = asCopro.coproprietes as unknown as CoproInfo;
+  if (resolvedRole === 'copropriétaire' && coproData) {
     if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
-    return { user, selectedCoproId, role: 'copropriétaire', copro };
-  }
-
-  if (asCoproByEmail?.coproprietes) {
-    const copro = asCoproByEmail.coproprietes as unknown as CoproInfo;
-    if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
-    return { user, selectedCoproId, role: 'copropriétaire', copro };
+    return { user, selectedCoproId, role: 'copropriétaire', copro: coproData };
   }
 
   // Cookie présent mais aucun accès

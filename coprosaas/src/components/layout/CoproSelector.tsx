@@ -33,6 +33,7 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
   }, []);
 
   const selected = coproprietes.find((c) => c.id === selectedId) ?? null;
+  const selectedBadgeRole = userRole ?? selected?.role ?? null;
 
   const handleSelect = (copro: UserCopropriete) => {
     setOpen(false);
@@ -90,7 +91,7 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
             <>
               <p className="text-xs font-semibold text-gray-800 truncate leading-tight">{selected.nom}</p>
               <p className="text-[10px] text-gray-500 leading-tight flex items-center gap-1 mt-0.5">
-                {selected.role === 'syndic' ? (
+                {selectedBadgeRole === 'syndic' ? (
                   <><Crown size={9} className="text-amber-700" /> Syndic</>
                 ) : (
                   <><User size={9} className="text-blue-600" /> Copropriétaire</>

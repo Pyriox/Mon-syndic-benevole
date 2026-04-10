@@ -8,6 +8,7 @@ import { cookies } from 'next/headers';
 import { createClient, getAuthUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getDashboardLayoutData, getSyndicNotifications, getCoproNotifications } from '@/lib/cached-queries';
+import { getAvailableDashboardRoles, normalizeDashboardViewMode, resolveDashboardRole } from '@/lib/dashboard-view-mode';
 import DashboardShell from '@/components/layout/DashboardShell';
 import DashboardTracker from '@/components/DashboardTracker';
 import { Suspense } from 'react';
@@ -64,6 +65,11 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 
   // Déduplique et fusionne les deux listes avec le rôle associé
   const syndicIds = new Set((syndicCopros ?? []).map((c) => c.id));
+  const coproIds = new Set(
+    allCoproRows
+      .map((row) => (row.coproprietes as unknown as { id: string } | null)?.id)
+      .filter((id): id is string => Boolean(id))
+  );
   const userCoproprietes: UserCopropriete[] = [
     ...(syndicCopros ?? []).map((c) => ({
       id: c.id,
@@ -92,6 +98,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   // --- Copropriété sélectionnée (cookie) ---
   const cookieStore = await cookies();
   let selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
+  const preferredViewMode = normalizeDashboardViewMode(cookieStore.get('dashboard_view_mode')?.value ?? null);
 
   // Si la valeur du cookie n'est plus valide (copropriété supprimée), fallback sur la première
   if (selectedCoproId && !userCoproprietes.find((c) => c.id === selectedCoproId)) {
@@ -108,7 +115,20 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     (syndicCopros ?? []).length > 0 ? 'syndic' :
     allCoproRows.length > 0 ? 'copropriétaire' :
     'syndic';
-  const userRole = selectedCopro?.role ?? accountRoleFromDb;
+  const hasSelectedSyndicAccess = selectedCoproId ? syndicIds.has(selectedCoproId) : false;
+  const hasSelectedCoproAccess = selectedCoproId ? coproIds.has(selectedCoproId) : false;
+  const availableViewRoles = getAvailableDashboardRoles({
+    hasSyndicAccess: hasSelectedSyndicAccess,
+    hasCoproAccess: hasSelectedCoproAccess,
+  });
+  const userRole = selectedCoproId
+    ? resolveDashboardRole({
+        preferredMode: preferredViewMode,
+        hasSyndicAccess: hasSelectedSyndicAccess,
+        hasCoproAccess: hasSelectedCoproAccess,
+        defaultRole: 'syndic',
+      }) ?? accountRoleFromDb
+    : accountRoleFromDb;
 
   // --- Notifications persistantes (centre de notifications) ---
   const notifications: AppNotification[] = [];
@@ -197,6 +217,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       coproprietes={userCoproprietes}
       selectedCoproId={selectedCoproId}
       userRole={userRole}
+      availableViewRoles={availableViewRoles}
       title={selectedCopro?.nom ?? 'Mon Syndic Bénévole'}
       userName={userName}
       notifications={notifications}

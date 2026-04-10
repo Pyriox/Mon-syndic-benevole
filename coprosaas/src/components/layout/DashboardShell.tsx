@@ -10,13 +10,14 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import BottomNav from './BottomNav';
 import CookiePreferencesButton from '@/components/CookiePreferencesButton';
-import type { UserCopropriete, AppNotification } from '@/types';
+import type { UserCopropriete, AppNotification, Role } from '@/types';
 
 interface DashboardShellProps {
   children: React.ReactNode;
   coproprietes: UserCopropriete[];
   selectedCoproId: string | null;
   userRole: 'syndic' | 'copropriétaire';
+  availableViewRoles: Role[];
   title: string;
   userName: string;
   notifications: AppNotification[];
@@ -27,6 +28,7 @@ export default function DashboardShell({
   coproprietes,
   selectedCoproId,
   userRole,
+  availableViewRoles,
   title,
   userName,
   notifications,
@@ -56,6 +58,8 @@ export default function DashboardShell({
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         <Header
           title={title}
+          userRole={userRole}
+          availableViewRoles={availableViewRoles}
           userName={userName}
           notifications={notifications}
           onMenuOpen={() => setSidebarOpen(true)}

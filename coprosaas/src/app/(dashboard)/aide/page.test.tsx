@@ -74,6 +74,7 @@ describe('AidePage', () => {
 
   beforeEach(() => {
     mockScenario = 'copro';
+    document.cookie = 'dashboard_view_mode=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
     document.cookie = 'selected_copro_id=copro-1';
   });
 
@@ -101,6 +102,22 @@ describe('AidePage', () => {
 
     expect(screen.getByText(/Comment inviter mes copropriétaires sur la plateforme/i)).not.toBeNull();
     expect(screen.queryByText(/Comment consulter mon solde/i)).toBeNull();
+  });
+
+  it('permet de forcer la vue copropriétaire via le switch quand l’utilisateur est aussi syndic', async () => {
+    mockScenario = 'syndic-and-copro';
+    document.cookie = 'selected_copro_id=copro-1';
+    document.cookie = 'dashboard_view_mode=coproprietaire';
+    const { default: AidePage } = await import('./page');
+
+    render(<AidePage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /aide copropriétaire/i })).not.toBeNull();
+    });
+
+    expect(screen.getByText(/Comment consulter mon solde/i)).not.toBeNull();
+    expect(screen.queryByText(/Comment inviter mes copropriétaires sur la plateforme/i)).toBeNull();
   });
 
   it('affiche une aide syndic lisible et pertinente sur le paramétrage', async () => {

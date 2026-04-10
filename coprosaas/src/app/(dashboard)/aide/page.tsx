@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { normalizeDashboardViewMode, resolveDashboardRole } from '@/lib/dashboard-view-mode';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -264,6 +265,7 @@ export default function AidePage() {
       if (user?.id) setUserId(user.id);
 
       const selectedCoproId = readCookie('selected_copro_id');
+      const preferredViewMode = normalizeDashboardViewMode(readCookie('dashboard_view_mode'));
 
       const profileQuery = supabase.from('profiles').select('full_name').maybeSingle();
       const syndicQuery = selectedCoproId
@@ -284,10 +286,15 @@ export default function AidePage() {
       if (profile?.full_name) setName(profile.full_name);
       if (syndicCopro?.nom) setSelectedCoproName(syndicCopro.nom);
 
-      if (syndicCopro) {
-        setUserRole('syndic');
-      } else if (coproMember) {
-        setUserRole('copropriétaire');
+      const resolvedRole = resolveDashboardRole({
+        preferredMode: preferredViewMode,
+        hasSyndicAccess: Boolean(syndicCopro),
+        hasCoproAccess: Boolean(coproMember),
+        defaultRole: 'syndic',
+      });
+
+      if (resolvedRole) {
+        setUserRole(resolvedRole);
       }
     };
 
