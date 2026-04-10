@@ -6,8 +6,18 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { saveCoproprieteSettings } from './actions';
-import { collectAvailableRepartitionGroups, sanitizeTantiemesGroupesMap } from '@/lib/utils';
-import { Info, Plus, Save, Settings2, X } from 'lucide-react';
+import { cn, collectAvailableRepartitionGroups, sanitizeTantiemesGroupesMap } from '@/lib/utils';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Filter,
+  Info,
+  Plus,
+  Save,
+  Settings2,
+  Sparkles,
+  X,
+} from 'lucide-react';
 
 interface CoproprieteSettings {
   id: string;
@@ -44,12 +54,18 @@ interface EditableLotRow {
   keyValues: Record<string, string>;
 }
 
+const KEY_TEMPLATES = ['Ascenseur', 'Eau chaude', 'Chauffage', 'Parking', 'Bâtiment A', 'Bâtiment B'];
+
 function normalizeKeyLabel(value: string | null | undefined): string {
   return (value ?? '').trim().replace(/\s+/g, ' ');
 }
 
 function formatBase(value: number): string {
   return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(Math.round(value * 100) / 100);
+}
+
+function parseNumericValue(value: string | null | undefined): number {
+  return Number.parseFloat((value ?? '').replace(',', '.')) || 0;
 }
 
 function deriveKeyNames(lots: LotSettingRow[]): string[] {
@@ -75,6 +91,22 @@ function buildEditableLots(lots: LotSettingRow[], keyNames: string[]): EditableL
   });
 }
 
+function getOwnerName(coproprietaireId: string | null, coproMap: Record<string, CoproprietaireSummary>): string {
+  if (!coproprietaireId) return '';
+  const owner = coproMap[coproprietaireId];
+  return owner?.raison_sociale ?? [owner?.prenom, owner?.nom].filter(Boolean).join(' ');
+}
+
+function getLotTypeLabel(type: string): string {
+  switch (type) {
+    case 'appartement': return 'Appartement';
+    case 'parking': return 'Parking';
+    case 'cave': return 'Cave';
+    case 'local_commercial': return 'Local commercial';
+    default: return 'Autre';
+  }
+}
+
 export default function CoproSettingsPanel({
   copropriete,
   initialLots,
@@ -85,10 +117,17 @@ export default function CoproSettingsPanel({
   coproMap: Record<string, CoproprietaireSummary>;
 }) {
   const router = useRouter();
+  const [activeSection, setActiveSection] = useState<'repartition' | 'copro'>('repartition');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [newKeyName, setNewKeyName] = useState('');
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [assignmentFilter, setAssignmentFilter] = useState<'all' | 'configured' | 'unconfigured' | 'missing-general'>('all');
+
+  const initialKeyNames = useMemo(() => deriveKeyNames(initialLots), [initialLots]);
+  const initialEditableLots = useMemo(() => buildEditableLots(initialLots, initialKeyNames), [initialKeyNames, initialLots]);
 
   const [coproForm, setCoproForm] = useState({
     nom: copropriete.nom,
@@ -97,11 +136,32 @@ export default function CoproSettingsPanel({
     ville: copropriete.ville,
   });
 
-  const [keyNames, setKeyNames] = useState<string[]>(() => deriveKeyNames(initialLots));
-  const [lots, setLots] = useState<EditableLotRow[]>(() => buildEditableLots(initialLots, deriveKeyNames(initialLots)));
+  const [keyNames, setKeyNames] = useState<string[]>(() => initialKeyNames);
+  const [lots, setLots] = useState<EditableLotRow[]>(() => initialEditableLots);
+
+  const initialSnapshot = useMemo(
+    () => JSON.stringify({
+      coproForm: {
+        nom: copropriete.nom,
+        adresse: copropriete.adresse,
+        code_postal: copropriete.code_postal,
+        ville: copropriete.ville,
+      },
+      keyNames: initialKeyNames,
+      lots: initialEditableLots,
+    }),
+    [copropriete, initialEditableLots, initialKeyNames],
+  );
+  const [savedSnapshot, setSavedSnapshot] = useState(initialSnapshot);
+
+  const currentSnapshot = useMemo(
+    () => JSON.stringify({ coproForm, keyNames, lots }),
+    [coproForm, keyNames, lots],
+  );
+  const isDirty = currentSnapshot !== savedSnapshot;
 
   const generalTotal = useMemo(
-    () => lots.reduce((sum, lot) => sum + (Number.parseFloat(lot.tantiemes.replace(',', '.')) || 0), 0),
+    () => lots.reduce((sum, lot) => sum + parseNumericValue(lot.tantiemes), 0),
     [lots],
   );
 
@@ -109,20 +169,68 @@ export default function CoproSettingsPanel({
     () => Object.fromEntries(
       keyNames.map((key) => [
         key,
-        lots.reduce((sum, lot) => sum + (Number.parseFloat((lot.keyValues[key] ?? '').replace(',', '.')) || 0), 0),
+        lots.reduce((sum, lot) => sum + parseNumericValue(lot.keyValues[key]), 0),
       ])
     ) as Record<string, number>,
     [keyNames, lots],
   );
 
+  const configuredLotsCount = useMemo(
+    () => lots.filter((lot) => keyNames.some((key) => parseNumericValue(lot.keyValues[key]) > 0)).length,
+    [keyNames, lots],
+  );
+
+  const lotsWithoutGeneralBase = useMemo(
+    () => lots.filter((lot) => parseNumericValue(lot.tantiemes) <= 0),
+    [lots],
+  );
+
+  const emptyKeyNames = useMemo(
+    () => keyNames.filter((key) => (totalsByKey[key] ?? 0) <= 0),
+    [keyNames, totalsByKey],
+  );
+
+  const visibleValidationIssues = lotsWithoutGeneralBase.length + emptyKeyNames.length;
+
+  const lotTypes = useMemo(
+    () => Array.from(new Set(lots.map((lot) => lot.type))).sort((a, b) => a.localeCompare(b, 'fr')),
+    [lots],
+  );
+
+  const filteredLots = useMemo(() => {
+    const query = search.toLowerCase().trim();
+
+    return lots.filter((lot) => {
+      const ownerName = getOwnerName(lot.coproprietaire_id, coproMap).toLowerCase();
+      const hasSpecialKey = keyNames.some((key) => parseNumericValue(lot.keyValues[key]) > 0);
+      const hasGeneralBase = parseNumericValue(lot.tantiemes) > 0;
+
+      const matchesSearch = !query
+        || lot.numero.toLowerCase().includes(query)
+        || getLotTypeLabel(lot.type).toLowerCase().includes(query)
+        || ownerName.includes(query);
+      const matchesType = typeFilter === 'all' || lot.type === typeFilter;
+      const matchesAssignment = assignmentFilter === 'all'
+        || (assignmentFilter === 'configured' && hasSpecialKey)
+        || (assignmentFilter === 'unconfigured' && !hasSpecialKey)
+        || (assignmentFilter === 'missing-general' && !hasGeneralBase);
+
+      return matchesSearch && matchesType && matchesAssignment;
+    });
+  }, [assignmentFilter, coproMap, keyNames, lots, search, typeFilter]);
+
   const handleCoproChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCoproForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setError('');
+    setSuccess('');
   };
 
   const handleLotChange = (lotId: string, field: 'batiment' | 'tantiemes', value: string) => {
     setLots((prev) => prev.map((lot) => (
       lot.id === lotId ? { ...lot, [field]: value } : lot
     )));
+    setError('');
+    setSuccess('');
   };
 
   const handleKeyValueChange = (lotId: string, key: string, value: string) => {
@@ -131,6 +239,8 @@ export default function CoproSettingsPanel({
         ? { ...lot, keyValues: { ...lot.keyValues, [key]: value } }
         : lot
     )));
+    setError('');
+    setSuccess('');
   };
 
   const handleAddKey = () => {
@@ -139,6 +249,7 @@ export default function CoproSettingsPanel({
 
     if (keyNames.includes(normalized)) {
       setError('Cette clé existe déjà.');
+      setActiveSection('repartition');
       return;
     }
 
@@ -150,6 +261,7 @@ export default function CoproSettingsPanel({
       keyValues: { ...lot.keyValues, [normalized]: '' },
     })));
     setNewKeyName('');
+    setActiveSection('repartition');
   };
 
   const handleRemoveKey = (keyToRemove: string) => {
@@ -169,13 +281,13 @@ export default function CoproSettingsPanel({
     setSuccess('');
 
     const payloadLots = lots.map((lot) => {
-      const tantiemes = Number.parseFloat(lot.tantiemes.replace(',', '.')) || 0;
+      const tantiemes = parseNumericValue(lot.tantiemes);
       const batiment = normalizeKeyLabel(lot.batiment) || null;
       const tantiemesGroupes = Object.fromEntries(
         keyNames
           .map((key) => {
             const rawValue = (lot.keyValues[key] ?? '').trim();
-            const amount = Number.parseFloat(rawValue.replace(',', '.'));
+            const amount = parseNumericValue(rawValue);
             if (!rawValue || !Number.isFinite(amount) || amount <= 0) return null;
             return [key, amount] as const;
           })
@@ -215,181 +327,384 @@ export default function CoproSettingsPanel({
       return;
     }
 
+    setSavedSnapshot(currentSnapshot);
     setSuccess('Paramétrage enregistré. Les AG, appels de fonds et régularisations utiliseront ces clés.');
     setSaving(false);
     router.refresh();
   };
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <div className="flex items-start gap-3">
-          <div className="rounded-xl bg-blue-50 p-2.5">
-            <Settings2 size={18} className="text-blue-600" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-lg font-bold text-gray-900">Paramétrage de la copropriété</h3>
-            <p className="mt-1 text-sm text-gray-600">
-              Créez ici vos clés de répartition spéciales puis attribuez-les aux lots concernés en renseignant leur base.
-              Ce paramétrage est ensuite repris automatiquement dans l&apos;AG, les appels de fonds,
-              les dépenses et la régularisation.
-            </p>
-          </div>
-        </div>
+    <div className="space-y-5">
+      <div className="sticky top-3 z-20">
+        <Card className="border-blue-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className={cn(
+                'rounded-xl p-2.5',
+                isDirty ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
+              )}>
+                {isDirty ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {isDirty ? 'Modifications non enregistrées' : 'Aucun changement en attente'}
+                </p>
+                <p className="text-xs text-gray-600">
+                  {isDirty
+                    ? 'Vos ajustements ne seront utilisés dans les AG et appels de fonds qu’après enregistrement.'
+                    : `${visibleValidationIssues} point${visibleValidationIssues > 1 ? 's' : ''} à vérifier dans la configuration actuelle.`}
+                </p>
+              </div>
+            </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Input label="Nom de la copropriété" name="nom" value={coproForm.nom} onChange={handleCoproChange} required />
-          <Input label="Adresse" name="adresse" value={coproForm.adresse} onChange={handleCoproChange} required />
-          <Input label="Code postal" name="code_postal" value={coproForm.code_postal} onChange={handleCoproChange} required />
-          <Input label="Ville" name="ville" value={coproForm.ville} onChange={handleCoproChange} required />
-        </div>
-      </Card>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="inline-flex rounded-xl bg-slate-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('repartition')}
+                  className={cn(
+                    'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                    activeSection === 'repartition' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900',
+                  )}
+                >
+                  Répartition des charges
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('copro')}
+                  className={cn(
+                    'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                    activeSection === 'copro' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900',
+                  )}
+                >
+                  Fiche copropriété
+                </button>
+              </div>
 
-      <Card>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Tantièmes généraux et clés de répartition</h3>
-            <p className="mt-1 text-sm text-gray-600">
-              Renseignez ici la base générale de chaque lot, puis ajoutez si besoin des clés spéciales pour les seuls lots concernés. Si la case est vide, le lot n&apos;est pas affecté à cette clé. L&apos;ajout, la modification et la suppression des lots se font depuis la page Copropriétés.
-            </p>
+              <Button type="button" onClick={handleSave} loading={saving} variant={isDirty ? 'primary' : 'secondary'}>
+                <Save size={14} /> {isDirty ? 'Enregistrer les modifications' : 'Enregistrer le paramétrage'}
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" onClick={handleSave} loading={saving}>
-              <Save size={14} /> Enregistrer le paramétrage
+        </Card>
+      </div>
+
+      <div className="flex flex-col gap-5">
+        <Card className={cn(activeSection === 'repartition' ? 'border-blue-200 shadow-sm' : 'border-gray-200')}>
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-blue-50 p-2.5">
+              <Settings2 size={18} className="text-blue-600" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-lg font-bold text-gray-900">Répartition des charges</h3>
+              <p className="mt-1 text-sm text-gray-600">
+                Définissez ici les tantièmes généraux et les clés spéciales utilisées automatiquement dans l&apos;AG,
+                les appels de fonds, les dépenses et la régularisation.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Base générale</p>
+              <p className="mt-1 text-xl font-bold text-slate-900">{formatBase(generalTotal)}</p>
+              <p className="text-xs text-slate-500">Total des tantièmes généraux</p>
+            </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Lots avec clé spéciale</p>
+              <p className="mt-1 text-xl font-bold text-blue-900">{configuredLotsCount} / {lots.length}</p>
+              <p className="text-xs text-blue-700">Lots déjà affectés à au moins une clé</p>
+            </div>
+            <div className={cn(
+              'rounded-xl border px-4 py-3',
+              visibleValidationIssues > 0 ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50',
+            )}>
+              <p className={cn(
+                'text-xs font-semibold uppercase tracking-wide',
+                visibleValidationIssues > 0 ? 'text-amber-700' : 'text-emerald-700',
+              )}>
+                Vérification métier
+              </p>
+              <p className={cn(
+                'mt-1 text-xl font-bold',
+                visibleValidationIssues > 0 ? 'text-amber-900' : 'text-emerald-900',
+              )}>
+                {visibleValidationIssues}
+              </p>
+              <p className={cn(
+                'text-xs',
+                visibleValidationIssues > 0 ? 'text-amber-700' : 'text-emerald-700',
+              )}>
+                {visibleValidationIssues > 0 ? 'élément(s) à corriger' : 'configuration cohérente'}
+              </p>
+            </div>
+          </div>
+
+          <div className={cn(
+            'mt-4 rounded-xl border px-3 py-2 text-sm',
+            visibleValidationIssues > 0 ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800',
+          )}>
+            {visibleValidationIssues > 0 ? (
+              <div className="space-y-1">
+                {lotsWithoutGeneralBase.length > 0 && (
+                  <p>• {lotsWithoutGeneralBase.length} lot{lotsWithoutGeneralBase.length > 1 ? 's' : ''} sans tantièmes généraux.</p>
+                )}
+                {emptyKeyNames.length > 0 && (
+                  <p>• {emptyKeyNames.length} clé{emptyKeyNames.length > 1 ? 's' : ''} sans base affectée : {emptyKeyNames.join(', ')}.</p>
+                )}
+              </div>
+            ) : (
+              <p>Tout est cohérent : chaque lot a une base générale et chaque clé spéciale comporte au moins un lot concerné.</p>
+            )}
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr]">
+            <div className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+              <div className="flex items-start gap-2">
+                <Info size={16} className="mt-0.5 shrink-0 text-amber-700" />
+                <div>
+                  <p className="font-semibold">Comment lire ce tableau ?</p>
+                  <p className="mt-1 text-amber-800">
+                    Une cellule vide signifie que le lot n’est pas concerné par la clé. Exemple : <em>Ascenseur</em> ne concerne que les lots desservis ; <em>Bâtiment B</em> ne concerne que ce bâtiment.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-3 text-sm text-blue-900">
+              <div className="flex items-start gap-2">
+                <Sparkles size={16} className="mt-0.5 shrink-0 text-blue-700" />
+                <div>
+                  <p className="font-semibold">Modèles fréquents</p>
+                  <p className="mt-1 text-blue-800">Cliquez sur un modèle pour préremplir rapidement le champ d’ajout.</p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {KEY_TEMPLATES.map((template) => (
+                  <button
+                    key={template}
+                    type="button"
+                    onClick={() => {
+                      setNewKeyName(template);
+                      setError('');
+                      setSuccess('');
+                    }}
+                    className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-medium text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100"
+                  >
+                    {template}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-end">
+            <div className="flex-1">
+              <Input
+                label="Ajouter une clé spéciale"
+                value={newKeyName}
+                onChange={(e) => setNewKeyName(e.target.value)}
+                placeholder="Ex. Ascenseur C, Eau chaude, Bâtiment B"
+                hint="Cliquez sur un modèle fréquent ou saisissez votre propre clé."
+              />
+            </div>
+            <Button type="button" variant="secondary" onClick={handleAddKey} className="md:mb-[1px]">
+              <Plus size={14} /> Ajouter la clé
             </Button>
           </div>
-        </div>
 
-        <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          <div className="flex items-start gap-2">
-            <Info size={14} className="mt-0.5 shrink-0" />
-            <p>
-              Les colonnes ci-dessous correspondent aux <strong>clés de répartition déjà créées</strong>. Saisir une base dans une cellule affecte automatiquement le lot à cette clé ; laisser vide signifie qu&apos;il n&apos;est pas concerné (ex. <em>Bâtiment B</em>, <em>Ascenseur C</em>, <em>Eau chaude</em>).
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-end">
-          <div className="flex-1">
-            <Input
-              label="Ajouter une clé spéciale"
-              value={newKeyName}
-              onChange={(e) => setNewKeyName(e.target.value)}
-              placeholder="Ex. Ascenseur C, Eau chaude, Bâtiment B"
-            />
-          </div>
-          <Button type="button" variant="secondary" onClick={handleAddKey} className="md:mb-[1px]">
-            <Plus size={14} /> Ajouter la clé
-          </Button>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-            Charges générales · base {formatBase(generalTotal)}
-          </span>
-          {keyNames.map((key) => (
-            <span key={key} className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-              {key} · base {formatBase(totalsByKey[key] ?? 0)}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+              Charges générales · base {formatBase(generalTotal)}
             </span>
-          ))}
-        </div>
-
-        {error && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
+            {keyNames.map((key) => (
+              <span key={key} className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                {key} · base {formatBase(totalsByKey[key] ?? 0)}
+              </span>
+            ))}
           </div>
-        )}
 
-        {success && (
-          <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-            {success}
-          </div>
-        )}
+          {error && (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
-        {lots.length === 0 ? (
-          <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
-            Ajoutez d&apos;abord vos lots depuis la vue d&apos;ensemble de la copropriété, puis revenez ici pour définir les tantièmes généraux et les clés de répartition.
-          </div>
-        ) : (
-          <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
-            <table className="min-w-[820px] w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
-                <tr>
-                  <th className="px-3 py-3 text-left font-semibold">Lot</th>
-                  <th className="px-3 py-3 text-right font-semibold">Charges générales</th>
-                  {keyNames.map((key) => (
-                    <th key={key} className="px-3 py-3 text-right font-semibold min-w-[140px]">
-                      <div className="flex items-center justify-end gap-1">
-                        <span>{key}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveKey(key)}
-                          className="rounded p-0.5 text-gray-400 hover:bg-white hover:text-red-600"
-                          title={`Retirer la clé ${key}`}
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {lots.map((lot) => {
-                  const owner = lot.coproprietaire_id ? coproMap[lot.coproprietaire_id] : null;
-                  const ownerName = owner?.raison_sociale ?? [owner?.prenom, owner?.nom].filter(Boolean).join(' ');
+          {success && (
+            <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+              {success}
+            </div>
+          )}
 
-                  return (
-                    <tr key={lot.id} className="align-top">
-                      <td className="px-3 py-3">
-                        <div className="min-w-[180px]">
-                          <p className="font-semibold text-gray-900">{lot.numero}</p>
-                          <p className="text-xs text-gray-500">{lot.type}</p>
-                          {ownerName && (
-                            <p className="mt-1 text-xs text-gray-500">{ownerName}</p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 min-w-[130px]">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={lot.tantiemes}
-                          onChange={(e) => handleLotChange(lot.id, 'tantiemes', e.target.value)}
-                          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
-                        />
-                      </td>
+          {lots.length === 0 ? (
+            <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
+              Ajoutez d&apos;abord vos lots depuis la vue d&apos;ensemble de la copropriété, puis revenez ici pour définir les tantièmes généraux et les clés de répartition.
+            </div>
+          ) : (
+            <>
+              <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[1.5fr_0.8fr_0.9fr]">
+                <Input
+                  label="Recherche"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Rechercher un lot, un copropriétaire ou un type"
+                />
+
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Type de lot</span>
+                  <div className="relative">
+                    <Filter size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <select
+                      aria-label="Filtrer par type"
+                      value={typeFilter}
+                      onChange={(e) => setTypeFilter(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
+                    >
+                      <option value="all">Tous les types</option>
+                      {lotTypes.map((type) => (
+                        <option key={type} value={type}>{getLotTypeLabel(type)}</option>
+                      ))}
+                    </select>
+                  </div>
+                </label>
+
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Statut</span>
+                  <select
+                    aria-label="Filtrer par statut"
+                    value={assignmentFilter}
+                    onChange={(e) => setAssignmentFilter(e.target.value as 'all' | 'configured' | 'unconfigured' | 'missing-general')}
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
+                  >
+                    <option value="all">Tous les lots</option>
+                    <option value="configured">Avec clé spéciale</option>
+                    <option value="unconfigured">Sans clé spéciale</option>
+                    <option value="missing-general">Sans base générale</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                <span>{filteredLots.length} lot{filteredLots.length > 1 ? 's' : ''} affiché{filteredLots.length > 1 ? 's' : ''}</span>
+                {(search || typeFilter !== 'all' || assignmentFilter !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch('');
+                      setTypeFilter('all');
+                      setAssignmentFilter('all');
+                    }}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
+                <table className="min-w-[920px] w-full text-sm">
+                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+                    <tr>
+                      <th className="sticky left-0 z-10 bg-slate-50 px-3 py-3 text-left font-semibold">Lot</th>
+                      <th className="px-3 py-3 text-right font-semibold">Charges générales</th>
                       {keyNames.map((key) => (
-                        <td key={`${lot.id}-${key}`} className="px-3 py-3 min-w-[130px]">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={lot.keyValues[key] ?? ''}
-                            onChange={(e) => handleKeyValueChange(lot.id, key, e.target.value)}
-                            placeholder="0"
-                            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
-                          />
-                        </td>
+                        <th key={key} className="px-3 py-3 text-right font-semibold min-w-[140px]">
+                          <div className="flex items-center justify-end gap-1">
+                            <span>{key}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveKey(key)}
+                              className="rounded p-0.5 text-gray-400 hover:bg-white hover:text-red-600"
+                              title={`Retirer la clé ${key}`}
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        </th>
                       ))}
                     </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot className="bg-slate-50 text-sm font-semibold text-slate-700">
-                <tr>
-                  <td className="px-3 py-3">Base totale</td>
-                  <td className="px-3 py-3 text-right">{formatBase(generalTotal)}</td>
-                  {keyNames.map((key) => (
-                    <td key={`total-${key}`} className="px-3 py-3 text-right">{formatBase(totalsByKey[key] ?? 0)}</td>
-                  ))}
-                </tr>
-              </tfoot>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {filteredLots.map((lot) => {
+                      const ownerName = getOwnerName(lot.coproprietaire_id, coproMap);
+
+                      return (
+                        <tr key={lot.id} className="align-top">
+                          <td className="sticky left-0 bg-white px-3 py-3">
+                            <div className="min-w-[200px]">
+                              <p className="font-semibold text-gray-900">{lot.numero}</p>
+                              <p className="text-xs text-gray-500">{getLotTypeLabel(lot.type)}</p>
+                              {ownerName && (
+                                <p className="mt-1 text-xs text-gray-500">{ownerName}</p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 min-w-[130px]">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={lot.tantiemes}
+                              onChange={(e) => handleLotChange(lot.id, 'tantiemes', e.target.value)}
+                              className={cn(
+                                'w-full rounded-lg border px-2.5 py-2 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none',
+                                parseNumericValue(lot.tantiemes) <= 0 ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-gray-50',
+                              )}
+                            />
+                          </td>
+                          {keyNames.map((key) => (
+                            <td key={`${lot.id}-${key}`} className="px-3 py-3 min-w-[130px]">
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={lot.keyValues[key] ?? ''}
+                                onChange={(e) => handleKeyValueChange(lot.id, key, e.target.value)}
+                                placeholder="0"
+                                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot className="bg-slate-50 text-sm font-semibold text-slate-700">
+                    <tr>
+                      <td className="sticky left-0 bg-slate-50 px-3 py-3">Base totale</td>
+                      <td className="px-3 py-3 text-right">{formatBase(generalTotal)}</td>
+                      {keyNames.map((key) => (
+                        <td key={`total-${key}`} className="px-3 py-3 text-right">{formatBase(totalsByKey[key] ?? 0)}</td>
+                      ))}
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </>
+          )}
+        </Card>
+
+        <Card className={cn(activeSection === 'copro' ? 'border-blue-200 shadow-sm' : 'border-gray-200')}>
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-slate-100 p-2.5">
+              <Settings2 size={18} className="text-slate-700" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-lg font-bold text-gray-900">Fiche copropriété</h3>
+              <p className="mt-1 text-sm text-gray-600">
+                Centralisez ici les informations d’identité de la copropriété. Elles seront reprises dans les documents générés.
+              </p>
+            </div>
           </div>
-        )}
-      </Card>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <Input label="Nom de la copropriété" name="nom" value={coproForm.nom} onChange={handleCoproChange} required />
+            <Input label="Adresse" name="adresse" value={coproForm.adresse} onChange={handleCoproChange} required />
+            <Input label="Code postal" name="code_postal" value={coproForm.code_postal} onChange={handleCoproChange} required />
+            <Input label="Ville" name="ville" value={coproForm.ville} onChange={handleCoproChange} required />
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
