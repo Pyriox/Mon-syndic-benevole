@@ -460,7 +460,14 @@ export default function CoproSettingsPanel({
                 </button>
               </div>
 
-              <Button type="button" onClick={handleSave} loading={saving} variant={isDirty ? 'primary' : 'secondary'}>
+              <Button
+                type="button"
+                onClick={() => {
+                  void handleSave();
+                }}
+                loading={saving}
+                variant={isDirty ? 'primary' : 'secondary'}
+              >
                 <Save size={14} /> {isDirty ? 'Enregistrer les modifications' : 'Enregistrer le paramétrage'}
               </Button>
             </div>
@@ -495,7 +502,13 @@ export default function CoproSettingsPanel({
                   <Button type="button" variant="secondary" onClick={handleResetChanges}>
                     Annuler mes modifications
                   </Button>
-                  <Button type="button" onClick={() => handleSave()} loading={saving}>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      void handleSave();
+                    }}
+                    loading={saving}
+                  >
                     <Save size={14} /> Enregistrer maintenant
                   </Button>
                 </div>
@@ -517,7 +530,13 @@ export default function CoproSettingsPanel({
             <Button type="button" variant="secondary" onClick={proceedToPendingNavigation}>
               Quitter sans enregistrer
             </Button>
-            <Button type="button" onClick={() => handleSave(true)} loading={saving}>
+            <Button
+              type="button"
+              onClick={() => {
+                void handleSave(true);
+              }}
+              loading={saving}
+            >
               <Save size={14} /> Enregistrer et quitter
             </Button>
           </div>
