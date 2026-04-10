@@ -252,7 +252,7 @@ export default async function AbonnementPage({
 
   return (
     <div className="min-h-full py-8 px-4">
-      <div className="w-full max-w-4xl mx-auto space-y-10">
+      <div className="w-full max-w-5xl mx-auto space-y-10">
 
         {/* ── En-tête */}
         <div>
