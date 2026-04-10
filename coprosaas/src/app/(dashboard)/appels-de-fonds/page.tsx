@@ -15,6 +15,7 @@ import { Wallet } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
+import PageHelp from '@/components/ui/PageHelp';
 
 interface Poste { libelle: string; categorie: string; montant: number }
 
@@ -146,6 +147,12 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
           {isSyndic && totalCount > 0 && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
         </div>
       </div>
+
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
+        {isSyndic
+          ? 'Les appels de fonds correspondent aux provisions demandées aux copropriétaires pour financer le budget voté en AG et les dépenses à venir.'
+          : 'Consultez ici vos avis de paiement, leurs échéances et l’état de vos règlements pour l’exercice en cours.'}
+      </PageHelp>
 
       {totalCount > 0 ? (
         <div className="space-y-3">

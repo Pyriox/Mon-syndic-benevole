@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
+import PageHelp from '@/components/ui/PageHelp';
 
 const catColorMap: Record<string, string> = {
   entretien:          'bg-orange-400',
@@ -115,6 +116,10 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
           </div>
           <AnneeSelector annee={annee} />
         </div>
+
+        <PageHelp tone="slate">
+          Consultez ici les dépenses déjà enregistrées pour la copropriété et la part théorique qui vous revient selon vos tantièmes.
+        </PageHelp>
 
         {depenses && depenses.length > 0 ? (
           <>
@@ -373,6 +378,10 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
           {canWrite ? <DepenseActions coproprietes={coproprietes ?? []} depensesDossierId={depDossier?.id} /> : <UpgradeBanner compact />}
         </div>
       </div>
+
+      <PageHelp>
+        Enregistrez ici les factures et charges réellement payées par la copropriété pour suivre l’exécution du budget et préparer la régularisation annuelle.
+      </PageHelp>
 
       {depenses && depenses.length > 0 ? (
         <>

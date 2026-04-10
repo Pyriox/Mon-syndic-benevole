@@ -17,6 +17,7 @@ import { CalendarDays, MapPin, ChevronRight } from 'lucide-react';
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
+import PageHelp from '@/components/ui/PageHelp';
 
 export default async function AssembleesPage({ searchParams }: { searchParams: Promise<{ annee?: string }> }) {
   const { annee: anneeParam } = await searchParams;
@@ -65,6 +66,12 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
           {isSyndic && (assemblees?.length ?? 0) > 0 && (canWrite ? <AGActions coproprietes={coproprietes ?? []} /> : <UpgradeBanner compact />)}
         </div>
       </div>
+
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
+        {isSyndic
+          ? 'Préparez ici l’ordre du jour, suivez le déroulé de l’assemblée générale et conservez les résolutions et procès-verbaux.'
+          : 'Retrouvez ici les dates d’AG, les convocations et les résolutions liées à votre copropriété.'}
+      </PageHelp>
 
       {assemblees && assemblees.length > 0 ? (
         <div className="space-y-3">

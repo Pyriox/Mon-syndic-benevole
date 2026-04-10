@@ -19,6 +19,7 @@ import { FileText, Download, ExternalLink, Folder, ChevronRight, FolderOpen, Arr
 import { isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
+import PageHelp from '@/components/ui/PageHelp';
 
 // Ordre d'utilité des dossiers permanents (plus petit = en premier)
 const DEFAULT_DOSSIER_ORDER: Record<string, number> = {
@@ -194,6 +195,10 @@ export default async function DocumentsPage({ searchParams }: Props) {
           <h2 className="text-2xl font-bold text-gray-900">{currentDossier?.nom ?? 'Documents'}</h2>
           <p className="text-gray-500 mt-1">{totalItems} élément{totalItems !== 1 ? 's' : ''}</p>
         </div>
+
+        <PageHelp tone="slate">
+          Retrouvez ici les documents que le syndic met à votre disposition : convocations, procès-verbaux, appels de fonds, contrats et pièces utiles.
+        </PageHelp>
 
         {totalItems === 0 ? (
           <EmptyState
@@ -429,6 +434,10 @@ export default async function DocumentsPage({ searchParams }: Props) {
           )}
         </div>
       </div>
+
+      <PageHelp>
+        Centralisez ici les pièces officielles de la copropriété et partagez-les avec les copropriétaires pour conserver un historique clair et accessible.
+      </PageHelp>
 
       {/* Table Drive */}
       {totalItems === 0 ? (

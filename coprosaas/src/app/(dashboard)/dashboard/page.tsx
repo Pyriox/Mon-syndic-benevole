@@ -9,6 +9,7 @@ import { Suspense } from 'react';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
+import PageHelp from '@/components/ui/PageHelp';
 import { Building2 } from 'lucide-react';
 import {
   CoproDashboardAlert,
@@ -43,6 +44,14 @@ export default async function DashboardPage() {
           <SyndicDashboardHeader coproId={scopeId} coproprieteName={copropriete?.nom ?? null} />
         )}
       </Suspense>
+
+      {copropriete && (
+        <PageHelp tone={userRole === 'copropriétaire' ? 'slate' : 'blue'}>
+          {userRole === 'copropriétaire'
+            ? 'Retrouvez ici vos soldes, documents partagés et prochaines échéances liées à votre copropriété.'
+            : 'Ce tableau de bord centralise les points de gestion quotidiens : budget, appels de fonds, incidents et assemblées générales.'}
+        </PageHelp>
+      )}
 
       {!copropriete &&
         (userRole === 'copropriétaire' ? (

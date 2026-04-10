@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
+import PageHelp from '@/components/ui/PageHelp';
 import CoproprietaireActions from './CoproprietaireActions';
 import CoproprietairesTable from './CoproprietairesTable';
 import { Building2, UserCheck, Users } from 'lucide-react';
@@ -95,6 +96,12 @@ export default async function CoproprietairesPage() {
         </div>
         {isSyndic && (coproprietaires?.length ?? 0) > 0 && <CoproprietaireActions coproprietes={coproprietes} />}
       </div>
+
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
+        {isSyndic
+          ? 'Tenez ici le registre des copropriétaires, utile pour les convocations d’AG, les appels de fonds et le suivi des lots.'
+          : 'Consultez ici la liste des copropriétaires et la répartition des tantièmes au sein de l’immeuble.'}
+      </PageHelp>
 
       {/* Bande de stats */}
       {coproprietaires && coproprietaires.length > 0 && (

@@ -10,6 +10,7 @@ import Link from 'next/link';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
+import PageHelp from '@/components/ui/PageHelp';
 import { Building2, Plus, MapPin, Hash } from 'lucide-react';
 
 export default async function CopropriétésPage() {
@@ -56,6 +57,10 @@ export default async function CopropriétésPage() {
           </Link>
         )}
       </div>
+
+      <PageHelp>
+        Chaque copropriété dispose de son propre paramétrage, de ses lots, de ses copropriétaires et de son suivi financier indépendant.
+      </PageHelp>
 
       {/* Grille des copropriétés */}
       {coproprietes && coproprietes.length > 0 ? (

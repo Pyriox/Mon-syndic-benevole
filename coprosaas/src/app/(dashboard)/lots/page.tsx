@@ -11,6 +11,7 @@ import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { getLots, getCoproprietaires } from '@/lib/cached-queries';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
+import PageHelp from '@/components/ui/PageHelp';
 import Link from 'next/link';
 import { Building2, Car, Archive, ShoppingBag, Briefcase, LayoutGrid, ExternalLink, Users, UserCheck, Mail, AlertCircle } from 'lucide-react';
 
@@ -141,6 +142,10 @@ export default async function LotsPage() {
           </Link>
         )}
       </div>
+
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
+        Chaque lot correspond à une partie privative ou annexe de l’immeuble et sert de base aux tantièmes, aux votes d’AG et aux répartitions de charges.
+      </PageHelp>
 
       {allLots.length > 0 ? (
         <>

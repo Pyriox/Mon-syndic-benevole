@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Card, { CardHeader } from '@/components/ui/Card';
+import PageHelp from '@/components/ui/PageHelp';
 import { ProfilEditActions, ProfilIdentiteEditor, LotsActions, SecurityActions, DeleteAccountSection } from './ProfilActions';
 import { User, Building2, Mail, ShieldCheck } from 'lucide-react';
 
@@ -87,6 +88,10 @@ export default async function ProfilPage() {
         <h2 className="text-2xl font-bold text-gray-900">Mon profil</h2>
         <p className="text-gray-500 mt-1">Gérez vos informations et la sécurité de votre compte.</p>
       </div>
+
+      <PageHelp tone="slate">
+        Vos coordonnées de profil sont utilisées dans les échanges, invitations et documents liés à votre copropriété ; gardez-les à jour pour faciliter la gestion.
+      </PageHelp>
 
       {/* ---- Mon compte + Identité ---- */}
       <Card>

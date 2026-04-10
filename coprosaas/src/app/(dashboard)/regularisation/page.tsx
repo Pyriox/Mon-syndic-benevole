@@ -14,6 +14,7 @@ import { formatEuros, formatDate } from '@/lib/utils';
 import { isSubscribed } from '@/lib/subscription';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
+import PageHelp from '@/components/ui/PageHelp';
 import { ArrowLeftRight, Info, Lock } from 'lucide-react';
 import ExerciceCreate from './ExerciceCreate';
 import RegularisationTable from './RegularisationTable';
@@ -76,6 +77,12 @@ export default async function RegularisationPage({
         </div>
         <AnneeSelector annee={annee} />
       </div>
+
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
+        {isSyndic
+          ? 'Comparez ici les provisions appelées et les dépenses réelles de l’exercice pour déterminer le solde final de chaque copropriétaire.'
+          : 'Consultez ici si l’exercice fait apparaître un complément à payer ou un trop-perçu à reporter sur votre compte.'}
+      </PageHelp>
 
       {/* ── Exercice non encore clôturé (année en cours ou future) ── */}
       {annee >= currentYear && (
