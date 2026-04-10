@@ -80,7 +80,7 @@ describe('CoproSettingsPanel', () => {
     expect(screen.getByRole('button', { name: /Enregistrer les modifications/i })).toBeTruthy();
   });
 
-  it('permet de filtrer les lots et d’ajouter une clé via un modèle rapide', async () => {
+  it('permet de filtrer les lots et d’ajouter manuellement une clé spéciale', async () => {
     const { default: CoproSettingsPanel } = await import('./CoproSettingsPanel');
 
     render(
@@ -97,10 +97,14 @@ describe('CoproSettingsPanel', () => {
 
     expect(screen.getByText('03-1ER')).toBeTruthy();
     expect(screen.queryByText('01-RDC')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Ascenseur$/i })).toBeNull();
 
-    fireEvent.click(screen.getAllByRole('button', { name: /Ascenseur/i })[0]);
+    fireEvent.change(screen.getByLabelText(/Ajouter une clé spéciale/i), {
+      target: { value: 'Local vélos' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Ajouter la clé/i }));
 
-    expect(screen.getByDisplayValue('Ascenseur')).toBeTruthy();
+    expect(screen.getByText(/Local vélos · base 0/i)).toBeTruthy();
   });
 
   it('bascule réellement entre la répartition et la fiche copropriété', async () => {
