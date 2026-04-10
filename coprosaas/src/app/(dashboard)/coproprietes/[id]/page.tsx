@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import PageHelp from '@/components/ui/PageHelp';
 import CoproDelete from './CoproDelete';
 import LotActions from './LotActions';
 import LotsTable from './LotsTable';
@@ -153,10 +154,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
 
       <div className="space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Lots de la copropriété</h3>
-            <p className="text-sm text-gray-500">Créez, identifiez et réordonnez vos lots ici. Les tantièmes généraux et les clés spéciales se règlent ensuite dans le <strong>Paramétrage</strong>.</p>
-          </div>
+          <h3 className="text-lg font-bold text-gray-900">Lots de la copropriété</h3>
           <LotActions
             coproprieteId={copro.id}
             showLabel
@@ -164,6 +162,10 @@ export default async function CopropriétéDetailPage({ params }: Props) {
             lotLimit={lotLimit === Infinity ? undefined : lotLimit}
           />
         </div>
+
+        <PageHelp>
+          Créez, identifiez et réordonnez vos lots ici. Les tantièmes généraux et les clés spéciales se règlent ensuite dans le Paramétrage.
+        </PageHelp>
 
         {lotCount > 0 ? (
           <Card>
