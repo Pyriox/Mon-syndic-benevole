@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -15,6 +15,8 @@ type QueryResult = {
   eq?: (column: string, value: unknown) => QueryResult;
   select?: () => QueryResult;
 };
+
+let mockScenario: 'copro' | 'syndic-and-copro' = 'copro';
 
 function createTableQuery(table: string): QueryResult {
   const filters = new Map<string, unknown>();
@@ -32,6 +34,9 @@ function createTableQuery(table: string): QueryResult {
       }
 
       if (table === 'coproprietes') {
+        if (mockScenario === 'syndic-and-copro') {
+          return { data: { id: 'copro-1', nom: 'Résidence des Lilas' }, error: null };
+        }
         return { data: null, error: null };
       }
 
@@ -63,7 +68,12 @@ vi.mock('@/lib/supabase/client', () => ({
 }));
 
 describe('AidePage', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
+    mockScenario = 'copro';
     document.cookie = 'selected_copro_id=copro-1';
   });
 
@@ -77,5 +87,19 @@ describe('AidePage', () => {
     });
 
     expect(screen.queryByText(/Comment inviter mes copropriétaires sur la plateforme/i)).toBeNull();
+  });
+
+  it('priorise la vue syndic quand l’utilisateur gère aussi la copropriété sélectionnée', async () => {
+    mockScenario = 'syndic-and-copro';
+    const { default: AidePage } = await import('./page');
+
+    render(<AidePage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /aide & contact/i })).not.toBeNull();
+    });
+
+    expect(screen.getByText(/Comment inviter mes copropriétaires sur la plateforme/i)).not.toBeNull();
+    expect(screen.queryByText(/Comment consulter mon solde/i)).toBeNull();
   });
 });

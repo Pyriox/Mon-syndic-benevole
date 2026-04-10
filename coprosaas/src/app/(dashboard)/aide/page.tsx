@@ -284,10 +284,10 @@ export default function AidePage() {
       if (profile?.full_name) setName(profile.full_name);
       if (syndicCopro?.nom) setSelectedCoproName(syndicCopro.nom);
 
-      if (coproMember) {
-        setUserRole('copropriétaire');
-      } else if (syndicCopro) {
+      if (syndicCopro) {
         setUserRole('syndic');
+      } else if (coproMember) {
+        setUserRole('copropriétaire');
       }
     };
 
