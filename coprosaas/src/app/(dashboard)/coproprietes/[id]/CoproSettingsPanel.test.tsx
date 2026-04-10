@@ -78,6 +78,8 @@ describe('CoproSettingsPanel', () => {
 
     expect(screen.getByText(/Modifications non enregistrées/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Enregistrer les modifications/i })).toBeTruthy();
+    expect(screen.getByText(/Enregistrez avant de quitter cette page/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Annuler mes modifications/i })).toBeTruthy();
   });
 
   it('permet de filtrer les lots et d’ajouter manuellement une clé spéciale', async () => {

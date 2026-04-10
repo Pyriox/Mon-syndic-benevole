@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -157,6 +157,47 @@ export default function CoproSettingsPanel({
   );
   const isDirty = currentSnapshot !== savedSnapshot;
 
+  useEffect(() => {
+    if (!isDirty) return undefined;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const link = target.closest('a[href]');
+      if (!(link instanceof HTMLAnchorElement)) return;
+      if (link.target === '_blank' || link.hasAttribute('download')) return;
+
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+      const nextUrl = new URL(link.href, window.location.href);
+      if (nextUrl.href === window.location.href) return;
+
+      const shouldLeave = window.confirm(
+        'Vous avez des modifications non enregistrées. Enregistrez avant de quitter cette page, sinon elles seront perdues.'
+      );
+
+      if (!shouldLeave) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('click', handleDocumentClick, true);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('click', handleDocumentClick, true);
+    };
+  }, [isDirty]);
+
   const generalTotal = useMemo(
     () => lots.reduce((sum, lot) => sum + parseNumericValue(lot.tantiemes), 0),
     [lots],
@@ -268,6 +309,20 @@ export default function CoproSettingsPanel({
       delete nextValues[keyToRemove];
       return { ...lot, keyValues: nextValues };
     }));
+    setError('');
+    setSuccess('');
+  };
+
+  const handleResetChanges = () => {
+    const parsed = JSON.parse(savedSnapshot) as {
+      coproForm: typeof coproForm;
+      keyNames: string[];
+      lots: EditableLotRow[];
+    };
+
+    setCoproForm(parsed.coproForm);
+    setKeyNames(parsed.keyNames);
+    setLots(parsed.lots);
     setError('');
     setSuccess('');
   };
@@ -395,6 +450,29 @@ export default function CoproSettingsPanel({
       {success && (
         <div className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
           {success}
+        </div>
+      )}
+
+      {isDirty && (
+        <div className="sticky bottom-3 z-30">
+          <Card className="border-amber-200 bg-amber-50/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-amber-50/90">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-amber-900">Enregistrez avant de quitter cette page</p>
+                <p className="text-xs text-amber-800">
+                  Vos dernières modifications seront perdues si vous changez d’écran sans enregistrer.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Button type="button" variant="secondary" onClick={handleResetChanges}>
+                  Annuler mes modifications
+                </Button>
+                <Button type="button" onClick={handleSave} loading={saving}>
+                  <Save size={14} /> Enregistrer maintenant
+                </Button>
+              </div>
+            </div>
+          </Card>
         </div>
       )}
 
