@@ -5,7 +5,7 @@
 
 import { wrapEmail, h, formatDateFR, formatEurosFR, infoTable, infoRow, alertBanner, COLOR } from './base';
 
-export type AppelEmailType = 'avis' | 'rappel' | 'mise_en_demeure';
+export type AppelEmailType = 'avis' | 'rappel' | 'rappel_j1' | 'mise_en_demeure';
 
 export interface AppelEmailParams {
   type: AppelEmailType;
@@ -21,12 +21,14 @@ export interface AppelEmailParams {
 const ACCENT: Record<AppelEmailType, string> = {
   avis:            COLOR.blue,
   rappel:          COLOR.amber,
+  rappel_j1:       COLOR.amber,
   mise_en_demeure: COLOR.red,
 };
 
 const SUBJECTS: Record<AppelEmailType, string> = {
   avis:            'Appel de fonds',
   rappel:          'Rappel de paiement',
+  rappel_j1:       'Relance après échéance',
   mise_en_demeure: 'Mise en demeure',
 };
 
@@ -38,6 +40,7 @@ export function buildAppelEmailSubject(params: {
   const prefixes: Record<AppelEmailType, string> = {
     avis:            `Appel de fonds — ${params.coproprieteNom}`,
     rappel:          `Rappel : paiement en attente — ${params.coproprieteNom}`,
+    rappel_j1:       `Relance : échéance dépassée — ${params.coproprieteNom}`,
     mise_en_demeure: `Mise en demeure — ${params.coproprieteNom}`,
   };
   return `${prefixes[params.type]} — Échéance ${formatDateFR(params.dateEcheance)}`;
@@ -56,12 +59,17 @@ export function buildAppelEmail(params: AppelEmailParams): string {
   const intro: Record<AppelEmailType, string> = {
     avis: `Un appel de fonds a été émis pour la copropriété <strong>${h(coproprieteNom)}</strong>.`,
     rappel: `Un paiement reste en attente pour la copropriété <strong>${h(coproprieteNom)}</strong>. L'échéance est dans <strong>7 jours</strong>.`,
+    rappel_j1: `Nous n'avons pas encore enregistré votre règlement pour la copropriété <strong>${h(coproprieteNom)}</strong>. L'échéance de cet appel de fonds est <strong>dépassée depuis 1 jour</strong>.`,
     mise_en_demeure: `Votre règlement pour la copropriété <strong>${h(coproprieteNom)}</strong> n'a pas été enregistré à ce jour. Votre compte présente un <strong>impayé</strong>.`,
   };
 
   const closing: Record<AppelEmailType, string> = {
     avis: `<p style="margin:20px 0 0;font-size:14px;color:${COLOR.muted}">Merci d'effectuer votre règlement avant la date d'échéance.</p><p style="margin:10px 0 0;font-size:13px;color:${COLOR.muted}">Votre avis est également disponible dans votre espace personnel copropriétaire.</p>`,
     rappel: `<p style="margin:20px 0 0;font-size:14px;color:${COLOR.muted}">Merci de régulariser votre situation avant l'échéance.</p>`,
+    rappel_j1: `${alertBanner(
+      'L\'échéance est désormais dépassée. Merci de vérifier votre virement ou de contacter rapidement votre syndic si le paiement a déjà été effectué.',
+      COLOR.amber, '#fffbeb'
+    )}<p style="margin:20px 0 0;font-size:14px;color:${COLOR.muted}">Si vous avez déjà payé, vous pouvez ignorer ce message : votre syndic mettra votre situation à jour dès l'encaissement confirmé.</p>`,
     mise_en_demeure: alertBanner(
       'Sans régularisation sous 8 jours, cette situation sera portée à l\'ordre du jour de la prochaine assemblée générale.',
       COLOR.red, '#fff5f5'

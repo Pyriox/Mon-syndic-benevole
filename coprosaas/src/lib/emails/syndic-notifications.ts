@@ -6,7 +6,7 @@
 //  3. incident_resolu    : notification au déclarant quand un incident est résolu
 // ============================================================
 
-import { wrapEmail, h, formatDateFR, ctaButton, COLOR } from './base';
+import { wrapEmail, h, formatDateFR, formatEurosFR, ctaButton, infoRow, infoTable, alertBanner, COLOR } from './base';
 
 // ─── AG Terminée ─────────────────────────────────────────────────────────────
 
@@ -139,6 +139,56 @@ ${ctaButton('Publier les appels de fonds →', appelsUrl, color)}
 </p>`;
 
   return wrapEmail(content, color);
+}
+
+// ── Récapitulatif syndic des impayés à J0 ────────────────────────────────────
+
+export interface SyndicImpayesRecapEmailParams {
+  syndicPrenom: string;
+  coproprieteNom: string;
+  appelTitre: string;
+  dateEcheance: string;
+  appelsUrl: string;
+  impayes: Array<{ nom: string; montantDu: number }>;
+}
+
+export function buildSyndicImpayesRecapSubject(coproprieteNom: string, appelTitre: string, nbImpayes: number): string {
+  return `[J0] ${nbImpayes} impayé${nbImpayes > 1 ? 's' : ''} à vérifier — ${appelTitre} · ${coproprieteNom}`;
+}
+
+export function buildSyndicImpayesRecapEmail(params: SyndicImpayesRecapEmailParams): string {
+  const { syndicPrenom, coproprieteNom, appelTitre, dateEcheance, appelsUrl, impayes } = params;
+  const total = impayes.reduce((sum, row) => sum + row.montantDu, 0);
+  const rows = infoTable(
+    impayes.map((row) => infoRow(h(row.nom), formatEurosFR(row.montantDu))).join('')
+    + infoRow('Total à vérifier', formatEurosFR(total), `font-size:16px;color:${COLOR.red}`)
+  );
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Impayés à vérifier aujourd'hui</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">Bonjour <strong>${h(syndicPrenom)}</strong>,</p>
+<p style="margin:0;font-size:14px;color:${COLOR.text};line-height:1.6">
+  L'appel de fonds <strong>${h(appelTitre)}</strong> arrive à échéance <strong>aujourd'hui (${formatDateFR(dateEcheance)})</strong>
+  et ${impayes.length} copropriétaire${impayes.length > 1 ? 's restent' : ' reste'} encore indiqué${impayes.length > 1 ? 's' : ''} comme impayé${impayes.length > 1 ? 's' : ''}.
+</p>
+<p style="margin:16px 0 0;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Il peut s'agir d'un simple oubli de cocher un paiement déjà reçu. Vérifiez les encaissements du jour et mettez à jour les lignes concernées si besoin.
+</p>
+
+${alertBanner(
+  'Ce rappel vous aide à confirmer les paiements reçus le jour même avant qu\'ils ne basculent en impayés suivis.',
+  COLOR.amber,
+  '#fffbeb'
+)}
+
+${rows}
+
+${ctaButton('Vérifier les paiements →', appelsUrl, COLOR.amber)}
+`;
+
+  return wrapEmail(content, COLOR.amber);
 }
 
 // ── Incident résolu (notification au déclarant) ─────────────────────────────────

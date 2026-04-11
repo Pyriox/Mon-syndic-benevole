@@ -5,7 +5,9 @@
 //  J-30 : avis initial aux copropriétaires (appels publiés sans email envoyé
 //         dont l'échéance est dans <= 30 jours)
 //  J-7  : rappel pré-échéance aux copropriétaires impayés
+//  J+1  : relance courte post-échéance aux copropriétaires impayés
 //  J+15 : mise en demeure post-échéance aux copropriétaires impayés
+//  J0   : récapitulatif des impayés au syndic pour vérification des paiements reçus
 //
 // Le J-30 permet de publier tous les appels d'un coup après une AG
 // sans spammer les copropriétaires des échéances lointaines.
@@ -23,6 +25,8 @@ import {
   buildBrouillonEcheanceSubject,
   buildSyndicOnboardingReminderEmail,
   buildSyndicOnboardingReminderSubject,
+  buildSyndicImpayesRecapEmail,
+  buildSyndicImpayesRecapSubject,
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
@@ -100,6 +104,7 @@ export async function GET(req: NextRequest) {
   const dateJ30 = addDays(today, 30);  // avis : appels publiés dont l'échéance est dans <= 30 jours
   const dateJ14 = addDays(today, 14);  // brouillons non publiés : rappel syndic J-14
   const dateJ7  = addDays(today, 7);   // appels avec échéance dans 7 jours
+  const dateJ1  = addDays(today, -1);  // appels échus hier, encore impayés
   const dateJ15 = addDays(today, -15); // appels avec échéance il y a 15 jours
   const dateM2  = addDays(today, -2);  // onboarding syndic : J+2 après confirmation de compte
   const dateM7  = addDays(today, -7);  // onboarding syndic : J+7 après confirmation de compte
@@ -123,6 +128,14 @@ export async function GET(req: NextRequest) {
     .eq('date_echeance', dateJ7)
     .is('rappel_j7_at', null);
 
+  // Appels à relancer le lendemain de l'échéance (J+1)
+  const { data: j1Appels } = await supabase
+    .from('appels_de_fonds')
+    .select('id, copropriete_id, titre, montant_total, date_echeance, coproprietes(nom)')
+    .eq('statut', 'publie')
+    .eq('date_echeance', dateJ1)
+    .is('rappel_j1_at', null);
+
   // Appels en mise en demeure (J+15)
   const { data: j15Appels } = await supabase
     .from('appels_de_fonds')
@@ -130,6 +143,14 @@ export async function GET(req: NextRequest) {
     .eq('statut', 'publie')
     .eq('date_echeance', dateJ15)
     .is('rappel_j15_at', null);
+
+  // Récapitulatif syndic à l'échéance (J0)
+  const { data: j0SyndicAppels } = await supabase
+    .from('appels_de_fonds')
+    .select('id, copropriete_id, titre, date_echeance, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .eq('statut', 'publie')
+    .eq('date_echeance', todayStr)
+    .is('rappel_syndic_j0_at', null);
 
   let totalSent = 0;
 
@@ -156,12 +177,34 @@ export async function GET(req: NextRequest) {
       totalSent += sent;
     }
 
+    // Traitement J+1
+    for (const appel of j1Appels ?? []) {
+      const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, 'rappel_j1');
+      if (sent >= 0) {
+        await supabase.from('appels_de_fonds')
+          .update({ rappel_j1_at: new Date().toISOString() })
+          .eq('id', appel.id);
+      }
+      totalSent += sent;
+    }
+
     // Traitement J+15
     for (const appel of j15Appels ?? []) {
       const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, 'mise_en_demeure');
       if (sent >= 0) {
         await supabase.from('appels_de_fonds')
           .update({ rappel_j15_at: new Date().toISOString() })
+          .eq('id', appel.id);
+      }
+      totalSent += sent;
+    }
+
+    // Récapitulatif syndic J0
+    for (const appel of j0SyndicAppels ?? []) {
+      const sent = await sendSyndicImpayesRecap(supabase, appel as unknown as AppelWithSyndicRow);
+      if (sent >= 0) {
+        await supabase.from('appels_de_fonds')
+          .update({ rappel_syndic_j0_at: new Date().toISOString() })
           .eq('id', appel.id);
       }
       totalSent += sent;
@@ -416,7 +459,9 @@ export async function GET(req: NextRequest) {
     date: today.toISOString().slice(0, 10),
     avis_appels:       avisAppels?.length    ?? 0,
     j7_appels:         j7Appels?.length      ?? 0,
+    j1_appels:         j1Appels?.length      ?? 0,
     j15_appels:        j15Appels?.length     ?? 0,
+    j0_syndic_appels:  j0SyndicAppels?.length ?? 0,
     brouillon_groupes: brouillonGroups.size,
     brouillon_j14_groupes: brouillonJ14Groups.size,
     brouillon_j7_groupes: brouillonJ7Groups.size,
@@ -435,6 +480,15 @@ interface AppelRow {
   titre: string;
   date_echeance: string;
   coproprietes: { nom: string } | null;
+}
+
+type SyndicProfileRow = { email: string | null; full_name: string | null };
+
+interface AppelWithSyndicRow extends Omit<AppelRow, 'coproprietes'> {
+  coproprietes: {
+    nom: string;
+    profiles: SyndicProfileRow | SyndicProfileRow[] | null;
+  } | null;
 }
 
 type OnboardingSyndicProfile = {
@@ -636,7 +690,7 @@ async function sendRappelEmails(
   type: AppelEmailType
 ): Promise<number> {
   // Pour l'avis initial (J-30), on cible toutes les lignes.
-  // Pour les rappels (J-7) et mises en demeure (J+15), uniquement les impayées.
+  // Pour les rappels J-7 / J+1 et la mise en demeure J+15, uniquement les impayées.
   const query = supabase
     .from('lignes_appels_de_fonds')
     .select('montant_du, regularisation_ajustement, coproprietaires(nom, prenom, email, user_id)')
@@ -702,14 +756,24 @@ async function sendRappelEmails(
 
     if (result.error) {
       await trackEmailDelivery({
-        templateKey: type === 'avis' ? 'appel_avis' : type === 'rappel' ? 'appel_rappel' : 'appel_mise_en_demeure',
+        templateKey: type === 'avis'
+          ? 'appel_avis'
+          : type === 'rappel'
+            ? 'appel_rappel'
+            : type === 'rappel_j1'
+              ? 'appel_rappel_j1'
+              : 'appel_mise_en_demeure',
         status: 'failed',
         recipientEmail: email,
         recipientUserId: cop.user_id,
         coproprieteId: appel.copropriete_id,
         appelDeFondsId: appel.id,
         subject,
-        legalEventType: type === 'avis' ? 'appel_de_fonds_avis' : type === 'rappel' ? 'appel_de_fonds_rappel' : 'appel_de_fonds_mise_en_demeure',
+        legalEventType: type === 'avis'
+          ? 'appel_de_fonds_avis'
+          : type === 'mise_en_demeure'
+            ? 'appel_de_fonds_mise_en_demeure'
+            : 'appel_de_fonds_rappel',
         legalReference: appel.id,
         payload: { trigger: 'cron', type },
         lastError: result.error.message,
@@ -719,14 +783,24 @@ async function sendRappelEmails(
 
     await trackEmailDelivery({
       providerMessageId: result.data?.id,
-      templateKey: type === 'avis' ? 'appel_avis' : type === 'rappel' ? 'appel_rappel' : 'appel_mise_en_demeure',
+      templateKey: type === 'avis'
+        ? 'appel_avis'
+        : type === 'rappel'
+          ? 'appel_rappel'
+          : type === 'rappel_j1'
+            ? 'appel_rappel_j1'
+            : 'appel_mise_en_demeure',
       status: 'sent',
       recipientEmail: email,
       recipientUserId: cop.user_id,
       coproprieteId: appel.copropriete_id,
       appelDeFondsId: appel.id,
       subject,
-      legalEventType: type === 'avis' ? 'appel_de_fonds_avis' : type === 'rappel' ? 'appel_de_fonds_rappel' : 'appel_de_fonds_mise_en_demeure',
+      legalEventType: type === 'avis'
+        ? 'appel_de_fonds_avis'
+        : type === 'mise_en_demeure'
+          ? 'appel_de_fonds_mise_en_demeure'
+          : 'appel_de_fonds_rappel',
       legalReference: appel.id,
       payload: { trigger: 'cron', type },
     });
@@ -734,4 +808,71 @@ async function sendRappelEmails(
   }));
 
   return sent;
+}
+
+async function sendSyndicImpayesRecap(
+  supabase: ReturnType<typeof createServerClient>,
+  appel: AppelWithSyndicRow,
+): Promise<number> {
+  const copro = appel.coproprietes;
+  const profile = Array.isArray(copro?.profiles) ? copro.profiles[0] : copro?.profiles;
+  const syndicEmail = normalizeEmail(profile?.email ?? null);
+
+  if (!copro || !syndicEmail) return 0;
+
+  const { data: lignes } = await supabase
+    .from('lignes_appels_de_fonds')
+    .select('montant_du, regularisation_ajustement, coproprietaires(nom, prenom, email, user_id)')
+    .eq('appel_de_fonds_id', appel.id)
+    .eq('paye', false);
+
+  const impayes = ((lignes ?? []) as LigneRow[])
+    .map((ligne) => {
+      const coproprietaire = Array.isArray(ligne.coproprietaires) ? ligne.coproprietaires[0] : ligne.coproprietaires;
+      if (!coproprietaire) return null;
+
+      return {
+        nom: `${coproprietaire.prenom} ${coproprietaire.nom}`.trim(),
+        montantDu: ligne.montant_du,
+      };
+    })
+    .filter((row): row is { nom: string; montantDu: number } => Boolean(row));
+
+  if (impayes.length === 0) return 0;
+
+  const syndicPrenom = (profile?.full_name ?? '').split(' ')[0] || 'Syndic';
+  const subject = buildSyndicImpayesRecapSubject(copro.nom, appel.titre, impayes.length);
+  const result = await resend.emails.send({
+    from: FROM,
+    to: syndicEmail,
+    subject,
+    html: buildSyndicImpayesRecapEmail({
+      syndicPrenom,
+      coproprieteNom: copro.nom,
+      appelTitre: appel.titre,
+      dateEcheance: appel.date_echeance,
+      appelsUrl: `${SITE_URL}/appels-de-fonds`,
+      impayes,
+    }),
+  });
+
+  await trackCronEmail({
+    providerMessageId: result.data?.id,
+    errorMessage: result.error?.message,
+    templateKey: 'appel_syndic_impayes_j0',
+    recipientEmail: syndicEmail,
+    subject,
+    coproprieteId: appel.copropriete_id,
+    legalEventType: 'appel_de_fonds_syndic_impayes_j0',
+    legalReference: appel.id,
+    payload: {
+      trigger: 'cron',
+      type: 'syndic_impayes_j0',
+      appelId: appel.id,
+      unpaidCount: impayes.length,
+      totalMontantDu: impayes.reduce((sum, row) => sum + row.montantDu, 0),
+    },
+  });
+
+  return result.error ? 0 : 1;
 }
