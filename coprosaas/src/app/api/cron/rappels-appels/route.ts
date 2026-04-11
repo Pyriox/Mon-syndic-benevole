@@ -339,14 +339,16 @@ export async function GET(req: NextRequest) {
     .from('appels_de_fonds')
     .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
     .eq('statut', 'brouillon')
-    .eq('date_echeance', dateJ14)
+    .gt('date_echeance', dateJ7)
+    .lte('date_echeance', dateJ14)
     .is('rappel_brouillon_j14_at', null);
 
   const { data: brouillonsJ7 } = await supabase
     .from('appels_de_fonds')
     .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
     .eq('statut', 'brouillon')
-    .eq('date_echeance', dateJ7)
+    .gte('date_echeance', todayStr)
+    .lte('date_echeance', dateJ7)
     .is('rappel_brouillon_j7_at', null);
 
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
