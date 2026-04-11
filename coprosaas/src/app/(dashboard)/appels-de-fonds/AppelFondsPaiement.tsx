@@ -7,26 +7,21 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import { applyCoproprietaireBalanceDelta, resolveAppelBalanceAccountType } from '@/lib/coproprietaire-balance';
-import { formatEuros, LABELS_CATEGORIE } from '@/lib/utils';
+import { formatEuros, LABELS_CATEGORIE, parseBudgetPostesFromDescription, repartitionParPostesDetailed } from '@/lib/utils';
 import {
   CheckCircle, Clock, XCircle, Loader2,
   ChevronUp, X, ReceiptText, FileDown,
 } from 'lucide-react';
 import { buildAvisPersonnelPDF } from './AppelFondsPDF';
 
-interface Poste { libelle: string; categorie: string; montant: number }
-
-function parsePostes(d: string | null | undefined): Poste[] {
-  if (!d) return [];
-  try {
-    const p = JSON.parse(d);
-    if (Array.isArray(p) && p.length > 0 && 'libelle' in p[0]) return p;
-  } catch { /* */ }
-  return [];
+interface PosteDetail {
+  libelle: string;
+  categorie?: string | null;
+  montant: number;
 }
 
 export interface Ligne {
@@ -75,11 +70,76 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
   const [toggling, setToggling] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [lots, setLots] = useState<Array<{
+    id: string;
+    tantiemes: number;
+    coproprietaire_id: string | null;
+    groupes_repartition?: string[] | null;
+    tantiemes_groupes?: Record<string, number> | null;
+  }>>([]);
 
-  const postes = parsePostes(appel.description);
   const ftAlur = appel.montant_fonds_travaux ?? 0;
+  const postes = useMemo(() => {
+    const parsed = parseBudgetPostesFromDescription(appel.description);
+    if (
+      ftAlur > 0
+      && !parsed.some((poste) => poste.categorie === 'fonds_travaux_alur' || /fonds\s+de\s+travaux/i.test(poste.libelle))
+    ) {
+      parsed.push({
+        libelle: 'Fonds de travaux (ALUR)',
+        categorie: 'fonds_travaux_alur',
+        montant: ftAlur,
+        repartition_type: 'generale',
+        repartition_cible: null,
+      });
+    }
+    return parsed;
+  }, [appel.description, ftAlur]);
   const hasPostes = postes.length > 0 || ftAlur > 0;
   const accountType = resolveAppelBalanceAccountType(appel);
+
+  useEffect(() => {
+    if (!appel.copropriete_id || !hasPostes) {
+      setLots([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchLots = async () => {
+      const { data } = await supabase
+        .from('lots')
+        .select('id, tantiemes, coproprietaire_id, groupes_repartition, tantiemes_groupes')
+        .eq('copropriete_id', appel.copropriete_id);
+
+      if (cancelled) return;
+      setLots((data ?? []).map((lot) => ({
+        ...lot,
+        coproprietaire_id: lot.coproprietaire_id ?? null,
+      })));
+    };
+
+    void fetchLots();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appel.copropriete_id, hasPostes, supabase]);
+
+  const detailByCoproId = useMemo(() => {
+    if (!hasPostes || lots.length === 0) return new Map<string, PosteDetail[]>();
+
+    return new Map(
+      repartitionParPostesDetailed(appel.montant_total, lots, postes).map((row) => [
+        row.copId,
+        row.details.map((detail) => ({
+          libelle: detail.libelle,
+          categorie: detail.categorie ?? null,
+          montant: detail.montant,
+        })),
+      ]),
+    );
+  }, [appel.montant_total, hasPostes, lots, postes]);
 
   const getStatut = (l: Ligne): 'paye' | 'impaye' | 'en_attente' => {
     if (l.paye) return 'paye';
@@ -267,7 +327,8 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                   type="button"
                   title={`Télécharger l'avis de paiement — ${nom}`}
                   onClick={() => {
-                    const pdf = buildAvisPersonnelPDF(appel, ligne);
+                    const detailPostes = ligne.coproprietaires?.id ? (detailByCoproId.get(ligne.coproprietaires.id) ?? []) : [];
+                    const pdf = buildAvisPersonnelPDF(appel, ligne, detailPostes);
                     const safe = nom.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     pdf.save(`avis-appel-fonds-${safe}.pdf`);
                   }}
@@ -335,31 +396,17 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                     </span>
                   </p>
                   <div className="space-y-1">
-                    {postes.map((poste, i) => {
-                      const part = Math.round((poste.montant * (ligne.montant_du / appel.montant_total)) * 100) / 100;
-                      return (
-                        <div key={i} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-1.5 border border-indigo-100">
-                          <div>
-                            <span className="font-medium text-gray-800">{poste.libelle}</span>
-                            <span className="ml-2 text-gray-400">
-                              {LABELS_CATEGORIE[poste.categorie as keyof typeof LABELS_CATEGORIE] ?? poste.categorie}
-                            </span>
-                          </div>
-                          <span className="font-bold text-indigo-700 tabular-nums">{formatEuros(part)}</span>
-                        </div>
-                      );
-                    })}
-                    {ftAlur > 0 && (
-                      <div className="flex items-center justify-between text-xs bg-amber-50 rounded-lg px-3 py-1.5 border border-amber-100">
+                    {(ligne.coproprietaires?.id ? (detailByCoproId.get(ligne.coproprietaires.id) ?? []) : []).map((poste, i) => (
+                      <div key={`${poste.libelle}-${i}`} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-1.5 border border-indigo-100">
                         <div>
-                          <span className="font-medium text-amber-800">Fonds travaux ALUR</span>
-                          <span className="ml-2 text-amber-500">Fonds travaux</span>
+                          <span className="font-medium text-gray-800">{poste.libelle}</span>
+                          <span className="ml-2 text-gray-400">
+                            {LABELS_CATEGORIE[(poste.categorie ?? 'autre') as keyof typeof LABELS_CATEGORIE] ?? (poste.categorie ?? 'Autre')}
+                          </span>
                         </div>
-                        <span className="font-bold text-amber-700 tabular-nums">
-                          {formatEuros(Math.round(ftAlur * (ligne.montant_du / appel.montant_total) * 100) / 100)}
-                        </span>
+                        <span className="font-bold text-indigo-700 tabular-nums">{formatEuros(poste.montant)}</span>
                       </div>
-                    )}
+                    ))}
                     <div className="flex items-center justify-between text-xs font-bold px-3 pt-1">
                       <span className="text-gray-600">Total</span>
                       <span className="text-indigo-800 tabular-nums">{formatEuros(ligne.montant_du)}</span>

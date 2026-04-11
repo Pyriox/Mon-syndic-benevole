@@ -223,6 +223,22 @@ export interface RepartitionPosteInput {
   repartition_cible?: string | null;
 }
 
+export interface RepartitionDetailItem {
+  libelle: string;
+  categorie?: string | null;
+  montant: number;
+  repartition_type?: RepartitionType | null;
+  repartition_cible?: string | null;
+}
+
+export interface RepartitionDetailedRow {
+  copId: string;
+  lotId: string | null;
+  tantiemes: number;
+  montant: number;
+  details: RepartitionDetailItem[];
+}
+
 export interface BudgetPosteDescription extends RepartitionPosteInput {
   categorie?: string | null;
 }
@@ -412,21 +428,24 @@ export function groupLotsByCoproprietaire<T extends { id: string; tantiemes: num
   return Array.from(coproMap.values());
 }
 
-export function repartitionParPostes(
+export function repartitionParPostesDetailed(
   montantTotal: number,
   lots: RepartitionLotLike[],
   postes: RepartitionPosteInput[],
-) {
+): RepartitionDetailedRow[] {
   const postesValides = postes.filter((poste) => (poste.montant ?? 0) > 0);
   const lotsEligibles = lots.filter((lot) => lot.coproprietaire_id && hasPositiveRepartitionWeight(lot));
 
-  if (lotsEligibles.length === 0) return [] as Array<{ copId: string; lotId: string | null; tantiemes: number; montant: number }>;
+  if (lotsEligibles.length === 0) return [];
 
   if (postesValides.length === 0) {
-    return repartirMontant(montantTotal, groupLotsByCoproprietaire(lotsEligibles));
+    return repartirMontant(montantTotal, groupLotsByCoproprietaire(lotsEligibles)).map((row) => ({
+      ...row,
+      details: [],
+    }));
   }
 
-  const amountsByOwner = new Map<string, { copId: string; lotId: string | null; tantiemes: number; montant: number }>();
+  const amountsByOwner = new Map<string, RepartitionDetailedRow>();
 
   for (const poste of postesValides) {
     const scopedLots = filterLotsByRepartitionScope(lotsEligibles, poste.repartition_type ?? 'generale', poste.repartition_cible ?? null)
@@ -437,11 +456,23 @@ export function repartitionParPostes(
     const groupedLots = groupLotsByCoproprietaire(scopedLots);
 
     for (const share of repartirMontant(poste.montant, groupedLots)) {
+      const detailItem: RepartitionDetailItem = {
+        libelle: poste.libelle,
+        categorie: (poste as { categorie?: string | null }).categorie ?? null,
+        montant: share.montant,
+        repartition_type: poste.repartition_type ?? 'generale',
+        repartition_cible: poste.repartition_cible ?? null,
+      };
+
       if (amountsByOwner.has(share.copId)) {
         const existing = amountsByOwner.get(share.copId)!;
         existing.montant = Math.round((existing.montant + share.montant) * 100) / 100;
+        existing.details.push(detailItem);
       } else {
-        amountsByOwner.set(share.copId, { ...share });
+        amountsByOwner.set(share.copId, {
+          ...share,
+          details: [detailItem],
+        });
       }
     }
   }
@@ -456,13 +487,30 @@ export function repartitionParPostes(
     for (let index = 1; index < result.length; index += 1) {
       if (result[index].tantiemes > result[refIndex].tantiemes) refIndex = index;
     }
-    result[refIndex] = {
-      ...result[refIndex],
-      montant: Math.round((result[refIndex].montant + diff) * 100) / 100,
-    };
+
+    const refRow = result[refIndex];
+    refRow.montant = Math.round((refRow.montant + diff) * 100) / 100;
+    if (refRow.details.length > 0) {
+      const lastDetailIndex = refRow.details.length - 1;
+      refRow.details[lastDetailIndex] = {
+        ...refRow.details[lastDetailIndex],
+        montant: Math.round((refRow.details[lastDetailIndex].montant + diff) * 100) / 100,
+      };
+    }
   }
 
-  return result;
+  return result.map((row) => ({
+    ...row,
+    details: row.details.filter((detail) => Math.abs(detail.montant) >= 0.01),
+  }));
+}
+
+export function repartitionParPostes(
+  montantTotal: number,
+  lots: RepartitionLotLike[],
+  postes: RepartitionPosteInput[],
+) {
+  return repartitionParPostesDetailed(montantTotal, lots, postes).map(({ details, ...row }) => row);
 }
 
 // ---- Calcul du total des tantièmes d'une copropriété ----

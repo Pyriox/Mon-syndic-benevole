@@ -9,6 +9,7 @@ import { FileDown } from 'lucide-react';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 
 interface Poste { libelle: string; categorie: string; montant: number }
+export interface PersonalPosteDetail { libelle: string; categorie?: string | null; montant: number }
 
 export interface LigneForPDF {
   id: string;
@@ -233,6 +234,7 @@ export interface AvisPersonnelInput {
 export function buildAvisPersonnelPDF(
   appel: AvisPersonnelInput,
   ligne: { montant_du: number; regularisation_ajustement?: number; coproprietaires: { nom: string; prenom: string } | null },
+  detailPostes?: PersonalPosteDetail[],
 ): jsPDF {
   const doc = new jsPDF();
   const W = doc.internal.pageSize.width;
@@ -332,26 +334,29 @@ export function buildAvisPersonnelPDF(
 
   // ── Postes ────────────────────────────────────────────────
   const ftAlurTotal = appel.montant_fonds_travaux ?? 0;
-  if (postes.length > 0 || ftAlurTotal > 0) {
+  const effectiveDetailRows: PersonalPosteDetail[] = detailPostes !== undefined
+    ? detailPostes
+    : [
+        ...postes.map((p) => ({
+          libelle: p.libelle,
+          categorie: p.categorie,
+          montant: Math.round(p.montant * ratio * 100) / 100,
+        })),
+        ...(ftAlurTotal > 0
+          ? [{ libelle: 'Fonds travaux ALUR', categorie: 'fonds_travaux_alur', montant: Math.round(ftAlurTotal * ratio * 100) / 100 }]
+          : []),
+      ].filter((row) => Math.abs(row.montant) >= 0.01);
+
+  if (effectiveDetailRows.length > 0) {
     y = pdfSectionTitle(doc, 'Détail de votre quote-part par poste', y, PDF_INDIGO);
-    const ftAvisRow: [string, string, string][] =
-      ftAlurTotal > 0
-        ? [['Fonds travaux ALUR', 'Fonds travaux', fmtEurPDF(Math.round(ftAlurTotal * ratio * 100) / 100)]]
-        : [];
     autoTable(doc, {
       startY: y,
       head: [['Poste de charge', 'Catégorie', 'Votre part (€)']],
-      body: [
-        ...postes.map((p) => {
-          const part = Math.round(p.montant * ratio * 100) / 100;
-          return [
-            p.libelle,
-            LABELS_CATEGORIE[p.categorie as keyof typeof LABELS_CATEGORIE] ?? p.categorie,
-            fmtEurPDF(part),
-          ] as [string, string, string];
-        }),
-        ...ftAvisRow,
-      ],
+      body: effectiveDetailRows.map((detail) => ([
+        detail.libelle,
+        LABELS_CATEGORIE[(detail.categorie ?? 'autre') as keyof typeof LABELS_CATEGORIE] ?? (detail.categorie ?? 'Autre'),
+        fmtEurPDF(detail.montant),
+      ] as [string, string, string])),
       foot: [['TOTAL À RÉGLER', '', fmtEurPDF(ligne.montant_du)]],
       headStyles: { fillColor: PDF_INDIGO, fontSize: 9, fontStyle: 'bold' },
       footStyles: { fillColor: PDF_MGRAY, textColor: [17, 24, 39], fontStyle: 'bold', fontSize: 9 },

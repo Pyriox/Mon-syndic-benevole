@@ -4,6 +4,7 @@ import {
   collectAvailableRepartitionGroups,
   parseBudgetPostesFromDescription,
   repartitionParPostes,
+  repartitionParPostesDetailed,
   type RepartitionLotLike,
   type RepartitionPosteInput,
 } from '../utils';
@@ -101,6 +102,27 @@ describe('repartition spéciale par groupes', () => {
     expect(repartition).toEqual([
       expect.objectContaining({ copId: 'copro-b1', montant: 117 }),
       expect.objectContaining({ copId: 'copro-b2', montant: 883 }),
+    ]);
+  });
+
+  it('n’attribue le poste spécial qu’aux copropriétaires concernés dans le détail', () => {
+    const postes: RepartitionPosteInput[] = [
+      { libelle: 'EDF', montant: 150, repartition_type: 'generale', repartition_cible: null },
+      { libelle: 'Ascenseur', montant: 50, repartition_type: 'groupe', repartition_cible: 'Ascenseur A' },
+    ];
+
+    const repartition = repartitionParPostesDetailed(200, lots, postes);
+    const coproA = repartition.find((row) => row.copId === 'copro-a');
+    const coproB = repartition.find((row) => row.copId === 'copro-b');
+
+    expect(coproA?.details).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ libelle: 'EDF', montant: 75 }),
+        expect.objectContaining({ libelle: 'Ascenseur', montant: 50 }),
+      ]),
+    );
+    expect(coproB?.details).toEqual([
+      expect.objectContaining({ libelle: 'EDF', montant: 75 }),
     ]);
   });
 

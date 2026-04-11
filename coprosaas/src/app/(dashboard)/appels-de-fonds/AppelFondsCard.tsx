@@ -12,10 +12,11 @@ import {
   LABELS_CATEGORIE,
   parseBudgetPostesFromDescription,
   repartitionParPostes,
+  repartitionParPostesDetailed,
 } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
-import AppelFondsPDF, { buildAvisPersonnelPDF, type AvisPersonnelInput } from './AppelFondsPDF';
+import AppelFondsPDF, { buildAvisPersonnelPDF, type AvisPersonnelInput, type PersonalPosteDetail } from './AppelFondsPDF';
 import AppelFondsPaiement, { type Ligne } from './AppelFondsPaiement';
 
 interface Poste {
@@ -313,11 +314,51 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         montant_fonds_travaux: appel.montant_fonds_travaux,
       };
 
+      const postesPourDetail = parseBudgetPostesFromDescription(appel.description);
+      if (
+        (appel.montant_fonds_travaux ?? 0) > 0
+        && !postesPourDetail.some((poste) => poste.categorie === 'fonds_travaux_alur' || /fonds\s+de\s+travaux/i.test(poste.libelle))
+      ) {
+        postesPourDetail.push({
+          libelle: 'Fonds de travaux (ALUR)',
+          categorie: 'fonds_travaux_alur',
+          montant: appel.montant_fonds_travaux ?? 0,
+          repartition_type: 'generale',
+          repartition_cible: null,
+        });
+      }
+
+      let detailsByCoproId = new Map<string, PersonalPosteDetail[]>();
+      if (appel.copropriete_id && postesPourDetail.length > 0) {
+        const { data: lots } = await supabase
+          .from('lots')
+          .select('id, tantiemes, coproprietaire_id, groupes_repartition, tantiemes_groupes')
+          .eq('copropriete_id', appel.copropriete_id);
+
+        detailsByCoproId = new Map(
+          repartitionParPostesDetailed(appel.montant_total, (lots ?? []).map((lot) => ({
+            ...lot,
+            coproprietaire_id: lot.coproprietaire_id ?? null,
+          })), postesPourDetail).map((row) => [
+            row.copId,
+            row.details.map((detail) => ({
+              libelle: detail.libelle,
+              categorie: detail.categorie ?? null,
+              montant: detail.montant,
+            })),
+          ]),
+        );
+      }
+
       // Générer et archiver un avis individuel pour chaque copropriétaire
       for (const ligne of effectiveLignes) {
         if (!ligne.coproprietaires?.id) continue;
 
-        const pdfDoc = buildAvisPersonnelPDF(appelForPDF, ligne);
+        const pdfDoc = buildAvisPersonnelPDF(
+          appelForPDF,
+          ligne,
+          ligne.coproprietaires?.id ? (detailsByCoproId.get(ligne.coproprietaires.id) ?? []) : [],
+        );
         const pdfBlob = pdfDoc.output('blob');
         const safeName = `${ligne.coproprietaires.prenom}-${ligne.coproprietaires.nom}`
           .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
