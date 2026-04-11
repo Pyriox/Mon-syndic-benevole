@@ -363,35 +363,7 @@ export default function GuideDemarragePage() {
               </div>
             </div>
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <table className="w-full min-w-[760px] text-sm">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold">Page</th>
-                    <th className="px-4 py-3 text-left font-semibold">À quoi elle sert</th>
-                    <th className="px-4 py-3 text-left font-semibold">Quand y aller</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {[
-                    ['Tableau de bord', 'Voir l’état général de la copropriété', 'Chaque jour'],
-                    ['Copropriétés', 'Créer et paramétrer l’immeuble', 'Au démarrage puis ponctuellement'],
-                    ['Lots', 'Définir les tantièmes et bases de répartition', 'Au démarrage, puis si un lot change'],
-                    ['Copropriétaires', 'Tenir le registre et inviter les membres', 'Au démarrage puis à chaque mouvement'],
-                    ['Appels de fonds', 'Émettre, publier et suivre les encaissements', 'À chaque échéance'],
-                    ['Dépenses', 'Enregistrer la vie financière réelle', 'Au fil de l’eau'],
-                    ['Assemblées', 'Préparer convocations, votes et PV', 'Avant et après chaque AG'],
-                    ['Documents / Aide', 'Classer, retrouver et se faire accompagner', 'En continu'],
-                  ].map(([page, usage, timing]) => (
-                    <tr key={page}>
-                      <td className="px-4 py-3 font-medium text-slate-900">{page}</td>
-                      <td className="px-4 py-3 text-slate-600">{usage}</td>
-                      <td className="px-4 py-3 text-slate-600">{timing}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+
           </section>
 
           <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-12 space-y-6">
