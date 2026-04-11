@@ -10,6 +10,12 @@ describe('buildAdminCoproFinancialView', () => {
         { id: 'cp-2', solde: -40 },
         { id: 'cp-3', solde: 200 },
       ],
+      unpaidLines: [
+        { id: 'l-1', coproprietaire_id: 'cp-1', montant_du: 88.45, paye: false, date_echeance: '2026-04-01', appel_statut: 'publie' },
+        { id: 'l-2', coproprietaire_id: 'cp-3', montant_du: 999, paye: false, date_echeance: '2026-05-20', appel_statut: 'publie' },
+        { id: 'l-3', coproprietaire_id: 'cp-3', montant_du: 111, paye: false, date_echeance: '2026-03-01', appel_statut: 'brouillon' },
+      ],
+      today: '2026-04-11',
       balanceEvents: [
         {
           id: 'evt-older',
@@ -38,9 +44,9 @@ describe('buildAdminCoproFinancialView', () => {
       ],
     });
 
-    expect(summary.debiteurCount).toBe(2);
+    expect(summary.debiteurCount).toBe(1);
     expect(summary.creditorCount).toBe(1);
-    expect(summary.totalDebiteur).toBe(320.5);
+    expect(summary.totalDebiteur).toBe(88.45);
     expect(summary.totalCrediteur).toBe(40);
     expect(summary.latestEvents.map((event) => event.id)).toEqual(['evt-newer', 'evt-older']);
     expect(summary.typeCounts.appel_publication).toBe(1);

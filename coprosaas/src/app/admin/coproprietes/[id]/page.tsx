@@ -31,7 +31,9 @@ export default async function AdminCoproDetail({
   const backHref = resolveAdminBackHref(from, '/admin/coproprietes');
   const admin = createAdminClient();
 
-  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }] = await Promise.all([
+  const today = new Date().toISOString().split('T')[0];
+
+  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }] = await Promise.all([
     admin
       .from('coproprietes')
       .select('id, nom, adresse, code_postal, ville, nombre_lots')
@@ -49,6 +51,12 @@ export default async function AdminCoproDetail({
       .order('created_at', { ascending: false })
       .order('event_date', { ascending: false })
       .limit(150),
+    admin
+      .from('appels_de_fonds')
+      .select('id, statut, date_echeance, lignes_appels_de_fonds(id, coproprietaire_id, montant_du, paye)')
+      .eq('copropriete_id', id)
+      .in('statut', ['publie', 'confirme'])
+      .lt('date_echeance', today),
   ]);
 
   if (!copro) notFound();
@@ -75,8 +83,21 @@ export default async function AdminCoproDetail({
   const currentPage = Math.min(Math.max(1, Number(page) || 1), totalPages);
   const pagedCps = filteredCps.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const contactsCount = cps.filter((cp) => Boolean(cp.email)).length;
+  const unpaidLines = (appelsEchus ?? []).flatMap((appel) =>
+    ((appel.lignes_appels_de_fonds ?? []) as Array<{ id: string; coproprietaire_id: string | null; montant_du: number; paye: boolean }>).map((ligne) => ({
+      id: ligne.id,
+      coproprietaire_id: ligne.coproprietaire_id ?? null,
+      montant_du: ligne.montant_du,
+      paye: ligne.paye,
+      date_echeance: (appel as { date_echeance?: string | null }).date_echeance ?? null,
+      appel_statut: (appel as { statut?: string | null }).statut ?? null,
+    })),
+  );
+
   const financeView = buildAdminCoproFinancialView({
     coproprietaires: cps,
+    unpaidLines,
+    today,
     balanceEvents: (balanceEventsRows ?? []) as Array<{
       id: string;
       coproprietaire_id: string | null;

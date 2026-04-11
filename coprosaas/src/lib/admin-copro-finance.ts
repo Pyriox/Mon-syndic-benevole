@@ -1,4 +1,5 @@
 import type { CoproprietaireBalanceAccountType, CoproprietaireBalanceSourceType } from './coproprietaire-balance';
+import { buildDashboardUnpaidSnapshot } from './dashboard-data';
 
 export interface AdminCoproFinancialCoproRow {
   id: string;
@@ -16,6 +17,15 @@ export interface AdminCoproFinancialEventRow {
   amount: number;
   balance_after: number;
   created_at: string;
+}
+
+export interface AdminCoproFinancialUnpaidLineRow {
+  id: string;
+  coproprietaire_id: string | null;
+  montant_du: number | null;
+  paye: boolean | null;
+  date_echeance: string | null;
+  appel_statut?: string | null;
 }
 
 const SOURCE_LABELS: Record<CoproprietaireBalanceSourceType, string> = {
@@ -57,19 +67,25 @@ export function getAdminBalanceAccountLabel(accountType: CoproprietaireBalanceAc
 export function buildAdminCoproFinancialView({
   coproprietaires,
   balanceEvents,
+  unpaidLines,
+  today,
   maxEvents = 80,
 }: {
   coproprietaires: AdminCoproFinancialCoproRow[] | null | undefined;
   balanceEvents: AdminCoproFinancialEventRow[] | null | undefined;
+  unpaidLines?: AdminCoproFinancialUnpaidLineRow[] | null | undefined;
+  today?: string;
   maxEvents?: number;
 }) {
-  const totalDebiteur = roundToCents(
-    (coproprietaires ?? []).reduce((sum, coproprietaire) => sum + Math.max(coproprietaire.solde ?? 0, 0), 0),
-  );
+  const unpaidSnapshot = buildDashboardUnpaidSnapshot({
+    lignes: unpaidLines,
+    today,
+  });
+  const totalDebiteur = roundToCents(unpaidSnapshot.totalMontantImpaye);
   const totalCrediteur = roundToCents(
     (coproprietaires ?? []).reduce((sum, coproprietaire) => sum + Math.abs(Math.min(coproprietaire.solde ?? 0, 0)), 0),
   );
-  const debiteurCount = (coproprietaires ?? []).filter((coproprietaire) => (coproprietaire.solde ?? 0) > 0).length;
+  const debiteurCount = unpaidSnapshot.nbImpayes;
   const creditorCount = (coproprietaires ?? []).filter((coproprietaire) => (coproprietaire.solde ?? 0) < 0).length;
 
   const sortedEvents = [...(balanceEvents ?? [])].sort((left, right) => {
