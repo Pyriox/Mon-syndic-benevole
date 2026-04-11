@@ -332,7 +332,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                       {scopeSummary.isGeneralOnly ? `${myTant} / ${totalTantiemes}` : scopeSummary.label}
                     </span>
                   </div>
-                  {shouldShowDetailedBreakdown ? (
+                  {shouldShowDetailedBreakdown && (
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Détail par clé</p>
                       <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -368,24 +368,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                         ))}
                       </div>
                     </div>
-                  ) : myScopeBreakdown[0] ? (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">Récapitulatif</p>
-                          <p className="text-xs text-gray-500">
-                            {myScopeBreakdown[0].totalWeight > 0
-                              ? `${myScopeBreakdown[0].myWeight} / ${myScopeBreakdown[0].totalWeight} tantièmes`
-                              : 'Calcul à partir des lignes enregistrées'}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold text-gray-900">{formatEuros(myScopeBreakdown[0].myAmount)}</p>
-                          <p className="text-[11px] text-gray-500">sur {formatEuros(myScopeBreakdown[0].totalAmount)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Ma part</span>
                     <span className="font-bold text-blue-700 text-lg">{formatEuros(myPart)}</span>

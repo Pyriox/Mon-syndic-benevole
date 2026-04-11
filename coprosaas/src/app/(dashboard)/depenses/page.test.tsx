@@ -276,8 +276,9 @@ describe('DepensesPage (vue copropriétaire)', () => {
 
     render(await DepensesPage({ searchParams: Promise.resolve({ annee: '2026' }) }));
 
-    expect(screen.getByText(/Récapitulatif/i)).toBeTruthy();
+    expect(screen.queryByText(/Récapitulatif/i)).toBeNull();
     expect(screen.queryByText(/Détail par clé/i)).toBeNull();
-    expect(screen.getByText(/162 \/ 1013 tantièmes/i)).toBeTruthy();
+    expect(screen.getByText(/162 \/ 1013/i)).toBeTruthy();
+    expect(screen.getByText(/185,83\s*€/i)).toBeTruthy();
   });
 });
