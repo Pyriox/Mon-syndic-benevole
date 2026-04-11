@@ -20,7 +20,7 @@ import { createClient } from '@/lib/supabase/client';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import { CoproprietaireEdit, CoproprietaireDelete, CoproprietaireInvite, type CoproprietaireListItem } from './CoproprietaireActions';
-import CoproprietaireBalanceHistory from './CoproprietaireBalanceHistory';
+import CoproprietaireBalanceHistory, { type BalanceEventRow } from './CoproprietaireBalanceHistory';
 import { formatEuros } from '@/lib/utils';
 import { GripVertical, Mail, Phone, UserCheck } from 'lucide-react';
 
@@ -81,6 +81,7 @@ interface CoproprietairesTableProps {
   readOnly?: boolean;
   coproprieteId?: string;
   currentUserId?: string;
+  balanceEventsByCoproprietaire?: Record<string, BalanceEventRow[]>;
 }
 
 // ── Helpers partagés ──────────────────────────────────────────────────────────
@@ -274,6 +275,7 @@ function MobileCoproCard({
   coproprieteId,
   onSaveCoproprietaire,
   onDeleteCoproprietaire,
+  initialEvents,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
@@ -283,6 +285,7 @@ function MobileCoproCard({
   coproprieteId?: string;
   onSaveCoproprietaire: (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => void;
   onDeleteCoproprietaire: (id: string, freedLotIds: string[]) => void;
+  initialEvents?: BalanceEventRow[];
 }) {
   const { cpTantiemes, cpPercent } = computeTantiemes(ownedLots, totalTantiemes);
   const displayName = computeDisplayName(cp);
@@ -305,6 +308,7 @@ function MobileCoproCard({
             coproprietaireId={cp.id}
             displayName={displayName}
             currentBalance={cp.solde ?? 0}
+            initialEvents={initialEvents}
           />
           <CoproprietaireEdit
             coproprietaire={{ ...cp, email: cp.email ?? '', telephone: cp.telephone ?? null, solde: cp.solde ?? 0 }}
@@ -344,6 +348,7 @@ function SortableCoproRow({
   coproprieteId,
   onSaveCoproprietaire,
   onDeleteCoproprietaire,
+  initialEvents,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
@@ -353,6 +358,7 @@ function SortableCoproRow({
   coproprieteId?: string;
   onSaveCoproprietaire: (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => void;
   onDeleteCoproprietaire: (id: string, freedLotIds: string[]) => void;
+  initialEvents?: BalanceEventRow[];
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: cp.id,
@@ -422,6 +428,7 @@ function SortableCoproRow({
             coproprietaireId={cp.id}
             displayName={displayName}
             currentBalance={cp.solde ?? 0}
+            initialEvents={initialEvents}
           />
           <CoproprietaireEdit
             coproprietaire={{ ...cp, email: cp.email ?? '', telephone: cp.telephone ?? null, solde: cp.solde ?? 0 }}
@@ -452,6 +459,7 @@ export default function CoproprietairesTable({
   readOnly = false,
   currentUserId,
   coproprieteId,
+  balanceEventsByCoproprietaire = {},
 }: CoproprietairesTableProps) {
   const [coproprietaires, setCoproprietaires] = useState<CoproRow[]>(initialCoproprietaires);
   const [lotsState, setLotsState] = useState<LotForSelect[]>(lotsForSelect);
@@ -583,6 +591,7 @@ export default function CoproprietairesTable({
             coproprieteId={coproprieteId}
             onSaveCoproprietaire={handleSavedCoproprietaire}
             onDeleteCoproprietaire={handleDeletedCoproprietaire}
+            initialEvents={balanceEventsByCoproprietaire[cp.id]}
           />
         ))}
       </div>
@@ -618,6 +627,7 @@ export default function CoproprietairesTable({
                   coproprieteId={coproprieteId}
                   onSaveCoproprietaire={handleSavedCoproprietaire}
                   onDeleteCoproprietaire={handleDeletedCoproprietaire}
+                  initialEvents={balanceEventsByCoproprietaire[cp.id]}
                 />
               ))}
             </tbody>

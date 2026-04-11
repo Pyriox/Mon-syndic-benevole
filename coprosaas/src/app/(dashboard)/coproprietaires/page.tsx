@@ -10,6 +10,7 @@ export const revalidate = 60;
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
+import type { CoproprietaireBalanceAccountType, CoproprietaireBalanceSourceType } from '@/lib/coproprietaire-balance';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
 import PageHelp from '@/components/ui/PageHelp';
@@ -52,7 +53,7 @@ export default async function CoproprietairesPage() {
 
   // Copropriétaires + tous les lots de la copropriété, en parallèle
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [coproResult, { data: allLots }] = await Promise.all([
+  const [coproResult, { data: allLots }, { data: balanceEventsRows }] = await Promise.all([
     isSyndic
       ? supabase.from('coproprietaires').select('id, nom, prenom, raison_sociale, email, telephone, adresse, code_postal, ville, solde, user_id').eq('copropriete_id', selectedCoproId ?? 'none').order('position', { ascending: true, nullsFirst: false })
       : supabase.from('coproprietaires').select('id, nom, prenom, raison_sociale, adresse, code_postal, ville, user_id').eq('copropriete_id', selectedCoproId ?? 'none').order('position', { ascending: true, nullsFirst: false }),
@@ -61,6 +62,15 @@ export default async function CoproprietairesPage() {
       .select('id, numero, type, tantiemes, coproprietaire_id')
       .eq('copropriete_id', selectedCoproId ?? 'none')
       .order('position', { ascending: true, nullsFirst: false }),
+    isSyndic
+      ? supabase
+          .from('coproprietaire_balance_events')
+          .select('id, coproprietaire_id, event_date, source_type, account_type, label, reason, amount, balance_after, created_at')
+          .eq('copropriete_id', selectedCoproId ?? 'none')
+          .order('event_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(500)
+      : Promise.resolve({ data: [] }),
   ]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coproprietaires = (coproResult as { data: any[] | null }).data;
@@ -84,6 +94,32 @@ export default async function CoproprietairesPage() {
   }));
 
   const totalTantiemes = (allLots ?? []).reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
+  const balanceEventsByCoproprietaire = (balanceEventsRows ?? []).reduce<Record<string, {
+    id: string;
+    event_date: string;
+    source_type: CoproprietaireBalanceSourceType;
+    account_type: CoproprietaireBalanceAccountType;
+    label: string;
+    reason: string | null;
+    amount: number;
+    balance_after: number;
+    created_at: string;
+  }[]>>((acc, row) => {
+    const coproprietaireId = row.coproprietaire_id;
+    if (!coproprietaireId) return acc;
+    acc[coproprietaireId] = [...(acc[coproprietaireId] ?? []), {
+      id: row.id,
+      event_date: row.event_date,
+      source_type: row.source_type as CoproprietaireBalanceSourceType,
+      account_type: row.account_type as CoproprietaireBalanceAccountType,
+      label: row.label,
+      reason: row.reason,
+      amount: row.amount,
+      balance_after: row.balance_after,
+      created_at: row.created_at,
+    }];
+    return acc;
+  }, {});
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nbInscrits = (coproprietaires ?? []).filter((c: any) => c.user_id).length;
 
@@ -142,6 +178,7 @@ export default async function CoproprietairesPage() {
             readOnly={!isSyndic}
             currentUserId={user.id}
             coproprieteId={selectedCoproId ?? undefined}
+            balanceEventsByCoproprietaire={balanceEventsByCoproprietaire}
           />
         </Card>
       ) : (

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import { formatEuros } from '@/lib/utils';
@@ -40,6 +39,30 @@ function balanceVariant(value: number): 'default' | 'success' | 'danger' {
   return 'default';
 }
 
+function getDisplayedBalance(value: number) {
+  if (value > 0) {
+    return {
+      amount: -Math.abs(value),
+      tone: 'text-red-600',
+      helper: 'Charges à régler',
+    };
+  }
+
+  if (value < 0) {
+    return {
+      amount: Math.abs(value),
+      tone: 'text-green-700',
+      helper: 'Avance de trésorerie',
+    };
+  }
+
+  return {
+    amount: 0,
+    tone: 'text-gray-900',
+    helper: 'Solde à jour',
+  };
+}
+
 function accountLabel(accountType: CoproprietaireBalanceAccountType) {
   switch (accountType) {
     case 'fonds_travaux':
@@ -58,7 +81,7 @@ export default function CoproprietaireBalanceHistory({
   displayName,
   currentBalance,
   mode = 'modal',
-  initialEvents = [],
+  initialEvents,
   showSummary,
 }: {
   coproprietaireId: string;
@@ -71,39 +94,42 @@ export default function CoproprietaireBalanceHistory({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [events, setEvents] = useState<BalanceEventRow[]>(initialEvents);
+  const [events, setEvents] = useState<BalanceEventRow[]>(initialEvents ?? []);
   const shouldShowSummary = showSummary ?? mode === 'modal';
+  const displayedBalance = getDisplayedBalance(currentBalance);
 
   useEffect(() => {
-    setEvents(initialEvents);
+    setEvents(initialEvents ?? []);
   }, [initialEvents]);
 
   const loadEvents = async () => {
     setLoading(true);
     setError('');
 
-    const supabase = createClient();
-    const { data, error: fetchError } = await supabase
-      .from('coproprietaire_balance_events')
-      .select('id, event_date, source_type, account_type, label, reason, amount, balance_after, created_at')
-      .eq('coproprietaire_id', coproprietaireId)
-      .order('event_date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(150);
+    try {
+      const response = await fetch(`/api/coproprietaires/${coproprietaireId}/balance-events?limit=150`, {
+        method: 'GET',
+        cache: 'no-store',
+      });
 
-    if (fetchError) {
-      setError(fetchError.message);
+      const payload = (await response.json()) as { events?: BalanceEventRow[]; message?: string };
+
+      if (!response.ok) {
+        setError(payload.message ?? 'Impossible de charger l’historique.');
+        return;
+      }
+
+      setEvents(payload.events ?? []);
+    } catch {
+      setError('Impossible de charger l’historique.');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setEvents((data ?? []) as BalanceEventRow[]);
-    setLoading(false);
   };
 
   const openModal = async () => {
     setIsOpen(true);
-    if (events.length === 0 && !loading) {
+    if (!loading) {
       await loadEvents();
     }
   };
@@ -114,7 +140,10 @@ export default function CoproprietaireBalanceHistory({
         {shouldShowSummary && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Solde actuel</p>
-            <p className={`text-2xl font-bold ${amountClass(currentBalance)}`}>{formatEuros(currentBalance)}</p>
+            <p className={`text-2xl font-bold ${displayedBalance.tone}`}>
+              {displayedBalance.amount > 0 ? '+' : ''}{formatEuros(displayedBalance.amount)}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">{displayedBalance.helper}</p>
           </div>
         )}
       </div>

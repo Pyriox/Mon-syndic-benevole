@@ -46,7 +46,6 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
   const supabase = createClient();
 
   const [isOpen, setIsOpen] = useState(false);
-  const todayStr = new Date().toISOString().slice(0, 10);
 
   // ---- Formulaire «Ajouter» ----
   const [loading, setLoading] = useState(false);
@@ -67,7 +66,6 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
     raison_sociale: '',
     solde_reprise: '',
     solde_reason: '',
-    solde_date: todayStr,
   });
 
   useEffect(() => {
@@ -129,7 +127,6 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
         coproprietaireId: cp.id,
         newBalance: initialBalance,
         reason: formData.solde_reason,
-        effectiveDate: formData.solde_date,
         label: 'Solde de reprise à l’ouverture',
         sourceType: 'solde_initial',
         metadata: { createdFrom: 'coproprietaire_add' },
@@ -169,7 +166,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
 
     setIsOpen(false);
     setLoading(false);
-    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '', solde_reason: '', solde_date: todayStr });
+    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '', solde_reason: '' });
     setIsSci(false);
     setSelectedLotIds([]);
     if (onAdded) {
@@ -184,7 +181,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
     setError('');
     setSelectedLotIds([]);
     setIsSci(false);
-    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '', solde_reason: '', solde_date: todayStr });
+    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '', solde_reason: '' });
   };
 
   return (
@@ -258,14 +255,9 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 space-y-3">
               <p className="text-sm font-semibold text-slate-900">Traçabilité du solde de reprise</p>
               <p className="text-xs text-slate-600">
-                Ce montant sera enregistré dans l&apos;historique financier du copropriétaire avec son motif et sa date d&apos;effet.
+                Ce montant sera enregistré dans l&apos;historique financier du copropriétaire avec son motif, horodaté automatiquement à la date du jour.
               </p>
-              <div className="grid grid-cols-2 gap-3">
-                <Input label="Date d’effet" name="solde_date" type="date" value={formData.solde_date} onChange={handleChange} required />
-                <div className="col-span-2">
-                  <Textarea label="Motif" name="solde_reason" value={formData.solde_reason} onChange={handleChange} required placeholder="Ex. reprise de comptabilité au 1er janvier, report de l’ancien syndic…" />
-                </div>
-              </div>
+              <Textarea label="Motif" name="solde_reason" value={formData.solde_reason} onChange={handleChange} required placeholder="Ex. reprise de comptabilité, report de l’ancien syndic, correction d’ouverture…" />
             </div>
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -381,7 +373,6 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSci, setIsSci] = useState(!!coproprietaire.raison_sociale);
-  const todayStr = new Date().toISOString().slice(0, 10);
 
   const [formData, setFormData] = useState({
     nom: coproprietaire.nom ?? '',
@@ -394,7 +385,6 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
     ville: coproprietaire.ville ?? '',
     solde: coproprietaire.solde,
     solde_reason: '',
-    solde_date: todayStr,
   });
   const [selectedLotIds, setSelectedLotIds] = useState<string[]>(assignedLotIds);
 
@@ -442,7 +432,6 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
         coproprietaireId: coproprietaire.id,
         newBalance: formData.solde,
         reason: formData.solde_reason,
-        effectiveDate: formData.solde_date,
         label: 'Ajustement manuel du solde',
         sourceType: 'manual_adjustment',
         metadata: { previousBalance: coproprietaire.solde },
@@ -504,7 +493,6 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
             ville: coproprietaire.ville ?? '',
             solde: coproprietaire.solde,
             solde_reason: '',
-            solde_date: todayStr,
           });
           setIsOpen(true);
         }}
@@ -577,14 +565,9 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 space-y-3">
               <p className="text-sm font-semibold text-slate-900">Justifier la modification du solde</p>
               <p className="text-xs text-slate-600">
-                Toute modification manuelle du solde est horodatée et conservée dans l&apos;historique financier du copropriétaire.
+                Toute modification manuelle du solde est conservée dans l&apos;historique financier du copropriétaire et datée automatiquement du jour.
               </p>
-              <div className="grid grid-cols-2 gap-3">
-                <Input label="Date d’effet" name="solde_date" type="date" value={formData.solde_date} onChange={handleChange} required />
-                <div className="col-span-2">
-                  <Textarea label="Motif" name="solde_reason" value={formData.solde_reason} onChange={handleChange} required placeholder="Ex. correction suite au relevé bancaire, régularisation manuelle, reprise de l’ancien syndic…" />
-                </div>
-              </div>
+              <Textarea label="Motif" name="solde_reason" value={formData.solde_reason} onChange={handleChange} required placeholder="Ex. correction suite au relevé bancaire, régularisation manuelle, reprise de l’ancien syndic…" />
             </div>
           )}
 
