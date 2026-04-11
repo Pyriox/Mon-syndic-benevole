@@ -60,6 +60,7 @@ export default function CookieBanner() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(() => {
     if (typeof window === 'undefined') return false;
+    if (window.location.pathname.startsWith('/guide-demarrage/captures')) return false;
 
     const stored = getStoredConsent();
     if (!stored) return true;
@@ -75,6 +76,7 @@ export default function CookieBanner() {
   const [showCustom, setShowCustom] = useState(false);
   const [preferences, setPreferences] = useState<ConsentPreferences>(DEFAULT_PREFERENCES);
   const isPrivacyPolicyPage = pathname === '/politique-confidentialite';
+  const isGuideCapturePage = pathname?.startsWith('/guide-demarrage/captures');
 
   useEffect(() => {
     const stored = getStoredConsent();
@@ -151,7 +153,7 @@ export default function CookieBanner() {
     setPreferences((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
-  if (!visible) return null;
+  if (!visible || isGuideCapturePage) return null;
 
   return (
     <div className={isPrivacyPolicyPage
