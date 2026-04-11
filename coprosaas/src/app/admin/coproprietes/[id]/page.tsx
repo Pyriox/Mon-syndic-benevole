@@ -82,7 +82,6 @@ export default async function AdminCoproDetail({
   const totalPages = Math.max(1, Math.ceil(filteredCps.length / PAGE_SIZE));
   const currentPage = Math.min(Math.max(1, Number(page) || 1), totalPages);
   const pagedCps = filteredCps.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const contactsCount = cps.filter((cp) => Boolean(cp.email)).length;
   const unpaidLines = (appelsEchus ?? []).flatMap((appel) =>
     ((appel.lignes_appels_de_fonds ?? []) as Array<{ id: string; coproprietaire_id: string | null; montant_du: number; paye: boolean }>).map((ligne) => ({
       id: ligne.id,
@@ -131,14 +130,10 @@ export default async function AdminCoproDetail({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800">
           <p className="text-lg font-bold">{cps.length}</p>
           <p className="text-xs font-semibold mt-0.5">Copropriétaires enregistrés</p>
-        </div>
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
-          <p className="text-lg font-bold">{contactsCount}</p>
-          <p className="text-xs font-semibold mt-0.5">Avec e-mail renseigné</p>
         </div>
         <div className={`rounded-xl border px-4 py-3 ${financeView.debiteurCount > 0 ? 'border-red-200 bg-red-50 text-red-800' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
           <p className="text-lg font-bold">{financeView.debiteurCount}</p>
