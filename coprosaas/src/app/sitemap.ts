@@ -24,12 +24,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
-    {
-      url: `${APP_URL}/guide-demarrage`,
-      lastModified: new Date('2026-04-11'),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
     ...blogEntries,
     {
       url: `${APP_URL}/mentions-legales`,
