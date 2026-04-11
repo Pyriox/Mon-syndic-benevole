@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import { formatEuros } from '@/lib/utils';
-import type { CoproprietaireBalanceAccountType, CoproprietaireBalanceSourceType } from '@/lib/coproprietaire-balance';
+import type { CoproprietaireBalanceSourceType } from '@/lib/coproprietaire-balance';
 import { History, Loader2 } from 'lucide-react';
 
 export interface BalanceEventRow {
   id: string;
   event_date: string;
   source_type: CoproprietaireBalanceSourceType;
-  account_type: CoproprietaireBalanceAccountType;
+  account_type: 'principal' | 'fonds_travaux' | 'regularisation' | 'mixte';
   label: string;
   reason: string | null;
   amount: number;
@@ -19,12 +19,45 @@ export interface BalanceEventRow {
   created_at: string;
 }
 
-function formatEventDate(value: string) {
-  return new Date(`${value}T00:00:00`).toLocaleDateString('fr-FR', {
+function toHistoryDate(value: string | null | undefined) {
+  if (!value) return null;
+
+  const parsed = value.includes('T') ? new Date(value) : new Date(`${value}T12:00:00`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatHistoryDate(value: string | null | undefined) {
+  const parsed = toHistoryDate(value);
+  if (!parsed) return '—';
+
+  return parsed.toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
+}
+
+function getEventSortTimestamp(event: BalanceEventRow) {
+  return toHistoryDate(event.created_at)?.getTime()
+    ?? toHistoryDate(event.event_date)?.getTime()
+    ?? 0;
+}
+
+function sortBalanceEvents(rows: BalanceEventRow[]) {
+  return [...rows].sort((left, right) => {
+    const timestampDiff = getEventSortTimestamp(right) - getEventSortTimestamp(left);
+    if (timestampDiff !== 0) return timestampDiff;
+
+    return (toHistoryDate(right.event_date)?.getTime() ?? 0) - (toHistoryDate(left.event_date)?.getTime() ?? 0);
+  });
+}
+
+function getDisplayedLabel(event: BalanceEventRow) {
+  if (event.source_type === 'appel_publication') {
+    return event.label.replace(/^Publication d'appel de fonds\s+[—-]\s+/i, '').trim();
+  }
+
+  return event.label;
 }
 
 function amountClass(value: number) {
@@ -63,19 +96,6 @@ function getDisplayedBalance(value: number) {
   };
 }
 
-function accountLabel(accountType: CoproprietaireBalanceAccountType) {
-  switch (accountType) {
-    case 'fonds_travaux':
-      return 'Fonds travaux';
-    case 'regularisation':
-      return 'Régularisation';
-    case 'mixte':
-      return 'Mixte';
-    default:
-      return 'Compte principal';
-  }
-}
-
 export default function CoproprietaireBalanceHistory({
   coproprietaireId,
   displayName,
@@ -94,12 +114,12 @@ export default function CoproprietaireBalanceHistory({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [events, setEvents] = useState<BalanceEventRow[]>(initialEvents ?? []);
+  const [events, setEvents] = useState<BalanceEventRow[]>(sortBalanceEvents(initialEvents ?? []));
   const shouldShowSummary = showSummary ?? mode === 'modal';
   const displayedBalance = getDisplayedBalance(currentBalance);
 
   useEffect(() => {
-    setEvents(initialEvents ?? []);
+    setEvents(sortBalanceEvents(initialEvents ?? []));
   }, [initialEvents]);
 
   const loadEvents = async () => {
@@ -119,7 +139,7 @@ export default function CoproprietaireBalanceHistory({
         return;
       }
 
-      setEvents(payload.events ?? []);
+      setEvents(sortBalanceEvents(payload.events ?? []));
     } catch {
       setError('Impossible de charger l’historique.');
     } finally {
@@ -172,12 +192,11 @@ export default function CoproprietaireBalanceHistory({
             <tbody>
               {events.map((event, index) => (
                 <tr key={event.id} className={index > 0 ? 'border-t border-slate-100' : ''}>
-                  <td className="px-4 py-3 align-top text-slate-600 whitespace-nowrap">{formatEventDate(event.event_date)}</td>
+                  <td className="px-4 py-3 align-top text-slate-600 whitespace-nowrap">{formatHistoryDate(event.created_at ?? event.event_date)}</td>
                   <td className="px-4 py-3 align-top">
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-slate-900">{event.label}</span>
-                        <Badge variant="info">{accountLabel(event.account_type)}</Badge>
+                        <span className="font-medium text-slate-900">{getDisplayedLabel(event)}</span>
                       </div>
                       {event.reason && (
                         <p className="text-xs text-slate-500">Motif : {event.reason}</p>

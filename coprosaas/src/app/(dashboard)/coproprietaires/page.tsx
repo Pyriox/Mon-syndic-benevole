@@ -67,8 +67,8 @@ export default async function CoproprietairesPage() {
           .from('coproprietaire_balance_events')
           .select('id, coproprietaire_id, event_date, source_type, account_type, label, reason, amount, balance_after, created_at')
           .eq('copropriete_id', selectedCoproId ?? 'none')
-          .order('event_date', { ascending: false })
           .order('created_at', { ascending: false })
+          .order('event_date', { ascending: false })
           .limit(500)
       : Promise.resolve({ data: [] }),
   ]);

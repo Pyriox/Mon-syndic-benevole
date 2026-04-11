@@ -47,8 +47,8 @@ export async function GET(
     .from('coproprietaire_balance_events')
     .select('id, event_date, source_type, account_type, label, reason, amount, balance_after, created_at')
     .eq('coproprietaire_id', coproprietaireId)
-    .order('event_date', { ascending: false })
     .order('created_at', { ascending: false })
+    .order('event_date', { ascending: false })
     .limit(limit);
 
   if (error) {
