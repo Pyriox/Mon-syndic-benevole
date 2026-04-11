@@ -16,6 +16,9 @@ export function buildWelcomeSubject(): string {
 export function buildWelcomeEmail(params: WelcomeEmailParams): string {
   const { prenom, dashboardUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bienvenue';
+  const coproUrl = `${SITE_URL}/coproprietes`;
+  const coproprietairesUrl = `${SITE_URL}/coproprietaires`;
+  const appelsUrl = `${SITE_URL}/appels-de-fonds`;
 
   const content = `
 <h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Bienvenue sur Mon Syndic Bénévole&nbsp;!</h1>
@@ -23,37 +26,58 @@ export function buildWelcomeEmail(params: WelcomeEmailParams): string {
 
 <p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
 <p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Votre compte est actif. Voici comment démarrer en 3 étapes&nbsp;:
+  Votre compte est actif. Pour aller à l'essentiel, suivez ce parcours&nbsp;:
 </p>
 
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px">
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px">
   <tr>
     <td style="padding:12px 16px;border-left:3px solid ${COLOR.green};background:#f0fdf4;border-radius:0 6px 6px 0;margin-bottom:8px">
       <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:${COLOR.text}">1. Créer votre copropriété</p>
-      <p style="margin:0;font-size:13px;color:${COLOR.muted}">Renseignez le nom, l'adresse et le nombre de lots.</p>
+      <p style="margin:0;font-size:13px;color:${COLOR.muted}">Renseignez le nom et l'adresse de l'immeuble.</p>
     </td>
   </tr>
   <tr><td style="height:8px"></td></tr>
   <tr>
     <td style="padding:12px 16px;border-left:3px solid ${COLOR.blue};background:#eff6ff;border-radius:0 6px 6px 0">
-      <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:${COLOR.text}">2. Ajouter vos lots et copropriétaires</p>
-      <p style="margin:0;font-size:13px;color:${COLOR.muted}">Importez vos lots et invitez les copropriétaires à rejoindre l'espace.</p>
+      <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:${COLOR.text}">2. Ajouter vos lots</p>
+      <p style="margin:0;font-size:13px;color:${COLOR.muted}">Créez chaque lot avec son numéro, son libellé et ses informations utiles.</p>
     </td>
   </tr>
   <tr><td style="height:8px"></td></tr>
   <tr>
     <td style="padding:12px 16px;border-left:3px solid ${COLOR.amber};background:#fffbeb;border-radius:0 6px 6px 0">
-      <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:${COLOR.text}">3. Émettre votre premier appel de fonds</p>
-      <p style="margin:0;font-size:13px;color:${COLOR.muted}">Créez un appel, publiez-le — les copropriétaires sont notifiés automatiquement.</p>
+      <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:${COLOR.text}">3. Ouvrir « Paramétrage » → « Répartition des charges »</p>
+      <p style="margin:0;font-size:13px;color:${COLOR.muted}">Renseignez ici les tantièmes généraux et, si besoin, vos clés spéciales (ascenseur, bâtiment, parking…).</p>
+    </td>
+  </tr>
+  <tr><td style="height:8px"></td></tr>
+  <tr>
+    <td style="padding:12px 16px;border-left:3px solid #8b5cf6;background:#f5f3ff;border-radius:0 6px 6px 0">
+      <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:${COLOR.text}">4. Ajouter vos copropriétaires puis créer votre premier appel de fonds</p>
+      <p style="margin:0;font-size:13px;color:${COLOR.muted}">Associez chaque copropriétaire à ses lots, puis ouvrez « Appels de fonds » pour publier le premier appel.</p>
     </td>
   </tr>
 </table>
 
-${ctaButton('Démarrer →', dashboardUrl, COLOR.green)}
+<div style="margin:0 0 20px;padding:12px 14px;background:#eff6ff;border-left:3px solid ${COLOR.blue};border-radius:0 8px 8px 0">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#1d4ed8">Important</p>
+  <p style="margin:0;font-size:13px;color:#1e3a8a;line-height:1.5">Les tantièmes généraux se règlent désormais dans <strong>Paramétrage</strong>, onglet <strong>Répartition des charges</strong> — plus dans la fiche lot.</p>
+</div>
+
+${ctaButton('Ouvrir mon espace →', dashboardUrl, COLOR.green)}
+
+<p style="margin:16px 0 0;font-size:13px;color:${COLOR.text};line-height:1.6">
+  Raccourcis utiles&nbsp;:
+  <a href="${coproUrl}" style="color:${COLOR.blue};font-weight:600">Mes copropriétés</a>
+  &nbsp;·&nbsp;
+  <a href="${coproprietairesUrl}" style="color:${COLOR.blue};font-weight:600">Copropriétaires</a>
+  &nbsp;·&nbsp;
+  <a href="${appelsUrl}" style="color:${COLOR.blue};font-weight:600">Appels de fonds</a>
+</p>
 
 <div style="margin:20px 0;padding:14px 16px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0">
   <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#92400e">Nouveau syndic bénévole&nbsp;?</p>
-  <p style="margin:0 0 8px;font-size:13px;color:#78350f;line-height:1.5">Consultez notre guide de migration pour être opérationnel en une demi-journée&nbsp;: lots, copropriétaires, premier appel de fonds.</p>
+  <p style="margin:0 0 8px;font-size:13px;color:#78350f;line-height:1.5">Consultez notre guide de migration pour être opérationnel rapidement&nbsp;: lots, paramétrage des tantièmes, copropriétaires et premier appel de fonds.</p>
   <a href="${SITE_URL}/blog/migrer-vers-mon-syndic-benevole" style="font-size:13px;font-weight:600;color:#92400e">Lire le guide →</a>
 </div>
 
@@ -61,5 +85,5 @@ ${ctaButton('Démarrer →', dashboardUrl, COLOR.green)}
   Une question ? Consultez notre <a href="${SITE_URL}/aide" style="color:${COLOR.blue}">aide en ligne</a> ou écrivez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.blue}">contact@mon-syndic-benevole.fr</a>.
 </p>`;
 
-  return wrapEmail(content, COLOR.green, 'Votre compte est confirmé — créez votre copropriété en 2 minutes');
+  return wrapEmail(content, COLOR.green, 'Votre compte est confirmé — configurez votre copropriété pas à pas');
 }

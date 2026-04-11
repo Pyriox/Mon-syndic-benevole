@@ -152,11 +152,17 @@ export function extractStripeSubscriptionSnapshot(subscription: Stripe.Subscript
   const rawItems = (raw.items as { data?: Array<Record<string, unknown>> } | undefined)?.data ?? [];
   const status = typeof raw.status === 'string' ? raw.status : 'incomplete';
   const cancelAtPeriodEnd = Boolean(raw.cancel_at_period_end);
-  const periodEndTimestamp = typeof raw.current_period_end === 'number'
-    ? raw.current_period_end
-    : typeof raw.billing_cycle_anchor === 'number'
-      ? raw.billing_cycle_anchor
-      : 0;
+
+  const itemPeriodEndTimestamp = rawItems.reduce<number>((latest, item) => {
+    const itemPeriodEnd = typeof item.current_period_end === 'number' ? item.current_period_end : 0;
+    return itemPeriodEnd > latest ? itemPeriodEnd : latest;
+  }, 0);
+
+  const periodEndTimestamp = itemPeriodEndTimestamp
+    || (typeof raw.current_period_end === 'number' ? raw.current_period_end : 0)
+    || (typeof raw.trial_end === 'number' ? raw.trial_end : 0)
+    || (typeof raw.cancel_at === 'number' ? raw.cancel_at : 0);
+
   const currentPeriodEnd = periodEndTimestamp > 0
     ? (() => {
         try {

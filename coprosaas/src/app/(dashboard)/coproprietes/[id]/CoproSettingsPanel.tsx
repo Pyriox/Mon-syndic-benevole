@@ -434,7 +434,10 @@ export default function CoproSettingsPanel({
 
   return (
     <div className="space-y-5">
-      <div className="sticky top-3 z-30 space-y-3">
+      <div
+        className="sticky z-30 space-y-3"
+        style={{ top: 'calc(var(--dashboard-header-height, 0px) + 0.75rem)' }}
+      >
         <Card className="border-blue-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">

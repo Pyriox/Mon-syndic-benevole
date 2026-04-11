@@ -75,11 +75,23 @@ function StatusBadge({ status }: { status: TicketStatus }) {
 }
 
 // ── Données FAQ ──────────────────────────────────────────────
-const FAQ: { question: string; answer: string; category: keyof typeof CATEGORIES }[] = [
+type FaqEntry = {
+  question: string;
+  answer: string;
+  category: keyof typeof CATEGORIES;
+  links?: Array<{ href: string; label: string }>;
+};
+
+const FAQ: FaqEntry[] = [
   {
     category: 'demarrage',
-    question: "Par où commencer après la création de mon compte ?",
-    answer: "L'ordre idéal est : (1) créer votre copropriété (nom, adresse) ; (2) ajouter vos lots avec les tantièmes ; (3) ajouter vos copropriétaires et les associer à leurs lots ; (4) émettre votre premier appel de fonds.",
+    question: 'Quelles sont les étapes pour configurer ma copropriété et émettre mon premier appel de fonds ?',
+    answer: "Pour aller vite, suivez cet ordre : (1) créez votre copropriété (nom, adresse) ; (2) ajoutez vos lots ; (3) ouvrez « Paramétrage », puis « Répartition des charges » pour renseigner les tantièmes généraux et vos éventuelles clés spéciales ; (4) ajoutez vos copropriétaires et associez-les à leurs lots ; (5) créez enfin votre premier appel de fonds.",
+    links: [
+      { href: '/coproprietes', label: 'Ouvrir mes copropriétés' },
+      { href: '/coproprietaires', label: 'Ouvrir les copropriétaires' },
+      { href: '/appels-de-fonds', label: 'Créer un appel de fonds' },
+    ],
   },
   {
     category: 'demarrage',
@@ -138,7 +150,7 @@ const FAQ: { question: string; answer: string; category: keyof typeof CATEGORIES
   },
 ];
 
-const FAQ_COPRO: { question: string; answer: string; category: keyof typeof CATEGORIES }[] = [
+const FAQ_COPRO: FaqEntry[] = [
   {
     category: 'demarrage',
     question: 'Comment accéder à ma copropriété et retrouver mes informations ?',
@@ -182,8 +194,8 @@ const FAQ_COPRO: { question: string; answer: string; category: keyof typeof CATE
 ];
 
 // ── Composant accordéon FAQ ──────────────────────────────────
-function FaqItem({ question, answer, category, defaultOpen = false }: {
-  question: string; answer: string; category: keyof typeof CATEGORIES; defaultOpen?: boolean;
+function FaqItem({ question, answer, category, links, defaultOpen = false }: FaqEntry & {
+  defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const cat = CATEGORIES[category];
@@ -208,7 +220,23 @@ function FaqItem({ question, answer, category, defaultOpen = false }: {
         }
       </button>
       {open && (
-        <p className="pb-4 text-sm text-gray-600 leading-relaxed">{answer}</p>
+        <div className="pb-4 space-y-3">
+          <p className="text-sm text-gray-600 leading-relaxed">{answer}</p>
+          {links?.length ? (
+            <div className="flex flex-wrap gap-2">
+              {links.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                >
+                  {link.label}
+                  <ExternalLink size={12} />
+                </a>
+              ))}
+            </div>
+          ) : null}
+        </div>
       )}
     </div>
   );

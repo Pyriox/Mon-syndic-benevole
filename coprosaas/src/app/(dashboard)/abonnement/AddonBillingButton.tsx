@@ -19,11 +19,12 @@ function formatPeriodEnd(date?: string | null): string | null {
   if (!date) return null;
 
   try {
-    return new Date(date).toLocaleDateString('fr-FR', {
+    return new Intl.DateTimeFormat('fr-FR', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
-    });
+      timeZone: 'Europe/Paris',
+    }).format(new Date(date));
   } catch {
     return null;
   }
@@ -160,16 +161,18 @@ export default function AddonBillingButton({
             </div>
           </div>
 
-          {isEnabling && (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tarif de l’option</p>
-              <p className="mt-1 text-2xl font-bold text-slate-900">{priceHeadline ?? 'Tarif Stripe'}</p>
-              {priceSubline && <p className="text-sm text-slate-600">{priceSubline}</p>}
-              <p className="mt-1 text-xs text-slate-500">
-                {priceNote ?? 'Ce montant sera ajouté à l’abonnement principal de la copropriété.'}
-              </p>
-            </div>
-          )}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              {isEnabling ? 'Tarif de l’option' : 'Tarif actuel de l’option'}
+            </p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{priceHeadline ?? 'Tarif Stripe'}</p>
+            {priceSubline && <p className="text-sm text-slate-600">{priceSubline}</p>}
+            <p className="mt-1 text-xs text-slate-500">
+              {isEnabling
+                ? (priceNote ?? 'Ce montant sera ajouté à l’abonnement principal de la copropriété.')
+                : 'Ce tarif ne sera plus reconduit à partir du prochain renouvellement.'}
+            </p>
+          </div>
 
           <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
             <ul className="space-y-2 text-sm text-gray-700">

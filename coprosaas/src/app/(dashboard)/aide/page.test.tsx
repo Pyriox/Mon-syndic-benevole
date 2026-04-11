@@ -131,6 +131,8 @@ describe('AidePage', () => {
     });
 
     expect(screen.getByText(/Questions sur le syndic bénévole et l'application/i)).not.toBeNull();
+    expect(screen.getByText(/Quelles sont les étapes pour configurer ma copropriété et émettre mon premier appel de fonds/i)).not.toBeNull();
+    expect(screen.getByRole('link', { name: /Ouvrir mes copropriétés/i })).not.toBeNull();
     expect(screen.getByText(/Où régler les tantièmes et les clés de répartition spéciales/i)).not.toBeNull();
     expect(screen.queryByText(/l&apos;application/i)).toBeNull();
   });

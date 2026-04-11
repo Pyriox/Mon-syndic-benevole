@@ -67,4 +67,25 @@ describe('AddonBillingButton', () => {
       );
     });
   });
+
+  it('shows the current pricing recap before confirming a stop at renewal', () => {
+    render(
+      <AddonBillingButton
+        coproprieteid="copro-1"
+        coproName="Résidence Test"
+        enabled={true}
+        priceHeadline="60 €/an"
+        priceSubline="soit 5 €/mois"
+        priceNote="Ajoutée à l’abonnement principal"
+        currentPeriodEnd="2030-12-30T23:00:00.000Z"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Arrêter à l’échéance/i }));
+
+    expect(screen.getByText(/Tarif actuel de l’option/i)).toBeTruthy();
+    expect(screen.getByText(/60 €\/an/i)).toBeTruthy();
+    expect(screen.getByText(/soit 5 €\/mois/i)).toBeTruthy();
+    expect(screen.getByText(/31 décembre 2030/i)).toBeTruthy();
+  });
 });

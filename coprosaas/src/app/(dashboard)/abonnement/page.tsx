@@ -7,6 +7,7 @@ export const metadata: Metadata = { title: 'Abonnement' };
 
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { extractStripeSubscriptionSnapshot, mapStripeSubscriptionStatus, STRIPE_ADDON_PRICES, stripe } from '@/lib/stripe';
@@ -77,6 +78,21 @@ function formatMoney(amount: number, currency: string = 'EUR'): string {
     minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+function formatBillingDate(value?: string | null): string | null {
+  if (!value) return null;
+
+  try {
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Europe/Paris',
+    }).format(new Date(value));
+  } catch {
+    return null;
+  }
 }
 
 async function getChargesSpecialesPricing(): Promise<AddonPricingDetails> {
@@ -209,20 +225,7 @@ export default async function AbonnementPage({
 }) {
   const { success, canceled, synced, coproId, error: pageError, addon } = await searchParams;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  // Réservé aux syndics
-  const { data: syndicCheck } = await supabase
-    .from('coproprietes')
-    .select('id')
-    .eq('syndic_id', user.id)
-    .limit(1)
-    .maybeSingle();
-  if (!syndicCheck) redirect('/dashboard');
+  const { user, selectedCoproId, copro: selectedCopro } = await requireCoproAccess(['syndic']);
 
   // Sync immédiate au retour du checkout Stripe
   if (success === '1' && synced !== '1' && coproId) {
@@ -231,14 +234,45 @@ export default async function AbonnementPage({
   }
 
   // Lecture via adminClient pour avoir les données fraîches après sync
+  // On affiche uniquement la copropriété actuellement sélectionnée dans le dashboard.
   const admin = createAdminClient();
-  const { data: coproprietes } = await admin
+  let { data: selectedCopropriete } = await admin
     .from('coproprietes')
     .select('id, nom, stripe_customer_id, stripe_subscription_id, plan, plan_id, plan_period_end')
+    .eq('id', selectedCoproId)
     .eq('syndic_id', user.id)
-    .order('nom');
+    .maybeSingle();
 
-  const coproIds = (coproprietes ?? []).map((c) => c.id);
+  const nowIso = new Date().toISOString();
+  const needsStripeRefresh = Boolean(
+    selectedCopropriete?.stripe_customer_id
+    && selectedCopropriete?.stripe_subscription_id
+    && selectedCopropriete.plan
+    && selectedCopropriete.plan !== 'inactif'
+    && (!selectedCopropriete.plan_period_end || selectedCopropriete.plan_period_end <= nowIso)
+  );
+
+  if (selectedCopropriete?.id && needsStripeRefresh) {
+    try {
+      const synced = await doStripeSync(selectedCopropriete.id);
+      if (synced) {
+        const { data: refreshedCopropriete } = await admin
+          .from('coproprietes')
+          .select('id, nom, stripe_customer_id, stripe_subscription_id, plan, plan_id, plan_period_end')
+          .eq('id', selectedCopropriete.id)
+          .eq('syndic_id', user.id)
+          .maybeSingle();
+
+        selectedCopropriete = refreshedCopropriete ?? selectedCopropriete;
+      }
+    } catch {
+      // Non bloquant : on garde les données locales si Stripe n'est pas joignable.
+    }
+  }
+
+  const coproprietes = selectedCopropriete ? [selectedCopropriete] : [];
+  const currentCoproName = selectedCopropriete?.nom ?? selectedCopro?.nom ?? null;
+  const coproIds = coproprietes.map((c) => c.id);
   const [{ data: lotsData }, { data: coproAddons }] = await Promise.all([
     admin
       .from('lots')
@@ -319,7 +353,9 @@ export default async function AbonnementPage({
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Abonnement</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Chaque copropriété dispose de son propre abonnement, indépendant des autres.
+            {currentCoproName
+              ? <>Vous consultez l’abonnement de <strong>{currentCoproName}</strong>. Utilisez le sélecteur de copropriété pour en changer.</>
+              : 'Chaque copropriété dispose de son propre abonnement, indépendant des autres.'}
           </p>
         </div>
 
@@ -422,6 +458,8 @@ export default async function AbonnementPage({
           const coproAddonRows = addonsByCopro[copro.id] ?? [];
           const chargesSpecialesAddon = coproAddonRows.find((addon) => addon.addon_key === 'charges_speciales') ?? null;
           const hasChargesAddon = hasChargesSpecialesAddon(coproAddonRows);
+          const renewalDateLabel = formatBillingDate(copro.plan_period_end);
+          const addonPeriodEndLabel = formatBillingDate(chargesSpecialesAddon?.current_period_end ?? null);
 
           return (
             <section key={copro.id} className="space-y-5">
@@ -480,7 +518,7 @@ export default async function AbonnementPage({
                             Plan {PLANS.find((p) => p.id === currentPlanId)?.name ?? currentPlanId}
                           </p>
                         )}
-                        {copro.plan_period_end && (
+                        {renewalDateLabel && (
                           <p className={`text-sm ${
                             isPastDue ? 'text-red-600' : isTrial ? 'text-amber-100' : 'text-green-100'
                           }`}>
@@ -490,11 +528,7 @@ export default async function AbonnementPage({
                               ? 'Fin de l’essai le '
                               : 'Renouvellement le '}
                             <span className={`font-semibold ${isPastDue ? 'text-red-800' : 'text-white'}`}>
-                              {new Date(copro.plan_period_end).toLocaleDateString('fr-FR', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric',
-                              })}
+                              {renewalDateLabel}
                             </span>
                           </p>
                         )}
@@ -629,16 +663,10 @@ export default async function AbonnementPage({
                       <li>• Dépenses, budgets d&apos;AG et appels de fonds ciblés</li>
                       <li>• Activation à tout moment avec prorata automatique</li>
                     </ul>
-                    {chargesSpecialesAddon?.cancel_at_period_end && chargesSpecialesAddon.current_period_end && (
+                    {chargesSpecialesAddon?.cancel_at_period_end && addonPeriodEndLabel && (
                       <p className="text-xs text-amber-700">
                         Résiliation programmée à l&apos;échéance du{' '}
-                        <span className="font-semibold">
-                          {new Date(chargesSpecialesAddon.current_period_end).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })}
-                        </span>
+                        <span className="font-semibold">{addonPeriodEndLabel}</span>
                         .
                       </p>
                     )}

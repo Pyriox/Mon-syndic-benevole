@@ -107,9 +107,19 @@ export function h(str: string): string {
 }
 
 export function formatDateFR(dateStr: string): string {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', {
-    day: '2-digit', month: 'long', year: 'numeric',
-  });
+  const raw = String(dateStr ?? '').trim();
+  if (!raw) return '';
+
+  const normalized = raw.includes('T') ? raw : `${raw}T00:00:00`;
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Paris',
+  }).format(date);
 }
 
 export function formatEurosFR(n: number): string {

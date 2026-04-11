@@ -40,11 +40,35 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   const [switchPending, startSwitchTransition] = useTransition();
   const [items, setItems] = useState<AppNotification[]>(notifications);
   const ref = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
   const canSwitchView = hasDualDashboardView(availableViewRoles);
 
   useEffect(() => {
     setItems(notifications);
   }, [notifications]);
+
+  useEffect(() => {
+    const headerEl = headerRef.current;
+    if (!headerEl) return undefined;
+
+    const updateHeaderHeight = () => {
+      document.documentElement.style.setProperty('--dashboard-header-height', `${headerEl.offsetHeight}px`);
+    };
+
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => updateHeaderHeight());
+      resizeObserver.observe(headerEl);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight);
+      resizeObserver?.disconnect();
+    };
+  }, [canSwitchView, title, userRole]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -118,7 +142,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   };
 
   return (
-    <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
+    <header ref={headerRef} className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2 min-w-0 flex-1">
           {onMenuOpen && (
