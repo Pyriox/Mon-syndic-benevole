@@ -612,9 +612,7 @@ export async function SyndicDashboardBudgetPanels({ coproId }: { coproId: string
 export async function SyndicDashboardTasks({ coproId }: { coproId: string }) {
   const data = await getSyndicDashboardSnapshot(coproId);
 
-  const overdueLineCount = data.nbLignesImpayees ?? data.nbImpayes ?? 0;
-
-  if (overdueLineCount === 0 && data.incidentsAnciens.length === 0) {
+  if (data.incidentsAnciens.length === 0) {
     return null;
   }
 
@@ -625,25 +623,6 @@ export async function SyndicDashboardTasks({ coproId }: { coproId: string }) {
         <h3 className="font-semibold text-gray-900">Alertes &amp; tâches à traiter</h3>
       </div>
       <div className="divide-y divide-gray-100">
-        {overdueLineCount > 0 && (
-          <div className="flex flex-wrap items-start gap-3 justify-between py-3">
-            <div className="flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-1" />
-              <div>
-                <p className="text-sm font-medium text-gray-800">
-                  {overdueLineCount} ligne{overdueLineCount > 1 ? 's' : ''} d&apos;appel de fonds en retard
-                </p>
-                <p className="text-xs text-gray-500">
-                  Montant échu non réglé : {formatEuros(data.totalMontantImpaye)}
-                  {data.nbImpayes60j > 0 ? ` · dont ${data.nbImpayes60j} depuis plus de 60 jours` : ''}
-                </p>
-              </div>
-            </div>
-            <Link href="/appels-de-fonds" className="text-xs text-blue-600 hover:underline font-medium shrink-0">
-              Voir &rarr;
-            </Link>
-          </div>
-        )}
         {data.incidentsAnciens.length > 0 && (
           <div className="flex flex-wrap items-start gap-3 justify-between py-3">
             <div className="flex items-center gap-3">

@@ -76,3 +76,21 @@ describe('SyndicDashboardAlert', () => {
     expect(screen.getByText(/1.?348,39\s?€/i)).not.toBeNull();
   });
 });
+
+describe('SyndicDashboardTasks', () => {
+  it('n’affiche pas une deuxième carte quand seul un impayé est déjà signalé dans le bandeau', async () => {
+    mockGetSyndicDashboardSnapshot.mockResolvedValue({
+      totalMontantImpaye: 88.45,
+      nbImpayes: 1,
+      nbLignesImpayees: 1,
+      nbImpayes60j: 1,
+      incidentsAnciens: [],
+    });
+
+    const { SyndicDashboardTasks } = await import('./DashboardSections');
+
+    const ui = await SyndicDashboardTasks({ coproId: 'copro-1' });
+
+    expect(ui).toBeNull();
+  });
+});
