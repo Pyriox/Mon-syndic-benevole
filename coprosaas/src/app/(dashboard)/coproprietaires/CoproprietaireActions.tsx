@@ -7,10 +7,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
+import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
+import Textarea from '@/components/ui/Textarea';
+import { setCoproprietaireBalanceManually } from '@/lib/coproprietaire-balance';
 import { Plus, Mail, UserPlus, Pencil, Trash2 } from 'lucide-react';
 
 interface Copropriete {
@@ -43,6 +46,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
   const supabase = createClient();
 
   const [isOpen, setIsOpen] = useState(false);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   // ---- Formulaire «Ajouter» ----
   const [loading, setLoading] = useState(false);
@@ -62,6 +66,8 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
     ville: '',
     raison_sociale: '',
     solde_reprise: '',
+    solde_reason: '',
+    solde_date: todayStr,
   });
 
   useEffect(() => {
@@ -74,7 +80,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
     fetchLots();
   }, [formData.copropriete_id, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -88,6 +94,13 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    const initialBalance = parseFloat(formData.solde_reprise) || 0;
+    if (Math.abs(initialBalance) > 0.004 && !formData.solde_reason.trim()) {
+      setError('Indiquez un motif pour enregistrer un solde de reprise non nul.');
+      setLoading(false);
+      return;
+    }
 
     const { data: cp, error: dbError } = await supabase
       .from('coproprietaires')
@@ -103,7 +116,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
         complement_adresse: formData.complement_adresse.trim() || null,
         code_postal: formData.code_postal.trim() || null,
         ville: formData.ville.trim() || null,
-        solde: parseFloat(formData.solde_reprise) || 0,
+        solde: 0,
         user_id: null,
       })
       .select('id')
@@ -111,9 +124,29 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
 
     if (dbError || !cp) { setError('Erreur : ' + (dbError?.message ?? 'inconnue')); setLoading(false); return; }
 
+    if (Math.abs(initialBalance) > 0.004) {
+      const { error: balanceError } = await setCoproprietaireBalanceManually(supabase, {
+        coproprietaireId: cp.id,
+        newBalance: initialBalance,
+        reason: formData.solde_reason,
+        effectiveDate: formData.solde_date,
+        label: 'Solde de reprise à l’ouverture',
+        sourceType: 'solde_initial',
+        metadata: { createdFrom: 'coproprietaire_add' },
+      });
+
+      if (balanceError) {
+        await supabase.from('coproprietaires').delete().eq('id', cp.id);
+        setError(balanceError.message);
+        setLoading(false);
+        return;
+      }
+    }
+
     if (selectedLotIds.length) {
       await supabase.from('lots').update({ coproprietaire_id: cp.id }).in('id', selectedLotIds);
     }
+    await revalidateCoproFinance(formData.copropriete_id);
     // Log événement (fire-and-forget via action serveur)
     const nom = [formData.prenom?.trim(), formData.nom?.trim()].filter(Boolean).join(' ') || formData.raison_sociale?.trim() || formData.email;
     void logCurrentUserEvent({
@@ -130,13 +163,13 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
       adresse: formData.adresse.trim() || null,
       code_postal: formData.code_postal.trim() || null,
       ville: formData.ville.trim() || null,
-      solde: parseFloat(formData.solde_reprise) || 0,
+      solde: initialBalance,
       user_id: null,
     };
 
     setIsOpen(false);
     setLoading(false);
-    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '' });
+    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '', solde_reason: '', solde_date: todayStr });
     setIsSci(false);
     setSelectedLotIds([]);
     if (onAdded) {
@@ -150,11 +183,13 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
     setIsOpen(false);
     setError('');
     setSelectedLotIds([]);
+    setIsSci(false);
+    setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '', solde_reason: '', solde_date: todayStr });
   };
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} size={showLabel ? 'md' : 'sm'}>
+      <Button onClick={() => { handleClose(); setIsOpen(true); }} size={showLabel ? 'md' : 'sm'}>
         <UserPlus size={16} /> {showLabel ? 'Ajouter un copropriétaire' : 'Ajouter'}
       </Button>
 
@@ -219,6 +254,20 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
             <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} required />
           </div>
           <Input label="Solde à la reprise (€)" name="solde_reprise" type="number" step="0.01" value={formData.solde_reprise} onChange={handleChange} placeholder="0.00 — facultatif" />
+          {Math.abs(parseFloat(formData.solde_reprise) || 0) > 0.004 && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 space-y-3">
+              <p className="text-sm font-semibold text-slate-900">Traçabilité du solde de reprise</p>
+              <p className="text-xs text-slate-600">
+                Ce montant sera enregistré dans l&apos;historique financier du copropriétaire avec son motif et sa date d&apos;effet.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="Date d’effet" name="solde_date" type="date" value={formData.solde_date} onChange={handleChange} required />
+                <div className="col-span-2">
+                  <Textarea label="Motif" name="solde_reason" value={formData.solde_reason} onChange={handleChange} required placeholder="Ex. reprise de comptabilité au 1er janvier, report de l’ancien syndic…" />
+                </div>
+              </div>
+            </div>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button type="submit" loading={loading}>Ajouter</Button>
@@ -306,6 +355,7 @@ export function CoproprietaireInvite({ coproprietaireId, displayName }: Copropri
 // Modifier un copropriétaire existant
 // ============================================================
 interface CoproprietaireEditProps {
+  coproprieteId?: string;
   coproprietaire: {
     id: string;
     nom: string | null;
@@ -324,13 +374,14 @@ interface CoproprietaireEditProps {
   onSaved?: (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => void;
 }
 
-export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds, onSaved }: CoproprietaireEditProps) {
+export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assignedLotIds, onSaved }: CoproprietaireEditProps) {
   const router = useRouter();
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSci, setIsSci] = useState(!!coproprietaire.raison_sociale);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const [formData, setFormData] = useState({
     nom: coproprietaire.nom ?? '',
@@ -342,10 +393,12 @@ export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds, onSav
     code_postal: coproprietaire.code_postal ?? '',
     ville: coproprietaire.ville ?? '',
     solde: coproprietaire.solde,
+    solde_reason: '',
+    solde_date: todayStr,
   });
   const [selectedLotIds, setSelectedLotIds] = useState<string[]>(assignedLotIds);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const value = e.target.name === 'solde' ? parseFloat(e.target.value) || 0 : e.target.value;
     setFormData((prev) => ({ ...prev, [e.target.name]: value }));
   };
@@ -361,6 +414,13 @@ export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds, onSav
     setLoading(true);
     setError('');
 
+    const soldeChanged = Math.abs(formData.solde - coproprietaire.solde) > 0.004;
+    if (soldeChanged && !formData.solde_reason.trim()) {
+      setError('Indiquez un motif pour toute modification manuelle du solde.');
+      setLoading(false);
+      return;
+    }
+
     const { error: dbError } = await supabase
       .from('coproprietaires')
       .update({
@@ -372,17 +432,36 @@ export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds, onSav
         adresse: formData.adresse.trim() || null,
         code_postal: formData.code_postal.trim() || null,
         ville: formData.ville.trim() || null,
-        solde: formData.solde,
       })
       .eq('id', coproprietaire.id);
 
     if (dbError) { setError(dbError.message); setLoading(false); return; }
+
+    if (soldeChanged) {
+      const { error: balanceError } = await setCoproprietaireBalanceManually(supabase, {
+        coproprietaireId: coproprietaire.id,
+        newBalance: formData.solde,
+        reason: formData.solde_reason,
+        effectiveDate: formData.solde_date,
+        label: 'Ajustement manuel du solde',
+        sourceType: 'manual_adjustment',
+        metadata: { previousBalance: coproprietaire.solde },
+      });
+
+      if (balanceError) {
+        setError(balanceError.message);
+        setLoading(false);
+        return;
+      }
+    }
 
     // Désassigner les anciens lots, réassigner les nouveaux
     await supabase.from('lots').update({ coproprietaire_id: null }).eq('coproprietaire_id', coproprietaire.id);
     if (selectedLotIds.length) {
       await supabase.from('lots').update({ coproprietaire_id: coproprietaire.id }).in('id', selectedLotIds);
     }
+
+    await revalidateCoproFinance(coproprieteId);
 
     const nextCoproprietaire: CoproprietaireListItem = {
       id: coproprietaire.id,
@@ -410,7 +489,25 @@ export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds, onSav
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setError('');
+          setIsSci(!!coproprietaire.raison_sociale);
+          setSelectedLotIds(assignedLotIds);
+          setFormData({
+            nom: coproprietaire.nom ?? '',
+            prenom: coproprietaire.prenom ?? '',
+            raison_sociale: coproprietaire.raison_sociale ?? '',
+            email: coproprietaire.email,
+            telephone: coproprietaire.telephone ?? '',
+            adresse: coproprietaire.adresse ?? '',
+            code_postal: coproprietaire.code_postal ?? '',
+            ville: coproprietaire.ville ?? '',
+            solde: coproprietaire.solde,
+            solde_reason: '',
+            solde_date: todayStr,
+          });
+          setIsOpen(true);
+        }}
         className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
         title="Modifier"
       >
@@ -476,6 +573,20 @@ export function CoproprietaireEdit({ coproprietaire, lots, assignedLotIds, onSav
             <Input label="Ville" name="ville" value={formData.ville} onChange={handleChange} />
           </div>
           <Input label="Solde (€)" name="solde" type="number" step="0.01" value={String(formData.solde)} onChange={handleChange} />
+          {Math.abs(formData.solde - coproprietaire.solde) > 0.004 && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 space-y-3">
+              <p className="text-sm font-semibold text-slate-900">Justifier la modification du solde</p>
+              <p className="text-xs text-slate-600">
+                Toute modification manuelle du solde est horodatée et conservée dans l&apos;historique financier du copropriétaire.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="Date d’effet" name="solde_date" type="date" value={formData.solde_date} onChange={handleChange} required />
+                <div className="col-span-2">
+                  <Textarea label="Motif" name="solde_reason" value={formData.solde_reason} onChange={handleChange} required placeholder="Ex. correction suite au relevé bancaire, régularisation manuelle, reprise de l’ancien syndic…" />
+                </div>
+              </div>
+            </div>
+          )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">

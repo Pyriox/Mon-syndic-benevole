@@ -38,7 +38,7 @@ describe('CoproSettingsPanel', () => {
       coproprietaire_id: 'cp-1',
       batiment: 'Bâtiment A',
       groupes_repartition: ['Ascenseur'],
-      tantiemes_groupes: { Ascenseur: 150 },
+      tantiemes_groupes: { Ascenseur: 150 } as Record<string, number>,
     },
     {
       id: 'lot-2',
@@ -48,7 +48,7 @@ describe('CoproSettingsPanel', () => {
       coproprietaire_id: 'cp-2',
       batiment: 'Bâtiment A',
       groupes_repartition: [],
-      tantiemes_groupes: {},
+      tantiemes_groupes: {} as Record<string, number>,
     },
   ];
 

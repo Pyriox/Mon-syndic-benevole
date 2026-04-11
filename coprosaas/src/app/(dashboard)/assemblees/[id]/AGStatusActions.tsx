@@ -634,16 +634,16 @@ export default function AGStatusActions({
     return (
       <>
         <Button variant="primary" size="sm" loading={loading} onClick={() => setIsConfirmOpen(true)}>
-          <CalendarCheck size={14} /> Valider la planification
+          <CalendarCheck size={14} /> Finaliser et planifier l&apos;AG
         </Button>
-        <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} title="Valider la planification" size="sm">
+        <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} title="Finaliser et planifier l'AG" size="sm">
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              L&apos;AG passera au statut <strong>« Planifiée »</strong>. Vous pourrez ensuite envoyer les convocations par e-mail.
+              Le brouillon passera au statut <strong>« Planifiée »</strong>. Vous pourrez ensuite envoyer les convocations par e-mail et préparer le jour J.
             </p>
             <div className="flex gap-3 pt-1">
               <Button variant="primary" loading={loading} onClick={handleValiderPlanification}>
-                <CalendarCheck size={14} /> Confirmer la planification
+                <CalendarCheck size={14} /> Confirmer et planifier
               </Button>
               <Button variant="secondary" onClick={() => setIsConfirmOpen(false)}>Annuler</Button>
             </div>

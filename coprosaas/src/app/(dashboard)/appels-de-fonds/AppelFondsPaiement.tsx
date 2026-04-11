@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
+import { applyCoproprietaireBalanceDelta, resolveAppelBalanceAccountType } from '@/lib/coproprietaire-balance';
 import { formatEuros, LABELS_CATEGORIE } from '@/lib/utils';
 import {
   CheckCircle, Clock, XCircle, Loader2,
@@ -73,10 +74,12 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
   const [payDate, setPayDate] = useState(todayStr);
   const [toggling, setToggling] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const postes = parsePostes(appel.description);
   const ftAlur = appel.montant_fonds_travaux ?? 0;
   const hasPostes = postes.length > 0 || ftAlur > 0;
+  const accountType = resolveAppelBalanceAccountType(appel);
 
   const getStatut = (l: Ligne): 'paye' | 'impaye' | 'en_attente' => {
     if (l.paye) return 'paye';
@@ -92,6 +95,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
 
   const handleConfirmPay = async (ligne: Ligne) => {
     setToggling(ligne.id);
+    setErrorMsg('');
     const date = payDate || todayStr;
 
     const { error: ligneError } = await supabase.from('lignes_appels_de_fonds').update({
@@ -106,11 +110,28 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
 
     // Paiement reçu : la dette diminue (solde positif = doit, donc on soustrait)
     if (ligne.coproprietaires?.id) {
-      const { data: cop } = await supabase
-        .from('coproprietaires').select('solde').eq('id', ligne.coproprietaires.id).single();
-      await supabase.from('coproprietaires').update({
-        solde: Math.round(((cop?.solde ?? 0) - ligne.montant_du) * 100) / 100,
-      }).eq('id', ligne.coproprietaires.id);
+      const { error: balanceError } = await applyCoproprietaireBalanceDelta(supabase, {
+        coproprietaireId: ligne.coproprietaires.id,
+        delta: -ligne.montant_du,
+        label: `Paiement reçu — ${appel.titre}`,
+        sourceType: 'payment_received',
+        effectiveDate: date,
+        accountType,
+        sourceId: appel.id,
+        metadata: {
+          appelId: appel.id,
+          ligneAppelId: ligne.id,
+          montantDu: ligne.montant_du,
+          datePaiement: date,
+        },
+      });
+
+      if (balanceError) {
+        await supabase.from('lignes_appels_de_fonds').update({ paye: false, date_paiement: null }).eq('id', ligne.id);
+        setErrorMsg(balanceError.message);
+        setToggling(null);
+        return;
+      }
     }
 
     updateLignesState(ligne.id, { paye: true, date_paiement: date });
@@ -121,6 +142,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
 
   const handleUnpay = async (ligne: Ligne) => {
     setToggling(ligne.id);
+    setErrorMsg('');
 
     const { error: ligneError } = await supabase.from('lignes_appels_de_fonds').update({
       paye: false,
@@ -134,11 +156,27 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
 
     // Annulation paiement : la dette réapparaît (on additionne)
     if (ligne.coproprietaires?.id) {
-      const { data: cop } = await supabase
-        .from('coproprietaires').select('solde').eq('id', ligne.coproprietaires.id).single();
-      await supabase.from('coproprietaires').update({
-        solde: Math.round(((cop?.solde ?? 0) + ligne.montant_du) * 100) / 100,
-      }).eq('id', ligne.coproprietaires.id);
+      const { error: balanceError } = await applyCoproprietaireBalanceDelta(supabase, {
+        coproprietaireId: ligne.coproprietaires.id,
+        delta: ligne.montant_du,
+        label: `Annulation de paiement — ${appel.titre}`,
+        sourceType: 'payment_cancelled',
+        effectiveDate: todayStr,
+        accountType,
+        sourceId: appel.id,
+        metadata: {
+          appelId: appel.id,
+          ligneAppelId: ligne.id,
+          montantDu: ligne.montant_du,
+        },
+      });
+
+      if (balanceError) {
+        await supabase.from('lignes_appels_de_fonds').update({ paye: true, date_paiement: ligne.date_paiement }).eq('id', ligne.id);
+        setErrorMsg(balanceError.message);
+        setToggling(null);
+        return;
+      }
     }
 
     updateLignesState(ligne.id, { paye: false, date_paiement: null });
@@ -150,6 +188,9 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
 
   return (
     <div className="mt-4 space-y-3">
+      {errorMsg && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{errorMsg}</p>
+      )}
       {/* ── En-tête ──────────────────────────────────── */}
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
         Répartition — {nbPayes}/{lignes.length} payé(s)

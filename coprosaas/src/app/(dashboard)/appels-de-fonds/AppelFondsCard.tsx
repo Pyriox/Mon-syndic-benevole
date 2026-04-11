@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw, Send, Trash2 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
+import { applyCoproprietaireBalanceDelta, resolveAppelBalanceAccountType } from '@/lib/coproprietaire-balance';
 import {
   formatEuros,
   formatDate,
@@ -210,12 +211,29 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         }))
       );
       if (error) { setRegenMsg('Erreur : ' + error.message); return; }
-      // Débit du solde (une entry par copropriétaire)
+      // Reconstituer le solde dans le journal financier (une entrée par copropriétaire)
+      const accountType = resolveAppelBalanceAccountType(appel);
       for (const g of grouped) {
-        const { data: cop } = await supabase.from('coproprietaires').select('solde').eq('id', g.copId).single();
-        await supabase.from('coproprietaires').update({
-          solde: Math.round(((cop?.solde ?? 0) - g.montant) * 100) / 100,
-        }).eq('id', g.copId);
+        const { error: balanceError } = await applyCoproprietaireBalanceDelta(supabase, {
+          coproprietaireId: g.copId,
+          delta: -g.montant,
+          label: `Répartition régénérée — ${appel.titre}`,
+          sourceType: 'appel_publication',
+          effectiveDate: appel.date_echeance,
+          accountType,
+          sourceId: appel.id,
+          metadata: {
+            appelId: appel.id,
+            lotId: g.lotId,
+            montantDu: g.montant,
+            regenerated: true,
+          },
+        });
+
+        if (balanceError) {
+          setRegenMsg('Erreur : ' + balanceError.message);
+          return;
+        }
       }
 
       const { data: freshLignes } = await supabase

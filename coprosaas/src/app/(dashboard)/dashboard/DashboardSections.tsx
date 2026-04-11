@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
+import CoproprietaireBalanceHistory from '../coproprietaires/CoproprietaireBalanceHistory';
 import { getCoproprietaireDashboardSnapshot, getSyndicDashboardSnapshot } from '@/lib/cached-queries';
 import { formatDate, formatEuros, LABELS_CATEGORIE } from '@/lib/utils';
 import {
@@ -147,6 +148,7 @@ export async function CoproDashboardMain({ userId, coproId }: { userId: string; 
   const hasDebt = data.solde > 0;
   const hasCredit = data.solde < 0;
   const displayedSolde = hasDebt ? -Math.abs(data.solde) : hasCredit ? Math.abs(data.solde) : 0;
+  const displayName = data.fiche.raison_sociale ?? ([data.fiche.prenom, data.fiche.nom].filter(Boolean).join(' ') || 'Mon compte');
 
   return (
     <>
@@ -225,6 +227,24 @@ export async function CoproDashboardMain({ userId, coproId }: { userId: string; 
           </div>
         </Card>
       )}
+
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-semibold text-gray-900">Historique de mes mouvements</h3>
+            <p className="text-xs text-gray-500 mt-1">Suivez ici l’évolution de votre solde, les régularisations et les paiements enregistrés.</p>
+          </div>
+          <span className="text-xs text-gray-500">12 derniers mouvements</span>
+        </div>
+        <CoproprietaireBalanceHistory
+          mode="inline"
+          coproprietaireId={data.fiche.id}
+          displayName={displayName}
+          currentBalance={data.solde}
+          initialEvents={data.balanceEvents ?? []}
+          showSummary={false}
+        />
+      </Card>
 
       {data.assembleesUpcoming.length > 0 && (
         <Card>

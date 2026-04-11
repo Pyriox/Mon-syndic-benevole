@@ -577,6 +577,7 @@ export function getCoproprietaireDashboardSnapshot(userId: string, coproId: stri
         joursAvantAG: null as number | null,
         solde: 0,
         displayFirstName: null as string | null,
+        balanceEvents: [] as Array<{ id: string; event_date: string; source_type: string; account_type: 'principal' | 'fonds_travaux' | 'regularisation' | 'mixte'; label: string; reason: string | null; amount: number; balance_after: number; created_at: string }>,
       };
     }
 
@@ -611,6 +612,16 @@ export function getCoproprietaireDashboardSnapshot(userId: string, coproId: stri
           .eq('coproprietaire_id', fiche.id)
           .eq('paye', false)
           .limit(5)
+      : { data: null };
+
+    const { data: balanceEvents } = fiche
+      ? await admin
+          .from('coproprietaire_balance_events')
+          .select('id, event_date, source_type, account_type, label, reason, amount, balance_after, created_at')
+          .eq('coproprietaire_id', fiche.id)
+          .order('event_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(12)
       : { data: null };
 
     const prochaineAG = assembleesUpcoming?.[0] ?? null;
@@ -662,6 +673,17 @@ export function getCoproprietaireDashboardSnapshot(userId: string, coproId: stri
       joursAvantAG,
       solde,
       displayFirstName,
+      balanceEvents: (balanceEvents ?? []).map((event) => ({
+        id: event.id,
+        event_date: event.event_date,
+        source_type: event.source_type,
+        account_type: event.account_type,
+        label: event.label,
+        reason: event.reason,
+        amount: event.amount,
+        balance_after: event.balance_after,
+        created_at: event.created_at,
+      })),
     };
     },
     ['dashboard-coproprietaire-snapshot', userId, coproId],

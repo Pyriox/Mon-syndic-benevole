@@ -119,7 +119,7 @@ export default async function AGDetailPage({ params }: Props) {
   const nextActionLabel = ag.statut === 'annulee'
     ? 'Cette AG est annulée.'
     : ag.statut === 'creation'
-      ? 'Étape suivante : valider la planification.'
+      ? 'Étape suivante : finaliser et planifier l’AG.'
       : ag.statut === 'planifiee' && !ag.convocation_envoyee_le
         ? 'Action requise : envoyer la convocation avant de démarrer l’AG.'
         : ag.statut === 'planifiee'

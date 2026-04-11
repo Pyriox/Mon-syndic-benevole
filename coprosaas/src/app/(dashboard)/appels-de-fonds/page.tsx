@@ -157,7 +157,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
 
       <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
         {isSyndic
-          ? 'Les appels de fonds correspondent aux provisions demandées aux copropriétaires pour financer le budget voté en AG et les dépenses à venir.'
+          ? 'Les appels de fonds correspondent aux provisions demandées aux copropriétaires pour financer le budget voté en AG et les dépenses à venir. Pour un appel standard, terminez d’abord votre AG ; sinon, créez un appel exceptionnel.'
           : 'Consultez ici vos avis de paiement, leurs échéances et l’état de vos règlements pour l’exercice en cours.'}
       </PageHelp>
 
@@ -215,7 +215,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
         <EmptyState
           icon={<Wallet size={48} strokeWidth={1.5} />}
           title="Aucun appel de fonds"
-          description={isSyndic ? "Créez un appel de fonds pour répartir les charges entre les copropriétaires." : undefined}
+          description={isSyndic ? "Pour un appel standard, terminez d’abord votre AG puis importez le budget voté. Sinon, créez un appel exceptionnel." : undefined}
           action={isSyndic && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} showLabel specialChargesEnabled={specialChargesEnabled} /> : <UpgradeBanner />)}
         />
       )}

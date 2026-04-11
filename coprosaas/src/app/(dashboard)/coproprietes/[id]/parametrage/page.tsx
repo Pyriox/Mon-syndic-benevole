@@ -78,6 +78,19 @@ export default async function CoproprieteParametragePage({ params }: Props) {
         <p className="mt-1 text-sm text-gray-600">
           Utilisez <strong>Répartition des charges</strong> pour les tantièmes et <strong>Fiche copropriété</strong> pour les informations d’identité.
         </p>
+        <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+          <p>
+            <strong>Avant votre premier appel de fonds :</strong> renseignez d&apos;abord les tantièmes dans <strong>Répartition des charges</strong>, puis ajoutez vos copropriétaires avant de créer l&apos;appel.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+            <Link href="/coproprietaires" className="font-semibold underline underline-offset-2">
+              Ouvrir les copropriétaires
+            </Link>
+            <Link href="/appels-de-fonds" className="font-semibold underline underline-offset-2">
+              Ouvrir les appels de fonds
+            </Link>
+          </div>
+        </div>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{lotCount} lots</span>
           <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">{assignedLotsCount} lots avec clé spéciale</span>

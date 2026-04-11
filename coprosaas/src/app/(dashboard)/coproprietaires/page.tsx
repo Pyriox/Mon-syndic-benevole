@@ -99,7 +99,7 @@ export default async function CoproprietairesPage() {
 
       <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
         {isSyndic
-          ? 'Tenez ici le registre des copropriétaires, utile pour les convocations d’AG, les appels de fonds et le suivi des lots.'
+          ? 'Tenez ici le registre des copropriétaires, utile pour les convocations d’AG, les appels de fonds, le suivi des lots et l’historique financier des soldes.'
           : 'Consultez ici la liste des copropriétaires et la répartition des tantièmes au sein de l’immeuble.'}
       </PageHelp>
 
@@ -141,6 +141,7 @@ export default async function CoproprietairesPage() {
             totalTantiemes={totalTantiemes}
             readOnly={!isSyndic}
             currentUserId={user.id}
+            coproprieteId={selectedCoproId ?? undefined}
           />
         </Card>
       ) : (

@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { applyCoproprietaireBalanceDelta, resolveAppelBalanceAccountType } from '@/lib/coproprietaire-balance';
 import { parseBudgetPostesFromDescription, repartitionParPostes } from '@/lib/utils';
 import { Resend } from 'resend';
 import { buildAppelEmail, buildAppelEmailSubject } from '@/lib/emails/appel-de-fonds';
@@ -161,18 +162,31 @@ export async function POST(
     return NextResponse.json({ message: 'Erreur génération répartition : ' + lignesErr.message }, { status: 500 });
   }
 
-  // Créer/mettre à jour la dette (solde positif = copropriétaire doit de l'argent)
-  // Si report régularisation : on remplace le solde courant par le montant dû ajusté,
-  // ainsi un paiement complet de ce 1er appel remet le solde à 0.
+  // Créer/mettre à jour la dette dans le journal financier.
+  // En cas de report de régularisation, on journalise seulement la nouvelle charge créée par cet appel.
+  const accountType = resolveAppelBalanceAccountType(appel);
   for (const r of repartitionAjustee) {
-    const soldeCourant = soldeByCoproId[r.copId] ?? 0;
-    const nouveauSolde = applyRegularisationCarryOver
-      ? r.montant_du
-      : Math.round((soldeCourant + r.montant_du) * 100) / 100;
-    await supabase
-      .from('coproprietaires')
-      .update({ solde: nouveauSolde })
-      .eq('id', r.copId);
+    const delta = Math.round((r.montant_du - (r.regularisation_ajustement ?? 0)) * 100) / 100;
+    const { error: balanceError } = await applyCoproprietaireBalanceDelta(supabase, {
+      coproprietaireId: r.copId,
+      delta,
+      label: `Publication d'appel de fonds — ${appel.titre}`,
+      sourceType: 'appel_publication',
+      effectiveDate: appel.date_echeance,
+      accountType,
+      sourceId: appelId,
+      metadata: {
+        appelId,
+        lotId: r.lotId,
+        montantDu: r.montant_du,
+        regularisationAjustement: r.regularisation_ajustement ?? 0,
+      },
+      createdBy: user.id,
+    });
+
+    if (balanceError) {
+      return NextResponse.json({ message: 'Erreur de mise à jour du solde : ' + balanceError.message }, { status: 500 });
+    }
   }
 
   // Détermine si l'avis doit être envoyé immédiatement (échéance à moins de 30 jours),
