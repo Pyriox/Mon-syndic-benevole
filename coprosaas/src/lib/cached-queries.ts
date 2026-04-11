@@ -14,7 +14,7 @@
 // ============================================================
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { buildDashboardExpenseSnapshot, buildDashboardUnpaidSnapshot } from '@/lib/dashboard-data';
+import { buildDashboardExpenseSnapshot, buildDashboardUnpaidSnapshot, isDashboardUnpaidActiveStatus } from '@/lib/dashboard-data';
 import type { AppNotification } from '@/types';
 
 function safeRevalidateTag(tag: string) {
@@ -151,8 +151,9 @@ export const getSyndicNotifications = unstable_cache(
         .limit(3),
       admin
         .from('appels_de_fonds')
-        .select('id, titre, date_echeance, lignes_appels_de_fonds(paye)')
+        .select('id, titre, statut, date_echeance, lignes_appels_de_fonds(paye)')
         .eq('copropriete_id', coproId)
+        .in('statut', ['publie', 'confirme'])
         .lt('date_echeance', today)
         .order('date_echeance', { ascending: true })
         .limit(5),
@@ -194,6 +195,7 @@ export const getSyndicNotifications = unstable_cache(
     }
 
     for (const appel of appelsRetard ?? []) {
+      if (!isDashboardUnpaidActiveStatus((appel as { statut?: string | null }).statut)) continue;
       const lignes = (appel.lignes_appels_de_fonds ?? []) as { paye: boolean }[];
       const nbImpaye = lignes.filter((l) => !l.paye).length;
       if (nbImpaye > 0) {
@@ -408,9 +410,9 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         .limit(3),
       admin
         .from('appels_de_fonds')
-        .select('id, date_echeance, lignes_appels_de_fonds(id, coproprietaire_id, montant_du, paye)')
+        .select('id, statut, date_echeance, lignes_appels_de_fonds(id, coproprietaire_id, montant_du, paye)')
         .eq('copropriete_id', coproId)
-        .eq('statut', 'publie')
+        .in('statut', ['publie', 'confirme'])
         .lt('date_echeance', todayStr),
       admin
         .from('appels_de_fonds')
@@ -475,6 +477,7 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         montant_du: ligne.montant_du,
         paye: ligne.paye,
         date_echeance: appel.date_echeance ?? null,
+        appel_statut: (appel as { statut?: string | null }).statut ?? null,
       })),
     );
 

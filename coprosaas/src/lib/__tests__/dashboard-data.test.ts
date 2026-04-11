@@ -29,17 +29,19 @@ describe('buildDashboardUnpaidSnapshot', () => {
   it('ne retient que les appels échus non marqués comme payés', () => {
     const snapshot = buildDashboardUnpaidSnapshot({
       lignes: [
-        { id: 'l-1', coproprietaire_id: 'cp-1', montant_du: 242.1, paye: false, date_echeance: '2026-04-01' },
-        { id: 'l-2', coproprietaire_id: 'cp-2', montant_du: 88.45, paye: false, date_echeance: '2026-04-02' },
-        { id: 'l-3', coproprietaire_id: 'cp-2', montant_du: 19.9, paye: false, date_echeance: '2026-05-15' },
-        { id: 'l-4', coproprietaire_id: 'cp-3', montant_du: 0, paye: false, date_echeance: '2026-04-03' },
-        { id: 'l-5', coproprietaire_id: 'cp-4', montant_du: 70, paye: true, date_echeance: '2026-03-15' },
+        { id: 'l-1', coproprietaire_id: 'cp-1', montant_du: 242.1, paye: false, date_echeance: '2026-04-01', appel_statut: 'publie' },
+        { id: 'l-2', coproprietaire_id: 'cp-2', montant_du: 88.45, paye: false, date_echeance: '2026-04-02', appel_statut: 'publie' },
+        { id: 'l-3', coproprietaire_id: 'cp-2', montant_du: 19.9, paye: false, date_echeance: '2026-05-15', appel_statut: 'publie' },
+        { id: 'l-4', coproprietaire_id: 'cp-3', montant_du: 0, paye: false, date_echeance: '2026-04-03', appel_statut: 'publie' },
+        { id: 'l-5', coproprietaire_id: 'cp-4', montant_du: 70, paye: true, date_echeance: '2026-03-15', appel_statut: 'publie' },
+        { id: 'l-6', coproprietaire_id: 'cp-5', montant_du: 50, paye: false, date_echeance: '2026-04-04', appel_statut: 'confirme' },
+        { id: 'l-7', coproprietaire_id: 'cp-6', montant_du: 999, paye: false, date_echeance: '2026-04-05', appel_statut: 'brouillon' },
       ],
       today: '2026-04-11',
     });
 
-    expect(snapshot.totalMontantImpaye).toBe(330.55);
-    expect(snapshot.nbImpayes).toBe(2);
-    expect(snapshot.nbLignesImpayees).toBe(2);
+    expect(snapshot.totalMontantImpaye).toBe(380.55);
+    expect(snapshot.nbImpayes).toBe(3);
+    expect(snapshot.nbLignesImpayees).toBe(3);
   });
 });

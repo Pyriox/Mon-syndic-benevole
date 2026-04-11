@@ -17,7 +17,14 @@ type DashboardUnpaidLineRow = {
   montant_du: number | null;
   paye: boolean | null;
   date_echeance: string | null;
+  appel_statut?: string | null;
 };
+
+const DASHBOARD_UNPAID_ACTIVE_STATUSES = new Set(['publie', 'confirme']);
+
+export function isDashboardUnpaidActiveStatus(statut: string | null | undefined) {
+  return statut == null || DASHBOARD_UNPAID_ACTIVE_STATUSES.has(statut);
+}
 
 export function buildDashboardExpenseSnapshot({
   depensesRecentes,
@@ -84,6 +91,7 @@ export function buildDashboardUnpaidSnapshot({
   today?: string;
 }) {
   const overdueLines = (lignes ?? []).filter((ligne) => {
+    if (!isDashboardUnpaidActiveStatus(ligne.appel_statut)) return false;
     if (ligne.paye) return false;
     if ((ligne.montant_du ?? 0) <= 0) return false;
     if (!ligne.date_echeance) return false;
