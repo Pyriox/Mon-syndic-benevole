@@ -39,7 +39,8 @@ export async function GET(req: NextRequest) {
     .from('assemblees_generales')
     .select('id, copropriete_id, titre, date_ag, lieu, convocation_envoyee_le, convocation_rappel_j14_at, coproprietes(nom, syndic_id)')
     .eq('statut', 'planifiee')
-    .eq('date_ag', j14)
+    .gt('date_ag', j7)
+    .lte('date_ag', j14)
     .not('convocation_envoyee_le', 'is', null)
     .is('convocation_rappel_j14_at', null);
 
@@ -47,7 +48,8 @@ export async function GET(req: NextRequest) {
     .from('assemblees_generales')
     .select('id, copropriete_id, titre, date_ag, lieu, convocation_envoyee_le, convocation_rappel_j7_at, coproprietes(nom, syndic_id)')
     .eq('statut', 'planifiee')
-    .eq('date_ag', j7)
+    .gte('date_ag', today)
+    .lte('date_ag', j7)
     .not('convocation_envoyee_le', 'is', null)
     .is('convocation_rappel_j7_at', null);
 
