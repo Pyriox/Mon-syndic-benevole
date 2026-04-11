@@ -1,14 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import { formatEuros } from '@/lib/utils';
 import type { CoproprietaireBalanceAccountType, CoproprietaireBalanceSourceType } from '@/lib/coproprietaire-balance';
 import { History, Loader2 } from 'lucide-react';
-
-type BalanceFilter = 'all' | 'principal' | 'fonds_travaux' | 'regularisation';
 
 export interface BalanceEventRow {
   id: string;
@@ -21,13 +19,6 @@ export interface BalanceEventRow {
   balance_after: number;
   created_at: string;
 }
-
-const FILTER_LABELS: Record<BalanceFilter, string> = {
-  all: 'Tous',
-  principal: 'Compte principal',
-  fonds_travaux: 'Fonds travaux',
-  regularisation: 'Régularisation',
-};
 
 function formatEventDate(value: string) {
   return new Date(`${value}T00:00:00`).toLocaleDateString('fr-FR', {
@@ -62,13 +53,6 @@ function accountLabel(accountType: CoproprietaireBalanceAccountType) {
   }
 }
 
-function matchesFilter(event: BalanceEventRow, filter: BalanceFilter) {
-  if (filter === 'all') return true;
-  if (filter === 'principal') return event.account_type === 'principal' || event.account_type === 'mixte';
-  if (filter === 'fonds_travaux') return event.account_type === 'fonds_travaux' || event.account_type === 'mixte';
-  return event.account_type === 'regularisation';
-}
-
 export default function CoproprietaireBalanceHistory({
   coproprietaireId,
   displayName,
@@ -88,17 +72,11 @@ export default function CoproprietaireBalanceHistory({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [events, setEvents] = useState<BalanceEventRow[]>(initialEvents);
-  const [selectedFilter, setSelectedFilter] = useState<BalanceFilter>('all');
   const shouldShowSummary = showSummary ?? mode === 'modal';
 
   useEffect(() => {
     setEvents(initialEvents);
   }, [initialEvents]);
-
-  const visibleEvents = useMemo(
-    () => events.filter((event) => matchesFilter(event, selectedFilter)),
-    [events, selectedFilter],
-  );
 
   const loadEvents = async () => {
     setLoading(true);
@@ -139,22 +117,6 @@ export default function CoproprietaireBalanceHistory({
             <p className={`text-2xl font-bold ${amountClass(currentBalance)}`}>{formatEuros(currentBalance)}</p>
           </div>
         )}
-        <div className="flex flex-wrap gap-2">
-          {(Object.keys(FILTER_LABELS) as BalanceFilter[]).map((filterKey) => (
-            <button
-              key={filterKey}
-              type="button"
-              onClick={() => setSelectedFilter(filterKey)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                selectedFilter === filterKey
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              {FILTER_LABELS[filterKey]}
-            </button>
-          ))}
-        </div>
       </div>
 
       {loading ? (
@@ -163,9 +125,9 @@ export default function CoproprietaireBalanceHistory({
         </div>
       ) : error ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-      ) : visibleEvents.length === 0 ? (
+      ) : events.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
-          Aucun mouvement enregistré pour ce filtre pour le moment.
+          Aucun mouvement enregistré pour le moment.
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -179,7 +141,7 @@ export default function CoproprietaireBalanceHistory({
               </tr>
             </thead>
             <tbody>
-              {visibleEvents.map((event, index) => (
+              {events.map((event, index) => (
                 <tr key={event.id} className={index > 0 ? 'border-t border-slate-100' : ''}>
                   <td className="px-4 py-3 align-top text-slate-600 whitespace-nowrap">{formatEventDate(event.event_date)}</td>
                   <td className="px-4 py-3 align-top">

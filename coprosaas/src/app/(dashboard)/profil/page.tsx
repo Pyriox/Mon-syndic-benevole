@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Mon profil' };
 
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card, { CardHeader } from '@/components/ui/Card';
 import PageHelp from '@/components/ui/PageHelp';
 import { ProfilEditActions, ProfilIdentiteEditor, LotsActions, SecurityActions, DeleteAccountSection } from './ProfilActions';
@@ -23,8 +23,7 @@ export default async function ProfilPage() {
   const fullName: string = user.user_metadata?.full_name ?? '';
   const email: string = user.email ?? '';
 
-  const cookieStore = await cookies();
-  const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
+  const { role: currentViewRole, selectedCoproId } = await requireCoproAccess();
 
   // Toutes les copropriétés gérées par ce syndic + leurs lots
   const { data: coproprietes } = await supabase
@@ -33,8 +32,8 @@ export default async function ProfilPage() {
     .eq('syndic_id', user.id)
     .order('nom');
 
-  // Rôle déterminé depuis la DB (plus fiable que les métadonnées)
-  const accountRole: 'syndic' | 'copropriétaire' = (coproprietes ?? []).length > 0 ? 'syndic' : 'copropriétaire';
+  // Le profil doit refléter la vue active sélectionnée dans le dashboard.
+  const accountRole: 'syndic' | 'copropriétaire' = currentViewRole ?? ((coproprietes ?? []).length > 0 ? 'syndic' : 'copropriétaire');
 
   const selectedCopro = (coproprietes ?? []).find((c) => c.id === selectedCoproId) ?? null;
 

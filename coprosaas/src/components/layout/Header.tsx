@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare, Crown } from 'lucide-react';
+import { setDashboardViewMode } from '@/lib/actions/set-dashboard-view-mode';
 import { cn } from '@/lib/utils';
 import { hasDualDashboardView, toDashboardViewMode } from '@/lib/dashboard-view-mode';
 import type { AppNotification, Role } from '@/types';
@@ -136,8 +137,9 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
     if (nextRole === userRole) return;
 
     startSwitchTransition(() => {
-      document.cookie = `dashboard_view_mode=${toDashboardViewMode(nextRole)}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=strict`;
-      router.refresh();
+      void setDashboardViewMode(toDashboardViewMode(nextRole)).then(() => {
+        router.refresh();
+      });
     });
   };
 
