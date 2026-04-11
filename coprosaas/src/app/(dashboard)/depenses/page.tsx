@@ -301,6 +301,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
           }))
           .filter((scope) => scope.myAmount > 0)
       : [];
+    const shouldShowDetailedBreakdown = myScopeBreakdown.some((scope) => scope.label !== 'Charges communes') || myScopeBreakdown.length > 1;
 
     return (
       <div className="max-w-5xl mx-auto space-y-6">
@@ -317,6 +318,121 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
         <PageHelp tone="slate">
           Consultez ici les dépenses déjà enregistrées pour la copropriété et la part théorique qui vous revient selon vos tantièmes.
         </PageHelp>
+
+        {depenses && depenses.length > 0 && (
+          <div className="space-y-6">
+            {/* Ma quote-part */}
+            <Card>
+              <h3 className="font-semibold text-gray-900 mb-4">Ma quote-part</h3>
+              {myPart > 0 || myTant > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-sm text-gray-600">{scopeSummary.isGeneralOnly ? 'Mes tantièmes' : 'Base de calcul'}</span>
+                    <span className="font-semibold text-gray-900 text-right">
+                      {scopeSummary.isGeneralOnly ? `${myTant} / ${totalTantiemes}` : scopeSummary.label}
+                    </span>
+                  </div>
+                  {shouldShowDetailedBreakdown ? (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Détail par clé</p>
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
+                        {myScopeBreakdown.map((scope) => (
+                          <div key={scope.label} className="rounded-lg border border-slate-200 bg-white p-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-medium text-gray-800">{scope.label}</p>
+                                <p className="text-xs text-gray-500">
+                                  {scope.totalWeight > 0
+                                    ? `${scope.myWeight} / ${scope.totalWeight} ${scope.label === 'Charges communes' ? 'tantièmes' : 'sur la clé'}`
+                                    : 'Calcul à partir des lignes enregistrées'}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-gray-900">{formatEuros(scope.myAmount)}</p>
+                                <p className="text-[11px] text-gray-500">sur {formatEuros(scope.totalAmount)}</p>
+                              </div>
+                            </div>
+                            <div className="mt-2 flex items-center gap-2">
+                              <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-blue-400"
+                                  style={{ width: `${Math.min(Math.max(scope.myPct * 100, 0), 100)}%` }}
+                                />
+                              </div>
+                              <span className="w-12 text-right text-xs font-semibold text-gray-700">
+                                {(scope.myPct * 100).toFixed(1)}%
+                              </span>
+                            </div>
+                            <p className="mt-1 text-[11px] text-gray-500">de cette clé</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : myScopeBreakdown[0] ? (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">Récapitulatif</p>
+                          <p className="text-xs text-gray-500">
+                            {myScopeBreakdown[0].totalWeight > 0
+                              ? `${myScopeBreakdown[0].myWeight} / ${myScopeBreakdown[0].totalWeight} tantièmes`
+                              : 'Calcul à partir des lignes enregistrées'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-gray-900">{formatEuros(myScopeBreakdown[0].myAmount)}</p>
+                          <p className="text-[11px] text-gray-500">sur {formatEuros(myScopeBreakdown[0].totalAmount)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Ma part</span>
+                    <span className="font-bold text-blue-700 text-lg">{formatEuros(myPart)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Pourcentage global</span>
+                    <span className="font-semibold text-gray-700">{Math.round(myPct * 100)}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="bg-blue-400 h-full rounded-full" style={{ width: `${Math.round(myPct * 100)}%` }} />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 italic text-center py-4">
+                  Aucun lot associé à votre fiche pour calculer votre quote-part.
+                </p>
+              )}
+            </Card>
+
+            {/* Répartition par catégorie */}
+            <Card>
+              <h3 className="font-semibold text-gray-900 mb-4">Répartition par catégorie</h3>
+              <div className="space-y-3">
+                {repartitionCatSorted.map(({ cat, total, pct }) => (
+                  <div key={cat}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${catColorMap[cat] ?? 'bg-gray-300'}`} />
+                        <span className="text-gray-700 font-medium">{LABELS_CATEGORIE[cat] ?? cat}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-500">
+                        <span>{formatEuros(total)}</span>
+                        <span className="font-semibold text-gray-700 w-9 text-right">{pct}%</span>
+                      </div>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`${catColorMap[cat] ?? 'bg-gray-300'} h-full rounded-full`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs text-gray-400 pt-2 border-t border-gray-100 text-right">
+                  Total : <span className="font-semibold text-gray-600">{formatEuros(totalDepenses)}</span>
+                </p>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {depenses && depenses.length > 0 ? (
           <>
@@ -404,104 +520,6 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
             title="Aucune dépense enregistrée"
             description="Aucune dépense n'a été saisie pour cette copropriété."
           />
-        )}
-
-        {depenses && depenses.length > 0 && (
-          <div className="space-y-6">
-            {/* Ma quote-part */}
-            <Card>
-              <h3 className="font-semibold text-gray-900 mb-4">Ma quote-part</h3>
-              {myPart > 0 || myTant > 0 ? (
-                <div className="space-y-4">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-sm text-gray-600">{scopeSummary.isGeneralOnly ? 'Mes tantièmes' : 'Base de calcul'}</span>
-                    <span className="font-semibold text-gray-900 text-right">
-                      {scopeSummary.isGeneralOnly ? `${myTant} / ${totalTantiemes}` : scopeSummary.label}
-                    </span>
-                  </div>
-                  {myScopeBreakdown.length > 0 && (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Détail par clé</p>
-                      <div className="mt-3 grid gap-3 md:grid-cols-2">
-                        {myScopeBreakdown.map((scope) => (
-                          <div key={scope.label} className="rounded-lg border border-slate-200 bg-white p-3">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="text-sm font-medium text-gray-800">{scope.label}</p>
-                                <p className="text-xs text-gray-500">
-                                  {scope.totalWeight > 0
-                                    ? `${scope.myWeight} / ${scope.totalWeight} ${scope.label === 'Charges communes' ? 'tantièmes' : 'sur la clé'}`
-                                    : 'Calcul à partir des lignes enregistrées'}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm font-semibold text-gray-900">{formatEuros(scope.myAmount)}</p>
-                                <p className="text-[11px] text-gray-500">sur {formatEuros(scope.totalAmount)}</p>
-                              </div>
-                            </div>
-                            <div className="mt-2 flex items-center gap-2">
-                              <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-blue-400"
-                                  style={{ width: `${Math.min(Math.max(scope.myPct * 100, 0), 100)}%` }}
-                                />
-                              </div>
-                              <span className="w-12 text-right text-xs font-semibold text-gray-700">
-                                {(scope.myPct * 100).toFixed(1)}%
-                              </span>
-                            </div>
-                            <p className="mt-1 text-[11px] text-gray-500">de cette clé</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Ma part</span>
-                    <span className="font-bold text-blue-700 text-lg">{formatEuros(myPart)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Pourcentage global</span>
-                    <span className="font-semibold text-gray-700">{Math.round(myPct * 100)}%</span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="bg-blue-400 h-full rounded-full" style={{ width: `${Math.round(myPct * 100)}%` }} />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400 italic text-center py-4">
-                  Aucun lot associé à votre fiche pour calculer votre quote-part.
-                </p>
-              )}
-            </Card>
-
-            {/* Répartition par catégorie */}
-            <Card>
-              <h3 className="font-semibold text-gray-900 mb-4">Répartition par catégorie</h3>
-              <div className="space-y-3">
-                {repartitionCatSorted.map(({ cat, total, pct }) => (
-                  <div key={cat}>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${catColorMap[cat] ?? 'bg-gray-300'}`} />
-                        <span className="text-gray-700 font-medium">{LABELS_CATEGORIE[cat] ?? cat}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-gray-500">
-                        <span>{formatEuros(total)}</span>
-                        <span className="font-semibold text-gray-700 w-9 text-right">{pct}%</span>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`${catColorMap[cat] ?? 'bg-gray-300'} h-full rounded-full`} style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                ))}
-                <p className="text-xs text-gray-400 pt-2 border-t border-gray-100 text-right">
-                  Total : <span className="font-semibold text-gray-600">{formatEuros(totalDepenses)}</span>
-                </p>
-              </div>
-            </Card>
-          </div>
         )}
       </div>
     );
