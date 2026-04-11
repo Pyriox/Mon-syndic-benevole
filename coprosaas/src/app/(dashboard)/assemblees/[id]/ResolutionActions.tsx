@@ -302,23 +302,31 @@ export default function ResolutionActions({ agId, showLabel, nextNumero, special
                       onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? { ...x, montant: e.target.value } : x))}
                       className="w-full text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
-                    <select
-                      value={p.repartition_type === 'groupe' && p.repartition_cible ? `groupe:${p.repartition_cible}` : 'generale'}
-                      onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? {
-                        ...x,
-                        repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
-                        repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : '',
-                      } : x))}
-                      className="text-sm rounded-lg border border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="generale">Charges communes</option>
-                      {!specialChargesEnabled && p.repartition_type === 'groupe' && p.repartition_cible && (
-                        <option value={`groupe:${p.repartition_cible}`}>Lecture seule · {p.repartition_cible}</option>
-                      )}
-                      {specialChargesEnabled && availableRepartitionGroups.map((group) => (
-                        <option key={group} value={`groupe:${group}`}>Seulement {group}</option>
-                      ))}
-                    </select>
+                    {((specialChargesEnabled && availableRepartitionGroups.length > 0) || (p.repartition_type === 'groupe' && p.repartition_cible)) ? (
+                      <select
+                        value={p.repartition_type === 'groupe' && p.repartition_cible ? `groupe:${p.repartition_cible}` : 'generale'}
+                        onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? {
+                          ...x,
+                          repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
+                          repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : '',
+                        } : x))}
+                        className="text-sm rounded-lg border border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="generale">Charges communes</option>
+                        {p.repartition_type === 'groupe' && p.repartition_cible && (!specialChargesEnabled || !availableRepartitionGroups.includes(p.repartition_cible)) && (
+                          <option value={`groupe:${p.repartition_cible}`}>
+                            {specialChargesEnabled ? p.repartition_cible : `Lecture seule · ${p.repartition_cible}`}
+                          </option>
+                        )}
+                        {specialChargesEnabled && availableRepartitionGroups.map((group) => (
+                          <option key={group} value={`groupe:${group}`}>{group}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="text-sm rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-gray-600">
+                        Charges communes
+                      </div>
+                    )}
                     <button type="button" onClick={() => setBudgetPostes((prev) => prev.filter((_, idx) => idx !== i))}
                       className="p-1 text-gray-400 hover:text-red-500 transition-colors">
                       <Trash2 size={14} />
@@ -570,23 +578,31 @@ export function ResolutionEdit({
                       onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? { ...x, montant: e.target.value } : x))}
                       className="w-full text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
-                    <select
-                      value={p.repartition_type === 'groupe' && p.repartition_cible ? `groupe:${p.repartition_cible}` : 'generale'}
-                      onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? {
-                        ...x,
-                        repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
-                        repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : '',
-                      } : x))}
-                      className="text-sm rounded-lg border border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="generale">Charges communes</option>
-                      {!specialChargesEnabled && p.repartition_type === 'groupe' && p.repartition_cible && (
-                        <option value={`groupe:${p.repartition_cible}`}>Lecture seule · {p.repartition_cible}</option>
-                      )}
-                      {specialChargesEnabled && availableRepartitionGroups.map((group) => (
-                        <option key={group} value={`groupe:${group}`}>Seulement {group}</option>
-                      ))}
-                    </select>
+                    {((specialChargesEnabled && availableRepartitionGroups.length > 0) || (p.repartition_type === 'groupe' && p.repartition_cible)) ? (
+                      <select
+                        value={p.repartition_type === 'groupe' && p.repartition_cible ? `groupe:${p.repartition_cible}` : 'generale'}
+                        onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? {
+                          ...x,
+                          repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
+                          repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : '',
+                        } : x))}
+                        className="text-sm rounded-lg border border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="generale">Charges communes</option>
+                        {p.repartition_type === 'groupe' && p.repartition_cible && (!specialChargesEnabled || !availableRepartitionGroups.includes(p.repartition_cible)) && (
+                          <option value={`groupe:${p.repartition_cible}`}>
+                            {specialChargesEnabled ? p.repartition_cible : `Lecture seule · ${p.repartition_cible}`}
+                          </option>
+                        )}
+                        {specialChargesEnabled && availableRepartitionGroups.map((group) => (
+                          <option key={group} value={`groupe:${group}`}>{group}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="text-sm rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-gray-600">
+                        Charges communes
+                      </div>
+                    )}
                     <button type="button" onClick={() => setBudgetPostes((prev) => prev.filter((_, idx) => idx !== i))}
                       className="p-1 text-gray-400 hover:text-red-500 transition-colors">
                       <Trash2 size={14} />

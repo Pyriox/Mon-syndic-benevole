@@ -656,25 +656,33 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
                                 budgetPostes: r.budgetPostes.map((x, idx) => idx === i ? { ...x, montant: e.target.value } : x),
                               })}
                               className="w-full text-xs rounded-lg border border-indigo-200 bg-white px-2 py-1.5 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                            <select
-                              value={p.repartition_type === 'groupe' && p.repartition_cible ? `groupe:${p.repartition_cible}` : 'generale'}
-                              onChange={(e) => updateResolution(r.id, {
-                                budgetPostes: r.budgetPostes.map((x, idx) => idx === i ? {
-                                  ...x,
-                                  repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
-                                  repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : '',
-                                } : x),
-                              })}
-                              className="text-xs rounded-lg border border-indigo-200 bg-white px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                              <option value="generale">Charges communes</option>
-                              {!specialChargesEnabled && p.repartition_type === 'groupe' && p.repartition_cible && (
-                                <option value={`groupe:${p.repartition_cible}`}>Lecture seule · {p.repartition_cible}</option>
-                              )}
-                              {specialChargesEnabled && availableRepartitionGroups.map((group) => (
-                                <option key={group} value={`groupe:${group}`}>Seulement {group}</option>
-                              ))}
-                            </select>
+                            {((specialChargesEnabled && availableRepartitionGroups.length > 0) || (p.repartition_type === 'groupe' && p.repartition_cible)) ? (
+                              <select
+                                value={p.repartition_type === 'groupe' && p.repartition_cible ? `groupe:${p.repartition_cible}` : 'generale'}
+                                onChange={(e) => updateResolution(r.id, {
+                                  budgetPostes: r.budgetPostes.map((x, idx) => idx === i ? {
+                                    ...x,
+                                    repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
+                                    repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : '',
+                                  } : x),
+                                })}
+                                className="text-xs rounded-lg border border-indigo-200 bg-white px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              >
+                                <option value="generale">Charges communes</option>
+                                {p.repartition_type === 'groupe' && p.repartition_cible && (!specialChargesEnabled || !availableRepartitionGroups.includes(p.repartition_cible)) && (
+                                  <option value={`groupe:${p.repartition_cible}`}>
+                                    {specialChargesEnabled ? p.repartition_cible : `Lecture seule · ${p.repartition_cible}`}
+                                  </option>
+                                )}
+                                {specialChargesEnabled && availableRepartitionGroups.map((group) => (
+                                  <option key={group} value={`groupe:${group}`}>{group}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div className="text-xs rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-indigo-700">
+                                Charges communes
+                              </div>
+                            )}
                             <button type="button"
                               onClick={() => updateResolution(r.id, { budgetPostes: r.budgetPostes.filter((_, idx) => idx !== i) })}
                               className="p-1 text-indigo-400 hover:text-red-500 transition-colors">

@@ -769,7 +769,7 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
                         {specialChargesEnabled
                           ? (
                             availableRepartitionGroups.length === 0
-                              ? 'Commencez simplement par renseigner un bâtiment dans vos lots.'
+                              ? 'Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'
                               : `Vous pouvez aussi cibler : ${availableRepartitionGroups.join(', ')}.`
                           )
                           : 'Les répartitions spéciales sont réservées à l’option payante Charges spéciales. Vous pouvez néanmoins conserver des charges communes.'}
@@ -789,27 +789,33 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
                         <input type="number" min="0" step="0.01" placeholder="0,00" value={poste.montant}
                           onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? { ...x, montant: e.target.value } : x))}
                           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        <select
-                          value={poste.repartition_type === 'groupe' && poste.repartition_cible ? `groupe:${poste.repartition_cible}` : 'generale'}
-                          onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? {
-                            ...x,
-                            repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
-                            repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : null,
-                          } : x))}
-                          className="rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="generale">Charges communes</option>
-                          {!specialChargesEnabled && poste.repartition_type === 'groupe' && poste.repartition_cible && (
-                            <option value={`groupe:${poste.repartition_cible}`}>
-                              Lecture seule · {poste.repartition_cible}
-                            </option>
-                          )}
-                          {specialChargesEnabled && availableRepartitionGroups.map((group) => (
-                            <option key={group} value={`groupe:${group}`}>
-                              Seulement {group}
-                            </option>
-                          ))}
-                        </select>
+                        {((specialChargesEnabled && availableRepartitionGroups.length > 0) || (poste.repartition_type === 'groupe' && poste.repartition_cible)) ? (
+                          <select
+                            value={poste.repartition_type === 'groupe' && poste.repartition_cible ? `groupe:${poste.repartition_cible}` : 'generale'}
+                            onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? {
+                              ...x,
+                              repartition_type: e.target.value.startsWith('groupe:') ? 'groupe' : 'generale',
+                              repartition_cible: e.target.value.startsWith('groupe:') ? e.target.value.slice(7) : null,
+                            } : x))}
+                            className="rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="generale">Charges communes</option>
+                            {poste.repartition_type === 'groupe' && poste.repartition_cible && (!specialChargesEnabled || !availableRepartitionGroups.includes(poste.repartition_cible)) && (
+                              <option value={`groupe:${poste.repartition_cible}`}>
+                                {specialChargesEnabled ? poste.repartition_cible : `Lecture seule · ${poste.repartition_cible}`}
+                              </option>
+                            )}
+                            {specialChargesEnabled && availableRepartitionGroups.map((group) => (
+                              <option key={group} value={`groupe:${group}`}>
+                                {group}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div className="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-sm text-gray-600">
+                            Charges communes
+                          </div>
+                        )}
                         {postes.length > 1 && (
                           <button type="button" onClick={() => setPostes((p) => p.filter((_, i) => i !== idx))}
                             className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">

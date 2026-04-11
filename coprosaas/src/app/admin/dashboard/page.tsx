@@ -19,6 +19,7 @@ import { isAdminUser } from '@/lib/admin-config';
 import { getSupportAttentionSummary } from '@/lib/admin-support';
 import { formatRelativeDayLabel } from '@/lib/admin-date';
 import { formatAdminCurrency } from '@/lib/admin-format';
+import { countActiveAddonCopros, summarizeStripeBilling } from '@/lib/admin-dashboard';
 import AdminStatCard from '../AdminStatCard';
 const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
 const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -58,6 +59,7 @@ export default async function AdminDashboardPage() {
     { data: lotsParCopro },
     { data: coproprietairesParCopro },
     { data: agParCopro },
+    { data: coproAddons },
     supportAttention,
   ] = await Promise.all([
     admin.from('lots').select('id', { count: 'exact', head: true }),
@@ -72,6 +74,7 @@ export default async function AdminDashboardPage() {
     admin.from('lots').select('copropriete_id'),
     admin.from('coproprietaires').select('copropriete_id'),
     admin.from('assemblees_generales').select('copropriete_id'),
+    admin.from('copro_addons').select('copropriete_id, addon_key, status, current_period_end, cancel_at_period_end').eq('addon_key', 'charges_speciales'),
     getSupportAttentionSummary(admin),
   ]);
 
@@ -80,7 +83,7 @@ export default async function AdminDashboardPage() {
 
   // Stripe (non-blocking)
   type StripeCharge = { id: string; amount: number; status: string; customerId: string | null; created: number };
-  type StripeInvoice = { id: string; amount_paid: number; status: string; customerId: string | null; created: number; billingReason: string | null };
+  type StripeInvoice = { id: string; amount_paid: number; status: string; customerId: string | null; subscriptionId: string | null; created: number; billingReason: string | null };
   let stripeCharges: StripeCharge[] = [];
   let stripeInvoices: StripeInvoice[] = [];
   let stripeStatus: 'ok' | 'warning' = 'ok';
@@ -102,6 +105,7 @@ export default async function AdminDashboardPage() {
       amount_paid: inv.amount_paid / 100,
       status: inv.status ?? 'paid',
       customerId: typeof inv.customer === 'string' ? inv.customer : null,
+      subscriptionId: null,
       created: inv.created,
       billingReason: inv.billing_reason ?? null,
     }));
@@ -132,6 +136,7 @@ export default async function AdminDashboardPage() {
   }
   const arr = Object.entries(planBreakdown).reduce((sum, [id, nb]) => sum + (ARR_PRICES[id] ?? 0) * nb, 0);
   const conversionPct = nbCoproprietes > 0 ? Math.round((nbActifs / nbCoproprietes) * 100) : 0;
+  const nbChargesSpecialesActives = countActiveAddonCopros(coproAddons ?? []);
 
   const hadStripe = coprosTyped.filter((c) => c.stripe_customer_id);
   const churned   = hadStripe.filter((c) => c.plan === 'resilie');
@@ -150,19 +155,13 @@ export default async function AdminDashboardPage() {
     .filter((inv) => inv.created >= startOfMonthTs && inv.created <= nowTs)
     .reduce((s, inv) => s + inv.amount_paid, 0);
 
-  // Renouvellements effectifs cette année (billing_reason = 'subscription_cycle')
+  // Renouvellements payants cette année, en excluant le 1er paiement après essai.
   const startOfYearTs = new Date(today.getFullYear(), 0, 1).getTime() / 1000;
-  const renouvellements = stripeInvoices.filter(
-    (inv) => inv.billingReason === 'subscription_cycle' && inv.created >= startOfYearTs
-  );
-  const nbRenouvellements = renouvellements.length;
-  const cashRenouvellements = renouvellements.reduce((s, inv) => s + inv.amount_paid, 0);
-
-  // Nouveaux abonnements cette année (subscription_create)
-  const newSubsAnnee = stripeInvoices.filter(
-    (inv) => inv.billingReason === 'subscription_create' && inv.created >= startOfYearTs
-  );
-  const cashNewSubsAnnee = newSubsAnnee.reduce((s, inv) => s + inv.amount_paid, 0);
+  const billingSummary = summarizeStripeBilling(stripeInvoices, today.getFullYear());
+  const nbRenouvellements = billingSummary.renewalCount;
+  const cashRenouvellements = billingSummary.renewalCash;
+  const newSubsAnneeCount = billingSummary.newSubscriptionCount;
+  const cashNewSubsAnnee = billingSummary.newSubscriptionCash;
 
   // Total cash encaissé cette année
   const cashTotalAnnee = stripeInvoices
@@ -283,11 +282,12 @@ export default async function AdminDashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <AdminStatCard label="ARR" value={formatAdminCurrency(arr)} sub={`Conv. ${conversionPct} % · ${nbActifs} abonnés actifs`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
           <AdminStatCard label="Cash encaissé (mois)" value={formatAdminCurrency(cashCeMois)} sub={`${today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`} icon={Receipt} color="bg-blue-100 text-blue-600" />
-          <AdminStatCard label="Cash encaissé (année)" value={formatAdminCurrency(cashTotalAnnee)} sub={`Dont ${formatAdminCurrency(cashNewSubsAnnee)} nouveaux · ${formatAdminCurrency(cashRenouvellements)} renouv.`} icon={BarChart3} color="bg-violet-100 text-violet-600" />
-          <AdminStatCard label="Renouvellements (année)" value={nbRenouvellements} sub={`${formatAdminCurrency(cashRenouvellements)} encaissés · ${newSubsAnnee.length} nouveaux abonnés`} icon={TrendingUp} color="bg-teal-100 text-teal-600" />
+          <AdminStatCard label="Cash encaissé (année)" value={formatAdminCurrency(cashTotalAnnee)} sub={`Dont ${formatAdminCurrency(cashNewSubsAnnee)} 1ers paiements · ${formatAdminCurrency(cashRenouvellements)} renouv.`} icon={BarChart3} color="bg-violet-100 text-violet-600" />
+          <AdminStatCard label="Renouvellements (année)" value={nbRenouvellements} sub={`${formatAdminCurrency(cashRenouvellements)} encaissés · essais convertis exclus`} icon={TrendingUp} color="bg-teal-100 text-teal-600" />
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
           <AdminStatCard label="Abonnés actifs" value={nbActifs} sub={`Essentiel ${planBreakdown.essentiel} · Confort ${planBreakdown.confort} · Illimité ${planBreakdown.illimite}`} icon={CreditCard} color="bg-blue-100 text-blue-600" />
+          <AdminStatCard label="Charges spéciales actives" value={nbChargesSpecialesActives} sub={`${nbChargesSpecialesActives} option${nbChargesSpecialesActives > 1 ? 's' : ''} en cours`} icon={Building2} color="bg-fuchsia-100 text-fuchsia-600" />
           <AdminStatCard label="Essais actifs" value={nbEssai} icon={Zap} color="bg-amber-100 text-amber-600" />
           <AdminStatCard label="Impayés" value={nbPasseDu} sub={nbPasseDu > 0 ? 'Action requise' : 'Aucun impayé'} icon={XCircle} color={nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={nbPasseDu > 0} />
           <AdminStatCard label="Taux de résiliation" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} ayant eu un abonnement`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
