@@ -285,9 +285,25 @@ export default async function AdminDashboardPage() {
           <AdminStatCard label="Cash encaissé (année)" value={formatAdminCurrency(cashTotalAnnee)} sub={`Dont ${formatAdminCurrency(cashNewSubsAnnee)} 1ers paiements · ${formatAdminCurrency(cashRenouvellements)} renouv.`} icon={BarChart3} color="bg-violet-100 text-violet-600" />
           <AdminStatCard label="Renouvellements (année)" value={nbRenouvellements} sub={`${formatAdminCurrency(cashRenouvellements)} encaissés · essais convertis exclus`} icon={TrendingUp} color="bg-teal-100 text-teal-600" />
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
-          <AdminStatCard label="Abonnés actifs" value={nbActifs} sub={`Essentiel ${planBreakdown.essentiel} · Confort ${planBreakdown.confort} · Illimité ${planBreakdown.illimite}`} icon={CreditCard} color="bg-blue-100 text-blue-600" />
-          <AdminStatCard label="Charges spéciales actives" value={nbChargesSpecialesActives} sub={`${nbChargesSpecialesActives} option${nbChargesSpecialesActives > 1 ? 's' : ''} en cours`} icon={Building2} color="bg-fuchsia-100 text-fuchsia-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+          <div className="sm:col-span-2 lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-blue-100 text-blue-600 shrink-0"><CreditCard size={18} /></div>
+            <div className="flex-1">
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Abonnements & options actives</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400">Abonnés</p>
+                  <p className="text-2xl font-bold text-gray-900">{nbActifs}</p>
+                  <p className="text-xs text-gray-500">Essentiel {planBreakdown.essentiel} · Confort {planBreakdown.confort} · Illimité {planBreakdown.illimite}</p>
+                </div>
+                <div className="sm:border-l sm:border-gray-100 sm:pl-3">
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400">Charges spéciales</p>
+                  <p className="text-2xl font-bold text-gray-900">{nbChargesSpecialesActives}</p>
+                  <p className="text-xs text-gray-500">option{nbChargesSpecialesActives > 1 ? 's' : ''} active{nbChargesSpecialesActives > 1 ? 's' : ''}</p>
+                </div>
+              </div>
+            </div>
+          </div>
           <AdminStatCard label="Essais actifs" value={nbEssai} icon={Zap} color="bg-amber-100 text-amber-600" />
           <AdminStatCard label="Impayés" value={nbPasseDu} sub={nbPasseDu > 0 ? 'Action requise' : 'Aucun impayé'} icon={XCircle} color={nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} danger={nbPasseDu > 0} />
           <AdminStatCard label="Taux de résiliation" value={`${churnRate} %`} sub={`${churned.length} résiliés / ${hadStripe.length} ayant eu un abonnement`} icon={TrendingDown} color={churnRate > 20 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'} danger={churnRate > 20} />
