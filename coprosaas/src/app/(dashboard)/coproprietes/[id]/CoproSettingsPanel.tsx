@@ -405,6 +405,14 @@ export default function CoproSettingsPanel({
       return;
     }
 
+    if (emptyKeyNames.length > 0) {
+      setError(`Renseignez une base sur au moins un lot pour chaque clé spéciale avant d’enregistrer : ${emptyKeyNames.join(', ')}.`);
+      setSuccess('');
+      setActiveSection('repartition');
+      setSaving(false);
+      return;
+    }
+
     const result = await saveCoproprieteSettings({
       coproprieteId: copropriete.id,
       nom: coproForm.nom,
@@ -498,16 +506,16 @@ export default function CoproSettingsPanel({
         </Card>
 
         {isDirty && (
-          <div className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 md:inset-x-auto md:right-6 md:bottom-6 md:w-[min(430px,calc(100vw-3rem))]">
-            <Card className="border-amber-200 bg-amber-50/95 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-amber-50/90">
-              <div className="space-y-3">
+          <div className="sticky z-40" style={{ top: 'calc(var(--dashboard-header-height, 0px) + 5.5rem)' }}>
+            <Card className="border-amber-200 bg-amber-50/95 shadow-xl backdrop-blur supports-[backdrop-filter]:bg-amber-50/90">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-amber-900">Enregistrez avant de quitter cette page</p>
                   <p className="text-xs text-amber-800 mt-1">
                     Vos dernières modifications seront perdues si vous changez d’écran sans enregistrer.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <Button type="button" variant="secondary" onClick={handleResetChanges}>
                     Annuler mes modifications
                   </Button>

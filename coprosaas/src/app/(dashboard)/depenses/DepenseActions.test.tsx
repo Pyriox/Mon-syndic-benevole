@@ -67,7 +67,7 @@ describe('DepenseActions', () => {
     fireEvent.click(screen.getByRole('button', { name: /Ajouter une dépense/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Aucune clé spéciale n’est encore configurée/i)).not.toBeNull();
+      expect(screen.getByText(/Aucune clé spéciale avec base affectée n’est encore configurée/i)).not.toBeNull();
     });
 
     expect(screen.queryByRole('combobox', { name: /Répartition de la dépense/i })).toBeNull();

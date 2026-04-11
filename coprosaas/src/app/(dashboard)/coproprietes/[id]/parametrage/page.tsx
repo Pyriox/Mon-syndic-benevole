@@ -76,17 +76,11 @@ export default async function CoproprieteParametragePage({ params }: Props) {
         <h2 className="text-2xl font-bold text-gray-900">Paramétrage</h2>
         <p className="mt-1 text-sm font-medium text-gray-600">{copro.nom}</p>
         <p className="mt-1 text-sm text-gray-600">
-          Cette page sert à préparer la copropriété avant les appels de fonds et la régularisation : utilisez <strong>Répartition des charges</strong> pour les tantièmes et clés spéciales, et <strong>Fiche copropriété</strong> pour les informations générales de l’immeuble.
+          <strong>Paramétrez ici les bases de répartition de la copropriété.</strong>
         </p>
-        <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
-          <p className="font-semibold">Ordre conseillé de mise en place</p>
-          <p className="mt-1 leading-relaxed">
-            Commencez par créer vos lots, puis ajoutez vos copropriétaires et associez-les à leurs lots. Revenez ensuite dans <strong>Répartition des charges</strong> pour vérifier les tantièmes et les éventuelles clés spéciales. En pratique, le premier appel de fonds intervient ensuite, généralement après une AG préparée puis terminée.
-          </p>
-          <p className="mt-2 leading-relaxed">
-            Accès rapides : <Link href="/coproprietaires" className="font-semibold underline underline-offset-2">copropriétaires</Link> et <Link href="/appels-de-fonds" className="font-semibold underline underline-offset-2">appels de fonds</Link>.
-          </p>
-        </div>
+        <p className="mt-2 text-sm text-gray-600">
+          Les tantièmes généraux, les éventuelles clés spéciales et les informations de la copropriété définis sur cette page seront utilisés dans les dépenses, les appels de fonds et la régularisation.
+        </p>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{lotCount} lots</span>
           <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">{assignedLotsCount} lots avec clé spéciale</span>

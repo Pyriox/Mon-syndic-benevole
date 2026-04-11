@@ -137,6 +137,27 @@ describe('CoproSettingsPanel', () => {
     expect(screen.getByText(/Local vélos · base 0/i)).toBeTruthy();
   });
 
+  it('refuse d’enregistrer une clé spéciale tant qu’aucun lot n’a de base affectée', async () => {
+    const { default: CoproSettingsPanel } = await import('./CoproSettingsPanel');
+
+    render(
+      <CoproSettingsPanel
+        copropriete={copropriete}
+        initialLots={initialLots}
+        coproMap={coproMap}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/Ajouter une clé spéciale/i), {
+      target: { value: 'Parking' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Ajouter la clé/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Enregistrer les modifications/i }));
+
+    expect(saveMock).not.toHaveBeenCalled();
+    expect(screen.getByText(/Renseignez une base sur au moins un lot pour chaque clé spéciale/i)).toBeTruthy();
+  });
+
   it('bascule réellement entre la répartition et la fiche copropriété', async () => {
     const { default: CoproSettingsPanel } = await import('./CoproSettingsPanel');
 

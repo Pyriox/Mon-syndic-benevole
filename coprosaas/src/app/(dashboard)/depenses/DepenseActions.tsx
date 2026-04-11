@@ -403,7 +403,7 @@ export default function DepenseActions({
               {shouldShowRepartitionSelector ? (
                 <>Cette dépense sera imputée selon : <span className="font-semibold">{formatRepartitionScope(formData.repartition_type, formData.repartition_cible)}</span></>
               ) : specialChargesEnabled ? (
-                <>Aucune clé spéciale n’est encore configurée dans le paramétrage de la copropriété.</>
+                <>Aucune clé spéciale avec base affectée n’est encore configurée dans le paramétrage de la copropriété.</>
               ) : (
                 <>Les répartitions spéciales par bâtiment, ascenseur ou parking sont réservées à l’option payante <strong>Charges spéciales</strong>.</>
               )}
