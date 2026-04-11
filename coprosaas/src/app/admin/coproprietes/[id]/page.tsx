@@ -13,7 +13,7 @@ import AdminSearch from '../../AdminSearch';
 import CoproprietaireBalanceHistory from '@/app/(dashboard)/coproprietaires/CoproprietaireBalanceHistory';
 import { resolveAdminBackHref } from '@/lib/admin-list-params';
 import { formatAdminDateTime } from '@/lib/admin-format';
-import { buildAdminCoproFinancialView, getAdminBalanceAccountLabel, getAdminBalanceSourceLabel } from '@/lib/admin-copro-finance';
+import { buildAdminCoproFinancialView, getAdminBalanceSourceLabel } from '@/lib/admin-copro-finance';
 
 export default async function AdminCoproDetail({
   params,
@@ -211,7 +211,6 @@ export default async function AdminCoproDetail({
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Copropriétaire</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Écriture</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Compte</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Variation</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Solde après</th>
                 </tr>
@@ -235,7 +234,6 @@ export default async function AdminCoproDetail({
                           {event.reason ? ` · Motif : ${event.reason}` : ''}
                         </p>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{getAdminBalanceAccountLabel(event.account_type)}</td>
                       <td className={`px-4 py-3 text-right font-semibold ${event.amount > 0 ? 'text-red-600' : event.amount < 0 ? 'text-emerald-700' : 'text-gray-500'}`}>
                         {event.amount > 0 ? '+' : ''}{fmtEur(event.amount)}
                       </td>
