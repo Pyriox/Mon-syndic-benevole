@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 let mockLots: Array<Record<string, unknown>> = [];
+let mockLotsLoader: () => Promise<{ data: Array<Record<string, unknown>>; error: null }> = async () => ({ data: mockLots, error: null });
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -24,7 +25,7 @@ vi.mock('@/lib/supabase/client', () => ({
       if (table === 'lots') {
         return {
           select: () => ({
-            eq: async () => ({ data: mockLots, error: null }),
+            eq: async () => mockLotsLoader(),
           }),
         };
       }
@@ -45,26 +46,38 @@ describe('DepenseActions', () => {
 
   beforeEach(() => {
     mockLots = [];
+    mockLotsLoader = async () => ({ data: mockLots, error: null });
   });
 
-  it('ne propose pas le sélecteur d’imputation spéciale quand aucune clé n’est configurée', async () => {
-    mockLots = [
-      {
-        id: 'lot-1',
-        numero: '1',
-        tantiemes: 100,
-        batiment: null,
-        groupes_repartition: [],
-        tantiemes_groupes: {},
-        coproprietaires: [{ id: 'cp-1', nom: 'Dupont', prenom: 'Jean' }],
-      },
-    ];
+  it('affiche un message de chargement avant de conclure qu’aucune clé spéciale n’est disponible', async () => {
+    const pendingLots: { release?: () => void } = {};
+    mockLotsLoader = () => new Promise((resolve) => {
+      pendingLots.release = () => resolve({
+        data: [
+          {
+            id: 'lot-1',
+            numero: '1',
+            tantiemes: 100,
+            batiment: null,
+            groupes_repartition: [],
+            tantiemes_groupes: {},
+            coproprietaires: [{ id: 'cp-1', nom: 'Dupont', prenom: 'Jean' }],
+          },
+        ],
+        error: null,
+      });
+    });
 
     const { default: DepenseActions } = await import('./DepenseActions');
 
     render(<DepenseActions coproprietes={[{ id: 'copro-1', nom: 'Résidence Test' }]} showLabel />);
 
     fireEvent.click(screen.getByRole('button', { name: /Ajouter une dépense/i }));
+
+    expect(screen.getByText(/Chargement des clés spéciales configurées/i)).not.toBeNull();
+    expect(screen.queryByText(/Aucune clé spéciale avec base affectée n’est encore configurée/i)).toBeNull();
+
+    pendingLots.release?.();
 
     await waitFor(() => {
       expect(screen.getByText(/Aucune clé spéciale avec base affectée n’est encore configurée/i)).not.toBeNull();

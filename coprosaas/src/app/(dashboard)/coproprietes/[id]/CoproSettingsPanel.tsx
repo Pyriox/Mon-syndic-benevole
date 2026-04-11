@@ -506,32 +506,35 @@ export default function CoproSettingsPanel({
         </Card>
 
         {isDirty && (
-          <div className="sticky z-40" style={{ top: 'calc(var(--dashboard-header-height, 0px) + 5.5rem)' }}>
-            <Card className="border-amber-200 bg-amber-50/95 shadow-xl backdrop-blur supports-[backdrop-filter]:bg-amber-50/90">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-amber-900">Enregistrez avant de quitter cette page</p>
-                  <p className="text-xs text-amber-800 mt-1">
-                    Vos dernières modifications seront perdues si vous changez d’écran sans enregistrer.
-                  </p>
+          <>
+            <div className="fixed inset-x-4 top-[calc(var(--dashboard-header-height,0px)+0.75rem)] z-50 md:left-1/2 md:right-auto md:w-[min(980px,calc(100vw-3rem))] md:-translate-x-1/2">
+              <Card className="border-amber-200 bg-amber-50/95 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-amber-50/90">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">Enregistrez avant de quitter cette page</p>
+                    <p className="text-xs text-amber-800 mt-1">
+                      Vos dernières modifications seront perdues si vous changez d’écran sans enregistrer.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Button type="button" variant="secondary" onClick={handleResetChanges}>
+                      Annuler mes modifications
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        void handleSave();
+                      }}
+                      loading={saving}
+                    >
+                      <Save size={14} /> Enregistrer maintenant
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <Button type="button" variant="secondary" onClick={handleResetChanges}>
-                    Annuler mes modifications
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      void handleSave();
-                    }}
-                    loading={saving}
-                  >
-                    <Save size={14} /> Enregistrer maintenant
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
+              </Card>
+            </div>
+            <div aria-hidden className="h-[124px] md:h-[96px]" />
+          </>
         )}
       </div>
 

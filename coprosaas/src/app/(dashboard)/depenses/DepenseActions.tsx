@@ -64,6 +64,8 @@ export default function DepenseActions({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lotsLoading, setLotsLoading] = useState(false);
+  const [lotsError, setLotsError] = useState('');
   const [showRepartition, setShowRepartition] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pieceJointeActuelle, setPieceJointeActuelle] = useState<string | null>(depense?.piece_jointe_url ?? null);
@@ -94,13 +96,32 @@ export default function DepenseActions({
 
   // Chargement des lots avec leurs copropriétaires quand la copropriété change
   useEffect(() => {
-    if (!formData.copropriete_id || !isOpen) return;
+    if (!formData.copropriete_id) {
+      setLots([]);
+      setLotsLoading(false);
+      setLotsError('');
+      return;
+    }
+
+    let cancelled = false;
 
     const fetchLots = async () => {
-      const { data } = await supabase
+      setLotsLoading(true);
+      setLotsError('');
+
+      const { data, error: fetchError } = await supabase
         .from('lots')
         .select('id, numero, tantiemes, batiment, groupes_repartition, tantiemes_groupes, coproprietaires(id, nom, prenom)')
         .eq('copropriete_id', formData.copropriete_id);
+
+      if (cancelled) return;
+
+      if (fetchError) {
+        setLots([]);
+        setLotsLoading(false);
+        setLotsError('Impossible de charger les clés de répartition pour le moment.');
+        return;
+      }
 
       // Aplatir la relation (Supabase renvoie un tableau pour coproprietaires)
       const lotsFlat = (data ?? []).map((lot) => {
@@ -116,9 +137,14 @@ export default function DepenseActions({
       });
 
       setLots(lotsFlat);
+      setLotsLoading(false);
     };
 
     void fetchLots();
+
+    return () => {
+      cancelled = true;
+    };
   }, [formData.copropriete_id, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -128,6 +154,8 @@ export default function DepenseActions({
   const availableRepartitionGroups = useMemo(() => collectAvailableRepartitionGroups(lots), [lots]);
   const hasSpecialRepartitionChoices = specialChargesEnabled && availableRepartitionGroups.length > 0;
   const shouldShowRepartitionSelector = hasSpecialRepartitionChoices || (formData.repartition_type === 'groupe' && Boolean(formData.repartition_cible));
+  const isLoadingRepartitionChoices = specialChargesEnabled && lotsLoading && !hasSpecialRepartitionChoices;
+  const hasRepartitionLoadingError = Boolean(lotsError) && !shouldShowRepartitionSelector;
   const repartitionOptions = useMemo(() => {
     const options = [{ value: 'generale', label: 'Charges communes' }];
 
@@ -170,7 +198,22 @@ export default function DepenseActions({
     setError('');
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    if (specialChargesEnabled && lotsLoading) {
+      setError('Chargement des clés de répartition en cours. Réessayez dans un instant.');
+      setLoading(false);
+      return;
+    }
+
+    if (lotsError) {
+      setError(lotsError);
+      setLoading(false);
+      return;
+    }
 
     const repartitionCible = formData.repartition_type === 'groupe'
       ? (formData.repartition_cible || null)
@@ -374,7 +417,7 @@ export default function DepenseActions({
             />
           </div>
 
-          <div className={`rounded-xl border p-3 space-y-2 ${shouldShowRepartitionSelector ? 'border-blue-100 bg-blue-50' : specialChargesEnabled ? 'border-slate-200 bg-slate-50' : 'border-amber-200 bg-amber-50'}`}>
+          <div className={`rounded-xl border p-3 space-y-2 ${shouldShowRepartitionSelector || isLoadingRepartitionChoices ? 'border-blue-100 bg-blue-50' : hasRepartitionLoadingError ? 'border-red-200 bg-red-50' : specialChargesEnabled ? 'border-slate-200 bg-slate-50' : 'border-amber-200 bg-amber-50'}`}>
             {shouldShowRepartitionSelector ? (
               <Select
                 label="Répartition de la dépense"
@@ -391,17 +434,28 @@ export default function DepenseActions({
                 options={repartitionOptions}
                 required
               />
+            ) : isLoadingRepartitionChoices ? (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Répartition de la dépense</p>
+                <p className="text-sm text-slate-700">
+                  Chargement des clés spéciales configurées…
+                </p>
+              </div>
             ) : (
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Répartition de la dépense</p>
-                <p className={`text-sm ${specialChargesEnabled ? 'text-slate-700' : 'text-amber-900'}`}>
+                <p className={`text-sm ${hasRepartitionLoadingError ? 'text-red-700' : specialChargesEnabled ? 'text-slate-700' : 'text-amber-900'}`}>
                   Cette dépense sera imputée selon : <span className="font-semibold">Charges communes</span>
                 </p>
               </div>
             )}
-            <p className={`text-xs ${shouldShowRepartitionSelector ? (specialChargesEnabled ? 'text-blue-700' : 'text-amber-800') : (specialChargesEnabled ? 'text-slate-500' : 'text-amber-700')}`}>
+            <p className={`text-xs ${shouldShowRepartitionSelector || isLoadingRepartitionChoices ? 'text-blue-700' : hasRepartitionLoadingError ? 'text-red-700' : specialChargesEnabled ? 'text-slate-500' : 'text-amber-700'}`}>
               {shouldShowRepartitionSelector ? (
                 <>Cette dépense sera imputée selon : <span className="font-semibold">{formatRepartitionScope(formData.repartition_type, formData.repartition_cible)}</span></>
+              ) : isLoadingRepartitionChoices ? (
+                <>Les bases de répartition de la copropriété sont en cours de chargement.</>
+              ) : hasRepartitionLoadingError ? (
+                <>{lotsError}</>
               ) : specialChargesEnabled ? (
                 <>Aucune clé spéciale avec base affectée n’est encore configurée dans le paramétrage de la copropriété.</>
               ) : (
