@@ -11,7 +11,15 @@ import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import DepenseActions, { DepenseDelete } from './DepenseActions';
 import AnneeSelector from '@/components/ui/AnneeSelector';
-import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
+import {
+  calculerPart,
+  filterLotsByRepartitionScope,
+  formatEuros,
+  formatDate,
+  formatRepartitionScope,
+  getLotTantiemesForRepartitionScope,
+  LABELS_CATEGORIE,
+} from '@/lib/utils';
 import { Receipt, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
@@ -49,6 +57,98 @@ function couleurCategorie(cat: string): 'default' | 'info' | 'success' | 'warnin
   return map[cat] ?? 'default';
 }
 
+type DepenseScopeLike = {
+  id: string;
+  montant: number;
+  repartition_type?: 'generale' | 'groupe' | null;
+  repartition_cible?: string | null;
+};
+
+type LotScopeLike = {
+  id: string;
+  tantiemes: number;
+  coproprietaire_id: string | null;
+  groupes_repartition?: string[] | null;
+  tantiemes_groupes?: Record<string, number> | null;
+};
+
+type RepartitionDepenseRow = {
+  depense_id: string;
+  coproprietaire_id: string;
+  montant_du: number | null;
+};
+
+function roundEuros(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function summarizeExpenseScopes(depenses: DepenseScopeLike[]) {
+  const labels = Array.from(new Set(
+    depenses.map((depense) => formatRepartitionScope(depense.repartition_type, depense.repartition_cible))
+  )).sort((a, b) => {
+    if (a === 'Charges communes') return -1;
+    if (b === 'Charges communes') return 1;
+    return a.localeCompare(b, 'fr');
+  });
+
+  if (labels.length === 0 || (labels.length === 1 && labels[0] === 'Charges communes')) {
+    return { isGeneralOnly: true, label: 'Charges communes' };
+  }
+
+  if (labels.length === 1) {
+    return { isGeneralOnly: false, label: labels[0] };
+  }
+
+  return {
+    isGeneralOnly: false,
+    label: labels.length <= 2 ? labels.join(' + ') : 'Variable selon la dépense',
+  };
+}
+
+function computeExpensePartsByOwner(
+  depenses: DepenseScopeLike[],
+  lots: LotScopeLike[],
+  repartitionsDepenses: RepartitionDepenseRow[],
+) {
+  const totals: Record<string, number> = {};
+  const explicitByDepense = new Map<string, RepartitionDepenseRow[]>();
+
+  for (const row of repartitionsDepenses) {
+    if (!row.depense_id || !row.coproprietaire_id) continue;
+    explicitByDepense.set(row.depense_id, [...(explicitByDepense.get(row.depense_id) ?? []), row]);
+  }
+
+  for (const depense of depenses) {
+    const explicitRows = explicitByDepense.get(depense.id) ?? [];
+
+    if (explicitRows.length > 0) {
+      for (const row of explicitRows) {
+        totals[row.coproprietaire_id] = roundEuros((totals[row.coproprietaire_id] ?? 0) + Number(row.montant_du ?? 0));
+      }
+      continue;
+    }
+
+    const scopedLots = filterLotsByRepartitionScope(lots, depense.repartition_type, depense.repartition_cible);
+    const weightByOwner: Record<string, number> = {};
+
+    for (const lot of scopedLots) {
+      if (!lot.coproprietaire_id) continue;
+      const weight = getLotTantiemesForRepartitionScope(lot, depense.repartition_type, depense.repartition_cible);
+      if (weight <= 0) continue;
+      weightByOwner[lot.coproprietaire_id] = (weightByOwner[lot.coproprietaire_id] ?? 0) + weight;
+    }
+
+    const totalWeight = Object.values(weightByOwner).reduce((sum, weight) => sum + weight, 0);
+    if (totalWeight <= 0) continue;
+
+    for (const [coproprietaireId, weight] of Object.entries(weightByOwner)) {
+      totals[coproprietaireId] = roundEuros((totals[coproprietaireId] ?? 0) + calculerPart(depense.montant, weight, totalWeight));
+    }
+  }
+
+  return totals;
+}
+
 export default async function DepensesPage({ searchParams }: { searchParams: Promise<{ annee?: string; page?: string }> }) {
   const { annee: anneeParam, page: pageParam } = await searchParams;
   const annee = parseInt(anneeParam ?? String(new Date().getFullYear()));
@@ -75,15 +175,23 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
         .order('date_depense', { ascending: false }),
       admin
         .from('lots')
-        .select('id, tantiemes, coproprietaire_id')
+        .select('id, tantiemes, coproprietaire_id, groupes_repartition, tantiemes_groupes')
         .eq('copropriete_id', scopeId)
         .not('coproprietaire_id', 'is', null),
       admin
         .from('coproprietaires')
-        .select('id, nom, prenom')
+        .select('id, nom, prenom, user_id, email')
         .eq('copropriete_id', scopeId)
         .order('nom'),
     ]);
+
+    const depenseIds = (depenses ?? []).map((depense) => depense.id);
+    const { data: repartitionsDepenses } = depenseIds.length > 0
+      ? await admin
+          .from('repartitions_depenses')
+          .select('depense_id, coproprietaire_id, montant_du')
+          .in('depense_id', depenseIds)
+      : { data: [] as RepartitionDepenseRow[] };
 
     const totalDepenses = depenses?.reduce((sum, d) => sum + d.montant, 0) ?? 0;
 
@@ -100,10 +208,17 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
     for (const l of lots ?? []) {
       if (l.coproprietaire_id) tantByOwner[l.coproprietaire_id] = (tantByOwner[l.coproprietaire_id] ?? 0) + (l.tantiemes ?? 0);
     }
-    const myCopro = (coproprietaires ?? []).find((c) => tantByOwner[c.id]);
+
+    const normalizedEmail = user.email?.trim().toLowerCase() ?? '';
+    const myCopro = (coproprietaires ?? []).find((coproprietaire) => {
+      const coproEmail = String(coproprietaire.email ?? '').trim().toLowerCase();
+      return coproprietaire.user_id === user.id || (!coproprietaire.user_id && normalizedEmail && coproEmail === normalizedEmail);
+    });
     const myTant = myCopro ? (tantByOwner[myCopro.id] ?? 0) : 0;
-    const myPct = totalTantiemes > 0 ? myTant / totalTantiemes : 0;
-    const myPart = totalDepenses * myPct;
+    const partsByOwner = computeExpensePartsByOwner(depenses ?? [], lots ?? [], (repartitionsDepenses ?? []) as RepartitionDepenseRow[]);
+    const myPart = myCopro ? roundEuros(partsByOwner[myCopro.id] ?? 0) : 0;
+    const myPct = totalDepenses > 0 ? myPart / totalDepenses : 0;
+    const scopeSummary = summarizeExpenseScopes(depenses ?? []);
 
     return (
       <div className="max-w-5xl mx-auto space-y-6">
@@ -241,11 +356,13 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
             {/* Ma quote-part */}
             <Card>
               <h3 className="font-semibold text-gray-900 mb-4">Ma quote-part</h3>
-              {myTant > 0 ? (
+              {myPart > 0 || myTant > 0 ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Mes tantièmes</span>
-                    <span className="font-semibold text-gray-900">{myTant} / {totalTantiemes}</span>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-sm text-gray-600">{scopeSummary.isGeneralOnly ? 'Mes tantièmes' : 'Base de calcul'}</span>
+                    <span className="font-semibold text-gray-900 text-right">
+                      {scopeSummary.isGeneralOnly ? `${myTant} / ${totalTantiemes}` : scopeSummary.label}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Ma part</span>
@@ -297,7 +414,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
     // Lots + coproprietaires pour la répartition par personne
     supabase
       .from('lots')
-      .select('id, tantiemes, coproprietaire_id')
+      .select('id, tantiemes, coproprietaire_id, groupes_repartition, tantiemes_groupes')
       .eq('copropriete_id', scopeId)
       .not('coproprietaire_id', 'is', null),
     supabase
@@ -324,6 +441,14 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
     depDossier = data;
   }
 
+  const depenseIds = (depenses ?? []).map((depense) => depense.id);
+  const { data: repartitionsDepenses } = depenseIds.length > 0
+    ? await supabase
+        .from('repartitions_depenses')
+        .select('depense_id, coproprietaire_id, montant_du')
+        .in('depense_id', depenseIds)
+    : { data: [] as RepartitionDepenseRow[] };
+
   // Calcul du total
   const totalDepenses = depenses?.reduce((sum, d) => sum + d.montant, 0) ?? 0;
 
@@ -340,7 +465,6 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
       pct: totalDepenses > 0 ? Math.round((total / totalDepenses) * 100) : 0,
     }));
 
-  // Répartition par copropriétaire (selon tantièmes)
   const totalTantiemes = (lots ?? []).reduce((sum, l) => sum + (l.tantiemes ?? 0), 0);
   const tantByOwner: Record<string, number> = {};
   for (const l of lots ?? []) {
@@ -348,17 +472,21 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
       tantByOwner[l.coproprietaire_id] = (tantByOwner[l.coproprietaire_id] ?? 0) + (l.tantiemes ?? 0);
     }
   }
+
+  const scopeSummary = summarizeExpenseScopes(depenses ?? []);
+  const partsByOwner = computeExpensePartsByOwner(depenses ?? [], lots ?? [], (repartitionsDepenses ?? []) as RepartitionDepenseRow[]);
   const repartitionCopro = (coproprietaires ?? [])
-    .filter((c) => tantByOwner[c.id])
+    .filter((c) => (partsByOwner[c.id] ?? 0) > 0 || (tantByOwner[c.id] ?? 0) > 0)
     .map((c) => {
       const tant = tantByOwner[c.id] ?? 0;
-      const pct = totalTantiemes > 0 ? tant / totalTantiemes : 0;
+      const part = roundEuros(partsByOwner[c.id] ?? 0);
+      const pct = totalDepenses > 0 ? Math.round((part / totalDepenses) * 100) : 0;
       return {
         id: c.id,
         nom: (c as unknown as { raison_sociale: string | null }).raison_sociale ?? `${c.prenom} ${c.nom}`,
         tant,
-        part: totalDepenses * pct,
-        pct: Math.round(pct * 100),
+        part,
+        pct,
       };
     })
     .sort((a, b) => b.part - a.part);
@@ -609,7 +737,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full shrink-0 bg-blue-400" />
                         <span className="text-gray-700 font-medium">{nom}</span>
-                        <span className="text-gray-400">({tant} t.)</span>
+                        {scopeSummary.isGeneralOnly && <span className="text-gray-400">({tant} t.)</span>}
                       </div>
                       <div className="flex items-center gap-3 text-gray-500">
                         <span>{formatEuros(part)}</span>
@@ -627,7 +755,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                 <p className="text-xs text-gray-400 pt-2 border-t border-gray-100 text-right">
                   Total : <span className="font-semibold text-gray-600">{formatEuros(totalDepenses)}</span>
                   <span className="ml-2 text-gray-300">·</span>
-                  <span className="ml-2">{totalTantiemes} tantièmes</span>
+                  <span className="ml-2">{scopeSummary.isGeneralOnly ? `${totalTantiemes} tantièmes` : `Base : ${scopeSummary.label}`}</span>
                 </p>
               </div>
             ) : (

@@ -20,7 +20,15 @@ vi.mock('@/lib/supabase/require-copro-access', () => ({
 
 vi.mock('@/lib/cached-queries', () => ({
   getLots: vi.fn(async () => ([
-    { id: 'lot-1', numero: '02-RDC', type: 'appartement', tantiemes: 160, coproprietaire_id: 'cp-1' },
+    {
+      id: 'lot-1',
+      numero: '02-RDC',
+      type: 'appartement',
+      tantiemes: 160,
+      coproprietaire_id: 'cp-1',
+      groupes_repartition: ['Ascenseur'],
+      tantiemes_groupes: { Ascenseur: 160 },
+    },
     { id: 'lot-2', numero: '04-1ER', type: 'appartement', tantiemes: 162, coproprietaire_id: 'cp-2' },
   ])),
   getCoproprietaires: vi.fn(async () => ([
@@ -30,12 +38,14 @@ vi.mock('@/lib/cached-queries', () => ({
 }));
 
 describe('LotsPage', () => {
-  it('affiche aussi le badge inscrit sur la ligne du copropriétaire connecté', async () => {
+  it('affiche aussi le badge inscrit sur la ligne du copropriétaire connecté et ses clés spéciales utiles', async () => {
     const { default: LotsPage } = await import('./page');
 
     render(await LotsPage());
 
     const badges = screen.getAllByText(/Inscrit/i);
     expect(badges).toHaveLength(4);
+    expect(screen.getAllByText(/Ascenseur · 160\/1000/i)).toHaveLength(2);
+    expect(screen.queryByText(/^Ascenseur$/i)).toBeNull();
   });
 });

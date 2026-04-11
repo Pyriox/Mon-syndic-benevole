@@ -22,6 +22,7 @@ import {
   GripVertical,
   Building2, Car, Archive, ShoppingBag, Briefcase, LayoutGrid,
 } from 'lucide-react';
+import { getLotRepartitionGroups, sanitizeTantiemesGroupesMap } from '@/lib/utils';
 
 // ── Config par type ───────────────────────────────────────────────────────────
 const LOT_TYPE_CONFIG: Record<string, {
@@ -82,6 +83,36 @@ interface LotsTableProps {
   currentUserId?: string | null;
 }
 
+function LotScopeBadges({ lot }: { lot: Pick<LotRow, 'batiment' | 'groupes_repartition' | 'tantiemes_groupes'> }) {
+  const weightedGroups = Object.entries(sanitizeTantiemesGroupesMap(lot.tantiemes_groupes));
+  const weightedGroupNames = new Set(weightedGroups.map(([group]) => group));
+  const plainGroups = getLotRepartitionGroups(lot).filter((group) => !weightedGroupNames.has(group));
+
+  if (!lot.batiment && plainGroups.length === 0 && weightedGroups.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-1 flex flex-wrap gap-1">
+      {lot.batiment && (
+        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
+          {lot.batiment}
+        </span>
+      )}
+      {plainGroups.slice(0, 2).map((group) => (
+        <span key={group} className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+          {group}
+        </span>
+      ))}
+      {weightedGroups.slice(0, 2).map(([group, amount]) => (
+        <span key={`${group}-${amount}`} className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+          {group} · {amount}/1000
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // ── Ligne sortable ────────────────────────────────────────────────────────────
 function SortableLotRow({
   lot,
@@ -137,25 +168,7 @@ function SortableLotRow({
           </div>
           <div>
             <span className="font-semibold text-gray-900">{lot.numero}</span>
-            {(lot.batiment || (lot.groupes_repartition?.length ?? 0) > 0 || Object.keys(lot.tantiemes_groupes ?? {}).length > 0) && (
-              <div className="mt-1 flex flex-wrap gap-1">
-                {lot.batiment && (
-                  <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
-                    {lot.batiment}
-                  </span>
-                )}
-                {(lot.groupes_repartition ?? []).slice(0, 2).map((group) => (
-                  <span key={group} className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
-                    {group}
-                  </span>
-                ))}
-                {Object.entries(lot.tantiemes_groupes ?? {}).slice(0, 2).map(([group, amount]) => (
-                  <span key={`${group}-${amount}`} className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-                    {group} · {amount}/1000
-                  </span>
-                ))}
-              </div>
-            )}
+            <LotScopeBadges lot={lot} />
           </div>
         </div>
       </td>
@@ -261,25 +274,7 @@ function SortableLotCard({
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="font-semibold text-gray-900 truncate">Lot {lot.numero}</p>
-              {(lot.batiment || (lot.groupes_repartition?.length ?? 0) > 0 || Object.keys(lot.tantiemes_groupes ?? {}).length > 0) && (
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {lot.batiment && (
-                    <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
-                      {lot.batiment}
-                    </span>
-                  )}
-                  {(lot.groupes_repartition ?? []).slice(0, 2).map((group) => (
-                    <span key={group} className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
-                      {group}
-                    </span>
-                  ))}
-                  {Object.entries(lot.tantiemes_groupes ?? {}).slice(0, 2).map(([group, amount]) => (
-                    <span key={`${group}-${amount}`} className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-                      {group} · {amount}/1000
-                    </span>
-                  ))}
-                </div>
-              )}
+              <LotScopeBadges lot={lot} />
             </div>
             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${cfg.badgeBg} ${cfg.badgeText}`}>
               {cfg.label}

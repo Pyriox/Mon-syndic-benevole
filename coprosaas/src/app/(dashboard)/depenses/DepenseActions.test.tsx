@@ -109,4 +109,55 @@ describe('DepenseActions', () => {
 
     expect((repartitionSelect as HTMLSelectElement).querySelector('option[value="groupe:Ascenseur"]')).not.toBeNull();
   });
+
+  it('affiche les tantièmes de la clé choisie dans la prévisualisation', async () => {
+    mockLots = [
+      {
+        id: 'lot-1',
+        numero: '01-RDC',
+        tantiemes: 173,
+        batiment: null,
+        groupes_repartition: ['Ascenseur'],
+        tantiemes_groupes: { Ascenseur: 100 },
+        coproprietaire_id: 'cp-1',
+      },
+      {
+        id: 'lot-2',
+        numero: '02-RDC',
+        tantiemes: 160,
+        batiment: null,
+        groupes_repartition: ['Ascenseur'],
+        tantiemes_groupes: { Ascenseur: 200 },
+        coproprietaire_id: 'cp-2',
+      },
+      {
+        id: 'lot-3',
+        numero: '03-1ER',
+        tantiemes: 174,
+        batiment: null,
+        groupes_repartition: ['Ascenseur'],
+        tantiemes_groupes: { Ascenseur: 300 },
+        coproprietaire_id: 'cp-3',
+      },
+    ];
+
+    const { default: DepenseActions } = await import('./DepenseActions');
+
+    render(<DepenseActions coproprietes={[{ id: 'copro-1', nom: 'Résidence Test' }]} showLabel />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Ajouter une dépense/i }));
+
+    const repartitionSelect = await screen.findByRole('combobox', { name: /Répartition de la dépense/i });
+    fireEvent.change(repartitionSelect, { target: { value: 'groupe:Ascenseur' } });
+    fireEvent.change(screen.getByLabelText(/Montant/i), { target: { value: '300' } });
+    fireEvent.click(screen.getByRole('button', { name: /Voir la répartition calculée/i }));
+
+    expect(screen.getByText(/3 lots concernés, 600 tantièmes/i)).not.toBeNull();
+    expect(screen.getByText('01-RDC')).not.toBeNull();
+    expect(screen.getByText('02-RDC')).not.toBeNull();
+    expect(screen.getByText('03-1ER')).not.toBeNull();
+    expect(screen.getByText('100')).not.toBeNull();
+    expect(screen.getByText('200')).not.toBeNull();
+    expect(screen.getByText('300')).not.toBeNull();
+  });
 });

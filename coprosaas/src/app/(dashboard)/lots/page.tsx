@@ -14,6 +14,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import PageHelp from '@/components/ui/PageHelp';
 import Link from 'next/link';
 import { Building2, Car, Archive, ShoppingBag, Briefcase, LayoutGrid, ExternalLink, Users, UserCheck, Mail, AlertCircle } from 'lucide-react';
+import { getLotRepartitionGroups, sanitizeTantiemesGroupesMap } from '@/lib/utils';
 
 // ── Config par type ──
 const LOT_TYPE_CONFIG: Record<string, {
@@ -49,6 +50,44 @@ function OwnerAvatar({ name, isMe = false }: { name: string; isMe?: boolean }) {
     }`}>
       {initials || '?'}
     </span>
+  );
+}
+
+function LotScopeBadges({
+  lot,
+}: {
+  lot: {
+    batiment?: string | null;
+    groupes_repartition?: string[] | null;
+    tantiemes_groupes?: Record<string, number> | null;
+  };
+}) {
+  const weightedGroups = Object.entries(sanitizeTantiemesGroupesMap(lot.tantiemes_groupes));
+  const weightedGroupNames = new Set(weightedGroups.map(([group]) => group));
+  const plainGroups = getLotRepartitionGroups(lot).filter((group) => !weightedGroupNames.has(group));
+
+  if (!lot.batiment && plainGroups.length === 0 && weightedGroups.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-1 flex flex-wrap gap-1">
+      {lot.batiment && (
+        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
+          {lot.batiment}
+        </span>
+      )}
+      {plainGroups.slice(0, 2).map((group) => (
+        <span key={group} className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+          {group}
+        </span>
+      ))}
+      {weightedGroups.slice(0, 2).map(([group, amount]) => (
+        <span key={`${group}-${amount}`} className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+          {group} · {amount}/1000
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -243,7 +282,10 @@ export default async function LotsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-gray-900 truncate">Lot {lot.numero}</p>
+                        <div>
+                          <p className="font-semibold text-gray-900 truncate">Lot {lot.numero}</p>
+                          <LotScopeBadges lot={lot} />
+                        </div>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${cfg.badgeBg} ${cfg.badgeText}`}>
                           {cfg.label}
                         </span>
@@ -330,7 +372,10 @@ export default async function LotsPage() {
                           <div className={`p-1.5 ${cfg.bgColor} rounded-lg`}>
                             <Icon size={14} className={cfg.iconColor} />
                           </div>
-                          <span className="font-semibold text-gray-900">{lot.numero}</span>
+                          <div>
+                            <span className="font-semibold text-gray-900">{lot.numero}</span>
+                            <LotScopeBadges lot={lot} />
+                          </div>
                         </div>
                       </td>
                       <td className="py-3.5 px-5">

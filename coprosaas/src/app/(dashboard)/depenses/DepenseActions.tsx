@@ -542,7 +542,7 @@ export default function DepenseActions({
                       </tr>
                     </thead>
                     <tbody>
-                      {repartition.map(({ lot, montant }) => (
+                      {repartition.map(({ lot, tantiemes, montant }) => (
                         <tr key={lot.id} className="border-t border-gray-100">
                           <td className="px-3 py-2">{lot.numero}</td>
                           <td className="px-3 py-2 text-gray-600">
@@ -552,7 +552,7 @@ export default function DepenseActions({
                                 ? <span className="text-gray-500">Lot attribué</span>
                                 : <span className="text-gray-400 italic">Non assigné</span>}
                           </td>
-                          <td className="px-3 py-2 text-right">{lot.tantiemes}</td>
+                          <td className="px-3 py-2 text-right">{tantiemes}</td>
                           <td className="px-3 py-2 text-right font-semibold">{formatEuros(montant)}</td>
                         </tr>
                       ))}
