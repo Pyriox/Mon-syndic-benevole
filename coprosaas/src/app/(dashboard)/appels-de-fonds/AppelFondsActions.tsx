@@ -155,6 +155,8 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
 
   // -- Charger les lots ----------------------------------------
   useEffect(() => {
+    if (!isOpen) return;
+
     if (!coproprieteId) {
       setLots([]);
       setLotsLoading(false);
@@ -168,9 +170,9 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
       setLotsLoading(true);
       setLotsError('');
 
-      const { data, error: fetchError } = await supabase
+      const { data: lotRows, error: fetchError } = await supabase
         .from('lots')
-        .select('id, numero, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes, coproprietaires(id, nom, prenom)')
+        .select('id, numero, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes')
         .eq('copropriete_id', coproprieteId);
 
       if (cancelled) return;
@@ -182,17 +184,25 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
         return;
       }
 
-      setLots((data ?? []).map((lot) => {
-        const coproprietaire = Array.isArray(lot.coproprietaires)
-          ? lot.coproprietaires[0]
-          : (lot.coproprietaires as unknown as { id: string; nom: string; prenom: string } | undefined);
+      const coproIds = Array.from(new Set((lotRows ?? []).map((lot) => lot.coproprietaire_id).filter(Boolean))) as string[];
+      let coproById = new Map<string, { id: string; nom: string; prenom: string }>();
 
-        return {
-          ...lot,
-          coproprietaire_id: lot.coproprietaire_id ?? coproprietaire?.id ?? null,
-          coproprietaire: coproprietaire ?? undefined,
-        };
-      }));
+      if (coproIds.length > 0) {
+        const { data: coproRows } = await supabase
+          .from('coproprietaires')
+          .select('id, nom, prenom')
+          .in('id', coproIds);
+
+        if (cancelled) return;
+
+        coproById = new Map((coproRows ?? []).map((copro) => [copro.id, copro]));
+      }
+
+      setLots((lotRows ?? []).map((lot) => ({
+        ...lot,
+        coproprietaire_id: lot.coproprietaire_id ?? null,
+        coproprietaire: lot.coproprietaire_id ? coproById.get(lot.coproprietaire_id) : undefined,
+      })));
       setLotsLoading(false);
     };
 
@@ -201,7 +211,7 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
     return () => {
       cancelled = true;
     };
-  }, [coproprieteId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [coproprieteId, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // -- Sélection d'une AG --------------------------------------
   function selectAG(ag: AGWithBudgets) {
@@ -482,12 +492,10 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
       }
     }
 
-    const rows = repartitionParPostes(totalBudgetAvecFT, lots, postesPourRepartition).map((row) => ({
+    return repartitionParPostes(totalBudgetAvecFT, lots, postesPourRepartition).map((row) => ({
       ...row,
-      cop: coproById.get(row.copId),
+      cop: coproById.get(row.copId) ?? { id: row.copId, nom: 'Copropriétaire', prenom: '' },
     }));
-
-    return rows.filter((row): row is (typeof rows)[number] & { cop: { id: string; nom: string; prenom: string } } => Boolean(row.cop));
   }, [lots, postesPourRepartition, totalBudgetAvecFT]);
 
   const typeAppel = isExceptionnel ? typeAppelExceptionnel

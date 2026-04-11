@@ -7,15 +7,20 @@ type Row = Record<string, unknown>;
 
 let mockLotsRows: Row[] = [];
 let mockLotsError: string | null = null;
+let mockFailOnEmbeddedLotsSelect = false;
 
 class MockQuery {
   private rows: Row[];
+  private forcedError: string | null = null;
 
   constructor(rows: Row[]) {
     this.rows = [...rows];
   }
 
-  select() {
+  select(columns?: string) {
+    if (mockFailOnEmbeddedLotsSelect && columns?.includes('coproprietaires(')) {
+      this.forcedError = 'embedded relation failed';
+    }
     return this;
   }
 
@@ -48,9 +53,10 @@ class MockQuery {
   }
 
   then(resolve: (value: { data: Row[]; error: { message: string } | null }) => unknown) {
+    const effectiveError = this.forcedError ?? mockLotsError;
     return Promise.resolve(resolve({
-      data: mockLotsError ? [] : this.rows,
-      error: mockLotsError ? { message: mockLotsError } : null,
+      data: effectiveError ? [] : this.rows,
+      error: effectiveError ? { message: effectiveError } : null,
     }));
   }
 }
@@ -105,6 +111,7 @@ describe('AppelFondsActions', () => {
   beforeEach(() => {
     mockLotsRows = [];
     mockLotsError = null;
+    mockFailOnEmbeddedLotsSelect = false;
   });
 
   it('n’affiche pas de sélecteur de clé spéciale quand aucune clé n’est configurée', async () => {
@@ -178,5 +185,38 @@ describe('AppelFondsActions', () => {
 
     expect(await screen.findByText(/Impossible de charger les clés de répartition pour le moment/i)).not.toBeNull();
     expect(screen.queryByText(/Ajoutez d’abord une clé spéciale/i)).toBeNull();
+  });
+
+  it('détecte les clés spéciales même si la relation copropriétaire embarquée échoue', async () => {
+    mockFailOnEmbeddedLotsSelect = true;
+    mockLotsRows = [
+      {
+        id: 'lot-1',
+        copropriete_id: 'copro-1',
+        coproprietaire_id: 'cp-1',
+        numero: '1',
+        tantiemes: 120,
+        batiment: 'A',
+        groupes_repartition: ['Ascenseur test'],
+        tantiemes_groupes: { 'Ascenseur test': 120 },
+        coproprietaires: [{ id: 'cp-1', nom: 'Durand', prenom: 'Zoé' }],
+      },
+    ];
+
+    const { default: AppelFondsActions } = await import('./AppelFondsActions');
+
+    render(<AppelFondsActions coproprietes={[{ id: 'copro-1', nom: 'Copro test' }]} showLabel />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Créer un appel de fonds/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Créer un appel exceptionnel sans AG/i }));
+
+    const rowInput = await waitFor(() => screen.getByPlaceholderText(/Ex : Entretien ascenseur/i));
+    const budgetRow = rowInput.closest('div');
+
+    await waitFor(() => {
+      const repartitionSelect = within(budgetRow as HTMLElement).getByRole('combobox') as HTMLSelectElement;
+      const optionLabels = Array.from(repartitionSelect.options).map((option) => option.text);
+      expect(optionLabels).toContain('Ascenseur test');
+    });
   });
 });
