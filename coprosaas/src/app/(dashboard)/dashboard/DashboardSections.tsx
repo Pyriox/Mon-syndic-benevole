@@ -299,35 +299,63 @@ export async function SyndicDashboardHeader({
 export async function SyndicDashboardAlert({ coproId }: { coproId: string }) {
   const data = await getSyndicDashboardSnapshot(coproId);
 
-  if (!data.agUrgente || !data.prochaineAG || data.joursAvantAG === null) {
+  const overdueLineCount = data.nbLignesImpayees ?? data.nbImpayes ?? 0;
+  const showUnpaidAlert = data.totalMontantImpaye > 0 && overdueLineCount > 0;
+  const showAgAlert = Boolean(data.agUrgente && data.prochaineAG && data.joursAvantAG !== null);
+
+  if (!showUnpaidAlert && !showAgAlert) {
     return null;
   }
 
   return (
-    <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-      <BellRing size={18} className="text-amber-700 shrink-0 mt-0.5" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-amber-800">
-          Assemblée Générale dans{' '}
-          <span className="inline-flex items-center bg-amber-100 text-amber-700 rounded-md px-2 py-0.5 text-xs font-bold">
-            J&minus;{data.joursAvantAG}
-          </span>
-        </p>
-        <p className="text-xs text-amber-700 mt-0.5 truncate">
-          {data.prochaineAG.titre} &middot;{' '}
-          {new Date(data.prochaineAG.date_ag).toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-          })}
-        </p>
-      </div>
-      <Link
-        href={`/assemblees/${data.prochaineAG.id}`}
-        className="shrink-0 text-xs text-amber-700 hover:text-amber-900 font-semibold underline-offset-2 hover:underline"
-      >
-        Voir &rarr;
-      </Link>
+    <div className="space-y-3">
+      {showUnpaidAlert && (
+        <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <BellRing size={18} className="text-red-700 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-red-800">
+              {overdueLineCount} ligne{overdueLineCount > 1 ? 's' : ''} d&apos;appel de fonds en retard
+            </p>
+            <p className="text-xs text-red-700 mt-0.5 truncate">
+              {formatEuros(data.totalMontantImpaye)} à régulariser · {data.nbImpayes} copropriétaire{data.nbImpayes > 1 ? 's' : ''} concerné{data.nbImpayes > 1 ? 's' : ''}
+            </p>
+          </div>
+          <Link
+            href="/appels-de-fonds"
+            className="shrink-0 text-xs text-red-700 hover:text-red-900 font-semibold underline-offset-2 hover:underline"
+          >
+            Voir &rarr;
+          </Link>
+        </div>
+      )}
+
+      {showAgAlert && data.prochaineAG && data.joursAvantAG !== null && (
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <BellRing size={18} className="text-amber-700 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800">
+              Assemblée Générale dans{' '}
+              <span className="inline-flex items-center bg-amber-100 text-amber-700 rounded-md px-2 py-0.5 text-xs font-bold">
+                J&minus;{data.joursAvantAG}
+              </span>
+            </p>
+            <p className="text-xs text-amber-700 mt-0.5 truncate">
+              {data.prochaineAG.titre} &middot;{' '}
+              {new Date(data.prochaineAG.date_ag).toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              })}
+            </p>
+          </div>
+          <Link
+            href={`/assemblees/${data.prochaineAG.id}`}
+            className="shrink-0 text-xs text-amber-700 hover:text-amber-900 font-semibold underline-offset-2 hover:underline"
+          >
+            Voir &rarr;
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
@@ -442,35 +470,24 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {!data.hasProvisions ? (
-          <Card className="flex items-center gap-4 border-dashed border-gray-200">
-            <div className="p-3 bg-gray-50 rounded-xl shrink-0">
-              <Banknote size={24} className="text-gray-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Solde impayé</p>
-              <p className="text-lg font-semibold text-gray-500">&mdash;</p>
-              <p className="text-xs text-gray-500 mt-0.5">Aucune provision saisie pour {data.currentYear}</p>
-            </div>
-          </Card>
-        ) : (
-          <Card className="flex items-center gap-4">
-            <div className="p-3 bg-red-100 rounded-xl shrink-0">
-              <Banknote size={24} className="text-red-600" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Solde impayé</p>
-              <p className={`text-2xl font-bold ${data.totalMontantImpaye > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                {formatEuros(data.totalMontantImpaye)}
+        <Card className="flex items-center gap-4">
+          <div className={`p-3 rounded-xl shrink-0 ${data.totalMontantImpaye > 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
+            <Banknote size={24} className={data.totalMontantImpaye > 0 ? 'text-red-600' : 'text-gray-500'} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Solde impayé</p>
+            <p className={`text-2xl font-bold ${data.totalMontantImpaye > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+              {formatEuros(data.totalMontantImpaye)}
+            </p>
+            {data.nbImpayes > 0 ? (
+              <p className="text-xs text-red-600 mt-0.5">
+                {data.nbImpayes} copropriétaire{data.nbImpayes > 1 ? 's' : ''}
               </p>
-              {data.nbImpayes > 0 && (
-                <p className="text-xs text-red-600 mt-0.5">
-                  {data.nbImpayes} copropriétaire{data.nbImpayes > 1 ? 's' : ''}
-                </p>
-              )}
-            </div>
-          </Card>
-        )}
+            ) : (
+              <p className="text-xs text-gray-500 mt-0.5">Aucun impayé</p>
+            )}
+          </div>
+        </Card>
 
         <Card className="flex items-center gap-4">
           <div className="p-3 bg-yellow-100 rounded-xl shrink-0">
@@ -595,7 +612,9 @@ export async function SyndicDashboardBudgetPanels({ coproId }: { coproId: string
 export async function SyndicDashboardTasks({ coproId }: { coproId: string }) {
   const data = await getSyndicDashboardSnapshot(coproId);
 
-  if (data.nbImpayes60j === 0 && data.incidentsAnciens.length === 0) {
+  const overdueLineCount = data.nbLignesImpayees ?? data.nbImpayes ?? 0;
+
+  if (overdueLineCount === 0 && data.incidentsAnciens.length === 0) {
     return null;
   }
 
@@ -606,15 +625,18 @@ export async function SyndicDashboardTasks({ coproId }: { coproId: string }) {
         <h3 className="font-semibold text-gray-900">Alertes &amp; tâches à traiter</h3>
       </div>
       <div className="divide-y divide-gray-100">
-        {data.nbImpayes60j > 0 && (
+        {overdueLineCount > 0 && (
           <div className="flex flex-wrap items-start gap-3 justify-between py-3">
             <div className="flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-1" />
               <div>
                 <p className="text-sm font-medium text-gray-800">
-                  {data.nbImpayes60j} ligne{data.nbImpayes60j > 1 ? 's' : ''} impayée{data.nbImpayes60j > 1 ? 's' : ''} depuis plus de 60 jours
+                  {overdueLineCount} ligne{overdueLineCount > 1 ? 's' : ''} d&apos;appel de fonds en retard
                 </p>
-                <p className="text-xs text-gray-500">Montant : {formatEuros(data.montantImpayes60j)}</p>
+                <p className="text-xs text-gray-500">
+                  Montant échu non réglé : {formatEuros(data.totalMontantImpaye)}
+                  {data.nbImpayes60j > 0 ? ` · dont ${data.nbImpayes60j} depuis plus de 60 jours` : ''}
+                </p>
               </div>
             </div>
             <Link href="/appels-de-fonds" className="text-xs text-blue-600 hover:underline font-medium shrink-0">

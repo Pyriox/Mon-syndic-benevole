@@ -19,9 +19,8 @@ import { isAdminUser } from '@/lib/admin-config';
 import { getSupportAttentionSummary } from '@/lib/admin-support';
 import { formatRelativeDayLabel } from '@/lib/admin-date';
 import { formatAdminCurrency } from '@/lib/admin-format';
-import { countActiveAddonCopros, summarizeStripeBilling } from '@/lib/admin-dashboard';
+import { buildEstimatedRevenueMetrics, countActiveAddonCopros, summarizeStripeBilling } from '@/lib/admin-dashboard';
 import AdminStatCard from '../AdminStatCard';
-const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
 const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 function timeAgo(s: string | null | undefined): string {
@@ -134,7 +133,8 @@ export default async function AdminDashboardPage() {
   for (const c of coprosTyped) {
     if (c.plan === 'actif' && c.plan_id) planBreakdown[c.plan_id] = (planBreakdown[c.plan_id] ?? 0) + 1;
   }
-  const arr = Object.entries(planBreakdown).reduce((sum, [id, nb]) => sum + (ARR_PRICES[id] ?? 0) * nb, 0);
+  const revenueMetrics = buildEstimatedRevenueMetrics(planBreakdown, coproAddons ?? []);
+  const arr = revenueMetrics.totalArr;
   const conversionPct = nbCoproprietes > 0 ? Math.round((nbActifs / nbCoproprietes) * 100) : 0;
   const nbChargesSpecialesActives = countActiveAddonCopros(coproAddons ?? []);
 
@@ -227,7 +227,7 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="flex gap-3 flex-wrap">
             {([
-              { val: formatAdminCurrency(arr), lbl: 'ARR' },
+              { val: formatAdminCurrency(arr), lbl: 'ARR total' },
               { val: formatAdminCurrency(cashCeMois), lbl: 'Cash mois' },
               { val: String(nbActifs), lbl: 'Abonnés' },
               { val: String(nbEssai), lbl: 'Essais' },
@@ -280,10 +280,10 @@ export default async function AdminDashboardPage() {
         </div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Revenus &amp; abonnements</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <AdminStatCard label="ARR" value={formatAdminCurrency(arr)} sub={`Conv. ${conversionPct} % · ${nbActifs} abonnés actifs`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
-          <AdminStatCard label="Cash encaissé (mois)" value={formatAdminCurrency(cashCeMois)} sub={`${today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`} icon={Receipt} color="bg-blue-100 text-blue-600" />
-          <AdminStatCard label="Cash encaissé (année)" value={formatAdminCurrency(cashTotalAnnee)} sub={`Dont ${formatAdminCurrency(cashNewSubsAnnee)} 1ers paiements · ${formatAdminCurrency(cashRenouvellements)} renouv.`} icon={BarChart3} color="bg-violet-100 text-violet-600" />
-          <AdminStatCard label="Renouvellements (année)" value={nbRenouvellements} sub={`${formatAdminCurrency(cashRenouvellements)} encaissés · essais convertis exclus`} icon={TrendingUp} color="bg-teal-100 text-teal-600" />
+          <AdminStatCard label="ARR total" value={formatAdminCurrency(arr)} sub={`Abonnements + options · Conv. ${conversionPct} % · ${nbActifs} abonnés actifs${nbChargesSpecialesActives > 0 ? ` · ${nbChargesSpecialesActives} option${nbChargesSpecialesActives > 1 ? 's' : ''}` : ''}`} icon={Banknote} color="bg-emerald-100 text-emerald-600" />
+          <AdminStatCard label="Cash encaissé (mois)" value={formatAdminCurrency(cashCeMois)} sub={`${today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })} · toutes factures Stripe`} icon={Receipt} color="bg-blue-100 text-blue-600" />
+          <AdminStatCard label="Cash encaissé (année)" value={formatAdminCurrency(cashTotalAnnee)} sub={`Abonnements + options · dont ${formatAdminCurrency(cashNewSubsAnnee)} 1ers paiements · ${formatAdminCurrency(cashRenouvellements)} renouv.`} icon={BarChart3} color="bg-violet-100 text-violet-600" />
+          <AdminStatCard label="Renouvellements (année)" value={nbRenouvellements} sub={`${formatAdminCurrency(cashRenouvellements)} encaissés · hors 1er paiement après essai`} icon={TrendingUp} color="bg-teal-100 text-teal-600" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
           <div className="sm:col-span-2 lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">

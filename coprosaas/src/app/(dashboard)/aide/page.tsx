@@ -519,7 +519,7 @@ export default function AidePage() {
           num: '4',
           color: 'bg-green-100 text-green-700',
           title: "Le dashboard reflète l'exercice en cours",
-          body: "Les provisions 2027, les dépenses réelles et l'écart prévisionnel s'affichent automatiquement dès que les données sont saisies. Le solde impayé = somme des soldes négatifs des copropriétaires.",
+          body: "Les provisions 2027, les dépenses réelles et l'écart prévisionnel s'affichent automatiquement dès que les données sont saisies. Le solde impayé correspond aux appels de fonds échus dont les lignes ne sont pas marquées comme payées.",
         },
         {
           num: '5',

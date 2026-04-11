@@ -27,14 +27,14 @@ export function buildSupportReplyEmail(params: SupportReplyEmailParams): string 
   Bonjour ${h(userName)},
 </p>
 <p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Notre équipe support a répondu à votre ticket. Voici le message&nbsp;:
+  Notre équipe support a répondu à votre demande. Voici son message&nbsp;:
 </p>
 
 <div style="background:#f0f7ff;border-left:3px solid ${COLOR.blue};border-radius:0 6px 6px 0;padding:16px 20px;margin:0 0 24px">
   <p style="margin:0;font-size:14px;color:${COLOR.text};line-height:1.7;white-space:pre-wrap">${h(adminMessage)}</p>
 </div>
 
-${ctaButton('Voir mon ticket', ticketUrl, COLOR.blue)}
+${ctaButton('Voir mon ticket →', ticketUrl, COLOR.blue)}
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px;border-top:1px solid ${COLOR.border}">
   <tr>

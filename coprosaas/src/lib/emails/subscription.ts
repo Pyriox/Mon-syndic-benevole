@@ -76,14 +76,14 @@ export function buildSubscriptionCreatedEmail(params: SubscriptionEmailParams): 
 </p>
 ${renewStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;border:1px solid ${COLOR.border}">
   <tr>
-    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Prochain renouvellement</td>
+    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Prochaine échéance d’abonnement</td>
     <td style="padding:12px 16px;font-size:14px;font-weight:600;color:${COLOR.text};text-align:right">${renewStr}</td>
   </tr>
 </table>` : ''}
 
 ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}`;
 
-  return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est actif${renewStr ? ` — prochain renouvellement le ${renewStr}` : ''}`);
+  return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est actif${renewStr ? ` — prochaine échéance le ${renewStr}` : ''}`);
 }
 
 // ── Essai terminé → abonnement payant ─────────────────────────────────────────
@@ -107,14 +107,14 @@ export function buildTrialToPaidEmail(params: SubscriptionEmailParams): string {
 </p>
 ${renewStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;border:1px solid ${COLOR.border}">
   <tr>
-    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Prochain renouvellement</td>
+    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Prochaine échéance d’abonnement</td>
     <td style="padding:12px 16px;font-size:14px;font-weight:600;color:${COLOR.text};text-align:right">${renewStr}</td>
   </tr>
 </table>` : ''}
 
 ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}`;
 
-  return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est actif${renewStr ? ` — prochain renouvellement le ${renewStr}` : ''}`);
+  return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est actif${renewStr ? ` — prochaine échéance le ${renewStr}` : ''}`);
 }
 
 // ── Renouvellement ────────────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ export function buildRenewalEmail(params: SubscriptionEmailParams): string {
 </p>
 ${renewStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;border:1px solid ${COLOR.border}">
   <tr>
-    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Valable jusqu'au</td>
+    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Abonnement valable jusqu’au</td>
     <td style="padding:12px 16px;font-size:14px;font-weight:600;color:${COLOR.text};text-align:right">${renewStr}</td>
   </tr>
 </table>` : ''}

@@ -11,9 +11,12 @@ type DashboardExpenseAggregateRow = {
   categorie: string | null;
 };
 
-type DashboardCoproBalanceRow = {
+type DashboardUnpaidLineRow = {
   id: string;
-  solde: number | null;
+  coproprietaire_id: string | null;
+  montant_du: number | null;
+  paye: boolean | null;
+  date_echeance: string | null;
 };
 
 export function buildDashboardExpenseSnapshot({
@@ -74,15 +77,29 @@ export function buildDashboardExpenseSnapshot({
 }
 
 export function buildDashboardUnpaidSnapshot({
-  coproprietaires,
+  lignes,
+  today = new Date().toISOString().split('T')[0],
 }: {
-  coproprietaires: DashboardCoproBalanceRow[] | null | undefined;
+  lignes: DashboardUnpaidLineRow[] | null | undefined;
+  today?: string;
 }) {
-  const rows = (coproprietaires ?? []).filter((coproprietaire) => (coproprietaire.solde ?? 0) > 0);
-  const totalMontantImpaye = Math.round(rows.reduce((sum, coproprietaire) => sum + (coproprietaire.solde ?? 0), 0) * 100) / 100;
+  const overdueLines = (lignes ?? []).filter((ligne) => {
+    if (ligne.paye) return false;
+    if ((ligne.montant_du ?? 0) <= 0) return false;
+    if (!ligne.date_echeance) return false;
+    return ligne.date_echeance < today;
+  });
+
+  const totalMontantImpaye = Math.round(overdueLines.reduce((sum, ligne) => sum + (ligne.montant_du ?? 0), 0) * 100) / 100;
+  const nbImpayes = new Set(
+    overdueLines
+      .map((ligne) => ligne.coproprietaire_id)
+      .filter((coproprietaireId): coproprietaireId is string => Boolean(coproprietaireId)),
+  ).size;
 
   return {
     totalMontantImpaye,
-    nbImpayes: rows.length,
+    nbImpayes,
+    nbLignesImpayees: overdueLines.length,
   };
 }

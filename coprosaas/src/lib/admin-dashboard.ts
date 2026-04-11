@@ -1,5 +1,10 @@
 import { hasAddonAccess, type CoproAddon } from '@/lib/subscription';
 
+export const ADMIN_MRR_PRICES: Record<string, number> = { essentiel: 25, confort: 30, illimite: 45 };
+export const ADMIN_ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
+export const ADMIN_ADDON_MRR_PRICES: Record<string, number> = { charges_speciales: 8.25 };
+export const ADMIN_ADDON_ARR_PRICES: Record<string, number> = { charges_speciales: 99 };
+
 export type AdminStripeInvoiceLike = {
   id: string;
   amount_paid: number;
@@ -68,4 +73,40 @@ export function countActiveAddonCopros(
   }
 
   return coproIds.size;
+}
+
+export function buildEstimatedRevenueMetrics(
+  planBreakdown: Record<string, number>,
+  addons: Array<Partial<CoproAddon> | null | undefined>,
+  nowIso: string = new Date().toISOString(),
+) {
+  const baseMrr = Object.entries(planBreakdown).reduce((sum, [planId, count]) => sum + (ADMIN_MRR_PRICES[planId] ?? 0) * count, 0);
+  const baseArr = Object.entries(planBreakdown).reduce((sum, [planId, count]) => sum + (ADMIN_ARR_PRICES[planId] ?? 0) * count, 0);
+
+  const addonCounts: Record<string, number> = {};
+  const seenAddonKeys = new Set<string>();
+
+  for (const addon of addons) {
+    if (!addon?.addon_key || !addon.copropriete_id) continue;
+    if (!hasAddonAccess(addon, nowIso)) continue;
+
+    const dedupeKey = `${addon.copropriete_id}:${addon.addon_key}`;
+    if (seenAddonKeys.has(dedupeKey)) continue;
+    seenAddonKeys.add(dedupeKey);
+
+    addonCounts[addon.addon_key] = (addonCounts[addon.addon_key] ?? 0) + 1;
+  }
+
+  const addonMrr = Object.entries(addonCounts).reduce((sum, [addonKey, count]) => sum + (ADMIN_ADDON_MRR_PRICES[addonKey] ?? 0) * count, 0);
+  const addonArr = Object.entries(addonCounts).reduce((sum, [addonKey, count]) => sum + (ADMIN_ADDON_ARR_PRICES[addonKey] ?? 0) * count, 0);
+
+  return {
+    baseMrr,
+    baseArr,
+    addonMrr,
+    addonArr,
+    totalMrr: baseMrr + addonMrr,
+    totalArr: baseArr + addonArr,
+    addonCounts,
+  };
 }

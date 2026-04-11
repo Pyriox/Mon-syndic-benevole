@@ -26,17 +26,20 @@ describe('buildDashboardExpenseSnapshot', () => {
 });
 
 describe('buildDashboardUnpaidSnapshot', () => {
-  it('additionne les soldes débiteurs des copropriétaires', () => {
+  it('ne retient que les appels échus non marqués comme payés', () => {
     const snapshot = buildDashboardUnpaidSnapshot({
-      coproprietaires: [
-        { id: 'cp-1', solde: 242.1 },
-        { id: 'cp-2', solde: 88.45 },
-        { id: 'cp-3', solde: 0 },
-        { id: 'cp-4', solde: -15 },
+      lignes: [
+        { id: 'l-1', coproprietaire_id: 'cp-1', montant_du: 242.1, paye: false, date_echeance: '2026-04-01' },
+        { id: 'l-2', coproprietaire_id: 'cp-2', montant_du: 88.45, paye: false, date_echeance: '2026-04-02' },
+        { id: 'l-3', coproprietaire_id: 'cp-2', montant_du: 19.9, paye: false, date_echeance: '2026-05-15' },
+        { id: 'l-4', coproprietaire_id: 'cp-3', montant_du: 0, paye: false, date_echeance: '2026-04-03' },
+        { id: 'l-5', coproprietaire_id: 'cp-4', montant_du: 70, paye: true, date_echeance: '2026-03-15' },
       ],
+      today: '2026-04-11',
     });
 
     expect(snapshot.totalMontantImpaye).toBe(330.55);
     expect(snapshot.nbImpayes).toBe(2);
+    expect(snapshot.nbLignesImpayees).toBe(2);
   });
 });

@@ -4,12 +4,10 @@ import { AlertTriangle, ArrowRight, ExternalLink, RefreshCw, TrendingUp, Wallet 
 
 import AdminStatCard from '../AdminStatCard';
 import { isAdminUser } from '@/lib/admin-config';
+import { buildEstimatedRevenueMetrics, countActiveAddonCopros } from '@/lib/admin-dashboard';
 import { formatAdminCurrency, formatAdminDate } from '@/lib/admin-format';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-
-const MRR_PRICES: Record<string, number> = { essentiel: 25, confort: 30, illimite: 45 };
-const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
 
 type SubscriptionCoproRow = {
   id: string;
@@ -31,10 +29,16 @@ export default async function AdminAbonnementsPage() {
   }
 
   const admin = createAdminClient();
-  const { data } = await admin
-    .from('coproprietes')
-    .select('id, nom, plan, plan_id, plan_period_end, stripe_customer_id, stripe_subscription_id, created_at')
-    .order('created_at', { ascending: false });
+  const [{ data }, { data: coproAddons }] = await Promise.all([
+    admin
+      .from('coproprietes')
+      .select('id, nom, plan, plan_id, plan_period_end, stripe_customer_id, stripe_subscription_id, created_at')
+      .order('created_at', { ascending: false }),
+    admin
+      .from('copro_addons')
+      .select('copropriete_id, addon_key, status, current_period_end, cancel_at_period_end')
+      .eq('addon_key', 'charges_speciales'),
+  ]);
 
   const copros = (data ?? []) as SubscriptionCoproRow[];
   const activeCount = copros.filter((copro) => copro.plan === 'actif').length;
@@ -47,8 +51,10 @@ export default async function AdminAbonnementsPage() {
     }
   }
 
-  const mrr = Object.entries(planBreakdown).reduce((sum, [planId, count]) => sum + (MRR_PRICES[planId] ?? 0) * count, 0);
-  const arr = Object.entries(planBreakdown).reduce((sum, [planId, count]) => sum + (ARR_PRICES[planId] ?? 0) * count, 0);
+  const revenueMetrics = buildEstimatedRevenueMetrics(planBreakdown, coproAddons ?? []);
+  const mrr = revenueMetrics.totalMrr;
+  const arr = revenueMetrics.totalArr;
+  const nbChargesSpecialesActives = countActiveAddonCopros(coproAddons ?? []);
 
   const nowIso = new Date().toISOString();
   const in14d = new Date(new Date(nowIso).getTime() + 14 * 86400000).toISOString();
@@ -112,9 +118,9 @@ export default async function AdminAbonnementsPage() {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <AdminStatCard
-          label="MRR estimé"
+          label="MRR total estimé"
           value={formatAdminCurrency(mrr)}
-          sub={`${formatAdminCurrency(arr)} d’ARR estimé`}
+          sub={`${formatAdminCurrency(arr)} d’ARR total estimé · abonnements + options${nbChargesSpecialesActives > 0 ? ` · ${nbChargesSpecialesActives} option${nbChargesSpecialesActives > 1 ? 's' : ''} active${nbChargesSpecialesActives > 1 ? 's' : ''}` : ''}`}
           icon={Wallet}
           color="bg-emerald-50 text-emerald-600"
         />

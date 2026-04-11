@@ -6,9 +6,10 @@
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { redirectToDashboard } from '@/lib/auth-redirect';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
@@ -27,7 +28,6 @@ const BENEFITS = [
 
 // ---- Formulaire (utilise useSearchParams → doit être dans Suspense) ----
 function RegisterForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const supabase = createClient();
@@ -123,7 +123,7 @@ function RegisterForm() {
           if (cancelled) return;
 
           if (linkResponse.ok) {
-            router.replace('/dashboard');
+            redirectToDashboard();
             return;
           }
 
@@ -148,7 +148,7 @@ function RegisterForm() {
   // `createClient()` retourne une nouvelle instance ; on évite de la mettre en dépendance
   // pour ne pas relancer en boucle le chargement/acceptation de l'invitation.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router, token]);
+  }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     formStartedRef.current = true;
@@ -219,7 +219,7 @@ function RegisterForm() {
         anonymousEvent: 'sign_up_anonymous',
         params: { role: 'copropriétaire', method: 'invitation' },
       });
-      router.replace('/dashboard');
+      redirectToDashboard();
       return;
     }
 
@@ -269,7 +269,7 @@ function RegisterForm() {
       return;
     }
 
-    router.replace('/dashboard');
+    redirectToDashboard();
   };
 
   // --- États d'affichage ---

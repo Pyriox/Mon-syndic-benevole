@@ -334,6 +334,7 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         pctTendance: 0,
         totalMontantImpaye: 0,
         nbImpayes: 0,
+        nbLignesImpayees: 0,
         nbIncidentsOuverts: 0,
         depenses: [] as Array<{ id: string; titre: string; montant: number; date_depense: string; categorie: string }>,
         repartitionBudget: [] as Array<{ cat: string; total: number; pct: number }>,
@@ -359,7 +360,6 @@ export function getSyndicDashboardSnapshot(coproId: string) {
     const [
       { count: nbLots },
       { count: nbCoproprietaires },
-      { data: coproprietairesFinance },
       { data: depenses },
       { data: depensesAll },
       { data: depensesAnPasse },
@@ -370,7 +370,6 @@ export function getSyndicDashboardSnapshot(coproId: string) {
     ] = await Promise.all([
       admin.from('lots').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
       admin.from('coproprietaires').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
-      admin.from('coproprietaires').select('id, solde').eq('copropriete_id', coproId),
       admin
         .from('depenses')
         .select('id, titre, montant, date_depense, categorie')
@@ -409,10 +408,10 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         .limit(3),
       admin
         .from('appels_de_fonds')
-        .select('id, date_echeance, lignes_appels_de_fonds(id, montant_du, paye)')
+        .select('id, date_echeance, lignes_appels_de_fonds(id, coproprietaire_id, montant_du, paye)')
         .eq('copropriete_id', coproId)
         .eq('statut', 'publie')
-        .lt('date_echeance', sixtyDaysAgoStr),
+        .lt('date_echeance', todayStr),
       admin
         .from('appels_de_fonds')
         .select('montant_total, type_appel, montant_fonds_travaux')
@@ -469,17 +468,28 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       else tendanceDepenses = 'baisse';
     }
 
-    const { totalMontantImpaye, nbImpayes } = buildDashboardUnpaidSnapshot({
-      coproprietaires: (coproprietairesFinance ?? []).map((coproprietaire) => ({
-        id: coproprietaire.id,
-        solde: coproprietaire.solde ?? 0,
+    const lignesImpayeesEchues = (appelsEchus ?? []).flatMap((appel) =>
+      ((appel.lignes_appels_de_fonds ?? []) as Array<{ id: string; coproprietaire_id: string | null; montant_du: number; paye: boolean }>).map((ligne) => ({
+        id: ligne.id,
+        coproprietaire_id: ligne.coproprietaire_id ?? null,
+        montant_du: ligne.montant_du,
+        paye: ligne.paye,
+        date_echeance: appel.date_echeance ?? null,
       })),
+    );
+
+    const { totalMontantImpaye, nbImpayes, nbLignesImpayees } = buildDashboardUnpaidSnapshot({
+      lignes: lignesImpayeesEchues,
+      today: todayStr,
     });
     const nbIncidentsOuverts = incidents?.length ?? 0;
 
-    const lignesImpayes60j = (appelsEchus ?? []).flatMap((appel) =>
-      ((appel.lignes_appels_de_fonds ?? []) as Array<{ id: string; montant_du: number; paye: boolean }>).filter((ligne) => !ligne.paye),
-    );
+    const lignesImpayes60j = lignesImpayeesEchues.filter((ligne) => {
+      if (ligne.paye) return false;
+      if ((ligne.montant_du ?? 0) <= 0) return false;
+      if (!ligne.date_echeance) return false;
+      return ligne.date_echeance < sixtyDaysAgoStr;
+    });
     const nbImpayes60j = lignesImpayes60j.length;
     const montantImpayes60j = lignesImpayes60j.reduce((sum, ligne) => sum + ligne.montant_du, 0);
 
@@ -508,6 +518,7 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       pctTendance,
       totalMontantImpaye,
       nbImpayes,
+      nbLignesImpayees,
       nbIncidentsOuverts,
       depenses: expenseSnapshot.depenses,
       repartitionBudget: expenseSnapshot.repartitionBudget,
@@ -539,7 +550,7 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       joursAvantAG,
     };
     },
-    ['dashboard-syndic-snapshot', coproId],
+    ['dashboard-syndic-snapshot-v2', coproId],
     { revalidate: 30, tags: [`dashboard-${coproId}`] },
   )();
 }

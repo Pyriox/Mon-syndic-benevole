@@ -24,7 +24,7 @@ export function confirmationInscriptionHtml(): string {
   Cliquez sur le bouton ci-dessous pour valider votre adresse et activer votre compte.
 </p>
 
-${ctaButton('Confirmer mon adresse e-mail', '{{ .ConfirmationURL }}')}
+${ctaButton('Confirmer mon adresse e-mail →', '{{ .ConfirmationURL }}')}
 
 <p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted};line-height:1.5">
   Ce lien est valable <strong>24 heures</strong>. Passé ce délai, vous pourrez en demander un nouveau depuis la page de connexion.

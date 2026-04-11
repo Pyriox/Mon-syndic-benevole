@@ -3,6 +3,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+const mockGetSyndicDashboardSnapshot = vi.fn();
+
 vi.mock('next/link', () => ({
   default: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a {...props}>{children}</a>
@@ -32,7 +34,7 @@ vi.mock('@/lib/cached-queries', () => ({
       },
     ],
   })),
-  getSyndicDashboardSnapshot: vi.fn(),
+  getSyndicDashboardSnapshot: mockGetSyndicDashboardSnapshot,
 }));
 
 describe('CoproDashboardMain', () => {
@@ -52,5 +54,25 @@ describe('CoproDashboardMain', () => {
 
     expect(screen.getAllByText(/Historique de mes mouvements/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Paiement reçu — Appel T2 2026/i).length).toBeGreaterThan(0);
+  });
+});
+
+describe('SyndicDashboardAlert', () => {
+  it('affiche de nouveau un bandeau d’alerte pour les appels de fonds échus impayés', async () => {
+    mockGetSyndicDashboardSnapshot.mockResolvedValue({
+      totalMontantImpaye: 1348.39,
+      nbImpayes: 4,
+      nbLignesImpayees: 6,
+      agUrgente: false,
+      prochaineAG: null,
+      joursAvantAG: null,
+    });
+
+    const { SyndicDashboardAlert } = await import('./DashboardSections');
+
+    render(await SyndicDashboardAlert({ coproId: 'copro-1' }));
+
+    expect(screen.getByText(/appel(s)? de fonds en retard/i)).not.toBeNull();
+    expect(screen.getByText(/1.?348,39\s?€/i)).not.toBeNull();
   });
 });

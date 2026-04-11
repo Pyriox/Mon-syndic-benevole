@@ -12,14 +12,14 @@ export const RESET_PASSWORD_SUBJECT = 'Réinitialisez votre mot de passe — Mon
 export function buildResetPasswordEmail(resetLink: string): string {
   const content = `
 <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:${COLOR.text}">Réinitialisez votre mot de passe</h1>
-<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">Une demande de réinitialisation a été effectuée</p>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">Une demande de réinitialisation vient d’être effectuée</p>
 
 <p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
   Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe pour votre compte
   <strong>Mon Syndic Bénévole</strong>.
 </p>
 
-${ctaButton('Réinitialiser mon mot de passe', resetLink)}
+${ctaButton('Réinitialiser mon mot de passe →', resetLink)}
 
 <p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted};line-height:1.5">
   Ce lien est valable <strong>1 heure</strong>. Passé ce délai, vous devrez faire une nouvelle demande.

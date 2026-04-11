@@ -40,7 +40,7 @@ export function buildInvitationEmail(params: InvitationEmailParams): string {
   <li>Visualiser vos lots et tantièmes</li>
 </ul>
 
-${ctaButton('Créer mon compte', inviteLink, COLOR.blue)}
+${ctaButton('Créer mon compte →', inviteLink, COLOR.blue)}
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px;border-top:1px solid ${COLOR.border}">
   <tr>

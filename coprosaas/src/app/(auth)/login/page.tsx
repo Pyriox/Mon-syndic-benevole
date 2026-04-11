@@ -4,9 +4,10 @@
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { redirectToDashboard } from '@/lib/auth-redirect';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
@@ -29,7 +30,6 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
   const inviteToken = searchParams.get('invite_token');
@@ -55,14 +55,12 @@ function LoginForm() {
   const formStartedRef = useRef(false);
   const formSubmittedRef = useRef(false);
   useEffect(() => {
-    void router.prefetch('/dashboard');
-
     return () => {
       if (formStartedRef.current && !formSubmittedRef.current) {
         trackAnonymousEvent('form_abandonment', { form: 'login' });
       }
     };
-  }, [router]);
+  }, []);
 
   const setEmailTracked = (v: string) => { if (v) formStartedRef.current = true; setEmail(v); };
   const setPasswordTracked = (v: string) => { if (v) formStartedRef.current = true; setPassword(v); };
@@ -155,7 +153,7 @@ function LoginForm() {
       params: { method: 'email' },
     });
     void logEventForEmail({ email: normalizedEmail, eventType: 'login_success', label: 'Connexion réussie' }).catch(() => undefined);
-    router.replace('/dashboard');
+    redirectToDashboard();
   };
 
   const handleResendConfirmation = async () => {

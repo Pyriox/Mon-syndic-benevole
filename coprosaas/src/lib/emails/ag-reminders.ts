@@ -27,10 +27,10 @@ export function buildAGReminderEmail(params: {
   agUrl?: string;
 }): string {
   const isUnopened = params.kind === 'unopened';
-  const title = isUnopened ? 'Convocation AG en attente de lecture' : 'Rappel Assemblée Generale';
+  const title = isUnopened ? 'Convocation AG en attente de lecture' : 'Rappel d’assemblée générale';
   const intro = isUnopened
-    ? 'Nous vous relancons car votre convocation AG n\'a pas encore ete ouverte.'
-    : 'Votre assemblee generale approche. Voici un rappel des informations utiles.';
+    ? 'Nous vous relançons car votre convocation d’assemblée générale n’a pas encore été ouverte.'
+    : 'Votre assemblée générale approche. Voici un rappel des informations utiles.';
 
   const content = `
 <h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">${h(title)}</h1>
@@ -46,11 +46,11 @@ export function buildAGReminderEmail(params: {
   <strong>${h(params.agTitre)}</strong>
 </p>
 <p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Date: <strong>${formatDateFR(params.dateAg)}</strong><br/>
-  ${params.lieu ? `Lieu: <strong>${h(params.lieu)}</strong>` : ''}
+  Date : <strong>${formatDateFR(params.dateAg)}</strong><br/>
+  ${params.lieu ? `Lieu : <strong>${h(params.lieu)}</strong>` : ''}
 </p>
 
-${ctaButton('Voir le detail AG', params.agUrl ?? `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr'}/assemblees`, COLOR.blue)}
+${ctaButton("Voir le détail de l'AG", params.agUrl ?? `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr'}/assemblees`, COLOR.blue)}
 `;
 
   return wrapEmail(content, isUnopened ? COLOR.amber : COLOR.blue);

@@ -233,16 +233,16 @@ export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingRemin
   const hasNoCopro = coproCount === 0;
 
   const title = hasNoCopro
-    ? 'Votre espace est prêt: lancez votre copropriété en quelques minutes'
-    : 'Bravo, vous y êtes presque: finalisez votre copropriété';
+    ? 'Votre espace est prêt — lancez votre copropriété en quelques minutes'
+    : 'Bravo, vous y êtes presque — finalisez votre copropriété';
 
   const subtitle = hasNoCopro
     ? 'Démarrage rapide'
     : 'Dernière étape clé';
 
   const body = hasNoCopro
-    ? `Vous avez confirmé votre compte: excellente nouvelle. En créant votre copropriété maintenant, vous pourrez piloter vos obligations, centraliser vos documents et gagner un temps précieux dès cette semaine.`
-    : `Votre copropriété est créée, c'est un très bon début. Vous avez actuellement <strong>${coproprietairesCount}</strong> copropriétaire${coproprietairesCount > 1 ? 's' : ''}; ajoutez-en au moins 2 pour débloquer un suivi plus fluide de vos actions et de votre communication.`;
+    ? `Vous avez confirmé votre compte, excellente nouvelle. En créant votre copropriété maintenant, vous pourrez piloter vos obligations, centraliser vos documents et gagner un temps précieux dès cette semaine.`
+    : `Votre copropriété est créée, c'est un très bon début. Vous avez actuellement <strong>${coproprietairesCount}</strong> copropriétaire${coproprietairesCount > 1 ? 's' : ''} ; ajoutez-en au moins 2 pour débloquer un suivi plus fluide de vos actions et de votre communication.`;
 
   const stepsSummary = hasNoCopro
     ? `<div style="margin:16px 0 0;padding:14px 16px;border:1px solid ${COLOR.border};border-radius:10px;background:#f8fafc">

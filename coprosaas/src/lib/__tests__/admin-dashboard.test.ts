@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { countActiveAddonCopros, summarizeStripeBilling } from '../admin-dashboard';
+import { buildEstimatedRevenueMetrics, countActiveAddonCopros, summarizeStripeBilling } from '../admin-dashboard';
 
 describe('summarizeStripeBilling', () => {
   it('exclut la première facture payée après essai des renouvellements', () => {
@@ -51,5 +51,24 @@ describe('countActiveAddonCopros', () => {
     ], '2026-04-11T00:00:00.000Z');
 
     expect(count).toBe(4);
+  });
+});
+
+describe('buildEstimatedRevenueMetrics', () => {
+  it('inclut les add-ons actifs dans le MRR et l’ARR estimés', () => {
+    const metrics = buildEstimatedRevenueMetrics({ essentiel: 1, confort: 1, illimite: 0 }, [
+      { copropriete_id: 'copro-1', addon_key: 'charges_speciales', status: 'active' },
+      { copropriete_id: 'copro-2', addon_key: 'charges_speciales', status: 'trialing' },
+      { copropriete_id: 'copro-2', addon_key: 'charges_speciales', status: 'trialing' },
+      { copropriete_id: 'copro-3', addon_key: 'charges_speciales', status: 'canceled', cancel_at_period_end: true, current_period_end: '2026-01-01T00:00:00.000Z' },
+    ], '2026-04-11T00:00:00.000Z');
+
+    expect(metrics.baseMrr).toBe(55);
+    expect(metrics.baseArr).toBe(660);
+    expect(metrics.addonCounts.charges_speciales).toBe(2);
+    expect(metrics.addonMrr).toBe(16.5);
+    expect(metrics.addonArr).toBe(198);
+    expect(metrics.totalMrr).toBe(71.5);
+    expect(metrics.totalArr).toBe(858);
   });
 });
