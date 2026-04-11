@@ -758,9 +758,11 @@ export default function CoproSettingsPanel({
                     );
                   })}
 
-                  <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700 sm:max-w-md">
-                    <span>Base totale</span>
-                    <span>{formatBase(generalTotal)}</span>
+                  <div className="flex justify-stretch md:justify-end">
+                    <div className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700 md:w-[220px] md:shrink-0">
+                      <span>Base totale</span>
+                      <span>{formatBase(generalTotal)}</span>
+                    </div>
                   </div>
                 </div>
               ) : (
