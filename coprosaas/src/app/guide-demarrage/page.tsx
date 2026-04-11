@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import LandingNav from '../LandingNav';
 import PublicFooter from '@/components/layout/PublicFooter';
-import GuideChecklist from './GuideChecklist';
 
 export const metadata: Metadata = {
   title: 'Guide de démarrage syndic bénévole',
@@ -338,8 +337,6 @@ export default function GuideDemarragePage() {
           </section>
 
           <section id="sommaire" className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-            <GuideChecklist steps={guideSteps.map((step) => ({ id: step.id, label: step.title }))} />
-
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <BellRing size={16} className="text-indigo-600" />
