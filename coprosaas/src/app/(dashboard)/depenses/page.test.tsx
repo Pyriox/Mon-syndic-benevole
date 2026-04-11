@@ -184,6 +184,9 @@ describe('DepensesPage (vue copropriétaire)', () => {
 
     expect(screen.getByText(/Ma quote-part/i)).toBeTruthy();
     expect(screen.getByText(/Charges communes \+ Ascenseur/i)).toBeTruthy();
+    expect(screen.getByText(/Détail par clé/i)).toBeTruthy();
+    expect(screen.getByText(/sur 100,00\s*€/i)).toBeTruthy();
+    expect(screen.getByText(/sur 300,00\s*€/i)).toBeTruthy();
     expect(screen.getByText(/40,00\s*€/i)).toBeTruthy();
     expect(screen.getByText(/10%/i)).toBeTruthy();
   });

@@ -82,14 +82,16 @@ function roundEuros(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+function compareScopeLabels(a: string, b: string) {
+  if (a === 'Charges communes') return -1;
+  if (b === 'Charges communes') return 1;
+  return a.localeCompare(b, 'fr');
+}
+
 function summarizeExpenseScopes(depenses: DepenseScopeLike[]) {
   const labels = Array.from(new Set(
     depenses.map((depense) => formatRepartitionScope(depense.repartition_type, depense.repartition_cible))
-  )).sort((a, b) => {
-    if (a === 'Charges communes') return -1;
-    if (b === 'Charges communes') return 1;
-    return a.localeCompare(b, 'fr');
-  });
+  )).sort(compareScopeLabels);
 
   if (labels.length === 0 || (labels.length === 1 && labels[0] === 'Charges communes')) {
     return { isGeneralOnly: true, label: 'Charges communes' };
@@ -103,6 +105,25 @@ function summarizeExpenseScopes(depenses: DepenseScopeLike[]) {
     isGeneralOnly: false,
     label: labels.length <= 2 ? labels.join(' + ') : 'Variable selon la dépense',
   };
+}
+
+function getScopeWeights(
+  lots: LotScopeLike[],
+  type?: 'generale' | 'groupe' | null,
+  target?: string | null,
+) {
+  const scopedLots = filterLotsByRepartitionScope(lots, type, target);
+  const weightByOwner: Record<string, number> = {};
+
+  for (const lot of scopedLots) {
+    if (!lot.coproprietaire_id) continue;
+    const weight = getLotTantiemesForRepartitionScope(lot, type, target);
+    if (weight <= 0) continue;
+    weightByOwner[lot.coproprietaire_id] = (weightByOwner[lot.coproprietaire_id] ?? 0) + weight;
+  }
+
+  const totalWeight = Object.values(weightByOwner).reduce((sum, weight) => sum + weight, 0);
+  return { weightByOwner, totalWeight };
 }
 
 function computeExpensePartsByOwner(
@@ -128,17 +149,7 @@ function computeExpensePartsByOwner(
       continue;
     }
 
-    const scopedLots = filterLotsByRepartitionScope(lots, depense.repartition_type, depense.repartition_cible);
-    const weightByOwner: Record<string, number> = {};
-
-    for (const lot of scopedLots) {
-      if (!lot.coproprietaire_id) continue;
-      const weight = getLotTantiemesForRepartitionScope(lot, depense.repartition_type, depense.repartition_cible);
-      if (weight <= 0) continue;
-      weightByOwner[lot.coproprietaire_id] = (weightByOwner[lot.coproprietaire_id] ?? 0) + weight;
-    }
-
-    const totalWeight = Object.values(weightByOwner).reduce((sum, weight) => sum + weight, 0);
+    const { weightByOwner, totalWeight } = getScopeWeights(lots, depense.repartition_type, depense.repartition_cible);
     if (totalWeight <= 0) continue;
 
     for (const [coproprietaireId, weight] of Object.entries(weightByOwner)) {
@@ -147,6 +158,66 @@ function computeExpensePartsByOwner(
   }
 
   return totals;
+}
+
+function computeExpenseBreakdownByScope(
+  depenses: DepenseScopeLike[],
+  lots: LotScopeLike[],
+  repartitionsDepenses: RepartitionDepenseRow[],
+) {
+  const breakdown = new Map<string, {
+    label: string;
+    totalAmount: number;
+    ownerAmounts: Record<string, number>;
+    weightByOwner: Record<string, number>;
+    totalWeight: number;
+  }>();
+  const explicitByDepense = new Map<string, RepartitionDepenseRow[]>();
+
+  for (const row of repartitionsDepenses) {
+    if (!row.depense_id || !row.coproprietaire_id) continue;
+    explicitByDepense.set(row.depense_id, [...(explicitByDepense.get(row.depense_id) ?? []), row]);
+  }
+
+  for (const depense of depenses) {
+    const label = formatRepartitionScope(depense.repartition_type, depense.repartition_cible);
+    const { weightByOwner, totalWeight } = getScopeWeights(lots, depense.repartition_type, depense.repartition_cible);
+    const entry = breakdown.get(label) ?? {
+      label,
+      totalAmount: 0,
+      ownerAmounts: {},
+      weightByOwner,
+      totalWeight,
+    };
+
+    entry.totalAmount = roundEuros(entry.totalAmount + depense.montant);
+    if (entry.totalWeight <= 0 && totalWeight > 0) {
+      entry.weightByOwner = weightByOwner;
+      entry.totalWeight = totalWeight;
+    }
+
+    const explicitRows = explicitByDepense.get(depense.id) ?? [];
+    if (explicitRows.length > 0) {
+      for (const row of explicitRows) {
+        entry.ownerAmounts[row.coproprietaire_id] = roundEuros((entry.ownerAmounts[row.coproprietaire_id] ?? 0) + Number(row.montant_du ?? 0));
+      }
+      breakdown.set(label, entry);
+      continue;
+    }
+
+    if (totalWeight <= 0) {
+      breakdown.set(label, entry);
+      continue;
+    }
+
+    for (const [coproprietaireId, weight] of Object.entries(weightByOwner)) {
+      entry.ownerAmounts[coproprietaireId] = roundEuros((entry.ownerAmounts[coproprietaireId] ?? 0) + calculerPart(depense.montant, weight, totalWeight));
+    }
+
+    breakdown.set(label, entry);
+  }
+
+  return Array.from(breakdown.values()).sort((a, b) => compareScopeLabels(a.label, b.label));
 }
 
 export default async function DepensesPage({ searchParams }: { searchParams: Promise<{ annee?: string; page?: string }> }) {
@@ -216,9 +287,19 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
     });
     const myTant = myCopro ? (tantByOwner[myCopro.id] ?? 0) : 0;
     const partsByOwner = computeExpensePartsByOwner(depenses ?? [], lots ?? [], (repartitionsDepenses ?? []) as RepartitionDepenseRow[]);
+    const scopeBreakdown = computeExpenseBreakdownByScope(depenses ?? [], lots ?? [], (repartitionsDepenses ?? []) as RepartitionDepenseRow[]);
     const myPart = myCopro ? roundEuros(partsByOwner[myCopro.id] ?? 0) : 0;
     const myPct = totalDepenses > 0 ? myPart / totalDepenses : 0;
     const scopeSummary = summarizeExpenseScopes(depenses ?? []);
+    const myScopeBreakdown = myCopro
+      ? scopeBreakdown
+          .map((scope) => ({
+            ...scope,
+            myAmount: roundEuros(scope.ownerAmounts[myCopro.id] ?? 0),
+            myWeight: scope.weightByOwner[myCopro.id] ?? 0,
+          }))
+          .filter((scope) => scope.myAmount > 0)
+      : [];
 
     return (
       <div className="max-w-5xl mx-auto space-y-6">
@@ -364,6 +445,29 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                       {scopeSummary.isGeneralOnly ? `${myTant} / ${totalTantiemes}` : scopeSummary.label}
                     </span>
                   </div>
+                  {myScopeBreakdown.length > 0 && (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Détail par clé</p>
+                      <div className="mt-2 space-y-2">
+                        {myScopeBreakdown.map((scope) => (
+                          <div key={scope.label} className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">{scope.label}</p>
+                              <p className="text-xs text-gray-500">
+                                {scope.totalWeight > 0
+                                  ? `${scope.myWeight} / ${scope.totalWeight} ${scope.label === 'Charges communes' ? 'tantièmes' : 'sur la clé'}`
+                                  : 'Calcul à partir des lignes enregistrées'}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-semibold text-gray-900">{formatEuros(scope.myAmount)}</p>
+                              <p className="text-[11px] text-gray-500">sur {formatEuros(scope.totalAmount)}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Ma part</span>
                     <span className="font-bold text-blue-700 text-lg">{formatEuros(myPart)}</span>
