@@ -467,40 +467,27 @@ export default function CoproSettingsPanel({
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <div className="inline-flex rounded-xl bg-slate-100 p-1">
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('repartition')}
-                  className={cn(
-                    'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-                    activeSection === 'repartition' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900',
-                  )}
-                >
-                  Répartition des charges
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('copro')}
-                  className={cn(
-                    'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-                    activeSection === 'copro' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900',
-                  )}
-                >
-                  Fiche copropriété
-                </button>
-              </div>
-
-              <Button
+            <div className="inline-flex rounded-xl bg-slate-100 p-1">
+              <button
                 type="button"
-                onClick={() => {
-                  void handleSave();
-                }}
-                loading={saving}
-                variant={isDirty ? 'primary' : 'secondary'}
+                onClick={() => setActiveSection('repartition')}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                  activeSection === 'repartition' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900',
+                )}
               >
-                <Save size={14} /> {isDirty ? 'Enregistrer les modifications' : 'Enregistrer le paramétrage'}
-              </Button>
+                Répartition des charges
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSection('copro')}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                  activeSection === 'copro' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900',
+                )}
+              >
+                Fiche copropriété
+              </button>
             </div>
           </div>
         </Card>

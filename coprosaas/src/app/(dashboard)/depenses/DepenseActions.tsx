@@ -80,7 +80,7 @@ export default function DepenseActions({
     batiment?: string | null;
     groupes_repartition?: string[] | null;
     tantiemes_groupes?: Record<string, number> | null;
-    coproprietaire?: { id: string; nom: string; prenom: string };
+    coproprietaire?: { id: string; nom: string; prenom: string } | null;
   }[]>([]);
 
   const [formData, setFormData] = useState({
@@ -111,7 +111,7 @@ export default function DepenseActions({
 
       const { data, error: fetchError } = await supabase
         .from('lots')
-        .select('id, numero, tantiemes, batiment, groupes_repartition, tantiemes_groupes, coproprietaires(id, nom, prenom)')
+        .select('id, numero, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes')
         .eq('copropriete_id', formData.copropriete_id);
 
       if (cancelled) return;
@@ -123,20 +123,11 @@ export default function DepenseActions({
         return;
       }
 
-      // Aplatir la relation (Supabase renvoie un tableau pour coproprietaires)
-      const lotsFlat = (data ?? []).map((lot) => {
-        const coproprietaire = Array.isArray(lot.coproprietaires)
-          ? lot.coproprietaires[0]
-          : lot.coproprietaires;
-
-        return {
-          ...lot,
-          coproprietaire_id: coproprietaire?.id ?? null,
-          coproprietaire,
-        };
-      });
-
-      setLots(lotsFlat);
+      setLots((data ?? []).map((lot) => ({
+        ...lot,
+        coproprietaire_id: lot.coproprietaire_id ?? null,
+        coproprietaire: null,
+      })));
       setLotsLoading(false);
     };
 
@@ -278,10 +269,10 @@ export default function DepenseActions({
 
       await supabase.from('repartitions_depenses').delete().eq('depense_id', depense.id);
       const lignes = repartition
-        .filter((r) => r.lot.coproprietaire)
+        .filter((r) => r.lot.coproprietaire_id)
         .map((r) => ({
           depense_id: depense.id,
-          coproprietaire_id: r.lot.coproprietaire!.id,
+          coproprietaire_id: r.lot.coproprietaire_id as string,
           lot_id: r.lot.id,
           montant_du: r.montant,
           paye: false,
@@ -318,10 +309,10 @@ export default function DepenseActions({
 
       if (newDepense && lots.length > 0) {
         const lignes = repartition
-          .filter((r) => r.lot.coproprietaire)
+          .filter((r) => r.lot.coproprietaire_id)
           .map((r) => ({
             depense_id: newDepense.id,
-            coproprietaire_id: r.lot.coproprietaire!.id,
+            coproprietaire_id: r.lot.coproprietaire_id as string,
             lot_id: r.lot.id,
             montant_du: r.montant,
             paye: false,
@@ -557,7 +548,9 @@ export default function DepenseActions({
                           <td className="px-3 py-2 text-gray-600">
                             {lot.coproprietaire
                               ? `${lot.coproprietaire.prenom} ${lot.coproprietaire.nom}`
-                              : <span className="text-gray-400 italic">Non assigné</span>}
+                              : lot.coproprietaire_id
+                                ? <span className="text-gray-500">Lot attribué</span>
+                                : <span className="text-gray-400 italic">Non assigné</span>}
                           </td>
                           <td className="px-3 py-2 text-right">{lot.tantiemes}</td>
                           <td className="px-3 py-2 text-right font-semibold">{formatEuros(montant)}</td>

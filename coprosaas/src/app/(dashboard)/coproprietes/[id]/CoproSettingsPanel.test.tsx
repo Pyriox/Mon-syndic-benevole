@@ -77,7 +77,7 @@ describe('CoproSettingsPanel', () => {
     });
 
     expect(screen.getByText(/Modifications non enregistrées/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Enregistrer les modifications/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Enregistrer maintenant/i })).toBeTruthy();
     expect(screen.getByText(/Enregistrez avant de quitter cette page/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Annuler mes modifications/i })).toBeTruthy();
   });
@@ -152,7 +152,7 @@ describe('CoproSettingsPanel', () => {
       target: { value: 'Parking' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Ajouter la clé/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Enregistrer les modifications/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Enregistrer maintenant/i }));
 
     expect(saveMock).not.toHaveBeenCalled();
     expect(screen.getByText(/Renseignez une base sur au moins un lot pour chaque clé spéciale/i)).toBeTruthy();

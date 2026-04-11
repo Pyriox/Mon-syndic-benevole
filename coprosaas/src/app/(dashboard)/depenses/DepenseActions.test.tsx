@@ -61,7 +61,7 @@ describe('DepenseActions', () => {
             batiment: null,
             groupes_repartition: [],
             tantiemes_groupes: {},
-            coproprietaires: [{ id: 'cp-1', nom: 'Dupont', prenom: 'Jean' }],
+            coproprietaire_id: 'cp-1',
           },
         ],
         error: null,
@@ -95,7 +95,7 @@ describe('DepenseActions', () => {
         batiment: null,
         groupes_repartition: ['Ascenseur'],
         tantiemes_groupes: { Ascenseur: 100 },
-        coproprietaires: [{ id: 'cp-1', nom: 'Dupont', prenom: 'Jean' }],
+        coproprietaire_id: 'cp-1',
       },
     ];
 
