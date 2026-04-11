@@ -34,15 +34,15 @@ const captureVariants = new Set([
 
 function CaptureFrame({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-100 p-8">
-      <div className="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden" data-guide-capture={title}>
+    <div className="bg-slate-100 p-2">
+      <div className="mx-auto max-w-[1100px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" data-guide-capture={title}>
         <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-3">
           <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
           <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
           <p className="ml-2 text-xs font-medium text-slate-500">Capture réelle d'écran</p>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-4">{children}</div>
       </div>
     </div>
   );
@@ -50,8 +50,8 @@ function CaptureFrame({ title, children }: { title: string; children: React.Reac
 
 function DashboardEmptyCapture() {
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <Card className="text-center py-14">
+    <div className="max-w-4xl mx-auto space-y-4">
+      <Card className="text-center py-12">
         <Building2 size={52} className="mx-auto text-blue-200 mb-5" />
         <h3 className="text-xl font-bold text-gray-800">Bienvenue sur Mon Syndic Bénévole !</h3>
         <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto">
@@ -68,7 +68,7 @@ function DashboardEmptyCapture() {
 
 function CoproprieteFormCapture() {
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Nouvelle copropriété</h2>
         <p className="text-gray-500 mt-1">Renseignez les informations de la copropriété.</p>
@@ -94,7 +94,7 @@ function CoproprieteFormCapture() {
 
 function LotsEmptyCapture() {
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Lots & bâtiment</h2>
         <p className="text-gray-500 mt-1">0 lot(s)</p>
@@ -110,7 +110,7 @@ function LotsEmptyCapture() {
 
 function CoproprietairesEmptyCapture() {
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Copropriétaires</h2>
         <p className="text-gray-500 mt-1">0 copropriétaire(s)</p>
@@ -126,7 +126,7 @@ function CoproprietairesEmptyCapture() {
 
 function AppelsEmptyCapture() {
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Appels de fonds</h2>
         <p className="text-gray-500 mt-1">0 appel</p>
@@ -142,7 +142,7 @@ function AppelsEmptyCapture() {
 
 function DepensesEmptyCapture() {
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Dépenses</h2>
         <p className="text-gray-500 mt-1">0 dépense</p>
@@ -158,7 +158,7 @@ function DepensesEmptyCapture() {
 
 function AGEmptyCapture() {
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Assemblées</h2>
         <p className="text-gray-500 mt-1">0 AG</p>
@@ -174,7 +174,7 @@ function AGEmptyCapture() {
 
 function DocumentsEmptyCapture() {
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
         <p className="text-gray-500 mt-1">0 élément</p>
