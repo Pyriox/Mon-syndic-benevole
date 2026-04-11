@@ -32,6 +32,7 @@ export default function PublicFooter({ compact = false }: PublicFooterProps) {
             <Link href="/mentions-legales" className="hover:text-gray-200 transition-colors">Mentions légales</Link>
             <Link href="/politique-confidentialite" className="hover:text-gray-200 transition-colors">Confidentialité</Link>
             <Link href="/cgu" className="hover:text-gray-200 transition-colors">CGU / CGV</Link>
+            <Link href="/guide-demarrage" className="hover:text-gray-200 transition-colors">Guide de démarrage</Link>
             <Link href="/blog" className="hover:text-gray-200 transition-colors">Blog</Link>
             <a href="mailto:contact@mon-syndic-benevole.fr" className="hover:text-gray-200 transition-colors">
               <span className="sm:hidden">Contact</span>

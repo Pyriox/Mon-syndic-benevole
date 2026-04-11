@@ -12,6 +12,7 @@ import { Loader2, Menu, X } from 'lucide-react';
 const navLinks = [
   { href: '/#fonctionnalites', label: 'Fonctionnalités' },
   { href: '/#tarif', label: 'Tarifs' },
+  { href: '/guide-demarrage', label: 'Guide' },
   { href: '/#faq', label: 'FAQ' },
   { href: '/blog', label: 'Blog' },
 ];
