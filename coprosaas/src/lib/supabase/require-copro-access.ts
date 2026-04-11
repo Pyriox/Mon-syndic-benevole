@@ -40,6 +40,64 @@ export interface CoproAccess {
   copro: CoproInfo | null;
 }
 
+async function resolveFirstAccessibleCopro({
+  admin,
+  userId,
+  normalizedEmail,
+  preferredViewMode,
+}: {
+  admin: ReturnType<typeof createAdminClient>;
+  userId: string;
+  normalizedEmail: string;
+  preferredViewMode: ReturnType<typeof normalizeDashboardViewMode>;
+}): Promise<Omit<CoproAccess, 'user'>> {
+  const [{ data: firstSyndic }, { data: firstCopro }, { data: firstCoproByEmail }] = await Promise.all([
+    admin
+      .from('coproprietes')
+      .select('id, nom, syndic_id, plan, plan_id')
+      .eq('syndic_id', userId)
+      .order('nom')
+      .limit(1)
+      .maybeSingle(),
+    admin
+      .from('coproprietaires')
+      .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
+      .eq('user_id', userId)
+      .order('copropriete_id')
+      .limit(1)
+      .maybeSingle(),
+    normalizedEmail
+      ? admin
+          .from('coproprietaires')
+          .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
+          .eq('email', normalizedEmail)
+          .is('user_id', null)
+          .order('copropriete_id')
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const firstCoproRelation = firstCopro?.coproprietes ?? firstCoproByEmail?.coproprietes ?? null;
+  const firstCoproData = (Array.isArray(firstCoproRelation) ? firstCoproRelation[0] : firstCoproRelation) as CoproInfo | null;
+  const resolvedRole = resolveDashboardRole({
+    preferredMode: preferredViewMode,
+    hasSyndicAccess: Boolean(firstSyndic),
+    hasCoproAccess: Boolean(firstCoproData),
+    defaultRole: 'syndic',
+  });
+
+  if (resolvedRole === 'syndic' && firstSyndic) {
+    return { selectedCoproId: firstSyndic.id, role: 'syndic', copro: firstSyndic };
+  }
+
+  if (resolvedRole === 'copropriétaire' && firstCoproData) {
+    return { selectedCoproId: firstCoproData.id, role: 'copropriétaire', copro: firstCoproData };
+  }
+
+  return { selectedCoproId: null, role: null, copro: null };
+}
+
 export const requireCoproAccess = cache(async function requireCoproAccess(allowedRoles?: CoproRole[]): Promise<CoproAccess> {
   // getAuthUser() est React.cache → résultat partagé avec le layout, 0 appel réseau supplémentaire
   const user = await getAuthUser();
@@ -54,54 +112,19 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
   // Pas de cookie : fallback sur la première copropriété accessible
   // (même logique que le layout — évite une vue vide avant que CoproSelector pose le cookie)
   if (!selectedCoproId) {
-    const [{ data: firstSyndic }, { data: firstCopro }, { data: firstCoproByEmail }] = await Promise.all([
-      admin
-        .from('coproprietes')
-        .select('id, nom, syndic_id, plan, plan_id')
-        .eq('syndic_id', user.id)
-        .order('nom')
-        .limit(1)
-        .maybeSingle(),
-      admin
-        .from('coproprietaires')
-        .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
-        .eq('user_id', user.id)
-        .order('copropriete_id')
-        .limit(1)
-        .maybeSingle(),
-      normalizedEmail
-        ? admin
-            .from('coproprietaires')
-            .select('coproprietes(id, nom, syndic_id, plan, plan_id)')
-            .eq('email', normalizedEmail)
-            .is('user_id', null)
-            .order('copropriete_id')
-            .limit(1)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
-
-    const firstCoproRelation = firstCopro?.coproprietes ?? firstCoproByEmail?.coproprietes ?? null;
-    const firstCoproData = (Array.isArray(firstCoproRelation) ? firstCoproRelation[0] : firstCoproRelation) as CoproInfo | null;
-    const resolvedRole = resolveDashboardRole({
-      preferredMode: preferredViewMode,
-      hasSyndicAccess: Boolean(firstSyndic),
-      hasCoproAccess: Boolean(firstCoproData),
-      defaultRole: 'syndic',
+    const fallbackAccess = await resolveFirstAccessibleCopro({
+      admin,
+      userId: user.id,
+      normalizedEmail,
+      preferredViewMode,
     });
 
-    if (resolvedRole === 'syndic' && firstSyndic) {
-      if (allowedRoles && !allowedRoles.includes('syndic')) redirect('/dashboard');
-      return { user, selectedCoproId: firstSyndic.id, role: 'syndic', copro: firstSyndic };
-    }
-    if (resolvedRole === 'copropriétaire' && firstCoproData) {
-      if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
-      return { user, selectedCoproId: firstCoproData.id, role: 'copropriétaire', copro: firstCoproData };
+    if (fallbackAccess.role && allowedRoles && !allowedRoles.includes(fallbackAccess.role)) {
+      redirect('/dashboard');
     }
 
-    // Aucune copropriété accessible
-    if (allowedRoles) redirect('/dashboard');
-    return { user, selectedCoproId: null, role: null, copro: null };
+    if (!fallbackAccess.role && allowedRoles) redirect('/dashboard');
+    return { user, ...fallbackAccess };
   }
 
   // Cookie présent : utilise le client admin pour bypasser la RLS sur coproprietes
@@ -140,12 +163,24 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
 
   if (resolvedRole === 'syndic' && asSyndic) {
     if (allowedRoles && !allowedRoles.includes('syndic')) redirect('/dashboard');
-    return { user, selectedCoproId, role: 'syndic', copro: asSyndic };
+    return { user, selectedCoproId: asSyndic.id, role: 'syndic', copro: asSyndic };
   }
 
   if (resolvedRole === 'copropriétaire' && coproData) {
     if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
-    return { user, selectedCoproId, role: 'copropriétaire', copro: coproData };
+    return { user, selectedCoproId: coproData.id, role: 'copropriétaire', copro: coproData };
+  }
+
+  const fallbackAccess = await resolveFirstAccessibleCopro({
+    admin,
+    userId: user.id,
+    normalizedEmail,
+    preferredViewMode,
+  });
+
+  if (fallbackAccess.role) {
+    if (allowedRoles && !allowedRoles.includes(fallbackAccess.role)) redirect('/dashboard');
+    return { user, ...fallbackAccess };
   }
 
   // Cookie présent mais aucun accès

@@ -94,4 +94,21 @@ describe('requireCoproAccess', () => {
     expect(result.role).toBe('copropriétaire');
     expect(result.copro?.nom).toBe('Villa des Fleurs');
   });
+
+  it('retombe sur la première copropriété accessible quand le cookie pointe vers une copropriété obsolète', async () => {
+    cookiesMock.mockResolvedValue({
+      get: vi.fn((key: string) => {
+        if (key === 'selected_copro_id') return { value: 'copro-obsolete' };
+        return undefined;
+      }),
+    });
+
+    const { requireCoproAccess } = await import('@/lib/supabase/require-copro-access');
+
+    const result = await requireCoproAccess();
+
+    expect(result.selectedCoproId).toBe('copro-1');
+    expect(result.role).toBe('copropriétaire');
+    expect(result.copro?.nom).toBe('Villa des Fleurs');
+  });
 });

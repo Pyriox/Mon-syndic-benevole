@@ -14,6 +14,7 @@
 // ============================================================
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { buildDashboardExpenseSnapshot } from '@/lib/dashboard-data';
 import type { AppNotification } from '@/types';
 
 function safeRevalidateTag(tag: string) {
@@ -425,17 +426,7 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         .eq('paye', false),
     ]);
 
-    const totalDepenses = depenses?.reduce((sum, depense) => sum + depense.montant, 0) ?? 0;
     const totalDepensesAnPasse = depensesAnPasse?.reduce((sum, depense) => sum + depense.montant, 0) ?? 0;
-
-    let tendanceDepenses: 'hausse' | 'baisse' | 'stable' | 'nouveau' = 'nouveau';
-    let pctTendance = 0;
-    if (totalDepensesAnPasse > 0) {
-      pctTendance = Math.round(((totalDepenses - totalDepensesAnPasse) / totalDepensesAnPasse) * 100);
-      if (Math.abs(pctTendance) <= 2) tendanceDepenses = 'stable';
-      else if (pctTendance > 0) tendanceDepenses = 'hausse';
-      else tendanceDepenses = 'baisse';
-    }
 
     const provisionsBP = (appelsProvisions ?? []).filter(
       (appel) => appel.type_appel === 'budget_previsionnel' || appel.type_appel === 'revision_budget' || appel.type_appel == null,
@@ -454,10 +445,34 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       (sum, appel) => sum + ((appel as { montant_fonds_travaux?: number }).montant_fonds_travaux ?? 0),
       0,
     );
+    const expenseSnapshot = buildDashboardExpenseSnapshot({
+      depensesRecentes: (depenses ?? []).map((depense) => ({
+        id: depense.id,
+        titre: depense.titre,
+        montant: depense.montant,
+        date_depense: depense.date_depense,
+        categorie: depense.categorie ?? 'autre',
+      })),
+      depensesAll: (depensesAll ?? []).map((depense) => ({
+        montant: depense.montant,
+        categorie: depense.categorie ?? 'autre',
+      })),
+      totalFondsTravaux,
+    });
+    const totalDepenses = expenseSnapshot.totalDepenses;
     const totalProvisionsBP = provisionsBP.reduce((sum, appel) => sum + (appel.montant_total ?? 0), 0);
     const totalProvisionsBPHorsFT = totalProvisionsBP - totalFondsTravauxBP;
     const ecartPrevisionnel = totalProvisionsBPHorsFT - totalDepenses;
     const totalDepensesAvecFT = totalDepenses + totalFondsTravaux;
+
+    let tendanceDepenses: 'hausse' | 'baisse' | 'stable' | 'nouveau' = 'nouveau';
+    let pctTendance = 0;
+    if (totalDepensesAnPasse > 0) {
+      pctTendance = Math.round(((totalDepenses - totalDepensesAnPasse) / totalDepensesAnPasse) * 100);
+      if (Math.abs(pctTendance) <= 2) tendanceDepenses = 'stable';
+      else if (pctTendance > 0) tendanceDepenses = 'hausse';
+      else tendanceDepenses = 'baisse';
+    }
 
     const lignesImpayeesEchues = (appelsEchusAujourdhui ?? []) as Array<{ montant_du: number; coproprietaire_id: string | null }>;
     const totalMontantImpaye = lignesImpayeesEchues.reduce((sum, ligne) => sum + ligne.montant_du, 0);
@@ -481,33 +496,6 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       : null;
     const agUrgente = joursAvantAG !== null && joursAvantAG <= 30;
 
-    const repartitionRaw: Record<string, number> = {};
-    for (const depense of depensesAll ?? []) {
-      const categorie = depense.categorie ?? 'autre';
-      repartitionRaw[categorie] = (repartitionRaw[categorie] ?? 0) + depense.montant;
-    }
-
-    const totalRepartition = Object.values(repartitionRaw).reduce((sum, value) => sum + value, 0);
-    const repartition = Object.entries(repartitionRaw)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 7)
-      .map(([cat, total]) => ({
-        cat,
-        total,
-        pct: totalRepartition > 0 ? Math.round((total / totalRepartition) * 100) : 0,
-      }));
-
-    const totalBudget = totalRepartition + totalFondsTravaux;
-    const repartitionBudget = [
-      ...(totalFondsTravaux > 0
-        ? [{ cat: 'fonds_travaux_alur', total: totalFondsTravaux, pct: totalBudget > 0 ? Math.round((totalFondsTravaux / totalBudget) * 100) : 0 }]
-        : []),
-      ...repartition.map((item) => ({
-        ...item,
-        pct: totalBudget > 0 ? Math.round((item.total / totalBudget) * 100) : 0,
-      })),
-    ];
-
     return {
       currentYear,
       prevYear,
@@ -523,15 +511,9 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       totalMontantImpaye,
       nbImpayes,
       nbIncidentsOuverts,
-      depenses: (depenses ?? []).map((depense) => ({
-        id: depense.id,
-        titre: depense.titre,
-        montant: depense.montant,
-        date_depense: depense.date_depense,
-        categorie: depense.categorie ?? 'autre',
-      })),
-      repartitionBudget,
-      totalBudget,
+      depenses: expenseSnapshot.depenses,
+      repartitionBudget: expenseSnapshot.repartitionBudget,
+      totalBudget: expenseSnapshot.totalBudget,
       assemblees: (assemblees ?? []).map((ag) => ({
         id: ag.id,
         titre: ag.titre,

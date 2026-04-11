@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 type Row = Record<string, unknown>;
 
 let mockLotsRows: Row[] = [];
+let mockLotsError: string | null = null;
 
 class MockQuery {
   private rows: Row[];
@@ -46,8 +47,11 @@ class MockQuery {
     return { data: null, error: null };
   }
 
-  then(resolve: (value: { data: Row[]; error: null }) => unknown) {
-    return Promise.resolve(resolve({ data: this.rows, error: null }));
+  then(resolve: (value: { data: Row[]; error: { message: string } | null }) => unknown) {
+    return Promise.resolve(resolve({
+      data: mockLotsError ? [] : this.rows,
+      error: mockLotsError ? { message: mockLotsError } : null,
+    }));
   }
 }
 
@@ -100,6 +104,7 @@ afterEach(() => {
 describe('AppelFondsActions', () => {
   beforeEach(() => {
     mockLotsRows = [];
+    mockLotsError = null;
   });
 
   it('n’affiche pas de sélecteur de clé spéciale quand aucune clé n’est configurée', async () => {
@@ -159,5 +164,19 @@ describe('AppelFondsActions', () => {
 
     expect(optionLabels).toContain('Ascenseur test');
     expect(optionLabels).not.toContain('Seulement Ascenseur test');
+  });
+
+  it('affiche une erreur explicite quand les clés spéciales ne peuvent pas être chargées', async () => {
+    mockLotsError = 'boom';
+
+    const { default: AppelFondsActions } = await import('./AppelFondsActions');
+
+    render(<AppelFondsActions coproprietes={[{ id: 'copro-1', nom: 'Copro test' }]} showLabel />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Créer un appel de fonds/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Créer un appel exceptionnel sans AG/i }));
+
+    expect(await screen.findByText(/Impossible de charger les clés de répartition pour le moment/i)).not.toBeNull();
+    expect(screen.queryByText(/Ajoutez d’abord une clé spéciale/i)).toBeNull();
   });
 });

@@ -100,6 +100,8 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lotsLoading, setLotsLoading] = useState(false);
+  const [lotsError, setLotsError] = useState('');
 
   const [lots, setLots] = useState<{
     id: string;
@@ -144,27 +146,61 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
   const [genPeriodicite, setGenPeriodicite] = useState<'mensuel' | 'trimestriel' | 'semestriel' | 'annuel'>('trimestriel');
 
   const availableRepartitionGroups = useMemo(() => collectAvailableRepartitionGroups(lots), [lots]);
+  const hasSpecialRepartitionChoices = specialChargesEnabled && availableRepartitionGroups.length > 0;
+  const shouldShowRepartitionSelector = hasSpecialRepartitionChoices || postes.some(
+    (poste) => poste.repartition_type === 'groupe' && Boolean(poste.repartition_cible),
+  );
+  const isLoadingRepartitionChoices = specialChargesEnabled && lotsLoading && !hasSpecialRepartitionChoices;
+  const hasRepartitionLoadingError = Boolean(lotsError) && !shouldShowRepartitionSelector;
 
   // -- Charger les lots ----------------------------------------
   useEffect(() => {
-    if (!coproprieteId) return;
-    supabase
-      .from('lots')
-      .select('id, numero, tantiemes, batiment, groupes_repartition, tantiemes_groupes, coproprietaires(id, nom, prenom)')
-      .eq('copropriete_id', coproprieteId)
-      .then(({ data }) => {
-        setLots((data ?? []).map((lot) => {
-          const coproprietaire = Array.isArray(lot.coproprietaires)
-            ? lot.coproprietaires[0]
-            : (lot.coproprietaires as unknown as { id: string; nom: string; prenom: string } | undefined);
+    if (!coproprieteId) {
+      setLots([]);
+      setLotsLoading(false);
+      setLotsError('');
+      return;
+    }
 
-          return {
-            ...lot,
-            coproprietaire_id: coproprietaire?.id ?? null,
-            coproprietaire,
-          };
-        }));
-      });
+    let cancelled = false;
+
+    const fetchLots = async () => {
+      setLotsLoading(true);
+      setLotsError('');
+
+      const { data, error: fetchError } = await supabase
+        .from('lots')
+        .select('id, numero, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes, coproprietaires(id, nom, prenom)')
+        .eq('copropriete_id', coproprieteId);
+
+      if (cancelled) return;
+
+      if (fetchError) {
+        setLots([]);
+        setLotsLoading(false);
+        setLotsError('Impossible de charger les clés de répartition pour le moment.');
+        return;
+      }
+
+      setLots((data ?? []).map((lot) => {
+        const coproprietaire = Array.isArray(lot.coproprietaires)
+          ? lot.coproprietaires[0]
+          : (lot.coproprietaires as unknown as { id: string; nom: string; prenom: string } | undefined);
+
+        return {
+          ...lot,
+          coproprietaire_id: lot.coproprietaire_id ?? coproprietaire?.id ?? null,
+          coproprietaire: coproprietaire ?? undefined,
+        };
+      }));
+      setLotsLoading(false);
+    };
+
+    void fetchLots();
+
+    return () => {
+      cancelled = true;
+    };
   }, [coproprieteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // -- Sélection d'une AG --------------------------------------
@@ -467,6 +503,16 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
     setError('');
 
     const postesValides = postesPourRepartition;
+    if (specialChargesEnabled && lotsLoading) {
+      setError('Chargement des clés de répartition en cours. Réessayez dans un instant.');
+      setLoading(false);
+      return;
+    }
+    if (lotsError) {
+      setError(lotsError);
+      setLoading(false);
+      return;
+    }
     if (postesValides.length === 0) {
       setError('Ajoutez au moins un poste avec un montant.');
       setLoading(false);
@@ -765,12 +811,16 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
                   <div className="p-3 space-y-2 border-t border-gray-200 bg-white">
                     <div className={`rounded-lg px-3 py-2 text-xs ${specialChargesEnabled ? 'border border-blue-100 bg-blue-50 text-blue-700' : 'border border-amber-200 bg-amber-50 text-amber-800'}`}>
                       <p className="font-medium">Par défaut, chaque ligne est répartie en charges communes.</p>
-                      <p className={`mt-0.5 ${specialChargesEnabled ? 'text-blue-600' : 'text-amber-700'}`}>
+                      <p className={`mt-0.5 ${hasRepartitionLoadingError ? 'text-red-600' : specialChargesEnabled ? 'text-blue-600' : 'text-amber-700'}`}>
                         {specialChargesEnabled
                           ? (
-                            availableRepartitionGroups.length === 0
-                              ? 'Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'
-                              : `Vous pouvez aussi cibler : ${availableRepartitionGroups.join(', ')}.`
+                            isLoadingRepartitionChoices
+                              ? 'Chargement des clés de répartition…'
+                              : hasRepartitionLoadingError
+                                ? lotsError
+                                : availableRepartitionGroups.length === 0
+                                  ? 'Ajoutez d’abord une clé spéciale dans le paramétrage de la copropriété.'
+                                  : `Vous pouvez aussi cibler : ${availableRepartitionGroups.join(', ')}.`
                           )
                           : 'Les répartitions spéciales sont réservées à l’option payante Charges spéciales. Vous pouvez néanmoins conserver des charges communes.'}
                       </p>
@@ -789,7 +839,7 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
                         <input type="number" min="0" step="0.01" placeholder="0,00" value={poste.montant}
                           onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? { ...x, montant: e.target.value } : x))}
                           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        {((specialChargesEnabled && availableRepartitionGroups.length > 0) || (poste.repartition_type === 'groupe' && poste.repartition_cible)) ? (
+                        {shouldShowRepartitionSelector ? (
                           <select
                             value={poste.repartition_type === 'groupe' && poste.repartition_cible ? `groupe:${poste.repartition_cible}` : 'generale'}
                             onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? {
