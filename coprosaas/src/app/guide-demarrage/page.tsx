@@ -11,7 +11,6 @@ import {
   HelpCircle,
   LayoutDashboard,
   Receipt,
-  Shield,
   Users,
   Wrench,
 } from 'lucide-react';
@@ -63,27 +62,27 @@ type GuideStep = {
 
 const guideSteps: GuideStep[] = [
   {
-    id: 'compte',
+    id: 'dashboard',
     step: 'Étape 1',
-    title: 'Créer votre compte et accéder au tableau de bord',
-    page: 'Pages `Connexion` / `Inscription` puis `Tableau de bord`',
-    href: '/register',
-    icon: Shield,
+    title: 'Première arrivée sur le tableau de bord',
+    page: 'Page `Tableau de bord` (après confirmation de l’adresse e-mail)',
+    href: '/dashboard',
+    icon: LayoutDashboard,
     accent: 'from-blue-500 to-indigo-500',
     duration: '2 à 3 min',
-    objective: 'Entrer dans l’application et comprendre la logique générale de navigation.',
+    objective: 'Comprendre immédiatement où se trouvent les informations essentielles et comment naviguer dans l’application.',
     actions: [
-      'Créez votre compte avec votre e-mail, votre mot de passe et votre nom.',
-      'Confirmez votre adresse si nécessaire, puis connectez-vous.',
-      'Repérez les trois zones clés : le sélecteur de copropriété, la navigation de gauche et le tableau de bord central.',
+      'Arrivez sur le tableau de bord juste après avoir confirmé votre adresse e-mail et vous être connecté.',
+      'Repérez les trois zones clés : le sélecteur de copropriété, la navigation de gauche et les cartes centrales de suivi.',
+      'Vérifiez les premiers indicateurs : provisions, dépenses, impayés, incidents et alertes à traiter.',
     ],
-    result: 'Vous êtes connecté et prêt à créer ou reprendre la gestion de votre copropriété.',
+    result: 'Vous savez où regarder en premier chaque jour et pouvez démarrer la configuration de votre copropriété sans vous perdre.',
     tips: [
-      'Si vous gérez plusieurs immeubles, un seul compte suffit ; chaque copropriété reste séparée.',
-      'Le tableau de bord vous servira ensuite de vue synthétique : budget, impayés, incidents et AG.',
+      'Le tableau de bord vous servira ensuite de vue synthétique quotidienne pour piloter la copropriété.',
+      'Si vous gérez plusieurs immeubles, le sélecteur de copropriété en haut vous permet de basculer rapidement de l’un à l’autre.',
     ],
-    previewTitle: 'Connexion puis tableau de bord',
-    previewItems: ['Créer mon compte', 'Connexion', 'Tableau de bord', 'Alertes & indicateurs'],
+    previewTitle: 'Tableau de bord — première connexion',
+    previewItems: ['Cartes de synthèse', 'Alertes', 'Navigation latérale', 'Vue d’ensemble'],
   },
   {
     id: 'copropriete',
@@ -250,28 +249,202 @@ const guideSteps: GuideStep[] = [
   },
 ];
 
-function GuidePreview({ title, items, accent }: { title: string; items: string[]; accent: string }) {
+function GuidePreview({ title, items, accent, variant }: { title: string; items: string[]; accent: string; variant: string }) {
+  const screen = (() => {
+    switch (variant) {
+      case 'dashboard':
+        return (
+          <div className="bg-slate-50 p-3 space-y-3">
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Tableau de bord</p>
+                  <p className="text-[11px] text-slate-500">23 Abbé Léon Spariat · 7 lots · 5 copropriétaires</p>
+                </div>
+                <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700">Syndic</span>
+              </div>
+              <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] text-blue-800">
+                Le tableau de bord centralise budget, appels de fonds, incidents et AG.
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {['Provisions 2026', 'Dépenses réelles', 'Solde impayé', 'Incidents'].map((label, index) => (
+                  <div key={label} className="rounded-lg border border-slate-100 p-2">
+                    <p className="text-[10px] text-slate-500">{label}</p>
+                    <p className={`text-sm font-bold ${index === 2 ? 'text-red-600' : 'text-slate-900'}`}>
+                      {index === 0 ? '2 262 €' : index === 1 ? '1 862 €' : index === 2 ? '88,45 €' : '0'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case 'copropriete':
+        return (
+          <div className="bg-slate-50 p-3">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5">
+              <p className="text-sm font-bold text-slate-900">Créer ma copropriété</p>
+              {['Nom de la copropriété', 'Adresse', 'Code postal', 'Ville'].map((field) => (
+                <div key={field}>
+                  <p className="text-[10px] text-slate-500 mb-1">{field}</p>
+                  <div className="h-8 rounded-lg border border-slate-200 bg-slate-50" />
+                </div>
+              ))}
+              <div className="flex justify-end pt-1">
+                <div className={`rounded-lg bg-gradient-to-r ${accent} px-3 py-1.5 text-[11px] font-semibold text-white`}>
+                  Enregistrer
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'lots':
+        return (
+          <div className="bg-slate-50 p-3">
+            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+              <div className="border-b border-slate-100 px-3 py-2">
+                <p className="text-sm font-bold text-slate-900">Lots</p>
+              </div>
+              {[
+                ['Lot 1', 'Appartement', '210'],
+                ['Lot 2', 'Appartement', '185'],
+                ['Lot 3', 'Cave', '45'],
+              ].map(([lot, type, tantiemes]) => (
+                <div key={lot} className="grid grid-cols-[1fr_1fr_60px] gap-2 border-t border-slate-100 px-3 py-2 text-[11px]">
+                  <span className="font-medium text-slate-800">{lot}</span>
+                  <span className="text-slate-500">{type}</span>
+                  <span className="text-right font-semibold text-slate-700">{tantiemes}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case 'coproprietaires':
+        return (
+          <div className="bg-slate-50 p-3">
+            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+              <div className="border-b border-slate-100 px-3 py-2">
+                <p className="text-sm font-bold text-slate-900">Copropriétaires</p>
+              </div>
+              {[
+                ['Jean-Pierre Vernaet', 'Lot 1', '205,60 €'],
+                ['Martine Foret', 'Lot 2', '0,00 €'],
+                ['Catherine Belloc', 'Lot 3', '-18,00 €'],
+              ].map(([name, lot, solde]) => (
+                <div key={name} className="flex items-center justify-between gap-2 border-t border-slate-100 px-3 py-2 text-[11px]">
+                  <div>
+                    <p className="font-medium text-slate-800">{name}</p>
+                    <p className="text-slate-500">{lot}</p>
+                  </div>
+                  <span className={`font-semibold ${solde.startsWith('-') ? 'text-emerald-700' : solde === '0,00 €' ? 'text-slate-500' : 'text-red-600'}`}>{solde}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case 'appels':
+        return (
+          <div className="bg-slate-50 p-3 space-y-2">
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Appel T2 2026</p>
+                  <p className="text-[11px] text-slate-500">Échéance : 10 avril 2026</p>
+                </div>
+                <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">Publié</span>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-slate-50 p-2">
+                  <p className="text-[10px] text-slate-500">Montant total</p>
+                  <p className="text-sm font-bold text-slate-900">1 302,04 €</p>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-2">
+                  <p className="text-[10px] text-slate-500">Impayés</p>
+                  <p className="text-sm font-bold text-red-600">88,45 €</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'depenses':
+        return (
+          <div className="bg-slate-50 p-3 space-y-2">
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-sm font-bold text-slate-900">Dépenses</p>
+              <div className="mt-2 space-y-2">
+                {[
+                  ['Matera', '704,00 €'],
+                  ['Assurance', '458,04 €'],
+                  ['Fonds travaux ALUR', '700,00 €'],
+                ].map(([label, amount]) => (
+                  <div key={label} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-[11px]">
+                    <span className="text-slate-700">{label}</span>
+                    <span className="font-semibold text-slate-900">{amount}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case 'ag':
+        return (
+          <div className="bg-slate-50 p-3 space-y-2">
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-sm font-bold text-slate-900">Assemblée générale 2026</p>
+              <p className="text-[11px] text-slate-500 mt-1">30 mars 2026 · Salle municipale</p>
+              <div className="mt-3 space-y-2">
+                {['Budget prévisionnel', 'Approbation des comptes', 'Travaux à voter'].map((item) => (
+                  <div key={item} className="rounded-lg border border-slate-100 px-3 py-2 text-[11px] text-slate-700">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case 'documents':
+        return (
+          <div className="bg-slate-50 p-3 space-y-2">
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-sm font-bold text-slate-900">Documents & aide</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {['PV AG', 'Factures', 'Appels de fonds', 'Règlement'].map((item) => (
+                  <div key={item} className="rounded-lg border border-slate-100 px-3 py-3 text-[11px] text-slate-700 bg-slate-50">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <div className="p-4">
+            <div className={`rounded-xl bg-gradient-to-r ${accent} px-3 py-2 text-sm font-semibold text-white`}>
+              {title}
+            </div>
+            <div className="mt-3 space-y-2">
+              {items.map((item) => (
+                <div key={item} className="flex items-center gap-2 rounded-lg border border-slate-100 px-3 py-2 text-sm text-slate-700">
+                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+    }
+  })();
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 bg-slate-50">
         <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
         <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-        <p className="ml-2 text-xs font-medium text-slate-500">Illustration de l’écran</p>
+        <p className="ml-2 text-xs font-medium text-slate-500">Illustration fidèle de l’écran</p>
       </div>
-      <div className="p-4">
-        <div className={`rounded-xl bg-gradient-to-r ${accent} px-3 py-2 text-sm font-semibold text-white`}>
-          {title}
-        </div>
-        <div className="mt-3 space-y-2">
-          {items.map((item) => (
-            <div key={item} className="flex items-center gap-2 rounded-lg border border-slate-100 px-3 py-2 text-sm text-slate-700">
-              <span className="h-2 w-2 rounded-full bg-blue-500" />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      {screen}
     </div>
   );
 }
@@ -309,15 +482,15 @@ export default function GuideDemarragePage() {
               </h1>
               <p className="mt-4 max-w-3xl text-base sm:text-lg text-blue-100/85 leading-relaxed">
                 Un parcours <strong>étape par étape</strong>, <strong>page par page</strong>, pour aider un nouveau syndic bénévole à
-                prendre la main rapidement sur <strong>Mon Syndic Bénévole</strong> : configuration, lots, copropriétaires,
-                appels de fonds, dépenses, AG et documents.
+                prendre la main rapidement sur <strong>Mon Syndic Bénévole</strong> dès sa première arrivée sur le <strong>tableau de bord</strong>,
+                après confirmation de l&apos;adresse e-mail : configuration, lots, copropriétaires, appels de fonds, dépenses, AG et documents.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3 text-sm">
                 {[
                   'Temps de prise en main : 20 à 30 min',
                   'Pensé pour un premier démarrage réel',
-                  'Guide interactif avec progression',
+                  'Illustrations fidèles des écrans',
                 ].map((item) => (
                   <span key={item} className="rounded-full bg-white/10 px-3 py-1.5 text-blue-50 border border-white/10">
                     {item}
@@ -440,7 +613,7 @@ export default function GuideDemarragePage() {
                       </div>
                     </div>
 
-                    <GuidePreview title={step.previewTitle} items={step.previewItems} accent={step.accent} />
+                    <GuidePreview title={step.previewTitle} items={step.previewItems} accent={step.accent} variant={step.id} />
                   </div>
                 </section>
               );
