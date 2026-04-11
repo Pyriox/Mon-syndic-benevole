@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildDashboardExpenseSnapshot } from '../dashboard-data';
+import { buildDashboardExpenseSnapshot, buildDashboardUnpaidSnapshot } from '../dashboard-data';
 
 describe('buildDashboardExpenseSnapshot', () => {
   it('retombe sur les dépenses récentes quand la requête agrégée revient vide', () => {
@@ -22,5 +22,21 @@ describe('buildDashboardExpenseSnapshot', () => {
         expect.objectContaining({ cat: 'assurance', total: 458.04 }),
       ]),
     );
+  });
+});
+
+describe('buildDashboardUnpaidSnapshot', () => {
+  it('additionne les soldes débiteurs des copropriétaires', () => {
+    const snapshot = buildDashboardUnpaidSnapshot({
+      coproprietaires: [
+        { id: 'cp-1', solde: 242.1 },
+        { id: 'cp-2', solde: 88.45 },
+        { id: 'cp-3', solde: 0 },
+        { id: 'cp-4', solde: -15 },
+      ],
+    });
+
+    expect(snapshot.totalMontantImpaye).toBe(330.55);
+    expect(snapshot.nbImpayes).toBe(2);
   });
 });

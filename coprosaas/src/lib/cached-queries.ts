@@ -14,7 +14,7 @@
 // ============================================================
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { buildDashboardExpenseSnapshot } from '@/lib/dashboard-data';
+import { buildDashboardExpenseSnapshot, buildDashboardUnpaidSnapshot } from '@/lib/dashboard-data';
 import type { AppNotification } from '@/types';
 
 function safeRevalidateTag(tag: string) {
@@ -359,6 +359,7 @@ export function getSyndicDashboardSnapshot(coproId: string) {
     const [
       { count: nbLots },
       { count: nbCoproprietaires },
+      { data: coproprietairesFinance },
       { data: depenses },
       { data: depensesAll },
       { data: depensesAnPasse },
@@ -366,10 +367,10 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       { data: assemblees },
       { data: appelsEchus },
       { data: appelsProvisions },
-      { data: appelsEchusAujourdhui },
     ] = await Promise.all([
       admin.from('lots').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
       admin.from('coproprietaires').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
+      admin.from('coproprietaires').select('id, solde').eq('copropriete_id', coproId),
       admin
         .from('depenses')
         .select('id, titre, montant, date_depense, categorie')
@@ -410,6 +411,7 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         .from('appels_de_fonds')
         .select('id, date_echeance, lignes_appels_de_fonds(id, montant_du, paye)')
         .eq('copropriete_id', coproId)
+        .eq('statut', 'publie')
         .lt('date_echeance', sixtyDaysAgoStr),
       admin
         .from('appels_de_fonds')
@@ -417,13 +419,6 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         .eq('copropriete_id', coproId)
         .gte('date_echeance', `${currentYear}-01-01`)
         .lt('date_echeance', `${currentYear + 1}-01-01`),
-      admin
-        .from('lignes_appels_de_fonds')
-        .select('montant_du, coproprietaire_id, appels_de_fonds!inner(copropriete_id, date_echeance, statut)')
-        .eq('appels_de_fonds.copropriete_id', coproId)
-        .eq('appels_de_fonds.statut', 'publie')
-        .lte('appels_de_fonds.date_echeance', todayStr)
-        .eq('paye', false),
     ]);
 
     const totalDepensesAnPasse = depensesAnPasse?.reduce((sum, depense) => sum + depense.montant, 0) ?? 0;
@@ -474,9 +469,12 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       else tendanceDepenses = 'baisse';
     }
 
-    const lignesImpayeesEchues = (appelsEchusAujourdhui ?? []) as Array<{ montant_du: number; coproprietaire_id: string | null }>;
-    const totalMontantImpaye = lignesImpayeesEchues.reduce((sum, ligne) => sum + ligne.montant_du, 0);
-    const nbImpayes = new Set(lignesImpayeesEchues.map((ligne) => ligne.coproprietaire_id).filter(Boolean)).size;
+    const { totalMontantImpaye, nbImpayes } = buildDashboardUnpaidSnapshot({
+      coproprietaires: (coproprietairesFinance ?? []).map((coproprietaire) => ({
+        id: coproprietaire.id,
+        solde: coproprietaire.solde ?? 0,
+      })),
+    });
     const nbIncidentsOuverts = incidents?.length ?? 0;
 
     const lignesImpayes60j = (appelsEchus ?? []).flatMap((appel) =>

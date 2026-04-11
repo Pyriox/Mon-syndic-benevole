@@ -11,6 +11,11 @@ type DashboardExpenseAggregateRow = {
   categorie: string | null;
 };
 
+type DashboardCoproBalanceRow = {
+  id: string;
+  solde: number | null;
+};
+
 export function buildDashboardExpenseSnapshot({
   depensesRecentes,
   depensesAll,
@@ -65,5 +70,19 @@ export function buildDashboardExpenseSnapshot({
     depenses: recentRows,
     repartitionBudget,
     totalBudget,
+  };
+}
+
+export function buildDashboardUnpaidSnapshot({
+  coproprietaires,
+}: {
+  coproprietaires: DashboardCoproBalanceRow[] | null | undefined;
+}) {
+  const rows = (coproprietaires ?? []).filter((coproprietaire) => (coproprietaire.solde ?? 0) > 0);
+  const totalMontantImpaye = Math.round(rows.reduce((sum, coproprietaire) => sum + (coproprietaire.solde ?? 0), 0) * 100) / 100;
+
+  return {
+    totalMontantImpaye,
+    nbImpayes: rows.length,
   };
 }
