@@ -86,11 +86,12 @@ const FAQ: FaqEntry[] = [
   {
     category: 'demarrage',
     question: 'Quelles sont les étapes pour configurer ma copropriété et émettre mon premier appel de fonds ?',
-    answer: "Pour aller vite, suivez cet ordre : (1) créez votre copropriété (nom, adresse) ; (2) ajoutez vos lots ; (3) ouvrez « Paramétrage », puis « Répartition des charges » pour renseigner les tantièmes généraux et vos éventuelles clés spéciales ; (4) ajoutez vos copropriétaires et associez-les à leurs lots ; (5) créez enfin votre premier appel de fonds.",
+    answer: "Après avoir créé votre copropriété, suivez l’ordre du menu : commencez par ajouter les lots, puis créez les copropriétaires et associez-les à leurs lots. Ouvrez ensuite « Paramétrage », puis « Répartition des charges » pour renseigner les tantièmes généraux et vos éventuelles clés spéciales. Dans le fonctionnement normal, le premier appel de fonds intervient après une AG préparée puis terminée.",
     links: [
-      { href: '/coproprietes', label: 'Ouvrir mes copropriétés' },
-      { href: '/coproprietaires', label: 'Ouvrir les copropriétaires' },
-      { href: '/appels-de-fonds', label: 'Créer un appel de fonds' },
+      { href: '/lots', label: 'Lots' },
+      { href: '/coproprietaires', label: 'Copropriétaires' },
+      { href: '/assemblees', label: 'Assemblées' },
+      { href: '/appels-de-fonds', label: 'Appels de fonds' },
     ],
   },
   {
@@ -223,18 +224,18 @@ function FaqItem({ question, answer, category, links, defaultOpen = false }: Faq
         <div className="pb-4 space-y-3">
           <p className="text-sm text-gray-600 leading-relaxed">{answer}</p>
           {links?.length ? (
-            <div className="flex flex-wrap gap-2">
-              {links.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
-                >
-                  {link.label}
-                  <ExternalLink size={12} />
-                </a>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              <span className="font-medium text-gray-700">Accès directs :</span>{' '}
+              {links.map((link, index) => (
+                <span key={link.href}>
+                  {index > 0 ? (index === links.length - 1 ? ' et ' : ', ') : ''}
+                  <a href={link.href} className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">
+                    {link.label}
+                  </a>
+                </span>
               ))}
-            </div>
+              .
+            </p>
           ) : null}
         </div>
       )}

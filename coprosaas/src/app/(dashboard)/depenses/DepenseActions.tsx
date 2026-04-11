@@ -94,7 +94,7 @@ export default function DepenseActions({
 
   // Chargement des lots avec leurs copropriétaires quand la copropriété change
   useEffect(() => {
-    if (!formData.copropriete_id) return;
+    if (!formData.copropriete_id || !isOpen) return;
 
     const fetchLots = async () => {
       const { data } = await supabase
@@ -118,28 +118,30 @@ export default function DepenseActions({
       setLots(lotsFlat);
     };
 
-    fetchLots();
-  }, [formData.copropriete_id]); // eslint-disable-line react-hooks/exhaustive-deps
+    void fetchLots();
+  }, [formData.copropriete_id, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const availableRepartitionGroups = useMemo(() => collectAvailableRepartitionGroups(lots), [lots]);
+  const hasSpecialRepartitionChoices = specialChargesEnabled && availableRepartitionGroups.length > 0;
+  const shouldShowRepartitionSelector = hasSpecialRepartitionChoices || (formData.repartition_type === 'groupe' && Boolean(formData.repartition_cible));
   const repartitionOptions = useMemo(() => {
     const options = [{ value: 'generale', label: 'Charges communes' }];
 
-    if (specialChargesEnabled) {
-      options.push(...availableRepartitionGroups.map((group) => ({ value: `groupe:${group}`, label: `Seulement ${group}` })));
+    if (hasSpecialRepartitionChoices) {
+      options.push(...availableRepartitionGroups.map((group) => ({ value: `groupe:${group}`, label: group })));
     } else if (formData.repartition_type === 'groupe' && formData.repartition_cible) {
       options.push({
         value: `groupe:${formData.repartition_cible}`,
-        label: `Lecture seule · ${formData.repartition_cible}`,
+        label: formData.repartition_cible,
       });
     }
 
     return options;
-  }, [availableRepartitionGroups, formData.repartition_cible, formData.repartition_type, specialChargesEnabled]);
+  }, [availableRepartitionGroups, formData.repartition_cible, formData.repartition_type, hasSpecialRepartitionChoices]);
 
   // Calcul de la répartition à afficher à l'utilisateur
   const lotsRepartition = useMemo(
@@ -372,30 +374,40 @@ export default function DepenseActions({
             />
           </div>
 
-          <div className={`rounded-xl border p-3 space-y-2 ${specialChargesEnabled ? 'border-blue-100 bg-blue-50' : 'border-amber-200 bg-amber-50'}`}>
-            <Select
-              label="Répartition de la dépense"
-              name="repartition_type"
-              value={formData.repartition_type === 'groupe' && formData.repartition_cible ? `groupe:${formData.repartition_cible}` : 'generale'}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData((prev) => ({
-                  ...prev,
-                  repartition_type: value.startsWith('groupe:') ? 'groupe' : 'generale',
-                  repartition_cible: value.startsWith('groupe:') ? value.slice(7) : '',
-                }));
-              }}
-              options={repartitionOptions}
-              required
-            />
-            <p className={`text-xs ${specialChargesEnabled ? 'text-blue-700' : 'text-amber-800'}`}>
-              Cette dépense sera imputée selon : <span className="font-semibold">{formatRepartitionScope(formData.repartition_type, formData.repartition_cible)}</span>
-            </p>
-            {!specialChargesEnabled && (
-              <p className="text-xs text-amber-700">
-                Les répartitions spéciales par bâtiment, ascenseur ou parking sont réservées à l’option payante <strong>Charges spéciales</strong>.
-              </p>
+          <div className={`rounded-xl border p-3 space-y-2 ${shouldShowRepartitionSelector ? 'border-blue-100 bg-blue-50' : specialChargesEnabled ? 'border-slate-200 bg-slate-50' : 'border-amber-200 bg-amber-50'}`}>
+            {shouldShowRepartitionSelector ? (
+              <Select
+                label="Répartition de la dépense"
+                name="repartition_type"
+                value={formData.repartition_type === 'groupe' && formData.repartition_cible ? `groupe:${formData.repartition_cible}` : 'generale'}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData((prev) => ({
+                    ...prev,
+                    repartition_type: value.startsWith('groupe:') ? 'groupe' : 'generale',
+                    repartition_cible: value.startsWith('groupe:') ? value.slice(7) : '',
+                  }));
+                }}
+                options={repartitionOptions}
+                required
+              />
+            ) : (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Répartition de la dépense</p>
+                <p className={`text-sm ${specialChargesEnabled ? 'text-slate-700' : 'text-amber-900'}`}>
+                  Cette dépense sera imputée selon : <span className="font-semibold">Charges communes</span>
+                </p>
+              </div>
             )}
+            <p className={`text-xs ${shouldShowRepartitionSelector ? (specialChargesEnabled ? 'text-blue-700' : 'text-amber-800') : (specialChargesEnabled ? 'text-slate-500' : 'text-amber-700')}`}>
+              {shouldShowRepartitionSelector ? (
+                <>Cette dépense sera imputée selon : <span className="font-semibold">{formatRepartitionScope(formData.repartition_type, formData.repartition_cible)}</span></>
+              ) : specialChargesEnabled ? (
+                <>Aucune clé spéciale n’est encore configurée dans le paramétrage de la copropriété.</>
+              ) : (
+                <>Les répartitions spéciales par bâtiment, ascenseur ou parking sont réservées à l’option payante <strong>Charges spéciales</strong>.</>
+              )}
+            </p>
           </div>
 
           <Textarea
