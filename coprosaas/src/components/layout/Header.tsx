@@ -144,9 +144,9 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   };
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2 min-w-0 flex-1">
+    <header ref={headerRef} className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-3 md:px-6 md:py-3.5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-1 items-start gap-2 lg:items-center">
           {onMenuOpen && (
             <button
               type="button"
@@ -159,42 +159,44 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
           )}
 
           <div className="min-w-0 flex-1">
-            <h1 className="text-sm md:text-xl font-semibold text-gray-900 truncate leading-tight">{title}</h1>
-            {canSwitchView && (
-              <div className="mt-2 flex items-center justify-start">
-                <div className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 p-1">
-                  <button
-                    type="button"
-                    onClick={() => handleViewSwitch('syndic')}
-                    disabled={switchPending}
-                    className={cn(
-                      'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
-                      userRole === 'syndic' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                    )}
-                  >
-                    <Crown size={13} />
-                    Syndic
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleViewSwitch('copropriétaire')}
-                    disabled={switchPending}
-                    className={cn(
-                      'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
-                      userRole === 'copropriétaire' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                    )}
-                  >
-                    <User size={13} />
-                    Copropriétaire
-                  </button>
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+              <h1 className="truncate text-lg font-semibold leading-tight text-gray-900 md:text-[1.75rem]">{title}</h1>
+              {canSwitchView && (
+                <div className="flex items-center justify-start">
+                  <div className="inline-flex items-center rounded-2xl border border-gray-200 bg-gray-50/90 p-1">
+                    <button
+                      type="button"
+                      onClick={() => handleViewSwitch('syndic')}
+                      disabled={switchPending}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors',
+                        userRole === 'syndic' ? 'bg-white text-amber-700 shadow-sm ring-1 ring-black/5' : 'text-gray-600 hover:text-gray-900'
+                      )}
+                    >
+                      <Crown size={13} />
+                      Syndic
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleViewSwitch('copropriétaire')}
+                      disabled={switchPending}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors',
+                        userRole === 'copropriétaire' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-black/5' : 'text-gray-600 hover:text-gray-900'
+                      )}
+                    >
+                      <User size={13} />
+                      Copropriétaire
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
         {/* Zone droite */}
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex shrink-0 items-center gap-2 self-end lg:self-auto md:gap-2.5">
           {/* Cloche notifications */}
           <div ref={ref} className="relative">
             <button
@@ -203,8 +205,8 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
               aria-expanded={open}
               aria-haspopup="true"
               className={cn(
-                'relative p-2.5 rounded-lg transition-colors',
-                open ? 'bg-gray-100 text-gray-700' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                'relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors',
+                open ? 'bg-gray-100 text-gray-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
               )}
             >
               <Bell size={20} />
@@ -293,12 +295,12 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
           </div>
 
           {/* Avatar utilisateur */}
-          <div className="flex items-center gap-2 pl-2 md:pl-3 border-l border-gray-200">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-2.5 py-1.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 shrink-0">
               <User size={16} className="text-blue-600" />
             </div>
             {userName && (
-              <span className="text-sm font-medium text-gray-700 hidden lg:block">
+              <span className="hidden text-sm font-medium text-gray-700 lg:block">
                 {userName}
               </span>
             )}
