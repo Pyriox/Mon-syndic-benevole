@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isAdminUser } from '@/lib/admin-config';
 
 export async function GET(
   request: NextRequest,
@@ -18,6 +19,7 @@ export async function GET(
 
   const admin = createAdminClient();
   const normalizedEmail = user.email?.trim().toLowerCase() ?? '';
+  const isAdmin = await isAdminUser(user.id, supabase);
   const requestedLimit = Number.parseInt(request.nextUrl.searchParams.get('limit') ?? '150', 10);
   const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 200) : 150;
 
@@ -39,7 +41,7 @@ export async function GET(
   const isOwner = coproprietaire.user_id === user.id;
   const hasEmailFallback = Boolean(normalizedEmail) && !coproprietaire.user_id && (coproprietaire.email ?? '').trim().toLowerCase() === normalizedEmail;
 
-  if (!isSyndic && !isOwner && !hasEmailFallback) {
+  if (!isAdmin && !isSyndic && !isOwner && !hasEmailFallback) {
     return NextResponse.json({ message: 'Accès refusé.' }, { status: 403 });
   }
 

@@ -557,7 +557,12 @@ export default async function AdminCopropietesPage({
                   return (
                     <tr key={c.id} className={`hover:bg-gray-50 transition-colors ${c.plan === 'passe_du' ? 'bg-red-50/30' : ''}`}>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-gray-800">{c.nom}</p>
+                        <Link
+                          href={appendAdminFrom(`/admin/coproprietes/${c.id}`, currentListHref)}
+                          className="font-medium text-gray-800 hover:text-indigo-700 hover:underline"
+                        >
+                          {c.nom}
+                        </Link>
                         <p className="text-xs text-gray-400">{c.ville}</p>
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
@@ -753,7 +758,14 @@ export default async function AdminCopropietesPage({
                     const profile = c.profiles as { email?: string } | null;
                     return (
                       <tr key={c.id} className={`hover:bg-gray-50 transition-colors ${c.plan === 'passe_du' ? 'bg-red-50/30' : ''}`}>
-                        <td className="px-4 py-3"><p className="font-medium text-gray-800">{c.nom}</p></td>
+                        <td className="px-4 py-3">
+                          <Link
+                            href={appendAdminFrom(`/admin/coproprietes/${c.id}`, currentListHref)}
+                            className="font-medium text-gray-800 hover:text-indigo-700 hover:underline"
+                          >
+                            {c.nom}
+                          </Link>
+                        </td>
                         <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell truncate max-w-[180px]">{profile?.email ?? '—'}</td>
                         <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
                         <td className="px-4 py-3 text-xs text-gray-600 hidden lg:table-cell">{formatAdminDate(c.plan_period_end)}</td>
