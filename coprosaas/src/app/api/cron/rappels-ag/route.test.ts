@@ -28,7 +28,7 @@ function makeEmptyChain() {
     data: [],
     error: null,
   };
-  const methods = ['select', 'eq', 'not', 'is', 'in', 'lt', 'lte', 'gte', 'limit', 'order', 'update'];
+  const methods = ['select', 'eq', 'not', 'is', 'in', 'lt', 'lte', 'gt', 'gte', 'limit', 'order', 'update'];
   for (const m of methods) {
     chain[m] = vi.fn().mockReturnValue(chain);
   }

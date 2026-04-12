@@ -97,6 +97,43 @@ async function sendStripeEmail(params: {
 // ⚠️ Ne pas parser le body en JSON — Stripe exige le raw body pour vérifier la signature.
 export const runtime = 'nodejs';
 
+type StripeWebhookStatus = 'processing' | 'processed' | 'failed';
+
+async function reserveStripeWebhookEvent(event: Stripe.Event): Promise<'reserved' | 'duplicate'> {
+  const supabase = createAdminClient();
+  const { error } = await supabase.from('stripe_webhook_events').insert({
+    stripe_event_id: event.id,
+    event_type: event.type,
+    status: 'processing' satisfies StripeWebhookStatus,
+  });
+
+  if (!error) return 'reserved';
+  if (error.code === '23505') return 'duplicate';
+
+  throw new Error(`[stripe_webhook_events] ${error.message}`);
+}
+
+async function markStripeWebhookEvent(
+  eventId: string,
+  status: StripeWebhookStatus,
+  failureReason?: string,
+): Promise<void> {
+  const supabase = createAdminClient();
+  const updates: Record<string, unknown> = {
+    status,
+    processed_at: new Date().toISOString(),
+  };
+
+  if (failureReason) {
+    updates.failure_reason = failureReason.slice(0, 1000);
+  }
+
+  await supabase
+    .from('stripe_webhook_events')
+    .update(updates)
+    .eq('stripe_event_id', eventId);
+}
+
 /** Met à jour les champs d'abonnement sur la table coproprietes. */
 async function updateCoproSubscription(coproId: string, data: {
   stripe_customer_id?: string | null;
@@ -141,6 +178,17 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Signature invalide';
     return NextResponse.json({ error: `Webhook error: ${msg}` }, { status: 400 });
+  }
+
+  try {
+    const reservation = await reserveStripeWebhookEvent(event);
+    if (reservation === 'duplicate') {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erreur idempotence';
+    console.error('[Stripe webhook] Erreur reserve event:', message);
+    return NextResponse.json({ error: 'Erreur interne webhook.' }, { status: 500 });
   }
 
   try {
@@ -459,9 +507,18 @@ export async function POST(req: NextRequest) {
         break;
       }
     }
-  } catch (e) {
+    await markStripeWebhookEvent(event.id, 'processed');
+    return NextResponse.json({ received: true });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Erreur traitement inconnue';
     console.error('[Stripe webhook] Erreur traitement:', e);
-  }
 
-  return NextResponse.json({ received: true });
+    try {
+      await markStripeWebhookEvent(event.id, 'failed', message);
+    } catch (markError) {
+      console.error('[Stripe webhook] Erreur marquage failed:', markError);
+    }
+
+    return NextResponse.json({ error: 'Traitement webhook échoué.' }, { status: 500 });
+  }
 }
