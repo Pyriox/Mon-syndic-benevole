@@ -162,82 +162,153 @@ export async function CoproDashboardMain({ userId, coproId }: { userId: string; 
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="flex items-center gap-4">
-          <div className={`p-3 rounded-xl shrink-0 ${hasDebt ? 'bg-red-100' : hasCredit ? 'bg-green-100' : 'bg-gray-100'}`}>
-            <Scale size={24} className={hasDebt ? 'text-red-600' : hasCredit ? 'text-green-600' : 'text-gray-500'} />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Mon solde</p>
-            <p className={`text-2xl font-bold ${hasDebt ? 'text-red-600' : hasCredit ? 'text-green-700' : 'text-gray-900'}`}>
-              {hasCredit ? '+' : ''}{formatEuros(displayedSolde)}
-            </p>
+      {renderCoproDashboardKpis(data, displayedSolde, hasDebt, hasCredit)}
+      {renderCoproDashboardCharges(data)}
+      {renderCoproDashboardHistoryAndAssemblies(data, displayName, data.fiche.id)}
+    </>
+  );
+}
+
+export async function CoproDashboardKpis({ userId, coproId }: { userId: string; coproId: string }) {
+  const data = await getCoproDashboardSnapshotCached(userId, coproId);
+
+  if (!data.fiche) {
+    return (
+      <Card className="text-center py-8">
+        <p className="text-gray-500 text-sm italic">
+          Votre fiche copropriétaire n&apos;est pas encore associée à ce compte. Contactez votre syndic.
+        </p>
+      </Card>
+    );
+  }
+
+  const hasDebt = data.solde > 0;
+  const hasCredit = data.solde < 0;
+  const displayedSolde = hasDebt ? -Math.abs(data.solde) : hasCredit ? Math.abs(data.solde) : 0;
+
+  return renderCoproDashboardKpis(data, displayedSolde, hasDebt, hasCredit);
+}
+
+export async function CoproDashboardCharges({ userId, coproId }: { userId: string; coproId: string }) {
+  const data = await getCoproDashboardSnapshotCached(userId, coproId);
+
+  if (!data.fiche) {
+    return null;
+  }
+
+  return renderCoproDashboardCharges(data);
+}
+
+export async function CoproDashboardHistoryAndAssemblies({ userId, coproId }: { userId: string; coproId: string }) {
+  const data = await getCoproDashboardSnapshotCached(userId, coproId);
+
+  if (!data.fiche) {
+    return null;
+  }
+
+  const displayName = data.fiche.raison_sociale ?? ([data.fiche.prenom, data.fiche.nom].filter(Boolean).join(' ') || 'Mon compte');
+
+  return renderCoproDashboardHistoryAndAssemblies(data, displayName, data.fiche.id);
+}
+
+function renderCoproDashboardKpis(
+  data: Awaited<ReturnType<typeof getCoproprietaireDashboardSnapshot>>,
+  displayedSolde: number,
+  hasDebt: boolean,
+  hasCredit: boolean,
+) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Card className="flex items-center gap-4">
+        <div className={`p-3 rounded-xl shrink-0 ${hasDebt ? 'bg-red-100' : hasCredit ? 'bg-green-100' : 'bg-gray-100'}`}>
+          <Scale size={24} className={hasDebt ? 'text-red-600' : hasCredit ? 'text-green-600' : 'text-gray-500'} />
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Mon solde</p>
+          <p className={`text-2xl font-bold ${hasDebt ? 'text-red-600' : hasCredit ? 'text-green-700' : 'text-gray-900'}`}>
+            {hasCredit ? '+' : ''}{formatEuros(displayedSolde)}
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {hasDebt ? 'Charges à régler' : hasCredit ? 'Avance de trésorerie' : 'Solde à jour'}
+          </p>
+        </div>
+      </Card>
+
+      <Card className="flex items-center gap-4">
+        <div className="p-3 bg-purple-100 rounded-xl shrink-0">
+          <CalendarDays size={24} className="text-purple-600" />
+        </div>
+        {data.prochaineAG ? (
+          <div className="min-w-0">
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
+            <p className="font-bold text-gray-900 truncate">{data.prochaineAG.titre}</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {hasDebt ? 'Charges à régler' : hasCredit ? 'Avance de trésorerie' : 'Solde à jour'}
+              {new Date(data.prochaineAG.date_ag).toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
             </p>
           </div>
-        </Card>
-
-        <Card className="flex items-center gap-4">
-          <div className="p-3 bg-purple-100 rounded-xl shrink-0">
-            <CalendarDays size={24} className="text-purple-600" />
+        ) : (
+          <div>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
+            <p className="text-sm text-gray-500 mt-1 italic">Aucune AG planifiée</p>
           </div>
-          {data.prochaineAG ? (
-            <div className="min-w-0">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
-              <p className="font-bold text-gray-900 truncate">{data.prochaineAG.titre}</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {new Date(data.prochaineAG.date_ag).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </p>
-            </div>
-          ) : (
-            <div>
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
-              <p className="text-sm text-gray-500 mt-1 italic">Aucune AG planifiée</p>
-            </div>
-          )}
-        </Card>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function renderCoproDashboardCharges(data: Awaited<ReturnType<typeof getCoproprietaireDashboardSnapshot>>) {
+  if (data.chargesImpayees.length > 0) {
+    return (
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-900">Mes charges à régler</h3>
+          <Link href="/appels-de-fonds" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+            Voir tout <ArrowRight size={14} />
+          </Link>
+        </div>
+        <ul className="divide-y divide-gray-100">
+          {data.chargesImpayees.map((ligne) => (
+            <li key={ligne.id} className="flex items-center justify-between py-2.5">
+              <div>
+                <p className="text-sm font-medium text-gray-800">{ligne.appel?.titre ?? 'Appel de fonds'}</p>
+                {ligne.appel?.date_echeance && (
+                  <p className="text-xs text-gray-500">Échéance : {formatDate(ligne.appel.date_echeance)}</p>
+                )}
+              </div>
+              <span className="text-sm font-semibold text-red-600 shrink-0 ml-3">
+                {formatEuros(ligne.montant_du)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <div className="flex items-center gap-3 py-1">
+        <div className="p-2 bg-green-100 rounded-lg shrink-0">
+          <Banknote size={18} className="text-green-600" />
+        </div>
+        <p className="text-sm font-medium text-green-700">Aucune charge en attente — vous êtes à jour !</p>
       </div>
+    </Card>
+  );
+}
 
-      {data.chargesImpayees.length > 0 ? (
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Mes charges à régler</h3>
-            <Link href="/appels-de-fonds" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
-              Voir tout <ArrowRight size={14} />
-            </Link>
-          </div>
-          <ul className="divide-y divide-gray-100">
-            {data.chargesImpayees.map((ligne) => (
-              <li key={ligne.id} className="flex items-center justify-between py-2.5">
-                <div>
-                  <p className="text-sm font-medium text-gray-800">{ligne.appel?.titre ?? 'Appel de fonds'}</p>
-                  {ligne.appel?.date_echeance && (
-                    <p className="text-xs text-gray-500">Échéance : {formatDate(ligne.appel.date_echeance)}</p>
-                  )}
-                </div>
-                <span className="text-sm font-semibold text-red-600 shrink-0 ml-3">
-                  {formatEuros(ligne.montant_du)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      ) : (
-        <Card>
-          <div className="flex items-center gap-3 py-1">
-            <div className="p-2 bg-green-100 rounded-lg shrink-0">
-              <Banknote size={18} className="text-green-600" />
-            </div>
-            <p className="text-sm font-medium text-green-700">Aucune charge en attente — vous êtes à jour !</p>
-          </div>
-        </Card>
-      )}
-
+function renderCoproDashboardHistoryAndAssemblies(
+  data: Awaited<ReturnType<typeof getCoproprietaireDashboardSnapshot>>,
+  displayName: string,
+  coproprietaireId: string,
+) {
+  return (
+    <>
       <Card>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -248,7 +319,7 @@ export async function CoproDashboardMain({ userId, coproId }: { userId: string; 
         </div>
         <CoproprietaireBalanceHistory
           mode="inline"
-          coproprietaireId={data.fiche.id}
+          coproprietaireId={coproprietaireId}
           displayName={displayName}
           currentBalance={data.solde}
           initialEvents={data.balanceEvents ?? []}

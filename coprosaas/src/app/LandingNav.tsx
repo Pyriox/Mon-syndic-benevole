@@ -1,13 +1,48 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SiteLogo from '@/components/ui/SiteLogo';
 import CtaLink from '@/components/ui/CtaLink';
-import { createClient } from '@/lib/supabase/client';
-import { LayoutGrid, Loader2, Menu, X } from 'lucide-react';
+
+function DashboardIcon() {
+  return (
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
+      <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      <rect x="13" y="3" width="8" height="5" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      <rect x="13" y="10" width="8" height="11" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      <rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function MenuIcon({ open }: { open: boolean }) {
+  if (open) {
+    return (
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" className="shrink-0">
+        <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" className="shrink-0">
+      <path d="M4 7H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function hasLikelyAuthCookie() {
+  if (typeof document === 'undefined') return false;
+
+  return document.cookie
+    .split('; ')
+    .some((cookie) => cookie.startsWith('sb-') && cookie.includes('auth-token='));
+}
 
 const navLinks = [
   { href: '/#fonctionnalites', label: 'Fonctionnalités' },
@@ -24,40 +59,34 @@ export default function LandingNav() {
   const [navPending, setNavPending] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
-    let active = true;
-
     const prefetch = () => {
       void router.prefetch('/login');
       void router.prefetch('/dashboard');
       void router.prefetch('/register');
     };
 
+    const updateAccountState = () => {
+      const isAuthenticated = hasLikelyAuthCookie();
+      setAccountHref(isAuthenticated ? '/dashboard' : '/login');
+      setAccountLabel(isAuthenticated ? 'Mon espace' : 'Connexion');
+    };
+
     const idle = window.requestIdleCallback
       ? window.requestIdleCallback(prefetch, { timeout: 1200 })
       : window.setTimeout(prefetch, 300);
 
-    supabase.auth.getSession().then((result) => {
-      if (!active) return;
-      const isAuthenticated = !!result.data.session;
-      setAccountHref(isAuthenticated ? '/dashboard' : '/login');
-      setAccountLabel(isAuthenticated ? 'Mon espace' : 'Connexion');
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-      const isAuthenticated = !!session;
-      setAccountHref(isAuthenticated ? '/dashboard' : '/login');
-      setAccountLabel(isAuthenticated ? 'Mon espace' : 'Connexion');
-    });
+    updateAccountState();
+    window.addEventListener('focus', updateAccountState);
+    document.addEventListener('visibilitychange', updateAccountState);
 
     return () => {
-      active = false;
       if (typeof idle === 'number') {
         window.clearTimeout(idle);
       } else if (window.cancelIdleCallback) {
         window.cancelIdleCallback(idle);
       }
-      listener.subscription.unsubscribe();
+      window.removeEventListener('focus', updateAccountState);
+      document.removeEventListener('visibilitychange', updateAccountState);
     };
   }, [router]);
 
@@ -99,7 +128,7 @@ export default function LandingNav() {
             aria-busy={navPending}
             className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:border-white/35 transition-colors disabled:opacity-70"
           >
-            {navPending ? <Loader2 size={14} className="animate-spin" /> : <LayoutGrid size={14} aria-hidden="true" />}
+            {navPending ? <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <DashboardIcon />}
             {navPending ? 'Ouverture...' : accountLabel}
           </button>
           <CtaLink
@@ -126,7 +155,7 @@ export default function LandingNav() {
             onClick={() => setOpen((v) => !v)}
             className="p-2 text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10"
           >
-            {open ? <X size={20} /> : <Menu size={20} />}
+            <MenuIcon open={open} />
           </button>
         </div>
       </div>
@@ -151,7 +180,7 @@ export default function LandingNav() {
             aria-busy={navPending}
             className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-white/10 hover:border-white/35 transition-colors disabled:opacity-70"
           >
-            {navPending ? <Loader2 size={14} className="animate-spin" /> : <LayoutGrid size={14} aria-hidden="true" />}
+            {navPending ? <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <DashboardIcon />}
             {navPending ? 'Ouverture...' : accountLabel}
           </button>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeDashboardViewMode, resolveDashboardRole } from '@/lib/dashboard-view-mode';
@@ -263,6 +263,8 @@ export default function AidePage() {
   const [replySending, setReplySending]     = useState(false);
   const [replyError, setReplyError]         = useState('');
   const [unreadTicketIds, setUnreadTicketIds] = useState<Set<string>>(new Set());
+  const pendingReadTicketIdsRef = useRef<Set<string>>(new Set());
+  const readFlushTimerRef = useRef<number | null>(null);
 
   // Filtre catégorie FAQ
   const [activecat, setActivecat] = useState<string>('all');
@@ -367,6 +369,48 @@ export default function AidePage() {
     }
   };
 
+  const flushQueuedReadTickets = useCallback(async () => {
+    if (readFlushTimerRef.current !== null) {
+      window.clearTimeout(readFlushTimerRef.current);
+      readFlushTimerRef.current = null;
+    }
+
+    const ticketIds = Array.from(pendingReadTicketIdsRef.current);
+    if (ticketIds.length === 0) return;
+
+    pendingReadTicketIdsRef.current.clear();
+
+    await fetch('/api/support/mark-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketIds }),
+    }).then(() => {
+      router.refresh();
+    }).catch(() => {
+      // Non bloquant.
+    });
+  }, [router]);
+
+  const queueTicketRead = useCallback((ticketId: string) => {
+    pendingReadTicketIdsRef.current.add(ticketId);
+
+    if (readFlushTimerRef.current !== null) {
+      window.clearTimeout(readFlushTimerRef.current);
+    }
+
+    readFlushTimerRef.current = window.setTimeout(() => {
+      void flushQueuedReadTickets();
+    }, 260);
+  }, [flushQueuedReadTickets]);
+
+  useEffect(() => {
+    return () => {
+      if (readFlushTimerRef.current !== null) {
+        window.clearTimeout(readFlushTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleOpenTicket = async (id: string) => {
     if (openTicketId === id) { setOpenTicketId(null); return; }
     setOpenTicketId(id);
@@ -380,14 +424,7 @@ export default function AidePage() {
         next.delete(id);
         return next;
       });
-      fetch('/api/support/mark-read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticketId: id }),
-      }).then(() => {
-        // Rafraîchit les Server Components (layout) pour vider la cloche
-        router.refresh();
-      }).catch(() => { /* non bloquant */ });
+      queueTicketRead(id);
     }
     await loadMessages(id);
   };

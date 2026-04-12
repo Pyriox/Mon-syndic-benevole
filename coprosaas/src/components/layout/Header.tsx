@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import { useState, useRef, useEffect, useTransition } from 'react';
+import { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare, Crown } from 'lucide-react';
@@ -42,6 +42,8 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   const [items, setItems] = useState<AppNotification[]>(notifications);
   const ref = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement | null>(null);
+  const pendingReadIdsRef = useRef<Set<string>>(new Set());
+  const flushTimerRef = useRef<number | null>(null);
   const canSwitchView = hasDualDashboardView(availableViewRoles);
 
   useEffect(() => {
@@ -113,7 +115,53 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
     return [...unread, ...read];
   };
 
+  const flushQueuedReadIds = useCallback(async () => {
+    if (flushTimerRef.current !== null) {
+      window.clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+
+    const ids = Array.from(pendingReadIdsRef.current);
+    if (ids.length === 0) return;
+
+    pendingReadIdsRef.current.clear();
+
+    await fetch('/api/notifications/mark-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+    }).catch(() => {
+      // Non bloquant.
+    });
+  }, []);
+
+  const queueReadId = useCallback((id: string) => {
+    pendingReadIdsRef.current.add(id);
+
+    if (flushTimerRef.current !== null) {
+      window.clearTimeout(flushTimerRef.current);
+    }
+
+    flushTimerRef.current = window.setTimeout(() => {
+      void flushQueuedReadIds();
+    }, 220);
+  }, [flushQueuedReadIds]);
+
+  useEffect(() => {
+    return () => {
+      if (flushTimerRef.current !== null) {
+        window.clearTimeout(flushTimerRef.current);
+      }
+    };
+  }, []);
+
   const markAllRead = async () => {
+    pendingReadIdsRef.current.clear();
+    if (flushTimerRef.current !== null) {
+      window.clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+
     setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => ({ ...n, isRead: true }))));
     await fetch('/api/notifications/mark-read', {
       method: 'POST',
@@ -126,13 +174,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
 
   const markOneRead = async (id: string) => {
     setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))));
-    await fetch('/api/notifications/mark-read', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: [id] }),
-    }).catch(() => {
-      // Non bloquant.
-    });
+    queueReadId(id);
   };
 
   const handleViewSwitch = (nextRole: Role) => {

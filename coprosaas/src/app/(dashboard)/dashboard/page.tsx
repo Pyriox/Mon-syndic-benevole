@@ -14,7 +14,9 @@ import { Building2 } from 'lucide-react';
 import {
   CoproDashboardAlert,
   CoproDashboardHeader,
-  CoproDashboardMain,
+  CoproDashboardCharges,
+  CoproDashboardHistoryAndAssemblies,
+  CoproDashboardKpis,
   DashboardAlertSkeleton,
   DashboardHeaderSkeleton,
   DashboardKpiGridSkeleton,
@@ -86,16 +88,16 @@ export default async function DashboardPage() {
             <CoproDashboardAlert userId={user.id} coproId={scopeId} />
           </Suspense>
 
-          <Suspense
-            fallback={
-              <>
-                <DashboardKpiGridSkeleton columns={2} />
-                <DashboardPanelSkeleton cards={1} />
-                <DashboardPanelSkeleton cards={1} />
-              </>
-            }
-          >
-            <CoproDashboardMain userId={user.id} coproId={scopeId} />
+          <Suspense fallback={<DashboardKpiGridSkeleton columns={2} />}>
+            <CoproDashboardKpis userId={user.id} coproId={scopeId} />
+          </Suspense>
+
+          <Suspense fallback={<DashboardPanelSkeleton cards={1} />}>
+            <CoproDashboardCharges userId={user.id} coproId={scopeId} />
+          </Suspense>
+
+          <Suspense fallback={<DashboardPanelSkeleton cards={1} />}>
+            <CoproDashboardHistoryAndAssemblies userId={user.id} coproId={scopeId} />
           </Suspense>
         </>
       )}

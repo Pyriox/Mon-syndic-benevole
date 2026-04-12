@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import CtaLink from '@/components/ui/CtaLink';
-import { ArrowRight } from 'lucide-react';
 
 export default function LandingStickyCTA() {
   const [show, setShow] = useState(false);
@@ -74,7 +73,11 @@ export default function LandingStickyCTA() {
         ctaLocation="sticky_cta"
         className="shrink-0 inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold px-3.5 py-2.5 rounded-xl text-sm transition-colors"
       >
-        Essai gratuit <ArrowRight size={14} />
+        Essai gratuit
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M13 6L19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </CtaLink>
     </div>
   );

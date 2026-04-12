@@ -5,19 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pushMock = vi.fn();
 const prefetchMock = vi.fn();
-const getSessionMock = vi.fn();
-const unsubscribeMock = vi.fn();
 const routerMock = {
   push: pushMock,
   prefetch: prefetchMock,
 };
-const onAuthStateChangeMock = vi.fn(() => ({
-  data: {
-    subscription: {
-      unsubscribe: unsubscribeMock,
-    },
-  },
-}));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => routerMock,
@@ -41,46 +32,30 @@ vi.mock('@/components/ui/CtaLink', () => ({
   },
 }));
 
-vi.mock('@/lib/supabase/client', () => ({
-  createClient: () => ({
-    auth: {
-      getSession: getSessionMock,
-      onAuthStateChange: onAuthStateChangeMock,
-    },
-  }),
-}));
-
 describe('LandingNav auth navigation', () => {
   beforeEach(() => {
     pushMock.mockReset();
     prefetchMock.mockReset();
-    getSessionMock.mockReset();
-    onAuthStateChangeMock.mockClear();
-    unsubscribeMock.mockReset();
+    document.cookie = '';
   });
 
   afterEach(() => {
     cleanup();
   });
 
-  it('ouvre /login sans refaire un getSession au clic quand la session est absente', async () => {
-    getSessionMock.mockResolvedValue({ data: { session: null } });
-
+  it('ouvre /login quand aucun cookie auth n\'est présent', async () => {
     const { default: LandingNav } = await import('./LandingNav');
     render(<LandingNav />);
 
-    await waitFor(() => {
-      expect(getSessionMock).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(() => expect(prefetchMock).toHaveBeenCalled());
 
     fireEvent.click(screen.getAllByRole('button', { name: /connexion/i })[0]);
 
     expect(pushMock).toHaveBeenCalledWith('/login');
-    expect(getSessionMock).toHaveBeenCalledTimes(1);
   });
 
-  it('ouvre /dashboard sans refaire un getSession au clic quand la session existe déjà', async () => {
-    getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+  it('ouvre /dashboard quand un cookie auth est détecté', async () => {
+    document.cookie = 'sb-project-auth-token=token';
 
     const { default: LandingNav } = await import('./LandingNav');
     render(<LandingNav />);
@@ -92,6 +67,5 @@ describe('LandingNav auth navigation', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /mon espace/i })[0]);
 
     expect(pushMock).toHaveBeenCalledWith('/dashboard');
-    expect(getSessionMock).toHaveBeenCalledTimes(1);
   });
 });

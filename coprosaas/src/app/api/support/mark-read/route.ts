@@ -13,29 +13,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
   }
 
-  let body: { ticketId?: string };
+  let body: { ticketId?: string; ticketIds?: string[] };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { ticketId } = body;
-  if (!ticketId?.trim()) {
+  const candidateIds = [
+    ...(body.ticketId ? [body.ticketId] : []),
+    ...(body.ticketIds ?? []),
+  ]
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  const ticketIds = Array.from(new Set(candidateIds));
+  if (ticketIds.length === 0) {
     return NextResponse.json({ message: 'ticketId requis' }, { status: 422 });
   }
 
   const admin = createAdminClient();
 
-  // Vérifier que le ticket appartient bien à cet utilisateur
-  const { data: ticket } = await admin
+  // Vérifier que les tickets appartiennent bien à cet utilisateur
+  const { data: ownedTickets } = await admin
     .from('support_tickets')
     .select('id')
-    .eq('id', ticketId.trim())
-    .eq('user_id', user.id)
-    .single();
+    .in('id', ticketIds)
+    .eq('user_id', user.id);
 
-  if (!ticket) {
+  const ownedTicketIds = (ownedTickets ?? []).map((ticket) => ticket.id);
+  if (ownedTicketIds.length === 0) {
     return NextResponse.json({ message: 'Ticket introuvable' }, { status: 404 });
   }
 
@@ -43,7 +50,7 @@ export async function POST(req: NextRequest) {
   await admin
     .from('support_messages')
     .update({ client_read: true })
-    .eq('ticket_id', ticket.id)
+    .in('ticket_id', ownedTicketIds)
     .eq('author', 'admin')
     .eq('client_read', false);
 
