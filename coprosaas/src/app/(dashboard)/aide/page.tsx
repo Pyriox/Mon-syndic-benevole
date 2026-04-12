@@ -10,7 +10,7 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import {
   MailCheck, ChevronDown, ChevronUp, HelpCircle, MessageSquare,
-  ExternalLink, Search,
+  ExternalLink,
   Send, RefreshCw, User, Shield, Clock, CheckCircle,
   BookOpen, Info,
 } from 'lucide-react';
@@ -22,6 +22,7 @@ const CATEGORIES: Record<string, { label: string; bg: string; text: string }> = 
   ag:        { label: 'Assemblées',  bg: 'bg-indigo-100', text: 'text-indigo-700' },
   app:       { label: 'Application', bg: 'bg-amber-100',  text: 'text-amber-700' },
 };
+const CATEGORY_ORDER = Object.keys(CATEGORIES) as Array<keyof typeof CATEGORIES>;
 
 // ── Sujets prédéfinis ────────────────────────────────────────
 const SUBJECT_CHIPS = [
@@ -269,8 +270,7 @@ export default function AidePage() {
   const [replyError, setReplyError]         = useState('');
   const [unreadTicketIds, setUnreadTicketIds] = useState<Set<string>>(new Set());
 
-  // Recherche + filtre catégorie FAQ
-  const [search, setSearch]       = useState('');
+  // Filtre catégorie FAQ
   const [activecat, setActivecat] = useState<string>('all');
 
   // Pré-remplissage depuis la session + détection du contexte utilisateur
@@ -542,13 +542,17 @@ export default function AidePage() {
       ];
 
   const filteredFaq = useMemo(() => {
-    const q = search.toLowerCase();
-    return faqItems.filter((item) => {
-      const matchCat    = activecat === 'all' || item.category === activecat;
-      const matchSearch = !q || item.question.toLowerCase().includes(q) || item.answer.toLowerCase().includes(q);
-      return matchCat && matchSearch;
-    });
-  }, [search, activecat, faqItems]);
+    return faqItems.filter((item) => activecat === 'all' || item.category === activecat);
+  }, [activecat, faqItems]);
+
+  const groupedFaq = useMemo(() => (
+    CATEGORY_ORDER
+      .map((category) => ({
+        category,
+        items: filteredFaq.filter((item) => item.category === category),
+      }))
+      .filter((group) => group.items.length > 0)
+  ), [filteredFaq]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-12">
@@ -593,18 +597,8 @@ export default function AidePage() {
           </div>
         </div>
 
-        {/* Barre de recherche + filtres catégories */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-5">
-          <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher une question…"
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
-            />
-          </div>
+        {/* Filtres catégories */}
+        <div className="flex flex-wrap gap-2 mb-5">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setActivecat('all')}
@@ -627,23 +621,48 @@ export default function AidePage() {
         {filteredFaq.length === 0 ? (
           <div className="text-center py-10 text-gray-400 text-sm">
             Aucune question trouvée.{' '}
-            <button onClick={() => { setSearch(''); setActivecat('all'); }} className="text-blue-600 hover:underline">
+            <button onClick={() => { setActivecat('all'); }} className="text-blue-600 hover:underline">
               Réinitialiser
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card padding="md">
-              {filteredFaq.slice(0, Math.ceil(filteredFaq.length / 2)).map((item, i) => (
-                <FaqItem key={i} {...item} defaultOpen={i === 0 && !search} />
-              ))}
-            </Card>
-            <Card padding="md">
-              {filteredFaq.slice(Math.ceil(filteredFaq.length / 2)).map((item, i) => (
-                <FaqItem key={i} {...item} />
-              ))}
-            </Card>
-          </div>
+          isCoproView ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {groupedFaq.map(({ category, items }, groupIndex) => {
+                const cat = CATEGORIES[category];
+                return (
+                  <Card key={category} padding="md">
+                    <div className="mb-3 flex items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                      <h3 className="text-sm font-semibold text-gray-900">{cat.label}</h3>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${cat.bg} ${cat.text}`}>
+                        {items.length} question{items.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    {items.map((item, itemIndex) => (
+                      <FaqItem
+                        key={`${category}-${itemIndex}`}
+                        {...item}
+                        defaultOpen={groupIndex === 0 && itemIndex === 0}
+                      />
+                    ))}
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card padding="md">
+                {filteredFaq.slice(0, Math.ceil(filteredFaq.length / 2)).map((item, i) => (
+                  <FaqItem key={i} {...item} defaultOpen={i === 0} />
+                ))}
+              </Card>
+              <Card padding="md">
+                {filteredFaq.slice(Math.ceil(filteredFaq.length / 2)).map((item, i) => (
+                  <FaqItem key={i} {...item} />
+                ))}
+              </Card>
+            </div>
+          )
         )}
       </div>
 
