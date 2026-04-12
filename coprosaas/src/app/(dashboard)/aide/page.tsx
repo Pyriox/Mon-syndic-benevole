@@ -22,8 +22,6 @@ const CATEGORIES: Record<string, { label: string; bg: string; text: string }> = 
   ag:        { label: 'Assemblées',  bg: 'bg-indigo-100', text: 'text-indigo-700' },
   app:       { label: 'Application', bg: 'bg-amber-100',  text: 'text-amber-700' },
 };
-const CATEGORY_ORDER = Object.keys(CATEGORIES) as Array<keyof typeof CATEGORIES>;
-
 // ── Sujets prédéfinis ────────────────────────────────────────
 const SUBJECT_CHIPS = [
   'Question technique',
@@ -545,15 +543,6 @@ export default function AidePage() {
     return faqItems.filter((item) => activecat === 'all' || item.category === activecat);
   }, [activecat, faqItems]);
 
-  const groupedFaq = useMemo(() => (
-    CATEGORY_ORDER
-      .map((category) => ({
-        category,
-        items: filteredFaq.filter((item) => item.category === category),
-      }))
-      .filter((group) => group.items.length > 0)
-  ), [filteredFaq]);
-
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-12">
 
@@ -626,31 +615,7 @@ export default function AidePage() {
             </button>
           </div>
         ) : (
-          isCoproView ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {groupedFaq.map(({ category, items }, groupIndex) => {
-                const cat = CATEGORIES[category];
-                return (
-                  <Card key={category} padding="md">
-                    <div className="mb-3 flex items-center justify-between gap-3 border-b border-gray-100 pb-3">
-                      <h3 className="text-sm font-semibold text-gray-900">{cat.label}</h3>
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${cat.bg} ${cat.text}`}>
-                        {items.length} question{items.length > 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    {items.map((item, itemIndex) => (
-                      <FaqItem
-                        key={`${category}-${itemIndex}`}
-                        {...item}
-                        defaultOpen={groupIndex === 0 && itemIndex === 0}
-                      />
-                    ))}
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card padding="md">
                 {filteredFaq.slice(0, Math.ceil(filteredFaq.length / 2)).map((item, i) => (
                   <FaqItem key={i} {...item} defaultOpen={i === 0} />
@@ -662,7 +627,6 @@ export default function AidePage() {
                 ))}
               </Card>
             </div>
-          )
         )}
       </div>
 
