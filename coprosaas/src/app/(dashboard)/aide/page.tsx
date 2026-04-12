@@ -86,13 +86,12 @@ const FAQ: FaqEntry[] = [
   {
     category: 'demarrage',
     question: 'Quelles sont les étapes pour configurer ma copropriété et émettre mon premier appel de fonds ?',
-    answer: "Commencez par créer les lots et les copropriétaires, puis renseignez dans le paramétrage les tantièmes et, si besoin, les clés de répartition spéciales. Les appels de fonds sont ensuite générés dans le cadre normal de la gestion, généralement après l’AG.",
+    answer: "Après avoir créé votre copropriété, suivez l’ordre du menu : commencez par ajouter les lots, puis créez les copropriétaires et associez-les à leurs lots. Ouvrez ensuite « Paramétrage », puis « Répartition des charges » pour renseigner les tantièmes généraux et vos éventuelles clés spéciales. Dans le fonctionnement normal, le premier appel de fonds intervient après une AG préparée puis terminée.",
     links: [
-      { href: '/lots', label: 'lots' },
-      { href: '/coproprietaires', label: 'copropriétaires' },
-      { href: '/coproprietes', label: 'paramétrage' },
-      { href: '/appels-de-fonds', label: 'appels de fonds' },
-      { href: '/assemblees', label: 'AG' },
+      { href: '/lots', label: 'Lots' },
+      { href: '/coproprietaires', label: 'Copropriétaires' },
+      { href: '/assemblees', label: 'Assemblées' },
+      { href: '/appels-de-fonds', label: 'Appels de fonds' },
     ],
   },
   {
