@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare, Crown } from 'lucide-react';
+import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare, Crown, LoaderCircle } from 'lucide-react';
 import { setDashboardViewMode } from '@/lib/actions/set-dashboard-view-mode';
 import { cn } from '@/lib/utils';
 import { hasDualDashboardView, toDashboardViewMode } from '@/lib/dashboard-view-mode';
@@ -39,6 +39,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [switchPending, startSwitchTransition] = useTransition();
+  const [switchTargetRole, setSwitchTargetRole] = useState<Role | null>(null);
   const [items, setItems] = useState<AppNotification[]>(notifications);
   const ref = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement | null>(null);
@@ -49,6 +50,12 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   useEffect(() => {
     setItems(notifications);
   }, [notifications]);
+
+  useEffect(() => {
+    if (switchTargetRole === userRole) {
+      setSwitchTargetRole(null);
+    }
+  }, [switchTargetRole, userRole]);
 
   useEffect(() => {
     const headerEl = headerRef.current;
@@ -178,14 +185,24 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   };
 
   const handleViewSwitch = (nextRole: Role) => {
-    if (nextRole === userRole) return;
+    if (nextRole === userRole || switchTargetRole) return;
 
-    startSwitchTransition(() => {
-      void setDashboardViewMode(toDashboardViewMode(nextRole)).then(() => {
-        router.refresh();
+    setSwitchTargetRole(nextRole);
+    void setDashboardViewMode(toDashboardViewMode(nextRole))
+      .then(() => {
+        startSwitchTransition(() => {
+          router.refresh();
+        });
+      })
+      .catch(() => {
+        setSwitchTargetRole(null);
       });
-    });
   };
+
+  const isSwitchingView = switchTargetRole !== null || switchPending;
+  const switchLoadingLabel = switchTargetRole
+    ? `Chargement de la vue ${switchTargetRole === 'syndic' ? 'syndic' : 'copropriétaire'}...`
+    : null;
 
   return (
     <header ref={headerRef} className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
@@ -206,14 +223,15 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
             <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
               <h1 className="truncate text-lg font-semibold leading-tight text-gray-900 md:text-[1.75rem]">{title}</h1>
               {canSwitchView && (
-                <div className="flex items-center justify-start">
+                <div className="flex flex-col items-start gap-1.5">
                   <div className="inline-flex items-center rounded-2xl border border-gray-200 bg-gray-50/90 p-1">
                     <button
                       type="button"
                       onClick={() => handleViewSwitch('syndic')}
-                      disabled={switchPending}
+                      disabled={isSwitchingView}
+                      aria-pressed={userRole === 'syndic'}
                       className={cn(
-                        'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors',
+                        'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-wait disabled:opacity-70',
                         userRole === 'syndic' ? 'bg-white text-amber-700 shadow-sm ring-1 ring-black/5' : 'text-gray-600 hover:text-gray-900'
                       )}
                     >
@@ -223,9 +241,10 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                     <button
                       type="button"
                       onClick={() => handleViewSwitch('copropriétaire')}
-                      disabled={switchPending}
+                      disabled={isSwitchingView}
+                      aria-pressed={userRole === 'copropriétaire'}
                       className={cn(
-                        'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors',
+                        'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-wait disabled:opacity-70',
                         userRole === 'copropriétaire' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-black/5' : 'text-gray-600 hover:text-gray-900'
                       )}
                     >
@@ -233,6 +252,12 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                       Copropriétaire
                     </button>
                   </div>
+                  {switchLoadingLabel && (
+                    <p className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500" aria-live="polite">
+                      <LoaderCircle size={12} className="animate-spin" />
+                      {switchLoadingLabel}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
