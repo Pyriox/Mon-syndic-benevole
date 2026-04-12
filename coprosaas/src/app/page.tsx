@@ -7,7 +7,7 @@ import {
   AlertTriangle, FileText, Wallet, ArrowRight,
   Shield, Scale, ArrowUp, BellRing, Banknote,
   LayoutDashboard, HelpCircle, UserCircle, LogOut, CreditCard,
-  X, Clock,
+  X, Clock, ChevronDown,
 } from 'lucide-react';
 import SiteLogo from '@/components/ui/SiteLogo';
 import LandingNav from './LandingNav';
@@ -1086,7 +1086,7 @@ export default function HomePage() {
               <details key={q} className="group py-5">
                 <summary className="flex items-center justify-between cursor-pointer list-none">
                   <span className="text-base font-semibold text-gray-900 pr-4">{q}</span>
-                  <span className="text-gray-400 group-open:rotate-180 transition-transform inline-block shrink-0 text-lg leading-none">▾</span>
+                  <ChevronDown size={16} className="text-gray-400 group-open:rotate-180 transition-transform shrink-0" />
                 </summary>
                 <p className="mt-3 text-sm text-gray-600 leading-relaxed">{a}</p>
               </details>

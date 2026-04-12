@@ -257,31 +257,38 @@ export default function CookieBanner() {
             .
           </div>
 
-          <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-2.5 sm:flex-row">
+          <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+            {/* Accept — full-width prominent on mobile, rightmost on desktop */}
+            <button
+              type="button"
+              onClick={accept}
+              className="sm:order-2 w-full rounded-xl bg-slate-950 px-4.5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-950/20 transition hover:bg-blue-700 sm:w-auto"
+            >
+              Oui, j&apos;accepte
+            </button>
+            {/* Secondary — 2-column grid on mobile, inline row on desktop */}
+            <div className="grid grid-cols-2 gap-2 sm:order-1 sm:flex sm:flex-row sm:gap-2.5">
               <button
                 type="button"
                 onClick={refuse}
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 sm:w-auto"
+                className="rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               >
-                Refuser les cookies optionnels
+                <span className="sm:hidden">Refuser</span>
+                <span className="hidden sm:inline">Refuser les cookies optionnels</span>
               </button>
               <button
                 type="button"
                 onClick={showCustom ? saveCustomPreferences : () => setShowCustom(true)}
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100 sm:w-auto"
+                className="rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100"
               >
-                {showCustom ? 'Valider ma personnalisation' : 'Personnaliser'}
+                {showCustom ? (
+                  <>
+                    <span className="sm:hidden">Valider</span>
+                    <span className="hidden sm:inline">Valider ma personnalisation</span>
+                  </>
+                ) : 'Personnaliser'}
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={accept}
-              className="w-full rounded-xl bg-slate-950 px-4.5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-950/20 transition hover:bg-blue-700 sm:w-auto"
-            >
-              Oui, j&apos;accepte
-            </button>
           </div>
         </div>
       </div>

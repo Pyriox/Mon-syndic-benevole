@@ -216,7 +216,7 @@ function FaqItem({ question, answer, category, links, defaultOpen = false }: Faq
       </button>
       {open && (
         <div className="pb-4 space-y-3">
-          <p className="text-sm text-gray-600 leading-relaxed">{answer}</p>
+          <div className="text-sm text-gray-600 leading-relaxed">{answer}</div>
           {links?.length ? (
             <p className="text-sm text-gray-600 leading-relaxed">
               <span className="font-medium text-gray-700">Accès directs :</span>{' '}
@@ -471,14 +471,20 @@ export default function AidePage() {
       return {
         ...item,
         answer: (
-          <>
-            Commencez par renseigner vos{' '}
-            <a href="/lots" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Lots</a>, puis ajoutez les{' '}
-            <a href="/coproprietaires" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Copropriétaires</a> en les associant à leurs lots. Dans{' '}
-            <a href={parametrageHref} className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Paramétrage → Répartition des charges</a>, saisissez les tantièmes généraux et vos éventuelles clés spéciales. Une fois votre première{' '}
-            <a href="/assemblees" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Assemblée générale</a> préparée et validée avec un budget approuvé, vous pouvez émettre vos{' '}
-            <a href="/appels-de-fonds" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Appels de fonds</a>.
-          </>
+          <ol className="space-y-2 list-none">
+            {[
+              { n: 1, c: (<>Renseignez vos <a href="/lots" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Lots</a> : numéros, types et tantièmes.</>) },
+              { n: 2, c: (<>Ajoutez les <a href="/coproprietaires" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Copropriétaires</a> en les associant à leurs lots.</>) },
+              { n: 3, c: (<>Dans <a href={parametrageHref} className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Paramétrage → Répartition des charges</a>, vérifiez les tantièmes et ajoutez vos clés spéciales si nécessaire.</>) },
+              { n: 4, c: (<>Préparez votre première <a href="/assemblees" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Assemblée Générale</a> et faites voter le budget prévisionnel.</>) },
+              { n: 5, c: (<>Émettez vos <a href="/appels-de-fonds" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Appels de fonds</a> — la quote-part par tantièmes est calculée automatiquement.</>) },
+            ].map(({ n, c }) => (
+              <li key={n} className="flex items-start gap-2.5">
+                <span className="shrink-0 w-5 h-5 bg-blue-100 text-blue-700 rounded-full text-[11px] font-bold flex items-center justify-center mt-0.5">{n}</span>
+                <span>{c}</span>
+              </li>
+            ))}
+          </ol>
         ),
       };
     });
