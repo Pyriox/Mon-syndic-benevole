@@ -9,8 +9,8 @@ import "./globals.css";
 const geist = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  preload: false,
-  display: 'optional',
+  preload: true,
+  display: 'swap',
 });
 
 const APP_URL = "https://www.mon-syndic-benevole.fr";
@@ -108,7 +108,7 @@ export default function RootLayout({
 
   return (
     <html lang="fr">
-      <body className={`${geist.variable} antialiased overflow-x-hidden`}>
+      <body className={`${geist.variable} ${geist.className} antialiased overflow-x-hidden`}>
         {/* Pas de fallback <noscript> GTM : cela peut déclencher des requêtes Google avant le consentement JS. */}
         {children}
         {hasGoogleTagging && (
