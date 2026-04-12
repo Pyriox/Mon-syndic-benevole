@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cache } from 'react';
 import Card from '@/components/ui/Card';
 import CoproprietaireBalanceHistory from '../coproprietaires/CoproprietaireBalanceHistory';
 import { getCoproprietaireDashboardSnapshot, getSyndicDashboardSnapshot } from '@/lib/cached-queries';
@@ -35,6 +36,14 @@ const catColorMap: Record<string, { bar: string; dot: string }> = {
   syndic_benevole: { bar: 'bg-blue-600', dot: 'bg-blue-600' },
   autre: { bar: 'bg-slate-300', dot: 'bg-slate-300' },
 };
+
+const getCoproDashboardSnapshotCached = cache(
+  async (userId: string, coproId: string) => getCoproprietaireDashboardSnapshot(userId, coproId)
+);
+
+const getSyndicDashboardSnapshotCached = cache(
+  async (coproId: string) => getSyndicDashboardSnapshot(coproId)
+);
 
 export function DashboardHeaderSkeleton() {
   return (
@@ -83,7 +92,7 @@ export async function CoproDashboardHeader({
   coproId: string;
   coproprieteName: string | null;
 }) {
-  const data = await getCoproprietaireDashboardSnapshot(userId, coproId);
+  const data = await getCoproDashboardSnapshotCached(userId, coproId);
 
   return (
     <div>
@@ -98,7 +107,7 @@ export async function CoproDashboardHeader({
 }
 
 export async function CoproDashboardAlert({ userId, coproId }: { userId: string; coproId: string }) {
-  const data = await getCoproprietaireDashboardSnapshot(userId, coproId);
+  const data = await getCoproDashboardSnapshotCached(userId, coproId);
 
   if (!data.prochaineAG || data.joursAvantAG === null || data.joursAvantAG > 30) {
     return null;
@@ -134,7 +143,7 @@ export async function CoproDashboardAlert({ userId, coproId }: { userId: string;
 }
 
 export async function CoproDashboardMain({ userId, coproId }: { userId: string; coproId: string }) {
-  const data = await getCoproprietaireDashboardSnapshot(userId, coproId);
+  const data = await getCoproDashboardSnapshotCached(userId, coproId);
 
   if (!data.fiche) {
     return (
@@ -283,7 +292,7 @@ export async function SyndicDashboardHeader({
   coproId: string;
   coproprieteName: string | null;
 }) {
-  const data = await getSyndicDashboardSnapshot(coproId);
+  const data = await getSyndicDashboardSnapshotCached(coproId);
 
   return (
     <div>
@@ -298,7 +307,7 @@ export async function SyndicDashboardHeader({
 }
 
 export async function SyndicDashboardAlert({ coproId }: { coproId: string }) {
-  const data = await getSyndicDashboardSnapshot(coproId);
+  const data = await getSyndicDashboardSnapshotCached(coproId);
 
   const overdueLineCount = data.nbLignesImpayees ?? data.nbImpayes ?? 0;
   const showUnpaidAlert = data.totalMontantImpaye > 0 && overdueLineCount > 0;
@@ -362,7 +371,7 @@ export async function SyndicDashboardAlert({ coproId }: { coproId: string }) {
 }
 
 export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
-  const data = await getSyndicDashboardSnapshot(coproId);
+  const data = await getSyndicDashboardSnapshotCached(coproId);
 
   return (
     <>
@@ -517,7 +526,7 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
 }
 
 export async function SyndicDashboardBudgetPanels({ coproId }: { coproId: string }) {
-  const data = await getSyndicDashboardSnapshot(coproId);
+  const data = await getSyndicDashboardSnapshotCached(coproId);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -611,7 +620,7 @@ export async function SyndicDashboardBudgetPanels({ coproId }: { coproId: string
 }
 
 export async function SyndicDashboardTasks({ coproId }: { coproId: string }) {
-  const data = await getSyndicDashboardSnapshot(coproId);
+  const data = await getSyndicDashboardSnapshotCached(coproId);
 
   if (data.incidentsAnciens.length === 0) {
     return null;
@@ -648,7 +657,7 @@ export async function SyndicDashboardTasks({ coproId }: { coproId: string }) {
 }
 
 export async function SyndicNextAction({ coproId }: { coproId: string }) {
-  const data = await getSyndicDashboardSnapshot(coproId);
+  const data = await getSyndicDashboardSnapshotCached(coproId);
 
   if (data.totalMontantImpaye > 0) {
     return (
@@ -743,7 +752,7 @@ export async function SyndicNextAction({ coproId }: { coproId: string }) {
 }
 
 export async function SyndicDashboardAssemblies({ coproId }: { coproId: string }) {
-  const data = await getSyndicDashboardSnapshot(coproId);
+  const data = await getSyndicDashboardSnapshotCached(coproId);
 
   if (data.assemblees.length === 0) {
     return null;
