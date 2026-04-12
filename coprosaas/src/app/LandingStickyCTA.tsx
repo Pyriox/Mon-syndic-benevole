@@ -11,7 +11,15 @@ export default function LandingStickyCTA() {
 
   // Show after 400px of scroll
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > 400);
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setShow(window.scrollY > 400);
+        ticking = false;
+      });
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);

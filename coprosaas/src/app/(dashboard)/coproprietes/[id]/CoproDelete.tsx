@@ -49,38 +49,56 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
       return;
     }
 
-    // Suppression en cascade : coproprietaires, lots, dépenses, appels, incidents, assemblées, documents, dossiers
-    await supabase.from('repartitions_depenses').delete().in(
-      'depense_id',
-      (await supabase.from('depenses').select('id').eq('copropriete_id', coproprieteId)).data?.map((d) => d.id) ?? []
-    );
-    await supabase.from('depenses').delete().eq('copropriete_id', coproprieteId);
+    try {
+      const [{ data: depenses }, { data: appels }, { data: ags }] = await Promise.all([
+        supabase.from('depenses').select('id').eq('copropriete_id', coproprieteId),
+        supabase.from('appels_de_fonds').select('id').eq('copropriete_id', coproprieteId),
+        supabase.from('assemblees_generales').select('id').eq('copropriete_id', coproprieteId),
+      ]);
 
-    await supabase.from('lignes_appels_de_fonds').delete().in(
-      'appel_id',
-      (await supabase.from('appels_de_fonds').select('id').eq('copropriete_id', coproprieteId)).data?.map((a) => a.id) ?? []
-    );
-    await supabase.from('appels_de_fonds').delete().eq('copropriete_id', coproprieteId);
+      const depenseIds = depenses?.map((d) => d.id) ?? [];
+      const appelIds = appels?.map((a) => a.id) ?? [];
+      const agIds = ags?.map((a) => a.id) ?? [];
 
-    const resolutionRows = await supabase.from('resolutions').select('id').in(
-      'ag_id',
-      (await supabase.from('assemblees_generales').select('id').eq('copropriete_id', coproprieteId)).data?.map((a) => a.id) ?? []
-    );
-    if ((resolutionRows.data?.length ?? 0) > 0) {
-      await supabase.from('resolutions').delete().in('id', resolutionRows.data!.map((r) => r.id));
-    }
-    await supabase.from('assemblees_generales').delete().eq('copropriete_id', coproprieteId);
+      const resolutionIds = agIds.length > 0
+        ? ((await supabase.from('resolutions').select('id').in('ag_id', agIds)).data?.map((r) => r.id) ?? [])
+        : [];
 
-    await supabase.from('incidents').delete().eq('copropriete_id', coproprieteId);
-    await supabase.from('documents').delete().eq('copropriete_id', coproprieteId);
-    await supabase.from('coproprietaires').delete().eq('copropriete_id', coproprieteId);
-    await supabase.from('lots').delete().eq('copropriete_id', coproprieteId);
+      // Suppression en cascade (phase 1) : tables enfants
+      await Promise.all([
+        depenseIds.length > 0
+          ? supabase.from('repartitions_depenses').delete().in('depense_id', depenseIds)
+          : Promise.resolve({ error: null }),
+        appelIds.length > 0
+          ? supabase.from('lignes_appels_de_fonds').delete().in('appel_id', appelIds)
+          : Promise.resolve({ error: null }),
+        resolutionIds.length > 0
+          ? supabase.from('resolutions').delete().in('id', resolutionIds)
+          : Promise.resolve({ error: null }),
+      ]);
 
-    // Suppression de la copropriété
-    const { error: delError } = await supabase.from('coproprietes').delete().eq('id', coproprieteId);
+      // Phase 2 : tables principales de la copropriété
+      await Promise.all([
+        supabase.from('depenses').delete().eq('copropriete_id', coproprieteId),
+        supabase.from('appels_de_fonds').delete().eq('copropriete_id', coproprieteId),
+        supabase.from('assemblees_generales').delete().eq('copropriete_id', coproprieteId),
+        supabase.from('incidents').delete().eq('copropriete_id', coproprieteId),
+        supabase.from('documents').delete().eq('copropriete_id', coproprieteId),
+      ]);
 
-    if (delError) {
-      setError('Erreur lors de la suppression : ' + delError.message);
+      await supabase.from('coproprietaires').delete().eq('copropriete_id', coproprieteId);
+      await supabase.from('lots').delete().eq('copropriete_id', coproprieteId);
+
+      // Suppression de la copropriété
+      const { error: delError } = await supabase.from('coproprietes').delete().eq('id', coproprieteId);
+
+      if (delError) {
+        setError('Erreur lors de la suppression : ' + delError.message);
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setError('Impossible de finaliser la suppression. Réessayez dans quelques instants.');
       setLoading(false);
       return;
     }

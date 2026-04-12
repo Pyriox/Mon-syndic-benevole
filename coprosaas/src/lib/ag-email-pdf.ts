@@ -1,3 +1,4 @@
+import 'server-only';
 import { jsPDF } from 'jspdf';
 import { formatDate, formatTime } from '@/lib/utils';
 

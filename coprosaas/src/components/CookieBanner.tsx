@@ -58,23 +58,31 @@ function applyStoredConsent(stored: StoredConsent) {
 
 export default function CookieBanner() {
   const pathname = usePathname();
-  const [visible, setVisible] = useState(() => {
-    if (typeof window === 'undefined') return false;
+  const [visible, setVisible] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [showCustom, setShowCustom] = useState(false);
+  const [preferences, setPreferences] = useState<ConsentPreferences>(DEFAULT_PREFERENCES);
+  const isPrivacyPolicyPage = pathname === '/politique-confidentialite';
 
+  useEffect(() => {
     const stored = getStoredConsent();
-    if (!stored) return true;
+    if (!stored) {
+      setVisible(true);
+      setIsReady(true);
+      return;
+    }
 
     const expired = Date.now() - stored.timestamp > CONSENT_MAX_AGE_MS;
     if (expired) {
       localStorage.removeItem(CONSENT_KEY);
-      return true;
+      setVisible(true);
+      setIsReady(true);
+      return;
     }
 
-    return false;
-  });
-  const [showCustom, setShowCustom] = useState(false);
-  const [preferences, setPreferences] = useState<ConsentPreferences>(DEFAULT_PREFERENCES);
-  const isPrivacyPolicyPage = pathname === '/politique-confidentialite';
+    setVisible(false);
+    setIsReady(true);
+  }, []);
 
   useEffect(() => {
     const stored = getStoredConsent();
@@ -151,7 +159,7 @@ export default function CookieBanner() {
     setPreferences((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
-  if (!visible) return null;
+  if (!isReady || !visible) return null;
 
   return (
     <div className={isPrivacyPolicyPage
