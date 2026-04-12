@@ -52,10 +52,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {isPassword && (
             <button
               type="button"
-              tabIndex={-1}
               onClick={() => setShowPassword((v) => !v)}
               className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors"
               aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              aria-pressed={showPassword}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>

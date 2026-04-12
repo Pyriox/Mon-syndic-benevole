@@ -79,7 +79,7 @@ function RegisterForm() {
 
         if (!response.ok || data.error || !data.email) {
           if (cancelled) return;
-          setError(data.error ?? "Impossible de vérifier l'invitation.");
+          setError(data.error ?? "Impossible de vérifier cette invitation. Demandez un nouveau lien d\'invitation à votre syndic.");
           setMode('invalid');
           return;
         }
@@ -127,7 +127,7 @@ function RegisterForm() {
             return;
           }
 
-          setError(linkResult.error ?? 'Impossible de rattacher cette invitation à votre compte.');
+          setError(linkResult.error ?? 'Impossible de rattacher cette invitation à votre compte. Vérifiez que vous êtes connecté avec la bonne adresse email.');
         }
 
         if (cancelled) return;
@@ -197,7 +197,7 @@ function RegisterForm() {
       });
       const result = await res.json();
       if (!res.ok) {
-        const errMsg = result.error ?? 'Une erreur est survenue.';
+        const errMsg = result.error ?? 'Impossible de finaliser l\'inscription pour cette invitation. Réessayez ou demandez un nouveau lien.';
         setError(errMsg);
         trackAnonymousEvent('registration_error', { error: result.error ?? 'invitation_error', role: 'copropriétaire' });
         setLoading(false);
@@ -236,7 +236,7 @@ function RegisterForm() {
     });
 
     if (authError) {
-      const errMsg = 'Erreur : ' + authError.message;
+      const errMsg = 'Inscription impossible pour le moment. Vérifiez vos informations et réessayez. Si le problème persiste, contactez le support.';
       setError(errMsg);
       trackAnonymousEvent('registration_error', { error: authError.code ?? 'sign_up_failed', role: 'syndic' });
       setLoading(false);

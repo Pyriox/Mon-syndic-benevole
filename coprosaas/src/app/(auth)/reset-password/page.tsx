@@ -99,7 +99,7 @@ function ResetPasswordForm() {
     setLoading(false);
 
     if (updateErr) {
-      setError('Une erreur est survenue. Veuillez réessayer ou demander un nouveau lien.');
+      setError('Impossible de mettre à jour le mot de passe. Réessayez, puis demandez un nouveau lien si le problème persiste.');
       return;
     }
 

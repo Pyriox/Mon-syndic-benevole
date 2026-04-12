@@ -62,7 +62,7 @@ export default function BottomNav({ userRole, onMenuOpen }: BottomNavProps) {
                 strokeWidth={active ? 2.5 : 1.8}
                 className="shrink-0"
               />
-              <span className="text-[10px] font-medium leading-tight">{label}</span>
+              <span className="text-xs font-medium leading-tight">{label}</span>
             </Link>
           );
         })}
@@ -74,7 +74,7 @@ export default function BottomNav({ userRole, onMenuOpen }: BottomNavProps) {
           className="relative flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-600 active:text-gray-800 transition-colors"
         >
           <MoreHorizontal size={22} strokeWidth={1.8} className="shrink-0" />
-          <span className="text-[10px] font-medium leading-tight">Menu</span>
+          <span className="text-xs font-medium leading-tight">Menu</span>
         </button>
       </div>
     </nav>

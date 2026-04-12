@@ -57,7 +57,7 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-blue-700">Créer une copropriété</p>
-              <p className="text-[10px] text-blue-700">Commencer la configuration</p>
+              <p className="text-xs text-blue-700">Commencer la configuration</p>
             </div>
           </Link>
         </div>
@@ -90,7 +90,7 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
           {selected ? (
             <>
               <p className="text-xs font-semibold text-gray-800 truncate leading-tight">{selected.nom}</p>
-              <p className="text-[10px] text-gray-500 leading-tight flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-gray-500 leading-tight flex items-center gap-1 mt-0.5">
                 {selectedBadgeRole === 'syndic' ? (
                   <><Crown size={9} className="text-amber-700" /> Syndic</>
                 ) : (
@@ -126,15 +126,15 @@ export default function CoproSelector({ coproprietes, selectedId, userRole }: Co
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-gray-800 truncate">{copro.nom}</p>
-                <p className="text-[10px] text-gray-500 truncate">{copro.ville}</p>
+                <p className="text-xs text-gray-500 truncate">{copro.ville}</p>
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 {copro.role === 'syndic' ? (
-                  <span className="text-[9px] font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                  <span className="text-[10px] font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
                     <Crown size={8} /> Syndic
                   </span>
                 ) : (
-                  <span className="text-[9px] font-semibold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                  <span className="text-[10px] font-semibold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
                     <User size={8} /> Copro.
                   </span>
                 )}

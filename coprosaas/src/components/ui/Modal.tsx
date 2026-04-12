@@ -4,7 +4,7 @@
 // ============================================================
 'use client';
 
-import { useEffect, ReactNode, useRef } from 'react';
+import { useEffect, ReactNode, useRef, useId } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,20 +26,64 @@ const desktopSizeClasses = {
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
   const pointerStartedOnBackdrop = useRef(false);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const lastFocusedElement = useRef<HTMLElement | null>(null);
+  const titleId = useId();
 
-  // Fermer avec la touche Échap
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    if (!isOpen) return undefined;
+
+    const getFocusableElements = () => {
+      if (!dialogRef.current) return [] as HTMLElement[];
+      return Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
     };
-    if (isOpen) {
-      document.addEventListener('keydown', handleEsc);
-      // Empêche le scroll de la page en arrière-plan
-      document.body.style.overflow = 'hidden';
-    }
+
+    lastFocusedElement.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    const focusables = getFocusableElements();
+    const initialTarget = focusables[0] ?? dialogRef.current;
+    initialTarget?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+
+      const currentFocusable = getFocusableElements();
+      if (currentFocusable.length === 0) {
+        e.preventDefault();
+        dialogRef.current?.focus();
+        return;
+      }
+
+      const first = currentFocusable[0];
+      const last = currentFocusable[currentFocusable.length - 1];
+      const active = document.activeElement;
+
+      if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    // Empêche le scroll de la page en arrière-plan
+    document.body.style.overflow = 'hidden';
+
     return () => {
-      document.removeEventListener('keydown', handleEsc);
+      document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
+      lastFocusedElement.current?.focus();
     };
   }, [isOpen, onClose]);
 
@@ -80,6 +124,11 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
 
       {/* Boîte du modal */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        tabIndex={-1}
         className={cn(
           // Commun
           'relative z-10 bg-white shadow-xl w-full flex flex-col',
@@ -99,9 +148,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
         {/* En-tête du modal */}
         {title && (
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0">
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <h3 id={titleId} className="text-lg font-semibold text-gray-900">{title}</h3>
             <button
               onClick={onClose}
+              aria-label="Fermer la fenêtre"
               className="p-1 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors"
             >
               <X size={20} />

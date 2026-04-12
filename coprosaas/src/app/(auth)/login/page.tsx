@@ -110,7 +110,7 @@ function LoginForm() {
         setUnconfirmedEmail(normalizedEmail);
         trackAnonymousEvent('login_error', { error: 'email_not_confirmed' });
       } else {
-        setError('Email ou mot de passe incorrect. Veuillez réessayer.');
+        setError('Email ou mot de passe incorrect. Vérifiez vos identifiants ou utilisez "Mot de passe oublié".');
         trackAnonymousEvent('login_error', { error: 'invalid_credentials' });
         void logEventForEmail({
           email: normalizedEmail,
@@ -197,7 +197,7 @@ function LoginForm() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as { message?: string };
-        const errMsg = data.message ?? 'Une erreur est survenue. Réessayez.';
+        const errMsg = data.message ?? 'Impossible d\'envoyer l\'email de réinitialisation pour le moment. Réessayez dans quelques minutes.';
         setResetError(errMsg);
         trackAnonymousEvent('password_reset_error', { error: data.message ?? 'unknown' });
         return;

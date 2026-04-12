@@ -186,7 +186,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
           <SiteLogo size={32} />
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold text-gray-900 leading-tight truncate">Mon Syndic</p>
-            <p className="text-[11px] font-semibold text-blue-600 leading-tight">Bénévole</p>
+            <p className="text-xs font-semibold text-blue-600 leading-tight">Bénévole</p>
           </div>
           {/* Bouton fermer visible uniquement sur mobile */}
           <button
@@ -207,7 +207,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
         {navSections.map((section, idx) => (
           <div key={idx}>
             {section.label && (
-              <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+              <p className="px-3 mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
                 {section.label}
               </p>
             )}
