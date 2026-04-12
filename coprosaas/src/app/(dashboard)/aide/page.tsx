@@ -85,7 +85,7 @@ const FAQ: FaqEntry[] = [
   {
     category: 'demarrage',
     question: 'Quelles sont les étapes pour configurer ma copropriété et émettre mon premier appel de fonds ?',
-    answer: <>Commencez par renseigner vos <a href="/lots" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Lots</a>, puis ajoutez les <a href="/coproprietaires" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Copropriétaires</a> en les associant à leurs lots. Dans <a href="/coproprietes" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Paramétrage → Répartition des charges</a>, saisissez les tantièmes généraux et vos éventuelles clés spéciales. Une fois votre première <a href="/assemblees" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Assemblée générale</a> préparée et validée avec un budget approuvé, vous pouvez émettre vos <a href="/appels-de-fonds" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Appels de fonds</a>.</>,
+    answer: 'Commencez par renseigner vos Lots, ajoutez les Copropriétaires, configurez le Paramétrage, préparez votre première AG, puis émettez vos Appels de fonds.',
   },
   {
     category: 'demarrage',
@@ -250,6 +250,7 @@ export default function AidePage() {
   const [userId, setUserId]   = useState<string | null>(null);
   const [userRole, setUserRole] = useState<'syndic' | 'copropriétaire' | null>(null);
   const [selectedCoproName, setSelectedCoproName] = useState('');
+  const [selectedCoproId, setSelectedCoproId] = useState<string | null>(null);
 
   // Tickets support
   const [tickets, setTickets]               = useState<Ticket[]>([]);
@@ -307,6 +308,7 @@ export default function AidePage() {
 
       if (profile?.full_name) setName(profile.full_name);
       if (syndicCopro?.nom) setSelectedCoproName(syndicCopro.nom);
+      if (selectedCoproId) setSelectedCoproId(selectedCoproId);
 
       const resolvedRole = resolveDashboardRole({
         preferredMode: preferredViewMode,
@@ -460,7 +462,26 @@ export default function AidePage() {
     }
   };
   const isCoproView = userRole === 'copropriétaire';
-  const faqItems = isCoproView ? FAQ_COPRO : FAQ;
+  const faqItems = useMemo(() => {
+    if (isCoproView) return FAQ_COPRO;
+    const parametrageHref = selectedCoproId ? `/coproprietes/${selectedCoproId}/parametrage` : '/coproprietes';
+    return FAQ.map((item, i) => {
+      if (i !== 0) return item;
+      return {
+        ...item,
+        answer: (
+          <>
+            Commencez par renseigner vos{' '}
+            <a href="/lots" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Lots</a>, puis ajoutez les{' '}
+            <a href="/coproprietaires" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Copropriétaires</a> en les associant à leurs lots. Dans{' '}
+            <a href={parametrageHref} className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Paramétrage → Répartition des charges</a>, saisissez les tantièmes généraux et vos éventuelles clés spéciales. Une fois votre première{' '}
+            <a href="/assemblees" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Assemblée générale</a> préparée et validée avec un budget approuvé, vous pouvez émettre vos{' '}
+            <a href="/appels-de-fonds" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Appels de fonds</a>.
+          </>
+        ),
+      };
+    });
+  }, [isCoproView, selectedCoproId]);
   const subjectChips = isCoproView ? SUBJECT_CHIPS_COPRO : SUBJECT_CHIPS;
   const resourceLinks = isCoproView
     ? [
