@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import SiteLogo from '@/components/ui/SiteLogo';
 import CtaLink from '@/components/ui/CtaLink';
 import { createClient } from '@/lib/supabase/client';
-import { Loader2, Menu, X } from 'lucide-react';
+import { LayoutGrid, Loader2, Menu, X } from 'lucide-react';
 
 const navLinks = [
   { href: '/#fonctionnalites', label: 'Fonctionnalités' },
@@ -35,13 +35,13 @@ export default function LandingNav() {
       if (!active) return;
       const isAuthenticated = !!result.data.session;
       setAccountHref(isAuthenticated ? '/dashboard' : '/login');
-      setAccountLabel(isAuthenticated ? 'Tableau de bord' : 'Connexion');
+      setAccountLabel(isAuthenticated ? 'Mon espace' : 'Connexion');
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       const isAuthenticated = !!session;
       setAccountHref(isAuthenticated ? '/dashboard' : '/login');
-      setAccountLabel(isAuthenticated ? 'Tableau de bord' : 'Connexion');
+      setAccountLabel(isAuthenticated ? 'Mon espace' : 'Connexion');
     });
 
     return () => {
@@ -84,9 +84,9 @@ export default function LandingNav() {
             onClick={handleAccountNavigation}
             disabled={navPending}
             aria-busy={navPending}
-            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors disabled:opacity-70"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:border-white/35 transition-colors disabled:opacity-70"
           >
-            {navPending ? <Loader2 size={14} className="animate-spin" /> : null}
+            {navPending ? <Loader2 size={14} className="animate-spin" /> : <LayoutGrid size={14} aria-hidden="true" />}
             {navPending ? 'Ouverture...' : accountLabel}
           </button>
           <CtaLink
@@ -136,9 +136,9 @@ export default function LandingNav() {
             onClick={handleAccountNavigation}
             disabled={navPending}
             aria-busy={navPending}
-            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white py-2.5 transition-colors disabled:opacity-70"
+            className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-white/10 hover:border-white/35 transition-colors disabled:opacity-70"
           >
-            {navPending ? <Loader2 size={14} className="animate-spin" /> : null}
+            {navPending ? <Loader2 size={14} className="animate-spin" /> : <LayoutGrid size={14} aria-hidden="true" />}
             {navPending ? 'Ouverture...' : accountLabel}
           </button>
         </div>

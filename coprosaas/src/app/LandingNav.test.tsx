@@ -86,10 +86,10 @@ describe('LandingNav auth navigation', () => {
     render(<LandingNav />);
 
     await waitFor(() => {
-      expect(screen.getAllByRole('button', { name: /tableau de bord/i })[0]).toBeTruthy();
+      expect(screen.getAllByRole('button', { name: /mon espace/i })[0]).toBeTruthy();
     });
 
-    fireEvent.click(screen.getAllByRole('button', { name: /tableau de bord/i })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /mon espace/i })[0]);
 
     expect(pushMock).toHaveBeenCalledWith('/dashboard');
     expect(getSessionMock).toHaveBeenCalledTimes(1);
