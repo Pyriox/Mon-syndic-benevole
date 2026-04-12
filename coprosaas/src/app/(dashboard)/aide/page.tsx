@@ -22,6 +22,7 @@ const CATEGORIES: Record<string, { label: string; bg: string; text: string }> = 
   ag:        { label: 'Assemblées',  bg: 'bg-indigo-100', text: 'text-indigo-700' },
   app:       { label: 'Application', bg: 'bg-amber-100',  text: 'text-amber-700' },
 };
+const CATEGORY_ORDER = Object.keys(CATEGORIES) as Array<keyof typeof CATEGORIES>;
 // ── Sujets prédéfinis ────────────────────────────────────────
 const SUBJECT_CHIPS = [
   'Question technique',
@@ -558,6 +559,32 @@ export default function AidePage() {
     return faqItems.filter((item) => activecat === 'all' || item.category === activecat);
   }, [activecat, faqItems]);
 
+  const faqColumns = useMemo(() => {
+    const grouped = CATEGORY_ORDER
+      .map((category) => ({
+        category,
+        items: filteredFaq.filter((item) => item.category === category),
+      }))
+      .filter((group) => group.items.length > 0);
+
+    const left: FaqEntry[] = [];
+    const right: FaqEntry[] = [];
+    let leftCount = 0;
+    let rightCount = 0;
+
+    grouped.forEach((group) => {
+      if (leftCount <= rightCount) {
+        left.push(...group.items);
+        leftCount += group.items.length;
+      } else {
+        right.push(...group.items);
+        rightCount += group.items.length;
+      }
+    });
+
+    return { left, right };
+  }, [filteredFaq]);
+
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-12">
 
@@ -632,13 +659,13 @@ export default function AidePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card padding="md">
-                {filteredFaq.slice(0, Math.ceil(filteredFaq.length / 2)).map((item, i) => (
-                  <FaqItem key={i} {...item} defaultOpen={i === 0} />
+                {faqColumns.left.map((item, i) => (
+                  <FaqItem key={`${item.category}-${item.question}`} {...item} defaultOpen={i === 0} />
                 ))}
               </Card>
               <Card padding="md">
-                {filteredFaq.slice(Math.ceil(filteredFaq.length / 2)).map((item, i) => (
-                  <FaqItem key={i} {...item} />
+                {faqColumns.right.map((item) => (
+                  <FaqItem key={`${item.category}-${item.question}`} {...item} />
                 ))}
               </Card>
             </div>
