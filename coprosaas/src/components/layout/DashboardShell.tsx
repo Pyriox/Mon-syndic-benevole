@@ -10,6 +10,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import BottomNav from './BottomNav';
 import CookiePreferencesButton from '@/components/CookiePreferencesButton';
+import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import type { UserCopropriete, AppNotification, Role } from '@/types';
 
 interface DashboardShellProps {
@@ -82,6 +83,8 @@ export default function DashboardShell({
           <CookiePreferencesButton className="text-xs text-gray-400 hover:text-gray-600 transition-colors" label="Cookies" />
         </footer>
       </div>
+
+      <ScrollToTopButton />
 
       {/* Barre de navigation fixe en bas — mobile uniquement */}
       <BottomNav

@@ -175,7 +175,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
         // Mobile : drawer fixe superposé, largeur légèrement plus grande pour le confort tactile
         'fixed top-0 left-0 bottom-0 z-40 w-72 transition-transform duration-300 ease-in-out',
         // Desktop : position normale dans le flux flex, largeur standard
-        'md:static md:w-60 md:z-auto md:translate-x-0 md:min-h-screen',
+        'md:sticky md:top-0 md:self-start md:h-screen md:w-60 md:z-auto md:translate-x-0',
         // Ouverture / fermeture mobile
         isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0',
       )}
