@@ -17,6 +17,15 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { buildDashboardExpenseSnapshot, buildDashboardUnpaidSnapshot, isDashboardUnpaidActiveStatus } from '@/lib/dashboard-data';
 import type { AppNotification } from '@/types';
 
+function assertSupabaseSuccess(
+  context: string,
+  result: { error?: { message?: string } | null },
+) {
+  if (result.error) {
+    throw new Error(`[${context}] ${result.error.message ?? 'Supabase query failed'}`);
+  }
+}
+
 function safeRevalidateTag(tag: string) {
   try {
     revalidateTag(tag, 'default');
@@ -360,15 +369,15 @@ export function getSyndicDashboardSnapshot(coproId: string) {
     const prevYear = currentYear - 1;
 
     const [
-      { count: nbLots },
-      { count: nbCoproprietaires },
-      { data: depenses },
-      { data: depensesAll },
-      { data: depensesAnPasse },
-      { data: incidents },
-      { data: assemblees },
-      { data: appelsEchus },
-      { data: appelsProvisions },
+      lotsResult,
+      coproprietairesResult,
+      depensesResult,
+      depensesAllResult,
+      depensesAnPasseResult,
+      incidentsResult,
+      assembleesResult,
+      appelsEchusResult,
+      appelsProvisionsResult,
     ] = await Promise.all([
       admin.from('lots').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
       admin.from('coproprietaires').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
@@ -421,6 +430,26 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         .gte('date_echeance', `${currentYear}-01-01`)
         .lt('date_echeance', `${currentYear + 1}-01-01`),
     ]);
+
+      assertSupabaseSuccess('dashboard lots', lotsResult);
+      assertSupabaseSuccess('dashboard coproprietaires', coproprietairesResult);
+      assertSupabaseSuccess('dashboard depenses recentes', depensesResult);
+      assertSupabaseSuccess('dashboard depenses aggregation', depensesAllResult);
+      assertSupabaseSuccess('dashboard depenses N-1', depensesAnPasseResult);
+      assertSupabaseSuccess('dashboard incidents', incidentsResult);
+      assertSupabaseSuccess('dashboard assemblees', assembleesResult);
+      assertSupabaseSuccess('dashboard appels echus', appelsEchusResult);
+      assertSupabaseSuccess('dashboard appels provisions', appelsProvisionsResult);
+
+      const nbLots = lotsResult.count;
+      const nbCoproprietaires = coproprietairesResult.count;
+      const depenses = depensesResult.data;
+      const depensesAll = depensesAllResult.data;
+      const depensesAnPasse = depensesAnPasseResult.data;
+      const incidents = incidentsResult.data;
+      const assemblees = assembleesResult.data;
+      const appelsEchus = appelsEchusResult.data;
+      const appelsProvisions = appelsProvisionsResult.data;
 
     const totalDepensesAnPasse = depensesAnPasse?.reduce((sum, depense) => sum + depense.montant, 0) ?? 0;
 
@@ -579,8 +608,8 @@ export function getCoproprietaireDashboardSnapshot(userId: string, coproId: stri
     const nowTs = Date.now();
 
     const [
-      { data: fiche },
-      { data: assembleesUpcoming },
+      ficheResult,
+      assembleesUpcomingResult,
     ] = await Promise.all([
       admin
         .from('coproprietaires')
@@ -599,16 +628,25 @@ export function getCoproprietaireDashboardSnapshot(userId: string, coproId: stri
         .limit(3),
     ]);
 
-    const { data: chargesImpayees } = fiche
+    assertSupabaseSuccess('dashboard copro fiche', ficheResult);
+    assertSupabaseSuccess('dashboard copro assemblees', assembleesUpcomingResult);
+
+    const fiche = ficheResult.data;
+    const assembleesUpcoming = assembleesUpcomingResult.data;
+
+    const chargesImpayeesResult = fiche
       ? await admin
           .from('lignes_appels_de_fonds')
           .select('id, montant_du, appels_de_fonds!inner(id, titre, date_echeance)')
           .eq('coproprietaire_id', fiche.id)
           .eq('paye', false)
           .limit(5)
-      : { data: null };
+      : { data: null, error: null };
 
-    const { data: balanceEvents } = fiche
+    assertSupabaseSuccess('dashboard copro charges impayees', chargesImpayeesResult);
+    const chargesImpayees = chargesImpayeesResult.data;
+
+    const balanceEventsResult = fiche
       ? await admin
           .from('coproprietaire_balance_events')
           .select('id, event_date, source_type, account_type, label, reason, amount, balance_after, created_at')
@@ -616,7 +654,10 @@ export function getCoproprietaireDashboardSnapshot(userId: string, coproId: stri
           .order('event_date', { ascending: false })
           .order('created_at', { ascending: false })
           .limit(12)
-      : { data: null };
+      : { data: null, error: null };
+
+    assertSupabaseSuccess('dashboard copro balance events', balanceEventsResult);
+    const balanceEvents = balanceEventsResult.data;
 
     const prochaineAG = assembleesUpcoming?.[0] ?? null;
     const joursAvantAG = prochaineAG

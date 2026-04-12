@@ -5,7 +5,6 @@
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Tableau de bord' };
 
-import { Suspense } from 'react';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
@@ -17,10 +16,6 @@ import {
   CoproDashboardCharges,
   CoproDashboardHistoryAndAssemblies,
   CoproDashboardKpis,
-  DashboardAlertSkeleton,
-  DashboardHeaderSkeleton,
-  DashboardKpiGridSkeleton,
-  DashboardPanelSkeleton,
   SyndicDashboardAlert,
   SyndicDashboardAssemblies,
   SyndicDashboardBudgetPanels,
@@ -36,17 +31,15 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <Suspense fallback={<DashboardHeaderSkeleton />}>
-        {userRole === 'copropriétaire' ? (
-          <CoproDashboardHeader
-            userId={user.id}
-            coproId={scopeId}
-            coproprieteName={copropriete?.nom ?? null}
-          />
-        ) : (
-          <SyndicDashboardHeader coproId={scopeId} coproprieteName={copropriete?.nom ?? null} />
-        )}
-      </Suspense>
+      {userRole === 'copropriétaire' ? (
+        <CoproDashboardHeader
+          userId={user.id}
+          coproId={scopeId}
+          coproprieteName={copropriete?.nom ?? null}
+        />
+      ) : (
+        <SyndicDashboardHeader coproId={scopeId} coproprieteName={copropriete?.nom ?? null} />
+      )}
 
       {copropriete && (
         <PageHelp tone={userRole === 'copropriétaire' ? 'slate' : 'blue'}>
@@ -84,56 +77,29 @@ export default async function DashboardPage() {
 
       {copropriete && userRole === 'copropriétaire' && (
         <>
-          <Suspense fallback={<DashboardAlertSkeleton />}>
-            <CoproDashboardAlert userId={user.id} coproId={scopeId} />
-          </Suspense>
+          <CoproDashboardAlert userId={user.id} coproId={scopeId} />
 
-          <Suspense fallback={<DashboardKpiGridSkeleton columns={2} />}>
-            <CoproDashboardKpis userId={user.id} coproId={scopeId} />
-          </Suspense>
+          <CoproDashboardKpis userId={user.id} coproId={scopeId} />
 
-          <Suspense fallback={<DashboardPanelSkeleton cards={1} />}>
-            <CoproDashboardCharges userId={user.id} coproId={scopeId} />
-          </Suspense>
+          <CoproDashboardCharges userId={user.id} coproId={scopeId} />
 
-          <Suspense fallback={<DashboardPanelSkeleton cards={1} />}>
-            <CoproDashboardHistoryAndAssemblies userId={user.id} coproId={scopeId} />
-          </Suspense>
+          <CoproDashboardHistoryAndAssemblies userId={user.id} coproId={scopeId} />
         </>
       )}
 
       {copropriete && userRole !== 'copropriétaire' && (
         <>
-          <Suspense fallback={<DashboardAlertSkeleton />}>
-            <SyndicDashboardAlert coproId={scopeId} />
-          </Suspense>
+          <SyndicDashboardAlert coproId={scopeId} />
 
-          <Suspense fallback={<DashboardAlertSkeleton />}>
-            <SyndicNextAction coproId={scopeId} />
-          </Suspense>
+          <SyndicNextAction coproId={scopeId} />
 
-          <Suspense
-            fallback={
-              <>
-                <DashboardKpiGridSkeleton columns={3} />
-                <DashboardKpiGridSkeleton columns={3} />
-              </>
-            }
-          >
-            <SyndicDashboardMetrics coproId={scopeId} />
-          </Suspense>
+          <SyndicDashboardMetrics coproId={scopeId} />
 
-          <Suspense fallback={<DashboardPanelSkeleton cards={2} />}>
-            <SyndicDashboardBudgetPanels coproId={scopeId} />
-          </Suspense>
+          <SyndicDashboardBudgetPanels coproId={scopeId} />
 
-          <Suspense fallback={<DashboardPanelSkeleton cards={1} />}>
-            <SyndicDashboardTasks coproId={scopeId} />
-          </Suspense>
+          <SyndicDashboardTasks coproId={scopeId} />
 
-          <Suspense fallback={<DashboardPanelSkeleton cards={1} />}>
-            <SyndicDashboardAssemblies coproId={scopeId} />
-          </Suspense>
+          <SyndicDashboardAssemblies coproId={scopeId} />
         </>
       )}
     </div>
