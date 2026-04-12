@@ -11,6 +11,7 @@ import {
   Banknote,
   BellRing,
   CalendarDays,
+  CheckCircle2,
   Minus,
   Receipt,
   Scale,
@@ -643,6 +644,101 @@ export async function SyndicDashboardTasks({ coproId }: { coproId: string }) {
         )}
       </div>
     </Card>
+  );
+}
+
+export async function SyndicNextAction({ coproId }: { coproId: string }) {
+  const data = await getSyndicDashboardSnapshot(coproId);
+
+  if (data.totalMontantImpaye > 0) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 mt-0.5">
+            <Banknote size={20} className="text-red-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">
+              {formatEuros(data.totalMontantImpaye)} d&apos;impayés à régulariser
+            </p>
+            <p className="text-xs text-gray-600 mt-0.5">
+              {data.nbImpayes} copropriétaire{data.nbImpayes > 1 ? 's' : ''} concerné{data.nbImpayes > 1 ? 's' : ''} — relancez-les ou enregistrez les paiements.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/appels-de-fonds"
+          className="shrink-0 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors"
+        >
+          Gérer les impayés →
+        </Link>
+      </div>
+    );
+  }
+
+  if (data.incidentsAnciens.length > 0) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 mt-0.5">
+            <AlertTriangle size={20} className="text-orange-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">
+              {data.incidentsAnciens.length} incident{data.incidentsAnciens.length > 1 ? 's' : ''} sans suivi depuis 7+ jours
+            </p>
+            <p className="text-xs text-gray-600 mt-0.5">
+              Mettez à jour ces incidents pour garder une trace et informer les copropriétaires.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/incidents"
+          className="shrink-0 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors"
+        >
+          Voir les incidents →
+        </Link>
+      </div>
+    );
+  }
+
+  if (data.agUrgente && data.prochaineAG && data.joursAvantAG !== null) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 mt-0.5">
+            <CalendarDays size={20} className="text-amber-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">
+              AG dans J&minus;{data.joursAvantAG} — préparez l&apos;ordre du jour
+            </p>
+            <p className="text-xs text-gray-600 mt-0.5">
+              {data.prochaineAG.titre} &middot;{' '}
+              {new Date(data.prochaineAG.date_ag).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+            </p>
+          </div>
+        </div>
+        <Link
+          href={`/assemblees/${data.prochaineAG.id}`}
+          className="shrink-0 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors"
+        >
+          Préparer l&apos;AG →
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
+      <div className="p-2 bg-green-100 rounded-lg shrink-0">
+        <CheckCircle2 size={18} className="text-green-600" />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-green-800">Tout est à jour</p>
+        <p className="text-xs text-green-700 mt-0.5">Aucune action urgente — la copropriété est bien gérée.</p>
+      </div>
+    </div>
   );
 }
 

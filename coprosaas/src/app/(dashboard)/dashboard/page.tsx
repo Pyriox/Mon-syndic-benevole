@@ -25,6 +25,7 @@ import {
   SyndicDashboardHeader,
   SyndicDashboardMetrics,
   SyndicDashboardTasks,
+  SyndicNextAction,
 } from './DashboardSections';
 
 export default async function DashboardPage() {
@@ -103,6 +104,10 @@ export default async function DashboardPage() {
         <>
           <Suspense fallback={<DashboardAlertSkeleton />}>
             <SyndicDashboardAlert coproId={scopeId} />
+          </Suspense>
+
+          <Suspense fallback={<DashboardAlertSkeleton />}>
+            <SyndicNextAction coproId={scopeId} />
           </Suspense>
 
           <Suspense

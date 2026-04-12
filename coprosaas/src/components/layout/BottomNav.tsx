@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Users, Wallet, FileText,
+  LayoutDashboard, Wallet, FileText,
   CalendarDays, AlertTriangle, MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,7 @@ export default function BottomNav({ userRole, onMenuOpen }: BottomNavProps) {
 
   const syndicItems = [
     { href: '/dashboard',         label: 'Accueil',   icon: LayoutDashboard },
-    { href: '/coproprietaires',   label: 'Membres',   icon: Users },
+    { href: '/assemblees',        label: 'AG',        icon: CalendarDays },
     { href: '/appels-de-fonds',   label: 'Finances',  icon: Wallet },
     { href: '/incidents',         label: 'Incidents', icon: AlertTriangle },
   ];

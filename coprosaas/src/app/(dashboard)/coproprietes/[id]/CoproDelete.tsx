@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Trash2, AlertTriangle } from 'lucide-react';
+import { Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface CoproDeleteProps {
   coproprieteId: string;
@@ -22,6 +22,7 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [deleted, setDeleted] = useState(false);
 
   const handleDelete = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,8 +85,11 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
       return;
     }
 
-    router.push('/coproprietes');
-    router.refresh();
+    setDeleted(true);
+    setTimeout(() => {
+      router.push('/coproprietes');
+      router.refresh();
+    }, 1500);
   };
 
   return (
@@ -101,6 +105,17 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
       </button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Supprimer la copropriété" size="md">
+        {deleted ? (
+          <div className="flex flex-col items-center gap-4 py-6 text-center">
+            <div className="p-3 bg-green-100 rounded-full">
+              <CheckCircle2 size={32} className="text-green-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Copropriété supprimée</p>
+              <p className="text-sm text-gray-500 mt-1">Redirection en cours…</p>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleDelete} className="space-y-5">
 
           {/* Avertissement */}
@@ -163,6 +178,7 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
             </Button>
           </div>
         </form>
+        )}
       </Modal>
     </>
   );

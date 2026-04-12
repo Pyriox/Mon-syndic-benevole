@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
-import { Pencil, Home, Mail, Lock, Check, X, Trash2, AlertTriangle } from 'lucide-react';
+import { Pencil, Home, Mail, Lock, Check, X, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 /** Normalise un numéro de téléphone français au format XX XX XX XX XX */
 function normalizePhone(raw: string): string {
@@ -714,6 +714,7 @@ export function DeleteAccountSection() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [deleted, setDeleted] = useState(false);
 
   const handleDelete = async () => {
     setLoading(true);
@@ -729,7 +730,8 @@ export function DeleteAccountSection() {
       setLoading(false);
       return;
     }
-    router.push('/login');
+    setDeleted(true);
+    setTimeout(() => router.push('/login'), 1500);
   };
 
   return (
@@ -743,6 +745,17 @@ export function DeleteAccountSection() {
       </button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Supprimer mon compte" size="md">
+        {deleted ? (
+          <div className="flex flex-col items-center gap-4 py-6 text-center">
+            <div className="p-3 bg-green-100 rounded-full">
+              <CheckCircle2 size={32} className="text-green-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Compte supprimé</p>
+              <p className="text-sm text-gray-500 mt-1">Déconnexion en cours…</p>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-5">
           <div className="flex gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
             <AlertTriangle size={20} className="text-red-500 shrink-0 mt-0.5" />
@@ -792,6 +805,7 @@ export function DeleteAccountSection() {
             </Button>
           </div>
         </div>
+        )}
       </Modal>
     </>
   );
