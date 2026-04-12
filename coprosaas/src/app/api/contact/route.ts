@@ -8,6 +8,13 @@ import { trackResendSendResult } from '@/lib/email-delivery';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'contact@mon-syndic-benevole.fr'}>`;
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? 'contact@mon-syndic-benevole.fr';
+const COPRO_TECHNICAL_TOPICS = new Set([
+  'probleme de connexion',
+  'invitation ou e-mail non recu',
+  'document ou avis inaccessible',
+  'bug sur mon espace',
+  'autre probleme technique',
+]);
 
 export async function POST(req: NextRequest) {
   // Validation basique de la source (Content-Type JSON)
@@ -22,14 +29,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 });
   }
 
-  let body: { name?: string; email?: string; subject?: string; message?: string; userId?: string };
+  let body: {
+    name?: string;
+    email?: string;
+    subject?: string;
+    message?: string;
+    userId?: string;
+    supportRole?: string;
+    supportTopic?: string;
+  };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { name, email, subject, message, userId } = body;
+  const { name, email, subject, message, userId, supportRole, supportTopic } = body;
 
   // Validation des champs obligatoires
   if (!name?.trim() || !email?.trim() || !subject?.trim() || !message?.trim()) {
@@ -46,6 +61,54 @@ export async function POST(req: NextRequest) {
   if (name.length > 200 || subject.length > 500 || message.length > 5000) {
     return NextResponse.json({ message: 'Contenu trop long' }, { status: 422 });
   }
+
+  const normalizedSupportRole = normalizeSupportRole(supportRole);
+  const normalizedSupportTopic = normalizeSupportTopic(supportTopic);
+
+  let authenticatedUserId: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    authenticatedUserId = user?.id ?? null;
+  } catch {
+    authenticatedUserId = null;
+  }
+
+  let effectiveSupportRole = normalizedSupportRole;
+  if (authenticatedUserId) {
+    try {
+      const admin = createAdminClient();
+      const [{ data: syndicAccess }, { data: coproAccess }] = await Promise.all([
+        admin.from('coproprietes').select('id').eq('syndic_id', authenticatedUserId).maybeSingle(),
+        admin.from('coproprietaires').select('id').eq('user_id', authenticatedUserId).maybeSingle(),
+      ]);
+
+      const hasSyndicAccess = Boolean(syndicAccess);
+      const hasCoproAccess = Boolean(coproAccess);
+
+      if (normalizedSupportRole === 'coproprietaire' && hasCoproAccess) {
+        effectiveSupportRole = 'coproprietaire';
+      } else if (normalizedSupportRole === 'syndic' && hasSyndicAccess) {
+        effectiveSupportRole = 'syndic';
+      } else if (!hasSyndicAccess && hasCoproAccess) {
+        effectiveSupportRole = 'coproprietaire';
+      } else if (hasSyndicAccess) {
+        effectiveSupportRole = 'syndic';
+      }
+    } catch (roleErr) {
+      console.warn('[contact] role detection error:', roleErr);
+    }
+  }
+
+  if (effectiveSupportRole === 'coproprietaire' && !COPRO_TECHNICAL_TOPICS.has(normalizedSupportTopic)) {
+    return NextResponse.json({
+      message: 'Le support copropriétaire traite uniquement les problèmes techniques. Pour toute question sur votre solde, vos charges ou vos appels de fonds, contactez votre syndic.',
+    }, { status: 422 });
+  }
+
+  const supportContextLabel = effectiveSupportRole === 'coproprietaire'
+    ? 'Copropriétaire · support technique'
+    : 'Syndic / contact général';
 
   const html = `
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937">
@@ -68,6 +131,10 @@ export async function POST(req: NextRequest) {
       <tr>
         <td style="padding:8px 0;color:#6b7280;font-size:13px;font-weight:600">Sujet</td>
         <td style="padding:8px 0;font-size:14px;color:#111827">${escapeHtml(subject)}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;border-top:1px solid #f3f4f6;color:#6b7280;font-size:13px;font-weight:600">Contexte</td>
+        <td style="padding:8px 0;border-top:1px solid #f3f4f6;font-size:14px;color:#111827">${escapeHtml(supportContextLabel)}</td>
       </tr>
     </table>
     <h3 style="font-size:13px;font-weight:600;color:#6b7280;margin:0 0 10px;text-transform:uppercase;letter-spacing:.05em">Message</h3>
@@ -118,7 +185,7 @@ export async function POST(req: NextRequest) {
     const admin = createAdminClient();
 
     // Résoudre le user_id réel si non fourni (via session serveur)
-    let resolvedUserId: string | null = userId?.trim() || null;
+    let resolvedUserId: string | null = userId?.trim() || authenticatedUserId || null;
     if (!resolvedUserId) {
       try {
         const supabase = await createClient();
@@ -174,4 +241,19 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function normalizeSupportRole(value: string | undefined): 'syndic' | 'coproprietaire' | null {
+  const normalized = normalizeSupportTopic(value);
+  if (normalized === 'syndic') return 'syndic';
+  if (normalized === 'coproprietaire') return 'coproprietaire';
+  return null;
+}
+
+function normalizeSupportTopic(value: string | undefined): string {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
 }

@@ -87,4 +87,60 @@ describe('POST /api/contact', () => {
     expect(insertTicket).toHaveBeenCalled();
     expect(insertMessage).toHaveBeenCalled();
   });
+
+  it('refuse un ticket coproprietaire hors support technique', async () => {
+    createClientMock.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-copro' } } }) },
+    });
+
+    const insertTicket = vi.fn();
+    const adminFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'coproprietes') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+      }
+      if (table === 'coproprietaires') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'cp-1' }, error: null }),
+            }),
+          }),
+        };
+      }
+      if (table === 'support_tickets') {
+        return { insert: insertTicket };
+      }
+      return { insert: vi.fn() };
+    });
+
+    createAdminClientMock.mockReturnValue({ from: adminFrom });
+
+    const { POST } = await import('./route');
+    const res = await POST(
+      new Request('http://localhost/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Alice Martin',
+          email: 'alice@example.com',
+          subject: 'Question sur mon solde',
+          message: 'Pourquoi mon appel de fonds est-il aussi élevé ?',
+          supportRole: 'copropriétaire',
+          supportTopic: 'Question sur mon solde',
+        }),
+      }) as unknown as NextRequest,
+    );
+
+    const json = await res.json();
+
+    expect(res.status).toBe(422);
+    expect(json.message).toMatch(/support copropriétaire traite uniquement les problèmes techniques/i);
+    expect(insertTicket).not.toHaveBeenCalled();
+  });
 });

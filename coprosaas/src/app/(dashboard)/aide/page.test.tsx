@@ -88,6 +88,9 @@ describe('AidePage', () => {
     });
 
     expect(screen.queryByText(/Comment inviter mes copropriétaires sur la plateforme/i)).toBeNull();
+    expect(screen.getByText(/Pour les questions sur vos charges, vos appels de fonds ou les décisions de la copropriété, contactez directement votre syndic/i)).not.toBeNull();
+    expect(screen.getByRole('heading', { name: /support technique/i })).not.toBeNull();
+    expect(screen.getByText(/Le support traite uniquement les problèmes techniques liés à votre espace/i)).not.toBeNull();
   });
 
   it('priorise la vue syndic quand l’utilisateur gère aussi la copropriété sélectionnée', async () => {

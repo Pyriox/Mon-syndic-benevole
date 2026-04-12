@@ -33,11 +33,11 @@ const SUBJECT_CHIPS = [
 ];
 
 const SUBJECT_CHIPS_COPRO = [
-  'Question sur mon solde',
-  'Document ou convocation',
   'Problème de connexion',
-  'Signaler une anomalie',
-  'Autre',
+  'Invitation ou e-mail non reçu',
+  'Document ou avis inaccessible',
+  'Bug sur mon espace',
+  'Autre problème technique',
 ];
 
 const MAX_MESSAGE = 3000;
@@ -186,12 +186,12 @@ const FAQ_COPRO: FaqEntry[] = [
   {
     category: 'app',
     question: 'Je ne vois pas un document ou un avis de fonds, que faire ?',
-    answer: 'Vérifiez d’abord que la bonne copropriété est sélectionnée. Si un document manque encore, contactez votre syndic ou utilisez le formulaire de support sur cette page.',
+    answer: 'Vérifiez d’abord que la bonne copropriété est sélectionnée. Si le document n’a pas été partagé ou si vous avez une question sur son contenu, contactez votre syndic. Utilisez le support uniquement si le document devrait être visible mais ne s’ouvre pas ou affiche une erreur.',
   },
   {
     category: 'app',
     question: 'Comment poser une question ou signaler un problème ?',
-    answer: 'Depuis cette page, vous pouvez envoyer un message au support. Si votre demande concerne votre dossier ou votre copropriété, pensez à préciser le contexte afin de recevoir une réponse plus rapide.',
+    answer: 'Le support copropriétaire traite uniquement les problèmes techniques : connexion, invitation, e-mail non reçu, document inaccessible ou bug d’affichage. Pour toute question sur votre solde, vos charges, vos appels de fonds ou les décisions de la copropriété, contactez directement votre syndic.',
   },
 ];
 
@@ -251,6 +251,7 @@ export default function AidePage() {
   const [email, setEmail]     = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [supportTopic, setSupportTopic] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent]       = useState(false);
   const [error, setError]     = useState('');
@@ -428,16 +429,28 @@ export default function AidePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isCoproView && !supportTopic) {
+      setError('Sélectionnez un motif technique avant d’envoyer votre demande.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, subject, message, userId }),
+        body: JSON.stringify({
+          name,
+          email,
+          subject,
+          message,
+          userId,
+          supportRole: userRole,
+          supportTopic,
+        }),
       });
-      if (!res.ok) throw new Error();
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message ?? 'Erreur');
       setSent(true);
       // Ajouter le nouveau ticket à la liste
       if (data.ticketId) {
@@ -449,8 +462,8 @@ export default function AidePage() {
           updated_at: new Date().toISOString(),
         }, ...prev]);
       }
-    } catch {
-      setError('Une erreur est survenue. Veuillez réessayer ou nous contacter directement par email.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue. Veuillez réessayer ou nous contacter directement par email.');
     } finally {
       setLoading(false);
     }
@@ -492,8 +505,8 @@ export default function AidePage() {
         {
           num: '4',
           color: 'bg-amber-100 text-amber-700',
-          title: 'Contactez le support si besoin',
-          body: 'Si vous constatez une anomalie ou un document manquant, utilisez le formulaire ci-dessous pour nous écrire. Nous pourrons vous guider rapidement.',
+          title: 'Contactez le support technique si besoin',
+          body: 'Utilisez le formulaire ci-dessous pour un problème de connexion, d’invitation, d’e-mail non reçu ou de document inaccessible. Pour toute question sur votre dossier, votre syndic reste votre interlocuteur.',
         },
       ]
     : [
@@ -560,7 +573,7 @@ export default function AidePage() {
             <div>
               <p className="text-sm font-semibold text-blue-900">Dans votre espace copropriétaire</p>
               <p className="text-sm text-blue-800 mt-1">
-                Vous pouvez consulter votre solde, télécharger vos documents partagés, suivre les assemblées générales et contacter le support si nécessaire.
+                Vous pouvez consulter votre solde, télécharger vos documents partagés et suivre les assemblées générales. Pour les questions sur vos charges, vos appels de fonds ou les décisions de la copropriété, contactez directement votre syndic.
               </p>
             </div>
           </div>
@@ -642,17 +655,27 @@ export default function AidePage() {
             <MessageSquare size={16} className="text-blue-600" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-gray-900">Support</h2>
+            <h2 className="text-base font-semibold text-gray-900">{isCoproView ? 'Support technique' : 'Support'}</h2>
             <p className="text-xs text-gray-400">
-              {isCoproView ? 'Questions sur votre espace, vos documents ou votre accès' : 'Vos demandes et notre formulaire de contact'}
+              {isCoproView ? 'Connexion, invitation, accès aux documents et bugs d’affichage' : 'Vos demandes et notre formulaire de contact'}
             </p>
           </div>
         </div>
 
+        {isCoproView && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <p className="text-sm font-semibold text-amber-900">Ce que traite le support copropriétaire</p>
+            <p className="mt-1 text-sm text-amber-800">
+              Le support traite uniquement les problèmes techniques liés à votre espace : accès, invitation, e-mail non reçu, document inaccessible ou bug.
+              Pour toute question sur votre solde, vos appels de fonds, vos charges, les documents partagés ou les décisions de la copropriété, contactez votre syndic.
+            </p>
+          </div>
+        )}
+
         {/* Mes tickets support */}
         {(tickets.length > 0 || ticketsLoading) && (
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-            <p className="text-sm font-semibold text-gray-700 mb-3">Mes tickets</p>
+            <p className="text-sm font-semibold text-gray-700 mb-3">{isCoproView ? 'Mes tickets techniques' : 'Mes tickets'}</p>
             {ticketsLoading ? (
               <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
                 <RefreshCw size={14} className="animate-spin" /> Chargement…
@@ -781,7 +804,11 @@ export default function AidePage() {
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-gray-900">Envoyer un message</h3>
-                  <p className="text-xs text-gray-400">Nous répondons sous 24 h (jours ouvrés)</p>
+                  <p className="text-xs text-gray-400">
+                    {isCoproView
+                      ? 'Support technique uniquement. Réponse sous 24 h ouvrées.'
+                      : 'Nous répondons sous 24 h (jours ouvrés)'}
+                  </p>
                 </div>
               </div>
 
@@ -795,7 +822,7 @@ export default function AidePage() {
                     Merci pour votre message. Notre équipe vous répondra dans les meilleurs délais.
                   </p>
                   <button
-                    onClick={() => { setSent(false); setSubject(''); setMessage(''); }}
+                    onClick={() => { setSent(false); setSubject(''); setMessage(''); setSupportTopic(''); }}
                     className="text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
                   >
                     Envoyer un autre message
@@ -830,9 +857,12 @@ export default function AidePage() {
                         <button
                           key={chip}
                           type="button"
-                          onClick={() => setSubject(chip)}
+                          onClick={() => {
+                            setSupportTopic(chip);
+                            setSubject(chip);
+                          }}
                           className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                            subject === chip
+                            supportTopic === chip
                               ? 'bg-blue-600 text-white border-blue-600'
                               : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
                           }`}
@@ -846,7 +876,8 @@ export default function AidePage() {
                       type="text"
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      placeholder="Ex : Question sur les appels de fonds"
+                      placeholder={isCoproView ? 'Ex : Document inaccessible depuis mon espace' : 'Ex : Question sur les appels de fonds'}
+                      hint={isCoproView ? 'Décrivez brièvement le problème technique rencontré.' : undefined}
                       required
                     />
                   </div>
@@ -856,7 +887,8 @@ export default function AidePage() {
                       label="Votre message"
                       value={message}
                       onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE))}
-                      placeholder="Décrivez votre question ou problème en détail…"
+                      placeholder={isCoproView ? 'Indiquez la page concernée, ce que vous essayiez de faire, le message affiché et, si possible, votre appareil ou navigateur.' : 'Décrivez votre question ou problème en détail…'}
+                      hint={isCoproView ? 'N’ajoutez pas ici de contestation de charges ou de question sur votre dossier : ces demandes doivent être adressées à votre syndic.' : undefined}
                       rows={5}
                       required
                     />
@@ -882,8 +914,19 @@ export default function AidePage() {
           {/* Colonne droite */}
           <div className="space-y-4">
             <Card padding="md">
-              <h3 className="text-sm font-semibold text-gray-800 mb-3">Contact direct</h3>
+              <h3 className="text-sm font-semibold text-gray-800 mb-3">{isCoproView ? 'Contact et orientation' : 'Contact direct'}</h3>
               <ul className="space-y-3">
+                {isCoproView && (
+                  <li className="flex items-start gap-2.5">
+                    <div className="w-7 h-7 rounded-md bg-amber-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <Info size={13} className="text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-700">Questions sur votre dossier</p>
+                      <p className="text-xs text-gray-500">Pour votre solde, vos charges, un appel de fonds ou un document partagé, contactez directement votre syndic.</p>
+                    </div>
+                  </li>
+                )}
                 <li className="flex items-start gap-2.5">
                   <div className="w-7 h-7 rounded-md bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
                     <MessageSquare size={13} className="text-blue-500" />
