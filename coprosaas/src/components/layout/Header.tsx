@@ -86,6 +86,8 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
 
   // Ferme le panel si clic en dehors ou touche Escape
   useEffect(() => {
+    if (!open) return undefined;
+
     const clickHandler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
@@ -98,7 +100,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
       document.removeEventListener('mousedown', clickHandler);
       document.removeEventListener('keydown', keyHandler);
     };
-  }, []);
+  }, [open]);
 
   const nbNotifs = items.length;
   const unreadItems = items.filter((n) => n.isRead !== true);

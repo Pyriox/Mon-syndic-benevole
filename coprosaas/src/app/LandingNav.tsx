@@ -27,9 +27,15 @@ export default function LandingNav() {
     const supabase = createClient();
     let active = true;
 
-    void router.prefetch('/login');
-    void router.prefetch('/dashboard');
-    void router.prefetch('/register');
+    const prefetch = () => {
+      void router.prefetch('/login');
+      void router.prefetch('/dashboard');
+      void router.prefetch('/register');
+    };
+
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(prefetch, { timeout: 1200 })
+      : window.setTimeout(prefetch, 300);
 
     supabase.auth.getSession().then((result) => {
       if (!active) return;
@@ -46,6 +52,11 @@ export default function LandingNav() {
 
     return () => {
       active = false;
+      if (typeof idle === 'number') {
+        window.clearTimeout(idle);
+      } else if (window.cancelIdleCallback) {
+        window.cancelIdleCallback(idle);
+      }
       listener.subscription.unsubscribe();
     };
   }, [router]);
@@ -54,6 +65,8 @@ export default function LandingNav() {
     setNavPending(true);
     setOpen(false);
     router.push(accountHref);
+    // Filet de sécurité si la navigation est interrompue.
+    window.setTimeout(() => setNavPending(false), 3000);
   };
 
   return (
