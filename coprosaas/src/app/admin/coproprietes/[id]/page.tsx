@@ -7,10 +7,10 @@ import { redirect, notFound } from 'next/navigation';
 import { isAdminUser } from '@/lib/admin-config';
 import { ArrowLeft, History, TrendingDown, TrendingUp, Users } from 'lucide-react';
 import Link from 'next/link';
-import AdminCoproprietaireActions from '../../AdminCoproprietaireActions';
+import AdminCoproprietaireActionsLazy from '../../AdminCoproprietaireActionsLazy';
 import AdminPagination from '../../AdminPagination';
 import AdminSearch from '../../AdminSearch';
-import CoproprietaireBalanceHistory from '@/app/(dashboard)/coproprietaires/CoproprietaireBalanceHistory';
+import CoproprietaireBalanceHistoryLazy from '../../CoproprietaireBalanceHistoryLazy';
 import { resolveAdminBackHref } from '@/lib/admin-list-params';
 import { formatAdminDateTime } from '@/lib/admin-format';
 import { buildAdminCoproFinancialView, getAdminBalanceSourceLabel } from '@/lib/admin-copro-finance';
@@ -307,13 +307,13 @@ export default async function AdminCoproDetail({
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <CoproprietaireBalanceHistory
+                          <CoproprietaireBalanceHistoryLazy
                             coproprietaireId={cp.id}
                             displayName={displayName}
                             currentBalance={cp.solde ?? 0}
                             initialEvents={financeView.eventsByCoproprietaire[cp.id] ?? []}
                           />
-                          <AdminCoproprietaireActions cp={cp} />
+                          <AdminCoproprietaireActionsLazy cp={cp} />
                         </div>
                       </td>
                     </tr>

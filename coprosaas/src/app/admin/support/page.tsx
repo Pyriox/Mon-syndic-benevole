@@ -5,7 +5,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import AdminSupportShell from './AdminSupportShell';
+import AdminSupportShellLazy from './AdminSupportShellLazy';
 
 import { isAdminUser } from '@/lib/admin-config';
 import { getAdminSupportTickets } from '@/lib/admin-support';
@@ -26,7 +26,7 @@ export default async function AdminSupportPage({
   const tickets = await getAdminSupportTickets(admin);
 
   return (
-    <AdminSupportShell
+    <AdminSupportShellLazy
       initialTickets={tickets}
       initialSearch={q ?? ''}
       initialFilterStatus={status === 'ouvert' || status === 'en_cours' || status === 'resolu' ? status : 'all'}

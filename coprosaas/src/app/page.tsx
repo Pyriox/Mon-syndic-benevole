@@ -11,9 +11,8 @@ import {
 } from 'lucide-react';
 import SiteLogo from '@/components/ui/SiteLogo';
 import LandingNav from './LandingNav';
-import LandingStickyCTA from './LandingStickyCTA';
+import PublicEnhancements from './PublicEnhancements';
 import CtaLink from '@/components/ui/CtaLink';
-import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import PublicFooter from '@/components/layout/PublicFooter';
 
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
@@ -1127,8 +1126,7 @@ export default function HomePage() {
       </section>
       </main>
 
-      <LandingStickyCTA />
-      <ScrollToTopButton />
+      <PublicEnhancements />
 
       <PublicFooter />
 

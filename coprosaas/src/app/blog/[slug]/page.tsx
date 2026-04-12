@@ -13,23 +13,16 @@ import PublicFooter from '@/components/layout/PublicFooter';
 export const dynamic = 'force-static';
 export const revalidate = 86400;
 
-// ── Content components ───────────────────────────────────────────────────────────
-import ArticleGerer from '../_content/gerer-copropriete-sans-syndic-professionnel';
-import ArticleAppel from '../_content/appel-de-fonds-copropriete-calcul-repartition';
-import ArticleFonds from '../_content/fonds-de-travaux-alur-obligations-montant-gestion';
-import ArticleCommentDevenir from '../_content/comment-devenir-syndic-benevole';
-import ArticleObligations from '../_content/obligations-syndic-benevole';
-import ArticleLogiciel from '../_content/logiciel-syndic-benevole';
-import ArticleMigrer from '../_content/migrer-vers-mon-syndic-benevole';
+type ArticleModule = { default: ComponentType };
 
-const contentMap: Record<string, ComponentType> = {
-  'gerer-copropriete-sans-syndic-professionnel': ArticleGerer,
-  'appel-de-fonds-copropriete-calcul-repartition': ArticleAppel,
-  'fonds-de-travaux-alur-obligations-montant-gestion': ArticleFonds,
-  'comment-devenir-syndic-benevole': ArticleCommentDevenir,
-  'obligations-syndic-benevole': ArticleObligations,
-  'logiciel-syndic-benevole': ArticleLogiciel,
-  'migrer-vers-mon-syndic-benevole': ArticleMigrer,
+const contentLoaders: Record<string, () => Promise<ArticleModule>> = {
+  'gerer-copropriete-sans-syndic-professionnel': () => import('../_content/gerer-copropriete-sans-syndic-professionnel'),
+  'appel-de-fonds-copropriete-calcul-repartition': () => import('../_content/appel-de-fonds-copropriete-calcul-repartition'),
+  'fonds-de-travaux-alur-obligations-montant-gestion': () => import('../_content/fonds-de-travaux-alur-obligations-montant-gestion'),
+  'comment-devenir-syndic-benevole': () => import('../_content/comment-devenir-syndic-benevole'),
+  'obligations-syndic-benevole': () => import('../_content/obligations-syndic-benevole'),
+  'logiciel-syndic-benevole': () => import('../_content/logiciel-syndic-benevole'),
+  'migrer-vers-mon-syndic-benevole': () => import('../_content/migrer-vers-mon-syndic-benevole'),
 };
 
 // ── Static params ────────────────────────────────────────────────────────────
@@ -76,8 +69,10 @@ export default async function ArticlePage({
   const post = getPost(slug);
   if (!post) notFound();
 
-  const ContentComponent = contentMap[slug];
-  if (!ContentComponent) notFound();
+  const loadContent = contentLoaders[slug];
+  if (!loadContent) notFound();
+
+  const { default: ContentComponent } = await loadContent();
 
   // Related articles (others)
   const related = posts.filter((p) => p.slug !== slug).slice(0, 2);
