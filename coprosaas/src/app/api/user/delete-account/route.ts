@@ -13,6 +13,17 @@ export async function POST(req: NextRequest) {
   if (body?.confirmText !== CONFIRM_TEXT) {
     return NextResponse.json({ error: 'Texte de confirmation incorrect.' }, { status: 400 });
   }
+  if (!body?.password || typeof body.password !== 'string') {
+    return NextResponse.json({ error: 'Mot de passe requis.' }, { status: 400 });
+  }
+
+  const { error: passwordError } = await supabase.auth.signInWithPassword({
+    email: user.email ?? '',
+    password: body.password,
+  });
+  if (passwordError) {
+    return NextResponse.json({ error: 'Mot de passe incorrect.' }, { status: 401 });
+  }
 
   const admin = createAdminClient();
 

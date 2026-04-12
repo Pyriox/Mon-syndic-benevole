@@ -19,6 +19,7 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
 
   const [isOpen, setIsOpen] = useState(false);
   const [confirmName, setConfirmName] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -36,6 +37,16 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
+
+    const { error: passwordError } = await supabase.auth.signInWithPassword({
+      email: user.email ?? '',
+      password,
+    });
+    if (passwordError) {
+      setError('Mot de passe incorrect.');
+      setLoading(false);
+      return;
+    }
 
     // Suppression en cascade : coproprietaires, lots, dépenses, appels, incidents, assemblées, documents, dossiers
     await supabase.from('repartitions_depenses').delete().in(
@@ -80,7 +91,7 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
   return (
     <>
       <button
-        onClick={() => { setIsOpen(true); setConfirmName(''); setError(''); }}
+        onClick={() => { setIsOpen(true); setConfirmName(''); setPassword(''); setError(''); }}
         className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg
                    text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300
                    transition-all duration-150"
@@ -125,6 +136,17 @@ export default function CoproDelete({ coproprieteId, coproprieteNom }: CoproDele
               placeholder={coproprieteNom}
               required
               autoFocus
+            />
+          </div>
+
+          <div>
+            <Input
+              label="Mot de passe actuel"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Votre mot de passe"
+              required
             />
           </div>
 

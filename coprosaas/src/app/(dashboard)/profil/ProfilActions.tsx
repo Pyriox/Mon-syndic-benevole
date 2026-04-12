@@ -711,6 +711,7 @@ export function DeleteAccountSection() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -720,7 +721,7 @@ export function DeleteAccountSection() {
     const res = await fetch('/api/user/delete-account', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ confirmText }),
+      body: JSON.stringify({ confirmText, password }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -734,7 +735,7 @@ export function DeleteAccountSection() {
   return (
     <>
       <button
-        onClick={() => { setIsOpen(true); setConfirmText(''); setError(''); }}
+        onClick={() => { setIsOpen(true); setConfirmText(''); setPassword(''); setError(''); }}
         className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-600 transition-colors duration-150 shrink-0"
       >
         <Trash2 size={12} />
@@ -764,6 +765,17 @@ export function DeleteAccountSection() {
             />
           </div>
 
+          <div>
+            <Input
+              label="Mot de passe actuel"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Votre mot de passe"
+              required
+            />
+          </div>
+
           {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
 
           <div className="flex gap-3 pt-1">
@@ -771,7 +783,7 @@ export function DeleteAccountSection() {
               variant="danger"
               loading={loading}
               onClick={handleDelete}
-              disabled={confirmText !== CONFIRM_TEXT}
+              disabled={confirmText !== CONFIRM_TEXT || password.trim().length === 0}
             >
               <Trash2 size={14} /> Supprimer définitivement
             </Button>
