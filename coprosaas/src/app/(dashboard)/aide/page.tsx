@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeDashboardViewMode, resolveDashboardRole } from '@/lib/dashboard-view-mode';
@@ -76,7 +76,7 @@ function StatusBadge({ status }: { status: TicketStatus }) {
 // ── Données FAQ ──────────────────────────────────────────────
 type FaqEntry = {
   question: string;
-  answer: string;
+  answer: ReactNode;
   category: keyof typeof CATEGORIES;
   links?: Array<{ href: string; label: string }>;
 };
@@ -85,13 +85,7 @@ const FAQ: FaqEntry[] = [
   {
     category: 'demarrage',
     question: 'Quelles sont les étapes pour configurer ma copropriété et émettre mon premier appel de fonds ?',
-    answer: "Après avoir créé votre copropriété, suivez l’ordre du menu : commencez par ajouter les lots, puis créez les copropriétaires et associez-les à leurs lots. Ouvrez ensuite « Paramétrage », puis « Répartition des charges » pour renseigner les tantièmes généraux et vos éventuelles clés spéciales. Dans le fonctionnement normal, le premier appel de fonds intervient après une AG préparée puis terminée.",
-    links: [
-      { href: '/lots', label: 'Lots' },
-      { href: '/coproprietaires', label: 'Copropriétaires' },
-      { href: '/assemblees', label: 'Assemblées' },
-      { href: '/appels-de-fonds', label: 'Appels de fonds' },
-    ],
+    answer: <>Commencez par renseigner vos <a href="/lots" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Lots</a>, puis ajoutez les <a href="/coproprietaires" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Copropriétaires</a> en les associant à leurs lots. Dans <a href="/coproprietes" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Paramétrage → Répartition des charges</a>, saisissez les tantièmes généraux et vos éventuelles clés spéciales. Une fois votre première <a href="/assemblees" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Assemblée générale</a> préparée et validée avec un budget approuvé, vous pouvez émettre vos <a href="/appels-de-fonds" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">Appels de fonds</a>.</>,
   },
   {
     category: 'demarrage',
