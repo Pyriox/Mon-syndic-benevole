@@ -221,7 +221,7 @@ export default function HomePage() {
 
           <div className="inline-flex items-center gap-2.5 bg-yellow-400/15 border border-yellow-400/40 text-yellow-300 text-sm sm:text-lg font-bold px-5 sm:px-7 py-3 rounded-full mb-6 sm:mb-10">
             <Banknote size={18} className="shrink-0" />
-            Économisez jusqu&apos;à 2&nbsp;700&nbsp;€/an vs un syndic professionnel
+            Économisez jusqu&apos;à 2&nbsp;600&nbsp;€/an vs un syndic professionnel
           </div>
 
           <p className="text-base sm:text-xl text-blue-100/80 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
