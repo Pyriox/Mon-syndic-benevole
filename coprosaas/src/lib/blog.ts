@@ -308,7 +308,7 @@ export const posts: BlogPost[] = [
       },
       {
         q: "Combien coûte un logiciel de gestion pour syndic bénévole ?",
-        a: "Mon Syndic Bénévole coûte moins de 25 € par mois pour l'ensemble de la copropriété, quel que soit le nombre de lots. C'est à comparer à 1 500–5 000 € par an pour un syndic professionnel sur un immeuble de 10 à 20 lots.",
+        a: "Mon Syndic Bénévole coûte à partir de 30 € par mois pour l'ensemble de la copropriété, quel que soit le nombre de lots. C'est à comparer à 1 500–5 000 € par an pour un syndic professionnel sur un immeuble de 10 à 20 lots.",
       },
       {
         q: "Un logiciel de syndic bénévole est-il conforme aux obligations légales ?",

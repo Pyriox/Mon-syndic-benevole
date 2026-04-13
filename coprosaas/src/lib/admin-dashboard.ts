@@ -1,7 +1,7 @@
 import { hasAddonAccess, type CoproAddon } from '@/lib/subscription';
 
-export const ADMIN_MRR_PRICES: Record<string, number> = { essentiel: 25, confort: 30, illimite: 45 };
-export const ADMIN_ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
+export const ADMIN_MRR_PRICES: Record<string, number> = { essentiel: 30, confort: 45, illimite: 80 };
+export const ADMIN_ARR_PRICES: Record<string, number> = { essentiel: 360, confort: 540, illimite: 960 };
 export const ADMIN_ADDON_MRR_PRICES: Record<string, number> = { charges_speciales: 8.25 };
 export const ADMIN_ADDON_ARR_PRICES: Record<string, number> = { charges_speciales: 99 };
 

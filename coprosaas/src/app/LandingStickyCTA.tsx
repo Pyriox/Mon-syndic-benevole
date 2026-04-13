@@ -66,7 +66,7 @@ export default function LandingStickyCTA() {
     >
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-gray-900 leading-tight">14 jours gratuits</p>
-        <p className="text-xs text-gray-500 truncate">Sans engagement · À partir de 300 €/an</p>
+        <p className="text-xs text-gray-500 truncate">Sans engagement · À partir de 360 €/an</p>
       </div>
       <CtaLink
         href="/register"

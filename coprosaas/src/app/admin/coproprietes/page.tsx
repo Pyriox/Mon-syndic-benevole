@@ -26,8 +26,8 @@ import { formatAdminCurrency, formatAdminDate } from '@/lib/admin-format';
 import { stripe } from '@/lib/stripe';
 import { PlanBadge } from '../AdminBadges';
 
-const MRR_PRICES: Record<string, number> = { essentiel: 25, confort: 30, illimite: 45 };
-const ARR_PRICES: Record<string, number> = { essentiel: 300, confort: 360, illimite: 540 };
+const MRR_PRICES: Record<string, number> = { essentiel: 30, confort: 45, illimite: 80 };
+const ARR_PRICES: Record<string, number> = { essentiel: 360, confort: 540, illimite: 960 };
 
 
 type CoproRow = {
@@ -668,9 +668,9 @@ export default async function AdminCopropietesPage({
               <p className="text-sm font-semibold text-gray-800 mb-4">Répartition des plans actifs</p>
               <div className="space-y-4">
                 {([
-                  { id: 'essentiel', label: 'Essentiel', price: '25 €/mois', color: 'bg-blue-500',   textColor: 'text-blue-700' },
-                  { id: 'confort',   label: 'Confort',   price: '30 €/mois', color: 'bg-indigo-500', textColor: 'text-indigo-700' },
-                  { id: 'illimite',  label: 'Illimité',  price: '45 €/mois', color: 'bg-purple-500', textColor: 'text-purple-700' },
+                  { id: 'essentiel', label: 'Essentiel', price: '30 €/mois', color: 'bg-blue-500',   textColor: 'text-blue-700' },
+                  { id: 'confort',   label: 'Confort',   price: '45 €/mois', color: 'bg-indigo-500', textColor: 'text-indigo-700' },
+                  { id: 'illimite',  label: 'Illimité',  price: '80 €/mois', color: 'bg-purple-500', textColor: 'text-purple-700' },
                 ] as const).map(({ id, label, price, color, textColor }) => {
                   const nb = planBreakdown[id] ?? 0;
                   const pct = nbActifs > 0 ? Math.round((nb / nbActifs) * 100) : 0;

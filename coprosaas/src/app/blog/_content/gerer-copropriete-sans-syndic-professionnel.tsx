@@ -145,13 +145,13 @@ export default function ArticleGererCopropriete() {
         <li className={li}><strong className={strong}>Total : 3 000 à 3 700 € par an</strong></li>
       </ul>
       <p className={p}>
-        Avec un logiciel de gestion dédié (~25 €/mois), l&apos;économie réelle pour la copropriété : <strong className={strong}>2 700 € à 3 400 € par an</strong>, soit 225 à 283 € par mois. Réparti entre les copropriétaires, ça représente 225 à 308 € d&apos;économie annuelle chacun sur un immeuble de 12 lots.
+        Avec un logiciel de gestion dédié (~30 €/mois), l&apos;économie réelle pour la copropriété : <strong className={strong}>2 640 € à 3 340 € par an</strong>, soit 220 à 278 € par mois. Réparti entre les copropriétaires, ça représente 220 à 303 € d&apos;économie annuelle chacun sur un immeuble de 12 lots.
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Un syndic professionnel coûte 150 à 250 € par lot et par an</p>
         <p className="text-sm text-gray-600 mb-4">
-          Mon Syndic Bénévole revient à moins de 25 €/mois pour toute la copropriété — quel que soit le nombre de lots. Appels de fonds calculés automatiquement, suivi des paiements, AG préparée en un clic. 14 jours gratuits, sans engagement.
+          Mon Syndic Bénévole revient à moins de 30 €/mois pour toute la copropriété — quel que soit le nombre de lots. Appels de fonds calculés automatiquement, suivi des paiements, AG préparée en un clic. 14 jours gratuits, sans engagement.
         </p>
         <CtaLink
           ctaLocation="blog_article"

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     absolute: 'Logiciel syndic bénévole : appels de fonds, AG, documents | Mon Syndic Bénévole',
   },
   description:
-    'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 300 €/an.',
+    'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 360 €/an.',
   keywords: [
     'syndic bénévole',
     'logiciel syndic bénévole',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Logiciel syndic bénévole : appels de fonds, AG, documents | Mon Syndic Bénévole',
     description:
-      'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 300 €/an.',
+      'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 360 €/an.',
     url: 'https://www.mon-syndic-benevole.fr',
     siteName: 'Mon Syndic Bénévole',
     locale: 'fr_FR',
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Logiciel syndic bénévole : appels de fonds, AG, documents | Mon Syndic Bénévole',
     description:
-      'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 300 €/an.',
+      'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 360 €/an.',
     images: ['/opengraph-image'],
   },
 };
@@ -71,7 +71,7 @@ const planFeatures = [
 ];
 
 const comparisonRows = [
-  ['Coût annuel (10 lots)', '1 500 – 3 000 €', 'À partir de 300 €'],
+  ['Coût annuel (10 lots)', '1 500 – 3 000 €', 'À partir de 360 €'],
   ['Engagement', 'Contrat 1–3 ans', 'Résiliable à tout moment'],
   ['Accès à vos données', 'Sur demande', 'Temps réel, 24h/24'],
   ['Délai de réponse', 'Plusieurs jours', 'Immédiat'],
@@ -104,11 +104,11 @@ export default function HomePage() {
         operatingSystem: 'Web',
         offers: {
           '@type': 'Offer',
-          price: '300',
+          price: '360',
           priceCurrency: 'EUR',
           priceSpecification: {
             '@type': 'UnitPriceSpecification',
-            price: '300',
+            price: '360',
             priceCurrency: 'EUR',
             unitText: 'YEAR',
           },
@@ -392,7 +392,7 @@ export default function HomePage() {
           <div className="text-center mb-14">
             <h2 id="solution-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Tout ce que fait un syndic professionnel —{' '}
-              <span className="text-blue-600">pour 300&nbsp;€/an</span>
+              <span className="text-blue-600">pour 360&nbsp;€/an</span>
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
               Mon Syndic Bénévole vous donne les mêmes outils qu&apos;un cabinet syndic, sans le contrat ni les frais.
@@ -908,7 +908,7 @@ export default function HomePage() {
                 color: 'text-blue-400',
               },
               {
-                value: "jusqu'à 2 700 €",
+                value: "jusqu'à 2 640 €",
                 label: 'économisés par an',
                 sublabel: 'vs un cabinet syndic professionnel',
                 Icon: Banknote,
@@ -954,7 +954,7 @@ export default function HomePage() {
             <div className="text-2xl shrink-0">💡</div>
             <div>
               <p className="text-sm font-bold text-amber-900">Un syndic professionnel coûte entre 1 500 € et 3 000 €/an.</p>
-              <p className="text-sm text-amber-700 mt-0.5">Mon Syndic Bénévole : à partir de <span className="font-bold">300 €/an</span>. Soit jusqu&apos;à <span className="font-bold text-amber-900">2 700 € d&apos;économies</span> chaque année — à fonctionnalités équivalentes.</p>
+              <p className="text-sm text-amber-700 mt-0.5">Mon Syndic Bénévole : à partir de <span className="font-bold">360 €/an</span>. Soit jusqu&apos;à <span className="font-bold text-amber-900">2 640 € d&apos;économies</span> chaque année — à fonctionnalités équivalentes.</p>
             </div>
           </div>
 
@@ -970,10 +970,10 @@ export default function HomePage() {
                 <p className="text-blue-200 text-sm font-semibold mb-1">Essentiel</p>
                 <p className="text-blue-100/70 text-xs mb-4">10 lots inclus</p>
                 <div className="flex items-end gap-1.5 mb-1">
-                    <span className="text-5xl font-extrabold">300 €</span>
+                    <span className="text-5xl font-extrabold">360 €</span>
                     <span className="text-blue-200 pb-1.5">/an</span>
                   </div>
-                  <p className="text-blue-200/80 text-xs mb-6">soit <span className="font-semibold text-white">25 €/mois</span></p>
+                  <p className="text-blue-200/80 text-xs mb-6">soit <span className="font-semibold text-white">30 €/mois</span></p>
                 <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-white text-blue-700 font-bold py-3.5 rounded-2xl hover:bg-blue-50 transition-colors mt-auto">
                   Commencer gratuitement →
                 </CtaLink>
@@ -988,10 +988,10 @@ export default function HomePage() {
               <p className="text-emerald-700 text-sm font-semibold mb-1">Confort</p>
               <p className="text-gray-500 text-xs mb-4">20 lots inclus</p>
               <div className="flex items-end gap-1.5 mb-1">
-                <span className="text-5xl font-extrabold text-gray-900">450 €</span>
+                <span className="text-5xl font-extrabold text-gray-900">540 €</span>
                 <span className="text-gray-500 pb-1.5">/an</span>
               </div>
-              <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">37,50 €/mois</span></p>
+              <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">45 €/mois</span></p>
               <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-emerald-600 text-white font-bold py-3.5 rounded-2xl hover:bg-emerald-700 transition-colors mt-auto">
                 Commencer gratuitement →
               </CtaLink>
@@ -1005,10 +1005,10 @@ export default function HomePage() {
               <p className="text-violet-700 text-sm font-semibold mb-1">Illimité</p>
               <p className="text-gray-500 text-xs mb-4">Lots illimités</p>
               <div className="flex items-end gap-1.5 mb-1">
-                <span className="text-5xl font-extrabold text-gray-900">600 €</span>
+                <span className="text-5xl font-extrabold text-gray-900">960 €</span>
                 <span className="text-gray-500 pb-1.5">/an</span>
               </div>
-              <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">50 €/mois</span></p>
+              <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">80 €/mois</span></p>
               <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-violet-600 text-white font-bold py-3.5 rounded-2xl hover:bg-violet-700 transition-colors mt-auto">
                 Commencer gratuitement →
               </CtaLink>
@@ -1017,7 +1017,7 @@ export default function HomePage() {
           </div>
 
           <p className="text-center text-gray-500 text-sm md:hidden mb-4">
-            Autres formules : <strong>Confort 450 €/an</strong> (20 lots) et <strong>Illimité 600 €/an</strong>.
+            Autres formules : <strong>Confort 540 €/an</strong> (20 lots) et <strong>Illimité 960 €/an</strong>.
           </p>
 
           <p className="text-center text-gray-500 text-sm mb-6">Les 3 plans offrent exactement les mêmes fonctionnalités — seule différence&nbsp;: le nombre de lots inclus.</p>

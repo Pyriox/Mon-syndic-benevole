@@ -15,7 +15,7 @@ const geist = Geist({
 
 const APP_URL = "https://www.mon-syndic-benevole.fr";
 const TITLE   = "Logiciel syndic bénévole : gestion de copropriété simple | Mon Syndic Bénévole";
-const DESC    = "Logiciel pour syndic bénévole : gérez appels de fonds, charges, AG, documents et incidents simplement. Essai gratuit 14 jours. Dès 300 €/an.";
+const DESC    = "Logiciel pour syndic bénévole : gérez appels de fonds, charges, AG, documents et incidents simplement. Essai gratuit 14 jours. Dès 360 €/an.";
 
 export const viewport: Viewport = {
   width: 'device-width',
