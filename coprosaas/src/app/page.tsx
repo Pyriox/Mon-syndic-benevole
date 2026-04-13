@@ -312,7 +312,7 @@ export default function HomePage() {
                   <p className="font-bold text-white">Mon Syndic Bénévole</p>
                 </div>
                 <div className="mb-5">
-                  <p className="text-4xl sm:text-5xl font-extrabold text-white">300 €</p>
+                  <p className="text-4xl sm:text-5xl font-extrabold text-white">360 €</p>
                   <p className="text-sm text-blue-200 mt-1">par an &middot; plan Essentiel &middot; 10 lots</p>
                 </div>
                 <ul className="space-y-2">
@@ -333,7 +333,7 @@ export default function HomePage() {
                   <Banknote size={18} className="text-yellow-300 shrink-0" />
                   <div>
                     <p className="text-xs text-blue-200 font-medium">Économies annuelles</p>
-                    <p className="text-xl font-extrabold text-yellow-300">jusqu&apos;à 2 700 €/an</p>
+                    <p className="text-xl font-extrabold text-yellow-300">jusqu&apos;à 2 600 €/an</p>
                   </div>
                 </div>
               </div>
@@ -908,7 +908,7 @@ export default function HomePage() {
                 color: 'text-blue-400',
               },
               {
-                value: "jusqu'à 2 640 €",
+                value: "jusqu'à 2 600 €",
                 label: 'économisés par an',
                 sublabel: 'vs un cabinet syndic professionnel',
                 Icon: Banknote,
@@ -954,7 +954,7 @@ export default function HomePage() {
             <div className="text-2xl shrink-0">💡</div>
             <div>
               <p className="text-sm font-bold text-amber-900">Un syndic professionnel coûte entre 1 500 € et 3 000 €/an.</p>
-              <p className="text-sm text-amber-700 mt-0.5">Mon Syndic Bénévole : à partir de <span className="font-bold">360 €/an</span>. Soit jusqu&apos;à <span className="font-bold text-amber-900">2 640 € d&apos;économies</span> chaque année — à fonctionnalités équivalentes.</p>
+              <p className="text-sm text-amber-700 mt-0.5">Mon Syndic Bénévole : à partir de <span className="font-bold">360 €/an</span>. Soit jusqu&apos;à <span className="font-bold text-amber-900">2 600 € d&apos;économies</span> chaque année — à fonctionnalités équivalentes.</p>
             </div>
           </div>
 
@@ -1100,7 +1100,7 @@ export default function HomePage() {
         <div className="hidden sm:block absolute bottom-0 right-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-5 leading-tight">
-            Prêt à économiser jusqu&apos;à 2 700 €<br />
+            Prêt à économiser jusqu&apos;à 2 600 €<br />
             <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
               sur votre copropriété ?
             </span>
@@ -1134,4 +1134,7 @@ export default function HomePage() {
     </>
   );
 }
+
+
+
 
