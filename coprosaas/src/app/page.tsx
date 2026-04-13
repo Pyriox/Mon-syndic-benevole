@@ -1100,7 +1100,7 @@ export default function HomePage() {
         <div className="hidden sm:block absolute bottom-0 right-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-5 leading-tight">
-            Prêt à économiser jusqu&apos;à 2 600 €<br />
+            Prêt à économiser jusqu&apos;à <span className="whitespace-nowrap">2 600 €</span><br />
             <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
               sur votre copropriété ?
             </span>
