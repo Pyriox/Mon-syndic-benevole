@@ -242,7 +242,7 @@ export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingRemin
 
   const body = hasNoCopro
     ? `Vous avez confirmé votre compte, excellente nouvelle. En créant votre copropriété maintenant, vous pourrez piloter vos obligations, centraliser vos documents et gagner un temps précieux dès cette semaine.`
-    : `Votre copropriété est créée, c'est un très bon début. Vous avez actuellement <strong>${coproprietairesCount}</strong> copropriétaire${coproprietairesCount > 1 ? 's' : ''} ; ajoutez-en au moins 2 pour débloquer un suivi plus fluide de vos actions et de votre communication.`;
+    : `Votre copropriété est créée, c'est un très bon début. Vous avez actuellement <strong>${coproprietairesCount}</strong> copropriétaire${coproprietairesCount > 1 ? 's' : ''} ; ajoutez vos copropriétaires pour débloquer un suivi plus fluide de vos actions et de votre communication.`;
 
   const stepsSummary = hasNoCopro
     ? `<div style="margin:16px 0 0;padding:14px 16px;border:1px solid ${COLOR.border};border-radius:10px;background:#f8fafc">
@@ -256,7 +256,7 @@ export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingRemin
     : `<div style="margin:16px 0 0;padding:14px 16px;border:1px solid ${COLOR.border};border-radius:10px;background:#f8fafc">
   <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:${COLOR.text}">Résumé des étapes à effectuer</p>
   <ol style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:${COLOR.text}">
-    <li>Ajouter au moins 2 copropriétaires (nom, e-mail, lots).</li>
+    <li>Ajouter les copropriétaires (nom, e-mail, lots).</li>
     <li>Contrôler rapidement les données saisies.</li>
     <li>Poursuivre avec vos appels de fonds et documents.</li>
   </ol>

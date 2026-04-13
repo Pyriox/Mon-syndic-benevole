@@ -111,7 +111,7 @@ const FAQ: FaqEntry[] = [
   {
     category: 'finances',
     question: "Comment enregistrer une dépense et la répartir entre copropriétaires ?",
-    answer: "Depuis la page « Dépenses », ajoutez la dépense avec sa catégorie et son montant. La répartition au prorata des tantièmes est calculée instantanément. Vous pouvez ensuite marquer les paiements reçus un par un ou en masse.",
+    answer: "Depuis la page « Dépenses », cliquez sur « Ajouter », puis renseignez le titre, la catégorie, le montant et la date. L'application calcule automatiquement la répartition entre copropriétaires selon les tantièmes (ou selon la clé choisie si vous utilisez les charges spéciales). Les montants sont ensuite repris dans la régularisation annuelle ; les paiements, eux, se suivent dans « Appels de fonds ».",
   },
   {
     category: 'finances',

@@ -85,7 +85,7 @@ export default async function Image() {
               fontWeight: '600',
             }}
           >
-            ✓ 14 jours gratuits
+            14 jours gratuits
           </div>
           <div
             style={{
@@ -98,7 +98,7 @@ export default async function Image() {
               fontWeight: '600',
             }}
           >
-            ✓ À partir de 360 €/an
+            A partir de 360 euros/an
           </div>
           <div
             style={{
@@ -111,7 +111,7 @@ export default async function Image() {
               fontWeight: '600',
             }}
           >
-            ✓ Sans engagement
+            Sans engagement
           </div>
         </div>
       </div>

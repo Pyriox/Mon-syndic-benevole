@@ -32,7 +32,7 @@ import {
 } from '@/lib/emails/syndic-notifications';
 import { buildTrialEndingEmail, buildTrialEndingSubject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
-import { resolveOnboardingKinds } from '@/lib/onboarding-reminders';
+import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
 import { getCronAuthState } from '@/lib/cron-auth';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
@@ -106,8 +106,8 @@ export async function GET(req: NextRequest) {
   const dateJ7  = addDays(today, 7);   // appels avec échéance dans 7 jours
   const dateJ1  = addDays(today, -1);  // appels échus hier, encore impayés
   const dateJ15 = addDays(today, -15); // appels avec échéance il y a 15 jours
-  const dateM2  = addDays(today, -2);  // onboarding syndic : J+2 après confirmation de compte
-  const dateM7  = addDays(today, -7);  // onboarding syndic : J+7 après confirmation de compte
+  const onboardingJ2Window = resolveOnboardingConfirmationWindow({ kind: 'j2', referenceDate: today });
+  const onboardingJ7Window = resolveOnboardingConfirmationWindow({ kind: 'j7', referenceDate: today });
 
   // ── Avis J-30 : appels publiés dont l'email n'a pas encore été envoyé ──
   // .gte('date_echeance', todayStr) empêche d'envoyer un "avis J-30" pour un
@@ -487,7 +487,7 @@ export async function GET(req: NextRequest) {
   if (onboardingKinds.includes('j2')) {
     onboardingJ2Sent = await sendSyndicOnboardingReminders(
       supabase,
-      dateM2,
+      onboardingJ2Window,
       'j2',
       {
         force: onboardingForce,
@@ -500,7 +500,7 @@ export async function GET(req: NextRequest) {
   if (onboardingKinds.includes('j7')) {
     onboardingJ7Sent = await sendSyndicOnboardingReminders(
       supabase,
-      dateM7,
+      onboardingJ7Window,
       'j7',
       {
         force: onboardingForce,
@@ -619,25 +619,35 @@ type OnboardingCopro = {
   syndic_id: string;
 };
 
-function dateRangeUtc(dateIso: string): { start: string; end: string } {
-  const start = `${dateIso}T00:00:00.000Z`;
-  const d = new Date(`${dateIso}T00:00:00.000Z`);
-  d.setUTCDate(d.getUTCDate() + 1);
-  const end = d.toISOString();
-  return { start, end };
+function buildUtcRangeBounds(startDateIso: string | null, endDateIso: string): { start: string | null; end: string } {
+  const endDate = new Date(`${endDateIso}T00:00:00.000Z`);
+  endDate.setUTCDate(endDate.getUTCDate() + 1);
+
+  return {
+    start: startDateIso ? `${startDateIso}T00:00:00.000Z` : null,
+    end: endDate.toISOString(),
+  };
 }
 
 async function getConfirmedEmailsForDate(
   supabase: ReturnType<typeof createServerClient>,
-  dateIso: string,
+  window: {
+    startDateIso: string | null;
+    endDateIso: string;
+  },
 ): Promise<string[]> {
-  const { start, end } = dateRangeUtc(dateIso);
-  const { data } = await supabase
+  const { start, end } = buildUtcRangeBounds(window.startDateIso, window.endDateIso);
+  let query = supabase
     .from('user_events')
     .select('user_email')
     .eq('event_type', 'account_confirmed')
-    .gte('created_at', start)
     .lt('created_at', end);
+
+  if (start) {
+    query = query.gte('created_at', start);
+  }
+
+  const { data } = await query;
 
   const rows = (data ?? []) as Array<{ user_email: string | null }>;
   return [...new Set(rows.map((row) => String(row.user_email ?? '').trim().toLowerCase()).filter((email): email is string => email.length > 0))];
@@ -661,7 +671,10 @@ async function getAlreadyRemindedEmails(
 
 async function sendSyndicOnboardingReminders(
   supabase: ReturnType<typeof createServerClient>,
-  targetDateIso: string,
+  confirmationWindow: {
+    startDateIso: string | null;
+    endDateIso: string;
+  },
   kind: SyndicOnboardingReminderKind,
   options?: {
     force?: boolean;
@@ -674,7 +687,7 @@ async function sendSyndicOnboardingReminders(
     .filter((email) => email.length > 0);
   const confirmedEmails = targetEmails.length > 0
     ? targetEmails
-    : await getConfirmedEmailsForDate(supabase, targetDateIso);
+    : await getConfirmedEmailsForDate(supabase, confirmationWindow);
   if (!confirmedEmails.length) return 0;
 
   const eventType = kind === 'j2'
