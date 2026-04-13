@@ -102,8 +102,9 @@ export default async function AGDetailPage({ params }: Props) {
 
   const isVisio = ag.lieu === 'Visioconférence';
   const specialChargesEnabled = hasChargesSpecialesAddon(coproAddons ?? []);
+  const isLaunched = ag.statut === 'en_cours' || ag.statut === 'terminee' || Boolean(ag.convocation_envoyee_le);
   const canVote = isSyndic && canWrite && (ag.statut === 'en_cours' || ag.statut === 'terminee');
-  const canEdit = isSyndic && canWrite && (ag.statut === 'creation' || ag.statut === 'planifiee');
+  const canEdit = isSyndic && canWrite && (ag.statut === 'creation' || ag.statut === 'planifiee') && !isLaunched;
   const needsConvocation = ag.statut === 'planifiee' && !ag.convocation_envoyee_le;
   const hasPresences = (presences ?? []).length > 0;
   const toutesResolutionsVotees =
@@ -236,11 +237,11 @@ export default async function AGDetailPage({ params }: Props) {
           )}
 
           {/* Actions de gestion (modification / suppression) */}
-          {(ag.statut === 'creation' || ag.statut === 'planifiee') && (
+          {(ag.statut === 'creation' || ag.statut === 'planifiee' || ag.statut === 'en_cours') && (
             <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
-              <AGEditInfos agId={id} dateAg={ag.date_ag} lieu={ag.lieu} />
+              {canEdit && <AGEditInfos agId={id} dateAg={ag.date_ag} lieu={ag.lieu} />}
               {ag.statut === 'creation' && <AGDelete agId={id} />}
-              {ag.statut === 'planifiee' && <AGAnnuler agId={id} />}
+              {(ag.statut === 'planifiee' || ag.statut === 'en_cours') && <AGAnnuler agId={id} />}
             </div>
           )}
 

@@ -81,6 +81,8 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
   const router = useRouter();
   const supabase = createClient();
   const currentStatut = statut ?? appel.statut;
+  const isCancelled = currentStatut === 'annulee';
+  const canEditCall = isSyndic && canWrite && !isCancelled;
 
   useEffect(() => {
     setStatut(appel.statut ?? null);
@@ -162,11 +164,11 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
 
   // Auto-generate répartition when accordion opens with no lines (publié only)
   useEffect(() => {
-    if (open && lignesCount === 0 && isSyndic && !autoRegenRef.current && !regenerating && currentStatut !== 'brouillon') {
+    if (open && lignesCount === 0 && canEditCall && !autoRegenRef.current && !regenerating && currentStatut !== 'brouillon') {
       autoRegenRef.current = true;
       handleRegenerate();
     }
-  }, [currentStatut, lignesCount, open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [canEditCall, currentStatut, lignesCount, open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRegenerate = async () => {
     setRegenerating(true);
@@ -435,6 +437,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
               {displayedNbImpayes > 0 && (
                 <Badge variant="danger">{displayedNbImpayes} impayé{displayedNbImpayes > 1 ? 's' : ''}</Badge>
               )}
+
+              {isCancelled && (
+                <Badge variant="warning">Annulé</Badge>
+              )}
             </div>
 
             {/* Montant + échéance sur une ligne */}
@@ -460,7 +466,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
 
           {/* Actions */}
           <div className="flex items-center gap-1 flex-wrap sm:shrink-0 sm:flex-nowrap">
-            {isSyndic && canWrite && (
+            {canEditCall && (
               currentStatut === 'brouillon' ? (
                 <button
                   type="button"
@@ -490,11 +496,11 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
               ) : null
             )}
             <AppelFondsPDF appel={appel} />
-            {isSyndic && canWrite && (
+            {canEditCall && (
               <button
                 type="button"
                 onClick={() => { setShowDeleteConfirm(true); setDeleteMsg(''); }}
-                title="Supprimer cet appel de fonds"
+                title={currentStatut === 'brouillon' ? 'Supprimer cet appel de fonds' : 'Annuler cet appel de fonds'}
                 className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <Trash2 size={15} />
@@ -519,9 +525,9 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
             <Trash2 size={15} className="shrink-0 text-red-500" />
             <span>
               {currentStatut === 'publie'
-                ? <>Supprimer « <strong>{appel.titre}</strong> » ? Les soldes des copropriétaires non payés seront rétablis.</>
+                ? <>Annuler « <strong>{appel.titre}</strong> » ? Les soldes des copropriétaires non payés seront rétablis et l&apos;historique sera conservé.</>
                 : currentStatut === 'confirme'
-                  ? <>Supprimer « <strong>{appel.titre}</strong> » ? Les soldes des copropriétaires marqués payés seront ajustés.</>
+                  ? <>Annuler « <strong>{appel.titre}</strong> » ? L&apos;appel restera visible en historique avec le statut annulé.</>
                   : <>Supprimer l&apos;appel en préparation « <strong>{appel.titre}</strong> » ? Cette action est irréversible.</>
               }
             </span>
@@ -533,7 +539,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
               disabled={deleting}
               className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
             >
-              {deleting ? <Loader2 size={11} className="animate-spin inline" /> : 'Supprimer'}
+              {deleting ? <Loader2 size={11} className="animate-spin inline" /> : currentStatut === 'brouillon' ? 'Supprimer' : 'Annuler l\'appel'}
             </button>
             <button
               type="button"
@@ -690,7 +696,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                   <p className="text-sm text-gray-400">
                     Aucune répartition générée.
                   </p>
-                  {isSyndic && canWrite && (
+                  {canEditCall && (
                     <button
                       type="button"
                       onClick={handleRegenerate}
@@ -712,7 +718,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
               appel={appel}
               lignes={localLignes}
               isSyndic={isSyndic}
-              canWrite={canWrite}
+              canWrite={canWrite && !isCancelled}
               onLignesChange={setLocalLignes}
             />
           )}

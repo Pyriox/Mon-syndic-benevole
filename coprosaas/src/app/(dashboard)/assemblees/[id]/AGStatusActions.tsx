@@ -94,14 +94,22 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
     setLoading(true);
     setError('');
     const newLieu = isVisio ? 'Visioconférence' : lieuVal.trim() || null;
-    const { error: dbError } = await supabase
+    const { data, error: dbError } = await supabase
       .from('assemblees_generales')
       .update({
         date_ag: toParisISOString(dateVal, heureVal, minuteVal),
         lieu: newLieu,
       })
-      .eq('id', agId);
+      .eq('id', agId)
+      .in('statut', ['creation', 'planifiee'])
+      .is('convocation_envoyee_le', null)
+      .select('id');
     if (dbError) { setError(dbError.message); setLoading(false); return; }
+    if (!data || data.length === 0) {
+      setError('Cette AG est déjà lancée. La modification est bloquée.');
+      setLoading(false);
+      return;
+    }
     setIsOpen(false);
     replaceCurrentRoute(router);
     setLoading(false);
@@ -181,11 +189,28 @@ export function AGDelete({ agId }: { agId: string }) {
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleDelete = async () => {
     setLoading(true);
+    setError('');
+
+    const { data: ag, error: agError } = await supabase
+      .from('assemblees_generales')
+      .select('id')
+      .eq('id', agId)
+      .eq('statut', 'creation')
+      .is('convocation_envoyee_le', null)
+      .maybeSingle();
+
+    if (agError || !ag) {
+      setError('Cette AG ne peut plus être supprimée. Utilisez l\'annulation tracée.');
+      setLoading(false);
+      return;
+    }
+
     await supabase.from('resolutions').delete().eq('ag_id', agId);
-    await supabase.from('assemblees_generales').delete().eq('id', agId);
+    await supabase.from('assemblees_generales').delete().eq('id', agId).eq('statut', 'creation');
     router.push('/assemblees');
   };
 
@@ -209,6 +234,7 @@ export function AGDelete({ agId }: { agId: string }) {
             </p>
           </div>
           <p className="text-sm text-gray-600">Êtes-vous sûr de vouloir supprimer cette assemblée générale ?</p>
+          {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button variant="danger" loading={loading} onClick={handleDelete}>
               <Trash2 size={14} /> Supprimer définitivement
@@ -224,13 +250,20 @@ export function AGDelete({ agId }: { agId: string }) {
 // ---- Annulation (seulement en statut 'planifiee' — garde une trace) ----
 export function AGAnnuler({ agId }: { agId: string }) {
   const router = useRouter();
-  const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleAnnuler = async () => {
     setLoading(true);
-    await supabase.from('assemblees_generales').update({ statut: 'annulee' }).eq('id', agId);
+    setError('');
+    const res = await fetch(`/api/ag/${agId}/annuler`, { method: 'POST' });
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}));
+      setError(payload.message ?? 'Impossible d\'annuler cette AG.');
+      setLoading(false);
+      return;
+    }
     replaceCurrentRoute(router);
     setLoading(false);
     setIsOpen(false);
@@ -256,6 +289,7 @@ export function AGAnnuler({ agId }: { agId: string }) {
             </p>
           </div>
           <p className="text-sm text-gray-600">Confirmer l&apos;annulation de cette assemblée générale ?</p>
+          {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button variant="danger" loading={loading} onClick={handleAnnuler}>
               <XCircle size={14} /> Annuler l&apos;AG

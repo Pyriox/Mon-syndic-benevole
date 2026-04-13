@@ -49,6 +49,14 @@ export async function POST(
     return NextResponse.json({ message: 'Abonnement requis pour envoyer des avis de fonds' }, { status: 403 });
   }
 
+  if (appel.statut === 'annulee') {
+    return NextResponse.json({ message: 'Cet appel est annulé. Aucun envoi n\'est possible.' }, { status: 409 });
+  }
+
+  if (appel.statut === 'brouillon') {
+    return NextResponse.json({ message: 'Cet appel est en brouillon. Émettez-le avant envoi.' }, { status: 409 });
+  }
+
   // Récupérer les lignes avec copropriétaires (email + user_id pour fallback auth)
   const { data: lignes } = await supabase
     .from('lignes_appels_de_fonds')

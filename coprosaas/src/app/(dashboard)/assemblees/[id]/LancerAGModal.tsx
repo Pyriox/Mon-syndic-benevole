@@ -121,7 +121,8 @@ export default function LancerAGModal({
       await supabase
         .from('assemblees_generales')
         .update({ statut: 'en_cours' })
-        .eq('id', agId);
+        .eq('id', agId)
+        .eq('statut', 'planifiee');
     }
 
     setIsOpen(false);

@@ -48,6 +48,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     return NextResponse.json({ message: 'Abonnement requis pour envoyer des convocations' }, { status: 403 });
   }
 
+  if (ag.statut === 'annulee') {
+    return NextResponse.json({ message: 'Cette AG est annulée. Envoi de convocation impossible.' }, { status: 409 });
+  }
+
+  if (ag.statut !== 'planifiee') {
+    return NextResponse.json({ message: 'La convocation ne peut être envoyée que pour une AG planifiée.' }, { status: 409 });
+  }
+
   const { data: resolutions } = await supabase
     .from('resolutions')
     .select('numero, titre, description')

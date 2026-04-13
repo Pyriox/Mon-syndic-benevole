@@ -101,6 +101,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     return NextResponse.json({ message: 'Abonnement requis pour envoyer le PV' }, { status: 403 });
   }
 
+  if (ag.statut === 'annulee') {
+    return NextResponse.json({ message: 'Cette AG est annulée. Envoi du PV impossible.' }, { status: 409 });
+  }
+
+  if (ag.statut !== 'terminee') {
+    return NextResponse.json({ message: 'Le PV ne peut être envoyé que pour une AG terminée.' }, { status: 409 });
+  }
+
   const { data: resolutions } = await supabase
     .from('resolutions')
     .select('numero, titre, statut, voix_pour, voix_contre, voix_abstention')

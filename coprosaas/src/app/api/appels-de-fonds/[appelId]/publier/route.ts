@@ -59,8 +59,8 @@ export async function POST(
     return NextResponse.json({ message: 'Abonnement requis pour publier un appel de fonds' }, { status: 403 });
   }
 
-  if (appel.statut === 'publie') {
-    return NextResponse.json({ message: 'Cet appel est déjà publié.' }, { status: 409 });
+  if (appel.statut !== 'brouillon') {
+    return NextResponse.json({ message: 'Seuls les appels en brouillon peuvent être émis.' }, { status: 409 });
   }
 
   // Lots avec copropriétaires assignés

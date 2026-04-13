@@ -60,6 +60,14 @@ export async function POST(
     return NextResponse.json({ message: 'AG déjà clôturée' }, { status: 409 });
   }
 
+  if (ag.statut === 'annulee') {
+    return NextResponse.json({ message: 'AG annulée : clôture impossible.' }, { status: 409 });
+  }
+
+  if (ag.statut !== 'en_cours') {
+    return NextResponse.json({ message: 'Seule une AG en cours peut être clôturée.' }, { status: 409 });
+  }
+
   // Clôture l'AG
   const { error: updateError } = await supabase
     .from('assemblees_generales')

@@ -185,7 +185,7 @@ export interface Document {
 }
 
 // --- Assemblée Générale ---
-export type StatutAG = 'planifiee' | 'en_cours' | 'terminee';
+export type StatutAG = 'creation' | 'planifiee' | 'en_cours' | 'terminee' | 'annulee';
 
 export interface AssembleeGenerale {
   id: string;
