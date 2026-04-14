@@ -1,3 +1,24 @@
+  // Fonction utilitaire pour soumettre une action POST (réassignation syndic)
+  const postAction = async (body: Record<string, unknown>, successMessage = 'OK') => {
+    setError('');
+    setPendingAction('reassign_syndic');
+
+    const response = await fetch('/api/admin/coproprietes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    setPendingAction(null);
+    if (response.ok) {
+      setDone(successMessage);
+      router.refresh();
+      return true;
+    }
+
+    setError(`Erreur : ${await getErrorMessage(response)}`);
+    return false;
+  };
 // ============================================================
 // Composant client : actions par copropriété dans la table admin
 // ============================================================
