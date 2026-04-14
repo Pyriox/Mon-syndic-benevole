@@ -53,16 +53,30 @@ export async function GET(req: NextRequest) {
     .not('convocation_envoyee_le', 'is', null)
     .is('convocation_rappel_j7_at', null);
 
+  const allAgRows = [...(agsJ14 ?? []), ...(agsJ7 ?? [])];
+  const allCoproIds = [...new Set(allAgRows.map((r) => r.copropriete_id))];
+
+  // Chargement en batch de tous les copropriétaires concernés (évite N+1 requêtes)
+  const recipientsByCopro = new Map<string, Array<{ id: string; nom: string; prenom: string; email: string; user_id: string | null }>>();
+  if (allCoproIds.length > 0) {
+    const { data: allRecipients } = await admin
+      .from('coproprietaires')
+      .select('id, nom, prenom, email, user_id, copropriete_id')
+      .in('copropriete_id', allCoproIds)
+      .not('email', 'is', null);
+    for (const cp of allRecipients ?? []) {
+      const list = recipientsByCopro.get(cp.copropriete_id) ?? [];
+      list.push({ id: cp.id, nom: cp.nom, prenom: cp.prenom, email: cp.email as string, user_id: cp.user_id });
+      recipientsByCopro.set(cp.copropriete_id, list);
+    }
+  }
+
   for (const row of agsJ14 ?? []) {
     const copro = Array.isArray(row.coproprietes) ? row.coproprietes[0] : row.coproprietes;
-    const { data: recipients } = await admin
-      .from('coproprietaires')
-      .select('id, nom, prenom, email, user_id')
-      .eq('copropriete_id', row.copropriete_id)
-      .not('email', 'is', null);
+    const recipients = recipientsByCopro.get(row.copropriete_id) ?? [];
 
     let sentForAg = 0;
-    for (const cp of recipients ?? []) {
+    for (const cp of recipients) {
       const subject = buildAGReminderSubject({
         coproprieteNom: copro?.nom ?? '',
         dateAg: row.date_ag,
@@ -135,14 +149,10 @@ export async function GET(req: NextRequest) {
 
   for (const row of agsJ7 ?? []) {
     const copro = Array.isArray(row.coproprietes) ? row.coproprietes[0] : row.coproprietes;
-    const { data: recipients } = await admin
-      .from('coproprietaires')
-      .select('id, nom, prenom, email, user_id')
-      .eq('copropriete_id', row.copropriete_id)
-      .not('email', 'is', null);
+    const recipients = recipientsByCopro.get(row.copropriete_id) ?? [];
 
     let sentForAg = 0;
-    for (const cp of recipients ?? []) {
+    for (const cp of recipients) {
       const subject = buildAGReminderSubject({
         coproprieteNom: copro?.nom ?? '',
         dateAg: row.date_ag,
