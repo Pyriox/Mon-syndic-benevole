@@ -19,10 +19,11 @@
     setError(`Erreur : ${await getErrorMessage(response)}`);
     return false;
   };
+
+'use client';
 // ============================================================
 // Composant client : actions par copropriété dans la table admin
 // ============================================================
-'use client';
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
