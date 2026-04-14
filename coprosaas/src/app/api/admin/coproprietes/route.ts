@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminUser } from '@/lib/admin-config';
+import { findAdminAuthUserByEmail } from '@/lib/admin-auth-users';
 import { logAdminAction } from '@/lib/actions/log-user-event';
 
 async function checkAdmin() {
@@ -43,11 +44,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'newEmail requis' }, { status: 400 });
     }
 
-    // Trouver l'utilisateur par email
-    const { data: { users }, error: listErr } = await admin.auth.admin.listUsers({ perPage: 1000 });
-    if (listErr) return NextResponse.json({ error: listErr.message }, { status: 500 });
-
-    const target = users.find((u) => u.email?.toLowerCase() === newEmail.trim().toLowerCase());
+    const target = await findAdminAuthUserByEmail(admin, newEmail);
     if (!target) {
       return NextResponse.json({ error: `Aucun compte trouvé pour ${newEmail.trim()}` }, { status: 404 });
     }

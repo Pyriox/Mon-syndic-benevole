@@ -17,6 +17,7 @@ import {
 
 import { isAdminUser } from '@/lib/admin-config';
 import { getSupportAttentionSummary } from '@/lib/admin-support';
+import { listAllAdminAuthUsers } from '@/lib/admin-auth-users';
 import { formatRelativeDayLabel } from '@/lib/admin-date';
 import { formatAdminCurrency } from '@/lib/admin-format';
 import { buildEstimatedRevenueMetrics, countActiveAddonCopros, summarizeStripeBilling } from '@/lib/admin-dashboard';
@@ -52,7 +53,7 @@ export default async function AdminDashboardPage() {
     { count: nbIncidentsOuverts },
     { count: nbAppels },
     { data: coproprietes },
-    authResult,
+    authUsersResult,
     { data: invitations },
     { data: ticketsSupport },
     { data: lotsParCopro },
@@ -67,7 +68,7 @@ export default async function AdminDashboardPage() {
     admin.from('incidents').select('id', { count: 'exact', head: true }).in('statut', ['ouvert', 'en_cours']),
     admin.from('appels_de_fonds').select('id', { count: 'exact', head: true }),
     admin.from('coproprietes').select('id, nom, plan, plan_id, stripe_customer_id, plan_period_end, created_at').order('created_at', { ascending: false }),
-    admin.auth.admin.listUsers({ perPage: 1000 }),
+    listAllAdminAuthUsers(admin),
     admin.from('invitations').select('id, email, statut, expires_at, created_at').order('created_at', { ascending: false }).limit(100),
     admin.from('support_tickets').select('id, user_name, user_email, subject, status, updated_at').in('status', ['ouvert', 'en_cours']).order('updated_at', { ascending: false }).limit(8),
     admin.from('lots').select('copropriete_id'),
@@ -118,7 +119,7 @@ export default async function AdminDashboardPage() {
   }
 
   // ── Computed ──
-  const authUsers = authResult.data?.users ?? [];
+  const authUsers = authUsersResult.users;
   const nbUsers = authUsers.length;
   const nbUnconfirmed = authUsers.filter((u) => !u.email_confirmed_at).length;
   const confirmedPct = nbUsers > 0 ? Math.round(((nbUsers - nbUnconfirmed) / nbUsers) * 100) : 0;
