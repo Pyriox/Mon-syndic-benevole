@@ -9,6 +9,7 @@ import {
   CheckCircle, MessageSquare, User, Shield,
   Circle, AlertCircle, Inbox, Mail,
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -149,6 +150,40 @@ export default function AdminSupportShell({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // ── Supabase Realtime : écoute tickets + messages ──
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel('admin-support-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_tickets' },
+        () => { void refreshTickets(); },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_messages' },
+        (payload) => {
+          const row = payload.new as { ticket_id?: string } | null;
+          if (row?.ticket_id) {
+            // Rafraîchir la liste pour l'état du ticket
+            void refreshTickets();
+            // Recharger les messages si le ticket est actuellement sélectionné
+            setSelectedId((current) => {
+              if (current === row.ticket_id) {
+                void loadMessages(current);
+              }
+              return current;
+            });
+          }
+        },
+      )
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadMessages]);
 
   // ── Rafraîchir la liste des tickets ──
   const refreshTickets = async () => {

@@ -5,12 +5,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { isAdminUser } from '@/lib/admin-config';
-import { ArrowLeft, History, TrendingDown, TrendingUp, Users } from 'lucide-react';
+import { ArrowLeft, History, TrendingDown, TrendingUp, Users, FileText, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 import AdminCoproprietaireActionsLazy from '../../AdminCoproprietaireActionsLazy';
 import AdminPagination from '../../AdminPagination';
 import AdminSearch from '../../AdminSearch';
 import CoproprietaireBalanceHistoryLazy from '../../CoproprietaireBalanceHistoryLazy';
+import AdminStorageExplorerLazy from './AdminStorageExplorerLazy';
 import { resolveAdminBackHref } from '@/lib/admin-list-params';
 import { formatAdminDateTime } from '@/lib/admin-format';
 import { buildAdminCoproFinancialView, getAdminBalanceSourceLabel } from '@/lib/admin-copro-finance';
@@ -33,7 +34,7 @@ export default async function AdminCoproDetail({
 
   const today = new Date().toISOString().split('T')[0];
 
-  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }] = await Promise.all([
+  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }, { data: allAppels }, { data: ags }] = await Promise.all([
     admin
       .from('coproprietes')
       .select('id, nom, adresse, code_postal, ville, nombre_lots')
@@ -57,6 +58,18 @@ export default async function AdminCoproDetail({
       .eq('copropriete_id', id)
       .in('statut', ['publie', 'confirme'])
       .lt('date_echeance', today),
+    admin
+      .from('appels_de_fonds')
+      .select('id, statut, titre, date_echeance, created_at')
+      .eq('copropriete_id', id)
+      .order('date_echeance', { ascending: false })
+      .limit(50),
+    admin
+      .from('assemblees_generales')
+      .select('id, statut, titre, date_ag, type_ag, created_at')
+      .eq('copropriete_id', id)
+      .order('date_ag', { ascending: false })
+      .limit(30),
   ]);
 
   if (!copro) notFound();
@@ -336,6 +349,112 @@ export default async function AdminCoproDetail({
             />
           </div>
         )}
+      </section>
+
+      {/* ── Assemblées Générales ── */}
+      <section id="assemblees" className="space-y-3">
+        <div className="flex items-center gap-2">
+          <CalendarDays size={16} className="text-indigo-500" />
+          <p className="text-sm font-semibold text-gray-900">Assemblées générales</p>
+          <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
+            {(ags ?? []).length}
+          </span>
+        </div>
+        {(ags ?? []).length === 0 ? (
+          <div className="bg-white rounded-xl border border-dashed border-gray-200 px-6 py-8 text-center text-sm text-gray-400">
+            Aucune assemblée générale enregistrée.
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Titre</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Type</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date AG</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {(ags ?? []).map((ag) => {
+                  const a = ag as { id: string; statut: string; titre: string | null; date_ag: string | null; type_ag: string | null };
+                  return (
+                    <tr key={a.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-800">{a.titre ?? '—'}</p>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell capitalize">{a.type_ag ?? '—'}</td>
+                      <td className="px-4 py-3 text-xs text-gray-600">{a.date_ag ? formatAdminDateTime(a.date_ag) : '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
+                          a.statut === 'cloture' ? 'bg-emerald-50 text-emerald-700' :
+                          a.statut === 'brouillon' ? 'bg-gray-100 text-gray-600' :
+                          'bg-amber-50 text-amber-700'
+                        }`}>{a.statut}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* ── Appels de fonds ── */}
+      <section id="appels" className="space-y-3">
+        <div className="flex items-center gap-2">
+          <FileText size={16} className="text-violet-500" />
+          <p className="text-sm font-semibold text-gray-900">Appels de fonds</p>
+          <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
+            {(allAppels ?? []).length}
+          </span>
+        </div>
+        {(allAppels ?? []).length === 0 ? (
+          <div className="bg-white rounded-xl border border-dashed border-gray-200 px-6 py-8 text-center text-sm text-gray-400">
+            Aucun appel de fonds enregistré.
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Titre</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Échéance</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {(allAppels ?? []).map((appel) => {
+                  const a = appel as { id: string; statut: string; titre: string | null; date_echeance: string | null };
+                  return (
+                    <tr key={a.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 font-medium text-gray-800">{a.titre ?? '—'}</td>
+                      <td className="px-4 py-3 text-xs text-gray-600">{a.date_echeance ? formatAdminDateTime(a.date_echeance) : '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
+                          a.statut === 'confirme' ? 'bg-emerald-50 text-emerald-700' :
+                          a.statut === 'publie' ? 'bg-blue-50 text-blue-700' :
+                          a.statut === 'brouillon' ? 'bg-gray-100 text-gray-600' :
+                          a.statut === 'annule' ? 'bg-red-50 text-red-700' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>{a.statut}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+      {/* ── Documents Storage ── */}
+      <section id="documents" className="space-y-3">
+        <div className="flex items-center gap-2">
+          <FileText size={16} className="text-gray-400" />
+          <p className="text-sm font-semibold text-gray-900">Documents (Storage)</p>
+        </div>
+        <AdminStorageExplorerLazy coproId={id} />
       </section>
     </div>
   );

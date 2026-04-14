@@ -9,6 +9,9 @@ import { formatAdminDateTime } from '@/lib/admin-format';
 import AdminImpersonate from '../../AdminImpersonate';
 import AdminCopyId from '../../AdminCopyId';
 import AdminUserEventTimeline from '../../AdminUserEventTimeline';
+import AdminUserConfirmActions from '../../AdminUserConfirmActions';
+import AdminLinkCoproprietaireUser from '../../AdminLinkCoproprietaireUser';
+import AdminUserSuspendAction from '../../AdminUserSuspendAction';
 import { PlanBadge, RoleBadge } from '../../AdminBadges';
 
 const EVENT_CATEGORY_MAP = {
@@ -43,7 +46,7 @@ export default async function AdminUtilisateurProfilePage({
   ] = await Promise.all([
     admin.auth.admin.getUserById(id),
     admin.from('admin_users').select('user_id').eq('user_id', id).maybeSingle(),
-    admin.from('profiles').select('last_active_at, full_name').eq('id', id).maybeSingle(),
+    admin.from('profiles').select('last_active_at, full_name, suspended_at').eq('id', id).maybeSingle(),
     admin.from('coproprietes').select('id, nom, plan, plan_id, created_at').eq('syndic_id', id).order('created_at', { ascending: false }),
   ]);
 
@@ -72,12 +75,12 @@ export default async function AdminUtilisateurProfilePage({
   ] = await Promise.all([
     admin
       .from('coproprietaires')
-      .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, coproprietes(id, nom)')
+      .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, user_id, coproprietes(id, nom)')
       .eq('user_id', id),
     email
       ? admin
           .from('coproprietaires')
-          .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, coproprietes(id, nom)')
+          .select('id, nom, prenom, raison_sociale, email, telephone, adresse, complement_adresse, code_postal, ville, solde, copropriete_id, user_id, coproprietes(id, nom)')
           .eq('email', email)
       : Promise.resolve({ data: [], error: null }),
     email
@@ -101,8 +104,8 @@ export default async function AdminUtilisateurProfilePage({
   const syndicCopros = (syndicCoprosRes.data ?? []) as { id: string; nom: string; plan: string | null; plan_id: string | null; created_at: string }[];
 
   const memberRowsRaw = [
-    ...((memberByIdRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; coproprietes: { id?: string; nom: string } | { id?: string; nom: string }[] | null }>),
-    ...((memberByEmailRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; coproprietes: { id?: string; nom: string } | { id?: string; nom: string }[] | null }>),
+    ...((memberByIdRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; user_id: string | null; coproprietes: { id?: string; nom: string } | { id?: string; nom: string }[] | null }>),
+    ...((memberByEmailRes.data ?? []) as Array<{ id: string; nom: string; prenom: string; raison_sociale: string | null; email: string; telephone: string | null; adresse: string | null; complement_adresse: string | null; code_postal: string | null; ville: string | null; solde: number; copropriete_id: string; user_id: string | null; coproprietes: { id?: string; nom: string } | { id?: string; nom: string }[] | null }>),
   ];
 
   const seen = new Set<string>();
@@ -116,6 +119,7 @@ export default async function AdminUtilisateurProfilePage({
   const fullName = ((authUser.user_metadata as Record<string, string> | null)?.full_name
     ?? (profileRes.data as { full_name: string | null } | null)?.full_name
     ?? null);
+  const isSuspended = !!((profileRes.data as { suspended_at?: string | null } | null)?.suspended_at);
 
   const allEvents = (eventsRes.data ?? []) as Array<{
     id: string;
@@ -166,6 +170,7 @@ export default async function AdminUtilisateurProfilePage({
   const linkedCoproCount = isMember ? memberRows.length : syndicCopros.length;
   const supportCount = (ticketsRes.data ?? []).length;
   const accountSignals = [
+    isSuspended ? 'Compte suspendu par un administrateur' : null,
     !authUser.email_confirmed_at ? 'E-mail non confirmé' : null,
     !lastActive ? 'Aucune activité récente remontée' : null,
     linkedCoproCount === 0 ? 'Aucune copropriété liée' : null,
@@ -299,6 +304,12 @@ export default async function AdminUtilisateurProfilePage({
               <div className="flex flex-wrap gap-2">
                 <AdminCopyId id={id} />
                 {!isAdmin && <AdminImpersonate email={authUser.email ?? ''} />}
+                {!authUser.email_confirmed_at && (
+                  <AdminUserConfirmActions userId={id} userEmail={authUser.email ?? ''} />
+                )}
+                {!isAdmin && (
+                  <AdminUserSuspendAction userId={id} userEmail={authUser.email ?? ''} isSuspended={isSuspended} />
+                )}
                 {supportCount > 0 && (
                   <Link href={`/admin/support?q=${encodeURIComponent(authUser.email ?? '')}`} className="inline-flex items-center rounded-lg border border-red-200 bg-white px-2.5 py-1.5 font-medium text-red-700 hover:border-red-300">
                     Voir le support
@@ -341,6 +352,8 @@ export default async function AdminUtilisateurProfilePage({
             )}
             {isMember && memberRows.map((m) => {
               const copro = Array.isArray(m.coproprietes) ? m.coproprietes[0] : m.coproprietes;
+              const displayName = m.raison_sociale || [m.prenom, m.nom].filter(Boolean).join(' ') || '—';
+              const needsLink = !m.user_id || m.user_id !== id;
               return (
                 <div key={m.id} className="px-4 py-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
@@ -352,7 +365,17 @@ export default async function AdminUtilisateurProfilePage({
                     </Link>
                     <p className="text-xs text-gray-400 truncate">{[m.prenom, m.nom].filter(Boolean).join(' ')} · {m.email}</p>
                   </div>
-                  <span className="text-xs font-semibold text-gray-700">{(m.solde ?? 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {needsLink && (
+                      <AdminLinkCoproprietaireUser
+                        coproprietaireId={m.id}
+                        userId={id}
+                        displayName={displayName}
+                        coproNom={copro?.nom ?? 'Copropriété inconnue'}
+                      />
+                    )}
+                    <span className="text-xs font-semibold text-gray-700">{(m.solde ?? 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                  </div>
                 </div>
               );
             })}

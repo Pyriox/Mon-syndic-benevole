@@ -131,3 +131,47 @@ export async function PATCH(request: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+// ── POST : lier un copropriétaire à un compte utilisateur ─────
+export async function POST(request: NextRequest) {
+  const requester = await checkAdmin();
+  if (!requester) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+  }
+
+  const body = await request.json() as {
+    action?: string;
+    coproprietaireId?: string;
+    linkUserId?: string;
+  };
+
+  if (body.action !== 'link_user') {
+    return NextResponse.json({ error: 'Action non reconnue' }, { status: 400 });
+  }
+
+  const { coproprietaireId, linkUserId } = body;
+  if (!coproprietaireId?.trim() || !linkUserId?.trim()) {
+    return NextResponse.json({ error: 'coproprietaireId et linkUserId requis' }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from('coproprietaires')
+    .update({ user_id: linkUserId.trim() })
+    .eq('id', coproprietaireId.trim());
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  void logAdminAction({
+    adminEmail: requester.email ?? '',
+    eventType: 'admin_coproprietaire_updated',
+    label: `Fiche copropriétaire liée au compte utilisateur ${linkUserId.trim()}`,
+    metadata: {
+      coproprietaireId: coproprietaireId.trim(),
+      linkedUserId: linkUserId.trim(),
+    },
+  });
+
+  return NextResponse.json({ success: true });
+}

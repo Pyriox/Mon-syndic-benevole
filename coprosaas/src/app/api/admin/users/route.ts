@@ -172,6 +172,36 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // ── Suspendre / réactiver un compte ─────────────────────────
+  if (action === 'toggle_suspend') {
+    if (!userId) return NextResponse.json({ error: 'userId requis' }, { status: 400 });
+    if (userId === requester.id) {
+      return NextResponse.json({ error: 'Suspension de votre propre compte interdite' }, { status: 400 });
+    }
+    // Vérifier l'état actuel
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('suspended_at')
+      .eq('id', userId)
+      .maybeSingle();
+    const isSuspended = !!(profile as { suspended_at?: string | null } | null)?.suspended_at;
+    const newSuspendedAt = isSuspended ? null : new Date().toISOString();
+    // Mettre à jour profiles
+    await admin.from('profiles').update({ suspended_at: newSuspendedAt }).eq('id', userId);
+    // Bloquer / débloquer la session via ban_duration Supabase Auth
+    await admin.auth.admin.updateUserById(userId, {
+      ban_duration: isSuspended ? 'none' : '876600h',
+    });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: isSuspended ? 'admin_account_unsuspended' : 'admin_account_suspended',
+      label: isSuspended ? `Compte réactivé — ${userId}` : `Compte suspendu — ${userId}`,
+      severity: 'warning',
+      metadata: { targetUserId: userId },
+    });
+    return NextResponse.json({ success: true, suspended: !isSuspended });
+  }
+
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 });
 }
 
