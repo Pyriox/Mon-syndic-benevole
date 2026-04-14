@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { invalidateLayoutCache, invalidateLotsCache } from '@/lib/cached-queries';
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import { sanitizeTantiemesGroupesMap } from '@/lib/utils';
 
 function buildLotSettingsPayload(data: {
@@ -58,6 +59,12 @@ export async function saveLot(data: {
   if (!copro) return { error: 'Accès non autorisé' };
 
   if (data.lotId) {
+    const { data: previousLot } = await supabase
+      .from('lots')
+      .select('id, numero, type, tantiemes, batiment, groupes_repartition, tantiemes_groupes')
+      .eq('id', data.lotId)
+      .maybeSingle();
+
     const { error } = await supabase
       .from('lots')
       .update({
@@ -66,19 +73,45 @@ export async function saveLot(data: {
       })
       .eq('id', data.lotId);
     if (error) return { error: error.message };
+
+    await logCurrentUserEvent({
+      eventType: 'lot_updated',
+      label: `Lot modifié : ${data.numero.trim()}`,
+      metadata: {
+        coproId: data.coproprieteId,
+        lotId: data.lotId,
+        before: previousLot,
+        updates: {
+          numero: data.numero.trim(),
+          type: data.type,
+        },
+      },
+    });
   } else {
     const payload = buildLotSettingsPayload({
       ...data,
       tantiemes: data.tantiemes ?? 0,
     });
 
-    const { error } = await supabase
+    const { data: createdLot, error } = await supabase
       .from('lots')
       .insert({
         copropriete_id: data.coproprieteId,
         ...payload,
-      });
+      })
+      .select('id, numero, type, tantiemes, batiment, groupes_repartition, tantiemes_groupes')
+      .single();
     if (error) return { error: error.message };
+
+    await logCurrentUserEvent({
+      eventType: 'lot_added',
+      label: `Lot ajouté : ${payload.numero}`,
+      metadata: {
+        coproId: data.coproprieteId,
+        lotId: createdLot?.id,
+        lot: createdLot ?? payload,
+      },
+    });
   }
 
   revalidatePath('/coproprietes');
@@ -103,8 +136,25 @@ export async function deleteLot(lotId: string, coproprieteId: string): Promise<{
     .maybeSingle();
   if (!copro) return { error: 'Accès non autorisé' };
 
+  const { data: previousLot } = await supabase
+    .from('lots')
+    .select('id, numero, type, tantiemes, batiment, groupes_repartition, tantiemes_groupes')
+    .eq('id', lotId)
+    .maybeSingle();
+
   const { error } = await supabase.from('lots').delete().eq('id', lotId);
   if (error) return { error: error.message };
+
+  await logCurrentUserEvent({
+    eventType: 'lot_deleted',
+    label: `Lot supprimé : ${previousLot?.numero ?? lotId}`,
+    metadata: {
+      coproId: coproprieteId,
+      lotId,
+      lot: previousLot,
+    },
+    severity: 'warning',
+  });
 
   revalidatePath('/coproprietes');
   revalidatePath(`/coproprietes/${coproprieteId}`);
@@ -135,7 +185,7 @@ export async function saveCoproprieteSettings(data: {
 
   const { data: copro } = await supabase
     .from('coproprietes')
-    .select('id')
+    .select('id, nom, adresse, code_postal, ville')
     .eq('id', data.coproprieteId)
     .eq('syndic_id', user.id)
     .maybeSingle();
@@ -172,6 +222,22 @@ export async function saveCoproprieteSettings(data: {
   revalidatePath(`/coproprietes/${data.coproprieteId}/parametrage`);
   invalidateLotsCache(data.coproprieteId);
   invalidateLayoutCache(user.id);
+
+  await logCurrentUserEvent({
+    eventType: 'copropriete_updated',
+    label: `Paramétrage de la copropriété modifié : ${data.nom.trim()}`,
+    metadata: {
+      coproId: data.coproprieteId,
+      before: copro,
+      after: {
+        nom: data.nom.trim(),
+        adresse: data.adresse.trim(),
+        code_postal: data.code_postal.trim(),
+        ville: data.ville.trim(),
+      },
+      updatedLotsCount: data.lots.length,
+    },
+  });
   return {};
 }
 
@@ -187,6 +253,13 @@ export async function updateCopropriete(data: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const { data: before } = await supabase
+    .from('coproprietes')
+    .select('id, nom, adresse, code_postal, ville')
+    .eq('id', data.coproprieteId)
+    .eq('syndic_id', user.id)
+    .maybeSingle();
+
   const { error } = await supabase
     .from('coproprietes')
     .update({ nom: data.nom, adresse: data.adresse, code_postal: data.code_postal, ville: data.ville })
@@ -199,5 +272,20 @@ export async function updateCopropriete(data: {
   revalidatePath(`/coproprietes/${data.coproprieteId}/parametrage`);
   // Le nom / l'adresse de la copro apparaissent dans la sidebar du layout
   invalidateLayoutCache(user.id);
+
+  await logCurrentUserEvent({
+    eventType: 'copropriete_updated',
+    label: `Copropriété modifiée : ${data.nom.trim()}`,
+    metadata: {
+      coproId: data.coproprieteId,
+      before,
+      after: {
+        nom: data.nom,
+        adresse: data.adresse,
+        code_postal: data.code_postal,
+        ville: data.ville,
+      },
+    },
+  });
   return {};
 }

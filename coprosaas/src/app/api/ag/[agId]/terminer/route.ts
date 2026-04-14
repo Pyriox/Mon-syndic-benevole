@@ -9,6 +9,7 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
+import { logEventForEmail } from '@/lib/actions/log-user-event';
 import {
   buildAGTermineeEmail,
   buildAGTermineeSubject,
@@ -76,6 +77,15 @@ export async function POST(
 
   if (updateError) {
     return NextResponse.json({ message: 'Erreur lors de la mise à jour' }, { status: 500 });
+  }
+
+  if (user.email) {
+    await logEventForEmail({
+      email: user.email,
+      eventType: 'ag_status_changed',
+      label: `Statut AG modifié : ${ag.statut} → terminee`,
+      metadata: { agId, coproId: copro.syndic_id, oldStatus: ag.statut, newStatus: 'terminee', quorumAtteint },
+    });
   }
 
   // Envoie l'email de notification au syndic (best-effort, non bloquant)

@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { formatDate, formatDateTime, getParisDateInputValue, getParisTimeInputValue, getParisYear, toParisISOString } from '@/lib/utils';
@@ -648,6 +649,11 @@ export default function AGStatusActions({
     setLoading(true);
     setIsConfirmOpen(false);
     await supabase.from('assemblees_generales').update({ statut: 'planifiee' }).eq('id', agId);
+    void logCurrentUserEvent({
+      eventType: 'ag_status_changed',
+      label: 'Statut AG modifié : creation → planifiee',
+      metadata: { agId, coproId: coproprieteId, oldStatus: 'creation', newStatus: 'planifiee' },
+    }).catch(() => undefined);
     replaceCurrentRoute(router);
     setLoading(false);
   };

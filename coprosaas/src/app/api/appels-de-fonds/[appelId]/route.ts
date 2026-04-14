@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { applyCoproprietaireBalanceDelta } from '@/lib/coproprietaire-balance';
+import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 export async function DELETE(
   _req: NextRequest,
@@ -50,6 +51,16 @@ export async function DELETE(
     const { error } = await supabase.from('appels_de_fonds').delete().eq('id', appelId);
 
     if (error) return NextResponse.json({ message: 'Erreur suppression : ' + error.message }, { status: 500 });
+
+    if (user.email) {
+      await logEventForEmail({
+        email: user.email,
+        eventType: 'appel_fonds_deleted',
+        label: `Appel de fonds supprimé : ${appel.titre}`,
+        severity: 'warning',
+        metadata: { appelId, previousStatus: appel.statut },
+      });
+    }
 
     return NextResponse.json({ message: 'Appel de fonds supprimé.' });
   }
@@ -114,12 +125,12 @@ export async function DELETE(
   if (error) return NextResponse.json({ message: 'Erreur annulation : ' + error.message }, { status: 500 });
 
   if (user.email) {
-    await supabase.from('user_events').insert({
-      user_email: user.email.toLowerCase(),
-      event_type: 'appel_fonds_cancelled',
-      label: `Appel annulé: ${appel.titre}`,
+    await logEventForEmail({
+      email: user.email,
+      eventType: 'appel_fonds_status_changed',
+      label: `Statut appel de fonds modifié : ${appel.statut} → annulee (${appel.titre})`,
       severity: 'warning',
-      metadata: { appelId, previousStatus: appel.statut },
+      metadata: { appelId, oldStatus: appel.statut, newStatus: 'annulee' },
     });
   }
 

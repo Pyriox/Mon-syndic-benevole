@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@/lib/supabase/server';
+import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 export async function POST(
   _req: NextRequest,
@@ -53,12 +54,12 @@ export async function POST(
   if (error) return NextResponse.json({ message: 'Erreur annulation : ' + error.message }, { status: 500 });
 
   if (user.email) {
-    await supabase.from('user_events').insert({
-      user_email: user.email.toLowerCase(),
-      event_type: 'ag_cancelled',
-      label: `AG annulée: ${ag.titre}`,
+    await logEventForEmail({
+      email: user.email,
+      eventType: 'ag_status_changed',
+      label: `Statut AG modifié : ${ag.statut} → annulee (${ag.titre})`,
       severity: 'warning',
-      metadata: { agId, previousStatus: ag.statut },
+      metadata: { agId, oldStatus: ag.statut, newStatus: 'annulee' },
     });
   }
 

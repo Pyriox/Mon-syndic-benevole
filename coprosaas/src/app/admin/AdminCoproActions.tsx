@@ -13,8 +13,6 @@ import { AdminDialogNotice, AdminPromptDialog } from './AdminActionDialog';
 interface Props {
   coproId: string;
   coproNom: string;
-  currentPlan: string;
-  currentPlanId: string | null;
   isOrphaned?: boolean;
   adresse?: string | null;
   codePostal?: string | null;
@@ -35,7 +33,6 @@ async function getErrorMessage(response: Response, fallback = 'Une erreur est su
 export default function AdminCoproActions({
   coproId,
   coproNom,
-  currentPlan,
   isOrphaned,
   adresse,
   codePostal,

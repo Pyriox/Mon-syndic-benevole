@@ -149,6 +149,23 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
     void logCurrentUserEvent({
       eventType: 'coproprietaire_added',
       label: `Copropriétaire ajouté — ${nom}`,
+      metadata: {
+        coproId: formData.copropriete_id,
+        coproprietaireId: cp.id,
+        selectedLotIds,
+        coproprietaire: {
+          nom: formData.nom.trim() || null,
+          prenom: formData.prenom.trim() || null,
+          raison_sociale: isSci ? formData.raison_sociale.trim() || null : null,
+          email: formData.email.trim().toLowerCase(),
+          telephone: formData.telephone.trim() || null,
+          adresse: formData.adresse.trim() || null,
+          complement_adresse: formData.complement_adresse.trim() || null,
+          code_postal: formData.code_postal.trim() || null,
+          ville: formData.ville.trim() || null,
+          solde_reprise: initialBalance,
+        },
+      },
     }).catch(() => undefined);
     const nextCoproprietaire: CoproprietaireListItem = {
       id: cp.id,
@@ -452,6 +469,40 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
 
     await revalidateCoproFinance(coproprieteId);
 
+    const nextNom = [formData.prenom.trim(), formData.nom.trim()].filter(Boolean).join(' ') || formData.raison_sociale.trim() || formData.email.trim().toLowerCase();
+    void logCurrentUserEvent({
+      eventType: 'coproprietaire_updated',
+      label: `Copropriétaire modifié — ${nextNom}`,
+      metadata: {
+        coproId: coproprieteId,
+        coproprietaireId: coproprietaire.id,
+        before: {
+          nom: coproprietaire.nom,
+          prenom: coproprietaire.prenom,
+          raison_sociale: coproprietaire.raison_sociale,
+          email: coproprietaire.email,
+          telephone: coproprietaire.telephone,
+          adresse: coproprietaire.adresse,
+          code_postal: coproprietaire.code_postal,
+          ville: coproprietaire.ville,
+          solde: coproprietaire.solde,
+          assignedLotIds,
+        },
+        after: {
+          nom: formData.nom.trim() || null,
+          prenom: formData.prenom.trim() || null,
+          raison_sociale: isSci ? formData.raison_sociale.trim() || null : null,
+          email: formData.email.trim().toLowerCase(),
+          telephone: formData.telephone.trim() || null,
+          adresse: formData.adresse.trim() || null,
+          code_postal: formData.code_postal.trim() || null,
+          ville: formData.ville.trim() || null,
+          solde: formData.solde,
+          selectedLotIds,
+        },
+      },
+    }).catch(() => undefined);
+
     const nextCoproprietaire: CoproprietaireListItem = {
       id: coproprietaire.id,
       nom: formData.nom.trim() || null,
@@ -605,6 +656,15 @@ export function CoproprietaireDelete({
     setLoading(true);
     await supabase.from('lots').update({ coproprietaire_id: null }).eq('coproprietaire_id', id);
     await supabase.from('coproprietaires').delete().eq('id', id);
+    void logCurrentUserEvent({
+      eventType: 'coproprietaire_deleted',
+      label: `Copropriétaire supprimé — ${nom}`,
+      metadata: {
+        coproprietaireId: id,
+        freedLotIds: assignedLotIds,
+      },
+      severity: 'warning',
+    }).catch(() => undefined);
     setIsOpen(false);
     setLoading(false);
     if (onDeleted) {

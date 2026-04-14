@@ -7,6 +7,7 @@
 import { useState, useRef, useCallback, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
@@ -352,6 +353,11 @@ export function DocumentMenu({
     const nextNom = nom.trim();
     const { error: err } = await supabase.from('documents').update({ nom: nextNom }).eq('id', localDoc.id);
     if (err) { setError(err.message); setLoading(false); return; }
+    void logCurrentUserEvent({
+      eventType: 'document_updated',
+      label: `Document renommé : ${localDoc.nom} → ${nextNom}`,
+      metadata: { documentId: localDoc.id, before: { nom: localDoc.nom }, after: { nom: nextNom } },
+    }).catch(() => undefined);
     setLocalDoc((prev) => ({ ...prev, nom: nextNom }));
     close();
   };
@@ -361,6 +367,14 @@ export function DocumentMenu({
     setLoading(true);
     const { error: err } = await supabase.from('documents').update({ dossier_id: targetId }).eq('id', localDoc.id);
     if (err) { setError(err.message); setLoading(false); return; }
+    void logCurrentUserEvent({
+      eventType: 'document_updated',
+      label: `Document déplacé : ${localDoc.nom}`,
+      metadata: {
+        documentId: localDoc.id,
+        after: { dossier_id: targetId, dossier_nom: dossiers.find((d) => d.id === targetId)?.nom ?? null },
+      },
+    }).catch(() => undefined);
     setHidden(true);
     close();
   };
@@ -369,6 +383,12 @@ export function DocumentMenu({
     setLoading(true);
     const { error: err } = await supabase.from('documents').delete().eq('id', localDoc.id);
     if (err) { setError(err.message); setLoading(false); return; }
+    void logCurrentUserEvent({
+      eventType: 'document_deleted',
+      label: `Document supprimé : ${localDoc.nom}`,
+      metadata: { documentId: localDoc.id },
+      severity: 'warning',
+    }).catch(() => undefined);
     setHidden(true);
     close();
   };

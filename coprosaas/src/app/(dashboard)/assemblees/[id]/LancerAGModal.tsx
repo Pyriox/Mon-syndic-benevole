@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { AlertTriangle, PlayCircle, UserCheck, UserX, Users } from 'lucide-react';
@@ -123,6 +124,12 @@ export default function LancerAGModal({
         .update({ statut: 'en_cours' })
         .eq('id', agId)
         .eq('statut', 'planifiee');
+
+      void logCurrentUserEvent({
+        eventType: 'ag_status_changed',
+        label: 'Statut AG modifié : planifiee → en_cours',
+        metadata: { agId, oldStatus: 'planifiee', newStatus: 'en_cours' },
+      }).catch(() => undefined);
     }
 
     setIsOpen(false);

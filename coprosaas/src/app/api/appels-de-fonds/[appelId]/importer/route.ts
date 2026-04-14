@@ -13,6 +13,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { parseBudgetPostesFromDescription, repartitionParPostes } from '@/lib/utils';
 import { isSubscribed } from '@/lib/subscription';
+import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 export async function POST(
   _req: NextRequest,
@@ -111,6 +112,15 @@ export async function POST(
   await supabase.from('appels_de_fonds')
     .update({ statut: 'confirme' })
     .eq('id', appelId);
+
+  if (user.email) {
+    await logEventForEmail({
+      email: user.email,
+      eventType: 'appel_fonds_status_changed',
+      label: `Statut appel de fonds modifié : ${appel.statut} → confirme (${appel.titre})`,
+      metadata: { appelId, oldStatus: appel.statut, newStatus: 'confirme' },
+    });
+  }
 
   return NextResponse.json({ message: 'Appel importé avec paiements validés.', lignes: repartition.length });
 }

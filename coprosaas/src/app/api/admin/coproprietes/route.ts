@@ -2,14 +2,13 @@
 // API Admin — gestion des abonnements des copropriétés
 //
 // POST /api/admin/coproprietes  { action, coproId }
-//   → reset_subscription, stripe_sync, reassign_syndic
+//   → reassign_syndic
 // PATCH /api/admin/coproprietes  { coproId, nom?, adresse?, code_postal?, ville?, nombre_lots? }
 //   → modifier les informations générales d’une copropriété
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { stripe } from '@/lib/stripe';
 import { isAdminUser } from '@/lib/admin-config';
 import { logAdminAction } from '@/lib/actions/log-user-event';
 

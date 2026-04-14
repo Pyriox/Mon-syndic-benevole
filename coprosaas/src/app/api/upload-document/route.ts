@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { logEventForEmail } from '@/lib/actions/log-user-event';
 import { isSubscribed } from '@/lib/subscription';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { hasMagicBytes } from '@/lib/utils-file';
@@ -162,6 +163,21 @@ export async function POST(req: NextRequest) {
       console.error('[upload-document] cleanup error:', cleanupError);
     });
     return NextResponse.json({ error: "Erreur lors de l'enregistrement du document." }, { status: 500 });
+  }
+
+  if (user.email) {
+    await logEventForEmail({
+      email: user.email,
+      eventType: 'document_added',
+      label: `Document ajouté : ${nom.trim()}`,
+      metadata: {
+        copropriete_id,
+        dossier_id: dossier_id || null,
+        coproprietaire_id: coproprietaire_id || null,
+        storagePath: uploadData.path,
+        taille: file.size,
+      },
+    });
   }
 
   return NextResponse.json({ url: publicUrl });

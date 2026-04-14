@@ -407,7 +407,7 @@ export default async function AdminCopropietesPage({
           <p className="text-sm text-gray-500 mt-1">
             {activeTab === 'coproprietes'
               ? 'Vue opérationnelle. Modifications via les actions disponibles.'
-              : 'Données Supabase + Stripe. Pour modifier un abonnement, utiliser Stripe puis « Sync depuis Stripe ».'}
+                  : 'Données Supabase + Stripe. Les modifications d’abonnement se font directement dans Stripe.'}
           </p>
         </div>
         <Suspense>
@@ -618,7 +618,7 @@ export default async function AdminCopropietesPage({
                           {typeof profile?.email === 'string' && profile.email.length > 0 && (!c.syndic_id || !adminUserIds.has(c.syndic_id)) && (
                             <AdminImpersonate email={profile.email} iconOnly />
                           )}
-                          <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} isOrphaned={!c.syndic_id} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} contextHref={currentListHref} />
+                          <AdminCoproActions coproId={c.id} coproNom={c.nom} isOrphaned={!c.syndic_id} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} contextHref={currentListHref} />
                         </div>
                       </td>
                     </tr>
@@ -734,7 +734,7 @@ export default async function AdminCopropietesPage({
             <div className="flex items-center justify-between mb-3 gap-3">
               <div>
                 <p className="text-sm font-semibold text-gray-900">Tous les abonnements</p>
-                <p className="text-xs text-gray-400">Modification de plan : via Stripe uniquement, puis « Sync depuis Stripe ».</p>
+                  <p className="text-xs text-gray-400">Modification de plan : via Stripe uniquement.</p>
               </div>
               <a href="https://dashboard.stripe.com/subscriptions" target="_blank" rel="noopener noreferrer"
                 className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1 shrink-0">
@@ -779,7 +779,7 @@ export default async function AdminCopropietesPage({
                           ) : <span className="text-xs text-gray-300">—</span>}
                         </td>
                         <td className="px-4 py-3">
-                          <AdminCoproActions coproId={c.id} coproNom={c.nom} currentPlan={c.plan ?? 'essai'} currentPlanId={c.plan_id ?? null} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} contextHref={currentListHref} />
+                          <AdminCoproActions coproId={c.id} coproNom={c.nom} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} contextHref={currentListHref} />
                         </td>
                       </tr>
                     );

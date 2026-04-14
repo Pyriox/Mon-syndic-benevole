@@ -18,6 +18,7 @@ import { buildAppelEmail, buildAppelEmailSubject } from '@/lib/emails/appel-de-f
 import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
+import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -204,6 +205,15 @@ export async function POST(
   await supabase.from('appels_de_fonds')
     .update({ statut: 'publie', ...(sendImmediately ? { emailed_at: now } : {}) })
     .eq('id', appelId);
+
+  if (user.email) {
+    await logEventForEmail({
+      email: user.email,
+      eventType: 'appel_fonds_status_changed',
+      label: `Statut appel de fonds modifié : brouillon → publie (${appel.titre})`,
+      metadata: { appelId, oldStatus: 'brouillon', newStatus: 'publie', sendImmediately },
+    });
+  }
 
   if (promptEmailSend) {
     return NextResponse.json({

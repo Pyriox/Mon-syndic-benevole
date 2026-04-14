@@ -12,10 +12,10 @@ import AdminUserEventTimeline from '../../AdminUserEventTimeline';
 import { PlanBadge, RoleBadge } from '../../AdminBadges';
 
 const EVENT_CATEGORY_MAP = {
-  billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_succeeded', 'payment_failed', 'subscription_renewed', 'subscription_upgraded'],
+  billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_succeeded', 'payment_failed'],
   account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'login_success', 'login_failed', 'email_confirmation_resent'],
-  activity: ['copropriete_created', 'appel_fonds_created', 'appel_fonds_sent', 'ag_created', 'coproprietaire_added', 'coproprietaire_deleted', 'document_uploaded', 'ticket_created'],
-  admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_subscription_reset', 'admin_stripe_sync', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
+  activity: ['copropriete_created', 'copropriete_updated', 'appel_fonds_created', 'appel_fonds_status_changed', 'appel_fonds_deleted', 'ag_created', 'ag_status_changed', 'coproprietaire_added', 'coproprietaire_updated', 'coproprietaire_deleted', 'lot_added', 'lot_updated', 'lot_deleted', 'document_added', 'document_updated', 'document_deleted', 'ticket_created'],
+  admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
 } as const;
 
 export default async function AdminUtilisateurProfilePage({
