@@ -23,7 +23,7 @@ interface Props {
   contextHref?: string;
 }
 
-type ConfirmAction = 'reset_subscription' | 'stripe_sync';
+type ConfirmAction = 'reassign_syndic';
 
 async function getErrorMessage(response: Response, fallback = 'Une erreur est survenue.') {
   try {
@@ -52,7 +52,7 @@ export default function AdminCoproActions({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropPos, setDropPos] = useState<{ top: number; right: number } | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
-  const [pendingAction, setPendingAction] = useState<ConfirmAction | 'edit' | 'reassign_syndic' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'edit' | 'reassign_syndic' | null>(null);
 
   const [editOpen, setEditOpen] = useState(false);
   const [editNom, setEditNom] = useState(coproNom);
@@ -111,41 +111,11 @@ export default function AdminCoproActions({
     setError(`Erreur : ${await getErrorMessage(response)}`);
   };
 
-  const requestConfirmation = (action: ConfirmAction) => {
-    setError('');
-    setOpen(false);
-    setConfirmAction(action);
-  };
+  // requestConfirmation supprimé car plus d'action à confirmer
 
-  const postAction = async (body: Record<string, unknown>, successMessage = 'OK') => {
-    setError('');
-    const action = String(body.action ?? 'edit') as ConfirmAction | 'reassign_syndic';
-    setPendingAction(action);
+  // postAction reste pour reassign_syndic uniquement
 
-    const response = await fetch('/api/admin/coproprietes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    setPendingAction(null);
-    if (response.ok) {
-      setDone(successMessage);
-      router.refresh();
-      return true;
-    }
-
-    setError(`Erreur : ${await getErrorMessage(response)}`);
-    return false;
-  };
-
-  const executeConfirmedAction = async () => {
-    if (!confirmAction) return;
-
-    const action = confirmAction;
-    setConfirmAction(null);
-    await postAction({ action, coproId }, action === 'stripe_sync' ? 'Sync OK' : 'Réinitialisé');
-  };
+  // executeConfirmedAction supprimé car plus d'action à confirmer
 
   const submitReassign = async () => {
     const nextEmail = reassignEmail.trim().toLowerCase();
@@ -242,26 +212,7 @@ export default function AdminCoproActions({
         </form>
       </Modal>
 
-      <AdminConfirmDialog
-        isOpen={confirmAction === 'stripe_sync'}
-        onClose={() => setConfirmAction(null)}
-        title="Synchroniser depuis Stripe"
-        description={<p>Mettre à jour <strong>{coproNom}</strong> selon l&apos;abonnement réel présent dans Stripe ?</p>}
-        confirmLabel="Lancer la synchronisation"
-        onConfirm={executeConfirmedAction}
-        isLoading={pendingAction === 'stripe_sync'}
-      />
 
-      <AdminConfirmDialog
-        isOpen={confirmAction === 'reset_subscription'}
-        onClose={() => setConfirmAction(null)}
-        title="Réinitialiser l'abonnement"
-        description={<p>Remettre <strong>{coproNom}</strong> en <strong>inactif</strong> et effacer les identifiants Stripe liés ?</p>}
-        confirmLabel="Réinitialiser"
-        onConfirm={executeConfirmedAction}
-        isLoading={pendingAction === 'reset_subscription'}
-        tone="danger"
-      />
 
       <AdminPromptDialog
         isOpen={reassignOpen}
@@ -319,14 +270,7 @@ export default function AdminCoproActions({
                   Voir les copropriétaires
                 </button>
                 <div className="my-1 border-t border-gray-100" />
-                <button
-                  onClick={() => requestConfirmation('stripe_sync')}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-blue-700 transition-colors hover:bg-blue-50"
-                >
-                  <RefreshCw size={12} className="shrink-0" />
-                  Sync depuis Stripe
-                </button>
-                <div className="my-1 border-t border-gray-100" />
+                {/* Suppression du bouton Sync depuis Stripe */}
                 <button
                   onClick={() => {
                     setError('');
@@ -339,18 +283,7 @@ export default function AdminCoproActions({
                   <UserCog size={12} className="shrink-0" />
                   Réassigner le syndic
                 </button>
-                {currentPlan !== 'essai' && (
-                  <>
-                    <div className="my-1 border-t border-gray-100" />
-                    <button
-                      onClick={() => requestConfirmation('reset_subscription')}
-                      className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-amber-700 transition-colors hover:bg-amber-50"
-                    >
-                      <RotateCcw size={12} className="shrink-0" />
-                      Réinitialiser (inactif)
-                    </button>
-                  </>
-                )}
+                {/* Suppression du bouton Réinitialiser (inactif) */}
               </div>
             </>
           )}

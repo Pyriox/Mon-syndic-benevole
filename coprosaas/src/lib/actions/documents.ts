@@ -3,6 +3,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
+import { logCurrentUserEvent } from './log-user-event';
+
 // Service role client — bypasse le RLS pour l'insert documents
 // (la migration RLS `20250116_documents_rls_write.sql` n'a pas encore été
 //  appliquée à la base de production, mais le syndic est vérifié ici)
@@ -48,5 +50,37 @@ export async function insertDocument(payload: {
   const admin = createAdminClient();
   const { error } = await admin.from('documents').insert(payload);
 
+  if (!error) {
+    await logCurrentUserEvent({
+      eventType: 'document_added',
+      label: `Document ajouté : ${payload.nom}`,
+      metadata: { copropriete_id: payload.copropriete_id, document: payload },
+    });
+  }
+
   return { error: error?.message ?? null };
+}
+
+/**
+ * Supprime un document et journalise l'action.
+ */
+export async function deleteDocumentWithJournal({
+  documentId,
+  copropriete_id,
+  documentLabel,
+}: {
+  documentId: string;
+  copropriete_id: string;
+  documentLabel?: string;
+}) {
+  const admin = createAdminClient();
+  const { error } = await admin.from('documents').delete().eq('id', documentId);
+  if (!error) {
+    await logCurrentUserEvent({
+      eventType: 'document_deleted',
+      label: `Document supprimé : ${documentLabel ?? documentId}`,
+      metadata: { copropriete_id, documentId },
+    });
+  }
+  return { error };
 }
