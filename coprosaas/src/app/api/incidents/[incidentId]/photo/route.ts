@@ -2,9 +2,64 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { hasMagicBytes } from '@/lib/utils-file';
+import { buildCoproStorageDownloadHref, extractStoragePath } from '@/lib/storage-path';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE = 5 * 1024 * 1024; // 5 Mo
+
+async function getAuthorizedIncident(incidentId: string, userId: string) {
+  const admin = createAdminClient();
+
+  const { data: incident } = await admin
+    .from('incidents')
+    .select('id, copropriete_id, photo_url')
+    .eq('id', incidentId)
+    .maybeSingle();
+  if (!incident) return { admin, incident: null };
+
+  const [{ data: copro }, { data: coproprietaire }] = await Promise.all([
+    admin
+      .from('coproprietes')
+      .select('id')
+      .eq('id', incident.copropriete_id)
+      .eq('syndic_id', userId)
+      .maybeSingle(),
+    admin
+      .from('coproprietaires')
+      .select('id')
+      .eq('copropriete_id', incident.copropriete_id)
+      .eq('user_id', userId)
+      .maybeSingle(),
+  ]);
+
+  if (!copro && !coproprietaire) return { admin, incident: null };
+
+  return { admin, incident };
+}
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ incidentId: string }> }
+) {
+  const { incidentId } = await params;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+
+  const { admin, incident } = await getAuthorizedIncident(incidentId, user.id);
+  if (!incident) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+  if (!incident.photo_url) return NextResponse.json({ error: 'Photo introuvable' }, { status: 404 });
+
+  const storagePath = extractStoragePath(incident.photo_url);
+  const { data: signed, error } = await admin.storage.from('documents').createSignedUrl(storagePath, 3600);
+
+  if (error || !signed?.signedUrl) {
+    return NextResponse.json({ error: 'Impossible de générer un lien sécurisé.' }, { status: 500 });
+  }
+
+  return NextResponse.redirect(signed.signedUrl);
+}
 
 export async function POST(
   req: NextRequest,
@@ -16,23 +71,8 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const admin = createAdminClient();
-
-  // Vérifier que l'incident existe et appartient à une copropriété du syndic
-  const { data: incident } = await admin
-    .from('incidents')
-    .select('id, copropriete_id')
-    .eq('id', incidentId)
-    .maybeSingle();
-  if (!incident) return NextResponse.json({ error: 'Incident introuvable' }, { status: 404 });
-
-  const { data: copro } = await admin
-    .from('coproprietes')
-    .select('id')
-    .eq('id', incident.copropriete_id)
-    .eq('syndic_id', user.id)
-    .maybeSingle();
-  if (!copro) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+  const { admin, incident } = await getAuthorizedIncident(incidentId, user.id);
+  if (!incident) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
 
   // Lire la pièce jointe
   const formData = await req.formData();
@@ -62,10 +102,8 @@ export async function POST(
     return NextResponse.json({ error: 'Erreur lors de l\'upload.' }, { status: 500 });
   }
 
-  const { data: { publicUrl } } = admin.storage.from('documents').getPublicUrl(upload.path);
-
   // Mettre à jour l'incident
-  await admin.from('incidents').update({ photo_url: publicUrl }).eq('id', incidentId);
+  await admin.from('incidents').update({ photo_url: upload.path }).eq('id', incidentId);
 
-  return NextResponse.json({ url: publicUrl });
+  return NextResponse.json({ url: buildCoproStorageDownloadHref(incident.copropriete_id, upload.path) });
 }

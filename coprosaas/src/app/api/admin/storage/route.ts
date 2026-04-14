@@ -38,18 +38,24 @@ export async function GET(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Ajouter les URL publiques
-  const files = (data ?? []).map((file) => {
+  const files = await Promise.all((data ?? []).map(async (file) => {
     const filePath = `${coproId.trim()}/${file.name}`;
-    const { data: { publicUrl } } = admin.storage.from('documents').getPublicUrl(filePath);
+    const { data: signed, error: signedError } = await admin.storage
+      .from('documents')
+      .createSignedUrl(filePath, 3600);
+
+    if (signedError || !signed?.signedUrl) {
+      throw new Error(signedError?.message ?? 'Signed URL manquante');
+    }
+
     return {
       name: file.name,
       path: filePath,
       size: file.metadata?.size ?? null,
       created_at: file.created_at ?? null,
-      publicUrl,
+      downloadUrl: signed.signedUrl,
     };
-  });
+  }));
 
   return NextResponse.json({ files });
 }

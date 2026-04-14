@@ -3,14 +3,14 @@
 // Explorateur Supabase Storage : liste et suppression des fichiers d'une copropriété
 import { useState, useEffect, useCallback } from 'react';
 import { Loader2, FileText, Trash2, Download, RefreshCw } from 'lucide-react';
-import { AdminConfirmDialog } from '../AdminActionDialog';
+import { AdminConfirmDialog } from '../../AdminActionDialog';
 
 interface StorageFile {
   name: string;
   path: string;
   size: number | null;
   created_at: string | null;
-  publicUrl: string;
+  downloadUrl: string;
 }
 
 interface Props {
@@ -126,7 +126,7 @@ export default function AdminStorageExplorer({ coproId }: Props) {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1.5">
                       <a
-                        href={file.publicUrl}
+                        href={file.downloadUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 transition-colors"

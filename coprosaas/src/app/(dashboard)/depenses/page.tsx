@@ -26,6 +26,7 @@ import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import PageHelp from '@/components/ui/PageHelp';
+import { buildCoproStorageDownloadHref } from '@/lib/storage-path';
 
 const catColorMap: Record<string, string> = {
   entretien:          'bg-orange-400',
@@ -437,7 +438,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                     <div className="text-right shrink-0">
                       <p className="font-semibold text-gray-900">{formatEuros(d.montant)}</p>
                       {d.piece_jointe_url && (
-                        <a href={d.piece_jointe_url} target="_blank" rel="noopener noreferrer"
+                        <a href={buildCoproStorageDownloadHref(selectedCoproId ?? 'none', d.piece_jointe_url)} target="_blank" rel="noopener noreferrer"
                           className="text-xs text-blue-600 hover:underline">P.J.</a>
                       )}
                     </div>
@@ -477,7 +478,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                         <td className="px-5 py-3 text-right font-semibold text-gray-900">{formatEuros(d.montant)}</td>
                         <td className="px-5 py-3 text-center">
                           {d.piece_jointe_url ? (
-                            <a href={d.piece_jointe_url} target="_blank" rel="noopener noreferrer"
+                            <a href={buildCoproStorageDownloadHref(selectedCoproId ?? 'none', d.piece_jointe_url)} target="_blank" rel="noopener noreferrer"
                               className="text-blue-600 hover:underline text-xs">Voir</a>
                           ) : (
                             <span className="text-gray-300">—</span>
@@ -653,7 +654,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                       </Badge>
                       <span className="text-xs text-gray-500">{formatDate(d.date_depense)}</span>
                       {d.piece_jointe_url && (
-                        <a href={d.piece_jointe_url} target="_blank" rel="noopener noreferrer"
+                        <a href={buildCoproStorageDownloadHref(d.copropriete_id, d.piece_jointe_url)} target="_blank" rel="noopener noreferrer"
                           className="text-xs text-blue-600 hover:underline">P.J.</a>
                       )}
                     </div>
@@ -725,7 +726,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
                       <td className="px-5 py-3 text-center">
                         {d.piece_jointe_url ? (
                           <a
-                            href={d.piece_jointe_url}
+                            href={buildCoproStorageDownloadHref(d.copropriete_id, d.piece_jointe_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline text-xs"

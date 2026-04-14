@@ -100,6 +100,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const resolvedUserId = authenticatedUserId;
+
   if (effectiveSupportRole === 'coproprietaire' && !COPRO_TECHNICAL_TOPICS.has(normalizedSupportTopic)) {
     return NextResponse.json({
       message: 'Le support copropriétaire traite uniquement les problèmes techniques. Pour toute question sur votre solde, vos charges ou vos appels de fonds, contactez votre syndic.',
@@ -166,7 +168,7 @@ export async function POST(req: NextRequest) {
       payload: {
         fromEmail: email.trim().toLowerCase(),
         fromName: name.trim(),
-        userId: userId?.trim() || null,
+        userId: resolvedUserId,
       },
     });
 
@@ -183,16 +185,6 @@ export async function POST(req: NextRequest) {
   let ticketId: string | null = null;
   try {
     const admin = createAdminClient();
-
-    // Résoudre le user_id réel si non fourni (via session serveur)
-    let resolvedUserId: string | null = userId?.trim() || authenticatedUserId || null;
-    if (!resolvedUserId) {
-      try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        resolvedUserId = user?.id ?? null;
-      } catch { /* non authentifié, pas grave */ }
-    }
 
     const { data: ticket } = await admin
       .from('support_tickets')

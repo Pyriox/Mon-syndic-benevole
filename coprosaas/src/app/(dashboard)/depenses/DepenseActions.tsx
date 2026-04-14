@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { buildCoproStorageDownloadHref, extractStorageBasename } from '@/lib/storage-path';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
@@ -474,12 +475,12 @@ export default function DepenseActions({
               <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
                 <Paperclip size={14} className="text-gray-400 shrink-0" />
                 <a
-                  href={pieceJointeActuelle}
+                  href={buildCoproStorageDownloadHref(formData.copropriete_id, pieceJointeActuelle)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline flex items-center gap-1 truncate"
                 >
-                  {decodeURIComponent(pieceJointeActuelle.split('/').pop()?.replace(/^\d+-/, '') ?? 'Pièce jointe')}
+                  {extractStorageBasename(pieceJointeActuelle).replace(/^\d+-/, '')}
                   <ExternalLink size={12} className="shrink-0" />
                 </a>
                 <button

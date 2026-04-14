@@ -38,25 +38,66 @@ export async function DELETE(request: NextRequest) {
 
   const admin = createAdminClient();
 
-  const [{ data: targetAdmin }, { count: adminCount }] = await Promise.all([
+  const [{ data: targetAdmin }, { count: adminCount }, { data: linkedCoproprietaires, error: linkedCoproprietairesError }] = await Promise.all([
     admin.from('admin_users').select('user_id').eq('user_id', userId).maybeSingle(),
     admin.from('admin_users').select('user_id', { count: 'exact', head: true }),
+    admin.from('coproprietaires').select('id').eq('user_id', userId),
   ]);
+
+  if (linkedCoproprietairesError) {
+    return NextResponse.json({ error: linkedCoproprietairesError.message }, { status: 500 });
+  }
 
   if (targetAdmin && (adminCount ?? 0) <= 1) {
     return NextResponse.json({ error: 'Impossible de supprimer le dernier administrateur' }, { status: 400 });
   }
 
-  // Délier les fiches coproprietaires avant suppression
-  await admin.from('coproprietaires').update({ user_id: null }).eq('user_id', userId);
+  const linkedCoproprietaireIds = (linkedCoproprietaires ?? []).map((row) => row.id as string);
 
+  // Délier les fiches coproprietaires avant suppression
+  if (linkedCoproprietaireIds.length > 0) {
+    const { error: unlinkError } = await admin
+      .from('coproprietaires')
+      .update({ user_id: null })
+      .eq('user_id', userId);
+
+    if (unlinkError) {
+      return NextResponse.json({ error: unlinkError.message }, { status: 500 });
+    }
+  }
+
+  let removedAdminRole = false;
   if (targetAdmin) {
-    await admin.from('admin_users').delete().eq('user_id', userId);
+    const { error: removeAdminError } = await admin.from('admin_users').delete().eq('user_id', userId);
+    if (removeAdminError) {
+      if (linkedCoproprietaireIds.length > 0) {
+        await admin.from('coproprietaires').update({ user_id: userId }).in('id', linkedCoproprietaireIds);
+      }
+      return NextResponse.json({ error: removeAdminError.message }, { status: 500 });
+    }
+    removedAdminRole = true;
   }
 
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (removedAdminRole) {
+      const { error: restoreAdminError } = await admin.from('admin_users').insert({ user_id: userId });
+      if (restoreAdminError) {
+        console.error('[admin/users] restore admin role error:', restoreAdminError.message);
+      }
+    }
+
+    if (linkedCoproprietaireIds.length > 0) {
+      const { error: relinkError } = await admin
+        .from('coproprietaires')
+        .update({ user_id: userId })
+        .in('id', linkedCoproprietaireIds);
+      if (relinkError) {
+        console.error('[admin/users] restore coproprietaires link error:', relinkError.message);
+      }
+    }
+
+    return NextResponse.json({ error: 'Suppression incomplète, restauration automatique appliquée.' }, { status: 500 });
   }
 
   void logAdminAction({
@@ -186,12 +227,33 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
     const isSuspended = !!(profile as { suspended_at?: string | null } | null)?.suspended_at;
     const newSuspendedAt = isSuspended ? null : new Date().toISOString();
-    // Mettre à jour profiles
-    await admin.from('profiles').update({ suspended_at: newSuspendedAt }).eq('id', userId);
-    // Bloquer / débloquer la session via ban_duration Supabase Auth
-    await admin.auth.admin.updateUserById(userId, {
-      ban_duration: isSuspended ? 'none' : '876600h',
+    const nextBanDuration = isSuspended ? 'none' : '876600h';
+    const rollbackBanDuration = isSuspended ? '876600h' : 'none';
+
+    // Bloquer / débloquer d'abord la session via Supabase Auth
+    const { error: authSuspendError } = await admin.auth.admin.updateUserById(userId, {
+      ban_duration: nextBanDuration,
     });
+
+    if (authSuspendError) {
+      return NextResponse.json({ error: authSuspendError.message }, { status: 500 });
+    }
+
+    // Puis persister la trace applicative. En cas d'échec, rollback de l'état Auth.
+    const { error: profileError } = await admin
+      .from('profiles')
+      .upsert({ id: userId, suspended_at: newSuspendedAt }, { onConflict: 'id' });
+
+    if (profileError) {
+      const { error: rollbackError } = await admin.auth.admin.updateUserById(userId, {
+        ban_duration: rollbackBanDuration,
+      });
+      if (rollbackError) {
+        console.error('[admin/users] rollback suspend auth error:', rollbackError.message);
+      }
+      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    }
+
     void logAdminAction({
       adminEmail: requester.email ?? '',
       eventType: isSuspended ? 'admin_account_unsuspended' : 'admin_account_suspended',

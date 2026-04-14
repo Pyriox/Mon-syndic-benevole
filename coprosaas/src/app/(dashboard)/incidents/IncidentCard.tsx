@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { buildCoproStorageDownloadHref } from '@/lib/storage-path';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -234,7 +235,7 @@ export default function IncidentCard({ incident, isSyndic, canWrite }: IncidentC
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [noteText,     setNoteText]     = useState('');
   const [photoLoading, setPhotoLoading] = useState(false);
-  const [photoUrl,     setPhotoUrl]     = useState<string | null>(incident.photo_url ?? null);
+  const [photoUrl,     setPhotoUrl]     = useState<string | null>(incident.photo_url ? buildCoproStorageDownloadHref(incident.copropriete_id, incident.photo_url) : null);
   const [notes,        setNotes]        = useState<Note[]>(() => parseNotes(incident.notes_internes));
   const [deleted,      setDeleted]      = useState(false);
 

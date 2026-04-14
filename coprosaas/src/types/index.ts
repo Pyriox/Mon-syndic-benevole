@@ -166,6 +166,7 @@ export interface LigneAppelDeFonds {
 
 // --- Document ---
 export type TypeDocument =
+  | 'convocation_ag'
   | 'pv_ag'
   | 'facture'
   | 'contrat'
@@ -178,7 +179,7 @@ export interface Document {
   copropriete_id: string;
   nom: string;
   type: TypeDocument;
-  url: string;             // URL dans Supabase Storage
+  url: string;             // Chemin ou URL historique dans Supabase Storage
   taille: number | null;   // en bytes
   uploaded_by: string;
   created_at: string;

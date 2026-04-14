@@ -178,14 +178,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
 
     if (uploadError) throw new Error(uploadError.message);
 
-    const { data: { publicUrl } } = admin.storage.from('documents').getPublicUrl(uploadData.path);
     const pvNom = `PV AG — ${ag.coproprietes?.nom ?? ''} — ${getParisYear(ag.date_ag) ?? new Date().getFullYear()}`;
     const { error: documentError } = await admin.from('documents').upsert({
       copropriete_id: ag.copropriete_id,
       dossier_id: dossierId,
       nom: pvNom,
       type: 'pv_ag',
-      url: publicUrl,
+      url: uploadData.path,
       taille: pdfBuffer.byteLength,
       uploaded_by: user.id,
     }, { onConflict: 'nom,copropriete_id' });

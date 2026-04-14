@@ -12,6 +12,7 @@ import { logEventForEmail } from '@/lib/actions/log-user-event';
 import { isSubscribed } from '@/lib/subscription';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { hasMagicBytes } from '@/lib/utils-file';
+import { buildCoproStorageDownloadHref } from '@/lib/storage-path';
 
 export async function POST(req: NextRequest) {
   // 1. Vérification de l'authentification
@@ -143,8 +144,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erreur lors de l'upload du fichier." }, { status: 500 });
   }
 
-  const { data: { publicUrl } } = admin.storage.from('documents').getPublicUrl(uploadData.path);
-
   // 5. Enregistrement en base via le client admin
   const { error: dbError } = await admin.from('documents').insert({
     copropriete_id,
@@ -180,6 +179,9 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ url: publicUrl });
+  return NextResponse.json({
+    url: buildCoproStorageDownloadHref(copropriete_id, uploadData.path),
+    storagePath: uploadData.path,
+  });
 }
 

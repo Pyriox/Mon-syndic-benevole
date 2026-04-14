@@ -9,7 +9,6 @@ import {
   CheckCircle, MessageSquare, User, Shield,
   Circle, AlertCircle, Inbox, Mail,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -151,42 +150,8 @@ export default function AdminSupportShell({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // ── Supabase Realtime : écoute tickets + messages ──
-  useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase
-      .channel('admin-support-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'support_tickets' },
-        () => { void refreshTickets(); },
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'support_messages' },
-        (payload) => {
-          const row = payload.new as { ticket_id?: string } | null;
-          if (row?.ticket_id) {
-            // Rafraîchir la liste pour l'état du ticket
-            void refreshTickets();
-            // Recharger les messages si le ticket est actuellement sélectionné
-            setSelectedId((current) => {
-              if (current === row.ticket_id) {
-                void loadMessages(current);
-              }
-              return current;
-            });
-          }
-        },
-      )
-      .subscribe();
-
-    return () => { void supabase.removeChannel(channel); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadMessages]);
-
   // ── Rafraîchir la liste des tickets ──
-  const refreshTickets = async () => {
+  const refreshTickets = useCallback(async () => {
     setRefreshing(true);
     try {
       const res = await fetch('/api/support/tickets');
@@ -196,7 +161,32 @@ export default function AdminSupportShell({
     } catch { /* silencieux */ } finally {
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  // ── Polling fiable côté admin (fallback au lieu du realtime bloqué par RLS) ──
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void refreshTickets();
+      if (selectedId) {
+        void loadMessages(selectedId);
+      }
+    }, 15000);
+
+    const handleFocus = () => {
+      void refreshTickets();
+      if (selectedId) {
+        void loadMessages(selectedId);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadMessages, refreshTickets, selectedId]);
 
   // ── Envoyer une réponse admin ──
   const handleSend = async (e: React.FormEvent) => {
