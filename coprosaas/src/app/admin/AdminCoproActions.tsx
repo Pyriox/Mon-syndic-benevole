@@ -1,36 +1,14 @@
-  // Fonction utilitaire pour soumettre une action POST (réassignation syndic)
-  const postAction = async (body: Record<string, unknown>, successMessage = 'OK') => {
-    setError('');
-    setPendingAction('reassign_syndic');
-
-    const response = await fetch('/api/admin/coproprietes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    setPendingAction(null);
-    if (response.ok) {
-      setDone(successMessage);
-      router.refresh();
-      return true;
-    }
-
-    setError(`Erreur : ${await getErrorMessage(response)}`);
-    return false;
-  };
-
-'use client';
+﻿'use client';
 // ============================================================
 // Composant client : actions par copropriété dans la table admin
 // ============================================================
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MoreHorizontal, Loader2, RotateCcw, RefreshCw, UserCog, Pencil, Users } from 'lucide-react';
+import { MoreHorizontal, Loader2, UserCog, Pencil, Users } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { appendAdminFrom } from '@/lib/admin-list-params';
-import { AdminConfirmDialog, AdminDialogNotice, AdminPromptDialog } from './AdminActionDialog';
+import { AdminDialogNotice, AdminPromptDialog } from './AdminActionDialog';
 
 interface Props {
   coproId: string;
@@ -44,8 +22,6 @@ interface Props {
   nombreLots?: number | null;
   contextHref?: string;
 }
-
-type ConfirmAction = 'reassign_syndic';
 
 async function getErrorMessage(response: Response, fallback = 'Une erreur est survenue.') {
   try {
@@ -73,7 +49,6 @@ export default function AdminCoproActions({
   const [error, setError] = useState('');
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropPos, setDropPos] = useState<{ top: number; right: number } | null>(null);
-  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [pendingAction, setPendingAction] = useState<'edit' | 'reassign_syndic' | null>(null);
 
   const [editOpen, setEditOpen] = useState(false);
@@ -133,11 +108,26 @@ export default function AdminCoproActions({
     setError(`Erreur : ${await getErrorMessage(response)}`);
   };
 
-  // requestConfirmation supprimé car plus d'action à confirmer
+  const postAction = async (body: Record<string, unknown>, successMessage = 'OK') => {
+    setError('');
+    setPendingAction('reassign_syndic');
 
-  // postAction reste pour reassign_syndic uniquement
+    const response = await fetch('/api/admin/coproprietes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
 
-  // executeConfirmedAction supprimé car plus d'action à confirmer
+    setPendingAction(null);
+    if (response.ok) {
+      setDone(successMessage);
+      router.refresh();
+      return true;
+    }
+
+    setError(`Erreur : ${await getErrorMessage(response)}`);
+    return false;
+  };
 
   const submitReassign = async () => {
     const nextEmail = reassignEmail.trim().toLowerCase();
@@ -234,8 +224,6 @@ export default function AdminCoproActions({
         </form>
       </Modal>
 
-
-
       <AdminPromptDialog
         isOpen={reassignOpen}
         onClose={() => setReassignOpen(false)}
@@ -292,7 +280,6 @@ export default function AdminCoproActions({
                   Voir les copropriétaires
                 </button>
                 <div className="my-1 border-t border-gray-100" />
-                {/* Suppression du bouton Sync depuis Stripe */}
                 <button
                   onClick={() => {
                     setError('');
@@ -305,7 +292,6 @@ export default function AdminCoproActions({
                   <UserCog size={12} className="shrink-0" />
                   Réassigner le syndic
                 </button>
-                {/* Suppression du bouton Réinitialiser (inactif) */}
               </div>
             </>
           )}
@@ -316,4 +302,3 @@ export default function AdminCoproActions({
     </>
   );
 }
-
