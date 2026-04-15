@@ -24,7 +24,7 @@ export default function ArticleFondsTravaux() {
         Avant la loi ALUR (mars 2014), aucune obligation d&apos;épargne collective n&apos;existait dans les copropriétés. Résultat documenté : des milliers d&apos;immeubles sans réserve, incapables de financer des travaux pourtant indispensables — ravalement, toiture, ascenseur — faute d&apos;épargne collective. Les travaux d&apos;urgence, réalisés sans préparation, coûtent en moyenne <strong className={strong}>30 à 40 % plus cher</strong> que des travaux planifiés.
       </p>
       <p className={p}>
-        Depuis le <strong className={strong}>1er janvier 2017</strong>, la constitution d&apos;un fonds de travaux est obligatoire pour toutes les copropriétés concernées. Ce n&apos;est plus optionnel.
+        Depuis le <strong className={strong}>1er janvier 2017</strong>, la constitution d&apos;un fonds de travaux était déjà obligatoire pour les copropriétés qui entraient dans le champ de l&apos;obligation. Ce n&apos;était déjà plus optionnel pour elles.
       </p>
 
       <h2 id="qui-est-concerne" className={h2}>Qui est concerné</h2>
@@ -37,6 +37,13 @@ export default function ArticleFondsTravaux() {
       <p className={p}>
         <strong className={strong}>Seule exception maintenue :</strong> une copropriété peut décider, à l&apos;unanimité, de ne pas constituer le fonds pendant les <strong className={strong}>cinq premières années</strong> suivant la réception de l&apos;immeuble. Au-delà, l&apos;obligation s&apos;applique sans exception.
       </p>
+
+      <div className="my-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles utiles</p>
+        <p className="text-sm text-gray-700">
+          Pour vérifier ce guide dans les textes et références publiques, consultez la <a href="https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256" target="_blank" rel="noopener noreferrer" className={a}>loi du 10 juillet 1965 sur Légifrance</a>, la fiche <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur le syndic de copropriété</a>, la fiche <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F32058" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur l&apos;immatriculation des copropriétés</a> et le dossier <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/" target="_blank" rel="noopener noreferrer" className={a}>ANIL consacré à la copropriété</a>.
+        </p>
+      </div>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Votre fonds de travaux, géré sans risque d&apos;oubli</p>

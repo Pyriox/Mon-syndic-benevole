@@ -165,8 +165,16 @@ export default async function ArticlePage({
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-blue-200 border-t border-white/20 pt-6">
             <span>
-              <time dateTime={post.publishedAt}>{formatPublishedAt(post.publishedAt)}</time>
+              Publié le <time dateTime={post.publishedAt}>{formatPublishedAt(post.publishedAt)}</time>
             </span>
+            {post.updatedAt && post.updatedAt !== post.publishedAt && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-blue-300/60" aria-hidden="true" />
+                <span>
+                  Mis à jour le <time dateTime={post.updatedAt}>{formatPublishedAt(post.updatedAt)}</time>
+                </span>
+              </>
+            )}
             <span className="w-1 h-1 rounded-full bg-blue-300/60" aria-hidden="true" />
             <span>{post.readingTime} min de lecture</span>
           </div>

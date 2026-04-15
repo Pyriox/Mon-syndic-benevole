@@ -133,6 +133,7 @@ export const posts: BlogPost[] = [
       'Tout comprendre sur le fonds de travaux ALUR : montant minimum, copropriétés concernées, règles de gestion et impact pour un syndic bénévole.',
     // 150 chars
     publishedAt: '2026-03-19',
+    updatedAt: '2026-04-15',
     readingTime: 8,
     category: 'Guide pratique – Finances & Réglementation',
     keywords: [
@@ -231,6 +232,7 @@ export const posts: BlogPost[] = [
     description:
       'Quelles sont les obligations légales du syndic bénévole ? AG, comptabilité, documents, assurance, fonds travaux et responsabilités à connaître.',
     publishedAt: '2026-03-21',
+    updatedAt: '2026-04-15',
     readingTime: 9,
     category: 'Guide pratique – Obligations légales',
     keywords: [
@@ -376,6 +378,7 @@ export const posts: BlogPost[] = [
       'Assemblée générale copropriété : convocation J-21, ordre du jour, règles de majorité (art. 24/25/26), procès-verbal — guide complet pour syndic bénévole.',
     // 153 chars
     publishedAt: '2026-04-15',
+    updatedAt: '2026-04-15',
     readingTime: 11,
     category: 'Guide pratique – Assemblée générale',
     keywords: [

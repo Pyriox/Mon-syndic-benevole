@@ -27,6 +27,13 @@ export default function ArticleObligationsSyndicBenevole() {
         La seule différence : le syndic bénévole n&apos;est pas soumis à la loi Hoguet (licence professionnelle, assurance RCP obligatoire). Il doit en revanche être copropriétaire de l&apos;immeuble concerné.
       </p>
 
+      <div className="my-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles utiles</p>
+        <p className="text-sm text-gray-700">
+          Pour recouper ce guide avec les références publiques, consultez la fiche <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur le syndic de copropriété</a>, le dossier <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/N31338" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur les acteurs de la copropriété</a>, la page <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/" target="_blank" rel="noopener noreferrer" className={a}>ANIL sur le syndic</a> et la page ANIL sur <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/immatriculation-des-coproprietes/" target="_blank" rel="noopener noreferrer" className={a}>l&apos;immatriculation des copropriétés</a>.
+        </p>
+      </div>
+
       <div className="my-6 bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-gray-700">
         <p className="font-semibold text-amber-800 mb-2">Responsabilité personnelle</p>
         <p>Le syndic bénévole peut être tenu responsable de ses fautes dans l&apos;exercice de son mandat (gestion de fonds, décisions prises sans AG, délais manqués). Sa responsabilité civile personnelle peut être engagée si le syndicat des copropriétaires subit un préjudice.</p>
@@ -56,11 +63,11 @@ export default function ArticleObligationsSyndicBenevole() {
             </tr>
             <tr>
               <td className="py-3 px-4 font-medium text-gray-800">J+1 mois après AG</td>
-              <td className="py-3 px-4 text-gray-700">Notification du PV à tous les copropriétaires</td>
+              <td className="py-3 px-4 text-gray-700">Notification du PV aux copropriétaires opposants ou défaillants</td>
               <td className="py-3 px-4 text-gray-500">Art. 17 décret 1967</td>
             </tr>
             <tr className="bg-gray-50">
-              <td className="py-3 px-4 font-medium text-gray-800">J+2 mois après AG</td>
+              <td className="py-3 px-4 font-medium text-gray-800">Après l&apos;AG</td>
               <td className="py-3 px-4 text-gray-700">Mise en œuvre des décisions votées</td>
               <td className="py-3 px-4 text-gray-500">Art. 18 loi 1965</td>
             </tr>
@@ -141,7 +148,7 @@ export default function ArticleObligationsSyndicBenevole() {
           <li>Vote de la cotisation au fonds de travaux (art. 14-2 loi 1965)</li>
           <li>[Résolution spécifique 1]</li>
           <li>[Résolution spécifique 2]</li>
-          <li>Questions diverses</li>
+          <li>Questions diverses (sans vote)</li>
         </ol>
         <p className="mb-4">
           Les documents suivants sont joints à la présente convocation :<br />
@@ -171,7 +178,7 @@ export default function ArticleObligationsSyndicBenevole() {
 
       <h2 id="pv-ag" className={h2}>Template : procès-verbal d&apos;AG</h2>
       <p className={p}>
-        Le PV doit être signé séance tenante par le président de séance, le secrétaire, et les scrutateurs. Il doit être notifié à tous les copropriétaires dans le mois suivant l&apos;AG.
+        Le PV doit être signé séance tenante par le président de séance, le secrétaire, et les scrutateurs. Il doit être notifié dans le mois aux copropriétaires opposants ou défaillants. En pratique, beaucoup de syndics l&apos;adressent à tous pour simplifier le suivi.
       </p>
 
       <div className="my-6 bg-gray-50 border border-gray-200 rounded-xl p-5 text-sm text-gray-700 font-mono leading-relaxed">
@@ -181,7 +188,7 @@ export default function ArticleObligationsSyndicBenevole() {
         <p className="mb-2"><strong>Présidence de séance :</strong> [Nom], élu(e) à l&apos;unanimité</p>
         <p className="mb-2"><strong>Secrétaire :</strong> [Nom]</p>
         <p className="mb-2"><strong>Présents et représentés :</strong></p>
-        <p className="mb-4">[Liste des lots, propriétaires, tantièmes, présents/représentés/absents → Total : XX tantièmes sur YY = quorum atteint / non atteint]</p>
+        <p className="mb-4">[Liste des lots, propriétaires, tantièmes, présents/représentés/absents → Total : XX tantièmes représentés sur YY et résultat de chaque vote]</p>
         <p className="mb-2 font-bold">RÉSOLUTION N°1 — [Intitulé]</p>
         <p className="mb-2">L&apos;assemblée, après en avoir délibéré, décide à la majorité de l&apos;article [24/25/26] :</p>
         <p className="mb-1">[Texte exact de la décision]</p>
@@ -343,15 +350,15 @@ export default function ArticleObligationsSyndicBenevole() {
             </ul>
           </div>
           <div className="px-5 py-4">
-            <p className="text-xs font-semibold text-green-600 mb-2">J+1 mois après l&apos;AG</p>
+            <p className="text-xs font-semibold text-green-600 mb-2">Après l&apos;AG</p>
             <ul className="space-y-1.5">
               <li className="flex items-start gap-2.5 text-sm text-gray-700">
                 <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
-                Notifier le PV signé à tous les copropriétaires (LRAR ou e-mail accepté)
+                  Notifier le PV signé aux copropriétaires opposants ou défaillants dans le mois
               </li>
               <li className="flex items-start gap-2.5 text-sm text-gray-700">
                 <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
-                Mettre en œuvre les décisions votées (commandes, contrats)
+                  Mettre en œuvre les décisions votées sans attendre (commandes, contrats)
               </li>
               <li className="flex items-start gap-2.5 text-sm text-gray-700">
                 <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
@@ -359,7 +366,7 @@ export default function ArticleObligationsSyndicBenevole() {
               </li>
               <li className="flex items-start gap-2.5 text-sm text-gray-700">
                 <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border border-gray-300 bg-white" aria-hidden="true" />
-                Mettre à jour le registre national des copropriétés
+                  Mettre à jour le registre national des copropriétés dans les 2 mois après l&apos;AG qui approuve les comptes
               </li>
             </ul>
           </div>
