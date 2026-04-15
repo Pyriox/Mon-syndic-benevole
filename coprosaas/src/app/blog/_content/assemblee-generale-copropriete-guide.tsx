@@ -17,7 +17,7 @@ export default function ArticleAssembleeGenerale() {
         Il est 23 h. L&apos;assemblée générale est dans trois semaines et Anne-Sophie, syndic bénévole d&apos;une résidence de 10 lots à Nantes, en est encore à chercher les relevés bancaires dans ses e-mails, à reconstituer les dépenses de l&apos;année poste par poste, à vérifier si elle a bien tous les devis annexés à convoquer. &ldquo;La première fois, j&apos;ai passé quatre week-ends entiers à préparer une réunion de deux heures.&rdquo;
       </p>
       <p className={p}>
-        La deuxième année, après avoir migré vers un outil dédié, la même AG lui a pris <strong className={strong}>une matinée</strong> — comptes bouclés, convocations générées, envoyées avec le bon délai. La réunion elle-même s&apos;est tenue en 1 h 30 chrono.
+        La deuxième année, après avoir migré vers un outil dédié, la même AG lui a pris <strong className={strong}>une matinée</strong>{' '}— comptes bouclés, convocations générées, envoyées avec le bon délai. La réunion elle-même s&apos;est tenue en 1 h 30 chrono.
       </p>
       <p className={p}>
         Ce guide couvre l&apos;intégralité du cycle AG — de la préparation des comptes à la notification du PV — avec les templates légaux, les règles de majorité, les erreurs à éviter, et ce que vous pouvez déléguer à un outil pour ne plus jamais rater une date critique.
@@ -42,7 +42,7 @@ export default function ArticleAssembleeGenerale() {
         La loi impose une <strong className={strong}>assemblée générale ordinaire au moins une fois par an</strong>, dans les six mois suivant la clôture de l&apos;exercice comptable (art. 7 décret du 17 mars 1967). Si votre exercice clôt au 31 décembre, l&apos;AG doit se tenir au plus tard le 30 juin de l&apos;année suivante.
       </p>
       <p className={p}>
-        En pratique, la majorité des copropriétés tiennent leur AG <strong className={strong}>entre mars et juin</strong> — période où les comptes de l&apos;année précédente sont bouclés et où la mobilisation des copropriétaires est la meilleure.
+        En pratique, la majorité des copropriétés tiennent leur AG <strong className={strong}>entre mars et juin</strong>{' '}— période où les comptes de l&apos;année précédente sont bouclés et où la mobilisation des copropriétaires est la meilleure.
       </p>
 
       <div className="overflow-x-auto mb-6 rounded-xl border border-gray-200">
@@ -99,7 +99,7 @@ export default function ArticleAssembleeGenerale() {
 
       <h3 className={h3}>1. Clôturer les comptes de l&apos;exercice précédent</h3>
       <p className={p}>
-        Les copropriétaires doivent approuver les comptes de l&apos;exercice N-1 en AG. Vous devez donc les <strong className={strong}>clôturer avant d&apos;envoyer les convocations</strong> — pas après. Deux colonnes à préparer : dépenses réalisées vs budget voté. L&apos;écart explique la régularisation annuelle (solde à payer ou trop-perçu à rembourser).
+        Les copropriétaires doivent approuver les comptes de l&apos;exercice N-1 en AG. Vous devez donc les <strong className={strong}>clôturer avant d&apos;envoyer les convocations</strong>{' '}— pas après. Deux colonnes à préparer : dépenses réalisées vs budget voté. L&apos;écart explique la régularisation annuelle (solde à payer ou trop-perçu à rembourser).
       </p>
       <p className={p}>
         Pour comprendre en détail le calcul de la régularisation et sa répartition par copropriétaire (notamment quand des <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>charges spéciales</a> sont impliquées), consultez notre guide complet sur les appels de fonds.
@@ -110,7 +110,7 @@ export default function ArticleAssembleeGenerale() {
         Le budget de l&apos;exercice N+1 doit être présenté poste par poste : assurance MRI, nettoyage, électricité des communs, contrat ascenseur, espaces verts, petits travaux d&apos;entretien courants. Chaque poste doit s&apos;appuyer sur un <strong className={strong}>justificatif ou un devis</strong> pour être défendable en AG.
       </p>
       <p className={p}>
-        N&apos;oubliez pas le vote du <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a> — obligatoire pour toutes les copropriétés depuis 2025 (minimum 5 % du budget prévisionnel). Il figure systématiquement à l&apos;ordre du jour.
+        N&apos;oubliez pas le vote du <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a>{' '}— obligatoire pour toutes les copropriétés depuis 2025 (minimum 5 % du budget prévisionnel). Il figure systématiquement à l&apos;ordre du jour.
       </p>
 
       <h3 className={h3}>3. Recenser les résolutions</h3>
@@ -287,7 +287,7 @@ export default function ArticleAssembleeGenerale() {
       <div className="my-6 rounded-xl bg-blue-50 border border-blue-100 p-5">
         <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-2">La règle du second tour (art. 25-1)</p>
         <p className="text-sm text-gray-700">
-          Si une résolution de l&apos;art. 25 recueille <strong>plus du tiers des voix</strong> sans atteindre la majorité absolue, un <strong>second vote à la majorité de l&apos;art. 24</strong> peut être organisé <em>immédiatement</em> lors de la même AG — sans nouvelle convocation. C&apos;est souvent la résolution qui passe au second tour qui débloque une situation. Ne levez pas la séance trop vite.
+          Si une résolution de l&apos;art. 25 recueille <strong>plus du tiers des voix</strong> sans atteindre la majorité absolue, un <strong>second vote à la majorité de l&apos;art. 24</strong> peut être organisé <em>immédiatement</em>{' '}lors de la même AG — sans nouvelle convocation. C&apos;est souvent la résolution qui passe au second tour qui débloque une situation. Ne levez pas la séance trop vite.
         </p>
       </div>
 
@@ -295,12 +295,12 @@ export default function ArticleAssembleeGenerale() {
 
       <h3 className={h3}>Avant d&apos;ouvrir la séance</h3>
       <p className={p}>
-        Préparez votre <strong className={strong}>feuille de présence</strong> en listant tous les lots, leurs propriétaires et leurs tantièmes. À l&apos;arrivée de chaque copropriétaire, notez sa présence et récoltez les pouvoirs des absents qui ont délégué. Il n&apos;y a pas de quorum légal en copropriété — l&apos;AG peut donc se tenir même avec très peu de présents. En revanche, cela ne signifie pas qu&apos;un seul copropriétaire peut automatiquement faire adopter toutes les résolutions : tout dépend des tantièmes qu&apos;il représente et de la majorité requise.
+        Préparez votre <strong className={strong}>feuille de présence</strong>{' '}en listant tous les lots, leurs propriétaires et leurs tantièmes. À l&apos;arrivée de chaque copropriétaire, notez sa présence et récoltez les pouvoirs des absents qui ont délégué. Il n&apos;y a pas de quorum légal en copropriété — l&apos;AG peut donc se tenir même avec très peu de présents. En revanche, cela ne signifie pas qu&apos;un seul copropriétaire peut automatiquement faire adopter toutes les résolutions : tout dépend des tantièmes qu&apos;il représente et de la majorité requise.
       </p>
 
       <h3 className={h3}>Ouverture de la séance</h3>
       <p className={p}>
-        La première résolution est toujours la désignation du <strong className={strong}>président de séance</strong> (à ne pas confondre avec le syndic — c&apos;est souvent un copropriétaire différent) et du <strong className={strong}>secrétaire de séance</strong> (qui rédige ou aide à rédiger le PV). Notez le nombre de tantièmes représentés — c&apos;est la base du calcul pour toutes les majorités.
+        La première résolution est toujours la désignation du <strong className={strong}>président de séance</strong>{' '}(à ne pas confondre avec le syndic — c&apos;est souvent un copropriétaire différent) et du <strong className={strong}>secrétaire de séance</strong>{' '}(qui rédige ou aide à rédiger le PV). Notez le nombre de tantièmes représentés — c&apos;est la base du calcul pour toutes les majorités.
       </p>
 
       <h3 className={h3}>Pendant les votes</h3>
@@ -490,7 +490,7 @@ export default function ArticleAssembleeGenerale() {
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">3</div>
             <div>
               <p className="text-sm font-semibold text-gray-900 mb-0.5">Envoi des convocations PDF</p>
-              <p className="text-sm text-gray-600">Un clic envoie à chaque copropriétaire sa convocation personnalisée en PDF — avec ses données de lot, les résolutions, les pièces jointes et le formulaire de vote par correspondance. L&apos;envoi est tracé avec date et heure pour chaque destinataire.</p>
+              <p className="text-sm text-gray-600">Un clic envoie à chaque copropriétaire sa convocation personnalisée en PDF — avec ses données de lot, les résolutions, les pièces jointes et le formulaire de vote par correspondance. L&apos;envoi est suivi pour chaque destinataire, avec date d&apos;envoi enregistrée.</p>
             </div>
           </div>
           <div className="px-6 py-4 flex gap-4 items-start">
@@ -504,7 +504,7 @@ export default function ArticleAssembleeGenerale() {
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">5</div>
             <div>
               <p className="text-sm font-semibold text-gray-900 mb-0.5">Notification du PV et création des appels de fonds</p>
-              <p className="text-sm text-gray-600">Envoyez le PV signé à tous les copropriétaires depuis la plateforme — avec preuve d&apos;envoi datée. Si le budget N+1 a été voté, il est disponible immédiatement comme base pour les prochains <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>appels de fonds trimestriels</a>.</p>
+              <p className="text-sm text-gray-600">Envoyez le PV signé à tous les copropriétaires depuis la plateforme — avec historique d&apos;envoi centralisé. Si le budget N+1 a été voté, il est disponible immédiatement comme base pour les prochains <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>appels de fonds trimestriels</a>.</p>
             </div>
           </div>
         </div>
@@ -531,9 +531,9 @@ export default function ArticleAssembleeGenerale() {
               <td className="py-3 px-4 text-center text-green-700 bg-blue-50/30">1 clic pour tous ✓</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 text-gray-700">Envoi avec traçabilité</td>
-              <td className="py-3 px-4 text-center text-gray-600">LRAR papier ou e-mail sans preuve</td>
-              <td className="py-3 px-4 text-center text-green-700 bg-blue-50/30">Horodaté par destinataire ✓</td>
+              <td className="py-3 px-4 text-gray-700">Suivi des envois</td>
+              <td className="py-3 px-4 text-center text-gray-600">LRAR : preuve papier / e-mail : suivi dispersé</td>
+              <td className="py-3 px-4 text-center text-green-700 bg-blue-50/30">Historique centralisé par destinataire ✓</td>
             </tr>
             <tr className="bg-gray-50">
               <td className="py-3 px-4 text-gray-700">Vérification de la majorité applicable</td>
@@ -562,7 +562,7 @@ export default function ArticleAssembleeGenerale() {
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Anne-Sophie prépare maintenant son AG en une matinée.</p>
         <p className="text-sm text-gray-600 mb-4">
-          Comptes clôturés dans la plateforme, budget pré-rempli, convocations générées en un clic avec le bon délai — le cycle AG complet est guidé. Pour aller plus loin sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a> tout au long de l&apos;année, consultez notre guide complet.
+          Comptes clôturés dans la plateforme, budget pré-rempli, convocations générées en un clic avec le bon délai — le cycle AG complet est guidé. Pour aller plus loin sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a>{' '}tout au long de l&apos;année, consultez notre guide complet.
         </p>
         <CtaLink
           ctaLocation="blog_article"
@@ -577,12 +577,12 @@ export default function ArticleAssembleeGenerale() {
 
       <h3 className={h3}>Peut-on tenir une AG sans que tous les copropriétaires soient présents ?</h3>
       <p className={p}>
-        Oui. Il n&apos;y a <strong className={strong}>pas de quorum en copropriété</strong> — l&apos;AG délibère quel que soit le nombre de présents ou représentés. En revanche, un seul copropriétaire présent ne peut pas automatiquement faire adopter toutes les résolutions : tout dépend du nombre de tantièmes qu&apos;il représente et de la majorité applicable. Les absents sans pouvoir ne comptent pas pour les résolutions de l&apos;art. 24, alors qu&apos;ils pèsent sur les majorités plus exigeantes comme l&apos;art. 25.
+        Oui. Il n&apos;y a <strong className={strong}>pas de quorum en copropriété</strong>{' '}— l&apos;AG délibère quel que soit le nombre de présents ou représentés. En revanche, un seul copropriétaire présent ne peut pas automatiquement faire adopter toutes les résolutions : tout dépend du nombre de tantièmes qu&apos;il représente et de la majorité applicable. Les absents sans pouvoir ne comptent pas pour les résolutions de l&apos;art. 24, alors qu&apos;ils pèsent sur les majorités plus exigeantes comme l&apos;art. 25.
       </p>
 
       <h3 className={h3}>Peut-on convoquer l&apos;AG par e-mail ?</h3>
       <p className={p}>
-        Oui, mais <strong className={strong}>uniquement si le copropriétaire a donné son accord écrit préalable</strong> pour ce mode de notification. Sans accord individuel, la convocation doit être envoyée par LRAR ou remise en main propre contre émargement. L&apos;accord peut être recueilli lors d&apos;une AG précédente (mention au PV) ou par un formulaire signé. Pour les copropriétaires qui n&apos;ont pas donné leur accord, maintenez l&apos;envoi postal.
+        Oui, mais <strong className={strong}>uniquement si le copropriétaire a donné son accord écrit préalable</strong>{' '}pour ce mode de notification. Sans accord individuel, la convocation doit être envoyée par LRAR ou remise en main propre contre émargement. L&apos;accord peut être recueilli lors d&apos;une AG précédente (mention au PV) ou par un formulaire signé. Pour les copropriétaires qui n&apos;ont pas donné leur accord, maintenez l&apos;envoi postal.
       </p>
 
       <h3 className={h3}>Combien coûte l&apos;envoi des convocations par recommandé ?</h3>
@@ -602,7 +602,7 @@ export default function ArticleAssembleeGenerale() {
 
       <h3 className={h3}>Combien de temps faut-il préparer une AG ordinaire, honnêtement ?</h3>
       <p className={p}>
-        Sans outil dédié : comptez <strong className={strong}>6 à 9 heures réparties sur 3 à 4 semaines</strong> — clôture des comptes, mise en forme des documents, publipostage des convocations, rédaction du PV. Avec un outil comme Mon Syndic Bénévole où les données sont déjà en place (dépenses enregistrées au fil de l&apos;année, tantièmes configurés) : <strong className={strong}>1 h 30 à 2 heures</strong> au total. Pour plus de détails sur la façon dont un <a href="/blog/logiciel-syndic-benevole" className={a}>logiciel pour syndic bénévole</a> change la gestion quotidienne, consultez notre comparatif.
+        Sans outil dédié : comptez <strong className={strong}>6 à 9 heures réparties sur 3 à 4 semaines</strong>{' '}— clôture des comptes, mise en forme des documents, publipostage des convocations, rédaction du PV. Avec un outil comme Mon Syndic Bénévole où les données sont déjà en place (dépenses enregistrées au fil de l&apos;année, tantièmes configurés) : <strong className={strong}>1 h 30 à 2 heures</strong> au total. Pour plus de détails sur la façon dont un <a href="/blog/logiciel-syndic-benevole" className={a}>logiciel pour syndic bénévole</a>{' '}change la gestion quotidienne, consultez notre comparatif.
       </p>
 
       <h3 className={h3}>Qui signe le PV si le président de séance n&apos;est pas le syndic ?</h3>
