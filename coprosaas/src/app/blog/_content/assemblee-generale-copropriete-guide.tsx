@@ -321,7 +321,7 @@ export default function ArticleAssembleeGenerale() {
               <tr><td className="py-2 px-3 text-gray-700">Contre</td><td className="py-2 px-3 text-right">180</td></tr>
               <tr><td className="py-2 px-3 text-gray-700">Abstentions</td><td className="py-2 px-3 text-right">80</td></tr>
               <tr className="bg-green-50 font-semibold"><td className="py-2 px-3 text-gray-800">Total exprimés (présents)</td><td className="py-2 px-3 text-right">680</td><td className="py-2 px-3 text-red-600">✗ 420 &lt; 501 — résolution rejetée</td></tr>
-              <tr><td className="py-2 px-3 text-gray-600 italic" colSpan={3} className="py-2 px-3 text-gray-600 italic">Mais &gt; 333 (1/3 de 1 000) → second vote art. 24 possible immédiatement. À la majorité des présents (420 &gt; 260) : résolution adoptée ✓</td></tr>
+              <tr><td colSpan={3} className="py-2 px-3 text-gray-600 italic">Mais &gt; 333 (1/3 de 1 000) → second vote art. 24 possible immédiatement. À la majorité des présents (420 &gt; 260) : résolution adoptée ✓</td></tr>
             </tbody>
           </table>
         </div>
