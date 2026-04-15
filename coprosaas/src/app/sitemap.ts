@@ -8,19 +8,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${APP_URL}/blog/${post.slug}`,
     lastModified: new Date(post.updatedAt ?? post.publishedAt),
     changeFrequency: 'monthly',
-    priority: post.slug === 'logiciel-syndic-benevole' || post.slug === 'migrer-vers-mon-syndic-benevole' ? 0.8 : 0.7,
+    priority: ['logiciel-syndic-benevole', 'migrer-vers-mon-syndic-benevole', 'assemblee-generale-copropriete-guide'].includes(post.slug) ? 0.8 : 0.7,
   }));
 
   return [
     {
       url: APP_URL,
-      lastModified: new Date('2026-03-22'),
+      lastModified: new Date('2026-04-15'),
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
       url: `${APP_URL}/blog`,
-      lastModified: new Date('2026-03-22'),
+      lastModified: new Date('2026-04-15'),
       changeFrequency: 'weekly',
       priority: 0.8,
     },

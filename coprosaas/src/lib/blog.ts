@@ -161,7 +161,7 @@ export const posts: BlogPost[] = [
     faqs: [
       {
         q: "Le fonds de travaux ALUR est-il obligatoire pour toutes les copropriétés ?",
-        a: "Il est obligatoire pour les copropriétés de 10 lots ou plus depuis le 1er janvier 2017. Les copropriétés de moins de 10 lots peuvent en constituer un volontairement.",
+        a: "Oui, depuis le 1er janvier 2025 (loi Habitat dégradé du 9 avril 2024), le fonds de travaux est obligatoire pour toutes les copropriétés soumises à la loi du 10 juillet 1965, quelle que soit leur taille. La dérogation dont bénéficiaient les copropriétés de 10 lots et moins a été supprimée.",
       },
       {
         q: "Quel est le montant minimum du fonds de travaux obligatoire ?",
@@ -320,8 +320,8 @@ export const posts: BlogPost[] = [
     slug: 'migrer-vers-mon-syndic-benevole',
     title: 'Migrer vers Mon Syndic Bénévole : guide complet en 7 étapes',
     description:
-      'Comment migrer vers Mon Syndic Bénévole depuis Excel ou un syndic professionnel : lots, tantièmes, soldes de départ, fonds de travaux, premier appel de fonds — opérationnel en une demi-journée.',
-    // 196 chars
+      'Migrez vers Mon Syndic Bénévole en une demi-journée : lots, tantièmes, soldes de départ, fonds de travaux, premier appel de fonds — guide complet en 7 étapes.',
+    // 155 chars
     publishedAt: '2026-03-28',
     readingTime: 10,
     category: 'Guide pratique – Migration & Prise en main',
@@ -366,6 +366,64 @@ export const posts: BlogPost[] = [
       {
         q: "Que se passe-t-il si je souhaite arrêter Mon Syndic Bénévole plus tard ?",
         a: "Vos données restent accessibles tant que votre compte est actif. Les PDF générés (avis d'appel de fonds, convocations, PV) sont téléchargeables depuis chaque section et peuvent être archivés avant de quitter. Aucun engagement de durée minimum au-delà de chaque mois souscrit.",
+      },
+    ],
+  },
+  {
+    slug: 'assemblee-generale-copropriete-guide',
+    title: 'Assemblée générale copropriété : guide complet pour syndic bénévole',
+    description:
+      'Assemblée générale copropriété : convocation J-21, ordre du jour, règles de majorité (art. 24/25/26), procès-verbal — guide complet pour syndic bénévole.',
+    // 153 chars
+    publishedAt: '2026-04-15',
+    readingTime: 11,
+    category: 'Guide pratique – Assemblée générale',
+    keywords: [
+      'assemblée générale copropriété',
+      'préparer AG copropriété',
+      'convoquer assemblée générale copropriété',
+      'ordre du jour AG copropriété',
+      'règles de majorité assemblée générale copropriété',
+      'procès-verbal AG copropriété',
+      'convocation AG copropriété délai 21 jours',
+    ],
+    toc: [
+      { id: 'quand-ag', text: 'Quand tenir l\'AG : les dates légales' },
+      { id: 'preparation', text: 'J-8 semaines : préparer le contenu de l\'AG' },
+      { id: 'convocation', text: 'La convocation : template et points légaux (J-21)' },
+      { id: 'regles-majorite', text: 'Les règles de majorité : articles 24, 25 et 26' },
+      { id: 'deroulement', text: 'Le jour de l\'AG : conduire la séance' },
+      { id: 'pv-redaction', text: 'Le procès-verbal : rédiger, signer, notifier' },
+      { id: 'apres-ag', text: 'Après l\'AG : les obligations dans les 30 jours' },
+      { id: 'erreurs', text: '5 erreurs qui peuvent invalider votre AG' },
+      { id: 'outil', text: 'Ce que Mon Syndic Bénévole automatise dans le cycle AG' },
+      { id: 'questions-frequentes', text: 'Questions fréquentes' },
+      { id: 'en-resume', text: 'En résumé' },
+    ],
+    faqs: [
+      {
+        q: "Quel est le délai légal pour convoquer une assemblée générale de copropriété ?",
+        a: "La convocation doit être réceptionnée par chaque copropriétaire au moins 21 jours calendaires avant la date de l'AG (art. 9 décret du 17 mars 1967). Ce délai court à partir de la première présentation de la lettre recommandée, pas de la date d'envoi. Prévoyez systématiquement 24 jours de marge.",
+      },
+      {
+        q: "Quelle majorité faut-il pour voter le budget prévisionnel en AG ?",
+        a: "Le budget prévisionnel est voté à la majorité de l'article 24 (majorité simple des copropriétaires présents et représentés). C'est la majorité la plus simple à atteindre, contrairement au fonds de travaux ALUR qui nécessite la majorité de l'article 25.",
+      },
+      {
+        q: "Peut-on voter en assemblée générale sans être présent ?",
+        a: "Oui, de deux façons : délégation de pouvoir à un autre copropriétaire, ou vote par correspondance via le formulaire obligatoire joint à la convocation (depuis le décret du 2 juillet 2020, loi ELAN). Il n'y a pas de quorum en copropriété — l'AG délibère quel que soit le nombre de présents.",
+      },
+      {
+        q: "Dans quel délai faut-il envoyer le procès-verbal après l'AG ?",
+        a: "Le PV doit être notifié à tous les copropriétaires dans le mois suivant l'AG (art. 17 du décret du 17 mars 1967). Le délai de 2 mois pour contester une résolution ne court qu'à partir de cette notification. Envoyez-le le plus tôt possible pour fermer cette fenêtre.",
+      },
+      {
+        q: "Que se passe-t-il si la majorité de l'article 25 n'est pas atteinte ?",
+        a: "Si une résolution de l'art. 25 recueille plus d'un tiers des voix sans atteindre la majorité absolue, un second vote à la majorité simple de l'art. 24 peut être organisé immédiatement dans la même AG (art. 25-1). Ce second tour peut se tenir sans nouvelle convocation.",
+      },
+      {
+        q: "Combien de temps faut-il pour préparer une AG de copropriété ?",
+        a: "Sans outil dédié : 6 à 9 heures sur 3 à 4 semaines (clôture des comptes, convocations, publipostage, rédaction du PV). Avec Mon Syndic Bénévole, où les données sont enregistrées au fil de l'année : 1 h 30 à 2 heures au total.",
       },
     ],
   },

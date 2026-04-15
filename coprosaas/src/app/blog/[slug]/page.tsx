@@ -23,6 +23,7 @@ const contentLoaders: Record<string, () => Promise<ArticleModule>> = {
   'obligations-syndic-benevole': () => import('../_content/obligations-syndic-benevole'),
   'logiciel-syndic-benevole': () => import('../_content/logiciel-syndic-benevole'),
   'migrer-vers-mon-syndic-benevole': () => import('../_content/migrer-vers-mon-syndic-benevole'),
+  'assemblee-generale-copropriete-guide': () => import('../_content/assemblee-generale-copropriete-guide'),
 };
 
 // ── Static params ────────────────────────────────────────────────────────────
