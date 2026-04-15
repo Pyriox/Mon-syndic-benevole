@@ -394,7 +394,7 @@ export const posts: BlogPost[] = [
       { id: 'regles-majorite', text: 'Les règles de majorité : articles 24, 25 et 26' },
       { id: 'deroulement', text: 'Le jour de l\'AG : conduire la séance' },
       { id: 'pv-redaction', text: 'Le procès-verbal : rédiger, signer, notifier' },
-      { id: 'apres-ag', text: 'Après l\'AG : les obligations dans les 30 jours' },
+      { id: 'apres-ag', text: 'Après l\'AG : les suites à donner sans attendre' },
       { id: 'erreurs', text: '5 erreurs qui peuvent invalider votre AG' },
       { id: 'outil', text: 'Ce que Mon Syndic Bénévole automatise dans le cycle AG' },
       { id: 'questions-frequentes', text: 'Questions fréquentes' },
@@ -407,15 +407,15 @@ export const posts: BlogPost[] = [
       },
       {
         q: "Quelle majorité faut-il pour voter le budget prévisionnel en AG ?",
-        a: "Le budget prévisionnel est voté à la majorité de l'article 24 (majorité simple des copropriétaires présents et représentés). C'est la majorité la plus simple à atteindre, contrairement au fonds de travaux ALUR qui nécessite la majorité de l'article 25.",
+        a: "Le budget prévisionnel est voté à la majorité de l'article 24, c'est-à-dire à la majorité des copropriétaires présents ou représentés. C'est la majorité la plus simple à atteindre parmi les votes courants d'une AG ordinaire.",
       },
       {
         q: "Peut-on voter en assemblée générale sans être présent ?",
-        a: "Oui, de deux façons : délégation de pouvoir à un autre copropriétaire, ou vote par correspondance via le formulaire obligatoire joint à la convocation (depuis le décret du 2 juillet 2020, loi ELAN). Il n'y a pas de quorum en copropriété — l'AG délibère quel que soit le nombre de présents.",
+        a: "Oui, de deux façons : délégation de pouvoir à un autre copropriétaire, ou vote par correspondance via le formulaire joint à la convocation. Il n'y a pas de quorum en copropriété : l'AG peut donc se tenir avec peu de présents. En revanche, l'adoption d'une résolution dépend toujours des tantièmes représentés et de la majorité requise.",
       },
       {
         q: "Dans quel délai faut-il envoyer le procès-verbal après l'AG ?",
-        a: "Le PV doit être notifié à tous les copropriétaires dans le mois suivant l'AG (art. 17 du décret du 17 mars 1967). Le délai de 2 mois pour contester une résolution ne court qu'à partir de cette notification. Envoyez-le le plus tôt possible pour fermer cette fenêtre.",
+        a: "Le procès-verbal doit être notifié dans le mois aux copropriétaires opposants ou défaillants. En pratique, beaucoup de syndics l'adressent à tous les copropriétaires pour garder une preuve d'information uniforme. Le délai de 2 mois pour contester une résolution court à partir de cette notification.",
       },
       {
         q: "Que se passe-t-il si la majorité de l'article 25 n'est pas atteinte ?",

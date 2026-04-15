@@ -85,6 +85,13 @@ export default function ArticleAssembleeGenerale() {
         </p>
       </div>
 
+      <div className="my-6 rounded-xl bg-slate-50 border border-slate-200 p-5">
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles utiles</p>
+        <p className="text-sm text-gray-700">
+          Pour recouper ce guide avec les références publiques, consultez la page de l&apos;<a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/assemblee-generale/" target="_blank" rel="noopener noreferrer" className={a}>ANIL sur l&apos;assemblée générale</a>, la fiche <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F35288" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur la contestation d&apos;une décision d&apos;AG</a> et la page ANIL sur <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/immatriculation-des-coproprietes/" target="_blank" rel="noopener noreferrer" className={a}>l&apos;immatriculation et la mise à jour du registre des copropriétés</a>.
+        </p>
+      </div>
+
       <h2 id="preparation" className={h2}>J-8 semaines : préparer le contenu de l&apos;AG</h2>
       <p className={p}>
         La majorité du travail de l&apos;AG se fait en amont — pas le soir de la réunion. Voici les quatre chantiers à ouvrir deux mois avant.
@@ -134,8 +141,8 @@ export default function ArticleAssembleeGenerale() {
           {([
             { cat: 'Comptabilité', docs: ['Comptes de l\'exercice clos — dépenses par poste, montant appelé, solde', 'Tableau de répartition des charges par copropriétaire', 'Relevés bancaires du compte courant et du compte fonds de travaux'] },
             { cat: 'Résolutions financières', docs: ['Projet de budget prévisionnel N+1 (poste par poste)', 'Proposition de cotisation au fonds de travaux'] },
-            { cat: 'Travaux votés', docs: ['Au moins deux devis comparatifs pour chaque résolution travaux de l\'article 25', 'Note technique de présentation pour les travaux importants'] },
-            { cat: 'Formulaires obligatoires', docs: ['Formulaire de vote par correspondance (obligatoire depuis la loi ELAN 2018)', 'Formulaire de délégation de pouvoirs'] },
+            { cat: 'Travaux votés', docs: ['Devis comparatifs si votre règlement, une décision antérieure ou la nature des travaux impose une mise en concurrence', 'Note technique de présentation pour les travaux importants'] },
+            { cat: 'Formulaires obligatoires', docs: ['Formulaire de vote par correspondance (obligatoire depuis le décret du 2 juillet 2020)', 'Formulaire de délégation de pouvoirs'] },
           ] as { cat: string; docs: string[] }[]).map(({ cat, docs }) => (
             <div key={cat} className="px-5 py-4">
               <p className="text-xs font-semibold text-blue-600 mb-2">{cat}</p>
@@ -177,9 +184,9 @@ export default function ArticleAssembleeGenerale() {
           <li>Approbation des comptes de l&apos;exercice [N-1] — art. 18 loi 1965 (majorité art. 24)</li>
           <li>Quitus de gestion au syndic pour l&apos;exercice [N-1] (majorité art. 24)</li>
           <li>Vote du budget prévisionnel [N+1] — art. 14-1 loi 1965 (majorité art. 24)</li>
-          <li>Vote de la cotisation au fonds de travaux [N+1] — art. 14-2 loi 1965 (majorité art. 25)</li>
+          <li>Vote de la cotisation au fonds de travaux [N+1] — art. 14-2 loi 1965 (majorité à vérifier selon la résolution)</li>
           <li>[Résolution travaux / autre — intitulé précis] (majorité art. [X])</li>
-          <li>Questions diverses</li>
+          <li>Questions diverses (sans vote)</li>
         </ol>
         <p className="mb-3 text-gray-700 font-mono">Pièces jointes : comptes exercice [N-1], budget [N+1], devis [prestataire], formulaires de vote par correspondance et de délégation de pouvoir.</p>
         <p className="mb-1 text-gray-700 font-mono">Cordialement,</p>
@@ -245,7 +252,6 @@ export default function ArticleAssembleeGenerale() {
               <td className="py-3 px-4 text-gray-600 align-top">
                 <ul className="space-y-1">
                   <li>→ <strong className={strong}>Élection / renouvellement du syndic</strong></li>
-                  <li>→ Vote du fonds de travaux ALUR</li>
                   <li>→ Travaux d&apos;amélioration (sauf article 26)</li>
                   <li>→ Autorisation au syndic de certains actes</li>
                   <li>→ Installation antenne collective, interphonie</li>
@@ -289,7 +295,7 @@ export default function ArticleAssembleeGenerale() {
 
       <h3 className={h3}>Avant d&apos;ouvrir la séance</h3>
       <p className={p}>
-        Préparez votre <strong className={strong}>feuille de présence</strong> en listant tous les lots, leurs propriétaires et leurs tantièmes. À l&apos;arrivée de chaque copropriétaire, notez sa présence et récoltez les pouvoirs des absents qui ont délégué. Il n&apos;y a pas de quorum légal en copropriété — vous pouvez commencer même si un seul copropriétaire est présent.
+        Préparez votre <strong className={strong}>feuille de présence</strong> en listant tous les lots, leurs propriétaires et leurs tantièmes. À l&apos;arrivée de chaque copropriétaire, notez sa présence et récoltez les pouvoirs des absents qui ont délégué. Il n&apos;y a pas de quorum légal en copropriété — l&apos;AG peut donc se tenir même avec très peu de présents. En revanche, cela ne signifie pas qu&apos;un seul copropriétaire peut automatiquement faire adopter toutes les résolutions : tout dépend des tantièmes qu&apos;il représente et de la majorité requise.
       </p>
 
       <h3 className={h3}>Ouverture de la séance</h3>
@@ -329,7 +335,7 @@ export default function ArticleAssembleeGenerale() {
 
       <h2 id="pv-redaction" className={h2}>Le procès-verbal : rédiger, signer, notifier</h2>
       <p className={p}>
-        Le PV est le document officiel qui fait foi des décisions prises. Il doit être <strong className={strong}>signé séance tenante</strong> par le président de séance et le secrétaire (et les scrutateurs si désignés). Notifiez-le à tous les copropriétaires dans le <strong className={strong}>mois suivant l&apos;AG</strong> — le délai de contestation (2 mois) ne court qu&apos;à partir de cette notification.
+        Le PV est le document officiel qui fait foi des décisions prises. Il doit être <strong className={strong}>signé séance tenante</strong> par le président de séance et le secrétaire (et les scrutateurs si désignés). Notifiez-le dans le <strong className={strong}>mois suivant l&apos;AG</strong> aux copropriétaires opposants ou défaillants ; en pratique, beaucoup de syndics l&apos;adressent à tous pour garder une traçabilité uniforme. Le délai de contestation (2 mois) court à partir de cette notification.
       </p>
 
       <div className="my-6 bg-gray-50 border border-gray-200 rounded-xl p-6 text-sm leading-relaxed">
@@ -369,9 +375,9 @@ export default function ArticleAssembleeGenerale() {
         </CtaLink>
       </div>
 
-      <h2 id="apres-ag" className={h2}>Après l&apos;AG : les obligations dans les 30 jours</h2>
+      <h2 id="apres-ag" className={h2}>Après l&apos;AG : les suites à donner sans attendre</h2>
       <p className={p}>
-        La réunion terminée, le travail n&apos;est pas fini. Quatre actions à accomplir dans le mois qui suit :
+        La réunion terminée, le travail n&apos;est pas fini. Voici les actions à lancer sans attendre après la séance :
       </p>
 
       <div className="my-6 space-y-3">
@@ -385,8 +391,8 @@ export default function ArticleAssembleeGenerale() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 flex gap-3">
           <span className="flex-shrink-0 text-sm font-bold text-blue-600 font-mono w-8">J+30</span>
           <div>
-            <p className="text-sm font-semibold text-gray-900 mb-0.5">Notifier le PV à tous les copropriétaires</p>
-            <p className="text-xs text-gray-600">Par LRAR ou e-mail si accord préalable de chaque copropriétaire. La notification ouvre le délai de contestation de 2 mois — plus vous l&apos;envoyez tôt, plus vite ce délai est refermé. Conservez les preuves d&apos;envoi.</p>
+            <p className="text-sm font-semibold text-gray-900 mb-0.5">Notifier le PV aux copropriétaires concernés, et idéalement le diffuser à tous</p>
+            <p className="text-xs text-gray-600">Les copropriétaires opposants ou défaillants doivent être notifiés dans le mois. En pratique, un envoi uniforme à tous les copropriétaires simplifie le suivi. Par LRAR, remise contre émargement ou voie électronique avec accord préalable, conservez toujours les preuves d&apos;envoi.</p>
           </div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-4 flex gap-3">
@@ -407,7 +413,7 @@ export default function ArticleAssembleeGenerale() {
 
       <div className="my-6 rounded-xl bg-amber-50 border border-amber-200 p-5">
         <p className="text-sm font-semibold text-amber-800 mb-2">Mettre à jour le registre national des copropriétés</p>
-        <p className="text-sm text-gray-700">Chaque année après l&apos;AG, les données financières de l&apos;exercice clos doivent être mises à jour sur le <strong>registre national des copropriétés</strong> (registre.coproprietes.gouv.fr). C&apos;est une obligation annuelle. L&apos;oublier expose la copropriété à une mise en demeure de l&apos;ANAH.</p>
+        <p className="text-sm text-gray-700">Après l&apos;AG qui approuve les comptes, les données financières de l&apos;exercice clos doivent être mises à jour sur le <strong>registre national des copropriétés</strong> au plus tard dans les 2 mois. C&apos;est une obligation annuelle. L&apos;oublier expose la copropriété à une mise en demeure, voire à une astreinte. Le mode d&apos;emploi officiel est détaillé par l&apos;<a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/immatriculation-des-coproprietes/" target="_blank" rel="noopener noreferrer" className={a}>ANIL</a>.</p>
       </div>
 
       <h2 id="erreurs" className={h2}>5 erreurs qui peuvent invalider votre AG</h2>
@@ -440,9 +446,9 @@ export default function ArticleAssembleeGenerale() {
         <div className="rounded-xl border border-red-100 bg-red-50 p-4 flex gap-3">
           <span className="flex-shrink-0 text-sm font-bold text-red-400 font-mono w-6">04</span>
           <div>
-            <p className="text-sm font-semibold text-gray-900 mb-0.5">PV non notifié dans le mois suivant l&apos;AG</p>
+            <p className="text-sm font-semibold text-gray-900 mb-0.5">PV non notifié dans le mois aux copropriétaires opposants ou défaillants</p>
             <p className="text-xs font-medium text-red-600 mb-1">Risque — Délai de contestation indéfiniment ouvert</p>
-            <p className="text-xs text-gray-600">Le délai de 2 mois pour contester une résolution ne court qu&apos;à partir de la notification du PV. Tant que le PV n&apos;est pas envoyé, la fenêtre reste ouverte. Envoyez le PV dans les 30 jours — idéalement dans les 15.</p>
+            <p className="text-xs text-gray-600">Le délai de 2 mois pour contester une résolution ne court qu&apos;à partir de la notification du PV. Tant que cette notification n&apos;est pas faite aux copropriétaires concernés, la fenêtre reste ouverte. En pratique, envoyez le PV rapidement à tous pour éviter toute ambiguïté.</p>
           </div>
         </div>
         <div className="rounded-xl border border-red-100 bg-red-50 p-4 flex gap-3">
@@ -571,7 +577,7 @@ export default function ArticleAssembleeGenerale() {
 
       <h3 className={h3}>Peut-on tenir une AG sans que tous les copropriétaires soient présents ?</h3>
       <p className={p}>
-        Oui. Il n&apos;y a <strong className={strong}>pas de quorum en copropriété</strong> — l&apos;AG délibère quel que soit le nombre de présents ou représentés (art. 22 loi 1965). Un seul copropriétaire présent peut voter toutes les résolutions. Les majorités (art. 24, 25, 26) s&apos;appliquent toujours de la même façon — mais les absents sans pouvoir ne comptent pas pour les résolutions de l&apos;art. 24, tandis qu&apos;ils comptent comme des voix &ldquo;contre&rdquo; pour les résolutions de l&apos;art. 25.
+        Oui. Il n&apos;y a <strong className={strong}>pas de quorum en copropriété</strong> — l&apos;AG délibère quel que soit le nombre de présents ou représentés. En revanche, un seul copropriétaire présent ne peut pas automatiquement faire adopter toutes les résolutions : tout dépend du nombre de tantièmes qu&apos;il représente et de la majorité applicable. Les absents sans pouvoir ne comptent pas pour les résolutions de l&apos;art. 24, alors qu&apos;ils pèsent sur les majorités plus exigeantes comme l&apos;art. 25.
       </p>
 
       <h3 className={h3}>Peut-on convoquer l&apos;AG par e-mail ?</h3>
@@ -591,7 +597,7 @@ export default function ArticleAssembleeGenerale() {
 
       <h3 className={h3}>Peut-on tenir une AG extraordinaire en cours d&apos;année ?</h3>
       <p className={p}>
-        Oui. Le syndic peut convoquer une AG extraordinaire à tout moment si une décision urgente ne peut pas attendre l&apos;AG ordinaire — travaux urgents votables en AG, remplacement d&apos;un prestataire, décision liée à un sinistre. Les mêmes règles de convocation s&apos;appliquent : délai de 21 jours, ordre du jour précis, documents annexés. Tout copropriétaire peut aussi demander une AG extraordinaire — par LRAR au syndic.
+        Oui. Le syndic peut convoquer une AG extraordinaire à tout moment si une décision urgente ne peut pas attendre l&apos;AG ordinaire — travaux urgents votables en AG, remplacement d&apos;un prestataire, décision liée à un sinistre. Les mêmes règles de convocation s&apos;appliquent : délai de 21 jours, ordre du jour précis, documents annexés. Un copropriétaire peut demander l&apos;inscription d&apos;une question ou alerter le syndic sur l&apos;urgence, mais la convocation elle-même reste encadrée par les règles légales applicables au syndic ou, en cas de carence, par les voies prévues par la loi.
       </p>
 
       <h3 className={h3}>Combien de temps faut-il préparer une AG ordinaire, honnêtement ?</h3>
@@ -609,7 +615,7 @@ export default function ArticleAssembleeGenerale() {
         L&apos;assemblée générale n&apos;est pas une réunion de routine — c&apos;est le moment où se prennent toutes les décisions engageant la copropriété pour l&apos;année. Bien préparée, elle se tient en 1 h 30 et donne à tous les copropriétaires une vision claire des finances et des projets. Mal préparée (délai manqué, résolution hors ordre du jour, PV non envoyé), elle peut déboucher sur des contentieux coûteux.
       </p>
       <p className={p}>
-        Le calendrier est simple : commencez à préparer 8 semaines avant, envoyez les convocations à J-24 minimum, tenez votre réunion, signez et notifiez le PV dans les 30 jours. Si vous venez de prendre vos fonctions, consultez notre <a href="/blog/comment-devenir-syndic-benevole" className={a}>guide des premières démarches du syndic bénévole</a> pour les démarches qui précèdent la première AG.
+        Le calendrier est simple : commencez à préparer 8 semaines avant, envoyez les convocations à J-24 minimum, tenez votre réunion, signez le PV séance tenante, notifiez-le rapidement aux copropriétaires concernés et mettez à jour le registre des copropriétés dans les 2 mois après l&apos;AG d&apos;approbation des comptes. Si vous venez de prendre vos fonctions, consultez notre <a href="/blog/comment-devenir-syndic-benevole" className={a}>guide des premières démarches du syndic bénévole</a> pour les démarches qui précèdent la première AG.
       </p>
       <p className={p}>
         Pour un syndic bénévole, la différence entre &ldquo;subir&rdquo; l&apos;AG et la gérer sereinement tient souvent à un seul facteur : les données sont-elles en ordre tout au long de l&apos;année, ou tout est-il à reconstituer la veille ? C&apos;est exactement ce que règle un outil de gestion dédié.
