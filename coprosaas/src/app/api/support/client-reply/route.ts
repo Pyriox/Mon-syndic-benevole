@@ -7,7 +7,7 @@ import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
-import { h } from '@/lib/emails/base';
+import { h, wrapEmail, ctaButton, infoTable, infoRow, COLOR } from '@/lib/emails/base';
 import { trackResendSendResult } from '@/lib/email-delivery';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
 
@@ -76,32 +76,24 @@ export async function POST(req: NextRequest) {
 
   // Notifier l'admin par email (best-effort)
   const ticketUrl = `${SITE_URL}/admin/support?ticket=${ticket.id}`;
-  const adminHtml = `
-<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937">
-  <div style="background:#1d4ed8;padding:24px 32px;border-radius:12px 12px 0 0">
-    <h1 style="color:#ffffff;font-size:18px;margin:0">Nouvelle réponse client</h1>
-    <p style="color:#bfdbfe;font-size:13px;margin:4px 0 0">Ticket support — Mon Syndic Bénévole</p>
-  </div>
-  <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-    <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
-      <tr>
-        <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;width:120px;color:#6b7280;font-size:13px;font-weight:600">Utilisateur</td>
-        <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;color:#111827">${h(ticket.user_name)} &lt;<a href="mailto:${h(ticket.user_email)}" style="color:#2563eb">${h(ticket.user_email)}</a>&gt;</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;color:#6b7280;font-size:13px;font-weight:600">Sujet</td>
-        <td style="padding:8px 0;font-size:14px;color:#111827">${h(ticket.subject)}</td>
-      </tr>
-    </table>
-    <h3 style="font-size:13px;font-weight:600;color:#6b7280;margin:0 0 10px;text-transform:uppercase;letter-spacing:.05em">Message</h3>
-    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;font-size:14px;color:#374151;line-height:1.7">${h(message.trim()).replace(/\n/g, '<br>')}</div>
-    <div style="margin-top:24px">
-      <a href="${ticketUrl}" style="display:inline-block;background:#1d4ed8;color:#ffffff;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;text-decoration:none">Voir le ticket</a>
-    </div>
-  </div>
-</div>`;
+  const adminHtml = wrapEmail(`
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Nouvelle réponse client</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(ticket.subject)}</p>
 
-  const subject = `[Support] Réponse client — ${ticket.subject}`;
+${infoTable(
+  infoRow('Utilisateur', `${h(ticket.user_name)} &lt;<a href="mailto:${h(ticket.user_email)}" style="color:${COLOR.blue};text-decoration:none">${h(ticket.user_email)}</a>&gt;`) +
+  infoRow('Sujet', h(ticket.subject))
+)}
+
+<p style="margin:0 0 10px;font-size:13px;font-weight:700;color:${COLOR.text}">Message</p>
+<div style="background:#f9fafb;border:1px solid ${COLOR.border};border-radius:8px;padding:16px;font-size:14px;color:#374151;line-height:1.7">${h(message.trim()).replace(/\n/g, '<br>')}</div>
+
+${ctaButton('Ouvrir la conversation →', ticketUrl, COLOR.blue)}`,
+  COLOR.blue,
+  'Nouvelle réponse client sur une demande de support',
+);
+
+  const subject = `Support — nouvelle réponse client — ${ticket.subject} — Mon Syndic Bénévole`;
   resend.emails.send({
     from:    FROM,
     to:      [SUPPORT_EMAIL],

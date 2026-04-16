@@ -6,7 +6,7 @@
 //         dont l'échéance est dans <= 30 jours)
 //  J-7  : rappel pré-échéance aux copropriétaires impayés
 //  J+1  : relance courte post-échéance aux copropriétaires impayés
-//  J+15 : mise en demeure post-échéance aux copropriétaires impayés
+//  J+15 : rappel d'impayé post-échéance aux copropriétaires impayés
 //  J0   : récapitulatif des impayés au syndic pour vérification des paiements reçus
 //
 // Le J-30 permet de publier tous les appels d'un coup après une AG
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
     .gt('date_echeance', dateJ15)
     .is('rappel_j1_at', null);
 
-  // Appels en mise en demeure (J+15), avec rattrapage si le cron ne s'est pas exécuté le jour exact.
+  // Appels en rappel d'impayé (J+15), avec rattrapage si le cron ne s'est pas exécuté le jour exact.
   const { data: j15Appels } = await supabase
     .from('appels_de_fonds')
     .select('id, copropriete_id, titre, montant_total, date_echeance, emailed_at, coproprietes(nom)')
@@ -822,7 +822,7 @@ function getAppelTemplateKey(type: AppelEmailType): string {
 
 function getAppelLegalEventType(type: AppelEmailType): string {
   if (type === 'avis') return 'appel_de_fonds_avis';
-  if (type === 'mise_en_demeure') return 'appel_de_fonds_mise_en_demeure';
+  if (type === 'mise_en_demeure') return 'appel_de_fonds_rappel_impaye';
   return 'appel_de_fonds_rappel';
 }
 
@@ -833,7 +833,7 @@ async function sendRappelEmails(
   type: AppelEmailType
 ): Promise<number> {
   // Pour l'avis initial (J-30), on cible toutes les lignes.
-  // Pour les rappels J-7 / J+1 et la mise en demeure J+15, uniquement les impayées.
+  // Pour les rappels J-7 / J+1 et le rappel d'impayé J+15, uniquement les impayées.
   const query = supabase
     .from('lignes_appels_de_fonds')
     .select('montant_du, regularisation_ajustement, coproprietaires(nom, prenom, email, user_id)')

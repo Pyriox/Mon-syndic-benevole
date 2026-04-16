@@ -154,7 +154,7 @@ function templateLabel(templateKey: string | null): string {
     appel_avis: 'Avis d’appel de fonds',
     appel_rappel: 'Rappel d’appel de fonds J-7',
     appel_rappel_j1: 'Relance d’appel de fonds J+1',
-    appel_mise_en_demeure: 'Mise en demeure appel de fonds',
+    appel_mise_en_demeure: 'Rappel d’impayé appel de fonds',
     appel_syndic_impayes_j0: 'Récapitulatif syndic des impayés J0',
     appel_brouillon_rappel: 'Rappel brouillon appel de fonds',
     incident_resolved: 'Incident résolu',

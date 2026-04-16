@@ -4,6 +4,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { trackResendSendResult } from '@/lib/email-delivery';
+import { wrapEmail, infoTable, infoRow, COLOR } from '@/lib/emails/base';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'contact@mon-syndic-benevole.fr'}>`;
@@ -112,42 +113,25 @@ export async function POST(req: NextRequest) {
     ? 'Copropriétaire · support technique'
     : 'Syndic / contact général';
 
-  const html = `
-<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937">
-  <div style="background:#2563eb;padding:24px 32px;border-radius:12px 12px 0 0">
-    <h1 style="color:#ffffff;font-size:20px;margin:0">Nouveau message de contact</h1>
-    <p style="color:#bfdbfe;font-size:13px;margin:4px 0 0">Mon Syndic Bénévole</p>
-  </div>
-  <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-    <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
-      <tr>
-        <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;width:120px;color:#6b7280;font-size:13px;font-weight:600">Nom</td>
-        <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;color:#111827">${escapeHtml(name)}</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:13px;font-weight:600">Email</td>
-        <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:14px;color:#2563eb">
-          <a href="mailto:${escapeHtml(email)}" style="color:#2563eb">${escapeHtml(email)}</a>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;color:#6b7280;font-size:13px;font-weight:600">Sujet</td>
-        <td style="padding:8px 0;font-size:14px;color:#111827">${escapeHtml(subject)}</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;border-top:1px solid #f3f4f6;color:#6b7280;font-size:13px;font-weight:600">Contexte</td>
-        <td style="padding:8px 0;border-top:1px solid #f3f4f6;font-size:14px;color:#111827">${escapeHtml(supportContextLabel)}</td>
-      </tr>
-    </table>
-    <h3 style="font-size:13px;font-weight:600;color:#6b7280;margin:0 0 10px;text-transform:uppercase;letter-spacing:.05em">Message</h3>
-    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;font-size:14px;color:#374151;line-height:1.7">${escapeHtml(message).replace(/\n/g, '<br>')}</div>
-    <p style="margin-top:24px;font-size:12px;color:#9ca3af">
-      Ce message a été envoyé depuis la page Aide &amp; Contact de Mon Syndic Bénévole.
-    </p>
-  </div>
-</div>`;
+  const html = wrapEmail(`
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Nouveau message de contact</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${escapeHtml(subject)}</p>
 
-  const subjectLine = `[Contact] ${subject}`;
+${infoTable(
+  infoRow('Nom', escapeHtml(name)) +
+  infoRow('E-mail', `<a href="mailto:${escapeHtml(email)}" style="color:${COLOR.blue};text-decoration:none">${escapeHtml(email)}</a>`) +
+  infoRow('Sujet', escapeHtml(subject)) +
+  infoRow('Contexte', escapeHtml(supportContextLabel))
+)}
+
+<p style="margin:0 0 10px;font-size:13px;font-weight:700;color:${COLOR.text}">Message</p>
+<div style="background:#f9fafb;border:1px solid ${COLOR.border};border-radius:8px;padding:16px;font-size:14px;color:#374151;line-height:1.7">${escapeHtml(message).replace(/\n/g, '<br>')}</div>
+
+<p style="margin:20px 0 0;font-size:12px;color:${COLOR.muted};line-height:1.6">
+  Ce message a été envoyé depuis la page Aide &amp; Contact de Mon Syndic Bénévole.
+</p>`, COLOR.blue, `Nouveau message de contact — ${escapeHtml(subject)}`);
+
+  const subjectLine = `Contact — ${subject} — Mon Syndic Bénévole`;
   let emailWarning = false;
 
   try {

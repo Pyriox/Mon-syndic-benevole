@@ -46,5 +46,5 @@ ${ctaButton('Réinitialiser mon mot de passe →', resetLink)}
   </tr>
 </table>`;
 
-  return wrapEmail(content, COLOR.blue);
+  return wrapEmail(content, COLOR.blue, 'Choisissez un nouveau mot de passe pour votre compte');
 }

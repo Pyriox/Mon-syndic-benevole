@@ -627,7 +627,7 @@ export interface TypeResolutionConfig {
   majorite: string;
   designation: boolean;     // Résultat = désignation d'une ou plusieurs personnes
   multiple: boolean;        // Désignation multiple (scrutateurs, conseil syndical)
-  optional: boolean;        // Peut être passée (reportée) sans vote
+  optional: boolean;        // Peut être passée (reportée) sans vote en séance — bouton "Passer" affiché
   hasBudget: boolean;       // Nécessite la saisie de postes budgétaires
   hasFondsTravaux: boolean; // Nécessite un montant en €
 }
@@ -650,7 +650,7 @@ export const TYPES_RESOLUTION: Record<string, TypeResolutionConfig> = {
   },
   scrutateurs: {
     label: 'Désignation des scrutateurs',
-    majorite: 'article_24', designation: true, multiple: true, optional: false,
+    majorite: 'article_24', designation: true, multiple: true, optional: true,
     hasBudget: false, hasFondsTravaux: false,
   },
   approbation_comptes: {
@@ -665,8 +665,13 @@ export const TYPES_RESOLUTION: Record<string, TypeResolutionConfig> = {
   },
   revision_budget: {
     label: "Révision du budget de l'exercice en cours",
-    majorite: 'article_24', designation: false, multiple: false, optional: true,
+    majorite: 'article_24', designation: false, multiple: false, optional: false,
     hasBudget: true, hasFondsTravaux: false,
+  },
+  revision_fonds_travaux: {
+    label: "Révision du fonds de travaux de l'exercice en cours",
+    majorite: 'article_24', designation: false, multiple: false, optional: false,
+    hasBudget: false, hasFondsTravaux: true,
   },
   budget_previsionnel: {
     label: 'Vote du budget prévisionnel',

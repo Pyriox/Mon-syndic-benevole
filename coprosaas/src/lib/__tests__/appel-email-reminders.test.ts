@@ -22,7 +22,7 @@ describe('appel email reminders', () => {
     });
 
     expect(subject).toMatch(/Relance/i);
-    expect(subject).toMatch(/échéance dépassée/i);
+    expect(subject).toMatch(/Échéance 10 avril 2026/i);
     expect(html).toMatch(/échéance.*dépassée/i);
     expect(html).toMatch(/242,10\s?€/i);
   });
@@ -46,5 +46,28 @@ describe('appel email reminders', () => {
     expect(html).toMatch(/Fabien Turpin/i);
     expect(html).toMatch(/Catherine Belloc/i);
     expect(html).toMatch(/oubli de cocher|vérifiez/i);
+  });
+
+  it('remplace la mise en demeure par un rappel d’impayé non juridique', () => {
+    const subject = buildAppelEmailSubject({
+      type: 'mise_en_demeure',
+      coproprieteNom: 'Résidence du Parc',
+      dateEcheance: '2026-04-10',
+    });
+
+    const html = buildAppelEmail({
+      type: 'mise_en_demeure',
+      prenom: 'Camille',
+      nom: 'Martin',
+      coproprieteNom: 'Résidence du Parc',
+      titre: 'Appel T2',
+      montantDu: 120,
+      dateEcheance: '2026-04-10',
+    });
+
+    expect(subject).toMatch(/Rappel d'impayé/i);
+    expect(subject).not.toMatch(/Mise en demeure/i);
+    expect(html).toMatch(/paiement non encore enregistré|ignorez ce message/i);
+    expect(html).not.toMatch(/ordre du jour/i);
   });
 });

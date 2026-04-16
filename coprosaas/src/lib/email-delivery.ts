@@ -84,7 +84,7 @@ function inferTemplateKeyFromSubject(subject: string | null | undefined): string
 
   if (!normalized) return 'resend_import';
   if (normalized.includes('activez votre compte') || normalized.includes('confirmez votre adresse')) return 'signup_confirmation';
-  if (normalized.includes('bienvenue sur mon syndic bénévole')) return 'welcome';
+  if (normalized.includes('bienvenue sur mon syndic bénévole') || normalized.includes('votre compte est prêt') || normalized.includes('votre compte est pret')) return 'welcome';
   if (normalized.includes('mot de passe') || normalized.includes('réinitialis') || normalized.includes('reinitialis')) return 'password_reset';
   if (normalized.includes('invitation')) return 'invitation';
 

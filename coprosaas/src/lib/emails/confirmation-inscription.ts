@@ -12,12 +12,12 @@
 import { wrapEmail, ctaButton, COLOR } from './base';
 
 export const CONFIRMATION_INSCRIPTION_SUBJECT =
-  'Activez votre compte — Mon Syndic Bénévole';
+  'Confirmez votre adresse e-mail — Mon Syndic Bénévole';
 
 export function confirmationInscriptionHtml(): string {
   const content = `
 <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:${COLOR.text}">Confirmez votre adresse e-mail</h1>
-<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">Dernière étape avant d'accéder à votre espace</p>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">Dernière étape pour activer votre compte</p>
 
 <p style="margin:0 0 4px;font-size:14px;color:${COLOR.text};line-height:1.6">
   Merci de vous être inscrit sur <strong>Mon Syndic Bénévole</strong>.<br/>
@@ -47,5 +47,5 @@ ${ctaButton('Confirmer mon adresse e-mail →', '{{ .ConfirmationURL }}')}
   Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.
 </p>`;
 
-  return wrapEmail(content, COLOR.blue);
+  return wrapEmail(content, COLOR.blue, 'Confirmez votre adresse e-mail pour activer votre compte');
 }

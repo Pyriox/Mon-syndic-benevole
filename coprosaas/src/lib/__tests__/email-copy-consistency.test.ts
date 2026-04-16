@@ -38,9 +38,9 @@ describe('email copy consistency', () => {
       agUrl: 'https://www.mon-syndic-benevole.fr/assemblees',
     });
 
-    expect(html).toContain('Convocation AG en attente de lecture');
+    expect(html).toContain('Votre convocation AG attend votre lecture');
     expect(html).toContain('Nous vous relançons');
     expect(html).toContain('assemblée générale');
-    expect(html).toContain("Voir le détail de l'AG");
+    expect(html).toContain("Consulter l'assemblée générale");
   });
 });

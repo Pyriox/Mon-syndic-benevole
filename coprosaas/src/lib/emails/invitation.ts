@@ -3,7 +3,7 @@
 // Envoyé automatiquement lors de la création d'une invitation
 // ============================================================
 
-import { wrapEmail, ctaButton, h, COLOR } from './base';
+import { wrapEmail, ctaButton, h, COLOR, CONTACT_EMAIL } from './base';
 
 export interface InvitationEmailParams {
   coproprieteNom: string;
@@ -12,14 +12,14 @@ export interface InvitationEmailParams {
 }
 
 export function buildInvitationEmailSubject(coproprieteNom: string): string {
-  return `Vous êtes invité à rejoindre ${coproprieteNom} — Mon Syndic Bénévole`;
+  return `Invitation à rejoindre ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildInvitationEmail(params: InvitationEmailParams): string {
   const { coproprieteNom, syndicPrenom, inviteLink } = params;
 
   const content = `
-<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre espace copropriétaire vous attend</h1>
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Invitation à rejoindre votre copropriété</h1>
 <p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
 
 <p style="margin:0 0 16px;font-size:15px;color:${COLOR.text};line-height:1.6">
@@ -27,11 +27,11 @@ export function buildInvitationEmail(params: InvitationEmailParams): string {
 </p>
 <p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
   <strong>${h(syndicPrenom)}</strong>, le syndic de la copropriété <strong>${h(coproprieteNom)}</strong>,
-  vous invite à créer votre compte sur <strong>Mon Syndic Bénévole</strong>.
+  vous invite à créer votre espace copropriétaire sur <strong>Mon Syndic Bénévole</strong>.
 </p>
 
 <p style="margin:0 0 4px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Grâce à votre espace personnel, vous pourrez&nbsp;:
+  Depuis votre espace copropriétaire, vous pourrez&nbsp;:
 </p>
 <ul style="margin:0 0 20px;padding-left:20px;font-size:14px;color:${COLOR.text};line-height:2">
   <li>Consulter vos charges et appels de fonds</li>
@@ -40,7 +40,7 @@ export function buildInvitationEmail(params: InvitationEmailParams): string {
   <li>Visualiser vos lots et tantièmes</li>
 </ul>
 
-${ctaButton('Créer mon compte →', inviteLink, COLOR.blue)}
+${ctaButton('Créer mon espace copropriétaire →', inviteLink, COLOR.blue)}
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px;border-top:1px solid ${COLOR.border}">
   <tr>
@@ -60,5 +60,7 @@ ${ctaButton('Créer mon compte →', inviteLink, COLOR.blue)}
   Si vous n'attendiez pas cette invitation, ignorez cet e-mail.
 </p>`;
 
-  return wrapEmail(content, COLOR.blue);
+  const footer = `<p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">En cas de difficulté d'accès, vous pouvez contacter votre syndic ou nous écrire à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.</p>`;
+
+  return wrapEmail(`${content}${footer}`, COLOR.blue, `Invitation à rejoindre ${h(coproprieteNom)}`);
 }

@@ -26,7 +26,7 @@ ${alertBanner(
 
 <p style="margin:0;font-size:13px;color:${COLOR.muted}">Si c'est bien vous, aucune action n'est requise.</p>`;
 
-  return wrapEmail(content, COLOR.blue);
+  return wrapEmail(content, COLOR.blue, 'Votre mot de passe vient d\'être modifié');
 }
 
 function emailChangeRequestedHtml(newEmail: string): string {
@@ -47,7 +47,7 @@ ${infoTable(infoRow('Nouvelle adresse demandée', h(newEmail)))}
   Si vous n'avez pas fait cette demande, ignorez ce message — votre adresse actuelle reste inchangée.
 </p>`;
 
-  return wrapEmail(content, COLOR.blue);
+  return wrapEmail(content, COLOR.blue, 'Une demande de changement d\'adresse e-mail a été enregistrée');
 }
 
 // ── Route handler ─────────────────────────────────────────────
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   const toEmail = user.email; // toujours envoyé à l'adresse actuelle (avant changement)
 
   const subject = type === 'password_changed'
-    ? 'Votre mot de passe Mon Syndic Bénévole a été modifié'
+    ? 'Votre mot de passe a été modifié — Mon Syndic Bénévole'
     : "Demande de changement d'adresse e-mail — Mon Syndic Bénévole";
 
   const result = await resend.emails.send({

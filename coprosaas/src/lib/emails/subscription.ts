@@ -10,7 +10,7 @@
 //  7. trial_ending_j3      : rappel 3 jours avant fin d'essai
 // ============================================================
 
-import { wrapEmail, h, formatDateFR, ctaButton, COLOR } from './base';
+import { wrapEmail, h, formatDateFR, ctaButton, COLOR, CONTACT_EMAIL } from './base';
 
 export interface SubscriptionEmailParams {
   prenom: string | null;
@@ -23,7 +23,7 @@ export interface SubscriptionEmailParams {
 // ── Essai gratuit démarré ─────────────────────────────────────────────────────
 
 export function buildTrialStartedSubject(coproprieteNom: string): string {
-  return `Votre essai gratuit a commencé — ${coproprieteNom}`;
+  return `Votre essai gratuit a commencé — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildTrialStartedEmail(params: SubscriptionEmailParams): string {
@@ -46,7 +46,7 @@ ${deadlineStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="marg
   </tr>
 </table>` : ''}
 
-${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.green)}
+${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.green)}
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
   Aucun paiement ne sera prélevé avant la fin de l'essai. À l'issue des 14 jours, votre abonnement <strong>${h(planLabel)}</strong> démarrera automatiquement.
@@ -58,7 +58,7 @@ ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.green)}
 // ── Abonnement souscrit directement (sans essai) ──────────────────────────────
 
 export function buildSubscriptionCreatedSubject(coproprieteNom: string): string {
-  return `Votre abonnement est activé — ${coproprieteNom}`;
+  return `Votre abonnement est activé — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildSubscriptionCreatedEmail(params: SubscriptionEmailParams): string {
@@ -81,7 +81,7 @@ ${renewStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:
   </tr>
 </table>` : ''}
 
-${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}`;
+${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.blue)}`;
 
   return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est actif${renewStr ? ` — prochaine échéance le ${renewStr}` : ''}`);
 }
@@ -89,7 +89,7 @@ ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}`;
 // ── Essai terminé → abonnement payant ─────────────────────────────────────────
 
 export function buildTrialToPaidSubject(coproprieteNom: string): string {
-  return `Votre abonnement commence — ${coproprieteNom}`;
+  return `Votre abonnement commence — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildTrialToPaidEmail(params: SubscriptionEmailParams): string {
@@ -112,7 +112,7 @@ ${renewStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:
   </tr>
 </table>` : ''}
 
-${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}`;
+${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.blue)}`;
 
   return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est actif${renewStr ? ` — prochaine échéance le ${renewStr}` : ''}`);
 }
@@ -120,7 +120,7 @@ ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}`;
 // ── Renouvellement ────────────────────────────────────────────────────────────
 
 export function buildRenewalSubject(coproprieteNom: string): string {
-  return `Renouvellement de votre abonnement — ${coproprieteNom}`;
+  return `Renouvellement de votre abonnement — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildRenewalEmail(params: SubscriptionEmailParams): string {
@@ -143,10 +143,10 @@ ${renewStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:
   </tr>
 </table>` : ''}
 
-${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}
+${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.blue)}
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
-  Pour gérer votre abonnement, rendez-vous dans votre espace membre.
+  Pour gérer votre abonnement, rendez-vous dans votre espace syndic.
 </p>`;
 
   return wrapEmail(content, COLOR.blue, `Votre abonnement ${planLabel} est renouvelé${renewStr ? ` jusqu'au ${renewStr}` : ''}`);
@@ -155,7 +155,7 @@ ${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}
 // ── Paiement échoué ────────────────────────────────────────────────────────────────────────────
 
 export function buildPaymentFailedSubject(coproprieteNom: string): string {
-  return `Paiement échoué — action requise — ${coproprieteNom}`;
+  return `Paiement échoué — action requise — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildPaymentFailedEmail(params: SubscriptionEmailParams): string {
@@ -163,7 +163,7 @@ export function buildPaymentFailedEmail(params: SubscriptionEmailParams): string
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
 
   const content = `
-<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.red}">⚠️ Paiement échoué</h1>
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.red}">Paiement échoué</h1>
 <p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
 
 <p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
@@ -173,7 +173,7 @@ export function buildPaymentFailedEmail(params: SubscriptionEmailParams): string
 <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca">
   <tr>
     <td style="padding:14px 16px;font-size:13px;color:${COLOR.red};line-height:1.6">
-      Pour réactiver votre accès, mettez à jour votre moyen de paiement dans votre espace membre. Stripe retentera automatiquement le prélèvement après mise à jour.
+      Pour réactiver votre accès, mettez à jour votre moyen de paiement dans votre espace syndic. Stripe retentera automatiquement le prélèvement après mise à jour.
     </td>
   </tr>
 </table>
@@ -181,7 +181,7 @@ export function buildPaymentFailedEmail(params: SubscriptionEmailParams): string
 ${ctaButton('Mettre à jour mon paiement →', `${dashboardUrl}?tab=billing`, COLOR.red)}
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
-  En cas de problème, contactez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.blue}">contact@mon-syndic-benevole.fr</a>.
+  En cas de probleme, contactez-nous a <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
 </p>`;
 
   return wrapEmail(content, COLOR.red, 'Action requise : votre paiement a échoué, mettez à jour votre moyen de paiement');
@@ -190,7 +190,7 @@ ${ctaButton('Mettre à jour mon paiement →', `${dashboardUrl}?tab=billing`, CO
 // ── Abonnement résilié ────────────────────────────────────────────────────────────────────
 
 export function buildCancelledSubject(coproprieteNom: string): string {
-  return `Votre abonnement a pris fin — ${coproprieteNom}`;
+  return `Votre abonnement a pris fin — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildCancelledEmail(params: SubscriptionEmailParams): string {
@@ -209,10 +209,10 @@ export function buildCancelledEmail(params: SubscriptionEmailParams): string {
   Vos données (copropriétés, appels de fonds, documents) sont conservées. Vous pouvez souscrire un nouvel abonnement à tout moment.
 </p>
 
-${ctaButton('Se réabonner →', `${dashboardUrl}`, COLOR.blue)}
+${ctaButton('Réactiver mon abonnement →', `${dashboardUrl}`, COLOR.blue)}
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
-  Des questions ? Écrivez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.blue}">contact@mon-syndic-benevole.fr</a>.
+  Des questions ? Écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
 </p>`;
 
   return wrapEmail(content, COLOR.muted, 'Vos données sont conservées — vous pouvez vous réabonner à tout moment');
@@ -221,7 +221,7 @@ ${ctaButton('Se réabonner →', `${dashboardUrl}`, COLOR.blue)}
 // ── Rappel J-3 avant fin d'essai ─────────────────────────────────────────────────────────
 
 export function buildTrialEndingSubject(coproprieteNom: string): string {
-  return `Votre essai se termine dans 3 jours — ${coproprieteNom}`;
+  return `Votre essai se termine dans 3 jours — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildTrialEndingEmail(params: SubscriptionEmailParams): string {
@@ -244,10 +244,10 @@ ${deadlineStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="marg
   </tr>
 </table>` : ''}
 
-${ctaButton('Accéder à mon espace →', dashboardUrl, COLOR.blue)}
+${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.blue)}
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
-  Vous pouvez gérer ou annuler votre abonnement à tout moment depuis votre espace membre avant la fin de l'essai.
+  Vous pouvez gérer ou annuler votre abonnement à tout moment depuis votre espace syndic avant la fin de l'essai.
 </p>`;
 
   return wrapEmail(content, COLOR.amber, `Votre essai se termine le ${deadlineStr || 'dans 3 jours'} — le plan ${planLabel} démarrera automatiquement`);

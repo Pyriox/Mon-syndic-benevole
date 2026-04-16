@@ -4,7 +4,7 @@
 // ============================================================
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -68,6 +68,7 @@ function buildOrdinaryTemplates(referenceYear: number): Omit<WizardResolution, '
   const nextExerciseYear = referenceYear + 1;
 
   return [
+    // ── Bureau (obligatoires) ────────────────────────────────────────────────
     { id: 'r1', numero: 1, titre: 'Désignation du président de séance',
       description: "Élu par l'assemblée pour diriger les débats. Le syndic ne peut être président.",
       majorite: 'article_24', type_resolution: 'president_seance', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
@@ -77,33 +78,39 @@ function buildOrdinaryTemplates(referenceYear: number): Omit<WizardResolution, '
     { id: 'r3', numero: 3, titre: 'Désignation du ou des scrutateurs',
       description: 'Contrôlent les votes et la feuille de présence. Peuvent être copropriétaires ou mandataires.',
       majorite: 'article_24', type_resolution: 'scrutateurs', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
-    { id: 'r4', numero: 4, titre: `Approbation des comptes de l'exercice ${previousExerciseYear}`,
+    // ── Désignation du syndic (avant les votes financiers) ───────────────────
+    { id: 'r4', numero: 4, titre: 'Désignation ou renouvellement du syndic',
+      description: 'Facultatif, mais conseillé si le mandat arrive à échéance. Précisez ensuite la date de fin du nouveau mandat.',
+      majorite: 'article_25', type_resolution: 'designation_syndic', optional: true, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
+    // ── Votes financiers (obligatoires) ─────────────────────────────────────
+    { id: 'r5', numero: 5, titre: `Approbation des comptes de l'exercice ${previousExerciseYear}`,
       description: `Validation des comptes de gestion de la copropriété pour l'exercice ${previousExerciseYear}.`,
       majorite: 'article_24', type_resolution: 'approbation_comptes', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false },
-    { id: 'r5', numero: 5, titre: 'Quitus au syndic',
+    { id: 'r6', numero: 6, titre: 'Quitus au syndic',
       description: `Les copropriétaires approuvent la gestion du syndic pour l'exercice ${previousExerciseYear}.`,
       majorite: 'article_24', type_resolution: 'quitus_syndic', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false },
-    { id: 'r6', numero: 6, titre: `Révision du budget prévisionnel ${currentExerciseYear}`,
-      description: `Ajustement facultatif du budget de l'exercice ${currentExerciseYear}. Indiquez les postes modifiés si nécessaire.`,
-      majorite: 'article_24', type_resolution: 'revision_budget', optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
     { id: 'r7', numero: 7, titre: `Vote du budget prévisionnel ${nextExerciseYear}`,
       description: `Budget pour les dépenses courantes de l'exercice ${nextExerciseYear}. Détaillez les postes par ligne.`,
       majorite: 'article_24', type_resolution: 'budget_previsionnel', optional: false, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
     { id: 'r8', numero: 8, titre: `Cotisation au fonds de travaux (ALUR) ${nextExerciseYear}`,
       description: `Cotisation obligatoire pour l'exercice ${nextExerciseYear}. Minimum recommandé : 5 % du budget prévisionnel.`,
       majorite: 'article_25', type_resolution: 'fonds_travaux', optional: false, hasBudget: false, hasFondsTravaux: true, isDesignation: false },
-    { id: 'r9', numero: 9, titre: 'Autorisation de travaux sur parties communes',
-      description: "Vote d'autorisation et de financement de travaux sur les parties communes (hors entretien courant déjà budgété). Détaillez les postes et le montant estimatif.",
-      majorite: 'article_25', type_resolution: null, optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
-    { id: 'r10', numero: 10, titre: `Calendrier de financement ${nextExerciseYear} (budget prévisionnel + fonds travaux)`,
+    { id: 'r9', numero: 9, titre: `Calendrier de financement ${nextExerciseYear} (budget prévisionnel + fonds travaux)`,
       description: `Dates auxquelles les appels de fonds de l'exercice ${nextExerciseYear} seront émis suite aux votes du budget et du fonds de travaux. Au moins une date requise.`,
       majorite: 'article_24', type_resolution: 'calendrier_financement', optional: false, hasBudget: false, hasFondsTravaux: false, isDesignation: false, hasEcheancier: true },
-    { id: 'r11', numero: 11, titre: 'Désignation ou renouvellement du syndic',
-      description: 'Facultatif, mais conseillé si le mandat arrive à échéance. Précisez ensuite la date de fin du nouveau mandat.',
-      majorite: 'article_25', type_resolution: 'designation_syndic', optional: true, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
-    { id: 'r12', numero: 12, titre: 'Désignation ou renouvellement du conseil syndical',
+    // ── Points facultatifs ───────────────────────────────────────────────────
+    { id: 'r10', numero: 10, titre: 'Désignation ou renouvellement du conseil syndical',
       description: 'Élection des membres du conseil syndical. Facultatif.',
       majorite: 'article_24', type_resolution: 'conseil_syndical', optional: true, hasBudget: false, hasFondsTravaux: false, isDesignation: true },
+    { id: 'r11', numero: 11, titre: `Révision du budget prévisionnel ${currentExerciseYear}`,
+      description: `Ajustement facultatif du budget de l'exercice ${currentExerciseYear}. Indiquez les postes modifiés si nécessaire.`,
+      majorite: 'article_24', type_resolution: 'revision_budget', optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
+    { id: 'r12', numero: 12, titre: 'Autorisation de travaux sur parties communes',
+      description: "Vote d'autorisation et de financement de travaux sur les parties communes (hors entretien courant déjà budgété). Détaillez les postes et le montant estimatif.",
+      majorite: 'article_25', type_resolution: null, optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
+    { id: 'r13', numero: 13, titre: `Révision du fonds de travaux ${currentExerciseYear}`,
+      description: `Ajustement facultatif du montant du fonds de travaux de l'exercice ${currentExerciseYear}.`,
+      majorite: 'article_24', type_resolution: 'revision_fonds_travaux', optional: true, hasBudget: false, hasFondsTravaux: true, isDesignation: false },
   ];
 }
 
@@ -466,8 +473,22 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
 
               return (
             <div className="space-y-2 max-h-[52vh] overflow-y-auto pr-1">
-              {resolutions.map((r) => (
-                <div key={r.id} className={`rounded-xl border transition-colors overflow-hidden ${
+              {resolutions.map((r, idx) => {
+                // Séparateur avant le premier point facultatif non inclus par défaut
+                const isFirstFacultatif =
+                  r.optional &&
+                  r.type_resolution !== 'designation_syndic' &&
+                  (idx === 0 || !resolutions[idx - 1].optional || resolutions[idx - 1].type_resolution === 'designation_syndic');
+                return (
+                <Fragment key={r.id}>
+                  {isFirstFacultatif && (
+                    <div className="flex items-center gap-2 py-1">
+                      <div className="h-px flex-1 bg-gray-200" />
+                      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Points facultatifs</span>
+                      <div className="h-px flex-1 bg-gray-200" />
+                    </div>
+                  )}
+                <div className={`rounded-xl border transition-colors overflow-hidden ${
                   !r.inclure           ? 'border-gray-200 bg-gray-50 opacity-60'
                   : r.hasBudget        ? 'border-indigo-200 bg-indigo-50'
                   : r.hasFondsTravaux  ? 'border-amber-200 bg-amber-50'
@@ -699,7 +720,9 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
                     </div>
                   )}
                 </div>
-              ))}
+                </Fragment>
+                );
+              })}
             </div>
               );
             })()}

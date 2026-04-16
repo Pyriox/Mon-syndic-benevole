@@ -1,4 +1,4 @@
-import { wrapEmail, h, formatDateFR, ctaButton, COLOR } from './base';
+import { wrapEmail, h, formatDateFR, ctaButton, COLOR, SITE_URL } from './base';
 
 type ReminderKind = 'j14' | 'j7' | 'unopened';
 
@@ -8,12 +8,12 @@ export function buildAGReminderSubject(params: {
   kind: ReminderKind;
 }): string {
   const prefix = params.kind === 'j14'
-    ? '[J-14] Rappel AG'
+    ? '[J-14] Assemblée générale'
     : params.kind === 'j7'
-      ? '[J-7] Rappel AG'
-      : '[Action requise] Convocation AG non ouverte';
+      ? '[J-7] Assemblée générale'
+      : '[Action requise] Consultez votre convocation AG';
 
-  return `${prefix} - ${params.coproprieteNom} - ${formatDateFR(params.dateAg)}`;
+  return `${prefix} — ${params.coproprieteNom} — ${formatDateFR(params.dateAg)} — Mon Syndic Bénévole`;
 }
 
 export function buildAGReminderEmail(params: {
@@ -27,9 +27,9 @@ export function buildAGReminderEmail(params: {
   agUrl?: string;
 }): string {
   const isUnopened = params.kind === 'unopened';
-  const title = isUnopened ? 'Convocation AG en attente de lecture' : 'Rappel d’assemblée générale';
+  const title = isUnopened ? 'Votre convocation AG attend votre lecture' : 'Rappel d’assemblée générale';
   const intro = isUnopened
-    ? 'Nous vous relançons car votre convocation d’assemblée générale n’a pas encore été ouverte.'
+    ? 'Nous vous relançons car votre convocation d’assemblée générale n’a pas encore été consultée.'
     : 'Votre assemblée générale approche. Voici un rappel des informations utiles.';
 
   const content = `
@@ -50,8 +50,14 @@ export function buildAGReminderEmail(params: {
   ${params.lieu ? `Lieu : <strong>${h(params.lieu)}</strong>` : ''}
 </p>
 
-${ctaButton("Voir le détail de l'AG", params.agUrl ?? `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr'}/assemblees`, COLOR.blue)}
+${ctaButton("Consulter l'assemblée générale →", params.agUrl ?? `${SITE_URL}/assemblees`, COLOR.blue)}
+
+<p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};line-height:1.6">
+  Si vous avez déjà consulté cette convocation, vous pouvez ignorer ce message.
+</p>
 `;
 
-  return wrapEmail(content, isUnopened ? COLOR.amber : COLOR.blue);
+  return wrapEmail(content, isUnopened ? COLOR.amber : COLOR.blue, isUnopened
+    ? 'Votre convocation AG attend votre lecture'
+    : 'Rappel des informations utiles pour votre assemblée générale');
 }

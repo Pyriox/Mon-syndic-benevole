@@ -18,7 +18,7 @@ export interface AGTermineeEmailParams {
 }
 
 export function buildAGTermineeSubject(coproprieteNom: string): string {
-  return `Votre AG est clôturée — Pensez à créer les appels de fonds | ${coproprieteNom}`;
+  return `AG clôturée — créez vos appels de fonds — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildAGTermineeEmail(params: AGTermineeEmailParams): string {
@@ -37,13 +37,13 @@ export function buildAGTermineeEmail(params: AGTermineeEmailParams): string {
   Si des résolutions budgétaires ont été approuvées, pensez à créer les <strong>appels de fonds</strong> pour l'année à venir. Le budget voté et le calendrier d'appel sont importés automatiquement.
 </p>
 
-${ctaButton('Créer les appels de fonds →', appelsDeGondsUrl, COLOR.blue)}
+${ctaButton('Accéder aux appels de fonds →', appelsDeGondsUrl, COLOR.blue)}
 
 <p style="margin:-8px 0 0;font-size:12px;color:${COLOR.muted}">
   Ce rappel est envoyé automatiquement à chaque clôture d'AG.
 </p>`;
 
-  return wrapEmail(content, COLOR.blue);
+  return wrapEmail(content, COLOR.blue, 'Votre assemblée générale est clôturée');
 }
 
 // ─── Brouillons non publiés ───────────────────────────────────────────────────
@@ -58,7 +58,7 @@ export interface BrouillonRappelEmailParams {
 export type BrouillonEcheanceType = 'j14' | 'j7' | 'j1_urgent';
 
 export function buildBrouillonRappelSubject(coproprieteNom: string, n: number): string {
-  return `${n} appel${n > 1 ? 's' : ''} de fonds en attente de publication — ${coproprieteNom}`;
+  return `${n} appel${n > 1 ? 's' : ''} de fonds à publier — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildBrouillonRappelEmail(params: BrouillonRappelEmailParams): string {
@@ -86,7 +86,7 @@ ${ctaButton('Publier les appels de fonds →', appelsUrl, COLOR.amber)}
   Ce rappel est envoyé une seule fois par lot de brouillons.
 </p>`;
 
-  return wrapEmail(content, COLOR.amber);
+  return wrapEmail(content, COLOR.amber, 'Des appels de fonds attendent votre validation');
 }
 
 export function buildBrouillonEcheanceSubject(
@@ -94,9 +94,9 @@ export function buildBrouillonEcheanceSubject(
   n: number,
   type: BrouillonEcheanceType,
 ): string {
-  if (type === 'j14') return `[J-14] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} — ${coproprieteNom}`;
-  if (type === 'j7') return `[J-7] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} — ${coproprieteNom}`;
-  return `[Urgent] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} (< 7 jours) — ${coproprieteNom}`;
+  if (type === 'j14') return `[J-14] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} — ${coproprieteNom} — Mon Syndic Bénévole`;
+  if (type === 'j7') return `[J-7] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} — ${coproprieteNom} — Mon Syndic Bénévole`;
+  return `[Urgent] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} (< 7 jours) — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildBrouillonEcheanceEmail(
@@ -138,7 +138,7 @@ ${ctaButton('Publier les appels de fonds →', appelsUrl, color)}
   Rappel automatique envoyé une seule fois pour cette échéance.
 </p>`;
 
-  return wrapEmail(content, color);
+  return wrapEmail(content, color, 'Des appels de fonds restent à publier avant leur échéance');
 }
 
 // ── Récapitulatif syndic des impayés à J0 ────────────────────────────────────
@@ -153,7 +153,7 @@ export interface SyndicImpayesRecapEmailParams {
 }
 
 export function buildSyndicImpayesRecapSubject(coproprieteNom: string, appelTitre: string, nbImpayes: number): string {
-  return `[J0] ${nbImpayes} impayé${nbImpayes > 1 ? 's' : ''} à vérifier — ${appelTitre} · ${coproprieteNom}`;
+  return `[J0] ${nbImpayes} impayé${nbImpayes > 1 ? 's' : ''} à vérifier — ${appelTitre} — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildSyndicImpayesRecapEmail(params: SyndicImpayesRecapEmailParams): string {
@@ -188,7 +188,7 @@ ${rows}
 ${ctaButton('Vérifier les paiements →', appelsUrl, COLOR.amber)}
 `;
 
-  return wrapEmail(content, COLOR.amber);
+  return wrapEmail(content, COLOR.amber, 'Vérifiez les paiements reçus aujourd\'hui');
 }
 
 // ── Incident résolu (notification au déclarant) ─────────────────────────────────
@@ -219,12 +219,12 @@ export function buildSyndicOnboardingReminderSubject(params: {
   coproCount: number;
 }): string {
   const prefix = params.kind === 'j2'
-    ? 'Votre copropriété vous attend'
-    : 'Passez à l\'action sur votre copropriété';
+    ? 'Votre espace syndic est prêt'
+    : 'Poursuivez la configuration de votre copropriété';
   const state = params.coproCount === 0
     ? 'Créez votre première copropriété'
     : 'Ajoutez vos premiers copropriétaires';
-  return `${prefix} — ${state}`;
+  return `${prefix} — ${state} — Mon Syndic Bénévole`;
 }
 
 export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingReminderEmailParams): string {
@@ -233,16 +233,16 @@ export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingRemin
   const hasNoCopro = coproCount === 0;
 
   const title = hasNoCopro
-    ? 'Votre espace est prêt — lancez votre copropriété en quelques minutes'
-    : 'Bravo, vous y êtes presque — finalisez votre copropriété';
+    ? 'Votre espace syndic est prêt'
+    : 'Votre copropriété est créée';
 
   const subtitle = hasNoCopro
-    ? 'Démarrage rapide'
-    : 'Dernière étape clé';
+    ? 'Première étape'
+    : 'Étape suivante';
 
   const body = hasNoCopro
-    ? `Vous avez confirmé votre compte, excellente nouvelle. En créant votre copropriété maintenant, vous pourrez piloter vos obligations, centraliser vos documents et gagner un temps précieux dès cette semaine.`
-    : `Votre copropriété est créée, c'est un très bon début. Vous avez actuellement <strong>${coproprietairesCount}</strong> copropriétaire${coproprietairesCount > 1 ? 's' : ''} ; ajoutez vos copropriétaires pour débloquer un suivi plus fluide de vos actions et de votre communication.`;
+    ? `Pour commencer, créez votre copropriété. Vous pourrez ensuite paramétrer vos lots, vos copropriétaires et vos appels de fonds.`
+    : `Votre copropriété est déjà créée. Vous avez actuellement <strong>${coproprietairesCount}</strong> copropriétaire${coproprietairesCount > 1 ? 's' : ''}. Ajoutez les copropriétaires manquants pour poursuivre la configuration et centraliser les échanges.`;
 
   const stepsSummary = hasNoCopro
     ? `<div style="margin:16px 0 0;padding:14px 16px;border:1px solid ${COLOR.border};border-radius:10px;background:#f8fafc">
@@ -264,11 +264,11 @@ export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingRemin
 
   const urgency = isJ7
     ? `<p style="margin:16px 0 0;font-size:14px;color:${COLOR.text};line-height:1.6">
-  En finalisant cette étape aujourd'hui, vous prenez de l'avance et profitez pleinement de votre espace syndic sans perdre de temps.
+  Cette étape reste nécessaire pour utiliser pleinement votre espace syndic et vos outils de communication.
 </p>`
     : '';
 
-  const ctaLabel = hasNoCopro ? 'Créer ma copropriété →' : 'Ajouter des copropriétaires →';
+  const ctaLabel = hasNoCopro ? 'Créer ma copropriété →' : 'Ajouter mes copropriétaires →';
   const color = isJ7 ? COLOR.amber : COLOR.blue;
 
   const content = `
@@ -288,12 +288,12 @@ ${ctaButton(ctaLabel, actionUrl, color)}
 `;
 
   return wrapEmail(content, color, hasNoCopro
-    ? 'Démarrez votre copropriété maintenant'
-    : 'Finalisez votre configuration en 2 minutes');
+    ? 'Créez votre première copropriété'
+    : 'Ajoutez vos copropriétaires pour poursuivre la configuration');
 }
 
 export function buildIncidentResoluSubject(titreIncident: string): string {
-  return `Votre incident est résolu — ${titreIncident}`;
+  return `Incident résolu — ${titreIncident} — Mon Syndic Bénévole`;
 }
 
 export function buildIncidentResoluEmail(params: IncidentResoluEmailParams): string {
@@ -302,7 +302,7 @@ export function buildIncidentResoluEmail(params: IncidentResoluEmailParams): str
   const dateStr = formatDateFR(dateResolution);
 
   const content = `
-<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.green}">✅ Incident résolu</h1>
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.green}">Incident résolu</h1>
 <p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
 
 <p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
@@ -321,7 +321,11 @@ export function buildIncidentResoluEmail(params: IncidentResoluEmailParams): str
   </tr>` : ''}
 </table>
 
-${ctaButton('Voir le détail →', incidentsUrl, COLOR.green)}`;
+${ctaButton('Consulter l\'incident →', incidentsUrl, COLOR.green)}
 
-  return wrapEmail(content, COLOR.green, `L'incident « ${titreIncident} » est résolu`);
+<p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};line-height:1.6">
+  Si vous avez une question sur cette resolution, rapprochez-vous de votre syndic.
+</p>`;
+
+  return wrapEmail(content, COLOR.green, `L'incident ${titreIncident} est résolu`);
 }
