@@ -16,7 +16,6 @@ import {
   collectAvailableRepartitionGroups,
   formatEuros,
   getDefaultFundingCallDate,
-  normalizeFrenchDateInputValue,
   parseFrenchDateInputValue,
   toParisISOString,
 } from '@/lib/utils';
@@ -159,6 +158,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
   const [isVisio,    setIsVisio]    = useState(false);
   const [dateVal,    setDateVal]    = useState('');
   const [dateDisplayVal, setDateDisplayVal] = useState('');
+  const [dateInputKey,   setDateInputKey]   = useState(0);
   const [heureVal,   setHeureVal]   = useState('09');
   const [minuteVal,  setMinuteVal]  = useState('00');
   const [formData,   setFormData]   = useState({
@@ -202,28 +202,11 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
     : null;
   const avertissementDelai = joursAvantAG !== null && joursAvantAG >= 0 && joursAvantAG < 21;
   const datePassee = joursAvantAG !== null && joursAvantAG < 0;
-  const dateYear = dateDisplayVal.length === 10 ? Number(dateDisplayVal.slice(6, 10)) : null;
-  const anneeInvalide = dateYear !== null && dateYear < 2000;
+  const dateDigitsCount = dateDisplayVal.replace(/\D/g, '').length;
+  const dateInvalide = dateDigitsCount === 8 && !dateVal;
   const titreFinal = typeAG === 'ordinaire'
     ? `Assemblée Générale Ordinaire ${dateVal ? new Date(dateVal).getFullYear() : new Date().getFullYear()}`
     : formData.titre.trim();
-
-  const handleDateChange = (rawValue: string) => {
-    const normalizedValue = normalizeFrenchDateInputValue(rawValue);
-    const parsedValue = parseFrenchDateInputValue(normalizedValue);
-    const parsedYear = normalizedValue.length === 10 ? Number(normalizedValue.slice(6, 10)) : null;
-
-    setDateDisplayVal(normalizedValue);
-
-    if (parsedValue && parsedYear !== null && parsedYear >= 2000) {
-      setDateVal(parsedValue);
-      updateDateTime(parsedValue, heureVal, minuteVal);
-      return;
-    }
-
-    setDateVal('');
-    updateDateTime('', heureVal, minuteVal);
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -347,6 +330,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
     setIsVisio(false);
     setDateVal('');
     setDateDisplayVal('');
+    setDateInputKey((k) => k + 1);
     setHeureVal('09');
     setMinuteVal('00');
     setFormData({ copropriete_id: coproprietes[0]?.id ?? '', titre: '', date_ag: '', lieu: '', notes: '' });
@@ -421,15 +405,25 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
               </label>
               <div className="flex gap-2">
                   <input type="text"
+                    key={dateInputKey}
                     inputMode="numeric"
                     placeholder="JJ/MM/AAAA"
-                    value={dateDisplayVal}
-                    onChange={(e) => handleDateChange(e.target.value)}
-                  required
+                    defaultValue={dateDisplayVal}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+                      const formatted = digits.length <= 2 ? digits
+                        : digits.length <= 4 ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+                        : `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+                      e.target.value = formatted;
+                      setDateDisplayVal(formatted);
+                      const parsed = digits.length === 8 ? parseFrenchDateInputValue(formatted) : '';
+                      setDateVal(parsed);
+                      updateDateTime(parsed, heureVal, minuteVal);
+                    }}
                     maxLength={10}
                     autoComplete="off"
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
-                />
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
+                  />
                 <select value={heureVal}
                   onChange={(e) => { setHeureVal(e.target.value); updateDateTime(dateVal, e.target.value, minuteVal); }}
                   className="w-[5.5rem] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -445,15 +439,15 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
                   ))}
                 </select>
               </div>
-              {anneeInvalide && (
+              {dateInvalide && (
                 <div className="mt-2 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5 text-red-500" />
                   <span>
-                    <strong>Année invalide :</strong> saisissez les 4 chiffres de l'année (ex. : 2026).
+                    <strong>Date invalide :</strong> vérifiez le jour, le mois et l&apos;année (ex. : 18/02/2026).
                   </span>
                 </div>
               )}
-              {!anneeInvalide && datePassee && (
+              {!dateInvalide && datePassee && (
                 <div className="mt-2 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5 text-red-500" />
                   <span>

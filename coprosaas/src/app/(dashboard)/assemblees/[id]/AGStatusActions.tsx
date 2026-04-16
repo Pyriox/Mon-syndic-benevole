@@ -20,7 +20,6 @@ import {
   getParisDateInputValue,
   getParisTimeInputValue,
   getParisYear,
-  normalizeFrenchDateInputValue,
   parseFrenchDateInputValue,
   toParisISOString,
 } from '@/lib/utils';
@@ -101,14 +100,6 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
   const [isVisio,   setIsVisio]   = useState(lieu === 'Visioconférence');
   const [lieuVal,   setLieuVal]   = useState(lieu === 'Visioconférence' ? '' : (lieu ?? ''));
 
-  const handleDateChange = (rawValue: string) => {
-    const normalizedValue = normalizeFrenchDateInputValue(rawValue);
-    const parsedValue = parseFrenchDateInputValue(normalizedValue);
-
-    setDateDisplayVal(normalizedValue);
-    setDateVal(parsedValue);
-  };
-
   const handleSave = async () => {
     if (!dateVal) {
       setError(dateDisplayVal ? 'La date est invalide. Utilisez le format JJ/MM/AAAA.' : 'La date est requise.');
@@ -159,9 +150,16 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
               <input type="text"
                 inputMode="numeric"
                 placeholder="JJ/MM/AAAA"
-                value={dateDisplayVal}
-                onChange={(e) => handleDateChange(e.target.value)}
-                required
+                defaultValue={dateDisplayVal}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+                  const formatted = digits.length <= 2 ? digits
+                    : digits.length <= 4 ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+                    : `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+                  e.target.value = formatted;
+                  setDateDisplayVal(formatted);
+                  setDateVal(digits.length === 8 ? parseFrenchDateInputValue(formatted) : '');
+                }}
                 maxLength={10}
                 autoComplete="off"
                 className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"

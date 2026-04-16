@@ -134,6 +134,7 @@ export function parseFrenchDateInputValue(value: string): string {
   const day = Number(dayPart);
   const month = Number(monthPart);
   const year = Number(yearPart);
+  if (year < 2000 || year > 2100) return '';
   const candidate = new Date(Date.UTC(year, month - 1, day));
 
   if (
