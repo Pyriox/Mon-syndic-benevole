@@ -241,9 +241,11 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
           })));
         }
       }
-      if (res.type_resolution === 'fonds_travaux' && res.fonds_travaux_montant) {
-        newPostes.push({ libelle: 'Fonds de travaux (ALUR)', categorie: 'fonds_travaux_alur', montant: String(res.fonds_travaux_montant) });
-        fondsTravauxTotal += res.fonds_travaux_montant;
+      if (res.type_resolution === 'fonds_travaux' || res.type_resolution === 'revision_fonds_travaux') {
+        if (res.fonds_travaux_montant) {
+          newPostes.push({ libelle: 'Fonds de travaux (ALUR)', categorie: 'fonds_travaux_alur', montant: String(res.fonds_travaux_montant) });
+          fondsTravauxTotal += res.fonds_travaux_montant;
+        }
       }
     }
     setMontantFondsTravaux(fondsTravauxTotal);
@@ -330,7 +332,7 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
         .from('resolutions')
         .select('id, titre, type_resolution, budget_postes, fonds_travaux_montant, ag_id')
         .in('ag_id', ags.map((a) => a.id))
-        .in('type_resolution', ['budget_previsionnel', 'revision_budget', 'fonds_travaux', 'calendrier_financement'])
+        .in('type_resolution', ['budget_previsionnel', 'revision_budget', 'fonds_travaux', 'revision_fonds_travaux', 'calendrier_financement'])
         .eq('statut', 'approuvee');
 
       const grouped: AGWithBudgets[] = ags

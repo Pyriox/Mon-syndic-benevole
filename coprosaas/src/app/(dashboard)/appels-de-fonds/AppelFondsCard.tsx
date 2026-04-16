@@ -31,6 +31,7 @@ const LABELS_TYPE_APPEL: Record<string, string> = {
   budget_previsionnel: 'Budget prévisionnel',
   revision_budget: 'Révision budgétaire',
   fonds_travaux: 'Fonds de travaux',
+  revision_fonds_travaux: 'Révision fonds de travaux',
   exceptionnel: 'Appel exceptionnel',
 };
 
