@@ -381,8 +381,8 @@ export default function VoteParCopro({
         <div className="px-3 py-2 bg-indigo-50 border-b border-indigo-100 text-xs font-semibold text-indigo-700 flex items-center gap-2">
           <Users size={12} />
           {isSyndic
-            ? 'Désigner une personne parmi les présents'
-            : (isMultiple ? 'Désigner un ou plusieurs copropriétaires' : 'Désigner un copropriétaire')}
+            ? 'Désigner un syndic (copropriétaire ou extérieur)'
+            : (isMultiple ? 'Désigner un ou plusieurs copropriétaires parmi les présents' : 'Désigner un copropriétaire parmi les présents')}
         </div>
 
         {/* Liste compacte de désignation */}

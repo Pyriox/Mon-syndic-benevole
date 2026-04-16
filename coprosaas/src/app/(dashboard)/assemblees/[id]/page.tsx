@@ -55,7 +55,7 @@ export default async function AGDetailPage({ params }: Props) {
   ] = await Promise.all([
     db
       .from('resolutions')
-      .select('id, ag_id, numero, titre, description, statut, majorite, voix_pour, voix_contre, voix_abstention, type_resolution, budget_postes, fonds_travaux_montant, designation_resultats')
+      .select('id, ag_id, numero, titre, description, statut, majorite, voix_pour, voix_contre, voix_abstention, type_resolution, budget_postes, fonds_travaux_montant, designation_resultats, date_fin_mandat')
       .eq('ag_id', id)
       .order('numero', { ascending: true }),
     // Copropriétaires de la copropriété (pour présences, votes et PV)
