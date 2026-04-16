@@ -8,6 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
+import { buildPvPdfDisplayName } from '@/lib/pdf-filenames';
 import { formatDate, getParisYear } from '@/lib/utils';
 import { buildPVPdfAttachment } from '@/lib/ag-email-pdf';
 
@@ -179,7 +180,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
 
     if (uploadError) throw new Error(uploadError.message);
 
-    const pvNom = `PV AG — ${ag.coproprietes?.nom ?? ''} — ${getParisYear(ag.date_ag) ?? new Date().getFullYear()}`;
+    const pvNom = buildPvPdfDisplayName({
+      coproprieteNom: ag.coproprietes?.nom,
+      titreAg: ag.titre,
+      dateAg: ag.date_ag,
+    });
     const { error: documentError } = await admin.from('documents').upsert({
       copropriete_id: ag.copropriete_id,
       dossier_id: dossierId,

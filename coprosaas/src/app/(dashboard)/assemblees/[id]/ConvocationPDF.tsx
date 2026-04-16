@@ -7,6 +7,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Button from '@/components/ui/Button';
+import { buildConvocationPdfFileName } from '@/lib/pdf-filenames';
 import { formatDate, formatTime } from '@/lib/utils';
 import { addPdfFooters, drawPdfHero, drawPdfInfoCard, drawPdfSectionTitle, ensurePdfSpace, formatPdfEuros, PDF_COLORS } from '@/lib/pdf';
 import { FileDown } from 'lucide-react';
@@ -125,10 +126,23 @@ function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[])
     body: resolutions.map((r) => {
       const parts: string[] = [];
       if (r.description) parts.push(r.description);
-      if (r.budget_postes && r.budget_postes.length > 0) {
-        const total = r.budget_postes.reduce((s, p) => s + p.montant, 0);
-        parts.push(`Budget proposé : ${formatPdfEuros(total)}`);
-        r.budget_postes.forEach((p) => parts.push(`  • ${p.libelle} : ${formatPdfEuros(p.montant)}`));
+      if (r.type_resolution === 'calendrier_financement') {
+        if (r.budget_postes && r.budget_postes.length > 0) {
+          parts.push('Dates d\'appel de fonds :');
+          r.budget_postes.forEach((p) => {
+            const dateParts = String(p.libelle).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            const dateLabel = dateParts
+              ? new Date(`${dateParts[1]}-${dateParts[2]}-${dateParts[3]}`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+              : p.libelle;
+            parts.push(`  • ${dateLabel}`);
+          });
+        }
+      } else {
+        if (r.budget_postes && r.budget_postes.length > 0) {
+          const total = r.budget_postes.reduce((s, p) => s + p.montant, 0);
+          parts.push(`Budget proposé : ${formatPdfEuros(total)}`);
+          r.budget_postes.forEach((p) => parts.push(`  • ${p.libelle} : ${formatPdfEuros(p.montant)}`));
+        }
       }
       if (r.fonds_travaux_montant != null) {
         parts.push(`Cotisation fonds de travaux : ${formatPdfEuros(r.fonds_travaux_montant)}`);
@@ -202,7 +216,11 @@ export type { Resolution as ConvocationResolution };
 export default function ConvocationPDF({ ag, resolutions }: ConvocationPDFProps) {
   const handleDownload = () => {
     const doc = genererConvocationDoc(ag, resolutions);
-    doc.save(`convocation-ag-${ag.id}.pdf`);
+    doc.save(buildConvocationPdfFileName({
+      coproprieteNom: ag.coproprietes?.nom,
+      titreAg: ag.titre,
+      dateAg: ag.date_ag,
+    }));
   };
 
   return (

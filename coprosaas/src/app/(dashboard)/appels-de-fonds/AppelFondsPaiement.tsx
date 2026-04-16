@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import { applyCoproprietaireBalanceDelta, resolveAppelBalanceAccountType } from '@/lib/coproprietaire-balance';
 import { formatEuros, LABELS_CATEGORIE, parseBudgetPostesFromDescription, repartitionParPostesDetailed } from '@/lib/utils';
+import { buildAvisAppelFondsPdfFileName } from '@/lib/pdf-filenames';
 import {
   CheckCircle, Clock, XCircle, Loader2,
   ChevronUp, X, ReceiptText, FileDown,
@@ -329,8 +330,11 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                   onClick={() => {
                     const detailPostes = ligne.coproprietaires?.id ? (detailByCoproId.get(ligne.coproprietaires.id) ?? []) : [];
                     const pdf = buildAvisPersonnelPDF(appel, ligne, detailPostes);
-                    const safe = nom.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                    pdf.save(`avis-appel-fonds-${safe}.pdf`);
+                    pdf.save(buildAvisAppelFondsPdfFileName({
+                      coproprietaireNom: nom,
+                      titreAppel: appel.titre,
+                      dateEcheance: appel.date_echeance,
+                    }));
                   }}
                   className="shrink-0 p-1 text-gray-500 hover:text-blue-600 transition-colors"
                 >

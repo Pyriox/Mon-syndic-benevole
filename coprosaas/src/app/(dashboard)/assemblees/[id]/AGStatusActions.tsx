@@ -21,6 +21,7 @@ import {
   getParisYear,
   toParisISOString,
 } from '@/lib/utils';
+import { buildConvocationPdfDisplayName, buildConvocationPdfFileName } from '@/lib/pdf-filenames';
 import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, AlertTriangle, Mail } from 'lucide-react';
 import LancerAGModal from './LancerAGModal';
 import { genererConvocationDoc, type ConvocationAGData, type ConvocationResolution } from './ConvocationPDF';
@@ -362,11 +363,20 @@ export function AGEnvoyerConvocation({
       const dossierId = user ? await getDossierConvocationsAG(supabase, user.id, ag.date_ag, ag.titre) : null;
 
       // 3. Uploader le PDF dans la section documents
-      const annee = getParisYear(ag.date_ag) ?? new Date().getFullYear();
+      const fileName = buildConvocationPdfFileName({
+        coproprieteNom: ag.coproprietes?.nom,
+        titreAg: ag.titre,
+        dateAg: ag.date_ag,
+      });
+      const documentName = buildConvocationPdfDisplayName({
+        coproprieteNom: ag.coproprietes?.nom,
+        titreAg: ag.titre,
+        dateAg: ag.date_ag,
+      });
       const uploadForm = new FormData();
-      uploadForm.append('file', pdfBlob, `convocation-${agId}.pdf`);
+      uploadForm.append('file', pdfBlob, fileName);
       uploadForm.append('copropriete_id', coproprieteId);
-      uploadForm.append('nom', `Convocation AG — ${ag.coproprietes?.nom ?? ''} — ${annee}`);
+      uploadForm.append('nom', documentName);
       uploadForm.append('type', 'convocation_ag');
       if (dossierId) uploadForm.append('dossier_id', dossierId);
       await fetch('/api/upload-document', { method: 'POST', body: uploadForm });

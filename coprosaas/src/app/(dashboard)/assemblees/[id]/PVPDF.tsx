@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Button from '@/components/ui/Button';
+import { buildPvPdfDisplayName, buildPvPdfFileName } from '@/lib/pdf-filenames';
 import { FileDown, Send } from 'lucide-react';
 import { formatDate, formatTime, getParisYear, TYPES_RESOLUTION } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -341,7 +342,8 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
       {
         const eLines = doc.splitTextToSize(res.titre, inner - 80);
         const eIsDesig = !!(res.designation_resultats && res.designation_resultats.length > 0);
-        const eHasBudget = !!(res.budget_postes && res.budget_postes.length > 0);
+        const eIsCalendrier = res.type_resolution === 'calendrier_financement';
+        const eHasBudget = !!(res.budget_postes && res.budget_postes.length > 0) && !eIsCalendrier;
         let estH = Math.max(10, eLines.length * 5 + 4) + 2; // rect titre
         if (eIsDesig) {
           const eDesigStr = res.designation_resultats!.map((d) => `${d.prenom} ${d.nom}`).join(', ');
@@ -350,6 +352,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         }
         estH += 22; // 3 lignes de résultats de vote (pour toutes les résolutions)
         if (res.fonds_travaux_montant != null) estH += 10;
+        if (eIsCalendrier && (res.budget_postes?.length ?? 0) > 0) estH += (res.budget_postes?.length ?? 0) * 6 + 10;
         if (eHasBudget) estH += 4 + 12 + (res.budget_postes?.length ?? 0) * 7 + 10;
         estH += 6; // espacement final
         y = checkPage(doc, y, estH);
@@ -358,7 +361,8 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
       const resStatutEffectif = effectifStatut(res);
       const badge = statutBadge(resStatutEffectif);
       const isDesig = !!(res.designation_resultats && res.designation_resultats.length > 0);
-      const hasBudget = !!(res.budget_postes && res.budget_postes.length > 0);
+      const isCalendrier = res.type_resolution === 'calendrier_financement';
+      const hasBudget = !!(res.budget_postes && res.budget_postes.length > 0) && !isCalendrier;
 
       // ── Numéro + titre ────────────────────────────────────
       const hasMajorite = !!(res.majorite && MAJORITE_LABELS[res.majorite]);
@@ -464,6 +468,27 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         doc.setTextColor(...AMBER);
         doc.text(`Cotisation fonds de travaux : ${formatPdfEuros(res.fonds_travaux_montant)}`, mL + 4, y + 5.5);
         y += 10;
+      }
+
+      // ── Calendrier de financement ──────────────────────
+      if (isCalendrier && (res.budget_postes?.length ?? 0) > 0) {
+        y = checkPage(doc, y, 20);
+        doc.setFillColor(...LGRAY);
+        doc.roundedRect(mL + 1, y, inner - 2, (res.budget_postes!.length) * 6 + 8, 1.5, 1.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...PURPLE);
+        doc.text('Dates d\'appel de fonds :', mL + 4, y + 6);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(40, 40, 40);
+        res.budget_postes!.forEach((p, i) => {
+          const dateParts = String(p.libelle).match(/^(\d{4})-(\d{2})-(\d{2})/);
+          const dateLabel = dateParts
+            ? new Date(`${dateParts[1]}-${dateParts[2]}-${dateParts[3]}`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+            : p.libelle;
+          doc.text(`• ${dateLabel}`, mL + 8, y + 6 + (i + 1) * 6);
+        });
+        y += res.budget_postes!.length * 6 + 12;
       }
 
       // ── Budget postes ─────────────────────────────────────
@@ -583,7 +608,11 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
       centerText: 'Généré via Mon Syndic Bénévole',
     });
 
-    const filename = `pv-ag-${ag.titre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}.pdf`;
+    const filename = buildPvPdfFileName({
+      coproprieteNom: ag.coproprietes?.nom,
+      titreAg: ag.titre,
+      dateAg: ag.date_ag,
+    });
     doc.save(filename);
 
     // Sauvegarder dans Documents : Assemblées Générales / Année / AG
@@ -604,7 +633,11 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
               const uploadForm = new FormData();
               uploadForm.append('file', pdfBlob, filename);
               uploadForm.append('copropriete_id', coproprieteId);
-              uploadForm.append('nom', `PV AG — ${ag.coproprietes?.nom ?? ''} — ${year}`);
+              uploadForm.append('nom', buildPvPdfDisplayName({
+                coproprieteNom: ag.coproprietes?.nom,
+                titreAg: ag.titre,
+                dateAg: ag.date_ag,
+              }));
               uploadForm.append('type', 'pv_ag');
               uploadForm.append('dossier_id', agDossierId);
               await fetch('/api/upload-document', { method: 'POST', body: uploadForm });

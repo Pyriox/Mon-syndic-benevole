@@ -16,6 +16,7 @@ import {
 } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
+import { buildAvisAppelFondsPdfDisplayName, buildAvisAppelFondsPdfFileName } from '@/lib/pdf-filenames';
 import AppelFondsPDF, { buildAvisPersonnelPDF, type AvisPersonnelInput, type PersonalPosteDetail } from './AppelFondsPDF';
 import AppelFondsPaiement, { type Ligne } from './AppelFondsPaiement';
 
@@ -363,13 +364,19 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           ligne.coproprietaires?.id ? (detailsByCoproId.get(ligne.coproprietaires.id) ?? []) : [],
         );
         const pdfBlob = pdfDoc.output('blob');
-        const safeName = `${ligne.coproprietaires.prenom}-${ligne.coproprietaires.nom}`
-          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-          .replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-        const file = new File([pdfBlob], `avis-${safeName}.pdf`, { type: 'application/pdf' });
+        const coproprietaireNom = `${ligne.coproprietaires.prenom} ${ligne.coproprietaires.nom}`.trim();
+        const file = new File([pdfBlob], buildAvisAppelFondsPdfFileName({
+          coproprietaireNom,
+          titreAppel: appel.titre,
+          dateEcheance: appel.date_echeance,
+        }), { type: 'application/pdf' });
         const form = new FormData();
         form.append('file', file);
-        form.append('nom', `Avis — ${ligne.coproprietaires.prenom} ${ligne.coproprietaires.nom} — ${appel.titre}`);
+        form.append('nom', buildAvisAppelFondsPdfDisplayName({
+          coproprietaireNom,
+          titreAppel: appel.titre,
+          dateEcheance: appel.date_echeance,
+        }));
         form.append('type', 'autre');
         form.append('copropriete_id', appel.copropriete_id);
         if (targetDossierId) form.append('dossier_id', targetDossierId);

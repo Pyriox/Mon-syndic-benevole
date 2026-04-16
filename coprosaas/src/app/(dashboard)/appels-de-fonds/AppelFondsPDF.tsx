@@ -6,6 +6,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FileDown } from 'lucide-react';
+import { buildAppelFondsPdfFileName } from '@/lib/pdf-filenames';
 import { formatEuros, formatDate, LABELS_CATEGORIE } from '@/lib/utils';
 import { addPdfFooters, drawPdfHero, drawPdfInfoCard, drawPdfSectionTitle, ensurePdfSpace, formatPdfEuros, PDF_COLORS } from '@/lib/pdf';
 
@@ -335,7 +336,11 @@ export function buildAvisPersonnelPDF(
 export default function AppelFondsPDF({ appel }: AppelFondsPDFProps) {
   const handleExport = () => {
     const doc = buildAppelFondsPDF(appel);
-    doc.save(`appel-de-fonds-${appel.titre.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+    doc.save(buildAppelFondsPdfFileName({
+      coproprieteNom: appel.coproprietes?.nom,
+      titreAppel: appel.titre,
+      dateEcheance: appel.date_echeance,
+    }));
   };
 
   return (

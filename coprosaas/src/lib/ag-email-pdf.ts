@@ -1,5 +1,6 @@
 import 'server-only';
 import { jsPDF } from 'jspdf';
+import { buildConvocationPdfFileName, buildPvPdfFileName } from '@/lib/pdf-filenames';
 import { formatDate, formatTime } from '@/lib/utils';
 
 type ConvocationResolutionPdf = {
@@ -94,7 +95,11 @@ export function buildConvocationPdfAttachment(params: {
   }
 
   return {
-    filename: `convocation-ag-${params.agId}.pdf`,
+    filename: buildConvocationPdfFileName({
+      coproprieteNom: params.coproprieteNom,
+      titreAg: params.titreAg,
+      dateAg: params.dateAg,
+    }),
     content: base64Pdf(doc),
     contentType: 'application/pdf',
   };
@@ -158,7 +163,11 @@ export function buildPVPdfAttachment(params: {
   }
 
   return {
-    filename: `pv-ag-${params.agId}.pdf`,
+    filename: buildPvPdfFileName({
+      coproprieteNom: params.coproprieteNom,
+      titreAg: params.titreAg,
+      dateAg: params.dateAg,
+    }),
     content: base64Pdf(doc),
     contentType: 'application/pdf',
   };
