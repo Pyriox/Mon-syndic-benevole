@@ -14,11 +14,6 @@ import Select from '@/components/ui/Select';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { collectAvailableRepartitionGroups, formatEuros, TYPES_RESOLUTION } from '@/lib/utils';
 
-function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
-  if (typeof window === 'undefined') return;
-  router.replace(`${window.location.pathname}${window.location.search}`);
-}
-
 type PosteBudget = {
   libelle: string;
   montant: number;
@@ -215,7 +210,7 @@ export default function ResolutionActions({ agId, showLabel, nextNumero, special
     setFormData({ titre: '', description: '', majorite: '', statut: 'en_attente' });
     setBudgetPostes([]);
     setFondsTravaux('');
-    replaceCurrentRoute(router);
+    router.refresh();
   };
 
   return (

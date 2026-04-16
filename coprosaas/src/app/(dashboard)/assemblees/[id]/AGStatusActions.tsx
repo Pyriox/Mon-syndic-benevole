@@ -26,11 +26,6 @@ import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, Alert
 import LancerAGModal from './LancerAGModal';
 import { genererConvocationDoc, type ConvocationAGData, type ConvocationResolution } from './ConvocationPDF';
 
-function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
-  if (typeof window === 'undefined') return;
-  router.replace(`${window.location.pathname}${window.location.search}`);
-}
-
 type EmailSendSummary = {
   level: 'success' | 'warning' | 'error';
   message: string;
@@ -120,7 +115,7 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
       return;
     }
     setIsOpen(false);
-    replaceCurrentRoute(router);
+    router.refresh();
     setLoading(false);
   };
 
@@ -275,7 +270,7 @@ export function AGAnnuler({ agId }: { agId: string }) {
       setLoading(false);
       return;
     }
-    replaceCurrentRoute(router);
+    router.refresh();
     setLoading(false);
     setIsOpen(false);
   };
@@ -674,7 +669,7 @@ export default function AGStatusActions({
       label: 'Statut AG modifié : creation → planifiee',
       metadata: { agId, coproId: coproprieteId, oldStatus: 'creation', newStatus: 'planifiee' },
     }).catch(() => undefined);
-    replaceCurrentRoute(router);
+    router.refresh();
     setLoading(false);
   };
 
@@ -686,7 +681,7 @@ export default function AGStatusActions({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quorumAtteint }),
     });
-    replaceCurrentRoute(router);
+    router.refresh();
     setLoading(false);
   };
 

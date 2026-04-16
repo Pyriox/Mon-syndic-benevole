@@ -64,6 +64,7 @@ export default function LancerAGModal({
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [copros, setCopros] = useState<Copro[]>([]);
   const [presences, setPresences] = useState<Record<string, PresenceEntry>>({});
   const isLaunch = mode === 'launch';
@@ -116,6 +117,7 @@ export default function LancerAGModal({
 
   const handleConfirm = async () => {
     setLoading(true);
+    setSaveError(null);
     const rows = copros.map((c) => {
       const entry = presences[c.id];
       const isRepresente = entry?.statut === 'represente';
@@ -133,16 +135,28 @@ export default function LancerAGModal({
       };
     });
 
-    await supabase
+    const { error: upsertError } = await supabase
       .from('ag_presences')
       .upsert(rows, { onConflict: 'ag_id,coproprietaire_id' });
 
+    if (upsertError) {
+      setSaveError(`Erreur lors de l'enregistrement des présences : ${upsertError.message}`);
+      setLoading(false);
+      return;
+    }
+
     if (mode === 'launch') {
-      await supabase
+      const { error: updateError } = await supabase
         .from('assemblees_generales')
         .update({ statut: 'en_cours' })
         .eq('id', agId)
         .eq('statut', 'planifiee');
+
+      if (updateError) {
+        setSaveError(`Erreur lors du démarrage de l'AG : ${updateError.message}`);
+        setLoading(false);
+        return;
+      }
 
       void logCurrentUserEvent({
         eventType: 'ag_status_changed',
@@ -153,7 +167,7 @@ export default function LancerAGModal({
 
     setIsOpen(false);
     setLoading(false);
-    replaceCurrentRoute(router);
+    router.refresh();
   };
 
   const presentCount = copros.filter(
@@ -291,6 +305,12 @@ export default function LancerAGModal({
                 })}
               </div>
             </>
+          )}
+
+          {saveError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {saveError}
+            </div>
           )}
 
           <div className="flex gap-3 pt-1">
