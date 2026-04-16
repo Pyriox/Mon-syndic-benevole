@@ -12,7 +12,14 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
-import { collectAvailableRepartitionGroups, formatEuros, getDefaultFundingCallDate, toParisISOString } from '@/lib/utils';
+import {
+  collectAvailableRepartitionGroups,
+  formatEuros,
+  getDefaultFundingCallDate,
+  normalizeFrenchDateInputValue,
+  parseFrenchDateInputValue,
+  toParisISOString,
+} from '@/lib/utils';
 import {
   Plus, AlertTriangle, Video, Calendar, Zap,
   ChevronDown, ChevronUp, Trash2, Users, Check,
@@ -151,7 +158,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
   const [typeAG,     setTypeAG]     = useState<'ordinaire' | 'exceptionnelle'>('ordinaire');
   const [isVisio,    setIsVisio]    = useState(false);
   const [dateVal,    setDateVal]    = useState('');
-  const [dateInputKey, setDateInputKey] = useState(0);
+  const [dateDisplayVal, setDateDisplayVal] = useState('');
   const [heureVal,   setHeureVal]   = useState('09');
   const [minuteVal,  setMinuteVal]  = useState('00');
   const [formData,   setFormData]   = useState({
@@ -195,10 +202,28 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
     : null;
   const avertissementDelai = joursAvantAG !== null && joursAvantAG >= 0 && joursAvantAG < 21;
   const datePassee = joursAvantAG !== null && joursAvantAG < 0;
-  const anneeInvalide = dateVal ? parseInt(dateVal.split('-')[0], 10) < 2000 : false;
+  const dateYear = dateDisplayVal.length === 10 ? Number(dateDisplayVal.slice(6, 10)) : null;
+  const anneeInvalide = dateYear !== null && dateYear < 2000;
   const titreFinal = typeAG === 'ordinaire'
     ? `Assemblée Générale Ordinaire ${dateVal ? new Date(dateVal).getFullYear() : new Date().getFullYear()}`
     : formData.titre.trim();
+
+  const handleDateChange = (rawValue: string) => {
+    const normalizedValue = normalizeFrenchDateInputValue(rawValue);
+    const parsedValue = parseFrenchDateInputValue(normalizedValue);
+    const parsedYear = normalizedValue.length === 10 ? Number(normalizedValue.slice(6, 10)) : null;
+
+    setDateDisplayVal(normalizedValue);
+
+    if (parsedValue && parsedYear !== null && parsedYear >= 2000) {
+      setDateVal(parsedValue);
+      updateDateTime(parsedValue, heureVal, minuteVal);
+      return;
+    }
+
+    setDateVal('');
+    updateDateTime('', heureVal, minuteVal);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -217,6 +242,11 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
   // -- Navigation --
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    if (!dateVal) {
+      setError(dateDisplayVal ? 'La date est invalide. Utilisez le format JJ/MM/AAAA.' : 'La date est requise.');
+      return;
+    }
     const planningYear = dateVal ? new Date(dateVal).getFullYear() : new Date().getFullYear();
     const initialized = initResolutions(typeAG, planningYear).map((r) =>
       r.hasEcheancier ? { ...r, echeancierDates: [getDefaultFundingCallDate([], dateVal)] } : r
@@ -316,7 +346,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
     setTypeAG('ordinaire');
     setIsVisio(false);
     setDateVal('');
-    setDateInputKey((k) => k + 1);
+    setDateDisplayVal('');
     setHeureVal('09');
     setMinuteVal('00');
     setFormData({ copropriete_id: coproprietes[0]?.id ?? '', titre: '', date_ag: '', lieu: '', notes: '' });
@@ -390,15 +420,14 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
                 Date et heure prévisionnelles <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex gap-2">
-                <input type="date"
-                  key={dateInputKey}
-                  defaultValue={dateVal}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setDateVal(v);
-                    updateDateTime(v, heureVal, minuteVal);
-                  }}
+                  <input type="text"
+                    inputMode="numeric"
+                    placeholder="JJ/MM/AAAA"
+                    value={dateDisplayVal}
+                    onChange={(e) => handleDateChange(e.target.value)}
                   required
+                    maxLength={10}
+                    autoComplete="off"
                   className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
                 />
                 <select value={heureVal}

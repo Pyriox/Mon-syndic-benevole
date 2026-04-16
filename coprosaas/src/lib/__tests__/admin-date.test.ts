@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { formatRelativeDayLabel } from '../admin-date';
-import { formatDateTime, formatTime, getDefaultFundingCallDate, toParisISOString } from '../utils';
+import {
+  formatDateTime,
+  formatFrenchDateInputValue,
+  formatTime,
+  getDefaultFundingCallDate,
+  normalizeFrenchDateInputValue,
+  parseFrenchDateInputValue,
+  toParisISOString,
+} from '../utils';
 
 describe('formatRelativeDayLabel', () => {
   it('returns Hier for a date on the previous calendar day', () => {
@@ -21,6 +29,17 @@ describe('AG timezone helpers', () => {
   it('converts a selected Paris wall-clock time to the correct UTC ISO string', () => {
     expect(toParisISOString('2026-04-06', '09', '00')).toBe('2026-04-06T07:00:00.000Z');
     expect(toParisISOString('2026-01-15', '09', '00')).toBe('2026-01-15T08:00:00.000Z');
+  });
+
+  it('formats and parses a french text date input value', () => {
+    expect(formatFrenchDateInputValue('2026-02-18')).toBe('18/02/2026');
+    expect(normalizeFrenchDateInputValue('18022026')).toBe('18/02/2026');
+    expect(parseFrenchDateInputValue('18/02/2026')).toBe('2026-02-18');
+  });
+
+  it('rejects invalid french text date input values', () => {
+    expect(parseFrenchDateInputValue('31/02/2026')).toBe('');
+    expect(parseFrenchDateInputValue('18/02/202')).toBe('');
   });
 });
 

@@ -106,6 +106,47 @@ export function getParisDateInputValue(value: string | null | undefined): string
   return `${parts.year}-${padDatePart(parts.month)}-${padDatePart(parts.day)}`;
 }
 
+export function formatFrenchDateInputValue(value: string | null | undefined): string {
+  if (!value) return '';
+
+  const dateInputValue = isDateInputValue(value) ? value : getParisDateInputValue(value);
+  if (!isDateInputValue(dateInputValue)) return '';
+
+  const [year, month, day] = dateInputValue.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+export function normalizeFrenchDateInputValue(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  const day = digits.slice(0, 2);
+  const month = digits.slice(2, 4);
+  const year = digits.slice(4, 8);
+
+  return [day, month, year].filter(Boolean).join('/');
+}
+
+export function parseFrenchDateInputValue(value: string): string {
+  const normalizedValue = normalizeFrenchDateInputValue(value);
+  const match = normalizedValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return '';
+
+  const [, dayPart, monthPart, yearPart] = match;
+  const day = Number(dayPart);
+  const month = Number(monthPart);
+  const year = Number(yearPart);
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    candidate.getUTCFullYear() !== year
+    || candidate.getUTCMonth() !== month - 1
+    || candidate.getUTCDate() !== day
+  ) {
+    return '';
+  }
+
+  return `${yearPart}-${monthPart}-${dayPart}`;
+}
+
 export function getParisTimeInputValue(value: string | null | undefined): { hour: string; minute: string } {
   if (!value) {
     return { hour: '00', minute: '00' };

@@ -13,7 +13,17 @@ import { createClient } from '@/lib/supabase/client';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import { formatDate, formatDateTime, getParisDateInputValue, getParisTimeInputValue, getParisYear, toParisISOString } from '@/lib/utils';
+import {
+  formatDate,
+  formatDateTime,
+  formatFrenchDateInputValue,
+  getParisDateInputValue,
+  getParisTimeInputValue,
+  getParisYear,
+  normalizeFrenchDateInputValue,
+  parseFrenchDateInputValue,
+  toParisISOString,
+} from '@/lib/utils';
 import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, AlertTriangle, Mail } from 'lucide-react';
 import LancerAGModal from './LancerAGModal';
 import { genererConvocationDoc, type ConvocationAGData, type ConvocationResolution } from './ConvocationPDF';
@@ -85,14 +95,25 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
 
   const initialTime = getParisTimeInputValue(dateAg);
   const [dateVal,   setDateVal]   = useState(getParisDateInputValue(dateAg));
-  const [dateInputKey, setDateInputKey] = useState(0);
+  const [dateDisplayVal, setDateDisplayVal] = useState(formatFrenchDateInputValue(dateAg));
   const [heureVal,  setHeureVal]  = useState(initialTime.hour);
   const [minuteVal, setMinuteVal] = useState(initialTime.minute);
   const [isVisio,   setIsVisio]   = useState(lieu === 'Visioconférence');
   const [lieuVal,   setLieuVal]   = useState(lieu === 'Visioconférence' ? '' : (lieu ?? ''));
 
+  const handleDateChange = (rawValue: string) => {
+    const normalizedValue = normalizeFrenchDateInputValue(rawValue);
+    const parsedValue = parseFrenchDateInputValue(normalizedValue);
+
+    setDateDisplayVal(normalizedValue);
+    setDateVal(parsedValue);
+  };
+
   const handleSave = async () => {
-    if (!dateVal) { setError('La date est requise.'); return; }
+    if (!dateVal) {
+      setError(dateDisplayVal ? 'La date est invalide. Utilisez le format JJ/MM/AAAA.' : 'La date est requise.');
+      return;
+    }
     setLoading(true);
     setError('');
     const newLieu = isVisio ? 'Visioconférence' : lieuVal.trim() || null;
@@ -135,11 +156,14 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
               Date et heure <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
-              <input type="date"
-                key={dateInputKey}
-                defaultValue={dateVal}
-                onChange={(e) => setDateVal(e.target.value)}
+              <input type="text"
+                inputMode="numeric"
+                placeholder="JJ/MM/AAAA"
+                value={dateDisplayVal}
+                onChange={(e) => handleDateChange(e.target.value)}
                 required
+                maxLength={10}
+                autoComplete="off"
                 className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
               />
               <select value={heureVal} onChange={(e) => setHeureVal(e.target.value)}
