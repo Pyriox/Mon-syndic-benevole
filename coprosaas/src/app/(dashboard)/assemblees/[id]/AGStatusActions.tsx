@@ -174,12 +174,12 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
               <div className="flex items-center flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 gap-1 hover:border-gray-400 transition-colors focus-within:ring-2 focus-within:ring-blue-500">
                 <input type="text" inputMode="numeric" value={dayVal} onChange={handleDayChange}
                   placeholder="JJ" maxLength={2} autoComplete="off"
-                  className="w-6 text-sm text-gray-900 focus:outline-none bg-transparent text-center" />
-                <span className="text-gray-400 text-sm select-none">/</span>
+                  className="w-8 text-sm text-gray-900 focus:outline-none bg-transparent text-center" />
+                <span className="text-gray-400 text-sm select-none shrink-0">/</span>
                 <input ref={monthInputRef} type="text" inputMode="numeric" value={monthVal} onChange={handleMonthChange}
                   placeholder="MM" maxLength={2} autoComplete="off"
-                  className="w-6 text-sm text-gray-900 focus:outline-none bg-transparent text-center" />
-                <span className="text-gray-400 text-sm select-none">/</span>
+                  className="w-8 text-sm text-gray-900 focus:outline-none bg-transparent text-center" />
+                <span className="text-gray-400 text-sm select-none shrink-0">/</span>
                 <input ref={yearInputRef} type="text" inputMode="numeric" value={yearVal} onChange={handleYearChange}
                   placeholder="AAAA" maxLength={4} autoComplete="off"
                   className="w-11 text-sm text-gray-900 focus:outline-none bg-transparent text-center" />
