@@ -395,9 +395,8 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
                   defaultValue={dateVal}
                   onChange={(e) => {
                     const v = e.target.value;
-                    if (!v) { setDateVal(''); updateDateTime('', heureVal, minuteVal); return; }
-                    const year = parseInt(v.split('-')[0], 10);
-                    if (year >= 1000) { setDateVal(v); updateDateTime(v, heureVal, minuteVal); }
+                    setDateVal(v);
+                    updateDateTime(v, heureVal, minuteVal);
                   }}
                   required
                   className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
