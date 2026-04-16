@@ -178,26 +178,10 @@ export default function VoteParCopro({
       return { id, nom: c?.nom ?? '', prenom: c?.prenom ?? '' };
     });
 
-    const usesRealVotes = majorite === 'article_25' || majorite === 'article_26';
-    let desigStatut: string;
-    let voixPour: number;
-    let voixContre: number;
-    let voixAbstention: number;
-
-    if (usesRealVotes) {
-      // Art.25 / Art.26 : utiliser les votes réels pour calculer le statut
-      desigStatut = resultats.length > 0 ? computeStatut(votes) : resolutionStatut;
-      voixPour = calcTantiemes('pour');
-      voixContre = calcTantiemes('contre');
-      voixAbstention = calcTantiemes('abstention');
-    } else {
-      // Président, secrétaire, scrutateurs : unanimité implicite des présents
-      const tantTotal = presences.reduce((s, p) => s + (tantiemesMap[p.coproprietaire_id] ?? 0), 0);
-      desigStatut = resultats.length > 0 ? 'approuvee' : resolutionStatut;
-      voixPour = tantTotal;
-      voixContre = 0;
-      voixAbstention = 0;
-    }
+    const desigStatut = resultats.length > 0 ? computeStatut(votes) : resolutionStatut;
+    const voixPour = calcTantiemes('pour');
+    const voixContre = calcTantiemes('contre');
+    const voixAbstention = calcTantiemes('abstention');
 
     await supabase.from('resolutions').update({
       designation_resultats: resultats.length > 0 ? resultats : null,
