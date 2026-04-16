@@ -835,14 +835,14 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
                           : 'Les répartitions spéciales sont réservées à l’option payante Charges spéciales. Vous pouvez néanmoins conserver des charges communes.'}
                       </p>
                     </div>
-                    <div className="grid grid-cols-[1fr_7rem_12rem_auto] gap-2 text-xs text-gray-400 px-1">
+                    <div className="grid grid-cols-[1fr_6rem_9rem_auto] gap-2 text-xs text-gray-400 px-1">
                       <span>Libellé</span>
                       <span className="text-right">Montant (€)</span>
                       <span>Répartition</span>
                       <span />
                     </div>
                     {postes.map((poste, idx) => (
-                      <div key={idx} className="grid grid-cols-[1fr_7rem_12rem_auto] items-center gap-2">
+                      <div key={idx} className="grid grid-cols-[1fr_6rem_9rem_auto] items-center gap-2">
                         <input type="text" placeholder="Ex : Entretien ascenseur" value={poste.libelle}
                           onChange={(e) => setPostes((p) => p.map((x, i) => i === idx ? { ...x, libelle: e.target.value } : x))}
                           className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />

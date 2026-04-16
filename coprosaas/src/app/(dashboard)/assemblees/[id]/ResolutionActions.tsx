@@ -295,7 +295,7 @@ export default function ResolutionActions({ agId, showLabel, nextNumero, special
                   <p className="text-xs text-gray-400 text-center py-1">Aucun poste ajouté</p>
                 )}
                 {budgetPostes.map((p, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_7rem_12rem_auto] gap-2 items-center">
+                  <div key={i} className="grid grid-cols-[1fr_6rem_9rem_auto] gap-2 items-center">
                     <input type="text" placeholder="Libellé du poste" value={p.libelle}
                       onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? { ...x, libelle: e.target.value } : x))}
                       className="text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -571,7 +571,7 @@ export function ResolutionEdit({
                     : 'Les clés spéciales sont réservées à l’option payante Charges spéciales. Vous pouvez revenir à une répartition générale si besoin.'}
                 </div>
                 {budgetPostes.map((p, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_7rem_12rem_auto] gap-2 items-center">
+                  <div key={i} className="grid grid-cols-[1fr_6rem_9rem_auto] gap-2 items-center">
                     <input type="text" value={p.libelle}
                       onChange={(e) => setBudgetPostes((prev) => prev.map((x, idx) => idx === i ? { ...x, libelle: e.target.value } : x))}
                       className="text-sm rounded-lg border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"

@@ -685,7 +685,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
                           <p className="text-xs text-gray-400 text-center py-2">Aucun poste — cliquez sur &quot;Ajouter un poste&quot;</p>
                         )}
                         {r.budgetPostes.map((p, i) => (
-                          <div key={i} className="grid grid-cols-[1fr_7rem_12rem_auto] gap-1.5 items-center">
+                          <div key={i} className="grid grid-cols-[1fr_6rem_9rem_auto] gap-1.5 items-center">
                             <input type="text" placeholder="Ex : Gardiennage, Entretien ascenseur..."
                               value={p.libelle}
                               onChange={(e) => updateResolution(r.id, {
