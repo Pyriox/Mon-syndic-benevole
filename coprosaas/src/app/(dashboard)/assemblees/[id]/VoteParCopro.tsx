@@ -36,6 +36,7 @@ interface VoteParCoproProps {
     repartition_cible?: string | null;
   }[] | null;
   initialFondsTravaux?: number | null;
+  initialDateFinMandat?: string | null;
 }
 
 const VOTE_OPTIONS: { value: Vote; label: string; activeClass: string }[] = [
@@ -58,6 +59,7 @@ export default function VoteParCopro({
   designationResultats,
   initialBudgetPostes,
   initialFondsTravaux,
+  initialDateFinMandat,
 }: VoteParCoproProps) {
   const supabase = createClient();
 
@@ -101,6 +103,15 @@ export default function VoteParCopro({
   const [fondsTravaux, setFondsTravaux] = useState(
     initialFondsTravaux != null ? String(initialFondsTravaux) : ''
   );
+
+  const defaultDateFinMandat = (() => {
+    const n1 = new Date().getFullYear() + 1;
+    return `${n1}-12-31`;
+  })();
+  const [dateFinMandat, setDateFinMandat] = useState<string>(
+    initialDateFinMandat ?? defaultDateFinMandat
+  );
+  const [savedDateFinMandat, setSavedDateFinMandat] = useState<string | null | undefined>(undefined);
 
   const [passerelleActive, setPasserelleActive] = useState(false);
   const [savedDesignationResultats, setSavedDesignationResultats] = useState<{ id: string; nom: string; prenom: string }[] | null | undefined>(undefined);
@@ -189,9 +200,11 @@ export default function VoteParCopro({
       voix_pour: voixPour,
       voix_contre: voixContre,
       voix_abstention: voixAbstention,
+      ...(isSyndic ? { date_fin_mandat: dateFinMandat || null } : {}),
     }).eq('id', resolutionId);
     setSavedDesignationResultats(resultats);
     setSavedStatut(desigStatut);
+    if (isSyndic) setSavedDateFinMandat(dateFinMandat || null);
     setDirty(false);
     setSaving(false);
     setSaved(true);
@@ -267,6 +280,7 @@ export default function VoteParCopro({
   const effectiveDesignationResultats = savedDesignationResultats ?? (designationResultats ?? []);
   const effectiveBudgetPostes = savedBudgetPostes ?? (initialBudgetPostes ?? []);
   const effectiveFondsTravaux = savedFondsTravaux !== undefined ? savedFondsTravaux : initialFondsTravaux;
+  const effectiveDateFinMandat = savedDateFinMandat !== undefined ? savedDateFinMandat : (initialDateFinMandat ?? null);
   const isApproved = effectiveStatut === 'approuvee';
   const isRefused  = effectiveStatut === 'refusee';
   const isReported = effectiveStatut === 'reportee';
@@ -294,6 +308,14 @@ export default function VoteParCopro({
                 <span className="font-medium">Désigné{effectiveDesignationResultats.length > 1 ? 's' : ''} :</span>{' '}
                 {effectiveDesignationResultats.map((d) => `${d.prenom} ${d.nom}`.trim()).join(', ')}
               </span>
+            </p>
+          )}
+
+          {/* Date fin de mandat syndic */}
+          {isSyndic && effectiveDateFinMandat && (
+            <p className="text-xs text-gray-700 mt-1">
+              <span className="font-medium">Fin de mandat :</span>{' '}
+              {new Date(effectiveDateFinMandat + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
             </p>
           )}
 
@@ -490,6 +512,25 @@ export default function VoteParCopro({
             </div>
           )}
         </div>
+
+        {/* Date de fin de mandat — syndic uniquement */}
+        {isSyndic && (
+          <div className="border-t border-gray-100 px-3 py-2 bg-white flex items-center gap-3 flex-wrap">
+            <label className="text-xs font-medium text-gray-700 shrink-0">
+              Fin de mandat
+            </label>
+            <input
+              type="date"
+              value={dateFinMandat}
+              min={new Date().toISOString().slice(0, 10)}
+              max={`${new Date().getFullYear() + 3}-12-31`}
+              onChange={(e) => { setDateFinMandat(e.target.value); setDirty(true); }}
+              disabled={!canEdit}
+              className="text-xs border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:bg-gray-50 disabled:text-gray-400"
+            />
+            <span className="text-[11px] text-gray-400">Max. 3 ans — par défaut 31/12 de l&apos;année suivante</span>
+          </div>
+        )}
 
         {/* Actions */}
         {canEdit && (

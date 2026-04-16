@@ -50,6 +50,7 @@ type AnyResolution = {
   fonds_travaux_montant?: number | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   designation_resultats?: any[] | null;
+  date_fin_mandat?: string | null;
 };
 
 interface ResolutionListProps {
@@ -216,6 +217,7 @@ function SortableCard({
                 designationResultats={res.designation_resultats ?? null}
                 initialBudgetPostes={res.budget_postes ?? null}
                 initialFondsTravaux={res.fonds_travaux_montant ?? null}
+                initialDateFinMandat={res.date_fin_mandat ?? null}
               />
             ) : (
               <VoteActions
