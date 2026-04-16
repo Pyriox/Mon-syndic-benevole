@@ -31,6 +31,7 @@ interface PresenceRecord {
   coproprietaire_id: string;
   statut: string;
   represente_par_id: string | null;
+  represente_par_nom?: string | null;
 }
 
 interface VoteCoproRecord {
@@ -317,7 +318,9 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
           getName(p.coproprietaire_id),
           String(tantiemesParCopro[p.coproprietaire_id] ?? 0),
           statLabels[p.statut] ?? p.statut,
-          p.statut === 'represente' && p.represente_par_id ? getName(p.represente_par_id) : '–',
+          p.statut === 'represente'
+            ? (p.represente_par_id ? getName(p.represente_par_id) : (p.represente_par_nom || '–'))
+            : '–',
         ]),
         headStyles: { fillColor: SLATE, fontSize: 8.5 },
         alternateRowStyles: { fillColor: LGRAY },

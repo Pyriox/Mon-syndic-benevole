@@ -17,6 +17,7 @@ interface Presence {
   coproprietaire_id: string;
   statut: string;
   represente_par_id: string | null;
+  represente_par_nom?: string | null;
 }
 
 interface PresencePanelProps {
@@ -90,7 +91,7 @@ export default function PresencePanel({
                 {p.statut === 'represente' && (
                   <span className="flex items-center gap-1 text-blue-600 text-xs font-medium">
                     <Users size={12} />
-                    Représenté par {p.represente_par_id ? getName(p.represente_par_id) : '–'}
+                    Représenté par {p.represente_par_id ? getName(p.represente_par_id) : (p.represente_par_nom || '–')}
                   </span>
                 )}
               </div>

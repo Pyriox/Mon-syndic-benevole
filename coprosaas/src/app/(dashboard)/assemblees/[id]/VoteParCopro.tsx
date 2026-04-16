@@ -14,7 +14,7 @@ import { formatEuros, TYPES_RESOLUTION } from '@/lib/utils';
 type Vote = 'pour' | 'contre' | 'abstention';
 
 interface Copro { id: string; nom: string; prenom: string; }
-interface Presence { coproprietaire_id: string; statut: string; represente_par_id: string | null; }
+interface Presence { coproprietaire_id: string; statut: string; represente_par_id: string | null; represente_par_nom?: string | null; }
 interface VoteCopro { coproprietaire_id: string; vote: Vote; }
 
 interface VoteParCoproProps {
@@ -373,8 +373,8 @@ export default function VoteParCopro({
                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
                   <span className="text-xs font-medium text-gray-800 truncate">{getName(p.coproprietaire_id)}</span>
-                  {p.statut === 'represente' && p.represente_par_id && (
-                    <span className="text-[10px] text-blue-500 shrink-0">↳ {getName(p.represente_par_id)}</span>
+                  {p.statut === 'represente' && (p.represente_par_id || p.represente_par_nom) && (
+                    <span className="text-[10px] text-blue-500 shrink-0">↳ {p.represente_par_id ? getName(p.represente_par_id) : p.represente_par_nom}</span>
                   )}
                 </div>
                 <span className="text-[10px] text-gray-400 shrink-0">{tantiemesMap[p.coproprietaire_id] ?? 0} t.</span>
@@ -446,8 +446,8 @@ export default function VoteParCopro({
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-xs text-gray-700 truncate">{getName(p.coproprietaire_id)}</span>
                     <span className="text-[10px] text-gray-400 shrink-0">{tantiemesMap[p.coproprietaire_id] ?? 0} t.</span>
-                    {p.statut === 'represente' && p.represente_par_id && (
-                      <span className="text-[10px] text-blue-500 shrink-0">↳ {getName(p.represente_par_id)}</span>
+                    {p.statut === 'represente' && (p.represente_par_id || p.represente_par_nom) && (
+                      <span className="text-[10px] text-blue-500 shrink-0">↳ {p.represente_par_id ? getName(p.represente_par_id) : p.represente_par_nom}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -641,8 +641,8 @@ export default function VoteParCopro({
                 <div className="min-w-0 flex items-baseline gap-1.5 flex-wrap">
                   <span className="text-sm text-gray-800 font-medium">{getName(p.coproprietaire_id)}</span>
                   <span className="text-[11px] text-gray-400 shrink-0">{tantiemesMap[p.coproprietaire_id] ?? 0} tant.</span>
-                  {p.statut === 'represente' && p.represente_par_id && (
-                    <span className="text-xs text-blue-500 shrink-0">(Repr. par {getName(p.represente_par_id)})</span>
+                    {p.statut === 'represente' && (p.represente_par_id || p.represente_par_nom) && (
+                      <span className="text-xs text-blue-500 shrink-0">(Repr. par {p.represente_par_id ? getName(p.represente_par_id) : p.represente_par_nom})</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">

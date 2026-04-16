@@ -72,7 +72,7 @@ export default async function AGDetailPage({ params }: Props) {
     // Feuille de présence pour cette AG
     db
       .from('ag_presences')
-      .select('coproprietaire_id, statut, represente_par_id')
+      .select('coproprietaire_id, statut, represente_par_id, represente_par_nom')
       .eq('ag_id', id),
     db
       .from('copro_addons')

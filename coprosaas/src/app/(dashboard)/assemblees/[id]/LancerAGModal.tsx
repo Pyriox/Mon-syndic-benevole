@@ -28,12 +28,15 @@ type PresenceStatut = 'present' | 'absent' | 'represente';
 interface PresenceEntry {
   statut: PresenceStatut;
   represente_par_id: string;
+  represente_par_nom: string;
+  represente_type: 'interne' | 'externe';
 }
 
 export interface ExistingPresence {
   coproprietaire_id: string;
   statut: string;
   represente_par_id: string | null;
+  represente_par_nom?: string | null;
 }
 
 interface LancerAGModalProps {
@@ -80,9 +83,12 @@ export default function LancerAGModal({
         const init: Record<string, PresenceEntry> = {};
         data.forEach((c) => {
           const ex = existingPresences.find((p) => p.coproprietaire_id === c.id);
+          const isExterne = ex?.statut === 'represente' && !ex.represente_par_id && Boolean(ex.represente_par_nom);
           init[c.id] = {
             statut: (ex?.statut as PresenceStatut) ?? 'present',
             represente_par_id: ex?.represente_par_id ?? '',
+            represente_par_nom: ex?.represente_par_nom ?? '',
+            represente_type: isExterne ? 'externe' : 'interne',
           };
         });
         setPresences(init);
@@ -102,17 +108,30 @@ export default function LancerAGModal({
   const setRepresentant = (id: string, val: string) =>
     setPresences((p) => ({ ...p, [id]: { ...p[id], represente_par_id: val } }));
 
+  const setRepresentantNom = (id: string, val: string) =>
+    setPresences((p) => ({ ...p, [id]: { ...p[id], represente_par_nom: val } }));
+
+  const setRepresenteType = (id: string, type: 'interne' | 'externe') =>
+    setPresences((p) => ({ ...p, [id]: { ...p[id], represente_type: type } }));
+
   const handleConfirm = async () => {
     setLoading(true);
-    const rows = copros.map((c) => ({
-      ag_id: agId,
-      coproprietaire_id: c.id,
-      statut: presences[c.id]?.statut ?? 'absent',
-      represente_par_id:
-        presences[c.id]?.statut === 'represente' && presences[c.id]?.represente_par_id
-          ? presences[c.id].represente_par_id
+    const rows = copros.map((c) => {
+      const entry = presences[c.id];
+      const isRepresente = entry?.statut === 'represente';
+      const isExterne = isRepresente && entry?.represente_type === 'externe';
+      return {
+        ag_id: agId,
+        coproprietaire_id: c.id,
+        statut: entry?.statut ?? 'absent',
+        represente_par_id: isRepresente && !isExterne && entry?.represente_par_id
+          ? entry.represente_par_id
           : null,
-    }));
+        represente_par_nom: isRepresente && isExterne && entry?.represente_par_nom.trim()
+          ? entry.represente_par_nom.trim()
+          : null,
+      };
+    });
 
     await supabase
       .from('ag_presences')
@@ -200,7 +219,7 @@ export default function LancerAGModal({
 
               <div className="max-h-[28rem] overflow-y-auto border border-gray-200 rounded-xl divide-y divide-gray-100">
                 {copros.map((c) => {
-                  const entry = presences[c.id] ?? { statut: 'absent', represente_par_id: '' };
+                  const entry = presences[c.id] ?? { statut: 'absent', represente_par_id: '', represente_par_nom: '', represente_type: 'interne' as const };
                   return (
                     <div key={c.id} className="p-3 space-y-2">
                       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -229,22 +248,42 @@ export default function LancerAGModal({
                       </div>
 
                       {entry.statut === 'represente' && (
-                        <div className="flex items-center gap-2 pl-3">
-                          <span className="text-xs text-gray-500 shrink-0">Représenté par :</span>
-                          <select
-                            value={entry.represente_par_id}
-                            onChange={(e) => setRepresentant(c.id, e.target.value)}
-                            className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                          >
-                            <option value="">— choisir —</option>
-                            {copros
-                              .filter((o) => o.id !== c.id)
-                              .map((o) => (
-                                <option key={o.id} value={o.id}>
-                                  {o.prenom} {o.nom}
-                                </option>
+                        <div className="space-y-2 pl-3">
+                          {/* Toggle interne / externe */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-500 shrink-0">Mandataire :</span>
+                            {(['interne', 'externe'] as const).map((t) => (
+                              <button key={t} type="button"
+                                onClick={() => setRepresenteType(c.id, t)}
+                                className={`px-2 py-0.5 text-xs rounded-md border transition-colors ${
+                                  entry.represente_type === t
+                                    ? 'bg-blue-100 border-blue-300 text-blue-700 font-medium'
+                                    : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'
+                                }`}>
+                                {t === 'interne' ? 'Copropriétaire' : 'Externe'}
+                              </button>
+                            ))}
+                          </div>
+                          {entry.represente_type === 'interne' ? (
+                            <select
+                              value={entry.represente_par_id}
+                              onChange={(e) => setRepresentant(c.id, e.target.value)}
+                              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            >
+                              <option value="">— choisir —</option>
+                              {copros.filter((o) => o.id !== c.id).map((o) => (
+                                <option key={o.id} value={o.id}>{o.prenom} {o.nom}</option>
                               ))}
-                          </select>
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              value={entry.represente_par_nom}
+                              onChange={(e) => setRepresentantNom(c.id, e.target.value)}
+                              placeholder="Prénom Nom du mandataire"
+                              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                          )}
                         </div>
                       )}
                     </div>
