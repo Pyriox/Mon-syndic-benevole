@@ -341,6 +341,14 @@ export default function VoteParCopro({
     const tantPourLiveD   = calcTantiemes('pour');
     const tantContreLiveD = calcTantiemes('contre');
     const tantAbstLiveD   = calcTantiemes('abstention');
+    const exprimesLiveD   = tantPourLiveD + tantContreLiveD;
+
+    // Passerelle Art. 25-1 pour les désignations soumises à l'Art. 25
+    const passerelleDisponibleD = majorite === 'article_25'
+      && totalTantiemes > 0
+      && exprimesLiveD > 0
+      && tantPourLiveD * 3 >= totalTantiemes
+      && tantPourLiveD * 2 <= totalTantiemes;
 
     return (
       <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden">
@@ -493,12 +501,14 @@ export default function VoteParCopro({
                   size="sm"
                   onClick={handleSaveDesignation}
                   loading={saving}
-                  disabled={!hasValidDesignation || !allVoted}
+                  disabled={!hasValidDesignation || !allVoted || (passerelleDisponibleD && !passerelleActive)}
                   title={
                     !hasValidDesignation
                       ? 'Sélectionnez au moins une personne'
                       : !allVoted
                       ? 'Saisissez le vote de tous les présents'
+                      : (passerelleDisponibleD && !passerelleActive)
+                      ? 'La passerelle Art. 25-1 est disponible — activez-la ou ignorez-la avant d\'enregistrer'
                       : undefined
                   }
                 >
@@ -518,11 +528,46 @@ export default function VoteParCopro({
             )}
           </div>
         )}
+
+        {/* Passerelle Art. 25-1 pour la désignation du syndic */}
+        {passerelleDisponibleD && !passerelleActive && (
+          <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-b-xl text-xs text-amber-900 flex items-start gap-2">
+            <AlertTriangle size={13} className="shrink-0 mt-0.5 text-amber-700" />
+            <div className="flex-1 space-y-1">
+              <p className="font-semibold">⚠️ Passerelle Art. 25-1 disponible — décision requise avant d&apos;enregistrer</p>
+              <p className="text-amber-800">
+                La désignation a obtenu <strong>{tantPourLiveD}</strong> tant. sur <strong>{totalTantiemes}</strong> (≥ 1/3),
+                sans atteindre la majorité absolue (&gt; 50 %). L&apos;assemblée peut immédiatement voter à la majorité simple (Art. 24).
+              </p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <button type="button"
+                  onClick={() => { setPasserelleActive(true); setDirty(true); setSaved(false); }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-600 text-white rounded-md font-semibold text-[11px] hover:bg-amber-700 transition-colors">
+                  <Zap size={11} /> Activer la passerelle Art. 25-1
+                </button>
+                <button type="button"
+                  onClick={() => { setPasserelleActive(false); setDirty(true); setSaved(false); }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-200 text-gray-700 rounded-md font-semibold text-[11px] hover:bg-gray-300 transition-colors">
+                  Ne pas utiliser — désignation refusée
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {passerelleActive && (
+          <div className="p-2 bg-amber-100 border-t border-amber-400 text-xs text-amber-900 flex items-center gap-2">
+            <Zap size={12} className="text-amber-600 shrink-0" />
+            <span className="font-semibold flex-1">Passerelle Art. 25-1 active — vote évalué à la majorité simple (Art. 24)</span>
+            <button type="button"
+              onClick={() => { setPasserelleActive(false); setDirty(true); setSaved(false); }}
+              className="text-[11px] text-amber-700 underline hover:text-amber-900 shrink-0">
+              Désactiver
+            </button>
+          </div>
+        )}
       </div>
     );
   }
-
-  // ==============================================================
   // MODE VOTE STANDARD
   // ==============================================================
   const pourCount       = Object.values(votes).filter((v) => v === 'pour').length;
