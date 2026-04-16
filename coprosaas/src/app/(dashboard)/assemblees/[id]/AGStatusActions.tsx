@@ -85,6 +85,7 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
 
   const initialTime = getParisTimeInputValue(dateAg);
   const [dateVal,   setDateVal]   = useState(getParisDateInputValue(dateAg));
+  const [dateInputKey, setDateInputKey] = useState(0);
   const [heureVal,  setHeureVal]  = useState(initialTime.hour);
   const [minuteVal, setMinuteVal] = useState(initialTime.minute);
   const [isVisio,   setIsVisio]   = useState(lieu === 'Visioconférence');
@@ -134,8 +135,15 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
               Date et heure <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
-              <input type="date" value={dateVal}
-                onChange={(e) => setDateVal(e.target.value)}
+              <input type="date"
+                key={dateInputKey}
+                defaultValue={dateVal}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (!v) { setDateVal(''); return; }
+                  const year = parseInt(v.split('-')[0], 10);
+                  if (year >= 1000) setDateVal(v);
+                }}
                 required
                 className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
               />

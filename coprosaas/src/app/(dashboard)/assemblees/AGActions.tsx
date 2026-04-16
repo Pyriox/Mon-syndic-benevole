@@ -151,6 +151,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
   const [typeAG,     setTypeAG]     = useState<'ordinaire' | 'exceptionnelle'>('ordinaire');
   const [isVisio,    setIsVisio]    = useState(false);
   const [dateVal,    setDateVal]    = useState('');
+  const [dateInputKey, setDateInputKey] = useState(0);
   const [heureVal,   setHeureVal]   = useState('09');
   const [minuteVal,  setMinuteVal]  = useState('00');
   const [formData,   setFormData]   = useState({
@@ -315,6 +316,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
     setTypeAG('ordinaire');
     setIsVisio(false);
     setDateVal('');
+    setDateInputKey((k) => k + 1);
     setHeureVal('09');
     setMinuteVal('00');
     setFormData({ copropriete_id: coproprietes[0]?.id ?? '', titre: '', date_ag: '', lieu: '', notes: '' });
@@ -388,8 +390,15 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
                 Date et heure prévisionnelles <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex gap-2">
-                <input type="date" value={dateVal}
-                  onChange={(e) => { setDateVal(e.target.value); updateDateTime(e.target.value, heureVal, minuteVal); }}
+                <input type="date"
+                  key={dateInputKey}
+                  defaultValue={dateVal}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (!v) { setDateVal(''); updateDateTime('', heureVal, minuteVal); return; }
+                    const year = parseInt(v.split('-')[0], 10);
+                    if (year >= 1000) { setDateVal(v); updateDateTime(v, heureVal, minuteVal); }
+                  }}
                   required
                   className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
                 />
