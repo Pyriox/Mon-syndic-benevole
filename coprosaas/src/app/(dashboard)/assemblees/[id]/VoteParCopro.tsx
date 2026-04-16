@@ -347,12 +347,14 @@ export default function VoteParCopro({
         {/* En-tête désignation */}
         <div className="px-3 py-2 bg-indigo-50 border-b border-indigo-100 text-xs font-semibold text-indigo-700 flex items-center gap-2">
           <Users size={12} />
-          {isMultiple ? 'Désigner une ou plusieurs personnes parmi les présents' : 'Désigner une personne parmi les présents'}
+          {isSyndic
+            ? 'Désigner une personne parmi les présents'
+            : (isMultiple ? 'Désigner un ou plusieurs copropriétaires' : 'Désigner un copropriétaire')}
         </div>
 
         {/* Liste compacte de désignation */}
         <div className="divide-y divide-gray-100 max-h-56 overflow-y-auto">
-          {presences.map((p) => {
+          {isSyndic ? presences.map((p) => {
             const isSelected = selectedIds.includes(p.coproprietaire_id);
             return (
               <button
@@ -366,9 +368,9 @@ export default function VoteParCopro({
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <div className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                    isSelected ? (isMultiple ? 'bg-indigo-600 border-indigo-600' : 'bg-indigo-600 border-indigo-600') : 'border-gray-300 bg-white'
+                    isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300 bg-white'
                   }`}>
-                    {isSelected && <div className={`${isMultiple ? 'w-1.5 h-1.5 rounded-sm' : 'w-1.5 h-1.5 rounded-full'} bg-white`} />}
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
                   <span className="text-xs font-medium text-gray-800 truncate">{getName(p.coproprietaire_id)}</span>
                   {p.statut === 'represente' && p.represente_par_id && (
@@ -376,6 +378,26 @@ export default function VoteParCopro({
                   )}
                 </div>
                 <span className="text-[10px] text-gray-400 shrink-0">{tantiemesMap[p.coproprietaire_id] ?? 0} t.</span>
+              </button>
+            );
+          }) : coproprietaires.map((c) => {
+            const isSelected = selectedIds.includes(c.id);
+            return (
+              <button
+                key={c.id}
+                type="button"
+                disabled={!canEdit}
+                onClick={() => toggleDesignation(c.id)}
+                className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors focus:outline-none ${
+                  isSelected ? 'bg-indigo-50' : 'bg-white hover:bg-gray-50'
+                } ${canEdit ? 'cursor-pointer' : 'cursor-default'}`}
+              >
+                <div className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                  isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300 bg-white'
+                }`}>
+                  {isSelected && <div className="w-1.5 h-1.5 rounded-sm bg-white" />}
+                </div>
+                <span className="text-xs font-medium text-gray-800 truncate">{c.prenom} {c.nom}</span>
               </button>
             );
           })}

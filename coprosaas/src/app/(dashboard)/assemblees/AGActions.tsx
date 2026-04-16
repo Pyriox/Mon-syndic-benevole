@@ -110,12 +110,12 @@ function buildOrdinaryTemplates(referenceYear: number): Omit<WizardResolution, '
     { id: 'r11', numero: 11, titre: `Révision du budget prévisionnel ${currentExerciseYear}`,
       description: `Ajustement facultatif du budget de l'exercice ${currentExerciseYear}. Indiquez les postes modifiés si nécessaire.`,
       majorite: 'article_24', type_resolution: 'revision_budget', optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
-    { id: 'r12', numero: 12, titre: 'Autorisation de travaux sur parties communes',
-      description: "Vote d'autorisation et de financement de travaux sur les parties communes (hors entretien courant déjà budgété). Détaillez les postes et le montant estimatif.",
-      majorite: 'article_25', type_resolution: null, optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
-    { id: 'r13', numero: 13, titre: `Révision du fonds de travaux ${currentExerciseYear}`,
+    { id: 'r12', numero: 12, titre: `Révision du fonds de travaux ${currentExerciseYear}`,
       description: `Ajustement facultatif du montant du fonds de travaux de l'exercice ${currentExerciseYear}.`,
       majorite: 'article_24', type_resolution: 'revision_fonds_travaux', optional: true, hasBudget: false, hasFondsTravaux: true, isDesignation: false },
+    { id: 'r13', numero: 13, titre: 'Autorisation de travaux sur parties communes',
+      description: "Vote d'autorisation et de financement de travaux sur les parties communes (hors entretien courant déjà budgété). Détaillez les postes et le montant estimatif.",
+      majorite: 'article_25', type_resolution: null, optional: true, hasBudget: true, hasFondsTravaux: false, isDesignation: false },
   ];
 }
 
