@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
-import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emails/base';
+import { wrapEmail, infoTable, infoRow, alertBanner, ctaButton, h, COLOR, SITE_URL } from '@/lib/emails/base';
 import { createClient } from '@/lib/supabase/server';
 import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
 import { formatDate, formatTime } from '@/lib/utils';
-import { buildConvocationPdfAttachment } from '@/lib/ag-email-pdf';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
@@ -89,19 +88,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
       </tr>`)
     .join('');
 
-  const pdfAttachment = buildConvocationPdfAttachment({
-    agId,
-    coproprieteNom: ag.coproprietes?.nom ?? '',
-    titreAg: ag.titre,
-    dateAg: ag.date_ag,
-    lieu: ag.lieu,
-    notes: ag.notes,
-    resolutions: (resolutions ?? []).map((r) => ({
-      numero: r.numero,
-      titre: r.titre,
-      description: r.description,
-    })),
-  });
+  const documentsUrl = `${SITE_URL}/documents`;
 
   let sent = 0;
   const errors: string[] = [];
@@ -124,6 +111,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
 
 ${infoRows}
 
+<p style="margin:16px 0 0;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Le PDF officiel de convocation est disponible dans votre espace membre, rubrique <strong>Documents</strong>.
+</p>
+
+${ctaButton('Consulter mes documents →', documentsUrl, COLOR.blue)}
+
 <h2 style="margin:24px 0 12px;font-size:15px;font-weight:700;color:${COLOR.text}">Ordre du jour</h2>
 <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${COLOR.border};border-radius:8px;border-collapse:separate;border-spacing:0;overflow:hidden">
   <tbody>${ordreduJour}</tbody>
@@ -140,7 +133,6 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
       to: cp.email,
       subject,
       html,
-      attachments: [pdfAttachment],
     });
 
     if (result.error) {

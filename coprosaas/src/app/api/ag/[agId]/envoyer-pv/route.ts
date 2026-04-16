@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
-import { wrapEmail, infoTable, infoRow, alertBanner, h, COLOR } from '@/lib/emails/base';
+import { wrapEmail, infoTable, infoRow, alertBanner, ctaButton, h, COLOR, SITE_URL } from '@/lib/emails/base';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isSubscribed } from '@/lib/subscription';
@@ -161,6 +161,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
 
   let documentStored = false;
   let documentStoreError: string | null = null;
+  const documentsUrl = `${SITE_URL}/documents`;
 
   try {
     const dossierId = await getDossierAGDocuments(admin, user.id, ag.date_ag, ag.titre);
@@ -217,6 +218,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
 
 ${infoRows}
 
+<p style="margin:16px 0 0;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Le PDF du procès-verbal est archivé dans votre espace membre, rubrique <strong>Documents</strong>.
+</p>
+
+${ctaButton('Accéder à mes documents →', documentsUrl, COLOR.green)}
+
 <h2 style="margin:24px 0 12px;font-size:15px;font-weight:700;color:${COLOR.text}">Résolutions votées</h2>
 <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${COLOR.border};border-radius:8px;border-collapse:separate;border-spacing:0;overflow:hidden">
   <thead>
@@ -241,7 +248,6 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
       to: cp.email,
       subject,
       html,
-      attachments: [pdfAttachment],
     });
 
     if (result.error) {

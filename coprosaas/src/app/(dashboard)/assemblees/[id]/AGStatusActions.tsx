@@ -456,7 +456,8 @@ export function AGEnvoyerConvocation({
           )}
           <p className="text-sm text-gray-600">
             La convocation inclut la date, le lieu et l&apos;ordre du jour complet.
-            Le PDF est joint à l&apos;e-mail et enregistré dans vos <strong>Documents</strong> (dossier Convocations AG).
+            L&apos;e-mail sert de notification et renvoie le copropriétaire vers son espace.
+            Le PDF est enregistré dans vos <strong>Documents</strong> (dossier Convocations AG).
           </p>
           {sendSummary && (
             <div className={`rounded-lg border px-3 py-2 text-sm ${
@@ -599,7 +600,7 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
               </p>
             </div>
           )}
-          <p className="text-sm text-gray-600">Le procès-verbal de l&apos;assemblée sera envoyé en pièce jointe PDF.</p>
+          <p className="text-sm text-gray-600">L&apos;e-mail sert de notification. Le copropriétaire consultera ensuite le PV dans son espace Documents.</p>
           {sendSummary && (
             <div className={`rounded-lg border px-3 py-2 text-sm ${
               sendSummary.level === 'success'

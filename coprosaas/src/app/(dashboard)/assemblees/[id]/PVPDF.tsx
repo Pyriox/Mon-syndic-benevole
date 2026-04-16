@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import { FileDown, Send } from 'lucide-react';
 import { formatDate, formatTime, getParisYear, TYPES_RESOLUTION } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { addPdfFooters, drawPdfHero, drawPdfInfoCard, drawPdfSectionTitle, ensurePdfSpace, formatPdfEuros, PDF_COLORS } from '@/lib/pdf';
 
 interface Resolution {
   id: string;
@@ -97,21 +98,14 @@ async function getOrCreateSubDossierPV(
 }
 
 // ─── Couleurs ─────────────────────────────────────────────
-const BLUE: [number, number, number]    = [29, 78, 216];
-const GREEN: [number, number, number]   = [22, 163, 74];
-const RED: [number, number, number]     = [220, 38, 38];
-const AMBER: [number, number, number]   = [180, 83, 9];
-const PURPLE: [number, number, number]  = [99, 102, 241];
-const SLATE: [number, number, number]   = [100, 116, 139];
-const LGRAY: [number, number, number]   = [248, 250, 252];
-const MGRAY: [number, number, number]   = [241, 245, 249];
-
-// Remplace l'espace fine insécable (U+202F) que jsPDF ne sait pas encoder par une espace normale
-const fmtEur = (n: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
-    .format(n)
-    .replace(/\u202f/g, ' ')
-    .replace(/\u00a0/g, ' ');
+const BLUE = PDF_COLORS.blue;
+const GREEN = PDF_COLORS.green;
+const RED = PDF_COLORS.red;
+const AMBER = PDF_COLORS.amber;
+const PURPLE = PDF_COLORS.indigo;
+const SLATE = PDF_COLORS.slate;
+const LGRAY = PDF_COLORS.gray;
+const MGRAY = PDF_COLORS.midGray;
 
 type Doc = jsPDF & { lastAutoTable: { finalY: number } };
 
@@ -132,19 +126,6 @@ function addPageHeader(doc: Doc) {
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.text('PROCÈS-VERBAL D\'ASSEMBLÉE GÉNÉRALE', W / 2, 5.5, { align: 'center' });
-}
-
-function sectionTitle(doc: Doc, text: string, y: number, color: [number, number, number] = BLUE): number {
-  const mL = 14;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(...color);
-  doc.text(text.toUpperCase(), mL, y);
-  doc.setDrawColor(...color);
-  doc.setLineWidth(0.4);
-  doc.line(mL, y + 2, 14 + text.length * 2.4, y + 2);
-  doc.setTextColor(30, 30, 30);
-  return y + 8;
 }
 
 function statutBadge(statut: string): { label: string; color: [number, number, number] } {
@@ -204,32 +185,19 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     // ════════════════════════════════════════════════════════
     // PAGE 1 — EN-TÊTE
     // ════════════════════════════════════════════════════════
-    doc.setFillColor(...BLUE);
-    doc.rect(0, 0, W, 45, 'F');
+    const rightLines = [
+      ag.coproprietes?.nom ?? '',
+      ag.coproprietes?.adresse ?? '',
+      `${ag.coproprietes?.code_postal ?? ''} ${ag.coproprietes?.ville ?? ''}`.trim(),
+    ].filter(Boolean);
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
-    doc.text('PROCÈS-VERBAL', mL, 18);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text("d'Assemblée Générale de copropriété", mL, 27);
-
-    // Infos copropriété (droite)
-    doc.setFontSize(9);
-    if (ag.coproprietes?.nom) {
-      doc.text(ag.coproprietes.nom, W - mR, 14, { align: 'right' });
-      if (ag.coproprietes.adresse) {
-        doc.text(ag.coproprietes.adresse, W - mR, 20, { align: 'right' });
-        doc.text(`${ag.coproprietes.code_postal ?? ''} ${ag.coproprietes.ville ?? ''}`.trim(), W - mR, 26, { align: 'right' });
-      }
-    }
-
-    // Quorum pastille
-    doc.setFillColor(ag.quorum_atteint ? 34 : 180, ag.quorum_atteint ? 197 : 180, ag.quorum_atteint ? 94 : 180);
-    doc.circle(W - mR - 3, 36, 3, 'F');
-    doc.setFontSize(8);
-    doc.text(`Quorum : ${ag.quorum_atteint ? 'atteint' : 'non atteint'}`, W - mR, 37, { align: 'right' });
+    drawPdfHero(doc, {
+      title: 'PROCÈS-VERBAL',
+      subtitle: "d'Assemblée Générale de copropriété",
+      accent: PDF_COLORS.blue,
+      rightLines,
+      badge: ag.quorum_atteint ? 'QUORUM ATTEINT' : 'QUORUM NON ATTEINT',
+    });
 
     let y = 53;
 
@@ -238,9 +206,6 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
     const heureFormatted = formatTime(ag.date_ag);
-
-    doc.setFillColor(239, 246, 255);
-    doc.roundedRect(mL, y, inner, 46, 2, 2, 'F');
 
     // Titre de l'AG
     doc.setFont('helvetica', 'bold');
@@ -255,34 +220,41 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     doc.line(mL + 3, y + 16, mL + inner - 3, y + 16);
 
     // DATE / HEURE / LIEU — 3 colonnes
-    const infoColW = inner / 3;
     const infoItems: { label: string; value: string }[] = [
       { label: 'DATE', value: dateFormatted },
       { label: 'HEURE', value: heureFormatted },
       { label: 'LIEU', value: ag.lieu ?? '–' },
     ];
-    infoItems.forEach((info, i) => {
-      const ix = mL + 4 + i * infoColW;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7.5);
-      doc.setTextColor(...BLUE);
-      doc.text(info.label, ix, y + 25);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(30, 30, 30);
-      const vlines = doc.splitTextToSize(info.value, infoColW - 6);
-      doc.text(vlines[0], ix, y + 33);
-      if (vlines.length > 1) doc.text(vlines[1], ix, y + 39);
+    y = drawPdfInfoCard(doc, {
+      x: mL,
+      y,
+      width: inner,
+      items: infoItems,
+      accent: PDF_COLORS.blue,
     });
 
-    y += 54;
+    const resolutionsApprouvees = resolutions.filter((r) => effectifStatut(r) === 'approuvee').length;
+    const resolutionsRefusees = resolutions.filter((r) => effectifStatut(r) === 'refusee').length;
+    const resolutionsReportees = resolutions.filter((r) => effectifStatut(r) === 'reportee').length;
+
+    y = drawPdfInfoCard(doc, {
+      x: mL,
+      y,
+      width: inner,
+      items: [
+        { label: 'PRÉSENCE / REPRÉSENTATION', value: `${voteurs.length} voteur(s) · ${tantiemesPresents}/${totalTantiemes || 0} tantièmes` },
+        { label: 'RÉSOLUTIONS APPROUVÉES', value: String(resolutionsApprouvees) },
+        { label: 'REFUSÉES / REPORTÉES', value: `${resolutionsRefusees} / ${resolutionsReportees}` },
+      ],
+      accent: PDF_COLORS.indigo,
+    });
 
     // ════════════════════════════════════════════════════════
     // FEUILLE DE PRÉSENCE
     // ════════════════════════════════════════════════════════
     if (presences.length > 0 && coproprietaires.length > 0) {
       y = checkPage(doc, y, 40);
-      y = sectionTitle(doc, 'Feuille de présence', y);
+      y = drawPdfSectionTitle(doc, 'Feuille de présence', y);
 
       const statLabels: Record<string, string> = {
         present:    'Présent(e)',
@@ -349,7 +321,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     // ════════════════════════════════════════════════════════
     if (ag.notes) {
       y = checkPage(doc, y, 30);
-      y = sectionTitle(doc, 'Ordre du jour', y);
+      y = drawPdfSectionTitle(doc, 'Notes et rappels de séance', y);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       doc.setTextColor(50);
@@ -362,7 +334,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     // RÉSOLUTIONS — une par une avec résultat visuel
     // ════════════════════════════════════════════════════════
     y = checkPage(doc, y, 40);
-    y = sectionTitle(doc, 'Résolutions', y);
+    y = drawPdfSectionTitle(doc, 'Résolutions', y);
 
     for (const res of resolutions) {
       // ── Estimer la hauteur totale de la résolution pour éviter une coupure de page ──
@@ -464,17 +436,19 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
           { label: 'Abstention', nb: nbVotesAbst,   tant: tantAbst,   pct: pctAbst,   col: SLATE },
         ];
         for (const vr of voteRows) {
+          doc.setFillColor(...LGRAY);
+          doc.roundedRect(mL + 2, y - 1, inner - 4, 6.5, 1.5, 1.5, 'F');
           doc.setFillColor(...vr.col);
-          doc.circle(mL + 4, y + 1.5, 1.5, 'F');
+          doc.circle(mL + 6, y + 1.8, 1.5, 'F');
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(8.5);
           doc.setTextColor(...vr.col);
-          doc.text(vr.label, mL + 8, y + 3);
+          doc.text(vr.label, mL + 10, y + 3.2);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(50, 50, 50);
           doc.text(
-            `${vr.nb} vote${vr.nb !== 1 ? 's' : ''}  \u2014  ${vr.tant} tant. sur ${tantiemesPresents} tant. soit ${vr.pct} %`,
-            mL + 34, y + 3
+            `${vr.nb} vote${vr.nb !== 1 ? 's' : ''} · ${vr.tant} tant. · ${vr.pct} % des présents/représentés`,
+            mL + 36, y + 3.2
           );
           y += 6;
         }
@@ -488,7 +462,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8.5);
         doc.setTextColor(...AMBER);
-        doc.text(`Cotisation fonds de travaux : ${fmtEur(res.fonds_travaux_montant)}`, mL + 4, y + 5.5);
+        doc.text(`Cotisation fonds de travaux : ${formatPdfEuros(res.fonds_travaux_montant)}`, mL + 4, y + 5.5);
         y += 10;
       }
 
@@ -499,13 +473,13 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8.5);
         doc.setTextColor(...PURPLE);
-        doc.text(`Budget voté — Total : ${fmtEur(total)}`, mL + 2, y);
+        doc.text(`Budget voté — Total : ${formatPdfEuros(total)}`, mL + 2, y);
         y += 4;
         autoTable(doc, {
           startY: y,
           head: [['Poste de dépense', 'Montant']],
-          body: (res.budget_postes ?? []).map((p) => [p.libelle, fmtEur(p.montant)]),
-          foot: [['TOTAL', fmtEur(total)]],
+          body: (res.budget_postes ?? []).map((p) => [p.libelle, formatPdfEuros(p.montant)]),
+          foot: [['TOTAL', formatPdfEuros(total)]],
           headStyles: { fillColor: PURPLE, fontSize: 8 },
           footStyles: { fillColor: MGRAY, textColor: [17, 24, 39], fontStyle: 'bold', fontSize: 8 },
           alternateRowStyles: { fillColor: LGRAY },
@@ -527,7 +501,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     const treated = resolutions.filter((r) => r.statut !== 'en_attente');
     if (treated.length > 0) {
       y = checkPage(doc, y, 50);
-      y = sectionTitle(doc, 'Synthèse', y);
+      y = drawPdfSectionTitle(doc, 'Synthèse', y);
 
       autoTable(doc, {
         startY: y,
@@ -577,7 +551,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     // SIGNATURES
     // ════════════════════════════════════════════════════════
     y = checkPage(doc, y, 45);
-    y = sectionTitle(doc, 'Signatures', y);
+    y = drawPdfSectionTitle(doc, 'Signatures', y);
 
     const sigBoxes = [
       { x: mL,       label: 'Le Président de séance' },
@@ -604,19 +578,10 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     doc.text(`Fait le ${new Date().toLocaleDateString('fr-FR')}`, mL, y);
 
     // ── Pied de page sur toutes les pages ──────────────────
-    const totalPages = doc.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-      const pH = doc.internal.pageSize.height;
-      doc.setFillColor(245, 247, 250);
-      doc.rect(0, pH - 12, W, 12, 'F');
-      doc.setFontSize(7);
-      doc.setTextColor(150, 150, 150);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`PV — ${ag.coproprietes?.nom ?? ''} — ${formatDate(ag.date_ag)}`, mL, pH - 4.5);
-      doc.text(`Page ${i} / ${totalPages}`, W - mR, pH - 4.5, { align: 'right' });
-      doc.text('Généré via Mon Syndic Bénévole', W / 2, pH - 4.5, { align: 'center' });
-    }
+    addPdfFooters(doc, {
+      leftText: `PV — ${ag.coproprietes?.nom ?? ''} — ${formatDate(ag.date_ag)}`,
+      centerText: 'Généré via Mon Syndic Bénévole',
+    });
 
     const filename = `pv-ag-${ag.titre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}.pdf`;
     doc.save(filename);

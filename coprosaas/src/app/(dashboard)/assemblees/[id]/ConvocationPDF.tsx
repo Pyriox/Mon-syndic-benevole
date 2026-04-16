@@ -8,6 +8,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Button from '@/components/ui/Button';
 import { formatDate, formatTime } from '@/lib/utils';
+import { addPdfFooters, drawPdfHero, drawPdfInfoCard, drawPdfSectionTitle, ensurePdfSpace, formatPdfEuros, PDF_COLORS } from '@/lib/pdf';
 import { FileDown } from 'lucide-react';
 
 interface Resolution {
@@ -34,110 +35,50 @@ interface ConvocationPDFProps {
   resolutions: Resolution[];
 }
 
-const BLUE: [number, number, number]  = [29, 78, 216];
-const LIGHT: [number, number, number] = [239, 246, 255];
-const GRAY: [number, number, number]  = [248, 250, 252];
-
-// Remplace les espaces insécables (U+00A0, U+202F) par une espace normale — jsPDF ne les gère pas
-const fmtEur = (n: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
-    .format(n)
-    .replace(/\u00A0|\u202F/g, '\u0020');
-
-function checkPage(doc: jsPDF, y: number, needed = 30): number {
-  if (y + needed > doc.internal.pageSize.height - 20) {
-    doc.addPage();
-    addConvocationPageHeader(doc);
-    return 28;
-  }
-  return y;
-}
-
-function addConvocationPageHeader(doc: jsPDF): void {
-  const W = doc.internal.pageSize.width;
-  doc.setFillColor(...BLUE);
-  doc.rect(0, 0, W, 8, 'F');
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text('CONVOCATION — ASSEMBLÉE GÉNÉRALE DE COPROPRIÉTÉ', W / 2, 5.5, { align: 'center' });
-}
-
-function addConvocationFooters(doc: jsPDF): void {
-  const W = doc.internal.pageSize.width;
-  const H = doc.internal.pageSize.height;
-  const total = (doc as unknown as { internal: { getNumberOfPages: () => number } }).internal.getNumberOfPages();
-  for (let i = 1; i <= total; i++) {
-    doc.setPage(i);
-    doc.setFillColor(245, 247, 250);
-    doc.rect(0, H - 12, W, 12, 'F');
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(150, 150, 150);
-    doc.text(
-      `Document généré le ${new Date().toLocaleDateString('fr-FR')} via Mon Syndic Bénévole`,
-      W / 2, H - 4.5, { align: 'center' },
-    );
-    if (total > 1) {
-      doc.text(`Page ${i} / ${total}`, W - 14, H - 4.5, { align: 'right' });
-    }
-  }
-}
-
 function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[]): jsPDF {
   const doc = new jsPDF();
   const W = doc.internal.pageSize.width;
   const mL = 14;
   const mR = 14;
   const inner = W - mL - mR;
-  let y = 0;
+  const rightLines = [
+    ag.coproprietes?.nom ?? '',
+    ag.coproprietes?.adresse ?? '',
+    `${ag.coproprietes?.code_postal ?? ''} ${ag.coproprietes?.ville ?? ''}`.trim(),
+  ].filter(Boolean);
 
-  // ── Bandeau de titre ───────────────────────────────────────
-  doc.setFillColor(...BLUE);
-  doc.rect(0, 0, W, 38, 'F');
+  const headerTitle = ag.convocation_envoyee_le ? 'CONVOCATION OFFICIELLE' : 'CONVOCATION';
+  let y = drawPdfHero(doc, {
+    title: headerTitle,
+    subtitle: "Assemblée Générale de copropriété",
+    accent: PDF_COLORS.blue,
+    rightLines,
+    badge: 'ORDRE DU JOUR',
+  });
 
-  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.text('CONVOCATION', mL, 16);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.text("Assemblée Générale de copropriété", mL, 25);
-
-  // Nom copropriété à droite
-  if (ag.coproprietes?.nom) {
-    doc.setFontSize(9);
-    doc.text(ag.coproprietes.nom, W - mR, 16, { align: 'right' });
-    if (ag.coproprietes.adresse) {
-      doc.text(`${ag.coproprietes.adresse}`, W - mR, 21, { align: 'right' });
-      doc.text(`${ag.coproprietes.code_postal ?? ''} ${ag.coproprietes.ville ?? ''}`.trim(), W - mR, 26, { align: 'right' });
-    }
-  }
-  y = 46;
-
-  // ── Bloc infos AG ───────────────────────────────────────────
-  doc.setFillColor(...LIGHT);
-  doc.roundedRect(mL, y, inner, 24, 2, 2, 'F');
+  doc.setFontSize(13);
+  doc.setTextColor(20, 20, 20);
+  const agTitleLines = doc.splitTextToSize(ag.titre, inner);
+  doc.text(agTitleLines, mL, y);
+  y += agTitleLines.length * 6 + 4;
 
   const dateFormatted = formatDate(ag.date_ag, {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
   const heureFormatted = formatTime(ag.date_ag);
 
-  doc.setTextColor(29, 78, 216);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text('DATE', mL + 4, y + 7);
-  doc.text('HEURE', mL + 70, y + 7);
-  doc.text('LIEU', mL + 120, y + 7);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(30, 30, 30);
-  doc.setFontSize(9);
-  doc.text(dateFormatted, mL + 4, y + 14);
-  doc.text(heureFormatted, mL + 70, y + 14);
-  doc.text(ag.lieu ?? '–', mL + 120, y + 14);
-  y += 32;
+  y = drawPdfInfoCard(doc, {
+    x: mL,
+    y,
+    width: inner,
+    items: [
+      { label: 'DATE', value: dateFormatted },
+      { label: 'HEURE', value: heureFormatted },
+      { label: 'LIEU', value: ag.lieu ?? '–' },
+    ],
+    accent: PDF_COLORS.blue,
+  });
 
   // ── Corps de lettre ─────────────────────────────────────────
   doc.setFontSize(10);
@@ -154,6 +95,17 @@ function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[])
   doc.text(intro, mL, y);
   y += intro.length * 5.5 + 5;
 
+  doc.setFillColor(...PDF_COLORS.gray);
+  doc.roundedRect(mL, y, inner, 18, 2, 2, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...PDF_COLORS.slate);
+  doc.text('Contenu de la convocation', mL + 4, y + 7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(60, 60, 60);
+  doc.text('Date, lieu, ordre du jour détaillé et informations utiles à consulter avant l’assemblée.', mL + 4, y + 13);
+  y += 26;
+
   doc.setFontSize(10);
   doc.setFont('helvetica', 'italic');
   doc.setTextColor(80);
@@ -165,14 +117,7 @@ function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[])
   y += ref.length * 5.5 + 8;
 
   // ── Ordre du jour ───────────────────────────────────────────
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(29, 78, 216);
-  doc.text('ORDRE DU JOUR', mL, y);
-  doc.setDrawColor(...BLUE);
-  doc.setLineWidth(0.5);
-  doc.line(mL, y + 2, mL + 50, y + 2);
-  y += 8;
+  y = drawPdfSectionTitle(doc, 'Ordre du jour', y, PDF_COLORS.blue);
 
   autoTable(doc, {
     startY: y,
@@ -182,20 +127,20 @@ function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[])
       if (r.description) parts.push(r.description);
       if (r.budget_postes && r.budget_postes.length > 0) {
         const total = r.budget_postes.reduce((s, p) => s + p.montant, 0);
-        parts.push(`Budget proposé : ${fmtEur(total)}`);
-        r.budget_postes.forEach((p) => parts.push(`  • ${p.libelle} : ${fmtEur(p.montant)}`));
+        parts.push(`Budget proposé : ${formatPdfEuros(total)}`);
+        r.budget_postes.forEach((p) => parts.push(`  • ${p.libelle} : ${formatPdfEuros(p.montant)}`));
       }
       if (r.fonds_travaux_montant != null) {
-        parts.push(`Cotisation fonds de travaux : ${fmtEur(r.fonds_travaux_montant)}`);
+        parts.push(`Cotisation fonds de travaux : ${formatPdfEuros(r.fonds_travaux_montant)}`);
       }
       return [r.numero, r.titre, parts.join('\n') || '–'];
     }),
-    headStyles: { fillColor: BLUE, fontSize: 9, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: GRAY },
+    headStyles: { fillColor: PDF_COLORS.blue, fontSize: 9, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: PDF_COLORS.gray },
     columnStyles: {
       0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 75, fontStyle: 'bold' },
-      2: { cellWidth: inner - 10 - 75 - 4, fontSize: 8 },
+      1: { cellWidth: 74, fontStyle: 'bold' },
+      2: { cellWidth: inner - 10 - 74 - 4, fontSize: 8 },
     },
     styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak', valign: 'top' },
     margin: { left: mL, right: mR },
@@ -205,13 +150,8 @@ function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[])
 
   // ── Notes / observations ────────────────────────────────────
   if (ag.notes) {
-    y = checkPage(doc, y, 30);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(29, 78, 216);
-    doc.text('OBSERVATIONS', mL, y);
-    doc.line(mL, y + 2, mL + 46, y + 2);
-    y += 8;
+    y = ensurePdfSpace(doc, y, 30, () => undefined);
+    y = drawPdfSectionTitle(doc, 'Observations', y, PDF_COLORS.indigo);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(60);
@@ -220,8 +160,19 @@ function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[])
     y += notesLines.length * 5 + 8;
   }
 
+  y = ensurePdfSpace(doc, y, 24, () => undefined);
+  doc.setFillColor(...PDF_COLORS.midGray);
+  doc.roundedRect(mL, y, inner, 16, 2, 2, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...PDF_COLORS.slate);
+  doc.text('Consultation des documents', mL + 4, y + 6.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Les pièces associées à l’assemblée restent consultables dans votre espace Documents.', mL + 4, y + 12);
+  y += 24;
+
   // ── Formule de politesse ────────────────────────────────────
-  y = checkPage(doc, y, 30);
+  y = ensurePdfSpace(doc, y, 30, () => undefined);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(40);
@@ -237,7 +188,10 @@ function genererConvocationDoc(ag: ConvocationAGData, resolutions: Resolution[])
   doc.line(mL, y + 12, mL + 60, y + 12);
 
   // ── Pied de page (toutes les pages) ─────────────────────────
-  addConvocationFooters(doc);
+  addPdfFooters(doc, {
+    leftText: `Convocation — ${ag.coproprietes?.nom ?? ''}`,
+    centerText: `Document généré le ${new Date().toLocaleDateString('fr-FR')} via Mon Syndic Bénévole`,
+  });
 
   return doc;
 }
