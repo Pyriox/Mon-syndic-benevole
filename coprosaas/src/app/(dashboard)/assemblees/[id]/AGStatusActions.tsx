@@ -7,7 +7,7 @@
 // ============================================================
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
@@ -19,7 +19,6 @@ import {
   getParisDateInputValue,
   getParisTimeInputValue,
   getParisYear,
-  parseFrenchDateInputValue,
   toParisISOString,
 } from '@/lib/utils';
 import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, AlertTriangle, Mail } from 'lucide-react';
@@ -92,43 +91,14 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
   const [error, setError] = useState('');
 
   const initialTime = getParisTimeInputValue(dateAg);
-  const initialDate = getParisDateInputValue(dateAg); // YYYY-MM-DD
-  const [dateVal,   setDateVal]   = useState(initialDate);
-  const [dayVal,    setDayVal]    = useState(initialDate.slice(8, 10));
-  const [monthVal,  setMonthVal]  = useState(initialDate.slice(5, 7));
-  const [yearVal,   setYearVal]   = useState(initialDate.slice(0, 4));
-  const monthInputRef = useRef<HTMLInputElement>(null);
-  const yearInputRef  = useRef<HTMLInputElement>(null);
+  const [dateVal,   setDateVal]   = useState(getParisDateInputValue(dateAg));
   const [heureVal,  setHeureVal]  = useState(initialTime.hour);
   const [minuteVal, setMinuteVal] = useState(initialTime.minute);
   const [isVisio,   setIsVisio]   = useState(lieu === 'Visioconférence');
   const [lieuVal,   setLieuVal]   = useState(lieu === 'Visioconférence' ? '' : (lieu ?? ''));
 
-  const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value.replace(/\D/g, '').slice(0, 2);
-    setDayVal(v);
-    if (v.length === 2) monthInputRef.current?.focus();
-    setDateVal(v.length === 2 && monthVal.length === 2 && yearVal.length === 4
-      ? parseFrenchDateInputValue(`${v}/${monthVal}/${yearVal}`) : '');
-  };
-  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value.replace(/\D/g, '').slice(0, 2);
-    setMonthVal(v);
-    if (v.length === 2) yearInputRef.current?.focus();
-    setDateVal(dayVal.length === 2 && v.length === 2 && yearVal.length === 4
-      ? parseFrenchDateInputValue(`${dayVal}/${v}/${yearVal}`) : '');
-  };
-  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value.replace(/\D/g, '').slice(0, 4);
-    setYearVal(v);
-    setDateVal(dayVal.length === 2 && monthVal.length === 2 && v.length === 4
-      ? parseFrenchDateInputValue(`${dayVal}/${monthVal}/${v}`) : '');
-  };
   const handleSave = async () => {
-    if (!dateVal) {
-      setError("La date est requise ou invalide. Vérifiez le jour, le mois et l'année.");
-      return;
-    }
+    if (!dateVal) { setError('La date est requise.'); return; }
     setLoading(true);
     setError('');
     const newLieu = isVisio ? 'Visioconférence' : lieuVal.trim() || null;
@@ -171,19 +141,13 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
               Date et heure <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
-              <div className="flex items-center flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 gap-1 hover:border-gray-400 transition-colors focus-within:ring-2 focus-within:ring-blue-500">
-                <input type="text" inputMode="numeric" value={dayVal} onChange={handleDayChange}
-                  placeholder="JJ" maxLength={2} autoComplete="off"
-                  className="w-8 text-sm text-gray-900 focus:outline-none bg-transparent text-center" />
-                <span className="text-gray-400 text-sm select-none shrink-0">/</span>
-                <input ref={monthInputRef} type="text" inputMode="numeric" value={monthVal} onChange={handleMonthChange}
-                  placeholder="MM" maxLength={2} autoComplete="off"
-                  className="w-8 text-sm text-gray-900 focus:outline-none bg-transparent text-center" />
-                <span className="text-gray-400 text-sm select-none shrink-0">/</span>
-                <input ref={yearInputRef} type="text" inputMode="numeric" value={yearVal} onChange={handleYearChange}
-                  placeholder="AAAA" maxLength={4} autoComplete="off"
-                  className="w-11 text-sm text-gray-900 focus:outline-none bg-transparent text-center" />
-              </div>
+              <input
+                type="date"
+                value={dateVal}
+                onChange={(e) => setDateVal(e.target.value)}
+                required
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
+              />
               <select value={heureVal} onChange={(e) => setHeureVal(e.target.value)}
                 className="w-[5.5rem] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
