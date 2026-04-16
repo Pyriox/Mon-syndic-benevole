@@ -88,6 +88,7 @@ export async function POST(
   }
 
   // Notification si des résolutions de révision ont été approuvées
+  // ET qu'il existe déjà des appels publiés/confirmés cette année (sinon le syndic créera de zéro avec les bons montants)
   const { data: revisionResolutions } = await supabase
     .from('resolutions')
     .select('id')
@@ -96,13 +97,27 @@ export async function POST(
     .eq('statut', 'approuvee')
     .limit(1);
 
-  if (revisionResolutions?.length) {
+  const coproprieteId = (ag as { copropriete_id?: string }).copropriete_id;
+  let hasExistingAppels = false;
+  if (revisionResolutions?.length && coproprieteId) {
+    const agYear = ag.date_ag ? new Date(ag.date_ag).getFullYear() : new Date().getFullYear();
+    const { count } = await supabase
+      .from('appels_de_fonds')
+      .select('id', { count: 'exact', head: true })
+      .eq('copropriete_id', coproprieteId)
+      .in('statut', ['publie', 'confirme'])
+      .gte('created_at', `${agYear}-01-01T00:00:00.000Z`)
+      .lt('created_at', `${agYear + 1}-01-01T00:00:00.000Z`);
+    hasExistingAppels = (count ?? 0) > 0;
+  }
+
+  if (revisionResolutions?.length && hasExistingAppels) {
     const dateAGFormatted = ag.date_ag
       ? new Date(ag.date_ag).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
       : 'cette AG';
     await pushNotification({
       userId: user.id,
-      coproprieteId: (ag as { copropriete_id?: string }).copropriete_id ?? null,
+      coproprieteId: coproprieteId ?? null,
       type: 'revision_budget_alerte',
       severity: 'warning',
       title: 'Révision votée — ajustez vos appels de fonds',
