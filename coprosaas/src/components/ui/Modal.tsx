@@ -29,6 +29,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedElement = useRef<HTMLElement | null>(null);
   const titleId = useId();
+  // Stocker onClose dans une ref pour ne pas relancer l'effet à chaque re-render
+  // (évite le reset de focus après chaque frappe clavier dans les inputs du modal)
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -50,7 +54,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -85,7 +89,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
       document.body.style.overflow = '';
       lastFocusedElement.current?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]); // onClose intentionnellement absent — stabilisé via onCloseRef
 
   if (!isOpen) return null;
 
