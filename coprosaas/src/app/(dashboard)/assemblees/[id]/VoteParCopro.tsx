@@ -388,7 +388,7 @@ export default function VoteParCopro({
                 <span className="text-[10px] text-gray-400 shrink-0">{tantiemesMap[p.coproprietaire_id] ?? 0} t.</span>
               </button>
             );
-          }) : coproprietaires.map((c) => {
+          }) : coproprietaires.filter((c) => presences.some((p) => p.coproprietaire_id === c.id)).map((c) => {
             const isSelected = selectedIds.includes(c.id);
             return (
               <button
