@@ -194,6 +194,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
     : null;
   const avertissementDelai = joursAvantAG !== null && joursAvantAG >= 0 && joursAvantAG < 21;
   const datePassee = joursAvantAG !== null && joursAvantAG < 0;
+  const anneeInvalide = dateVal ? parseInt(dateVal.split('-')[0], 10) < 2000 : false;
   const titreFinal = typeAG === 'ordinaire'
     ? `Assemblée Générale Ordinaire ${dateVal ? new Date(dateVal).getFullYear() : new Date().getFullYear()}`
     : formData.titre.trim();
@@ -389,19 +390,6 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
               <div className="flex gap-2">
                 <input type="date" value={dateVal}
                   onChange={(e) => { setDateVal(e.target.value); updateDateTime(e.target.value, heureVal, minuteVal); }}
-                  onBlur={(e) => {
-                    const v = e.target.value;
-                    if (!v) return;
-                    const [y, mo, d] = v.split('-');
-                    const year = parseInt(y, 10);
-                    if (year < 100) {
-                      const corrected = `${2000 + year}-${mo}-${d}`;
-                      setDateVal(corrected); updateDateTime(corrected, heureVal, minuteVal);
-                    } else if (year < 2000) {
-                      const corrected = `${new Date().getFullYear()}-${mo}-${d}`;
-                      setDateVal(corrected); updateDateTime(corrected, heureVal, minuteVal);
-                    }
-                  }}
                   min="2020-01-01"
                   max="2099-12-31"
                   required
@@ -422,7 +410,15 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
                   ))}
                 </select>
               </div>
-              {datePassee && (
+              {anneeInvalide && (
+                <div className="mt-2 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
+                  <AlertTriangle size={15} className="shrink-0 mt-0.5 text-red-500" />
+                  <span>
+                    <strong>Année invalide :</strong> saisissez les 4 chiffres de l'année (ex. : 2026).
+                  </span>
+                </div>
+              )}
+              {!anneeInvalide && datePassee && (
                 <div className="mt-2 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5 text-red-500" />
                   <span>

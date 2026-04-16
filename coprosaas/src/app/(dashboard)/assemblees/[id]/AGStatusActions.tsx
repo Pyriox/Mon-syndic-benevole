@@ -136,14 +136,6 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
             <div className="flex gap-2">
               <input type="date" value={dateVal}
                 onChange={(e) => setDateVal(e.target.value)}
-                onBlur={(e) => {
-                  const v = e.target.value;
-                  if (!v) return;
-                  const [y, mo, d] = v.split('-');
-                  const year = parseInt(y, 10);
-                  if (year < 100) setDateVal(`${2000 + year}-${mo}-${d}`);
-                  else if (year < 2000) setDateVal(`${new Date().getFullYear()}-${mo}-${d}`);
-                }}
                 min="2020-01-01"
                 max="2099-12-31"
                 required
