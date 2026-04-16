@@ -548,11 +548,6 @@ export default function VoteParCopro({
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-600 text-white rounded-md font-semibold text-[11px] hover:bg-amber-700 transition-colors">
                   <Zap size={11} /> Activer la passerelle Art. 25-1
                 </button>
-                <button type="button"
-                  onClick={() => { setPasserelleActive(false); setDirty(true); setSaved(false); }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-200 text-gray-700 rounded-md font-semibold text-[11px] hover:bg-gray-300 transition-colors">
-                  Ne pas utiliser — désignation refusée
-                </button>
               </div>
             </div>
           </div>
@@ -769,11 +764,6 @@ export default function VoteParCopro({
                     onClick={() => { setPasserelleActive(true); setDirty(true); setSaved(false); }}
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-600 text-white rounded-md font-semibold text-[11px] hover:bg-amber-700 transition-colors">
                     <Zap size={11} /> Activer la passerelle (vote Art. 24)
-                  </button>
-                  <button type="button"
-                    onClick={() => { setPasserelleActive(false); setDirty(true); setSaved(false); }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-200 text-gray-700 rounded-md font-semibold text-[11px] hover:bg-gray-300 transition-colors">
-                    Ne pas utiliser — résolution refusée
                   </button>
                 </div>
               </div>
