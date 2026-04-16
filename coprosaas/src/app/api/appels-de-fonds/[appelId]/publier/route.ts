@@ -206,6 +206,15 @@ export async function POST(
     .update({ statut: 'publie', ...(sendImmediately ? { emailed_at: now } : {}) })
     .eq('id', appelId);
 
+  // Résoudre automatiquement l'alerte de révision budgétaire si elle existe
+  await supabase
+    .from('app_notifications')
+    .update({ is_read: true, read_at: now })
+    .eq('user_id', user.id)
+    .eq('copropriete_id', appel.copropriete_id)
+    .eq('type', 'revision_budget_alerte')
+    .eq('is_read', false);
+
   if (user.email) {
     await logEventForEmail({
       email: user.email,

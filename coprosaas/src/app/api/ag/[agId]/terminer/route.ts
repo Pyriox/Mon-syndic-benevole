@@ -15,8 +15,7 @@ import {
   buildAGTermineeSubject,
 } from '@/lib/emails/syndic-notifications';
 import { trackResendSendResult } from '@/lib/email-delivery';
-import { getCanonicalSiteUrl } from '@/lib/site-url';
-
+import { getCanonicalSiteUrl } from '@/lib/site-url';import { pushNotification } from '@/lib/notification-center';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 
@@ -45,7 +44,7 @@ export async function POST(
   const { data: ag } = await supabase
     .from('assemblees_generales')
     .select(
-      'id, date_ag, statut, coproprietes(nom, syndic_id, profiles!coproprietes_syndic_id_fkey(email, full_name))'
+      'id, date_ag, statut, copropriete_id, coproprietes(nom, syndic_id, profiles!coproprietes_syndic_id_fkey(email, full_name))'
     )
     .eq('id', agId)
     .single();
@@ -85,6 +84,32 @@ export async function POST(
       eventType: 'ag_status_changed',
       label: `Statut AG modifié : ${ag.statut} → terminee`,
       metadata: { agId, coproId: copro.syndic_id, oldStatus: ag.statut, newStatus: 'terminee', quorumAtteint },
+    });
+  }
+
+  // Notification si des résolutions de révision ont été approuvées
+  const { data: revisionResolutions } = await supabase
+    .from('resolutions')
+    .select('id')
+    .eq('ag_id', agId)
+    .in('type_resolution', ['revision_budget', 'revision_fonds_travaux'])
+    .eq('statut', 'approuvee')
+    .limit(1);
+
+  if (revisionResolutions?.length) {
+    const dateAGFormatted = ag.date_ag
+      ? new Date(ag.date_ag).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      : 'cette AG';
+    await pushNotification({
+      userId: user.id,
+      coproprieteId: (ag as { copropriete_id?: string }).copropriete_id ?? null,
+      type: 'revision_budget_alerte',
+      severity: 'warning',
+      title: 'Révision votée — ajustez vos appels de fonds',
+      body: `Une révision budgétaire a été votée en AG du ${dateAGFormatted}. Vérifiez et ajustez vos prochains appels de fonds.`,
+      href: '/appels-de-fonds',
+      actionLabel: 'Voir les appels',
+      metadata: { agId, agDate: ag.date_ag },
     });
   }
 
