@@ -210,10 +210,10 @@ export default function CookieBanner() {
                     type="button"
                     onClick={() => togglePreference('analytics')}
                     aria-pressed={preferences.analytics}
-                    className={`relative h-7 w-12 shrink-0 self-start rounded-full transition-colors sm:self-center ${preferences.analytics ? 'bg-blue-600' : 'bg-slate-300'}`}
+                    className={`relative h-7 w-12 shrink-0 self-start rounded-full transition-colors duration-200 ease-in-out sm:self-center ${preferences.analytics ? 'bg-blue-600' : 'bg-slate-300'}`}
                   >
                     <span
-                      className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${preferences.analytics ? 'translate-x-6' : 'translate-x-1'}`}
+                      className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all duration-200 ease-in-out ${preferences.analytics ? 'left-6' : 'left-1'}`}
                     />
                   </button>
                 </div>
@@ -231,10 +231,10 @@ export default function CookieBanner() {
                     type="button"
                     onClick={() => togglePreference('ads')}
                     aria-pressed={preferences.ads}
-                    className={`relative h-7 w-12 shrink-0 self-start rounded-full transition-colors sm:self-center ${preferences.ads ? 'bg-amber-500' : 'bg-slate-300'}`}
+                    className={`relative h-7 w-12 shrink-0 self-start rounded-full transition-colors duration-200 ease-in-out sm:self-center ${preferences.ads ? 'bg-amber-500' : 'bg-slate-300'}`}
                   >
                     <span
-                      className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${preferences.ads ? 'translate-x-6' : 'translate-x-1'}`}
+                      className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all duration-200 ease-in-out ${preferences.ads ? 'left-6' : 'left-1'}`}
                     />
                   </button>
                 </div>
