@@ -158,17 +158,13 @@ export default async function AdminAnalyticsPage() {
   const gaOnboardingComplete30d = analytics.businessEvents30d.onboarding_complete ?? 0;
 
   const registrationEvents = (recentUserEvents ?? []).filter((event) => event.event_type === 'user_registered');
-  const confirmedAccountEvents = (recentUserEvents ?? []).filter((event) => event.event_type === 'account_confirmed');
   const purchaseLikeEvents = (recentUserEvents ?? []).filter((event) => (
     event.event_type === 'trial_started' || event.event_type === 'subscription_created'
   ));
   const checkoutEvents = (recentUserEvents ?? []).filter((event) => event.event_type === 'begin_checkout');
 
-  const internalSignUps30d = Math.max(registrationEvents.length, confirmedAccountEvents.length);
-  const internalSignUps7d = Math.max(
-    countSince(registrationEvents, last7dMs),
-    countSince(confirmedAccountEvents, last7dMs),
-  );
+  const internalSignUps30d = registrationEvents.length;
+  const internalSignUps7d = countSince(registrationEvents, last7dMs);
   const internalPurchases30d = purchaseLikeEvents.length;
   const internalPurchases7d = countSince(purchaseLikeEvents, last7dMs);
   const internalCheckouts30d = Math.max(checkoutEvents.length, internalPurchases30d);

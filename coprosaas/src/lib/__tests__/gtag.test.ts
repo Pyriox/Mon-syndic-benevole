@@ -140,7 +140,7 @@ describe('gtag helpers', () => {
     expect(pageViewEvent).toBeUndefined();
   });
 
-  it('autorise une nouvelle pageview sur la même URL après changement de consentement', async () => {
+  it('ignore un double envoi immédiat sur la même URL après changement de consentement', async () => {
     const { pageview } = await import('../gtag');
 
     localStorage.setItem(
@@ -163,7 +163,7 @@ describe('gtag helpers', () => {
     );
     pageview('/tarifs?plan=confort');
 
-    expect(window.dataLayer.filter((event) => event.event === 'virtual_pageview')).toHaveLength(2);
+    expect(window.dataLayer.filter((event) => event.event === 'virtual_pageview')).toHaveLength(1);
   });
 
   it('envoie seulement l’événement standard quand le consentement analytics est accordé', async () => {

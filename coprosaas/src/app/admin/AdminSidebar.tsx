@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Suspense } from 'react';
 import type { ElementType } from 'react';
 import { BarChart3, LayoutDashboard, Users, Building2, LifeBuoy, Mail, CreditCard } from 'lucide-react';
 
@@ -12,19 +13,20 @@ const NAV: NavItem[] = [
   { href: '/admin/analytics',     label: 'Analytics',      icon: BarChart3 },
   { href: '/admin/utilisateurs',  label: 'Utilisateurs',   icon: Users },
   { href: '/admin/coproprietes',  label: 'Copropriétés',   icon: Building2 },
-  { href: '/admin/abonnements',   label: 'Abonnements',  icon: CreditCard },
+  { href: '/admin/abonnements',   label: 'Abonnements',    icon: CreditCard },
   { href: '/admin/emails',        label: 'Emails',         icon: Mail },
   { href: '/admin/support',       label: 'Support',        icon: LifeBuoy },
 ];
 
-export default function AdminSidebar({ badges = {} }: { badges?: Record<string, number> }) {
+function AdminSidebarInner({ badges = {} }: { badges?: Record<string, number> }) {
   const pathname = usePathname();
+
   return (
     <nav className="w-full md:w-52 shrink-0 flex md:flex-col gap-2 md:gap-0.5 pt-0 md:pt-1 overflow-x-auto md:overflow-visible pb-1">
       {NAV.map(({ href, label, icon: Icon, soon }) => {
         const active = pathname === href || pathname.startsWith(href + '/');
         const badge = badges[href] ?? 0;
-        const needsAttention = (href === '/admin/support' || href === '/admin/emails') && badge > 0;
+        const needsAttention = href === '/admin/support' && badge > 0;
         return (
           <Link
             key={href}
@@ -54,5 +56,13 @@ export default function AdminSidebar({ badges = {} }: { badges?: Record<string, 
         );
       })}
     </nav>
+  );
+}
+
+export default function AdminSidebar({ badges = {} }: { badges?: Record<string, number> }) {
+  return (
+    <Suspense fallback={<nav className="w-full md:w-52 shrink-0" />}>
+      <AdminSidebarInner badges={badges} />
+    </Suspense>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CONSENT_KEY, denyConsent, grantConsent, pageview, updateConsent, type ConsentPreferences } from '@/lib/gtag';
+import { CONSENT_KEY, denyConsent, grantConsent, updateConsent, type ConsentPreferences } from '@/lib/gtag';
 // CNIL : le consentement doit être renouvelé tous les 13 mois maximum
 const CONSENT_MAX_AGE_MS = 13 * 30 * 24 * 60 * 60 * 1000;
 
@@ -130,12 +130,6 @@ export default function CookieBanner() {
   function accept() {
     saveConsent('accepted', { analytics: true, ads: true });
     grantConsent();
-    // Sur première visite, aucun nouvel event n'est émis après clic "Accepter"
-    // tant qu'il n'y a pas de navigation. On envoie une page_view immédiate.
-    if (typeof window !== 'undefined') {
-      const url = window.location.pathname + window.location.search;
-      pageview(url);
-    }
     setVisible(false);
   }
 
@@ -148,10 +142,6 @@ export default function CookieBanner() {
   function saveCustomPreferences() {
     saveConsent('customized', preferences);
     updateConsent(preferences);
-    if (preferences.analytics && typeof window !== 'undefined') {
-      const url = window.location.pathname + window.location.search;
-      pageview(url);
-    }
     setVisible(false);
   }
 

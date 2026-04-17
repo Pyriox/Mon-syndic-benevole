@@ -74,6 +74,10 @@ export function hasAnalyticsConsent(): boolean {
   return getConsentPreferences().analytics;
 }
 
+export function shouldTrackPurchaseEvent(): boolean {
+  return hasAnalyticsConsent();
+}
+
 function getMeasurementMode() {
   return hasAnalyticsConsent() ? 'consented' : 'cookieless';
 }
@@ -248,7 +252,7 @@ export function pageview(url: string) {
     consent_state: hasAnalyticsConsent() ? 'granted' : 'denied',
     anonymize_ip: true,
   };
-  const dedupeKey = `${payload.consent_state}:${sanitizedUrl}`;
+  const dedupeKey = sanitizedUrl;
 
   if (GTM_ID) {
     if (isDuplicatePageview(dedupeKey)) return;

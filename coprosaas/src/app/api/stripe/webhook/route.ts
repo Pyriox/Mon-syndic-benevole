@@ -141,6 +141,7 @@ async function updateCoproSubscription(coproId: string, data: {
   plan_id?: string | null;
   plan?: 'actif' | 'inactif' | 'passe_du' | 'essai' | 'resilie';
   plan_period_end?: string | null;
+  plan_cancel_at_period_end?: boolean;
 }) {
   const supabase = createAdminClient();
   const update: Record<string, unknown> = {
@@ -148,6 +149,7 @@ async function updateCoproSubscription(coproId: string, data: {
     plan_id:                data.plan_id,
     plan:                   data.plan ?? 'inactif',
     plan_period_end:        data.plan_period_end,
+    plan_cancel_at_period_end: data.plan_cancel_at_period_end ?? false,
   };
   // N'écraser stripe_customer_id que si explicitement fourni
   if (data.stripe_customer_id !== undefined) {
@@ -303,6 +305,7 @@ export async function POST(req: NextRequest) {
           plan_id: subscriptionSnapshot.planId ?? subMeta?.plan_id ?? null,
           plan: plan as 'actif' | 'inactif' | 'passe_du' | 'essai' | 'resilie',
           plan_period_end: periodEnd,
+          plan_cancel_at_period_end: subscriptionSnapshot.cancelAtPeriodEnd,
         });
         await syncCoproAddons(coproId, subscriptionSnapshot);
 
@@ -373,6 +376,7 @@ export async function POST(req: NextRequest) {
           plan_id: null,
           plan: 'resilie',
           plan_period_end: null,
+          plan_cancel_at_period_end: false,
         });
         await syncCoproAddons(coproId, null);
 

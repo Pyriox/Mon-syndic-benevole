@@ -21,23 +21,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const admin = createAdminClient();
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
   const [
     {
       pendingCount: pendingSupportCount,
       openCount: nbTicketsOuverts,
       inProgressCount: nbTicketsEnCours,
     },
-    { count: emailIncidentCount },
   ] = await Promise.all([
     getSupportAttentionSummary(admin),
-    admin
-      .from('email_deliveries')
-      .select('id', { count: 'exact', head: true })
-      .in('status', ['failed', 'bounced', 'complained'])
-      .gte('created_at', sevenDaysAgo),
   ]);
-  const emailBadge = emailIncidentCount ?? 0;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -89,7 +81,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       {/* Corps : sidebar + contenu */}
       <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col md:flex-row gap-4 md:gap-6 items-start">
-        <AdminSidebar badges={{ '/admin/support': pendingSupportCount, '/admin/emails': emailBadge }} />
+        <AdminSidebar badges={{ '/admin/support': pendingSupportCount }} />
         <main className="flex-1 min-w-0 w-full">
           {children}
         </main>

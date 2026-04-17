@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
-import { trackEvent } from '@/lib/gtag';
+import { shouldTrackPurchaseEvent, trackEvent } from '@/lib/gtag';
 
 // Prix annuels réels (synchronisés avec PLANS dans abonnement/page.tsx)
 export const PLAN_ANNUAL_PRICES: Record<string, number> = {
-  essentiel: 300,
-  confort:   450,
-  illimite:  600,
+  essentiel: 360,
+  confort:   540,
+  illimite:  960,
 };
 
 interface Props {
@@ -19,6 +19,8 @@ interface Props {
 
 export default function SubscriptionSuccessTracker({ planId, subscriptionId, coproNom, amount }: Props) {
   useEffect(() => {
+    if (!shouldTrackPurchaseEvent()) return;
+
     // Priorité : montant passé explicitement par le parent, sinon lookup par planId
     const price = amount ?? PLAN_ANNUAL_PRICES[planId ?? ''] ?? 0;
     trackEvent('purchase', {
