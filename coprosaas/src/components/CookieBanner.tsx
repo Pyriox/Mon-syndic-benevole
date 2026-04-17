@@ -179,7 +179,7 @@ export default function CookieBanner() {
           </div>
           <h2 className="text-base font-semibold leading-tight text-slate-950 sm:text-[1.35rem]">Aidez-nous à améliorer Mon Syndic Bénévole</h2>
           <p className="mt-2 text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-5">
-            Cookies nécessaires pour la sécurité, et mesure d&apos;audience optionnelle — avec ou sans cookie selon votre choix.
+            Les cookies nécessaires assurent la sécurité et le bon fonctionnement du site. Si vous l&apos;acceptez, la mesure d&apos;audience nous aide aussi à comprendre ce qui vous est vraiment utile, à simplifier les parcours et à améliorer plus vite la plateforme.
           </p>
         </div>
 
@@ -198,7 +198,7 @@ export default function CookieBanner() {
 
           {showCustom && (
             <div className="mt-3.5 space-y-2.5">
-              <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3 sm:p-3.5">
+              <div className={`rounded-xl border p-3 sm:p-3.5 ${preferences.analytics ? 'border-blue-200 bg-blue-50/60' : 'border-slate-200 bg-slate-50'}`}>
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-900">Mesure d&apos;audience</p>
@@ -219,7 +219,7 @@ export default function CookieBanner() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 sm:p-3.5">
+              <div className={`rounded-xl border p-3 sm:p-3.5 ${preferences.ads ? 'border-amber-200 bg-amber-50/70' : 'border-slate-200 bg-slate-50'}`}>
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-900">Personnalisation et mesure publicitaire</p>

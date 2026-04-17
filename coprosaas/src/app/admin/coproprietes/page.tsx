@@ -311,8 +311,8 @@ export default async function AdminCopropietesPage({
       return sortOrder === 'asc' ? a.nom.localeCompare(b.nom) : b.nom.localeCompare(a.nom);
     }
     if (sortBy === 'renewal') {
-      const av = a.plan === 'actif' && a.plan_period_end ? new Date(a.plan_period_end).getTime() : Number.POSITIVE_INFINITY;
-      const bv = b.plan === 'actif' && b.plan_period_end ? new Date(b.plan_period_end).getTime() : Number.POSITIVE_INFINITY;
+      const av = (a.plan === 'actif' || a.plan === 'essai' || !a.plan) && a.plan_period_end ? new Date(a.plan_period_end).getTime() : Number.POSITIVE_INFINITY;
+      const bv = (b.plan === 'actif' || b.plan === 'essai' || !b.plan) && b.plan_period_end ? new Date(b.plan_period_end).getTime() : Number.POSITIVE_INFINITY;
 
       if (!Number.isFinite(av) && !Number.isFinite(bv)) return 0;
       if (!Number.isFinite(av)) return 1;
@@ -391,6 +391,9 @@ export default async function AdminCopropietesPage({
   const in14d = new Date(new Date(nowIso).getTime() + 14 * 86400000).toISOString();
   const upcomingRenewals = coprosStatsTyped.filter((c) =>
     c.plan === 'actif' && c.plan_period_end && c.plan_period_end >= nowIso && c.plan_period_end <= in14d
+  );
+  const upcomingTrials = coprosStatsTyped.filter((c) =>
+    (c.plan === 'essai' || !c.plan) && c.plan_period_end && c.plan_period_end >= nowIso && c.plan_period_end <= in14d
   );
   const customerToCopro: Record<string, string> = {};
   for (const c of coprosTyped) {
@@ -535,7 +538,7 @@ export default async function AdminCopropietesPage({
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Activité / Risques</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Santé</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Créée</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Fin essai / Créée</th>
                   <th className="px-4 py-3 w-10" />
                 </tr>
               </thead>
@@ -612,7 +615,21 @@ export default async function AdminCopropietesPage({
                         </div>
                       </td>
                       <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
-                      <td className="px-4 py-3 text-xs text-gray-400 hidden xl:table-cell">{formatAdminDate(c.created_at)}</td>
+                      <td className="px-4 py-3 text-xs hidden xl:table-cell">
+                        {(c.plan === 'essai' || !c.plan) && c.plan_period_end ? (
+                          <div>
+                            <p className="text-[10px] text-amber-600 font-medium uppercase tracking-wide leading-none mb-0.5">Fin essai</p>
+                            <p className="text-amber-700 font-semibold">{formatAdminDate(c.plan_period_end)}</p>
+                          </div>
+                        ) : c.plan === 'actif' && c.plan_period_end ? (
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-wide leading-none mb-0.5">Renouvellement</p>
+                            <p className="text-gray-600">{formatAdminDate(c.plan_period_end)}</p>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">{formatAdminDate(c.created_at)}</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
                           {typeof profile?.email === 'string' && profile.email.length > 0 && (!c.syndic_id || !adminUserIds.has(c.syndic_id)) && (
@@ -706,6 +723,34 @@ export default async function AdminCopropietesPage({
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
               <p className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <Clock size={14} className="text-amber-700" />
+                Essais se terminant &lt; 14 jours
+                {upcomingTrials.length > 0 && (
+                  <span className="ml-auto text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 font-semibold">{upcomingTrials.length}</span>
+                )}
+              </p>
+              {upcomingTrials.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4 text-center">Aucun essai se terminant bientôt</p>
+              ) : (
+                <div className="space-y-2">
+                  {upcomingTrials.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{c.nom}</p>
+                        <PlanBadge plan={c.plan} planId={c.plan_id} />
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-amber-600 font-medium uppercase tracking-wide leading-none mb-0.5">Fin essai</p>
+                        <p className="text-xs font-semibold text-amber-700">{formatAdminDate(c.plan_period_end)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <p className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <Clock size={14} className="text-amber-700" />
                 Renouvellements &lt; 14 jours
                 {upcomingRenewals.length > 0 && (
                   <span className="ml-auto text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 font-semibold">{upcomingRenewals.length}</span>
@@ -748,7 +793,7 @@ export default async function AdminCopropietesPage({
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Copropriété</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Syndic</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Renouvellement</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Fin essai / Renouvellement</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">ID Stripe sub.</th>
                     <th className="px-4 py-3 w-10" />
                   </tr>
