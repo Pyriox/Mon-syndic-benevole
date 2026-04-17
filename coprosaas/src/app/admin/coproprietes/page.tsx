@@ -29,6 +29,11 @@ import { PlanBadge } from '../AdminBadges';
 const MRR_PRICES: Record<string, number> = { essentiel: 30, confort: 45, illimite: 80 };
 const ARR_PRICES: Record<string, number> = { essentiel: 360, confort: 540, illimite: 960 };
 
+/** Quand plan_period_end est absent pour un essai, on estime la fin à created_at + 14 jours. */
+function trialEndEstimate(createdAt: string): string {
+  return new Date(new Date(createdAt).getTime() + 14 * 86400 * 1000).toISOString();
+}
+
 
 type CoproRow = {
   id: string;
@@ -616,10 +621,14 @@ export default async function AdminCopropietesPage({
                       </td>
                       <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
                       <td className="px-4 py-3 text-xs hidden xl:table-cell">
-                        {(c.plan === 'essai' || !c.plan) && c.plan_period_end ? (
+                        {(c.plan === 'essai' || !c.plan) ? (
                           <div>
                             <p className="text-[10px] text-amber-600 font-medium uppercase tracking-wide leading-none mb-0.5">Fin essai</p>
-                            <p className="text-amber-700 font-semibold">{formatAdminDate(c.plan_period_end)}</p>
+                            <p className="text-amber-700 font-semibold">
+                              {c.plan_period_end
+                                ? formatAdminDate(c.plan_period_end)
+                                : `~ ${formatAdminDate(trialEndEstimate(c.created_at))}`}
+                            </p>
                           </div>
                         ) : c.plan === 'actif' && c.plan_period_end ? (
                           <div>
@@ -813,7 +822,16 @@ export default async function AdminCopropietesPage({
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell truncate max-w-[180px]">{profile?.email ?? '—'}</td>
                         <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
-                        <td className="px-4 py-3 text-xs text-gray-600 hidden lg:table-cell">{formatAdminDate(c.plan_period_end)}</td>
+                        <td className="px-4 py-3 text-xs text-gray-600 hidden lg:table-cell">
+                          {(c.plan === 'essai' || !c.plan)
+                            ? (c.plan_period_end
+                                ? <span className="text-amber-700 font-medium">{formatAdminDate(c.plan_period_end)}</span>
+                                : <span className="text-amber-600" title="Estimé à partir de la date d’inscription (created_at + 14j)">
+                                    ~&nbsp;{formatAdminDate(trialEndEstimate(c.created_at))}
+                                  </span>
+                              )
+                            : formatAdminDate(c.plan_period_end)}
+                        </td>
                         <td className="px-4 py-3 hidden xl:table-cell">
                           {c.stripe_subscription_id ? (
                             <a href={`https://dashboard.stripe.com/subscriptions/${c.stripe_subscription_id}`}
