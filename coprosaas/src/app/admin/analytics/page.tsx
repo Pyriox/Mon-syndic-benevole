@@ -158,10 +158,8 @@ export default async function AdminAnalyticsPage() {
   const gaOnboardingComplete30d = analytics.businessEvents30d.onboarding_complete ?? 0;
   const dashboardPageViews7d = analytics.businessEvents7d.dashboard_page_view ?? 0;
   const dashboardPageViews30d = analytics.businessEvents30d.dashboard_page_view ?? 0;
-  const adminPageViews7d = analytics.businessEvents7d.admin_page_view ?? 0;
-  const adminPageViews30d = analytics.businessEvents30d.admin_page_view ?? 0;
-  const internalPageViews7d = dashboardPageViews7d + adminPageViews7d;
-  const internalPageViews30d = dashboardPageViews30d + adminPageViews30d;
+  const internalPageViews7d = dashboardPageViews7d;
+  const internalPageViews30d = dashboardPageViews30d;
 
   const registrationEvents = (recentUserEvents ?? []).filter((event) => event.event_type === 'user_registered');
   const purchaseLikeEvents = (recentUserEvents ?? []).filter((event) => (
@@ -365,7 +363,7 @@ export default async function AdminAnalyticsPage() {
           Les routes dashboard/admin ne remontent pas en `page_view` générique. Elles sont suivies via des événements dédiés pour l’audit produit.
         </p>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
           <StatCard
             label="Pages dashboard (7 j)"
             value={fmtNumber(dashboardPageViews7d)}
@@ -374,16 +372,9 @@ export default async function AdminAnalyticsPage() {
             tone="bg-sky-50 text-sky-600"
           />
           <StatCard
-            label="Pages admin (7 j)"
-            value={fmtNumber(adminPageViews7d)}
-            hint={`${fmtNumber(adminPageViews30d)} sur 30 jours · événement admin_page_view`}
-            icon={BarChart3}
-            tone="bg-amber-50 text-amber-600"
-          />
-          <StatCard
-            label="Pages internes (7 j)"
-            value={fmtNumber(internalPageViews7d)}
-            hint={`${fmtNumber(internalPageViews30d)} sur 30 jours · dashboard + admin`}
+            label="Pages dashboard (30 j)"
+            value={fmtNumber(internalPageViews30d)}
+            hint="Total pages dashboard sur 30 jours"
             icon={Activity}
             tone="bg-emerald-50 text-emerald-600"
           />
