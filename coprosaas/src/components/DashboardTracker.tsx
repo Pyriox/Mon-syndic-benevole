@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { trackAnonymousEvent } from '@/lib/gtag';
 
 interface Props {
@@ -10,24 +10,10 @@ interface Props {
 
 /**
  * Composant client injecté dans le layout dashboard.
- * - Trace chaque navigation de page dashboard (analytics anonyme, sans consentement).
  * - Trace l'événement onboarding_complete si la page contient ?copro_cree=1.
  */
 export default function DashboardTracker({ userRole }: Props) {
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const prevPathRef = useRef<string | null>(null);
-
-  // ── Page views dashboard ──────────────────────────────────────────────
-  useEffect(() => {
-    const fullPath = `${pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-    if (fullPath === prevPathRef.current) return;
-    prevPathRef.current = fullPath;
-
-    trackAnonymousEvent('dashboard_page_view', {
-      role: userRole,
-    });
-  }, [pathname, searchParams, userRole]);
 
   // ── Onboarding complete (première copropriété créée) ──────────────────
   useEffect(() => {

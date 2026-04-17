@@ -10,6 +10,7 @@ const CUSTOM_EVENT_NAMES = [
   'purchase',
   'onboarding_complete',
   'dashboard_page_view',
+  'admin_page_view',
   'view_article',
   'click_cta',
   'form_abandonment',
@@ -63,6 +64,11 @@ export type Ga4AdminAnalytics = {
   topEvents: Array<{
     name: string;
     count: number;
+  }>;
+  internalPlatformPages: Array<{
+    area: string;
+    path: string;
+    views: number;
   }>;
   measurementModes: BreakdownItem[];
   consentStates: BreakdownItem[];
@@ -244,6 +250,16 @@ function parseBreakdown(report: Ga4RunReportResponse) {
     .filter((item) => item.value > 0);
 }
 
+function parseInternalPlatformPages(report: Ga4RunReportResponse) {
+  return (report.rows ?? [])
+    .map((row) => ({
+      area: row.dimensionValues?.[0]?.value || 'unknown',
+      path: row.dimensionValues?.[1]?.value || '/',
+      views: toNumber(row.metricValues?.[0]?.value),
+    }))
+    .filter((item) => item.views > 0);
+}
+
 export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
   const config = getConfig();
   const emptyState: Ga4AdminAnalytics = {
@@ -258,12 +274,14 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
     businessEvents30d: {},
     topPages: [],
     topEvents: [],
+    internalPlatformPages: [],
     measurementModes: [],
     consentStates: [],
     deviceCategories: [],
     notes: [
       'Les chiffres GA4 peuvent avoir un léger délai de traitement.',
       'Les répartitions par consentement nécessitent les dimensions personnalisées GA4 correspondantes.',
+      'Les pages internes dashboard/admin utilisent les événements `dashboard_page_view` et `admin_page_view`.',
     ],
   };
 
@@ -294,7 +312,14 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       },
     };
 
-    const [overview7, overview30, topPagesReport, topEvents7dReport, topEvents30dReport, measurementModeReport, consentStateReport, deviceCategoryReport] =
+    const internalPlatformFilter = {
+      filter: {
+        fieldName: 'eventName',
+        inListFilter: { values: ['dashboard_page_view', 'admin_page_view'] },
+      },
+    };
+
+    const [overview7, overview30, topPagesReport, topEvents7dReport, topEvents30dReport, internalPlatformPagesReport, measurementModeReport, consentStateReport, deviceCategoryReport] =
       await Promise.all([
         runReport(accessToken, config.propertyId, {
           dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
@@ -327,6 +352,14 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
           orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
           limit: String(CUSTOM_EVENT_NAMES.length),
         }),
+        runReport(accessToken, config.propertyId, {
+          dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+          dimensions: [{ name: 'customEvent:platform_area' }, { name: 'customEvent:platform_path' }],
+          metrics: [{ name: 'eventCount' }],
+          dimensionFilter: internalPlatformFilter,
+          orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+          limit: '12',
+        }).catch(() => ({ rows: [] })),
         runReport(accessToken, config.propertyId, {
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
           dimensions: [{ name: 'customEvent:measurement_mode' }],
@@ -367,6 +400,7 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       businessEvents30d,
       topPages: parseTopPages(topPagesReport),
       topEvents,
+      internalPlatformPages: parseInternalPlatformPages(internalPlatformPagesReport),
       measurementModes: parseBreakdown(measurementModeReport),
       consentStates: parseBreakdown(consentStateReport),
       deviceCategories: parseBreakdown(deviceCategoryReport),

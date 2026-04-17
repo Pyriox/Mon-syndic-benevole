@@ -11,6 +11,7 @@ import { getDashboardLayoutData, getSyndicNotifications, getCoproNotifications }
 import { getAvailableDashboardRoles, normalizeDashboardViewMode, resolveDashboardRole } from '@/lib/dashboard-view-mode';
 import DashboardShell from '@/components/layout/DashboardShell';
 import DashboardTracker from '@/components/DashboardTracker';
+import InternalPageTracker from '@/components/InternalPageTracker';
 import { Suspense } from 'react';
 import type { UserCopropriete, AppNotification } from '@/types';
 
@@ -222,6 +223,9 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       userName={userName}
       notifications={notifications}
     >
+      <Suspense>
+        <InternalPageTracker area="dashboard" role={userRole} />
+      </Suspense>
       <Suspense>
         <DashboardTracker userRole={userRole} />
       </Suspense>

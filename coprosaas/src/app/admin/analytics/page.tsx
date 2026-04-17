@@ -156,6 +156,12 @@ export default async function AdminAnalyticsPage() {
     (analytics.businessEvents30d.login_anonymous ?? 0);
   const gaOnboardingComplete7d = analytics.businessEvents7d.onboarding_complete ?? 0;
   const gaOnboardingComplete30d = analytics.businessEvents30d.onboarding_complete ?? 0;
+  const dashboardPageViews7d = analytics.businessEvents7d.dashboard_page_view ?? 0;
+  const dashboardPageViews30d = analytics.businessEvents30d.dashboard_page_view ?? 0;
+  const adminPageViews7d = analytics.businessEvents7d.admin_page_view ?? 0;
+  const adminPageViews30d = analytics.businessEvents30d.admin_page_view ?? 0;
+  const internalPageViews7d = dashboardPageViews7d + adminPageViews7d;
+  const internalPageViews30d = dashboardPageViews30d + adminPageViews30d;
 
   const registrationEvents = (recentUserEvents ?? []).filter((event) => event.event_type === 'user_registered');
   const purchaseLikeEvents = (recentUserEvents ?? []).filter((event) => (
@@ -350,6 +356,40 @@ export default async function AdminAnalyticsPage() {
         />
       </section>
 
+      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <BarChart3 size={16} className="text-indigo-600" />
+          <h2 className="text-sm font-semibold text-gray-900">Usage plateforme interne</h2>
+        </div>
+        <p className="mt-2 text-sm text-gray-600">
+          Les routes dashboard/admin ne remontent pas en `page_view` générique. Elles sont suivies via des événements dédiés pour l’audit produit.
+        </p>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <StatCard
+            label="Pages dashboard (7 j)"
+            value={fmtNumber(dashboardPageViews7d)}
+            hint={`${fmtNumber(dashboardPageViews30d)} sur 30 jours · événement dashboard_page_view`}
+            icon={Eye}
+            tone="bg-sky-50 text-sky-600"
+          />
+          <StatCard
+            label="Pages admin (7 j)"
+            value={fmtNumber(adminPageViews7d)}
+            hint={`${fmtNumber(adminPageViews30d)} sur 30 jours · événement admin_page_view`}
+            icon={BarChart3}
+            tone="bg-amber-50 text-amber-600"
+          />
+          <StatCard
+            label="Pages internes (7 j)"
+            value={fmtNumber(internalPageViews7d)}
+            hint={`${fmtNumber(internalPageViews30d)} sur 30 jours · dashboard + admin`}
+            icon={Activity}
+            tone="bg-emerald-50 text-emerald-600"
+          />
+        </div>
+      </section>
+
       {usingBusinessFallback && (
         <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4 shadow-sm">
           <p className="text-sm text-sky-900">
@@ -443,6 +483,36 @@ export default async function AdminAnalyticsPage() {
                     <div className="shrink-0 text-right">
                       <p className="text-sm font-semibold text-gray-900">{fmtNumber(page.views)}</p>
                       <p className="text-[11px] text-gray-500">{fmtNumber(page.users)} utilisateurs</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <Activity size={16} className="text-indigo-600" />
+            <h2 className="text-sm font-semibold text-gray-900">Top pages internes (30 jours)</h2>
+          </div>
+
+          {analytics.internalPlatformPages.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              Aucune page interne détaillée disponible. Vérifie que les dimensions GA4 `platform_area` et `platform_path` sont bien enregistrées.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {analytics.internalPlatformPages.map((page) => (
+                <div key={`${page.area}-${page.path}`} className="rounded-xl border border-gray-100 px-3 py-2.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{page.path}</p>
+                      <p className="text-xs text-gray-500">{page.area}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-sm font-semibold text-gray-900">{fmtNumber(page.views)}</p>
+                      <p className="text-[11px] text-gray-500">événements</p>
                     </div>
                   </div>
                 </div>
