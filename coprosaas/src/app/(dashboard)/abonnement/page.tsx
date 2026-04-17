@@ -196,6 +196,7 @@ async function doStripeSync(coproId: string): Promise<boolean> {
       plan,
       plan_id: subscriptionSnapshot.planId,
       plan_period_end: subscriptionSnapshot.currentPeriodEnd,
+    plan_cancel_at_period_end: subscriptionSnapshot.cancelAtPeriodEnd,
     })
     .eq('id', coproId);
 
@@ -238,7 +239,7 @@ export default async function AbonnementPage({
   const admin = createAdminClient();
   let { data: selectedCopropriete } = await admin
     .from('coproprietes')
-    .select('id, nom, stripe_customer_id, stripe_subscription_id, plan, plan_id, plan_period_end')
+    .select('id, nom, stripe_customer_id, stripe_subscription_id, plan, plan_id, plan_period_end, plan_cancel_at_period_end')
     .eq('id', selectedCoproId)
     .eq('syndic_id', user.id)
     .maybeSingle();
@@ -258,7 +259,7 @@ export default async function AbonnementPage({
       if (synced) {
         const { data: refreshedCopropriete } = await admin
           .from('coproprietes')
-          .select('id, nom, stripe_customer_id, stripe_subscription_id, plan, plan_id, plan_period_end')
+          .select('id, nom, stripe_customer_id, stripe_subscription_id, plan, plan_id, plan_period_end, plan_cancel_at_period_end')
           .eq('id', selectedCopropriete.id)
           .eq('syndic_id', user.id)
           .maybeSingle();
@@ -459,6 +460,7 @@ export default async function AbonnementPage({
           const chargesSpecialesAddon = coproAddonRows.find((addon) => addon.addon_key === 'charges_speciales') ?? null;
           const hasChargesAddon = hasChargesSpecialesAddon(coproAddonRows);
           const renewalDateLabel = formatBillingDate(copro.plan_period_end);
+          const cancelAtPeriodEnd = planActuel === 'actif' && !!(copro as { plan_cancel_at_period_end?: boolean | null }).plan_cancel_at_period_end;
           const addonPeriodEndLabel = formatBillingDate(chargesSpecialesAddon?.current_period_end ?? null);
 
           return (
@@ -526,6 +528,8 @@ export default async function AbonnementPage({
                               ? 'Fin le '
                               : isTrial
                               ? 'Fin de l’essai le '
+                              : cancelAtPeriodEnd
+                              ? 'Fin d’abonnement le '
                               : 'Renouvellement le '}
                             <span className={`font-semibold ${isPastDue ? 'text-red-800' : 'text-white'}`}>
                               {renewalDateLabel}
@@ -536,6 +540,18 @@ export default async function AbonnementPage({
                     </div>
 
                   </div>
+                </div>
+              )}
+
+              {/* Bandeau non-renouvellement */}
+              {cancelAtPeriodEnd && (
+                <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 flex items-start gap-3">
+                  <AlertCircle size={16} className="text-orange-500 shrink-0 mt-0.5" />
+                  <p className="text-sm text-orange-800">
+                    Le renouvellement automatique est <strong>désactivé</strong>. Votre abonnement expirera définitivement le{' '}
+                    <strong>{renewalDateLabel}</strong> et ne sera pas reconduit.
+                    Pour le réactiver, ouvrez le portail de facturation ci-dessous.
+                  </p>
                 </div>
               )}
 
