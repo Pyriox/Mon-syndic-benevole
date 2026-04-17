@@ -171,6 +171,45 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
+  // Envoyer un email de réinitialisation de mot de passe
+  if (action === 'reset_password') {
+    if (!email) return NextResponse.json({ error: 'email requis' }, { status: 400 });
+    const { error } = await admin.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_reset_password',
+      label: `Email de réinitialisation de mot de passe envoyé — ${email}`,
+      metadata: { targetEmail: email.toLowerCase() },
+    });
+    return NextResponse.json({ success: true });
+  }
+
+  // Basculer le rôle syndic ↔ membre (user_metadata.role)
+  if (action === 'toggle_role') {
+    if (!userId) return NextResponse.json({ error: 'userId requis' }, { status: 400 });
+    const { data: authUser, error: fetchError } = await admin.auth.admin.getUserById(userId);
+    if (fetchError || !authUser) return NextResponse.json({ error: fetchError?.message ?? 'Utilisateur introuvable' }, { status: 500 });
+    const currentMeta = (authUser.user.user_metadata ?? {}) as Record<string, unknown>;
+    const isMembre = currentMeta.role === 'copropriétaire';
+    const newRole = isMembre ? null : 'copropriétaire';
+    const { error } = await admin.auth.admin.updateUserById(userId, {
+      user_metadata: { ...currentMeta, role: newRole },
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_role_changed',
+      label: `Rôle changé ${isMembre ? 'membre → syndic' : 'syndic → membre'} — ${userId}`,
+      severity: 'warning',
+      metadata: { targetUserId: userId, from: isMembre ? 'membre' : 'syndic', to: isMembre ? 'syndic' : 'membre' },
+    });
+    return NextResponse.json({ success: true, newRole: isMembre ? 'syndic' : 'membre' });
+  }
+
   // Accorder / retirer le rôle admin
   if (action === 'toggle_admin') {
     if (!userId) return NextResponse.json({ error: 'userId requis' }, { status: 400 });

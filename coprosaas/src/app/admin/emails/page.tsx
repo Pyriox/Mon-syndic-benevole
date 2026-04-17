@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 import AdminPagination from '../AdminPagination';
+import AdminEmailRetryButton from '../AdminEmailRetryButton';
 import AdminSearch from '../AdminSearch';
 import AdminStatCard from '../AdminStatCard';
 import { isAdminUser } from '@/lib/admin-config';
@@ -357,7 +358,10 @@ export default async function AdminEmailsPage({
                   </p>
                   {row.last_error && <p className="mt-1 text-xs text-red-700">{row.last_error}</p>}
                 </div>
-                <span className="shrink-0 text-xs text-gray-500">{formatDateTime(row.created_at)}</span>
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <span className="text-xs text-gray-500">{formatDateTime(row.created_at)}</span>
+                  {row.status === 'failed' && <AdminEmailRetryButton deliveryId={row.id} />}
+                </div>
               </div>
             ))}
           </div>

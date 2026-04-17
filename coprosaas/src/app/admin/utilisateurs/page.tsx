@@ -97,16 +97,18 @@ export default async function AdminUtilisateursPage({
     admin.from('admin_users').select('user_id'),
     admin.from('coproprietaires').select('email, user_id, copropriete_id'),
     admin.from('support_tickets').select('user_email'),
-    admin.from('profiles').select('id, last_active_at'),
+    admin.from('profiles').select('id, last_active_at, suspended_at'),
   ]);
 
   const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
 
   // userId → last_active_at
   const lastActiveById: Record<string, string | null> = {};
+  const suspendedById: Record<string, boolean> = {};
   for (const p of profilesData ?? []) {
-    const typed = p as { id: string; last_active_at: string | null };
+    const typed = p as { id: string; last_active_at: string | null; suspended_at: string | null };
     lastActiveById[typed.id] = typed.last_active_at;
+    suspendedById[typed.id] = !!typed.suspended_at;
   }
 
   // copropriete_id → détails copro
@@ -518,6 +520,8 @@ export default async function AdminUtilisateursPage({
                       isConfirmed={!!u.email_confirmed_at}
                       isSelf={u.id === user.id}
                       isAdmin={isAdmin}
+                      isSuspended={suspendedById[u.id] ?? false}
+                      userRole={role === 'admin' ? 'admin' : role}
                     />
                   </td>
                 </tr>

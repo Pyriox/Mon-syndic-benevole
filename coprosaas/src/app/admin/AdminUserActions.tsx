@@ -5,7 +5,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Mail, MoreHorizontal, Loader2, ShieldCheck, Pencil } from 'lucide-react';
+import { Trash2, Mail, MoreHorizontal, Loader2, ShieldCheck, ShieldOff, Pencil, KeyRound, UserCog } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { AdminConfirmDialog, AdminDialogNotice } from './AdminActionDialog';
 
@@ -16,9 +16,11 @@ interface Props {
   isConfirmed: boolean;
   isSelf: boolean;
   isAdmin: boolean;
+  isSuspended?: boolean;
+  userRole?: 'syndic' | 'membre' | 'admin';
 }
 
-type ConfirmAction = 'delete' | 'force_confirm' | 'toggle_admin';
+type ConfirmAction = 'delete' | 'force_confirm' | 'toggle_admin' | 'toggle_suspend' | 'toggle_role';
 
 async function getErrorMessage(response: Response, fallback = 'Une erreur est survenue.') {
   try {
@@ -29,7 +31,7 @@ async function getErrorMessage(response: Response, fallback = 'Une erreur est su
   }
 }
 
-export default function AdminUserActions({ userId, userEmail, fullName, isConfirmed, isSelf, isAdmin }: Props) {
+export default function AdminUserActions({ userId, userEmail, fullName, isConfirmed, isSelf, isAdmin, isSuspended: initialSuspended = false, userRole = 'syndic' }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState('');
@@ -37,7 +39,9 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropPos, setDropPos] = useState<{ top: number; right: number } | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
-  const [pendingAction, setPendingAction] = useState<ConfirmAction | 'edit' | 'resend' | null>(null);
+  const [pendingAction, setPendingAction] = useState<ConfirmAction | 'edit' | 'resend' | 'reset_password' | null>(null);
+  const [suspended, setSuspended] = useState(initialSuspended);
+  const [role, setRole] = useState(userRole);
 
   const [editOpen, setEditOpen] = useState(false);
   const [editEmail, setEditEmail] = useState(userEmail);
@@ -108,6 +112,27 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
     setError(`Erreur : ${await getErrorMessage(response)}`);
   };
 
+  const handleResetPassword = async () => {
+    setError('');
+    setOpen(false);
+    setPendingAction('reset_password');
+
+    const response = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset_password', email: userEmail }),
+    });
+
+    setPendingAction(null);
+    if (response.ok) {
+      setDone('Reset envoyé');
+      setTimeout(() => setDone(''), 3000);
+      return;
+    }
+
+    setError(`Erreur : ${await getErrorMessage(response)}`);
+  };
+
   const requestConfirmation = (action: ConfirmAction) => {
     setError('');
     setOpen(false);
@@ -129,7 +154,7 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
       response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: action === 'force_confirm' ? 'force_confirm' : 'toggle_admin', userId }),
+        body: JSON.stringify({ action: action === 'force_confirm' ? 'force_confirm' : action === 'toggle_admin' ? 'toggle_admin' : action === 'toggle_suspend' ? 'toggle_suspend' : 'toggle_role', userId }),
       });
     }
 
@@ -139,7 +164,19 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
         router.refresh();
         return;
       }
-
+      if (action === 'toggle_suspend') {
+        setSuspended((prev) => !prev);
+        setDone(suspended ? 'Réactivé' : 'Suspendu');
+        setTimeout(() => setDone(''), 3000);
+        return;
+      }
+      if (action === 'toggle_role') {
+        const data = await response.json() as { newRole?: string };
+        setRole(data.newRole === 'membre' ? 'membre' : 'syndic');
+        setDone(data.newRole === 'membre' ? 'Rôle : Membre' : 'Rôle : Syndic');
+        setTimeout(() => setDone(''), 3000);
+        return;
+      }
       setDone(action === 'force_confirm' ? 'Compte vérifié' : isAdmin ? 'Admin retiré' : 'Admin accordé');
       router.refresh();
       return;
@@ -210,6 +247,34 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
       />
 
       <AdminConfirmDialog
+        isOpen={confirmAction === 'toggle_suspend'}
+        onClose={() => setConfirmAction(null)}
+        title={suspended ? 'Réactiver le compte' : 'Suspendre le compte'}
+        description={
+          suspended
+            ? <p>Réactiver <strong>{userEmail}</strong> ? L&apos;utilisateur pourra se reconnecter.</p>
+            : <p>Suspendre <strong>{userEmail}</strong> ? La session sera immédiatement invalidée.</p>
+        }
+        confirmLabel={suspended ? 'Réactiver' : 'Suspendre'}
+        tone={suspended ? 'primary' : 'danger'}
+        onConfirm={executeConfirmedAction}
+        isLoading={pendingAction === 'toggle_suspend'}
+      />
+
+      <AdminConfirmDialog
+        isOpen={confirmAction === 'toggle_role'}
+        onClose={() => setConfirmAction(null)}
+        title={role === 'membre' ? 'Passer en Syndic' : 'Passer en Membre'}
+        description={
+          <p>Changer le rôle de <strong>{userEmail}</strong> : {role === 'membre' ? 'Membre → Syndic' : 'Syndic → Membre'} ?</p>
+        }
+        confirmLabel={role === 'membre' ? 'Passer Syndic' : 'Passer Membre'}
+        tone="primary"
+        onConfirm={executeConfirmedAction}
+        isLoading={pendingAction === 'toggle_role'}
+      />
+
+      <AdminConfirmDialog
         isOpen={confirmAction === 'force_confirm'}
         onClose={() => setConfirmAction(null)}
         title="Forcer la vérification"
@@ -260,6 +325,13 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
                         Renvoyer la confirmation
                       </button>
                     )}
+                    <button
+                      onClick={handleResetPassword}
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                    >
+                      <KeyRound size={14} className="text-orange-500" />
+                      Envoyer reset mot de passe
+                    </button>
                     {!isConfirmed && (
                       <button
                         onClick={() => requestConfirmation('force_confirm')}
@@ -284,6 +356,23 @@ export default function AdminUserActions({ userId, userEmail, fullName, isConfir
                     >
                       <ShieldCheck size={14} className={isAdmin ? 'text-amber-500' : 'text-indigo-500'} />
                       {isAdmin ? 'Retirer admin' : 'Rôle admin'}
+                    </button>
+                    {!isAdmin && (
+                      <button
+                        onClick={() => requestConfirmation('toggle_role')}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-violet-700 transition-colors hover:bg-violet-50"
+                      >
+                        <UserCog size={14} className="text-violet-500" />
+                        {role === 'membre' ? 'Passer Syndic' : 'Passer Membre'}
+                      </button>
+                    )}
+                    <div className="my-1 border-t border-gray-100" />
+                    <button
+                      onClick={() => requestConfirmation('toggle_suspend')}
+                      className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors ${suspended ? 'text-emerald-700 hover:bg-emerald-50' : 'text-red-600 hover:bg-red-50'}`}
+                    >
+                      {suspended ? <ShieldCheck size={14} className="text-emerald-500" /> : <ShieldOff size={14} className="text-red-500" />}
+                      {suspended ? 'Réactiver le compte' : 'Suspendre le compte'}
                     </button>
                     <div className="my-1 border-t border-gray-100" />
                     <button

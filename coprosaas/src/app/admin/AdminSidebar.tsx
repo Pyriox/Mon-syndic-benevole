@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ElementType } from 'react';
-import { BarChart3, LayoutDashboard, Users, Building2, LifeBuoy, Mail } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Users, Building2, LifeBuoy, Mail, CreditCard } from 'lucide-react';
 
 type NavItem = { href: string; label: string; icon: ElementType; soon?: boolean };
 
@@ -12,6 +12,7 @@ const NAV: NavItem[] = [
   { href: '/admin/analytics',     label: 'Analytics',      icon: BarChart3 },
   { href: '/admin/utilisateurs',  label: 'Utilisateurs',   icon: Users },
   { href: '/admin/coproprietes',  label: 'Copropriétés',   icon: Building2 },
+  { href: '/admin/abonnements',   label: 'Abonnements',  icon: CreditCard },
   { href: '/admin/emails',        label: 'Emails',         icon: Mail },
   { href: '/admin/support',       label: 'Support',        icon: LifeBuoy },
 ];
@@ -23,7 +24,7 @@ export default function AdminSidebar({ badges = {} }: { badges?: Record<string, 
       {NAV.map(({ href, label, icon: Icon, soon }) => {
         const active = pathname === href || pathname.startsWith(href + '/');
         const badge = badges[href] ?? 0;
-        const needsAttention = href === '/admin/support' && badge > 0;
+        const needsAttention = (href === '/admin/support' || href === '/admin/emails') && badge > 0;
         return (
           <Link
             key={href}

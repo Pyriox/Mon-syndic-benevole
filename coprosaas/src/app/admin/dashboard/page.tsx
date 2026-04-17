@@ -531,7 +531,7 @@ export default async function AdminDashboardPage() {
               const maxCopro = coproCount[topCopros[0]?.id] ?? 1;
               const pct = Math.round((nbCopro / maxCopro) * 100);
               return (
-                <div key={c.id} className="px-4 py-3">
+                <Link key={c.id} href={`/admin/coproprietes/${c.id}`} className="block px-4 py-3 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-sm font-medium text-gray-800 truncate">{c.nom}</span>
                     <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0 ml-3">
@@ -541,7 +541,7 @@ export default async function AdminDashboardPage() {
                     </div>
                   </div>
                   <ProgressBar value={pct} color="bg-emerald-400" />
-                </div>
+                </Link>
               );
             })}
           </div>
