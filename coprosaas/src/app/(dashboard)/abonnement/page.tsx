@@ -545,7 +545,7 @@ export default async function AbonnementPage({
                         <input type="hidden" name="coproId" value={copro.id} />
                         <button
                           type="submit"
-                          className="inline-flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
+                          className="inline-flex items-center gap-1.5 bg-white text-orange-600 hover:bg-orange-50 text-xs font-semibold px-3 py-2 rounded-lg transition-colors whitespace-nowrap shadow-sm"
                         >
                           <Settings2 size={13} />
                           Gérer &amp; factures
