@@ -691,21 +691,29 @@ export default async function AbonnementPage({
                   <div className="lg:w-72">
                     {isSubscribed || isPastDue ? (
                       hasStripeCustomer ? (
-                        <div className="space-y-2">
-                          <AddonBillingButton
-                            coproprieteid={copro.id}
-                            coproName={copro.nom}
-                            enabled={hasChargesAddon}
-                            scheduledForCancellation={Boolean(chargesSpecialesAddon?.cancel_at_period_end)}
-                            priceHeadline={chargesAddonPricing.headline}
-                            priceSubline={chargesAddonPricing.subline}
-                            priceNote={chargesAddonPricing.note}
-                            currentPeriodEnd={chargesSpecialesAddon?.current_period_end ?? copro.plan_period_end ?? null}
-                          />
-                          <p className="text-xs text-gray-500">
-                            Un récapitulatif du tarif et des conséquences de votre choix s&apos;affiche avant validation. Le portail ci-dessous reste disponible pour vos factures et moyens de paiement.
+                        cancelAtPeriodEnd && hasChargesAddon ? (
+                          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                            L&apos;option s&apos;arrêtera automatiquement avec l&apos;abonnement principal
+                            {renewalDateLabel ? <> le <span className="font-semibold">{renewalDateLabel}</span></> : null}.
+                            Pour la maintenir, réactivez d&apos;abord le renouvellement de l&apos;abonnement principal via le portail ci-dessous.
                           </p>
-                        </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <AddonBillingButton
+                              coproprieteid={copro.id}
+                              coproName={copro.nom}
+                              enabled={hasChargesAddon}
+                              scheduledForCancellation={Boolean(chargesSpecialesAddon?.cancel_at_period_end)}
+                              priceHeadline={chargesAddonPricing.headline}
+                              priceSubline={chargesAddonPricing.subline}
+                              priceNote={chargesAddonPricing.note}
+                              currentPeriodEnd={chargesSpecialesAddon?.current_period_end ?? copro.plan_period_end ?? null}
+                            />
+                            <p className="text-xs text-gray-500">
+                              Un récapitulatif du tarif et des conséquences de votre choix s&apos;affiche avant validation. Le portail ci-dessous reste disponible pour vos factures et moyens de paiement.
+                            </p>
+                          </div>
+                        )
                       ) : (
                         <p className="text-xs text-gray-500">Le compte Stripe sera disponible juste après l&apos;activation de l&apos;abonnement principal.</p>
                       )
