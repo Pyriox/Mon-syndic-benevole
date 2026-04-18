@@ -27,19 +27,6 @@ function trialEndEstimate(createdAt: string): string {
   return new Date(new Date(createdAt).getTime() + 14 * 86400 * 1000).toISOString();
 }
 
-function daysFromNow(dateStr: string): number {
-  return Math.round((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-}
-
-function RelDays({ days, tone }: { days: number; tone: string }) {
-  const label = days < 0
-    ? `il y a ${Math.abs(days)} j`
-    : days === 0
-      ? "aujourd'hui"
-      : `dans ${days} j`;
-  return <p className={`text-[11px] ${tone}`}>{label}</p>;
-}
-
 type CoproRow = {
   id: string;
   nom: string;
@@ -565,37 +552,18 @@ export default async function AdminCopropietesPage({
                         </div>
                       </td>
                       <td className="px-4 py-3"><PlanBadge plan={c.plan} planId={c.plan_id} /></td>
-                      <td className="px-4 py-3 text-xs hidden xl:table-cell">
-                        {(c.plan === 'essai' || !c.plan) ? (
-                          c.plan_period_end ? (
-                            <div>
-                              <p className="text-[10px] text-amber-600 font-medium uppercase tracking-wide leading-none mb-0.5">Fin essai</p>
-                              <p className="text-amber-700 font-semibold">{formatAdminDate(c.plan_period_end)}</p>
-                              <p className={`text-[11px] mt-0.5 ${daysFromNow(c.plan_period_end) < 0 ? 'text-red-400' : daysFromNow(c.plan_period_end) <= 3 ? 'text-orange-500' : 'text-amber-500'}`}>
-                                {daysFromNow(c.plan_period_end) < 0 ? `il y a ${Math.abs(daysFromNow(c.plan_period_end))} j` : daysFromNow(c.plan_period_end) === 0 ? "aujourd'hui" : `dans ${daysFromNow(c.plan_period_end)} j`}
-                              </p>
-                            </div>
-                          ) : (
-                            <div>
-                              <p className="text-[10px] text-amber-600 font-medium uppercase tracking-wide leading-none mb-0.5">Fin essai ~</p>
-                              <p className="text-amber-600">{formatAdminDate(trialEndEstimate(c.created_at))}</p>
-                            </div>
-                          )
-                        ) : c.plan === 'actif' && c.plan_period_end ? (
-                          <div>
-                            <p className={`text-[10px] font-medium uppercase tracking-wide leading-none mb-0.5 ${c.plan_cancel_at_period_end ? 'text-orange-500' : 'text-emerald-600'}`}>
-                              {c.plan_cancel_at_period_end ? 'Résiliation prévue' : 'Renouvellement'}
-                            </p>
-                            <p className={`font-semibold ${c.plan_cancel_at_period_end ? 'text-orange-600' : 'text-gray-700'}`}>
-                              {formatAdminDate(c.plan_period_end)}
-                            </p>
-                            <p className={`text-[11px] mt-0.5 ${c.plan_cancel_at_period_end ? 'text-orange-400' : daysFromNow(c.plan_period_end) <= 7 ? 'text-amber-500' : 'text-gray-400'}`}>
-                              {daysFromNow(c.plan_period_end) < 0 ? `il y a ${Math.abs(daysFromNow(c.plan_period_end))} j` : daysFromNow(c.plan_period_end) === 0 ? "aujourd'hui" : `dans ${daysFromNow(c.plan_period_end)} j`}
-                            </p>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">{c.plan_period_end ? formatAdminDate(c.plan_period_end) : '—'}</span>
-                        )}
+                      <td className="px-4 py-3 text-xs text-gray-600 hidden xl:table-cell">
+                        {(c.plan === 'essai' || !c.plan)
+                          ? (c.plan_period_end
+                              ? <span className="text-amber-700 font-medium">{formatAdminDate(c.plan_period_end)}</span>
+                              : <span className="text-amber-600" title="Estimé à partir de la date d'inscription (created_at + 14j)">~&nbsp;{formatAdminDate(trialEndEstimate(c.created_at))}</span>
+                            )
+                          : (
+                              <span className={c.plan === 'actif' && c.plan_cancel_at_period_end ? 'text-orange-600 font-medium' : undefined}>
+                                {c.plan_period_end ? formatAdminDate(c.plan_period_end) : '—'}
+                              </span>
+                            )
+                        }
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
