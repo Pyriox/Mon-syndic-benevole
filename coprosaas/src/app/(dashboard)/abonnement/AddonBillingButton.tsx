@@ -113,10 +113,10 @@ export default function AddonBillingButton({
           type="button"
           onClick={openConfirmation}
           disabled={loading}
-          className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors ${
+          className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
             isEnabling
-              ? 'bg-slate-900 hover:bg-slate-800'
-              : 'bg-amber-600 hover:bg-amber-700'
+              ? 'bg-slate-900 hover:bg-slate-800 text-white'
+              : 'border border-gray-300 bg-white text-gray-600 hover:border-gray-400 hover:text-gray-800'
           } ${loading ? 'cursor-wait opacity-80' : ''}`}
         >
           {loading ? (
