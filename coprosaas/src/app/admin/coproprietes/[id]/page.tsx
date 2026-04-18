@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { isAdminUser } from '@/lib/admin-config';
-import { ArrowLeft, History, TrendingDown, TrendingUp, Users, FileText, CalendarDays } from 'lucide-react';
+import { ArrowLeft, History, TrendingDown, TrendingUp, Users, FileText, CalendarDays, CreditCard, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import AdminCoproprietaireActionsLazy from '../../AdminCoproprietaireActionsLazy';
 import AdminPagination from '../../AdminPagination';
@@ -13,8 +13,9 @@ import AdminSearch from '../../AdminSearch';
 import CoproprietaireBalanceHistoryLazy from '../../CoproprietaireBalanceHistoryLazy';
 import AdminStorageExplorerLazy from './AdminStorageExplorerLazy';
 import { resolveAdminBackHref } from '@/lib/admin-list-params';
-import { formatAdminDateTime } from '@/lib/admin-format';
+import { formatAdminDate, formatAdminDateTime } from '@/lib/admin-format';
 import { buildAdminCoproFinancialView, getAdminBalanceSourceLabel } from '@/lib/admin-copro-finance';
+import { PlanBadge } from '../../AdminBadges';
 
 export default async function AdminCoproDetail({
   params,
@@ -37,7 +38,7 @@ export default async function AdminCoproDetail({
   const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }, { data: allAppels }, { data: ags }] = await Promise.all([
     admin
       .from('coproprietes')
-      .select('id, nom, adresse, code_postal, ville, nombre_lots')
+      .select('id, nom, adresse, code_postal, ville, nombre_lots, plan, plan_id, plan_period_end, plan_cancel_at_period_end, stripe_customer_id, stripe_subscription_id, created_at')
       .eq('id', id)
       .single(),
     admin
@@ -73,6 +74,10 @@ export default async function AdminCoproDetail({
   ]);
 
   if (!copro) notFound();
+
+  function daysFromNow(dateStr: string): number {
+    return Math.round((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cps = (coproprietaires ?? []) as any[];
@@ -142,6 +147,120 @@ export default async function AdminCoproDetail({
           {copro.nombre_lots ? ` · ${copro.nombre_lots} lot${copro.nombre_lots > 1 ? 's' : ''}` : ''}
         </p>
       </div>
+
+      {/* ── Abonnement ── */}
+      {(() => {
+        const c = copro as typeof copro & {
+          plan: string | null;
+          plan_id: string | null;
+          plan_period_end: string | null;
+          plan_cancel_at_period_end: boolean | null;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          created_at: string;
+        };
+        const cancelling = !!c.plan_cancel_at_period_end;
+        const isActive = c.plan === 'actif';
+        const isTrial = c.plan === 'essai' || !c.plan;
+        const endDate = c.plan_period_end;
+        const days = endDate ? daysFromNow(endDate) : null;
+        const expired = days !== null && days < 0;
+        const urgent = days !== null && !expired && (isTrial ? days <= 3 : days <= 7);
+
+        let echLabel = '';
+        let echColor = 'text-gray-600';
+        if (isTrial) {
+          echLabel = expired ? 'Essai expiré' : `Fin essai${!endDate ? ' ~' : ''}`;
+          echColor = expired ? 'text-red-500' : urgent ? 'text-orange-500' : 'text-amber-600';
+        } else if (isActive && cancelling) {
+          echLabel = 'Résiliation prévue';
+          echColor = 'text-orange-500';
+        } else if (isActive) {
+          echLabel = 'Renouvellement';
+          echColor = urgent ? 'text-amber-600' : 'text-emerald-600';
+        } else if (c.plan === 'resilie') {
+          echLabel = 'Résilié le';
+          echColor = 'text-red-400';
+        } else if (c.plan === 'passe_du') {
+          echLabel = 'Impayé depuis';
+          echColor = 'text-red-500';
+        }
+
+        const relLabel = days === null ? null
+          : days < 0 ? `il y a ${Math.abs(days)} j`
+          : days === 0 ? "aujourd'hui"
+          : `dans ${days} j`;
+
+        return (
+          <section className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-4">
+            <div className="flex items-center gap-2 mb-3">
+              <CreditCard size={15} className="text-indigo-500" />
+              <p className="text-sm font-semibold text-gray-900">Abonnement</p>
+            </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
+
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Plan</p>
+                <PlanBadge plan={c.plan} planId={c.plan_id} />
+              </div>
+
+              {(endDate || isTrial) && (
+                <div>
+                  <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${echColor}`}>{echLabel}</p>
+                  <p className={`font-semibold ${expired ? 'text-red-600' : urgent ? 'text-orange-600' : cancelling ? 'text-orange-600' : 'text-gray-800'}`}>
+                    {endDate ? formatAdminDate(endDate) : `~ ${formatAdminDate(new Date(new Date(c.created_at).getTime() + 14 * 86400 * 1000).toISOString())}`}
+                  </p>
+                  {relLabel && (
+                    <p className={`text-[11px] mt-0.5 ${expired ? 'text-red-400' : urgent ? 'text-orange-500' : cancelling ? 'text-orange-400' : 'text-gray-400'}`}>{relLabel}</p>
+                  )}
+                </div>
+              )}
+
+              {cancelling && isActive && (
+                <div className="flex items-center">
+                  <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
+                    Non-renouvellement activé
+                  </span>
+                </div>
+              )}
+
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Créée le</p>
+                <p className="text-gray-600">{formatAdminDate(c.created_at)}</p>
+              </div>
+
+              {c.stripe_customer_id && (
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Client Stripe</p>
+                  <Link
+                    href={`https://dashboard.stripe.com/customers/${c.stripe_customer_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-mono text-indigo-600 hover:text-indigo-800"
+                  >
+                    {c.stripe_customer_id} <ExternalLink size={11} />
+                  </Link>
+                </div>
+              )}
+
+              {c.stripe_subscription_id && (
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Abonnement Stripe</p>
+                  <Link
+                    href={`https://dashboard.stripe.com/subscriptions/${c.stripe_subscription_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-mono text-indigo-600 hover:text-indigo-800"
+                  >
+                    {c.stripe_subscription_id} <ExternalLink size={11} />
+                  </Link>
+                </div>
+              )}
+
+            </div>
+          </section>
+        );
+      })()}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800">
