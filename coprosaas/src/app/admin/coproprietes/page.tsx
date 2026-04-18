@@ -360,15 +360,14 @@ export default async function AdminCopropietesPage({
       <Suspense><AdminSearch placeholder="Rechercher une copropriete, ville, CP..." defaultValue={q ?? ''} /></Suspense>
 
           {/* ── Stats ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'Total copropriétés', value: nbCoproprietes, icon: Building2, color: 'bg-blue-100 text-blue-600' },
-              { label: 'Abonnées actives', value: nbActifs, icon: Building2, color: 'bg-green-100 text-green-600' },
-              { label: 'En essai', value: nbEssai, icon: Building2, color: 'bg-amber-100 text-amber-600' },
-              { label: 'Inactives / résiliées / impayées', value: nbInactif + nbResilie + nbPasseDu, icon: Building2, color: nbPasseDu > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400' },
-            ].map(({ label, value, icon: Icon, color }) => (
-              <AdminStatCard key={label} label={label} value={value} color={color} icon={Icon} />
-            ))}
+          <div className="flex items-center gap-4 flex-wrap">
+            <AdminStatCard label="Total copropriétés" value={nbCoproprietes} color="bg-blue-100 text-blue-600" icon={Building2} />
+            <Link
+              href="/admin/abonnements"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
+            >
+              Voir les abonnements & revenus <ExternalLink size={11} />
+            </Link>
           </div>
 
           {/* ── Filtres rapides ── */}
