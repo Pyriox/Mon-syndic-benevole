@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // Page : Abonnement
 // Architecture : 1 abonnement Stripe par copropriété
 // ============================================================
@@ -504,15 +504,17 @@ export default async function AbonnementPage({
                       ? 'bg-red-50 border border-red-200'
                       : isTrial
                       ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                      : cancelAtPeriodEnd
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'
                       : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <p className={`text-xs font-semibold uppercase tracking-wide ${
-                        isPastDue ? 'text-red-500' : isTrial ? 'text-amber-100' : 'text-green-100'
+                        isPastDue ? 'text-red-500' : isTrial ? 'text-amber-100' : cancelAtPeriodEnd ? 'text-orange-100' : 'text-green-100'
                       }`}>
-                        {isPastDue ? 'Paiement en attente' : isTrial ? 'Période d’essai' : 'Abonnement actif'}
+                        {isPastDue ? 'Paiement en attente' : isTrial ? 'Période d’essai' : cancelAtPeriodEnd ? 'Résiliation programmée' : 'Abonnement actif'}
                       </p>
                       <div className="flex flex-wrap gap-x-6 gap-y-1 items-baseline">
                         {currentPlanId && (
@@ -522,7 +524,7 @@ export default async function AbonnementPage({
                         )}
                         {renewalDateLabel && (
                           <p className={`text-sm ${
-                            isPastDue ? 'text-red-600' : isTrial ? 'text-amber-100' : 'text-green-100'
+                            isPastDue ? 'text-red-600' : isTrial ? 'text-amber-100' : cancelAtPeriodEnd ? 'text-orange-100' : 'text-green-100'
                           }`}>
                             {isPastDue
                               ? 'Fin le '
@@ -538,20 +540,41 @@ export default async function AbonnementPage({
                         )}
                       </div>
                     </div>
-
+                    {hasStripeCustomer && !isPastDue && (
+                      <form action={portalAction} className="shrink-0">
+                        <input type="hidden" name="coproId" value={copro.id} />
+                        <button
+                          type="submit"
+                          className="inline-flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
+                        >
+                          <Settings2 size={13} />
+                          Gérer &amp; factures
+                        </button>
+                      </form>
+                    )}
                   </div>
                 </div>
               )}
 
               {/* Bandeau non-renouvellement */}
               {cancelAtPeriodEnd && (
-                <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 flex items-start gap-3">
-                  <AlertCircle size={16} className="text-orange-500 shrink-0 mt-0.5" />
-                  <p className="text-sm text-orange-800">
-                    Le renouvellement automatique est <strong>désactivé</strong>. Votre abonnement expirera définitivement le{' '}
-                    <strong>{renewalDateLabel}</strong> et ne sera pas reconduit.
-                    Pour le réactiver, ouvrez le portail de facturation ci-dessous.
-                  </p>
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <AlertCircle size={16} className="text-orange-500 shrink-0 mt-0.5" />
+                    <p className="text-sm text-orange-800">
+                      Le renouvellement automatique est <strong>désactivé</strong>. Votre abonnement expirera définitivement le{' '}
+                      <strong>{renewalDateLabel}</strong> et ne sera pas reconduit.
+                    </p>
+                  </div>
+                  <form action={portalAction} className="shrink-0">
+                    <input type="hidden" name="coproId" value={copro.id} />
+                    <button
+                      type="submit"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold transition-colors"
+                    >
+                      Réactiver le renouvellement
+                    </button>
+                  </form>
                 </div>
               )}
 
@@ -695,7 +718,7 @@ export default async function AbonnementPage({
                           <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                             L&apos;option s&apos;arrêtera automatiquement avec l&apos;abonnement principal
                             {renewalDateLabel ? <> le <span className="font-semibold">{renewalDateLabel}</span></> : null}.
-                            Pour la maintenir, réactivez d&apos;abord le renouvellement de l&apos;abonnement principal via le portail ci-dessous.
+                            Pour la maintenir, réactivez d&apos;abord le renouvellement de l&apos;abonnement principal via le bouton Gérer ci-dessus.
                           </p>
                         ) : (
                           <div className="space-y-2">
@@ -710,7 +733,7 @@ export default async function AbonnementPage({
                               currentPeriodEnd={chargesSpecialesAddon?.current_period_end ?? copro.plan_period_end ?? null}
                             />
                             <p className="text-xs text-gray-500">
-                              Un récapitulatif du tarif et des conséquences de votre choix s&apos;affiche avant validation. Le portail ci-dessous reste disponible pour vos factures et moyens de paiement.
+                              Un récapitulatif du tarif et des conséquences de votre choix s&apos;affiche avant validation. Le portail ci-dessus reste disponible pour vos factures et moyens de paiement.
                             </p>
                           </div>
                         )
@@ -724,21 +747,7 @@ export default async function AbonnementPage({
                 </div>
               </div>
 
-              {/* Lien gérer l'abonnement & factures */}
-              {(isSubscribed || isPastDue) && hasStripeCustomer && (
-                <form action={portalAction} className="flex justify-end">
-                  <input type="hidden" name="coproId" value={copro.id} />
-                  <button
-                    type="submit"
-                    className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                  >
-                    <Settings2 size={14} />
-                    Gérer l&apos;abonnement &amp; factures
-                  </button>
-                </form>
-              )}
-
-              <hr className="border-gray-100" />
+<hr className="border-gray-100" />
             </section>
           );
         })}
