@@ -122,7 +122,12 @@ export async function POST(req: NextRequest) {
     'text/csv': 'csv',
   };
   const fileExt = MIME_TO_EXT[file.type] ?? 'bin';
-  const safeName = (nom.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '') || 'document');
+  const safeName = (nom
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9-_]/g, '')
+    || 'document');
   const fileName = `${copropriete_id}/${Date.now()}-${safeName}.${fileExt}`;
   const arrayBuffer = await file.arrayBuffer();
 
