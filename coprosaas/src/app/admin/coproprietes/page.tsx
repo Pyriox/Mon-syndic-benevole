@@ -27,6 +27,19 @@ function trialEndEstimate(createdAt: string): string {
   return new Date(new Date(createdAt).getTime() + 14 * 86400 * 1000).toISOString();
 }
 
+function daysFromNow(dateStr: string): number {
+  return Math.round((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
+
+function RelDays({ days, tone }: { days: number; tone: string }) {
+  const label = days < 0
+    ? `il y a ${Math.abs(days)} j`
+    : days === 0
+      ? "aujourd'hui"
+      : `dans ${days} j`;
+  return <p className={`text-[11px] ${tone}`}>{label}</p>;
+}
+
 type CoproRow = {
   id: string;
   nom: string;
@@ -475,7 +488,7 @@ export default async function AdminCopropietesPage({
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Activité / Risques</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Santé</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Fin essai / Créée</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Échéance</th>
                   <th className="px-4 py-3 w-10" />
                 </tr>
               </thead>

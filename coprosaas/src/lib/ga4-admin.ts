@@ -171,6 +171,7 @@ async function getAccessToken(clientEmail: string, privateKey: string) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
     cache: 'no-store',
+    signal: AbortSignal.timeout(8000),
   });
 
   const payload = (await response.json()) as { access_token?: string; error_description?: string };
@@ -195,6 +196,7 @@ async function runReport(
     },
     body: JSON.stringify(body),
     cache: 'no-store',
+    signal: AbortSignal.timeout(8000),
   });
 
   const payload = (await response.json()) as Ga4RunReportResponse;
@@ -319,7 +321,7 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       },
     };
 
-    const [overview7, overview30, topPagesReport, topEvents7dReport, topEvents30dReport, internalPlatformPagesReport, measurementModeReport, consentStateReport, deviceCategoryReport] =
+    const [overview7, overview30, topPagesReport, topEvents7dReport, topEvents30dReport, internalPlatformPagesReport, consentStateReport, deviceCategoryReport] =
       await Promise.all([
         runReport(accessToken, config.propertyId, {
           dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
@@ -362,14 +364,6 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
         }).catch(() => ({ rows: [] })),
         runReport(accessToken, config.propertyId, {
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-          dimensions: [{ name: 'customEvent:measurement_mode' }],
-          metrics: [{ name: 'eventCount' }],
-          dimensionFilter: pageViewFilter,
-          orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
-          limit: '10',
-        }).catch(() => ({ rows: [] })),
-        runReport(accessToken, config.propertyId, {
-          dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
           dimensions: [{ name: 'customEvent:consent_state' }],
           metrics: [{ name: 'eventCount' }],
           dimensionFilter: pageViewFilter,
@@ -401,7 +395,7 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       topPages: parseTopPages(topPagesReport),
       topEvents,
       internalPlatformPages: parseInternalPlatformPages(internalPlatformPagesReport),
-      measurementModes: parseBreakdown(measurementModeReport),
+      measurementModes: [],
       consentStates: parseBreakdown(consentStateReport),
       deviceCategories: parseBreakdown(deviceCategoryReport),
     };

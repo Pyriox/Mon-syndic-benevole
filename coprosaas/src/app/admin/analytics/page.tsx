@@ -1,9 +1,12 @@
+export const revalidate = 300;
+
 import type { ElementType } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   Activity,
   BarChart3,
+  Building2,
   Clock3,
   Cookie,
   ExternalLink,
@@ -351,6 +354,13 @@ export default async function AdminAnalyticsPage() {
           hint={checkouts7d > 0 ? `${fmtNumber(purchases30d)} sur 30 jours · ${pct(purchases7d, checkouts7d)}% de conversion 7 j · source ${businessSourceLabel}` : `${fmtNumber(purchases30d)} sur 30 jours · aucun checkout sur 7 j · source ${businessSourceLabel}`}
           icon={ShoppingCart}
           tone="bg-rose-50 text-rose-600"
+        />
+        <StatCard
+          label="Onboarding / copro (7 j)"
+          value={fmtNumber(onboardingComplete7d)}
+          hint={`${fmtNumber(onboardingComplete30d)} sur 30 jours · ${pct(onboardingComplete7d, signUps7d)}% des inscrits 7 j · source ${businessSourceLabel}`}
+          icon={Building2}
+          tone="bg-teal-50 text-teal-600"
         />
       </section>
 
