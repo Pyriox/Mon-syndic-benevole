@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // Admin — Détail d'une copropriété : liste des copropriétaires
 // ============================================================
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -210,7 +210,7 @@ export default async function AdminCoproDetail({
                   <p className={`font-semibold ${expired ? 'text-red-600' : urgent ? 'text-orange-600' : cancelling ? 'text-orange-600' : 'text-gray-800'}`}>
                     {endDate ? formatAdminDate(endDate) : `~ ${formatAdminDate(new Date(new Date(c.created_at).getTime() + 14 * 86400 * 1000).toISOString())}`}
                   </p>
-                  {relLabel && (
+                  {relLabel && days !== null && Math.abs(days) <= 30 && (
                     <p className={`text-[11px] mt-0.5 ${expired ? 'text-red-400' : urgent ? 'text-orange-500' : cancelling ? 'text-orange-400' : 'text-gray-400'}`}>{relLabel}</p>
                   )}
                 </div>
