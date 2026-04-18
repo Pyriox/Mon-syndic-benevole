@@ -35,7 +35,7 @@ export default async function AdminCoproDetail({
 
   const today = new Date().toISOString().split('T')[0];
 
-  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }, { data: allAppels }, { data: ags }] = await Promise.all([
+  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }, { data: allAppels }, { data: ags }, { data: coproAddons }] = await Promise.all([
     admin
       .from('coproprietes')
       .select('id, nom, adresse, code_postal, ville, nombre_lots, plan, plan_id, plan_period_end, plan_cancel_at_period_end, stripe_customer_id, stripe_subscription_id, created_at')
@@ -71,6 +71,11 @@ export default async function AdminCoproDetail({
       .eq('copropriete_id', id)
       .order('date_ag', { ascending: false })
       .limit(30),
+
+    admin
+      .from('copro_addons')
+      .select('addon_key, status, cancel_at_period_end')
+      .eq('copropriete_id', id),
   ]);
 
   if (!copro) notFound();
@@ -256,6 +261,24 @@ export default async function AdminCoproDetail({
                   </Link>
                 </div>
               )}
+
+              {(() => {
+                const chargesAddon = (coproAddons ?? []).find((a) => a.addon_key === 'charges_speciales');
+                const active = chargesAddon?.status === 'active' || chargesAddon?.status === 'trialing';
+                const stopping = active && !!chargesAddon?.cancel_at_period_end;
+                return (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Option charges spéciales</p>
+                    {!chargesAddon || !active ? (
+                      <span className="text-xs text-gray-400">Non souscrite</span>
+                    ) : stopping ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">Résiliation programmée</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">Active</span>
+                    )}
+                  </div>
+                );
+              })()}
 
             </div>
           </section>
