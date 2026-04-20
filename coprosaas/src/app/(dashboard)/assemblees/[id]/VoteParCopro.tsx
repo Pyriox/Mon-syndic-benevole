@@ -69,6 +69,7 @@ export default function VoteParCopro({
   const isOptional      = typeConfig?.optional === true;
   const hasBudget       = typeConfig?.hasBudget === true;
   const hasFondsTravaux = typeConfig?.hasFondsTravaux === true;
+  const isCalendrier    = typeResolution === 'calendrier_financement';
 
   const [votes, setVotes] = useState<Record<string, Vote | null>>(() => {
     const m: Record<string, Vote | null> = {};
@@ -103,6 +104,11 @@ export default function VoteParCopro({
   const [fondsTravaux, setFondsTravaux] = useState(
     initialFondsTravaux != null ? String(initialFondsTravaux) : ''
   );
+
+  const [echeancierDates, setEcheancierDates] = useState<string[]>(() => {
+    if (!isCalendrier) return [];
+    return (initialBudgetPostes ?? []).map((p) => p.libelle);
+  });
 
   const defaultDateFinMandat = (() => {
     const n1 = new Date().getFullYear() + 1;
@@ -236,6 +242,12 @@ export default function VoteParCopro({
       extraFields.budget_postes = pv.length > 0 ? pv : null;
     }
     if (hasFondsTravaux) extraFields.fonds_travaux_montant = fondsTravaux ? parseFloat(fondsTravaux) : null;
+    if (isCalendrier) {
+      const validDates = echeancierDates.filter((d) => d.trim());
+      extraFields.budget_postes = validDates.length > 0
+        ? validDates.map((d) => ({ libelle: d, montant: 0 }))
+        : null;
+    }
 
     await supabase.from('resolutions')
       .update({ voix_pour: tantPour, voix_contre: tantContre, voix_abstention: tantAbst, statut: newStatut, ...extraFields })
@@ -249,6 +261,8 @@ export default function VoteParCopro({
           repartition_type: p.repartition_type,
           repartition_cible: p.repartition_type === 'groupe' ? (p.repartition_cible || null) : null,
         }))
+        : isCalendrier
+        ? echeancierDates.filter((d) => d.trim()).map((d) => ({ libelle: d, montant: 0 }))
         : []
     );
     setSavedFondsTravaux(hasFondsTravaux ? (fondsTravaux ? parseFloat(fondsTravaux) : null) : null);
@@ -332,6 +346,18 @@ export default function VoteParCopro({
           {hasFondsTravaux && effectiveFondsTravaux != null && (
             <p className="text-xs text-gray-700 mt-1.5">
               <span className="font-medium">Cotisation fonds de travaux :</span> {formatEuros(effectiveFondsTravaux)}
+            </p>
+          )}
+
+          {/* Calendrier de financement result */}
+          {isCalendrier && effectiveBudgetPostes.length > 0 && (
+            <p className="text-xs text-gray-700 mt-1.5">
+              <span className="font-medium">Dates d&apos;appel de fonds :</span>{' '}
+              {effectiveBudgetPostes.map((p, i) => (
+                <span key={i} className="inline-block mr-2">
+                  {new Date(p.libelle + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              ))}
             </p>
           )}
 
@@ -699,6 +725,47 @@ export default function VoteParCopro({
               <div className="text-right text-xs font-bold text-indigo-700 pt-1 border-t border-indigo-100">
                 Total : {formatEuros(budgetPostes.reduce((s, p) => s + (parseFloat(p.montant) || 0), 0))}
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Calendrier de financement — dates d'appel de fonds */}
+      {isCalendrier && canEdit && (
+        <div className="border border-green-200 rounded-xl p-3 bg-green-50">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-semibold text-green-800">
+              Dates d&apos;appel de fonds <span className="text-red-500">*</span>
+              <span className="text-gray-400 font-normal ml-1">(minimum 1 date)</span>
+            </label>
+            <button type="button"
+              onClick={() => { setEcheancierDates((d) => [...d, '']); setDirty(true); setSaved(false); }}
+              className="text-xs text-green-600 hover:text-green-800 font-medium flex items-center gap-1">
+              <Plus size={12} /> Ajouter une date
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {echeancierDates.map((date, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 w-20 shrink-0">Versement {i + 1}</span>
+                <input type="date" value={date}
+                  onChange={(e) => {
+                    setEcheancierDates((d) => d.map((x, idx) => idx === i ? e.target.value : x));
+                    setDirty(true);
+                    setSaved(false);
+                  }}
+                  className="flex-1 text-xs rounded-lg border border-green-200 bg-white px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                {echeancierDates.length > 1 && (
+                  <button type="button"
+                    onClick={() => { setEcheancierDates((d) => d.filter((_, idx) => idx !== i)); setDirty(true); setSaved(false); }}
+                    className="p-1 text-green-400 hover:text-red-500 transition-colors">
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            ))}
+            {echeancierDates.length === 0 && (
+              <p className="text-xs text-green-400 text-center py-1">Aucune date — ajoutez au moins une date</p>
             )}
           </div>
         </div>
