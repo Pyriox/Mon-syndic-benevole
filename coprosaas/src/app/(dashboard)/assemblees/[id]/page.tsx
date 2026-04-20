@@ -109,7 +109,7 @@ export default async function AGDetailPage({ params }: Props) {
   const hasPresences = (presences ?? []).length > 0;
   const toutesResolutionsVotees =
     (resolutions ?? []).length > 0 &&
-    (resolutions ?? []).every((r) => r.statut !== 'en_attente');
+    (resolutions ?? []).every((r) => r.statut === 'approuvee' || r.statut === 'refusee' || r.statut === 'reportee');
   const workflowSteps = [
     { label: 'Brouillon créé', done: true },
     { label: 'Planification validée', done: ['planifiee', 'en_cours', 'terminee'].includes(ag.statut) },

@@ -200,7 +200,7 @@ export default function VoteParCopro({
     const voixContre = calcTantiemes('contre');
     const voixAbstention = calcTantiemes('abstention');
 
-    await supabase.from('resolutions').update({
+    const { error } = await supabase.from('resolutions').update({
       designation_resultats: resultats.length > 0 ? resultats : null,
       statut: desigStatut,
       voix_pour: voixPour,
@@ -208,6 +208,11 @@ export default function VoteParCopro({
       voix_abstention: voixAbstention,
       ...(isSyndic ? { date_fin_mandat: dateFinMandat || null } : {}),
     }).eq('id', resolutionId);
+    if (error) {
+      alert('Erreur lors de l\'enregistrement du vote. Veuillez réessayer.');
+      setSaving(false);
+      return;
+    }
     setSavedDesignationResultats(resultats);
     setSavedStatut(desigStatut);
     if (isSyndic) setSavedDateFinMandat(dateFinMandat || null);
@@ -223,8 +228,22 @@ export default function VoteParCopro({
       resolution_id: resolutionId, coproprietaire_id, vote: vote!,
     }));
     const toDeleteIds = Object.entries(votes).filter(([, v]) => v === null).map(([id]) => id);
-    if (toUpsert.length > 0)   await supabase.from('votes_coproprietaires').upsert(toUpsert, { onConflict: 'resolution_id,coproprietaire_id' });
-    if (toDeleteIds.length > 0) await supabase.from('votes_coproprietaires').delete().eq('resolution_id', resolutionId).in('coproprietaire_id', toDeleteIds);
+    if (toUpsert.length > 0) {
+      const { error: upsertError } = await supabase.from('votes_coproprietaires').upsert(toUpsert, { onConflict: 'resolution_id,coproprietaire_id' });
+      if (upsertError) {
+        alert('Erreur lors de l\'enregistrement des votes. Veuillez réessayer.');
+        setSaving(false);
+        return;
+      }
+    }
+    if (toDeleteIds.length > 0) {
+      const { error: deleteError } = await supabase.from('votes_coproprietaires').delete().eq('resolution_id', resolutionId).in('coproprietaire_id', toDeleteIds);
+      if (deleteError) {
+        alert('Erreur lors de l\'enregistrement des votes. Veuillez réessayer.');
+        setSaving(false);
+        return;
+      }
+    }
 
     const tantPour  = calcTantiemes('pour');
     const tantContre = calcTantiemes('contre');
@@ -249,9 +268,14 @@ export default function VoteParCopro({
         : null;
     }
 
-    await supabase.from('resolutions')
+    const { error: updateError } = await supabase.from('resolutions')
       .update({ voix_pour: tantPour, voix_contre: tantContre, voix_abstention: tantAbst, statut: newStatut, ...extraFields })
       .eq('id', resolutionId);
+    if (updateError) {
+      alert('Erreur lors de la mise à jour du statut de la résolution. Veuillez réessayer.');
+      setSaving(false);
+      return;
+    }
 
     setSavedBudgetPostes(
       hasBudget
