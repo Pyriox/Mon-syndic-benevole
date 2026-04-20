@@ -142,7 +142,7 @@ Lors d'une vente, c'est la principale source de blocage. Le notaire demande les 
 **6. Ne pas réévaluer le montant chaque année**
 Le montant voté l'an dernier ne s'ajuste pas automatiquement si le budget prévisionnel augmente. Chaque exercice doit faire l'objet d'un nouveau vote — faute de quoi le taux peut tomber sous le seuil légal sans que personne s'en aperçoive.
 
-> La plupart de ces erreurs sont invisibles jusqu'au moment où elles posent problème — une vente, une contestation en AG, un sinistre. [Découvrez comment les éviter automatiquement →](https://mon-syndic-benevole.fr)
+> La plupart de ces erreurs sont invisibles jusqu'au moment où elles posent problème — une vente, une contestation en AG, un sinistre. [Découvrez comment les éviter automatiquement →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -154,9 +154,9 @@ Ce n'est pas une question de compétence. C'est une question d'outil adapté.
 
 Des solutions permettent aujourd'hui de gérer le fonds de travaux ALUR comme un espace dédié — distinct des charges courantes, avec des appels séparés, une traçabilité automatique par copropriétaire, et un historique exportable pour le notaire ou l'AG. Sans connaissance comptable. Sans risque d'oubli.
 
-[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) est conçu pour ça : **gagner du temps et sécuriser la gestion** du fonds de travaux, de la création du premier appel jusqu'à l'export pour votre assemblée générale.
+[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) est conçu pour ça : **gagner du temps et sécuriser la gestion** du fonds de travaux, de la création du premier appel jusqu'à l'export pour votre assemblée générale.
 
-> Plusieurs centaines de syndics bénévoles l'utilisent pour rester en conformité sans y penser. [Essai gratuit 30 jours, sans carte bancaire →](https://mon-syndic-benevole.fr)
+> Plusieurs centaines de syndics bénévoles l'utilisent pour rester en conformité sans y penser. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -185,7 +185,7 @@ Le fonds de travaux ALUR n'est pas une contrainte administrative parmi d'autres.
 
 Le défi pour le syndic bénévole n'est pas de comprendre le principe. C'est de l'appliquer rigoureusement, chaque année, avec la traçabilité que la loi impose implicitement. Et ça, Excel ne le fait pas seul.
 
-**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) — Fonds de travaux séparé, cotisations automatiques, historique par copropriétaire, export pour le notaire : restez en conformité sans y penser. Essai gratuit 30 jours, sans engagement.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Fonds de travaux séparé, cotisations automatiques, historique par copropriétaire, export pour le notaire : restez en conformité sans y penser. Essai gratuit 30 jours, sans engagement.**
 
 ---
 

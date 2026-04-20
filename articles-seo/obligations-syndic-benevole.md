@@ -192,7 +192,7 @@ Plus un impayé vieillit, plus il est difficile à recouvrer. Et pendant ce temp
 **7. Ne pas archiver les justificatifs de dépenses**
 Lors de la présentation des comptes en AG, un copropriétaire peut demander à voir la facture de chaque dépense. Sans archive propre, le syndic se retrouve dans l'incapacité de justifier — ce qui crée des soupçons, même en l'absence de toute irrégularité.
 
-> La majorité de ces erreurs sont directement liées à l'absence d'un système organisé. [Découvrez comment les éviter automatiquement →](https://mon-syndic-benevole.fr)
+> La majorité de ces erreurs sont directement liées à l'absence d'un système organisé. [Découvrez comment les éviter automatiquement →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -204,9 +204,9 @@ Le vrai défi, c'est le temps et la mémoire. Rappeler les bonnes échéances. R
 
 C'est précisément pour ça que des outils dédiés à la gestion bénévole existent. Pas pour remplacer le syndic — mais pour l'accompagner dans l'exercice de ses obligations, en automatisant ce qui peut l'être et en structurant ce qui doit être tracé.
 
-[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) centralise l'ensemble du cycle : appels de fonds trimestriels calculés automatiquement, convocations guidées, suivi des paiements en temps réel, archivage des documents, tableau de bord des obligations à venir.
+[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) centralise l'ensemble du cycle : appels de fonds trimestriels calculés automatiquement, convocations guidées, suivi des paiements en temps réel, archivage des documents, tableau de bord des obligations à venir.
 
-> **Simplifier la gestion sans Excel** — c'est possible dès le premier jour. [Essai gratuit 30 jours, sans carte bancaire →](https://mon-syndic-benevole.fr)
+> **Simplifier la gestion sans Excel** — c'est possible dès le premier jour. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -237,7 +237,7 @@ Tout ça est accessible. Mais pas sans méthode.
 
 Le syndic bénévole qui réussit son mandat n'est pas nécessairement celui qui a le plus de connaissances juridiques. C'est celui qui a mis en place un système qui lui permet de ne rien oublier, de tout retrouver, et de répondre à n'importe quelle demande — copropriétaire, notaire ou assureur — en quelques minutes.
 
-**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) — Toutes vos obligations légales, organisées et suivies dans une seule interface. Appels de fonds, AG, archives, comptabilité. Essai gratuit 30 jours, sans engagement.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Toutes vos obligations légales, organisées et suivies dans une seule interface. Appels de fonds, AG, archives, comptabilité. Essai gratuit 30 jours, sans engagement.**
 
 ---
 

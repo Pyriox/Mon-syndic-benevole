@@ -143,7 +143,7 @@ Sans alerte, le syndic réalise en novembre qu'il aurait dû envoyer la convocat
 **6. Les justificatifs de dépenses ne sont pas archivés systématiquement**
 En AG, un copropriétaire demande la facture du plombier de mars. Le syndic doit fouiller dans ses mails pendant dix minutes devant tout le monde. Ce manque de réactivité crée de la méfiance, même en l'absence de toute irrégularité.
 
-> Ces situations sont très courantes dans les copropriétés gérées sans outil structuré. [Découvrez comment les éviter automatiquement →](https://mon-syndic-benevole.fr)
+> Ces situations sont très courantes dans les copropriétés gérées sans outil structuré. [Découvrez comment les éviter automatiquement →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -173,11 +173,11 @@ Un syndic bénévole bien outillé passe **deux heures par mois** là où un aut
 
 Ce n'est pas une question de technologie. C'est une question de temps, de sérénité, et de confiance des copropriétaires.
 
-[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) est conçu spécifiquement pour ça : un outil pensé pour les syndics non professionnels, qui couvre l'ensemble du cycle de gestion sans supposer de connaissances comptables préalables.
+[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) est conçu spécifiquement pour ça : un outil pensé pour les syndics non professionnels, qui couvre l'ensemble du cycle de gestion sans supposer de connaissances comptables préalables.
 
 **Appels de fonds automatisés, fonds de travaux séparé, AG guidées, archivage centralisé, tableau de bord des impayés** — tout dans une interface pensée pour être prise en main dès le premier jour, sans formation.
 
-> Des centaines de syndics bénévoles l'utilisent pour **gagner du temps et sécuriser la gestion** de leur copropriété. [Essai gratuit 30 jours, sans carte bancaire →](https://mon-syndic-benevole.fr)
+> Des centaines de syndics bénévoles l'utilisent pour **gagner du temps et sécuriser la gestion** de leur copropriété. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -208,7 +208,7 @@ Un bon logiciel pour syndic bénévole n'est pas sophistiqué. Il est adapté. I
 
 C'est la différence entre un mandat subi et un mandat maîtrisé.
 
-**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) — Le logiciel pensé pour les syndics bénévoles : appels de fonds, fonds de travaux, AG, archives, trésorerie. Tout ce qu'il faut, rien de superflu. Essai gratuit 30 jours, sans engagement.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Le logiciel pensé pour les syndics bénévoles : appels de fonds, fonds de travaux, AG, archives, trésorerie. Tout ce qu'il faut, rien de superflu. Essai gratuit 30 jours, sans engagement.**
 
 ---
 

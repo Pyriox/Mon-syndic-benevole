@@ -1,4 +1,12 @@
 {
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "mon-syndic-benevole.fr" }],
+      "destination": "https://www.mon-syndic-benevole.fr/:path*",
+      "statusCode": 301
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron/rappels-appels",

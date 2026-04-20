@@ -143,7 +143,7 @@ Utiliser son propre compte bancaire pour les opérations de la copropriété est
 **6. Ne pas déclarer un sinistre dans les délais**
 La plupart des assurances imposent une déclaration dans les 5 jours ouvrés. Un retard peut entraîner un refus de prise en charge — avec des conséquences financières qui retombent sur le syndicat.
 
-> Beaucoup de ces erreurs ne viennent pas d'un manque de bonne volonté. Elles viennent d'un manque d'outil qui rappelle, structure et sécurise chaque étape. [Découvrez comment éviter ces erreurs automatiquement →](https://mon-syndic-benevole.fr)
+> Beaucoup de ces erreurs ne viennent pas d'un manque de bonne volonté. Elles viennent d'un manque d'outil qui rappelle, structure et sécurise chaque étape. [Découvrez comment éviter ces erreurs automatiquement →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -187,9 +187,9 @@ Gérer une copropriété sans syndic professionnel, c'est faisable. Mais le fair
 
 La gestion bénévole n'a pas à être artisanale. Des outils existent aujourd'hui pour structurer l'ensemble des obligations — appels de fonds, suivi des paiements, convocations d'AG, archivage des documents, gestion des incidents — dans une interface accessible sans compétences comptables ni juridiques.
 
-C'est exactement ce que [Mon Syndic Bénévole](https://mon-syndic-benevole.fr) propose : une plateforme pensée pour les copropriétés de taille humaine, qui rend la gestion bénévole aussi rigoureuse qu'une gestion professionnelle — sans en avoir le coût ni la complexité.
+C'est exactement ce que [Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) propose : une plateforme pensée pour les copropriétés de taille humaine, qui rend la gestion bénévole aussi rigoureuse qu'une gestion professionnelle — sans en avoir le coût ni la complexité.
 
-> Plusieurs centaines de syndics bénévoles l'utilisent aujourd'hui pour **gagner du temps et sécuriser la gestion** de leur copropriété. [Essai gratuit 30 jours, sans carte bancaire →](https://mon-syndic-benevole.fr)
+> Plusieurs centaines de syndics bénévoles l'utilisent aujourd'hui pour **gagner du temps et sécuriser la gestion** de leur copropriété. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -215,7 +215,7 @@ Gérer sa copropriété sans syndic professionnel, c'est légal, courant, et pou
 
 La bonne volonté ne suffit pas si elle repose sur un tableur bricolé et des mails éparpillés. Mais avec une méthode claire et un outil adapté, la gestion bénévole devient réellement accessible — et souvent plus satisfaisante que de confier son immeuble à un cabinet qui le traitera comme un dossier parmi d'autres.
 
-**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) — Appels de fonds, assemblées, documents, incidents, trésorerie : gérez votre copropriété simplement, sans Excel, sans erreur. Essai gratuit 30 jours.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Appels de fonds, assemblées, documents, incidents, trésorerie : gérez votre copropriété simplement, sans Excel, sans erreur. Essai gratuit 30 jours.**
 
 ---
 

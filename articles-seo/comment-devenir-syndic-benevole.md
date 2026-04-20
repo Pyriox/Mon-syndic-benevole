@@ -162,7 +162,7 @@ Un trou dans la couverture assurance peut laisser la copropriété exposée pour
 **6. Sous-estimer le temps nécessaire et s'épuiser**
 Un syndic bénévole qui s'engage sans s'organiser correctement finit souvent par bâcler les fins d'exercice, retarder les AG, et céder le mandat dans de mauvaises conditions. Mieux vaut s'outiller dès le départ.
 
-> Ces erreurs sont très fréquentes chez les syndics bénévoles qui gèrent tout manuellement. [Découvrez comment les éviter automatiquement →](https://mon-syndic-benevole.fr)
+> Ces erreurs sont très fréquentes chez les syndics bénévoles qui gèrent tout manuellement. [Découvrez comment les éviter automatiquement →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -178,9 +178,9 @@ Construire ce système manuellement, à partir de zéro, avec des fichiers Excel
 
 Des plateformes existent aujourd'hui pour prendre en charge l'ensemble du cycle de gestion d'une copropriété — de la création des lots et des tantièmes jusqu'à l'export des comptes pour l'AG — sans qu'il faille être comptable ou juriste pour s'en servir.
 
-[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) est conçu spécifiquement pour ça : **simplifier la gestion sans Excel**, sécuriser les obligations légales, et redonner au syndic bénévole le temps et la sérénité de bien exercer son mandat.
+[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) est conçu spécifiquement pour ça : **simplifier la gestion sans Excel**, sécuriser les obligations légales, et redonner au syndic bénévole le temps et la sérénité de bien exercer son mandat.
 
-> Des centaines de syndics bénévoles utilisent la plateforme pour **gagner du temps et sécuriser la gestion** de leur copropriété dès le premier jour. [Essai gratuit 30 jours, sans carte bancaire →](https://mon-syndic-benevole.fr)
+> Des centaines de syndics bénévoles utilisent la plateforme pour **gagner du temps et sécuriser la gestion** de leur copropriété dès le premier jour. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -211,7 +211,7 @@ Mais c'est aussi un engagement réel, avec des responsabilités légales, une ch
 
 La différence entre un mandat réussi et un mandat épuisant ne tient pas à la compétence juridique. Elle tient à l'organisation et aux outils. Un syndic bénévole bien outillé dès le premier jour gère en 2 heures par mois ce qu'un autre passe une journée entière à reconstituer.
 
-**[Mon Syndic Bénévole](https://mon-syndic-benevole.fr) — Prenez en main votre copropriété avec les bons outils dès le premier jour : appels de fonds, assemblées, documents, trésorerie. Essai gratuit 30 jours, sans engagement.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Prenez en main votre copropriété avec les bons outils dès le premier jour : appels de fonds, assemblées, documents, trésorerie. Essai gratuit 30 jours, sans engagement.**
 
 ---
 
