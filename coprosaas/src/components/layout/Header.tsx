@@ -35,6 +35,38 @@ const colorBySeverity = {
   info: 'text-blue-500 bg-blue-50',
 };
 
+type NotificationCategory = 'urgent' | 'action' | 'info';
+
+const categoryMeta: Record<NotificationCategory, {
+  title: string;
+  description: string;
+  headerClassName: string;
+  titleClassName: string;
+  descriptionClassName: string;
+}> = {
+  urgent: {
+    title: 'Urgent',
+    description: 'Actions prioritaires a traiter sans attendre.',
+    headerClassName: 'bg-red-50/70 border-b border-red-100',
+    titleClassName: 'text-red-800',
+    descriptionClassName: 'text-red-700',
+  },
+  action: {
+    title: 'A traiter',
+    description: "Actions a suivre ou verifications en attente.",
+    headerClassName: 'bg-amber-50/60 border-b border-amber-100',
+    titleClassName: 'text-amber-800',
+    descriptionClassName: 'text-amber-700',
+  },
+  info: {
+    title: 'Info',
+    description: 'Historique recent et confirmations de la plateforme.',
+    headerClassName: 'bg-slate-50 border-b border-gray-100',
+    titleClassName: 'text-slate-700',
+    descriptionClassName: 'text-gray-500',
+  },
+};
+
 export default function Header({ title, userRole, availableViewRoles, userName, notifications = [], onMenuOpen }: HeaderProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -60,6 +92,11 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
     if (a.createdAt) return -1;
     if (b.createdAt) return 1;
     return 0;
+  };
+  const getCategory = (notification: AppNotification): NotificationCategory => {
+    if (notification.severity === 'danger') return 'urgent';
+    if (!isMarkReadEnabled(notification) || notification.severity === 'warning') return 'action';
+    return 'info';
   };
 
   useEffect(() => {
@@ -126,13 +163,22 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
     };
   }, [open]);
 
-  const tasks = items.filter((n) => !isMarkReadEnabled(n)).sort(sortByPriority);
-  const recentItems = items.filter((n) => isMarkReadEnabled(n)).sort(sortByPriority);
   const nbNotifs = items.length;
   const unreadItems = items.filter((n) => !isMarkReadEnabled(n) || n.isRead !== true);
   const nbUnread = unreadItems.length;
   const nbDanger = unreadItems.filter((n) => n.severity === 'danger').length;
-  const nbUnreadRecent = recentItems.filter((n) => n.isRead !== true).length;
+  const nbUnreadMarkable = items.filter((n) => isMarkReadEnabled(n) && n.isRead !== true).length;
+  const categorizedItems: Record<NotificationCategory, AppNotification[]> = {
+    urgent: [],
+    action: [],
+    info: [],
+  };
+
+  for (const item of [...items].sort(sortByPriority)) {
+    categorizedItems[getCategory(item)].push(item);
+  }
+
+  const orderedCategories = (Object.keys(categoryMeta) as NotificationCategory[]).filter((key) => categorizedItems[key].length > 0);
 
   const flushQueuedReadIds = useCallback(async () => {
     if (flushTimerRef.current !== null) {
@@ -322,7 +368,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                   <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
                     <p className="text-sm font-semibold text-gray-900">Notifications</p>
                     <div className="flex items-center gap-3">
-                      {nbUnreadRecent > 0 && (
+                      {nbUnreadMarkable > 0 && (
                         <button
                           type="button"
                           onClick={markAllRead}
@@ -341,83 +387,60 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                     </div>
                   ) : (
                     <div className="flex-1 overflow-y-auto md:max-h-80">
-                      {tasks.length > 0 && (
-                        <div className="border-b border-gray-100">
-                          <div className="px-4 py-2.5 bg-amber-50/60 border-b border-amber-100">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">A traiter</p>
-                            <p className="text-[11px] text-amber-700 mt-0.5">Ces alertes disparaissent quand l'action est réellement effectuée.</p>
+                      {orderedCategories.map((category, index) => {
+                        const notificationsForCategory = categorizedItems[category];
+                        const meta = categoryMeta[category];
+                        return (
+                          <div key={category} className={cn(index < orderedCategories.length - 1 ? 'border-b border-gray-100' : '')}>
+                            <div className={cn('px-4 py-2.5', meta.headerClassName)}>
+                              <p className={cn('text-xs font-semibold uppercase tracking-wide', meta.titleClassName)}>{meta.title}</p>
+                              <p className={cn('text-[11px] mt-0.5', meta.descriptionClassName)}>{meta.description}</p>
+                            </div>
+                            <ul className="divide-y divide-gray-50">
+                              {notificationsForCategory.map((notif) => {
+                                const Icon = iconByType[notif.type as keyof typeof iconByType] ?? Bell;
+                                const titleText = notif.title ?? notif.label ?? 'Notification';
+                                const subtitleText = notif.body ?? notif.sublabel;
+                                const unread = notif.isRead !== true;
+                                const showActionLabel = category !== 'info' && !isMarkReadEnabled(notif);
+                                return (
+                                  <li key={notif.id}>
+                                    <Link
+                                      href={notif.href}
+                                      onClick={() => handleNotificationClick(notif)}
+                                      className={cn(
+                                        'flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors',
+                                        unread ? 'bg-blue-50/40' : ''
+                                      )}
+                                    >
+                                      <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
+                                        <Icon size={13} />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-medium text-gray-800 truncate">{titleText}</p>
+                                        {subtitleText && (
+                                          <p className="text-xs text-gray-600 mt-0.5">{subtitleText}</p>
+                                        )}
+                                        {showActionLabel && (
+                                          <p className={cn(
+                                            'text-[11px] mt-1 font-medium',
+                                            category === 'urgent' ? 'text-red-700' : 'text-amber-700'
+                                          )}>
+                                            {category === 'urgent' ? 'Priorite immediate' : 'Action requise'}
+                                          </p>
+                                        )}
+                                        {!showActionLabel && notif.createdAt && (
+                                          <p className="text-[11px] text-gray-500 mt-1">{new Date(notif.createdAt).toLocaleString('fr-FR')}</p>
+                                        )}
+                                      </div>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
                           </div>
-                          <ul className="divide-y divide-gray-50">
-                            {tasks.map((notif) => {
-                              const Icon = iconByType[notif.type as keyof typeof iconByType] ?? Bell;
-                              const titleText = notif.title ?? notif.label ?? 'Notification';
-                              const subtitleText = notif.body ?? notif.sublabel;
-                              return (
-                                <li key={notif.id}>
-                                  <Link
-                                    href={notif.href}
-                                    onClick={() => handleNotificationClick(notif)}
-                                    className="flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors bg-blue-50/40"
-                                  >
-                                    <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
-                                      <Icon size={13} />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-medium text-gray-800 truncate">{titleText}</p>
-                                      {subtitleText && (
-                                        <p className="text-xs text-gray-600 mt-0.5">{subtitleText}</p>
-                                      )}
-                                      <p className="text-[11px] text-amber-700 mt-1 font-medium">Action requise</p>
-                                    </div>
-                                  </Link>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      )}
-
-                      {recentItems.length > 0 && (
-                        <div>
-                          <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">Activite recente</p>
-                            <p className="text-[11px] text-gray-500 mt-0.5">Historique des notifications envoyees par la plateforme.</p>
-                          </div>
-                          <ul className="divide-y divide-gray-50">
-                            {recentItems.map((notif) => {
-                              const Icon = iconByType[notif.type as keyof typeof iconByType] ?? Bell;
-                              const titleText = notif.title ?? notif.label ?? 'Notification';
-                              const subtitleText = notif.body ?? notif.sublabel;
-                              const unread = notif.isRead !== true;
-                              return (
-                                <li key={notif.id}>
-                                  <Link
-                                    href={notif.href}
-                                    onClick={() => handleNotificationClick(notif)}
-                                    className={cn(
-                                      'flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors',
-                                      unread ? 'bg-blue-50/50' : ''
-                                    )}
-                                  >
-                                    <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
-                                      <Icon size={13} />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-medium text-gray-800 truncate">{titleText}</p>
-                                      {subtitleText && (
-                                        <p className="text-xs text-gray-600 mt-0.5">{subtitleText}</p>
-                                      )}
-                                      {notif.createdAt && (
-                                        <p className="text-[11px] text-gray-500 mt-1">{new Date(notif.createdAt).toLocaleString('fr-FR')}</p>
-                                      )}
-                                    </div>
-                                  </Link>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      )}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

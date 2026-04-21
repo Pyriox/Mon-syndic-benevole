@@ -82,9 +82,19 @@ describe('Header view switch', () => {
     });
   });
 
-  it('separe les alertes a traiter de l activite recente', async () => {
+  it('classe les notifications dans urgent, a traiter et info', async () => {
     const user = userEvent.setup();
     const notifications: AppNotification[] = [
+      {
+        id: 'dynamic-incident',
+        type: 'incident',
+        label: 'Fuite urgente',
+        sublabel: 'Intervention immediate necessaire',
+        href: '/incidents',
+        severity: 'danger',
+        source: 'dynamic',
+        canMarkRead: false,
+      },
       {
         id: 'dynamic-ag',
         type: 'ag',
@@ -118,12 +128,14 @@ describe('Header view switch', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /notifications : 2 non lues/i }));
+    await user.click(screen.getByRole('button', { name: /notifications : 3 non lues/i }));
 
-    expect(screen.getByText(/a traiter/i)).toBeTruthy();
-    expect(screen.getByText(/activite recente/i)).toBeTruthy();
-    expect(screen.getByText(/ces alertes disparaissent quand l'action est réellement effectuée/i)).toBeTruthy();
-    expect(screen.getByText(/historique des notifications envoyees par la plateforme/i)).toBeTruthy();
+    expect(screen.getByText(/^urgent$/i)).toBeTruthy();
+    expect(screen.getByText(/^a traiter$/i)).toBeTruthy();
+    expect(screen.getByText(/^info$/i)).toBeTruthy();
+    expect(screen.getByText(/actions prioritaires a traiter sans attendre/i)).toBeTruthy();
+    expect(screen.getByText(/actions a suivre ou verifications en attente/i)).toBeTruthy();
+    expect(screen.getByText(/historique recent et confirmations de la plateforme/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /tout marquer lu/i })).toBeTruthy();
   });
 
