@@ -385,10 +385,8 @@ export async function SyndicDashboardAlert({ coproId }: { coproId: string }) {
   const overdueLineCount = data.nbLignesImpayees ?? data.nbImpayes ?? 0;
   const showUnpaidAlert = data.totalMontantImpaye > 0 && overdueLineCount > 0;
   const showAgAlert = Boolean(data.agUrgente && data.prochaineAG && data.joursAvantAG !== null);
-  const showAgEnCoursAlert = Boolean(data.agEnCours);
-  const showPVAlert = Boolean(data.agTermineeSansPV);
 
-  if (!showUnpaidAlert && !showAgAlert && !showAgEnCoursAlert && !showPVAlert) {
+  if (!showUnpaidAlert && !showAgAlert) {
     return null;
   }
 
@@ -438,51 +436,6 @@ export async function SyndicDashboardAlert({ coproId }: { coproId: string }) {
             className="shrink-0 text-xs text-amber-700 hover:text-amber-900 font-semibold underline-offset-2 hover:underline"
           >
             Voir &rarr;
-          </Link>
-        </div>
-      )}
-
-      {showAgEnCoursAlert && data.agEnCours && (
-        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
-          <Radio size={18} className="text-blue-700 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-blue-800">Assemblée Générale en cours</p>
-            <p className="text-xs text-blue-700 mt-0.5 truncate">
-              {data.agEnCours.titre} &middot;{' '}
-              {new Date(data.agEnCours.date_ag).toLocaleDateString('fr-FR', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
-            </p>
-          </div>
-          <Link
-            href={`/assemblees/${data.agEnCours.id}`}
-            className="shrink-0 text-xs text-blue-700 hover:text-blue-900 font-semibold underline-offset-2 hover:underline"
-          >
-            Voir &rarr;
-          </Link>
-        </div>
-      )}
-
-      {showPVAlert && data.agTermineeSansPV && (
-        <div className="flex items-start gap-3 bg-violet-50 border border-violet-200 rounded-xl px-4 py-3">
-          <Send size={18} className="text-violet-700 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-violet-800">PV d&apos;AG à envoyer aux copropriétaires</p>
-            <p className="text-xs text-violet-700 mt-0.5 truncate">
-              {data.agTermineeSansPV.titre} &middot;{' '}
-              {new Date(data.agTermineeSansPV.date_ag).toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'long',
-              })}
-            </p>
-          </div>
-          <Link
-            href={`/assemblees/${data.agTermineeSansPV.id}`}
-            className="shrink-0 text-xs text-violet-700 hover:text-violet-900 font-semibold underline-offset-2 hover:underline"
-          >
-            Envoyer &rarr;
           </Link>
         </div>
       )}
