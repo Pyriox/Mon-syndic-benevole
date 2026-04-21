@@ -47,6 +47,21 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   const flushTimerRef = useRef<number | null>(null);
   const canSwitchView = hasDualDashboardView(availableViewRoles);
 
+  const isMarkReadEnabled = (notification: AppNotification) => notification.canMarkRead !== false && notification.source !== 'dynamic' && notification.source !== 'support';
+  const bySeverity = (severity: AppNotification['severity']) => {
+    if (severity === 'danger') return 0;
+    if (severity === 'warning') return 1;
+    return 2;
+  };
+  const sortByPriority = (a: AppNotification, b: AppNotification) => {
+    const severityDelta = bySeverity(a.severity) - bySeverity(b.severity);
+    if (severityDelta !== 0) return severityDelta;
+    if (a.createdAt && b.createdAt) return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (a.createdAt) return -1;
+    if (b.createdAt) return 1;
+    return 0;
+  };
+
   useEffect(() => {
     setItems(notifications);
   }, [notifications]);
@@ -111,15 +126,19 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
     };
   }, [open]);
 
+  const tasks = items.filter((n) => !isMarkReadEnabled(n)).sort(sortByPriority);
+  const recentItems = items.filter((n) => isMarkReadEnabled(n)).sort(sortByPriority);
   const nbNotifs = items.length;
-  const unreadItems = items.filter((n) => n.isRead !== true);
+  const unreadItems = items.filter((n) => !isMarkReadEnabled(n) || n.isRead !== true);
   const nbUnread = unreadItems.length;
   const nbDanger = unreadItems.filter((n) => n.severity === 'danger').length;
+  const nbUnreadRecent = recentItems.filter((n) => n.isRead !== true).length;
 
   const keepOnlyLastThreeRead = (list: AppNotification[]) => {
-    const unread = list.filter((n) => n.isRead !== true);
-    const read = list.filter((n) => n.isRead === true).slice(0, 3);
-    return [...unread, ...read];
+    const active = list.filter((n) => !isMarkReadEnabled(n));
+    const unread = list.filter((n) => isMarkReadEnabled(n) && n.isRead !== true);
+    const read = list.filter((n) => isMarkReadEnabled(n) && n.isRead === true).slice(0, 3);
+    return [...active, ...unread, ...read];
   };
 
   const flushQueuedReadIds = useCallback(async () => {
@@ -169,7 +188,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
       flushTimerRef.current = null;
     }
 
-    setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => ({ ...n, isRead: true }))));
+    setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => (isMarkReadEnabled(n) ? { ...n, isRead: true } : n))));
     await fetch('/api/notifications/mark-read', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -180,8 +199,15 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   };
 
   const markOneRead = async (id: string) => {
-    setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))));
+    setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => (n.id === id && isMarkReadEnabled(n) ? { ...n, isRead: true } : n))));
     queueReadId(id);
+  };
+
+  const handleNotificationClick = (notification: AppNotification) => {
+    setOpen(false);
+    if (isMarkReadEnabled(notification)) {
+      void markOneRead(notification.id);
+    }
   };
 
   const handleViewSwitch = (nextRole: Role) => {
@@ -303,7 +329,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                   <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
                     <p className="text-sm font-semibold text-gray-900">Notifications</p>
                     <div className="flex items-center gap-3">
-                      {nbUnread > 0 && (
+                      {nbUnreadRecent > 0 && (
                         <button
                           type="button"
                           onClick={markAllRead}
@@ -321,42 +347,85 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                       <p className="text-sm text-gray-500">Aucune alerte en cours</p>
                     </div>
                   ) : (
-                    <ul className="flex-1 overflow-y-auto divide-y divide-gray-50 md:max-h-80">
-                      {items.map((notif) => {
-                        const Icon = iconByType[notif.type as keyof typeof iconByType] ?? Bell;
-                        const titleText = notif.title ?? notif.label ?? 'Notification';
-                        const subtitleText = notif.body ?? notif.sublabel;
-                        const unread = notif.isRead !== true;
-                        return (
-                          <li key={notif.id}>
-                            <Link
-                              href={notif.href}
-                              onClick={() => {
-                                setOpen(false);
-                                void markOneRead(notif.id);
-                              }}
-                              className={cn(
-                                'flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors',
-                                unread ? 'bg-blue-50/50' : ''
-                              )}
-                            >
-                              <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
-                                <Icon size={13} />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-gray-800 truncate">{titleText}</p>
-                                {subtitleText && (
-                                  <p className="text-xs text-gray-600 mt-0.5">{subtitleText}</p>
-                                )}
-                                {notif.createdAt && (
-                                  <p className="text-[11px] text-gray-500 mt-1">{new Date(notif.createdAt).toLocaleString('fr-FR')}</p>
-                                )}
-                              </div>
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                    <div className="flex-1 overflow-y-auto md:max-h-80">
+                      {tasks.length > 0 && (
+                        <div className="border-b border-gray-100">
+                          <div className="px-4 py-2.5 bg-amber-50/60 border-b border-amber-100">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">A traiter</p>
+                            <p className="text-[11px] text-amber-700 mt-0.5">Ces alertes disparaissent quand l'action est réellement effectuée.</p>
+                          </div>
+                          <ul className="divide-y divide-gray-50">
+                            {tasks.map((notif) => {
+                              const Icon = iconByType[notif.type as keyof typeof iconByType] ?? Bell;
+                              const titleText = notif.title ?? notif.label ?? 'Notification';
+                              const subtitleText = notif.body ?? notif.sublabel;
+                              return (
+                                <li key={notif.id}>
+                                  <Link
+                                    href={notif.href}
+                                    onClick={() => handleNotificationClick(notif)}
+                                    className="flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors bg-blue-50/40"
+                                  >
+                                    <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
+                                      <Icon size={13} />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-medium text-gray-800 truncate">{titleText}</p>
+                                      {subtitleText && (
+                                        <p className="text-xs text-gray-600 mt-0.5">{subtitleText}</p>
+                                      )}
+                                      <p className="text-[11px] text-amber-700 mt-1 font-medium">Action requise</p>
+                                    </div>
+                                  </Link>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+
+                      {recentItems.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">Activite recente</p>
+                            <p className="text-[11px] text-gray-500 mt-0.5">Historique des notifications envoyees par la plateforme.</p>
+                          </div>
+                          <ul className="divide-y divide-gray-50">
+                            {recentItems.map((notif) => {
+                              const Icon = iconByType[notif.type as keyof typeof iconByType] ?? Bell;
+                              const titleText = notif.title ?? notif.label ?? 'Notification';
+                              const subtitleText = notif.body ?? notif.sublabel;
+                              const unread = notif.isRead !== true;
+                              return (
+                                <li key={notif.id}>
+                                  <Link
+                                    href={notif.href}
+                                    onClick={() => handleNotificationClick(notif)}
+                                    className={cn(
+                                      'flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors',
+                                      unread ? 'bg-blue-50/50' : ''
+                                    )}
+                                  >
+                                    <div className={cn('mt-0.5 p-1.5 rounded-lg shrink-0', colorBySeverity[notif.severity])}>
+                                      <Icon size={13} />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-medium text-gray-800 truncate">{titleText}</p>
+                                      {subtitleText && (
+                                        <p className="text-xs text-gray-600 mt-0.5">{subtitleText}</p>
+                                      )}
+                                      {notif.createdAt && (
+                                        <p className="text-[11px] text-gray-500 mt-1">{new Date(notif.createdAt).toLocaleString('fr-FR')}</p>
+                                      )}
+                                    </div>
+                                  </Link>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </>

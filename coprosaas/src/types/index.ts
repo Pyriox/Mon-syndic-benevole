@@ -6,6 +6,8 @@
 // --- Notification ---
 export type NotificationType = 'impaye' | 'incident' | 'ag' | 'appel_fonds' | 'support' | 'preuve_email' | 'admin_alert' | string;
 
+export type NotificationSource = 'persistent' | 'dynamic' | 'support';
+
 export interface AppNotification {
   id: string;
   type: NotificationType;
@@ -18,6 +20,8 @@ export interface AppNotification {
   actionLabel?: string;
   isRead?: boolean;
   createdAt?: string;
+  source?: NotificationSource;
+  canMarkRead?: boolean;
 }
 
 // --- Profil utilisateur ---

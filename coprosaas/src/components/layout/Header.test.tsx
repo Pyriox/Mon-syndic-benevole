@@ -8,6 +8,7 @@ import Header from './Header';
 
 const refreshMock = vi.fn();
 const setDashboardViewModeMock = vi.fn();
+const fetchMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: refreshMock }),
@@ -25,10 +26,13 @@ describe('Header view switch', () => {
   beforeEach(() => {
     refreshMock.mockReset();
     setDashboardViewModeMock.mockReset();
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
   });
 
   afterEach(() => {
     cleanup();
+    vi.unstubAllGlobals();
   });
 
   it('affiche un chargement pendant le switch de vue puis relance le refresh', async () => {
@@ -76,5 +80,80 @@ describe('Header view switch', () => {
     await waitFor(() => {
       expect(screen.queryByText(/chargement de la vue copropriétaire/i)).toBeNull();
     });
+  });
+
+  it('separe les alertes a traiter de l activite recente', async () => {
+    const user = userEvent.setup();
+    const notifications: AppNotification[] = [
+      {
+        id: 'dynamic-ag',
+        type: 'ag',
+        label: 'PV a envoyer',
+        sublabel: 'AG du 12 avril',
+        href: '/assemblees',
+        severity: 'warning',
+        source: 'dynamic',
+        canMarkRead: false,
+      },
+      {
+        id: 'persisted-1',
+        type: 'appel_fonds',
+        title: 'Avis envoyes',
+        body: '12 avis envoyes',
+        href: '/appels-de-fonds',
+        severity: 'info',
+        source: 'persistent',
+        canMarkRead: true,
+        isRead: false,
+        createdAt: '2026-04-21T10:00:00.000Z',
+      },
+    ];
+
+    render(
+      <Header
+        title="Tableau de bord"
+        userRole="syndic"
+        availableViewRoles={['syndic']}
+        notifications={notifications}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /notifications : 2 non lues/i }));
+
+    expect(screen.getByText(/a traiter/i)).toBeTruthy();
+    expect(screen.getByText(/activite recente/i)).toBeTruthy();
+    expect(screen.getByText(/ces alertes disparaissent quand l'action est réellement effectuée/i)).toBeTruthy();
+    expect(screen.getByText(/historique des notifications envoyees par la plateforme/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /tout marquer lu/i })).toBeTruthy();
+  });
+
+  it('ne marque pas en lu une alerte dynamique lors du clic', async () => {
+    const user = userEvent.setup();
+    const notifications: AppNotification[] = [
+      {
+        id: 'dynamic-ag',
+        type: 'ag',
+        label: 'PV a envoyer',
+        sublabel: 'AG du 12 avril',
+        href: '/assemblees',
+        severity: 'warning',
+        source: 'dynamic',
+        canMarkRead: false,
+      },
+    ];
+
+    render(
+      <Header
+        title="Tableau de bord"
+        userRole="syndic"
+        availableViewRoles={['syndic']}
+        notifications={notifications}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /notifications : 1 non lue/i }));
+    await user.click(screen.getByRole('link', { name: /pv a envoyer/i }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

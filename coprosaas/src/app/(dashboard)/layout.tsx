@@ -153,18 +153,32 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       actionLabel: n.action_label ?? undefined,
       isRead: n.is_read,
       createdAt: n.created_at,
+      source: 'persistent',
+      canMarkRead: true,
     });
   }
 
   // --- Alertes dynamiques (uniquement pour le syndic sur la copropriété sélectionnée) ---
 
   if (selectedCoproId && userRole === 'syndic') {
-    notifications.push(...await getSyndicNotifications(selectedCoproId));
+    notifications.push(
+      ...(await getSyndicNotifications(selectedCoproId)).map((notification) => ({
+        ...notification,
+        source: 'dynamic' as const,
+        canMarkRead: false,
+      }))
+    );
   }
 
   // --- Notifications pour les copropriétaires ---
   if (selectedCoproId && userRole === 'copropriétaire') {
-    notifications.push(...await getCoproNotifications(user.id, selectedCoproId));
+    notifications.push(
+      ...(await getCoproNotifications(user.id, selectedCoproId)).map((notification) => ({
+        ...notification,
+        source: 'dynamic' as const,
+        canMarkRead: false,
+      }))
+    );
   }
 
   // --- Messages support non lus (tous les rôles) ---
@@ -193,6 +207,8 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
           href: '/aide',
           severity: 'info',
           isRead: false,
+          source: 'support',
+          canMarkRead: false,
         });
       }
     }
