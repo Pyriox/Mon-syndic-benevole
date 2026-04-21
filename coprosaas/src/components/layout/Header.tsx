@@ -377,7 +377,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                                             'text-[11px] mt-1 font-medium',
                                             category === 'urgent' ? 'text-red-700' : 'text-amber-700'
                                           )}>
-                                            {category === 'urgent' ? 'Priorite immediate' : 'Action requise'}
+                                            {category === 'urgent' ? 'Priorité immédiate' : 'Action requise'}
                                           </p>
                                         )}
                                         {!showActionLabel && notif.createdAt && (
