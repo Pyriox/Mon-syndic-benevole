@@ -13,7 +13,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import AGActions from './AGActions';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { formatDate, LABELS_STATUT_AG } from '@/lib/utils';
-import { CalendarDays, MapPin, ChevronRight } from 'lucide-react';
+import { CalendarDays, MapPin, ChevronRight, Send } from 'lucide-react';
 import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
@@ -31,7 +31,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
   const [{ data: assemblees }, { data: coproAddons }] = await Promise.all([
     supabase
       .from('assemblees_generales')
-      .select('*, coproprietes(nom), resolutions(id)')
+      .select('*, pv_envoye_le, coproprietes(nom), resolutions(id)')
       .eq('copropriete_id', selectedCoproId ?? 'none')
       .gte('date_ag', `${annee}-01-01`)
       .lt('date_ag', `${annee + 1}-01-01`)
@@ -94,6 +94,11 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
                       <Badge variant={badgeVariant(ag.statut)}>
                         {LABELS_STATUT_AG[ag.statut] ?? ag.statut}
                       </Badge>
+                      {isSyndic && ag.statut === 'terminee' && !ag.pv_envoye_le && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full">
+                          <Send size={11} />PV à envoyer
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                       <span>{ag.coproprietes?.nom}</span>
