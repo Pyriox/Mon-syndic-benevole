@@ -13,7 +13,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import AGActions from './AGActions';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import { formatDate, LABELS_STATUT_AG } from '@/lib/utils';
-import { CalendarDays, MapPin, ChevronRight, Send } from 'lucide-react';
+import { CalendarDays, MapPin, ChevronRight, Send, Mail, CheckCircle } from 'lucide-react';
 import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
@@ -55,6 +55,39 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
 
   // role === null = nouveau compte sans copropriété → traité comme syndic (cohérent avec le layout)
   const isSyndic = userRole === 'syndic' || userRole === null;
+
+  type AGRow = NonNullable<typeof assemblees>[number];
+  const nextActionBadge = (ag: AGRow) => {
+    if (ag.statut === 'creation') {
+      return (
+        <span className="inline-flex items-center gap-1 text-xs font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+          <CalendarDays size={11} />À planifier
+        </span>
+      );
+    }
+    if (ag.statut === 'planifiee' && !ag.convocation_envoyee_le) {
+      return (
+        <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+          <Mail size={11} />Convocation à envoyer
+        </span>
+      );
+    }
+    if (ag.statut === 'en_cours') {
+      return (
+        <span className="inline-flex items-center gap-1 text-xs font-medium bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+          <CheckCircle size={11} />À clôturer
+        </span>
+      );
+    }
+    if (ag.statut === 'terminee' && !ag.pv_envoye_le) {
+      return (
+        <span className="inline-flex items-center gap-1 text-xs font-medium bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full">
+          <Send size={11} />PV à envoyer
+        </span>
+      );
+    }
+    return null;
+  };
   const canWrite = isSubscribed(copropriete?.plan);
   const specialChargesEnabled = hasChargesSpecialesAddon(coproAddons ?? []);
 
@@ -94,11 +127,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
                       <Badge variant={badgeVariant(ag.statut)}>
                         {LABELS_STATUT_AG[ag.statut] ?? ag.statut}
                       </Badge>
-                      {isSyndic && ag.statut === 'terminee' && !ag.pv_envoye_le && (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full">
-                          <Send size={11} />PV à envoyer
-                        </span>
-                      )}
+                      {isSyndic && nextActionBadge(ag)}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                       <span>{ag.coproprietes?.nom}</span>
