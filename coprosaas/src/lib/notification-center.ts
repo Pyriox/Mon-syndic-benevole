@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { invalidateLayoutCache } from '@/lib/cached-queries';
 
 export type NotificationSeverity = 'info' | 'warning' | 'danger';
 
@@ -29,6 +30,7 @@ export async function pushNotification(input: NotificationInput): Promise<void> 
     action_label: input.actionLabel ?? null,
     metadata: input.metadata ?? {},
   });
+  invalidateLayoutCache(input.userId);
 }
 
 export async function pushNotifications(inputs: NotificationInput[]): Promise<void> {
@@ -47,6 +49,10 @@ export async function pushNotifications(inputs: NotificationInput[]): Promise<vo
       metadata: input.metadata ?? {},
     }))
   );
+
+  for (const userId of new Set(inputs.map((input) => input.userId))) {
+    invalidateLayoutCache(userId);
+  }
 }
 
 export async function pushAdminAlert(params: {

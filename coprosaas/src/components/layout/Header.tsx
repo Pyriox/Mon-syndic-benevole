@@ -134,13 +134,6 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   const nbDanger = unreadItems.filter((n) => n.severity === 'danger').length;
   const nbUnreadRecent = recentItems.filter((n) => n.isRead !== true).length;
 
-  const keepOnlyLastThreeRead = (list: AppNotification[]) => {
-    const active = list.filter((n) => !isMarkReadEnabled(n));
-    const unread = list.filter((n) => isMarkReadEnabled(n) && n.isRead !== true);
-    const read = list.filter((n) => isMarkReadEnabled(n) && n.isRead === true).slice(0, 3);
-    return [...active, ...unread, ...read];
-  };
-
   const flushQueuedReadIds = useCallback(async () => {
     if (flushTimerRef.current !== null) {
       window.clearTimeout(flushTimerRef.current);
@@ -188,7 +181,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
       flushTimerRef.current = null;
     }
 
-    setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => (isMarkReadEnabled(n) ? { ...n, isRead: true } : n))));
+    setItems((prev) => prev.map((n) => (isMarkReadEnabled(n) ? { ...n, isRead: true } : n)));
     await fetch('/api/notifications/mark-read', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -199,7 +192,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   };
 
   const markOneRead = async (id: string) => {
-    setItems((prev) => keepOnlyLastThreeRead(prev.map((n) => (n.id === id && isMarkReadEnabled(n) ? { ...n, isRead: true } : n))));
+    setItems((prev) => prev.map((n) => (n.id === id && isMarkReadEnabled(n) ? { ...n, isRead: true } : n)));
     queueReadId(id);
   };
 
