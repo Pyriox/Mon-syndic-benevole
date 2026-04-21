@@ -357,6 +357,8 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         agUrgente: false,
         prochaineAG: null as { id: string; titre: string; date_ag: string; statut: string } | null,
         joursAvantAG: null as number | null,
+        agEnCours: null as { id: string; titre: string; date_ag: string } | null,
+        agTermineeSansPV: null as { id: string; titre: string; date_ag: string } | null,
       };
     }
 
@@ -378,6 +380,8 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       assembleesResult,
       appelsEchusResult,
       appelsProvisionsResult,
+      agEnCoursResult,
+      agTermineeSansPVResult,
     ] = await Promise.all([
       admin.from('lots').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
       admin.from('coproprietaires').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
@@ -429,6 +433,22 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         .eq('copropriete_id', coproId)
         .gte('date_echeance', `${currentYear}-01-01`)
         .lt('date_echeance', `${currentYear + 1}-01-01`),
+      admin
+        .from('assemblees_generales')
+        .select('id, titre, date_ag, statut')
+        .eq('copropriete_id', coproId)
+        .eq('statut', 'en_cours')
+        .order('date_ag', { ascending: false })
+        .limit(1),
+      admin
+        .from('assemblees_generales')
+        .select('id, titre, date_ag')
+        .eq('copropriete_id', coproId)
+        .eq('statut', 'terminee')
+        .is('pv_envoye_le', null)
+        .gte('date_ag', new Date(nowTs - 60 * 24 * 60 * 60 * 1000).toISOString())
+        .order('date_ag', { ascending: false })
+        .limit(1),
     ]);
 
       assertSupabaseSuccess('dashboard lots', lotsResult);
@@ -440,6 +460,8 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       assertSupabaseSuccess('dashboard assemblees', assembleesResult);
       assertSupabaseSuccess('dashboard appels echus', appelsEchusResult);
       assertSupabaseSuccess('dashboard appels provisions', appelsProvisionsResult);
+      assertSupabaseSuccess('dashboard ag en cours', agEnCoursResult);
+      assertSupabaseSuccess('dashboard ag terminee sans pv', agTermineeSansPVResult);
 
       const nbLots = lotsResult.count;
       const nbCoproprietaires = coproprietairesResult.count;
@@ -450,6 +472,8 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       const assemblees = assembleesResult.data;
       const appelsEchus = appelsEchusResult.data;
       const appelsProvisions = appelsProvisionsResult.data;
+      const agEnCoursData = agEnCoursResult.data?.[0] ?? null;
+      const agTermineeSansPVData = agTermineeSansPVResult.data?.[0] ?? null;
 
     const totalDepensesAnPasse = depensesAnPasse?.reduce((sum, depense) => sum + depense.montant, 0) ?? 0;
 
@@ -580,6 +604,12 @@ export function getSyndicDashboardSnapshot(coproId: string) {
           }
         : null,
       joursAvantAG,
+      agEnCours: agEnCoursData
+        ? { id: agEnCoursData.id, titre: agEnCoursData.titre, date_ag: agEnCoursData.date_ag }
+        : null,
+      agTermineeSansPV: agTermineeSansPVData
+        ? { id: agTermineeSansPVData.id, titre: agTermineeSansPVData.titre, date_ag: agTermineeSansPVData.date_ag }
+        : null,
     };
     },
     ['dashboard-syndic-snapshot-v2', coproId],

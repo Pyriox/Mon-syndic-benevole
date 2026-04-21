@@ -145,6 +145,7 @@ export async function POST(
           coproprieteNom: copro.nom ?? '',
           dateAG: ag.date_ag,
           appelsDeGondsUrl: `${siteUrl}/appels-de-fonds`,
+          agUrl: `${siteUrl}/assemblees/${agId}`,
         }),
       })
       .then((result) => trackResendSendResult(result, {

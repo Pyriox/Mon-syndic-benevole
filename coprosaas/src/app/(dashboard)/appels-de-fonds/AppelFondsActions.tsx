@@ -52,10 +52,21 @@ interface BudgetResolution {
   fonds_travaux_montant: number | null;
 }
 
+const LABELS_BUDGET_TYPE: Record<string, string> = {
+  budget_previsionnel: 'Budget prévisionnel',
+  revision_budget: 'Révision budget',
+};
+
+function extractYearFromTitle(titre: string): number | null {
+  const m = titre.match(/\b(20\d{2})\b/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
 interface AGWithBudgets {
   ag_id: string;
   ag_titre: string;
   ag_date: string;
+  budgetLabel: string | null; // non-null quand l'AG avait plusieurs budgets
   resolutions: BudgetResolution[];
   votedDates: string[]; // dates extraites du calendrier_financement voté
 }
@@ -336,24 +347,58 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
         .eq('statut', 'approuvee');
 
       const grouped: AGWithBudgets[] = ags
-        .map((ag) => {
+        .flatMap((ag): AGWithBudgets[] => {
           const agRes = (resolutions ?? []).filter((r) => r.ag_id === ag.id);
           const calendrier = agRes.find((r) => r.type_resolution === 'calendrier_financement');
-          return {
-            ag_id: ag.id,
-            ag_titre: ag.titre,
-            ag_date: ag.date_ag,
-            votedDates: (calendrier?.budget_postes ?? []).map((p: { libelle: string }) => p.libelle).filter(Boolean),
-            resolutions: agRes
+          const votedDates = (calendrier?.budget_postes ?? []).map((p: { libelle: string }) => p.libelle).filter(Boolean);
+
+          const budgetResolutions = agRes.filter((r) =>
+            r.type_resolution === 'budget_previsionnel' || r.type_resolution === 'revision_budget'
+          );
+          const ftResolutions = agRes.filter((r) =>
+            r.type_resolution === 'fonds_travaux' || r.type_resolution === 'revision_fonds_travaux'
+          );
+
+          const toEntry = (res: typeof agRes[number]) => ({
+            id: res.id,
+            titre: res.titre,
+            type_resolution: res.type_resolution,
+            budget_postes: res.budget_postes as BudgetResolution['budget_postes'],
+            fonds_travaux_montant: res.fonds_travaux_montant,
+          });
+
+          if (budgetResolutions.length <= 1) {
+            // Cas standard : une seule résolution budgétaire → une entrée
+            const allRes = agRes
               .filter((r) => r.type_resolution !== 'calendrier_financement')
-              .map((r) => ({
-                id: r.id,
-                titre: r.titre,
-                type_resolution: r.type_resolution,
-                budget_postes: r.budget_postes as BudgetResolution['budget_postes'],
-                fonds_travaux_montant: r.fonds_travaux_montant,
-              })),
-          };
+              .map(toEntry);
+            if (allRes.length === 0) return [];
+            return [{ ag_id: ag.id, ag_titre: ag.titre, ag_date: ag.date_ag, budgetLabel: null, votedDates, resolutions: allRes }];
+          }
+
+          // Plusieurs résolutions budgétaires → une entrée par résolution
+          return budgetResolutions.map((budRes) => {
+            const budYear = extractYearFromTitle(budRes.titre);
+            // Associer les fonds travaux dont l'année correspond (ou sans année dans le titre)
+            const usedFtIds = new Set<string>();
+            const matchingFT = ftResolutions.filter((ft) => {
+              const ftYear = extractYearFromTitle(ft.titre);
+              return ftYear === null || ftYear === budYear;
+            }).filter((ft) => !usedFtIds.has(ft.id) && usedFtIds.add(ft.id));
+
+            const label = budYear
+              ? `${LABELS_BUDGET_TYPE[budRes.type_resolution ?? ''] ?? 'Budget'} ${budYear}`
+              : (LABELS_BUDGET_TYPE[budRes.type_resolution ?? ''] ?? 'Budget');
+
+            return {
+              ag_id: ag.id,
+              ag_titre: ag.titre,
+              ag_date: ag.date_ag,
+              budgetLabel: label,
+              votedDates,
+              resolutions: [budRes, ...matchingFT].map(toEntry),
+            };
+          });
         })
         .filter((ag) => ag.resolutions.length > 0);
 
@@ -682,12 +727,13 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
                     const total = ag.resolutions.reduce((s, r) =>
                       s + (r.fonds_travaux_montant ?? (r.budget_postes ?? []).reduce((x, p) => x + p.montant, 0)), 0);
                     const agDate = new Date(ag.ag_date.slice(0, 10) + 'T00:00:00');
+                    const isFirst = i === 0 || ag.ag_id !== agsDisponibles[i - 1]?.ag_id;
                     return (
-                      <button key={ag.ag_id} type="button" onClick={() => selectAG(ag)}
+                      <button key={`${ag.ag_id}-${ag.budgetLabel ?? 'default'}`} type="button" onClick={() => selectAG(ag)}
                         className="w-full flex items-center justify-between gap-3 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-xl px-4 py-3 text-left transition-colors">
-                        <div>
+                        <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            {i === 0 && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">Dernière AG</span>}
+                            {isFirst && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">Dernière AG</span>}
                             <span className="text-sm font-semibold text-gray-800">{ag.ag_titre}</span>
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5">
@@ -698,6 +744,11 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
                               </span>
                             )}
                           </p>
+                          {ag.budgetLabel && (
+                            <span className="inline-block mt-1 text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-semibold">
+                              {ag.budgetLabel}
+                            </span>
+                          )}
                         </div>
                         <span className="text-base font-bold text-blue-700 shrink-0">{formatEuros(total)}</span>
                       </button>

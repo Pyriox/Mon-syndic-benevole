@@ -15,6 +15,7 @@ export interface AGTermineeEmailParams {
   coproprieteNom: string;
   dateAG: string;
   appelsDeGondsUrl: string;
+  agUrl: string;
 }
 
 export function buildAGTermineeSubject(coproprieteNom: string): string {
@@ -22,7 +23,7 @@ export function buildAGTermineeSubject(coproprieteNom: string): string {
 }
 
 export function buildAGTermineeEmail(params: AGTermineeEmailParams): string {
-  const { syndicPrenom, coproprieteNom, dateAG, appelsDeGondsUrl } = params;
+  const { syndicPrenom, coproprieteNom, dateAG, appelsDeGondsUrl, agUrl } = params;
   const dateStr = formatDateFR(dateAG);
 
   const content = `
@@ -39,7 +40,14 @@ export function buildAGTermineeEmail(params: AGTermineeEmailParams): string {
 
 ${ctaButton('Accéder aux appels de fonds →', appelsDeGondsUrl, COLOR.blue)}
 
-<p style="margin:-8px 0 0;font-size:12px;color:${COLOR.muted}">
+<p style="margin:20px 0 8px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Pensez également à transmettre le <strong>procès-verbal</strong> de l'AG à l'ensemble des copropriétaires par e-mail. La loi impose la transmission du PV dans les délais légaux après la tenue de l'assemblée.
+</p>
+<p style="margin:0 0 24px;font-size:14px">
+  <a href="${h(agUrl)}" style="color:${COLOR.blue};font-weight:600;text-decoration:underline">Envoyer le PV depuis la plateforme →</a>
+</p>
+
+<p style="margin:0;font-size:12px;color:${COLOR.muted}">
   Ce rappel est envoyé automatiquement à chaque clôture d'AG.
 </p>`;
 
