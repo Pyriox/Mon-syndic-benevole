@@ -15,6 +15,7 @@
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { buildDashboardExpenseSnapshot, buildDashboardUnpaidSnapshot, isDashboardUnpaidActiveStatus } from '@/lib/dashboard-data';
+import { buildSyndicBellNotifications } from '@/lib/notification-hierarchy';
 import type { AppNotification } from '@/types';
 
 function assertSupabaseSuccess(
@@ -124,103 +125,8 @@ export function getCoproprietaires(coproId: string) {
 // Cache : 30 secondes par copropriété
 export const getSyndicNotifications = unstable_cache(
   async (coproId: string): Promise<AppNotification[]> => {
-    const admin = createAdminClient();
-    const today = new Date().toISOString().split('T')[0];
-    const in30days = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-    const notifications: AppNotification[] = [];
-
-    const [
-      { data: impayes },
-      { data: incidents },
-      { data: agImminentes },
-      { data: appelsRetard },
-    ] = await Promise.all([
-      admin
-        .from('coproprietaires')
-        .select('id, nom, prenom, solde')
-        .eq('copropriete_id', coproId)
-        .lt('solde', 0)
-        .order('solde', { ascending: true })
-        .limit(5),
-      admin
-        .from('incidents')
-        .select('id, titre, statut, priorite')
-        .eq('copropriete_id', coproId)
-        .in('statut', ['ouvert', 'en_cours'])
-        .order('priorite', { ascending: false })
-        .limit(5),
-      admin
-        .from('assemblees_generales')
-        .select('id, titre, date_ag')
-        .eq('copropriete_id', coproId)
-        .in('statut', ['planifiee', 'en_cours'])
-        .gte('date_ag', today)
-        .lte('date_ag', in30days)
-        .order('date_ag', { ascending: true })
-        .limit(3),
-      admin
-        .from('appels_de_fonds')
-        .select('id, titre, statut, date_echeance, lignes_appels_de_fonds(paye)')
-        .eq('copropriete_id', coproId)
-        .in('statut', ['publie', 'confirme'])
-        .lt('date_echeance', today)
-        .order('date_echeance', { ascending: true })
-        .limit(5),
-    ]);
-
-    for (const cp of impayes ?? []) {
-      const nom = [cp.prenom, cp.nom].filter(Boolean).join(' ') || 'Copropriétaire';
-      notifications.push({
-        id: `impaye-${cp.id}`,
-        type: 'impaye',
-        label: `${nom} — solde débiteur`,
-        sublabel: `${(cp.solde as number).toFixed(2)} €`,
-        href: '/coproprietaires',
-        severity: 'danger',
-      });
-    }
-
-    for (const inc of incidents ?? []) {
-      notifications.push({
-        id: `incident-${inc.id}`,
-        type: 'incident',
-        label: inc.titre,
-        sublabel: inc.statut === 'ouvert' ? 'Ouvert' : 'En cours',
-        href: '/incidents',
-        severity: (inc.priorite as string) === 'urgente' ? 'danger' : 'warning',
-      });
-    }
-
-    for (const ag of agImminentes ?? []) {
-      const d = new Date(ag.date_ag);
-      notifications.push({
-        id: `ag-${ag.id}`,
-        type: 'ag',
-        label: ag.titre,
-        sublabel: d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }),
-        href: '/assemblees',
-        severity: 'info',
-      });
-    }
-
-    for (const appel of appelsRetard ?? []) {
-      if (!isDashboardUnpaidActiveStatus((appel as { statut?: string | null }).statut)) continue;
-      const lignes = (appel.lignes_appels_de_fonds ?? []) as { paye: boolean }[];
-      const nbImpaye = lignes.filter((l) => !l.paye).length;
-      if (nbImpaye > 0) {
-        const d = new Date(appel.date_echeance);
-        notifications.push({
-          id: `appel-${appel.id}`,
-          type: 'appel_fonds',
-          label: appel.titre,
-          sublabel: `Échu le ${d.toLocaleDateString('fr-FR')} · ${nbImpaye} impayé(s)`,
-          href: '/appels-de-fonds',
-          severity: 'warning',
-        });
-      }
-    }
-
-    return notifications;
+    const snapshot = await getSyndicDashboardSnapshot(coproId);
+    return buildSyndicBellNotifications(snapshot);
   },
   ['syndic-notifications'],
   { revalidate: 30 },

@@ -8,9 +8,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare, Crown, LoaderCircle } from 'lucide-react';
 import { setDashboardViewMode } from '@/lib/actions/set-dashboard-view-mode';
+import { NOTIFICATION_CATEGORY_META, resolveNotificationCategory, sortNotificationsByPriority } from '@/lib/notification-hierarchy';
 import { cn } from '@/lib/utils';
 import { hasDualDashboardView, toDashboardViewMode } from '@/lib/dashboard-view-mode';
-import type { AppNotification, Role } from '@/types';
+import type { AppNotification, AppNotificationCategory, Role } from '@/types';
 
 interface HeaderProps {
   title: string;
@@ -35,38 +36,6 @@ const colorBySeverity = {
   info: 'text-blue-500 bg-blue-50',
 };
 
-type NotificationCategory = 'urgent' | 'action' | 'info';
-
-const categoryMeta: Record<NotificationCategory, {
-  title: string;
-  description: string;
-  headerClassName: string;
-  titleClassName: string;
-  descriptionClassName: string;
-}> = {
-  urgent: {
-    title: 'Urgent',
-    description: 'Actions prioritaires a traiter sans attendre.',
-    headerClassName: 'bg-red-50/70 border-b border-red-100',
-    titleClassName: 'text-red-800',
-    descriptionClassName: 'text-red-700',
-  },
-  action: {
-    title: 'A traiter',
-    description: "Actions a suivre ou verifications en attente.",
-    headerClassName: 'bg-amber-50/60 border-b border-amber-100',
-    titleClassName: 'text-amber-800',
-    descriptionClassName: 'text-amber-700',
-  },
-  info: {
-    title: 'Info',
-    description: 'Historique recent et confirmations de la plateforme.',
-    headerClassName: 'bg-slate-50 border-b border-gray-100',
-    titleClassName: 'text-slate-700',
-    descriptionClassName: 'text-gray-500',
-  },
-};
-
 export default function Header({ title, userRole, availableViewRoles, userName, notifications = [], onMenuOpen }: HeaderProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -80,24 +49,6 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   const canSwitchView = hasDualDashboardView(availableViewRoles);
 
   const isMarkReadEnabled = (notification: AppNotification) => notification.canMarkRead !== false && notification.source !== 'dynamic' && notification.source !== 'support';
-  const bySeverity = (severity: AppNotification['severity']) => {
-    if (severity === 'danger') return 0;
-    if (severity === 'warning') return 1;
-    return 2;
-  };
-  const sortByPriority = (a: AppNotification, b: AppNotification) => {
-    const severityDelta = bySeverity(a.severity) - bySeverity(b.severity);
-    if (severityDelta !== 0) return severityDelta;
-    if (a.createdAt && b.createdAt) return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    if (a.createdAt) return -1;
-    if (b.createdAt) return 1;
-    return 0;
-  };
-  const getCategory = (notification: AppNotification): NotificationCategory => {
-    if (notification.severity === 'danger') return 'urgent';
-    if (!isMarkReadEnabled(notification) || notification.severity === 'warning') return 'action';
-    return 'info';
-  };
 
   useEffect(() => {
     setItems(notifications);
@@ -168,17 +119,17 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   const nbUnread = unreadItems.length;
   const nbDanger = unreadItems.filter((n) => n.severity === 'danger').length;
   const nbUnreadMarkable = items.filter((n) => isMarkReadEnabled(n) && n.isRead !== true).length;
-  const categorizedItems: Record<NotificationCategory, AppNotification[]> = {
+  const categorizedItems: Record<AppNotificationCategory, AppNotification[]> = {
     urgent: [],
     action: [],
     info: [],
   };
 
-  for (const item of [...items].sort(sortByPriority)) {
-    categorizedItems[getCategory(item)].push(item);
+  for (const item of [...items].sort(sortNotificationsByPriority)) {
+    categorizedItems[resolveNotificationCategory(item)].push(item);
   }
 
-  const orderedCategories = (Object.keys(categoryMeta) as NotificationCategory[]).filter((key) => categorizedItems[key].length > 0);
+  const orderedCategories = (Object.keys(NOTIFICATION_CATEGORY_META) as AppNotificationCategory[]).filter((key) => categorizedItems[key].length > 0);
 
   const flushQueuedReadIds = useCallback(async () => {
     if (flushTimerRef.current !== null) {
@@ -389,7 +340,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                     <div className="flex-1 overflow-y-auto md:max-h-80">
                       {orderedCategories.map((category, index) => {
                         const notificationsForCategory = categorizedItems[category];
-                        const meta = categoryMeta[category];
+                        const meta = NOTIFICATION_CATEGORY_META[category];
                         return (
                           <div key={category} className={cn(index < orderedCategories.length - 1 ? 'border-b border-gray-100' : '')}>
                             <div className={cn('px-4 py-2.5', meta.headerClassName)}>

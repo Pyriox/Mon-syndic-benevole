@@ -7,6 +7,7 @@
 export type NotificationType = 'impaye' | 'incident' | 'ag' | 'appel_fonds' | 'support' | 'preuve_email' | 'admin_alert' | string;
 
 export type NotificationSource = 'persistent' | 'dynamic' | 'support';
+export type AppNotificationCategory = 'urgent' | 'action' | 'info';
 
 export interface AppNotification {
   id: string;
@@ -22,6 +23,8 @@ export interface AppNotification {
   createdAt?: string;
   source?: NotificationSource;
   canMarkRead?: boolean;
+  category?: AppNotificationCategory;
+  priorityRank?: number;
 }
 
 // --- Profil utilisateur ---
