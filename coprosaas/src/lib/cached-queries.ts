@@ -359,6 +359,8 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         joursAvantAG: null as number | null,
         agEnCours: null as { id: string; titre: string; date_ag: string } | null,
         agTermineeSansPV: null as { id: string; titre: string; date_ag: string } | null,
+        nbAppelsBrouillon: 0,
+        appelsSansEmail: [] as Array<{ id: string; titre: string; date_echeance: string | null }>,
       };
     }
 
@@ -382,6 +384,8 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       appelsProvisionsResult,
       agEnCoursResult,
       agTermineeSansPVResult,
+      appelsBrouillonResult,
+      appelsSansEmailResult,
     ] = await Promise.all([
       admin.from('lots').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
       admin.from('coproprietaires').select('id', { count: 'exact', head: true }).eq('copropriete_id', coproId),
@@ -449,6 +453,19 @@ export function getSyndicDashboardSnapshot(coproId: string) {
         .gte('date_ag', new Date(nowTs - 60 * 24 * 60 * 60 * 1000).toISOString())
         .order('date_ag', { ascending: false })
         .limit(1),
+      admin
+        .from('appels_de_fonds')
+        .select('id', { count: 'exact', head: true })
+        .eq('copropriete_id', coproId)
+        .eq('statut', 'brouillon'),
+      admin
+        .from('appels_de_fonds')
+        .select('id, titre, date_echeance')
+        .eq('copropriete_id', coproId)
+        .eq('statut', 'publie')
+        .is('emailed_at', null)
+        .order('date_echeance', { ascending: true })
+        .limit(5),
     ]);
 
       assertSupabaseSuccess('dashboard lots', lotsResult);
@@ -462,6 +479,8 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       assertSupabaseSuccess('dashboard appels provisions', appelsProvisionsResult);
       assertSupabaseSuccess('dashboard ag en cours', agEnCoursResult);
       assertSupabaseSuccess('dashboard ag terminee sans pv', agTermineeSansPVResult);
+      assertSupabaseSuccess('dashboard appels brouillon', appelsBrouillonResult);
+      assertSupabaseSuccess('dashboard appels sans email', appelsSansEmailResult);
 
       const nbLots = lotsResult.count;
       const nbCoproprietaires = coproprietairesResult.count;
@@ -474,6 +493,12 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       const appelsProvisions = appelsProvisionsResult.data;
       const agEnCoursData = agEnCoursResult.data?.[0] ?? null;
       const agTermineeSansPVData = agTermineeSansPVResult.data?.[0] ?? null;
+      const nbAppelsBrouillon = appelsBrouillonResult.count ?? 0;
+      const appelsSansEmailData = (appelsSansEmailResult.data ?? []).map((a) => ({
+        id: a.id,
+        titre: a.titre,
+        date_echeance: a.date_echeance ?? null,
+      }));
 
     const totalDepensesAnPasse = depensesAnPasse?.reduce((sum, depense) => sum + depense.montant, 0) ?? 0;
 
@@ -610,6 +635,8 @@ export function getSyndicDashboardSnapshot(coproId: string) {
       agTermineeSansPV: agTermineeSansPVData
         ? { id: agTermineeSansPVData.id, titre: agTermineeSansPVData.titre, date_ag: agTermineeSansPVData.date_ag }
         : null,
+      nbAppelsBrouillon,
+      appelsSansEmail: appelsSansEmailData,
     };
     },
     ['dashboard-syndic-snapshot-v2', coproId],

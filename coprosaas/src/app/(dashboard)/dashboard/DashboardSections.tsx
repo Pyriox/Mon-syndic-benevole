@@ -13,6 +13,8 @@ import {
   BellRing,
   CalendarDays,
   CheckCircle2,
+  FileText,
+  Mail,
   Minus,
   Radio,
   Receipt,
@@ -779,6 +781,60 @@ export async function SyndicNextAction({ coproId }: { coproId: string }) {
           className="shrink-0 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors"
         >
           Voir les incidents →
+        </Link>
+      </div>
+    );
+  }
+
+  if (data.nbAppelsBrouillon > 0) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 mt-0.5">
+            <FileText size={20} className="text-yellow-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">
+              {data.nbAppelsBrouillon} appel{data.nbAppelsBrouillon > 1 ? 's' : ''} de fonds en brouillon
+            </p>
+            <p className="text-xs text-gray-600 mt-0.5">
+              Publiez-{data.nbAppelsBrouillon > 1 ? 'les' : 'le'} pour que les copropriétaires reçoivent leur avis de paiement.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/appels-de-fonds"
+          className="shrink-0 text-sm font-semibold text-white bg-yellow-600 hover:bg-yellow-700 px-4 py-1.5 rounded-lg transition-colors"
+        >
+          Publier →
+        </Link>
+      </div>
+    );
+  }
+
+  if (data.appelsSansEmail.length > 0) {
+    const appel = data.appelsSansEmail[0];
+    const extra = data.appelsSansEmail.length > 1 ? ` (+ ${data.appelsSansEmail.length - 1} autre${data.appelsSansEmail.length > 2 ? 's' : ''})` : '';
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-sky-50 border border-sky-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 mt-0.5">
+            <Mail size={20} className="text-sky-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">
+              Appel de fonds publié sans avis envoyé{extra}
+            </p>
+            <p className="text-xs text-gray-600 mt-0.5">
+              {appel.titre}{appel.date_echeance ? ` · échéance ${new Date(appel.date_echeance).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}` : ''} — les copropriétaires n&apos;ont pas encore reçu leur avis.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/appels-de-fonds"
+          className="shrink-0 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 px-4 py-1.5 rounded-lg transition-colors"
+        >
+          Envoyer les avis →
         </Link>
       </div>
     );
