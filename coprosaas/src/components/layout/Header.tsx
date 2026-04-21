@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare, Crown, LoaderCircle } from 'lucide-react';
+import { Bell, User, AlertTriangle, AlertCircle, CalendarDays, Wallet, Menu, MessageSquare, Crown, LoaderCircle, X } from 'lucide-react';
 import { setDashboardViewMode } from '@/lib/actions/set-dashboard-view-mode';
 import { NOTIFICATION_CATEGORY_META, resolveNotificationCategory, sortNotificationsByPriority } from '@/lib/notification-hierarchy';
 import { cn } from '@/lib/utils';
@@ -42,6 +42,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   const [switchPending, startSwitchTransition] = useTransition();
   const [switchTargetRole, setSwitchTargetRole] = useState<Role | null>(null);
   const [items, setItems] = useState<AppNotification[]>(notifications);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const ref = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement | null>(null);
   const pendingReadIdsRef = useRef<Set<string>>(new Set());
@@ -114,18 +115,19 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
     };
   }, [open]);
 
-  const nbNotifs = items.length;
-  const unreadItems = items.filter((n) => !isMarkReadEnabled(n) || n.isRead !== true);
+  const visibleItems = items.filter((n) => !dismissedIds.has(n.id));
+  const nbNotifs = visibleItems.length;
+  const unreadItems = visibleItems.filter((n) => !isMarkReadEnabled(n) || n.isRead !== true);
   const nbUnread = unreadItems.length;
   const nbDanger = unreadItems.filter((n) => n.severity === 'danger').length;
-  const nbUnreadMarkable = items.filter((n) => isMarkReadEnabled(n) && n.isRead !== true).length;
+  const nbUnreadMarkable = visibleItems.filter((n) => isMarkReadEnabled(n) && n.isRead !== true).length;
   const categorizedItems: Record<AppNotificationCategory, AppNotification[]> = {
     urgent: [],
     action: [],
     info: [],
   };
 
-  for (const item of [...items].sort(sortNotificationsByPriority)) {
+  for (const item of [...visibleItems].sort(sortNotificationsByPriority)) {
     categorizedItems[resolveNotificationCategory(item)].push(item);
   }
 
@@ -191,6 +193,15 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
   const markOneRead = async (id: string) => {
     setItems((prev) => prev.map((n) => (n.id === id && isMarkReadEnabled(n) ? { ...n, isRead: true } : n)));
     queueReadId(id);
+  };
+
+  const dismissNotification = (e: React.MouseEvent, notification: AppNotification) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isMarkReadEnabled(notification)) {
+      void markOneRead(notification.id);
+    }
+    setDismissedIds((prev) => new Set(prev).add(notification.id));
   };
 
   const handleNotificationClick = (notification: AppNotification) => {
@@ -355,12 +366,13 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                                 const unread = notif.isRead !== true;
                                 const showActionLabel = category !== 'info' && !isMarkReadEnabled(notif);
                                 return (
-                                  <li key={notif.id}>
+                                  <li key={notif.id} className="relative group">
                                     <Link
                                       href={notif.href}
                                       onClick={() => handleNotificationClick(notif)}
                                       className={cn(
                                         'flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors',
+                                        category === 'action' ? 'pr-8' : '',
                                         unread ? 'bg-blue-50/40' : ''
                                       )}
                                     >
@@ -385,6 +397,17 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                                         )}
                                       </div>
                                     </Link>
+                                    {category === 'action' && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => dismissNotification(e, notif)}
+                                        className="absolute top-2.5 right-2 p-1 rounded-md text-gray-300 hover:text-gray-600 hover:bg-gray-100 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
+                                        aria-label="Ignorer cette notification"
+                                        title="Ignorer"
+                                      >
+                                        <X size={12} />
+                                      </button>
+                                    )}
                                   </li>
                                 );
                               })}
