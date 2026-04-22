@@ -131,11 +131,11 @@ describe('Header view switch', () => {
     await user.click(screen.getByRole('button', { name: /notifications : 3 non lues/i }));
 
     expect(screen.getByText(/^urgent$/i)).toBeTruthy();
-    expect(screen.getByText(/^a traiter$/i)).toBeTruthy();
+    expect(screen.getByText(/^à traiter$/i)).toBeTruthy();
     expect(screen.getByText(/^info$/i)).toBeTruthy();
-    expect(screen.getByText(/actions prioritaires a traiter sans attendre/i)).toBeTruthy();
-    expect(screen.getByText(/actions a suivre ou verifications en attente/i)).toBeTruthy();
-    expect(screen.getByText(/historique recent et confirmations de la plateforme/i)).toBeTruthy();
+    expect(screen.getByText(/actions prioritaires/i)).toBeTruthy();
+    expect(screen.getByText(/actions à suivre/i)).toBeTruthy();
+    expect(screen.getByText(/historique récent/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /tout marquer lu/i })).toBeTruthy();
   });
 

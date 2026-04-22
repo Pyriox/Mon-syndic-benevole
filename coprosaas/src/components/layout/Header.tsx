@@ -115,7 +115,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
     };
   }, [open]);
 
-  const visibleItems = items.filter((n) => !dismissedIds.has(n.id));
+  const visibleItems = items.filter((n) => !dismissedIds.has(n.id) && !(n.source === 'persistent' && n.isRead === true));
   const nbNotifs = visibleItems.length;
   const unreadItems = visibleItems.filter((n) => !isMarkReadEnabled(n) || n.isRead !== true);
   const nbUnread = unreadItems.length;
@@ -372,7 +372,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                                       onClick={() => handleNotificationClick(notif)}
                                       className={cn(
                                         'flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors',
-                                        category === 'action' ? 'pr-8' : '',
+                                        category !== 'urgent' ? 'pr-8' : '',
                                         unread ? 'bg-blue-50/40' : ''
                                       )}
                                     >
@@ -397,7 +397,7 @@ export default function Header({ title, userRole, availableViewRoles, userName, 
                                         )}
                                       </div>
                                     </Link>
-                                    {category === 'action' && (
+                                    {category !== 'urgent' && (
                                       <button
                                         type="button"
                                         onClick={(e) => dismissNotification(e, notif)}

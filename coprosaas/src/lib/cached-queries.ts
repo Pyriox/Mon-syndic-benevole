@@ -15,7 +15,7 @@
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { buildDashboardExpenseSnapshot, buildDashboardUnpaidSnapshot, isDashboardUnpaidActiveStatus } from '@/lib/dashboard-data';
-import { buildSyndicBellNotifications } from '@/lib/notification-hierarchy';
+import { buildCoproBellNotifications, buildSyndicBellNotifications } from '@/lib/notification-hierarchy';
 import type { AppNotification } from '@/types';
 
 function assertSupabaseSuccess(
@@ -137,38 +137,8 @@ export const getSyndicNotifications = unstable_cache(
 export const getCoproNotifications = unstable_cache(
   async (userId: string, coproId: string): Promise<AppNotification[]> => {
     const admin = createAdminClient();
-    const today = new Date().toISOString().split('T')[0];
-    const in30days = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-    const notifications: AppNotification[] = [];
-
-    const { data: maCopro } = await admin
-      .from('coproprietaires')
-      .select('id, solde')
-      .eq('copropriete_id', coproId)
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (!maCopro) return notifications;
-
-    const [
-      { data: lignesImpayes },
-      { data: agImminentes },
-      { data: incidents },
-    ] = await Promise.all([
-      admin
-        .from('lignes_appels_de_fonds')
-        .select('id, montant_du, appels_de_fonds!inner(id, titre, date_echeance)')
-        .eq('coproprietaire_id', maCopro.id)
-        .eq('paye', false),
-      admin
-        .from('assemblees_generales')
-        .select('id, titre, date_ag')
-        .eq('copropriete_id', coproId)
-        .in('statut', ['planifiee', 'en_cours'])
-        .gte('date_ag', today)
-        .lte('date_ag', in30days)
-        .order('date_ag', { ascending: true })
-        .limit(3),
+    const [snapshot, incidentsResult] = await Promise.all([
+      getCoproprietaireDashboardSnapshot(userId, coproId),
       admin
         .from('incidents')
         .select('id, titre, statut, priorite')
@@ -178,55 +148,23 @@ export const getCoproNotifications = unstable_cache(
         .limit(3),
     ]);
 
-    if ((maCopro.solde as number) < 0) {
-      notifications.push({
-        id: `solde-${maCopro.id}`,
-        type: 'impaye',
-        label: 'Votre solde est débiteur',
-        sublabel: `${(maCopro.solde as number).toFixed(2)} €`,
-        href: '/dashboard',
-        severity: 'danger',
-      });
-    }
+    assertSupabaseSuccess('dashboard copro notifications incidents', incidentsResult);
 
-    for (const ligne of lignesImpayes ?? []) {
-      const appel = ligne.appels_de_fonds as unknown as { id: string; titre: string; date_echeance: string };
-      if (appel.date_echeance >= today) continue;
-      const d = new Date(appel.date_echeance);
-      notifications.push({
-        id: `appel-${appel.id}`,
-        type: 'appel_fonds',
-        label: appel.titre,
-        sublabel: `Échu le ${d.toLocaleDateString('fr-FR')} — ${(ligne.montant_du as number).toFixed(2)} €`,
-        href: '/appels-de-fonds',
-        severity: 'warning',
-      });
-    }
+    if (!snapshot.fiche) return [];
 
-    for (const ag of agImminentes ?? []) {
-      const d = new Date(ag.date_ag);
-      notifications.push({
-        id: `ag-${ag.id}`,
-        type: 'ag',
-        label: ag.titre,
-        sublabel: d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }),
-        href: '/assemblees',
-        severity: 'info',
-      });
-    }
-
-    for (const inc of incidents ?? []) {
-      notifications.push({
-        id: `incident-${inc.id}`,
-        type: 'incident',
-        label: inc.titre,
-        sublabel: inc.statut === 'ouvert' ? 'Ouvert' : 'En cours',
-        href: '/incidents',
-        severity: 'warning',
-      });
-    }
-
-    return notifications;
+    return buildCoproBellNotifications({
+      solde: snapshot.solde,
+      chargesImpayees: snapshot.chargesImpayees,
+      prochaineAG: snapshot.prochaineAG,
+      joursAvantAG: snapshot.joursAvantAG,
+      incidentsActifs: (incidentsResult.data ?? []).map((incident) => ({
+        id: incident.id,
+        titre: incident.titre,
+        statut: incident.statut,
+        priorite: incident.priorite,
+      })),
+      balanceEvents: snapshot.balanceEvents,
+    });
   },
   ['copropriétaire-notifications'],
   { revalidate: 30 },

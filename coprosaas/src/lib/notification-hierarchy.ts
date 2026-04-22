@@ -82,6 +82,29 @@ export interface SyndicBellSnapshot {
   joursAvantAG: number | null;
 }
 
+export interface CoproBellSnapshot {
+  solde: number;
+  chargesImpayees: Array<{
+    id: string;
+    montant_du: number;
+    appel: { id: string; titre: string; date_echeance: string | null } | null;
+  }>;
+  prochaineAG: { id: string; titre: string; date_ag: string; statut: string } | null;
+  joursAvantAG: number | null;
+  incidentsActifs: Array<{ id: string; titre: string; statut: string; priorite: string }>;
+  balanceEvents: Array<{
+    id: string;
+    event_date: string;
+    source_type: string;
+    account_type: 'principal' | 'fonds_travaux' | 'regularisation' | 'mixte';
+    label: string;
+    reason: string | null;
+    amount: number;
+    balance_after: number;
+    created_at: string;
+  }>;
+}
+
 export function buildSyndicBellNotifications(snapshot: SyndicBellSnapshot, now = new Date()): AppNotification[] {
   const notifications: AppNotification[] = [];
   const nowTs = now.getTime();
@@ -203,6 +226,123 @@ export function buildSyndicBellNotifications(snapshot: SyndicBellSnapshot, now =
       severity: isUrgent ? 'danger' : 'warning',
       category: isUrgent ? 'urgent' : 'action',
       priorityRank: 70,
+    });
+  }
+
+  return notifications;
+}
+
+export function buildCoproBellNotifications(snapshot: CoproBellSnapshot, now = new Date()): AppNotification[] {
+  const notifications: AppNotification[] = [];
+  const nowTs = now.getTime();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+
+  const overdueCharges = snapshot.chargesImpayees.filter((ligne) => {
+    if (!ligne.appel?.date_echeance) return false;
+    return new Date(`${ligne.appel.date_echeance}T00:00:00`).getTime() < nowTs;
+  });
+  const overdueTotal = overdueCharges.reduce((sum, ligne) => sum + ligne.montant_du, 0);
+
+  if (overdueCharges.length > 0) {
+    const oldestOverdue = [...overdueCharges]
+      .filter((ligne) => ligne.appel?.date_echeance)
+      .sort((a, b) => {
+        const aTs = new Date(`${a.appel?.date_echeance}T00:00:00`).getTime();
+        const bTs = new Date(`${b.appel?.date_echeance}T00:00:00`).getTime();
+        return aTs - bTs;
+      })[0];
+
+    notifications.push({
+      id: 'copro-charges-echues',
+      type: 'appel_fonds',
+      title: `${formatEuros(overdueTotal)} d'échéances dépassées`,
+      body: `${overdueCharges.length} appel${overdueCharges.length > 1 ? 's' : ''} de fonds en retard${oldestOverdue?.appel?.date_echeance ? ` depuis le ${new Date(`${oldestOverdue.appel.date_echeance}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}` : ''}.`,
+      href: '/appels-de-fonds',
+      severity: 'danger',
+      category: 'urgent',
+      priorityRank: 10,
+    });
+  } else if (snapshot.solde > 0 || snapshot.chargesImpayees.length > 0) {
+    const nextCharge = [...snapshot.chargesImpayees]
+      .filter((ligne) => ligne.appel?.date_echeance)
+      .sort((a, b) => {
+        const aTs = new Date(`${a.appel?.date_echeance}T00:00:00`).getTime();
+        const bTs = new Date(`${b.appel?.date_echeance}T00:00:00`).getTime();
+        return aTs - bTs;
+      })[0];
+
+    notifications.push({
+      id: 'copro-solde-a-regler',
+      type: 'impaye',
+      title: `${formatEuros(Math.max(snapshot.solde, 0))} à régler`,
+      body: snapshot.chargesImpayees.length > 0
+        ? `${snapshot.chargesImpayees.length} charge${snapshot.chargesImpayees.length > 1 ? 's' : ''} en attente${nextCharge?.appel?.date_echeance ? ` · prochaine échéance le ${new Date(`${nextCharge.appel.date_echeance}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}` : ''}.`
+        : 'Votre solde reste débiteur sur cette copropriété.',
+      href: '/appels-de-fonds',
+      severity: 'warning',
+      category: 'action',
+      priorityRank: 20,
+    });
+  }
+
+  if (snapshot.prochaineAG && snapshot.joursAvantAG !== null && snapshot.joursAvantAG <= 30) {
+    const isUrgent = snapshot.joursAvantAG <= 7;
+
+    notifications.push({
+      id: `copro-ag-${snapshot.prochaineAG.id}`,
+      type: 'ag',
+      title: `AG dans J-${snapshot.joursAvantAG}`,
+      body: `${snapshot.prochaineAG.titre} · ${new Date(snapshot.prochaineAG.date_ag).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`,
+      href: `/assemblees/${snapshot.prochaineAG.id}`,
+      severity: isUrgent ? 'danger' : 'warning',
+      category: isUrgent ? 'urgent' : 'action',
+      priorityRank: isUrgent ? 30 : 40,
+    });
+  }
+
+  if (snapshot.incidentsActifs.length > 0) {
+    const urgentIncidents = snapshot.incidentsActifs.filter((incident) => incident.priorite === 'urgente');
+    const hasUrgentIncident = urgentIncidents.length > 0;
+
+    notifications.push({
+      id: hasUrgentIncident ? 'copro-incidents-urgents' : 'copro-incidents-actifs',
+      type: 'incident',
+      title: hasUrgentIncident
+        ? `${urgentIncidents.length} incident${urgentIncidents.length > 1 ? 's' : ''} urgent${urgentIncidents.length > 1 ? 's' : ''} en cours`
+        : `${snapshot.incidentsActifs.length} incident${snapshot.incidentsActifs.length > 1 ? 's' : ''} en cours de suivi`,
+      body: 'Consultez l’avancement et les dernières mises à jour dans Incidents & travaux.',
+      href: '/incidents',
+      severity: hasUrgentIncident ? 'danger' : 'warning',
+      category: hasUrgentIncident ? 'urgent' : 'action',
+      priorityRank: hasUrgentIncident ? 50 : 60,
+    });
+  }
+
+  if (snapshot.solde < 0) {
+    notifications.push({
+      id: 'copro-credit',
+      type: 'impaye',
+      title: `${formatEuros(Math.abs(snapshot.solde))} de crédit enregistré`,
+      body: 'Une avance ou un trop-perçu est actuellement enregistré en votre faveur.',
+      href: '/dashboard',
+      severity: 'info',
+      category: 'info',
+      priorityRank: 80,
+    });
+  }
+
+  const latestBalanceEvent = snapshot.balanceEvents[0];
+  if (latestBalanceEvent) {
+    notifications.push({
+      id: `copro-balance-event-${latestBalanceEvent.id}`,
+      type: latestBalanceEvent.amount < 0 ? 'appel_fonds' : 'impaye',
+      title: latestBalanceEvent.label,
+      body: `${formatEuros(latestBalanceEvent.balance_after)} de solde après écriture · ${new Date(latestBalanceEvent.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`,
+      href: '/dashboard',
+      severity: 'info',
+      category: 'info',
+      priorityRank: 90,
+      createdAt: latestBalanceEvent.created_at,
     });
   }
 

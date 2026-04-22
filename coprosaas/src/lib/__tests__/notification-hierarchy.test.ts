@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSyndicBellNotifications, resolveNotificationCategory, sortNotificationsByPriority } from '../notification-hierarchy';
+import { buildCoproBellNotifications, buildSyndicBellNotifications, resolveNotificationCategory, sortNotificationsByPriority } from '../notification-hierarchy';
 import type { AppNotification } from '@/types';
 
 describe('notification hierarchy', () => {
@@ -85,5 +85,62 @@ describe('notification hierarchy', () => {
 
     expect(sorted.map((notification) => notification.id)).toEqual(['urgent-early', 'urgent', 'action', 'info']);
     expect(resolveNotificationCategory(sorted[0])).toBe('urgent');
+  });
+
+  it('hiérarchise les notifications copropriétaire comme la vue syndic', () => {
+    const notifications = buildCoproBellNotifications({
+      solde: 205.6,
+      chargesImpayees: [
+        {
+          id: 'ligne-1',
+          montant_du: 205.6,
+          appel: { id: 'appel-1', titre: 'T2 2026', date_echeance: '2026-04-10' },
+        },
+      ],
+      prochaineAG: { id: 'ag-1', titre: 'AGO 2026', date_ag: '2026-04-25T10:00:00.000Z', statut: 'planifiee' },
+      joursAvantAG: 4,
+      incidentsActifs: [
+        { id: 'incident-1', titre: 'Fuite cave', statut: 'en_cours', priorite: 'urgente' },
+      ],
+      balanceEvents: [
+        {
+          id: 'evt-1',
+          event_date: '2026-04-20',
+          source_type: 'payment_received',
+          account_type: 'principal',
+          label: 'Paiement reçu — T2 2026',
+          reason: null,
+          amount: -120,
+          balance_after: 205.6,
+          created_at: '2026-04-20T10:00:00.000Z',
+        },
+      ],
+    }, new Date('2026-04-21T10:00:00.000Z'));
+
+    expect(notifications.map((notification) => notification.id)).toEqual([
+      'copro-charges-echues',
+      'copro-ag-ag-1',
+      'copro-incidents-urgents',
+      'copro-balance-event-evt-1',
+    ]);
+    expect(notifications[0]?.category).toBe('urgent');
+    expect(notifications[3]?.category).toBe('info');
+    expect(notifications[0]?.title).toMatch(/échéances dépassées/i);
+  });
+
+  it('corrige le sens du solde copropriétaire et expose un crédit en info', () => {
+    const notifications = buildCoproBellNotifications({
+      solde: -87.4,
+      chargesImpayees: [],
+      prochaineAG: null,
+      joursAvantAG: null,
+      incidentsActifs: [],
+      balanceEvents: [],
+    }, new Date('2026-04-21T10:00:00.000Z'));
+
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0]?.id).toBe('copro-credit');
+    expect(notifications[0]?.category).toBe('info');
+    expect(notifications[0]?.title).toMatch(/crédit enregistré/i);
   });
 });
