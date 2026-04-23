@@ -4,13 +4,34 @@ import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { wrapEmail, infoTable, infoRow, alertBanner, ctaButton, h, COLOR, SITE_URL } from '@/lib/emails/base';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
-import { formatDate, formatTime } from '@/lib/utils';
+import { formatDate, formatTime, getParisYear } from '@/lib/utils';
+import { buildConvocationPdfAttachment } from '@/lib/ag-email-pdf';
+import { buildConvocationPdfDisplayName } from '@/lib/pdf-filenames';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
+
+async function getOrCreateSubDossier(
+  admin: ReturnType<typeof createAdminClient>,
+  nom: string,
+  parentId: string | null,
+  syndicId: string,
+): Promise<string | null> {
+  const base = admin.from('document_dossiers').select('id').eq('syndic_id', syndicId).eq('nom', nom);
+  const query = parentId ? base.eq('parent_id', parentId) : base.is('parent_id', null);
+  const { data: existing } = await query.maybeSingle();
+  if (existing?.id) return existing.id;
+
+  const payload: Record<string, string | boolean | null> = { nom, syndic_id: syndicId, is_default: false };
+  if (parentId) payload.parent_id = parentId;
+
+  const { data: created } = await admin.from('document_dossiers').insert(payload).select('id').single();
+  return created?.id ?? null;
+}
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ agId: string }> }) {
   const { agId } = await params;
@@ -89,6 +110,65 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     .join('');
 
   const documentsUrl = `${SITE_URL}/documents`;
+
+  // Archivage de la convocation dans les Documents (best-effort, non bloquant)
+  try {
+    const admin = createAdminClient();
+    const pdfAttachment = buildConvocationPdfAttachment({
+      agId,
+      coproprieteNom: ag.coproprietes?.nom ?? '',
+      titreAg: ag.titre,
+      dateAg: ag.date_ag,
+      lieu: ag.lieu ?? null,
+      notes: ag.notes ?? null,
+      resolutions: (resolutions ?? []).map((r) => ({
+        numero: r.numero,
+        titre: r.titre,
+        description: r.description,
+      })),
+    });
+
+    const rootFolderId = await getOrCreateSubDossier(admin, 'Assemblées Générales', null, user.id);
+    if (rootFolderId) {
+      const year = String(getParisYear(ag.date_ag) ?? new Date().getFullYear());
+      const yearFolderId = await getOrCreateSubDossier(admin, year, rootFolderId, user.id);
+      if (yearFolderId) {
+        const dateFr = formatDate(ag.date_ag, { day: 'numeric', month: 'long', year: 'numeric' });
+        const agFolderName = `${ag.titre} — ${dateFr}`;
+        const agFolderId = await getOrCreateSubDossier(admin, agFolderName, yearFolderId, user.id);
+        if (agFolderId) {
+          const pdfBuffer = Buffer.from(pdfAttachment.content, 'base64');
+          const safeName = pdfAttachment.filename.replace(/\.pdf$/i, '')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9-_]+/g, '-')
+            .replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'convocation-ag';
+          const storagePath = `${ag.copropriete_id}/${Date.now()}-${safeName}.pdf`;
+
+          const { data: uploadData, error: uploadError } = await admin.storage
+            .from('documents')
+            .upload(storagePath, pdfBuffer, { contentType: 'application/pdf', cacheControl: '3600', upsert: false });
+
+          if (!uploadError && uploadData) {
+            const convNom = buildConvocationPdfDisplayName({
+              coproprieteNom: ag.coproprietes?.nom,
+              titreAg: ag.titre,
+              dateAg: ag.date_ag,
+            });
+            await admin.from('documents').insert({
+              copropriete_id: ag.copropriete_id,
+              dossier_id: agFolderId,
+              nom: convNom,
+              type: 'convocation_ag',
+              url: uploadData.path,
+              taille: pdfBuffer.byteLength,
+              uploaded_by: user.id,
+            });
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[ag/envoyer-convocation] Archivage PDF échoué:', e);
+  }
 
   let sent = 0;
   const errors: string[] = [];

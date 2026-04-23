@@ -184,7 +184,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
       titreAg: ag.titre,
       dateAg: ag.date_ag,
     });
-    const { error: documentError } = await admin.from('documents').upsert({
+    const { error: documentError } = await admin.from('documents').insert({
       copropriete_id: ag.copropriete_id,
       dossier_id: dossierId,
       nom: pvNom,
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
       url: uploadData.path,
       taille: pdfBuffer.byteLength,
       uploaded_by: user.id,
-    }, { onConflict: 'nom,copropriete_id' });
+    });
 
     if (documentError) throw new Error(documentError.message);
     documentStored = true;

@@ -153,7 +153,7 @@ export async function POST(
 
           if (!uploadError && uploadData) {
             const pvNom = buildPvPdfDisplayName({ coproprieteNom: copro.nom, titreAg: agTitre, dateAg: agDateValue });
-            await admin.from('documents').upsert({
+            await admin.from('documents').insert({
               copropriete_id: ag.copropriete_id,
               dossier_id: agFolderId,
               nom: pvNom,
@@ -161,7 +161,7 @@ export async function POST(
               url: uploadData.path,
               taille: pdfBuffer.byteLength,
               uploaded_by: user.id,
-            }, { onConflict: 'nom,copropriete_id' });
+            });
           }
         }
       }
