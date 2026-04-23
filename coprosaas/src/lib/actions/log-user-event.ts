@@ -29,7 +29,7 @@ export async function logCurrentUserEvent({
 
     const admin = createAdminClient();
     await admin.from('user_events').insert({
-      user_id: userId ?? user.id,
+      user_id: userId ?? user?.id ?? null,
       user_email: email,
       event_type: eventType.trim(),
       label: label.trim(),
