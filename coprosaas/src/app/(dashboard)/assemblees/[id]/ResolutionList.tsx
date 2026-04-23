@@ -118,19 +118,19 @@ function SortableCard({
   const cardColor = isFinancier
     ? 'border-indigo-200 bg-indigo-50'
     : isDesignation
-    ? 'border-blue-200 bg-blue-50'
+    ? 'border-amber-200 bg-amber-50'
     : 'border-slate-200 bg-slate-50';
 
   const numColor = isFinancier
     ? 'bg-indigo-100 text-indigo-500'
     : isDesignation
-    ? 'bg-blue-100 text-blue-500'
+    ? 'bg-amber-100 text-amber-600'
     : 'bg-slate-200 text-slate-500';
 
   const categorieBadge = isFinancier
     ? { label: 'Financier', cls: 'text-indigo-600 bg-indigo-100' }
     : isDesignation
-    ? { label: 'Désignation', cls: 'text-blue-600 bg-blue-100' }
+    ? { label: 'Désignation', cls: 'text-amber-700 bg-amber-100' }
     : null;
 
   return (
