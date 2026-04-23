@@ -108,8 +108,10 @@ async function sendWelcomeEmail(params: {
 async function logAccountConfirmed(
   admin: ReturnType<typeof createAdminClient>,
   email: string,
+  userId?: string | null,
 ): Promise<void> {
   await admin.from('user_events').insert({
+    user_id: userId ?? null,
     user_email: normalizeEmail(email),
     event_type: 'account_confirmed',
     label: 'Compte confirmé',
@@ -152,7 +154,7 @@ async function runSignupFollowups(params: {
   }
 
   if (!hasAccountConfirmedEvent) {
-    await logAccountConfirmed(admin, normalizedEmail).catch((e: Error) => {
+    await logAccountConfirmed(admin, normalizedEmail, userId).catch((e: Error) => {
       console.warn('[auth/confirm] logAccountConfirmed error:', e?.message);
     });
   }

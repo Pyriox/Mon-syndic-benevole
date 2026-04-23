@@ -110,6 +110,7 @@ export async function POST(request: NextRequest) {
 
   await Promise.resolve(
     admin.from('user_events').insert({
+      user_id: userId,
       user_email: invitation.email.toLowerCase(),
       event_type: 'user_registered',
       label: 'Inscription via invitation',

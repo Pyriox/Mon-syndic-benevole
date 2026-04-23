@@ -261,6 +261,7 @@ function RegisterForm() {
       email: formData.email,
       eventType: 'user_registered',
       label: 'Inscription du compte',
+      userId: data.user?.id ?? null,
     }).catch(() => undefined);
 
     if (data.user && !data.session) {

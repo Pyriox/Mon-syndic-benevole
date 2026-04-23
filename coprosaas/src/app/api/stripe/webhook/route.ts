@@ -32,16 +32,16 @@ function getPlanLabel(planId: string | null | undefined): string {
 async function getSyndicInfoByCoproId(
   supabase: ReturnType<typeof createAdminClient>,
   coproId: string,
-): Promise<{ email: string | null; prenom: string | null; coproNom: string | null }> {
+): Promise<{ email: string | null; prenom: string | null; coproNom: string | null; userId: string | null }> {
   const { data: copro } = await supabase
     .from('coproprietes')
     .select('syndic_id, nom')
     .eq('id', coproId)
     .maybeSingle();
-  if (!copro?.syndic_id) return { email: null, prenom: null, coproNom: copro?.nom ?? null };
+  if (!copro?.syndic_id) return { email: null, prenom: null, coproNom: copro?.nom ?? null, userId: null };
   const { data: { user } } = await supabase.auth.admin.getUserById(copro.syndic_id);
   const prenom = (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
-  return { email: user?.email ?? null, prenom, coproNom: copro.nom };
+  return { email: user?.email ?? null, prenom, coproNom: copro.nom, userId: copro.syndic_id };
 }
 
 /** Enregistre un événement dans user_events (non bloquant). */
@@ -50,12 +50,13 @@ async function logUserEvent(
   email: string,
   event_type: string,
   label: string,
+  userId?: string | null,
 ): Promise<void> {
   if (!email) return;
   await Promise.resolve(
     adminClient
       .from('user_events')
-      .insert({ user_email: email.toLowerCase(), event_type, label }),
+      .insert({ user_id: userId ?? null, user_email: email.toLowerCase(), event_type, label }),
   ).catch((e: Error) => console.warn('[logUserEvent]', e?.message));
 }
 
@@ -267,6 +268,7 @@ export async function POST(req: NextRequest) {
                 subPlan === 'essai'
                   ? `Essai démarré — ${coproData.nom}`
                   : `Abonnement activé — ${coproData.nom} (${getPlanLabel(session.metadata?.plan_id)})`,
+                userId,
               );
             }
           } catch (e) {
@@ -383,7 +385,7 @@ export async function POST(req: NextRequest) {
         // Email : abonnement résilié
         try {
           const adminClient = createAdminClient();
-          const { email, prenom, coproNom } = await getSyndicInfoByCoproId(adminClient, coproId);
+          const { email, prenom, coproNom, userId } = await getSyndicInfoByCoproId(adminClient, coproId);
           if (email && coproNom) {
             const emailParams: SubscriptionEmailParams = {
               prenom,
@@ -408,6 +410,7 @@ export async function POST(req: NextRequest) {
               email,
               'subscription_cancelled',
               `Abonnement résilié — ${coproNom}`,
+              userId,
             );
           }
         } catch (e) {
@@ -457,9 +460,9 @@ export async function POST(req: NextRequest) {
 
         try {
           const adminClient = createAdminClient();
-          const { email, coproNom } = await getSyndicInfoByCoproId(adminClient, copro.id);
+          const { email, coproNom, userId } = await getSyndicInfoByCoproId(adminClient, copro.id);
           if (email && coproNom) {
-            await logUserEvent(adminClient, email, 'payment_succeeded', `Paiement réussi — ${coproNom}`);
+            await logUserEvent(adminClient, email, 'payment_succeeded', `Paiement réussi — ${coproNom}`, userId);
           }
         } catch (e) {
           console.error('[Stripe webhook] Erreur log payment_succeeded:', e);
@@ -483,7 +486,7 @@ export async function POST(req: NextRequest) {
         // Email : paiement échoué
         try {
           const adminClient = createAdminClient();
-          const { email, prenom, coproNom } = await getSyndicInfoByCoproId(adminClient, copro.id);
+          const { email, prenom, coproNom, userId } = await getSyndicInfoByCoproId(adminClient, copro.id);
           if (email && coproNom) {
             const emailParams: SubscriptionEmailParams = {
               prenom,
@@ -503,7 +506,7 @@ export async function POST(req: NextRequest) {
               legalReference: invoice.id,
               payload: { customerId },
             });
-            await logUserEvent(adminClient, email, 'payment_failed', `Paiement échoué — ${coproNom}`);
+            await logUserEvent(adminClient, email, 'payment_failed', `Paiement échoué — ${coproNom}`, userId);
           }
         } catch (e) {
           console.error('[Stripe webhook] Erreur email payment_failed:', e);

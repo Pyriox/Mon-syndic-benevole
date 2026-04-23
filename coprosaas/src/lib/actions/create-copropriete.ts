@@ -39,6 +39,7 @@ export async function createCopropriete(formData: {
     try {
       const admin = createAdminClient();
       await admin.from('user_events').insert({
+        user_id: user.id,
         user_email: userEmail.toLowerCase(),
         event_type: 'copropriete_created',
         label: `Copropriété créée — ${coproNom}`,

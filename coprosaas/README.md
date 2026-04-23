@@ -20,6 +20,10 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Analytics
+
+Le contrat opérationnel GTM / GA4 est documenté dans [GTM_CONTRACT.md](./GTM_CONTRACT.md). Toute modification du conteneur doit respecter ce document pour éviter les doubles comptages et la réintroduction de pages internes.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -13,14 +13,20 @@ describe('internal analytics helpers', () => {
   });
 
   it('calcule un contexte stable pour les vues internes', () => {
-    expect(getInternalAnalyticsContext('/admin/coproprietes/3fa85f64-5717-4562-b3fc-2c963f66afa6', 'admin')).toEqual({
-      normalizedPath: '/admin/coproprietes/[id]',
+    expect(getInternalAnalyticsContext('/coproprietes/3fa85f64-5717-4562-b3fc-2c963f66afa6/parametrage')).toEqual({
+      normalizedPath: '/coproprietes/[id]/parametrage',
       pageGroup: 'coproprietes',
-      pageName: 'coproprietes_[id]',
-      pageDepth: 2,
+      pageName: 'coproprietes_[id]_parametrage',
+      pageDepth: 3,
     });
 
-    expect(getInternalPageViewEventName('dashboard')).toBe('dashboard_page_view');
-    expect(getInternalPageViewEventName('admin')).toBe('admin_page_view');
+    expect(getInternalAnalyticsContext('/')).toEqual({
+      normalizedPath: '/',
+      pageGroup: 'overview',
+      pageName: 'dashboard_home',
+      pageDepth: 1,
+    });
+
+    expect(getInternalPageViewEventName()).toBe('dashboard_page_view');
   });
 });

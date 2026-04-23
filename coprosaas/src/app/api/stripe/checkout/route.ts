@@ -164,6 +164,7 @@ export async function POST(req: NextRequest) {
       try {
         const adminClient = createAdminClient();
         await adminClient.from('user_events').insert({
+          user_id: user.id,
           user_email: user.email.toLowerCase(),
           event_type: 'begin_checkout',
           label: `Checkout démarré — ${copro.nom} (${planId})`,

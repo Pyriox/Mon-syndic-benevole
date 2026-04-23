@@ -242,7 +242,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     >
       <ActivityHeartbeat />
       <Suspense>
-        <InternalPageTracker area="dashboard" role={userRole} />
+        <InternalPageTracker role={userRole} />
       </Suspense>
       <Suspense>
         <DashboardTracker userRole={userRole} />

@@ -152,7 +152,12 @@ function LoginForm() {
       anonymousEvent: 'login_anonymous',
       params: { method: 'email' },
     });
-    void logEventForEmail({ email: normalizedEmail, eventType: 'login_success', label: 'Connexion réussie' }).catch(() => undefined);
+    void logEventForEmail({
+      email: normalizedEmail,
+      eventType: 'login_success',
+      label: 'Connexion réussie',
+      userId: data.user.id,
+    }).catch(() => undefined);
     redirectToDashboard();
   };
 

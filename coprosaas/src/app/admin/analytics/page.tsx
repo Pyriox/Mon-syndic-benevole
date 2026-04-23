@@ -18,33 +18,18 @@ import {
   Users,
 } from 'lucide-react';
 
-import { ADMIN_EMAIL, isAdminUser } from '@/lib/admin-config';
+import { isAdminUser } from '@/lib/admin-config';
 import { getGa4AdminAnalytics } from '@/lib/ga4-admin';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-
-type UserEventRow = {
-  event_type: string;
-  created_at: string | null;
-  user_email: string | null;
-};
-
-type ProfileActivityRow = {
-  id: string;
-  full_name: string | null;
-  last_active_at: string | null;
-};
-
-type AdminRow = {
-  user_id: string;
-};
-
-type SourceMetric = {
-  label: string;
-  value7d: number | null;
-  value30d: number | null;
-  source: string;
-};
+import {
+  buildAdminAnalyticsMetrics,
+  type AdminRow,
+  type CoproActivityRow,
+  type ProfileActivityRow,
+  type SourceMetric,
+  type UserEventRow,
+} from './metrics';
 
 function fmtNumber(value: number) {
   return new Intl.NumberFormat('fr-FR').format(value);
@@ -62,13 +47,6 @@ function fmtDateTime(value: string) {
 function pct(part: number, total: number) {
   if (!total) return 0;
   return Math.round((part / total) * 100);
-}
-
-function countSinceDateValues(values: Array<string | null | undefined>, sinceMs: number) {
-  return values.reduce((sum, value) => {
-    const parsed = value ? Date.parse(value) : Number.NaN;
-    return Number.isFinite(parsed) && parsed >= sinceMs ? sum + 1 : sum;
-  }, 0);
 }
 
 function fmtRelativeTime(value: string | null) {
@@ -221,18 +199,17 @@ export default async function AdminAnalyticsPage() {
   const admin = createAdminClient();
   const snapshotMs = Date.parse(analytics.fetchedAt);
   const nowMs = Number.isFinite(snapshotMs) ? snapshotMs : 0;
-  const last7dMs = nowMs - 7 * 24 * 60 * 60 * 1000;
   const last30dIso = new Date(nowMs - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const [{ data: recentUserEvents }, { data: recentCopros }, { data: recentProfiles }, { data: adminRows }] = await Promise.all([
     admin
       .from('user_events')
-      .select('event_type, created_at, user_email')
+      .select('event_type, created_at, user_email, user_id')
       .in('event_type', ['user_registered', 'begin_checkout', 'trial_started', 'subscription_created', 'login_success'])
       .gte('created_at', last30dIso),
     admin
       .from('coproprietes')
-      .select('created_at')
+      .select('created_at, syndic_id')
       .gte('created_at', last30dIso),
     admin
       .from('profiles')
@@ -246,80 +223,36 @@ export default async function AdminAnalyticsPage() {
       .select('user_id'),
   ]);
 
-  const adminUserIds = new Set((adminRows ?? []).map((row) => (row as AdminRow).user_id));
-  const filteredUserEvents = ((recentUserEvents ?? []) as UserEventRow[]).filter((event) => (
-    (event.user_email ?? '').trim().toLowerCase() !== ADMIN_EMAIL
-  ));
-  const activeProfiles = ((recentProfiles ?? []) as ProfileActivityRow[]).filter((profile) => (
-    !adminUserIds.has(profile.id) && !!profile.last_active_at
-  ));
-
-  const gaSignUps7d =
-    (analytics.businessEvents7d.sign_up ?? 0) +
-    (analytics.businessEvents7d.sign_up_anonymous ?? 0);
-  const gaSignUps30d =
-    (analytics.businessEvents30d.sign_up ?? 0) +
-    (analytics.businessEvents30d.sign_up_anonymous ?? 0);
-  const gaLogins7d =
-    (analytics.businessEvents7d.login ?? 0) +
-    (analytics.businessEvents7d.login_anonymous ?? 0);
-  const gaLogins30d =
-    (analytics.businessEvents30d.login ?? 0) +
-    (analytics.businessEvents30d.login_anonymous ?? 0);
-  const gaCheckouts7d = analytics.businessEvents7d.begin_checkout ?? 0;
-  const gaCheckouts30d = analytics.businessEvents30d.begin_checkout ?? 0;
-  const gaPurchases7d = analytics.businessEvents7d.purchase ?? 0;
-  const gaPurchases30d = analytics.businessEvents30d.purchase ?? 0;
-  const gaOnboarding7d = analytics.businessEvents7d.onboarding_complete ?? 0;
-  const gaOnboarding30d = analytics.businessEvents30d.onboarding_complete ?? 0;
-  const dashboardPageViews7d = analytics.businessEvents7d.dashboard_page_view ?? 0;
-  const dashboardPageViews30d = analytics.businessEvents30d.dashboard_page_view ?? 0;
-
-  const registrationEvents = filteredUserEvents.filter((event) => event.event_type === 'user_registered');
-  const checkoutEvents = filteredUserEvents.filter((event) => event.event_type === 'begin_checkout');
-  const loginEvents = filteredUserEvents.filter((event) => event.event_type === 'login_success');
-  const trialEvents = filteredUserEvents.filter((event) => event.event_type === 'trial_started');
-  const subscriptionEvents = filteredUserEvents.filter((event) => event.event_type === 'subscription_created');
-
-  const internalActive30d = activeProfiles.length;
-  const internalActive7d = countSinceDateValues(activeProfiles.map((profile) => profile.last_active_at), last7dMs);
-  const internalRegistrations30d = registrationEvents.length;
-  const internalRegistrations7d = countSinceDateValues(registrationEvents.map((event) => event.created_at), last7dMs);
-  const internalLoginForms30d = loginEvents.length;
-  const internalLoginForms7d = countSinceDateValues(loginEvents.map((event) => event.created_at), last7dMs);
-  const internalCheckouts30d = checkoutEvents.length;
-  const internalCheckouts7d = countSinceDateValues(checkoutEvents.map((event) => event.created_at), last7dMs);
-  const internalOnboarding30d = countSinceDateValues((recentCopros ?? []).map((row) => row.created_at), Number.NEGATIVE_INFINITY);
-  const internalOnboarding7d = countSinceDateValues((recentCopros ?? []).map((row) => row.created_at), last7dMs);
-  const stripeTrials30d = trialEvents.length;
-  const stripeTrials7d = countSinceDateValues(trialEvents.map((event) => event.created_at), last7dMs);
-  const stripeSubscriptions30d = subscriptionEvents.length;
-  const stripeSubscriptions7d = countSinceDateValues(subscriptionEvents.map((event) => event.created_at), last7dMs);
-  const latestActivityAt = activeProfiles[0]?.last_active_at ?? null;
-  const latestActivityUser = activeProfiles[0]?.full_name?.trim() || 'Utilisateur non nommé';
-
-  const gaMetrics: SourceMetric[] = [
-    { label: 'Inscriptions GA4', value7d: gaSignUps7d, value30d: gaSignUps30d, source: 'GA4 sign_up / sign_up_anonymous' },
-    { label: 'Connexions GA4', value7d: gaLogins7d, value30d: gaLogins30d, source: 'GA4 login / login_anonymous' },
-    { label: 'Checkouts GA4', value7d: gaCheckouts7d, value30d: gaCheckouts30d, source: 'GA4 begin_checkout' },
-    { label: 'Purchases GA4', value7d: gaPurchases7d, value30d: gaPurchases30d, source: 'GA4 purchase' },
-    { label: 'Onboarding GA4', value7d: gaOnboarding7d, value30d: gaOnboarding30d, source: 'GA4 onboarding_complete' },
-    { label: 'Pages dashboard GA4', value7d: dashboardPageViews7d, value30d: dashboardPageViews30d, source: 'GA4 dashboard_page_view' },
-  ];
-
-  const internalMetrics: SourceMetric[] = [
-    { label: 'Utilisateurs actifs internes', value7d: internalActive7d, value30d: internalActive30d, source: 'profiles.last_active_at hors admins' },
-    { label: 'Inscriptions internes', value7d: internalRegistrations7d, value30d: internalRegistrations30d, source: 'user_events.user_registered' },
-    { label: 'Connexions formulaire', value7d: internalLoginForms7d, value30d: internalLoginForms30d, source: 'user_events.login_success' },
-    { label: 'Checkouts applicatifs', value7d: internalCheckouts7d, value30d: internalCheckouts30d, source: 'user_events.begin_checkout' },
-    { label: 'Copros créées', value7d: internalOnboarding7d, value30d: internalOnboarding30d, source: 'coproprietes.created_at' },
-  ];
-
-  const stripeMetrics: SourceMetric[] = [
-    { label: 'Essais démarrés', value7d: stripeTrials7d, value30d: stripeTrials30d, source: 'Webhook Stripe trial_started' },
-    { label: 'Abonnements activés', value7d: stripeSubscriptions7d, value30d: stripeSubscriptions30d, source: 'Webhook Stripe subscription_created' },
-    { label: 'Activations billing', value7d: stripeTrials7d + stripeSubscriptions7d, value30d: stripeTrials30d + stripeSubscriptions30d, source: 'Webhook Stripe agrégé' },
-  ];
+  const {
+    gaMetrics,
+    internalMetrics,
+    stripeMetrics,
+    dashboardPageViews7d,
+    dashboardPageViews30d,
+    internalActive7d,
+    internalActive30d,
+    internalRegistrations7d,
+    internalRegistrations30d,
+    internalLoginForms7d,
+    internalLoginForms30d,
+    internalCheckouts7d,
+    internalCheckouts30d,
+    internalOnboarding7d,
+    internalOnboarding30d,
+    stripeTrials7d,
+    stripeTrials30d,
+    stripeSubscriptions7d,
+    stripeSubscriptions30d,
+    latestActivityAt,
+    latestActivityUser,
+  } = buildAdminAnalyticsMetrics({
+    analytics,
+    recentUserEvents: (recentUserEvents ?? []) as UserEventRow[],
+    recentCopros: (recentCopros ?? []) as CoproActivityRow[],
+    recentProfiles: (recentProfiles ?? []) as ProfileActivityRow[],
+    adminRows: (adminRows ?? []) as AdminRow[],
+    nowMs,
+  });
 
   return (
     <div className="space-y-6 pb-16">
@@ -327,9 +260,9 @@ export default async function AdminAnalyticsPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">Analytics • Admin</p>
-            <h1 className="mt-1 text-2xl font-bold">GA4, logs internes et Stripe séparés</h1>
+            <h1 className="mt-1 text-2xl font-bold">KPI métier prioritaires, diagnostics par source</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-200">
-              Cette page n’agrège plus les sources. Chaque bloc expose sa propre vérité pour rendre les écarts visibles au lieu de les masquer.
+              Les KPI quantifiables côté application utilisent désormais uniquement les logs internes ou Stripe. GA4 reste affiché pour l’audience web et les signaux sans équivalent fiable en base.
             </p>
           </div>
 
@@ -398,20 +331,89 @@ export default async function AdminAnalyticsPage() {
         </section>
       )}
 
+      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <BarChart3 size={16} className="text-indigo-600" />
+          <h2 className="text-sm font-semibold text-gray-900">KPI prioritaires</h2>
+        </div>
+        <p className="mt-2 text-sm text-gray-600">
+          Ces cartes suivent d’abord la fiabilité métier. Les parcours applicatifs viennent des logs internes, la facturation de Stripe, et GA4 n’apparaît ici que lorsqu’aucune source interne équivalente n’existe.
+        </p>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Utilisateurs actifs (7 j)"
+            value={fmtNumber(internalActive7d)}
+            hint={`${fmtNumber(internalActive30d)} sur 30 jours · logs internes`}
+            icon={Users}
+            tone="bg-blue-50 text-blue-600"
+          />
+          <StatCard
+            label="Dernière activité détectée"
+            value={fmtRelativeTime(latestActivityAt)}
+            hint={latestActivityAt ? `${fmtDateTime(latestActivityAt)} · ${latestActivityUser} · logs internes` : 'Aucune activité client remontée'}
+            icon={Clock3}
+            tone="bg-slate-50 text-slate-700"
+          />
+          <StatCard
+            label="Inscriptions (7 j)"
+            value={fmtNumber(internalRegistrations7d)}
+            hint={`${fmtNumber(internalRegistrations30d)} sur 30 jours · logs internes`}
+            icon={UserPlus}
+            tone="bg-indigo-50 text-indigo-600"
+          />
+          <StatCard
+            label="Connexions formulaire (7 j)"
+            value={fmtNumber(internalLoginForms7d)}
+            hint={`${fmtNumber(internalLoginForms30d)} sur 30 jours · logs internes`}
+            icon={Activity}
+            tone="bg-violet-50 text-violet-600"
+          />
+          <StatCard
+            label="Checkouts applicatifs (7 j)"
+            value={fmtNumber(internalCheckouts7d)}
+            hint={`${fmtNumber(internalCheckouts30d)} sur 30 jours · logs internes`}
+            icon={MousePointerClick}
+            tone="bg-amber-50 text-amber-600"
+          />
+          <StatCard
+            label="Copros créées (7 j)"
+            value={fmtNumber(internalOnboarding7d)}
+            hint={`${fmtNumber(internalOnboarding30d)} sur 30 jours · logs internes`}
+            icon={Building2}
+            tone="bg-teal-50 text-teal-600"
+          />
+          <StatCard
+            label="Essais démarrés (7 j)"
+            value={fmtNumber(stripeTrials7d)}
+            hint={`${fmtNumber(stripeTrials30d)} sur 30 jours · Stripe webhook`}
+            icon={ShoppingCart}
+            tone="bg-rose-50 text-rose-600"
+          />
+          <StatCard
+            label="Abonnements activés (7 j)"
+            value={fmtNumber(stripeSubscriptions7d)}
+            hint={`${fmtNumber(stripeSubscriptions30d)} sur 30 jours · Stripe webhook`}
+            icon={ShieldCheck}
+            tone="bg-emerald-50 text-emerald-600"
+          />
+        </div>
+      </section>
+
       <section className="grid gap-4 lg:grid-cols-4">
         <SourceSummaryCard
           source="GA4"
-          title={analytics.configured && !analytics.error ? 'Audience et événements web' : 'GA4 à vérifier'}
-          description="Utilisateurs, sessions, pages vues, consentement, appareils et événements front bruts."
+          title={analytics.configured && !analytics.error ? 'Audience web et diagnostic navigateur' : 'GA4 à vérifier'}
+          description="Sessions, pages vues, événements front, consentement, appareils et signaux sans source interne fiable."
         />
         <SourceSummaryCard
           source="Logs internes"
-          title="Activité produit et parcours applicatif"
+          title="Source de référence pour le produit"
           description="Dernière activité, inscriptions, connexions formulaire, checkouts et créations de copropriété."
         />
         <SourceSummaryCard
           source="Stripe"
-          title="Billing confirmé par webhook"
+          title="Source de référence pour le billing"
           description="Essais et abonnements activés depuis Stripe, sans dépendre du tracking navigateur."
         />
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -429,61 +431,33 @@ export default async function AdminAnalyticsPage() {
       <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-2">
           <BarChart3 size={16} className="text-indigo-600" />
-          <h2 className="text-sm font-semibold text-gray-900">Bloc GA4</h2>
+          <h2 className="text-sm font-semibold text-gray-900">Audience web et signaux GA4</h2>
         </div>
         <p className="mt-2 text-sm text-gray-600">
-          Lecture brute de la propriété GA4. Aucun fallback interne n’est injecté dans ce bloc. Les pages admin ne sont plus suivies.
+          Ce bloc ne garde que les signaux où GA4 reste utile: audience web, pages vues, sessions et vues dashboard. Les KPI métier quantifiables en base sont sortis de ce bloc.
         </p>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label="Utilisateurs actifs (7 j)"
+            label="Utilisateurs actifs web (7 j)"
             value={fmtNumber(analytics.last7d.activeUsers)}
-            hint={`${fmtNumber(analytics.last30d.activeUsers)} sur 30 jours · source GA4`}
+            hint={`${fmtNumber(analytics.last30d.activeUsers)} sur 30 jours · GA4`}
             icon={Users}
             tone="bg-blue-50 text-blue-600"
           />
           <StatCard
-            label="Sessions (7 j)"
+            label="Sessions web (7 j)"
             value={fmtNumber(analytics.last7d.sessions)}
-            hint={`${fmtNumber(analytics.last30d.sessions)} sur 30 jours · source GA4`}
+            hint={`${fmtNumber(analytics.last30d.sessions)} sur 30 jours · GA4`}
             icon={Activity}
             tone="bg-violet-50 text-violet-600"
           />
           <StatCard
-            label="Pages vues (7 j)"
+            label="Pages vues web (7 j)"
             value={fmtNumber(analytics.last7d.pageViews)}
-            hint={`${fmtNumber(analytics.last30d.pageViews)} sur 30 jours · source GA4`}
+            hint={`${fmtNumber(analytics.last30d.pageViews)} sur 30 jours · GA4`}
             icon={Eye}
             tone="bg-emerald-50 text-emerald-600"
-          />
-          <StatCard
-            label="Inscriptions GA4 (7 j)"
-            value={fmtNumber(gaSignUps7d)}
-            hint={`${fmtNumber(gaSignUps30d)} sur 30 jours · ${pct(gaSignUps7d, analytics.last7d.activeUsers)}% des actifs 7 j`}
-            icon={UserPlus}
-            tone="bg-indigo-50 text-indigo-600"
-          />
-          <StatCard
-            label="Connexions GA4 (7 j)"
-            value={fmtNumber(gaLogins7d)}
-            hint={`${fmtNumber(gaLogins30d)} sur 30 jours · login + login_anonymous`}
-            icon={Activity}
-            tone="bg-slate-50 text-slate-700"
-          />
-          <StatCard
-            label="Checkouts GA4 (7 j)"
-            value={fmtNumber(gaCheckouts7d)}
-            hint={`${fmtNumber(gaCheckouts30d)} sur 30 jours · begin_checkout`}
-            icon={MousePointerClick}
-            tone="bg-amber-50 text-amber-600"
-          />
-          <StatCard
-            label="Purchases GA4 (7 j)"
-            value={fmtNumber(gaPurchases7d)}
-            hint={gaCheckouts7d > 0 ? `${fmtNumber(gaPurchases30d)} sur 30 jours · ${pct(gaPurchases7d, gaCheckouts7d)}% de conversion GA4` : `${fmtNumber(gaPurchases30d)} sur 30 jours · aucun checkout GA4 sur 7 j`}
-            icon={ShoppingCart}
-            tone="bg-rose-50 text-rose-600"
           />
           <StatCard
             label="Pages dashboard GA4 (7 j)"
@@ -491,103 +465,6 @@ export default async function AdminAnalyticsPage() {
             hint={`${fmtNumber(dashboardPageViews30d)} sur 30 jours · dashboard_page_view`}
             icon={Eye}
             tone="bg-sky-50 text-sky-600"
-          />
-          <StatCard
-            label="Onboarding GA4 (7 j)"
-            value={fmtNumber(gaOnboarding7d)}
-            hint={`${fmtNumber(gaOnboarding30d)} sur 30 jours · onboarding_complete`}
-            icon={Building2}
-            tone="bg-teal-50 text-teal-600"
-          />
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center gap-2">
-          <ShieldCheck size={16} className="text-indigo-600" />
-          <h2 className="text-sm font-semibold text-gray-900">Bloc logs internes</h2>
-        </div>
-        <p className="mt-2 text-sm text-gray-600">
-          Les métriques ci-dessous proviennent uniquement de la base applicative. `Dernière activité` est distincte d’une connexion formulaire.
-          Elle est mise à jour lors de l’ouverture de l’espace client, du retour de focus et des navigations dashboard, même sans logout/login.
-        </p>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <StatCard
-            label="Utilisateurs actifs internes (7 j)"
-            value={fmtNumber(internalActive7d)}
-            hint={`${fmtNumber(internalActive30d)} sur 30 jours · profiles.last_active_at hors admins`}
-            icon={Users}
-            tone="bg-blue-50 text-blue-600"
-          />
-          <StatCard
-            label="Dernière activité"
-            value={fmtRelativeTime(latestActivityAt)}
-            hint={latestActivityAt ? `${fmtDateTime(latestActivityAt)} · ${latestActivityUser}` : 'Aucune activité client remontée'}
-            icon={Clock3}
-            tone="bg-slate-50 text-slate-700"
-          />
-          <StatCard
-            label="Inscriptions internes (7 j)"
-            value={fmtNumber(internalRegistrations7d)}
-            hint={`${fmtNumber(internalRegistrations30d)} sur 30 jours · user_registered`}
-            icon={UserPlus}
-            tone="bg-indigo-50 text-indigo-600"
-          />
-          <StatCard
-            label="Connexions formulaire (7 j)"
-            value={fmtNumber(internalLoginForms7d)}
-            hint={`${fmtNumber(internalLoginForms30d)} sur 30 jours · login_success uniquement`}
-            icon={Activity}
-            tone="bg-violet-50 text-violet-600"
-          />
-          <StatCard
-            label="Checkouts applicatifs (7 j)"
-            value={fmtNumber(internalCheckouts7d)}
-            hint={`${fmtNumber(internalCheckouts30d)} sur 30 jours · begin_checkout`}
-            icon={MousePointerClick}
-            tone="bg-amber-50 text-amber-600"
-          />
-          <StatCard
-            label="Copros créées (7 j)"
-            value={fmtNumber(internalOnboarding7d)}
-            hint={`${fmtNumber(internalOnboarding30d)} sur 30 jours · coproprietes.created_at`}
-            icon={Building2}
-            tone="bg-teal-50 text-teal-600"
-          />
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center gap-2">
-          <ShoppingCart size={16} className="text-indigo-600" />
-          <h2 className="text-sm font-semibold text-gray-900">Bloc Stripe</h2>
-        </div>
-        <p className="mt-2 text-sm text-gray-600">
-          Ce bloc reflète uniquement les activations confirmées par webhook Stripe. Il est donc plus fiable que le navigateur pour la facturation.
-        </p>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <StatCard
-            label="Essais démarrés (7 j)"
-            value={fmtNumber(stripeTrials7d)}
-            hint={`${fmtNumber(stripeTrials30d)} sur 30 jours · webhook trial_started`}
-            icon={ShoppingCart}
-            tone="bg-rose-50 text-rose-600"
-          />
-          <StatCard
-            label="Abonnements activés (7 j)"
-            value={fmtNumber(stripeSubscriptions7d)}
-            hint={`${fmtNumber(stripeSubscriptions30d)} sur 30 jours · webhook subscription_created`}
-            icon={ShieldCheck}
-            tone="bg-emerald-50 text-emerald-600"
-          />
-          <StatCard
-            label="Activations billing (7 j)"
-            value={fmtNumber(stripeTrials7d + stripeSubscriptions7d)}
-            hint={`${fmtNumber(stripeTrials30d + stripeSubscriptions30d)} sur 30 jours · essais + abonnements`}
-            icon={BarChart3}
-            tone="bg-amber-50 text-amber-600"
           />
         </div>
       </section>
@@ -609,10 +486,10 @@ export default async function AdminAnalyticsPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
           <h2 className="text-sm font-semibold text-gray-900">Lecture rapide</h2>
           <div className="mt-4 space-y-3 text-sm text-gray-600">
-            <p>GA4 sert ici à lire l’audience et les événements web bruts.</p>
-            <p>Les logs internes servent à lire l’activité produit réelle côté application.</p>
-            <p>Stripe sert de source de vérité pour la facturation et les activations.</p>
-            <p>Un écart entre blocs signale un problème d’instrumentation, pas une valeur à fusionner.</p>
+            <p>Les KPI produit en tête de page utilisent les logs internes dès qu’une mesure fiable existe côté base.</p>
+            <p>Stripe reste la source de vérité pour la facturation et les activations.</p>
+            <p>GA4 sert surtout à lire l’audience web, les pages vues et les signaux navigateur sans équivalent interne.</p>
+            <p>Les tableaux bruts par source restent en bas pour diagnostiquer les écarts d’instrumentation.</p>
           </div>
         </div>
       </section>
@@ -676,7 +553,7 @@ export default async function AdminAnalyticsPage() {
           )}
         </div>
 
-        <SourceMetricsTable title="Lecture GA4 brute" items={gaMetrics} />
+        <SourceMetricsTable title="Diagnostic GA4 brut" items={gaMetrics} />
         <SourceMetricsTable title="Lecture applicative brute" items={internalMetrics} />
         <SourceMetricsTable title="Lecture Stripe brute" items={stripeMetrics} />
 
@@ -713,8 +590,10 @@ export default async function AdminAnalyticsPage() {
           {[
             ...analytics.notes,
             'Les pages admin ne sont plus trackées par événements custom ; seul le dashboard reste instrumenté côté GA4.',
-            'Dernière activité = `profiles.last_active_at`, mise à jour à l’entrée, au retour de focus et aux navigations dans l’espace client.',
+            'Dernière activité détectée = `profiles.last_active_at`, mise à jour à l’entrée, au retour de focus, aux navigations et aux interactions utilisateur dans l’espace client.',
             'Connexions formulaire = `user_events.login_success` uniquement, donc ce chiffre est volontairement plus strict que la dernière activité.',
+            'Les KPI quantifiables côté application utilisent les logs internes ou Stripe en priorité ; GA4 reste un bloc d’audience et de diagnostic web.',
+            'Les agrégats internes excluent les admins par `user_id`, avec repli email uniquement pour l’historique antérieur à la migration.',
             'Les tableaux de synthèse sont volontairement séparés : aucune valeur n’est fusionnée, maximisée ou corrigée ici.',
           ].map((note) => (
             <li key={note}>• {note}</li>

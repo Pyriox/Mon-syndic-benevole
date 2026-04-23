@@ -10,6 +10,7 @@ export type LogUserEventInput = {
   label?: string;
   severity?: EventSeverity;
   metadata?: Record<string, unknown>;
+  userId?: string | null;
 };
 
 export async function logCurrentUserEvent({
@@ -17,6 +18,7 @@ export async function logCurrentUserEvent({
   label = '',
   severity = 'info',
   metadata,
+  userId,
 }: LogUserEventInput): Promise<void> {
   try {
     const supabase = await createClient();
@@ -27,6 +29,7 @@ export async function logCurrentUserEvent({
 
     const admin = createAdminClient();
     await admin.from('user_events').insert({
+      user_id: userId ?? user.id,
       user_email: email,
       event_type: eventType.trim(),
       label: label.trim(),
@@ -45,12 +48,14 @@ export async function logEventForEmail({
   label = '',
   severity = 'info',
   metadata,
+  userId,
 }: LogUserEventInput & { email: string }): Promise<void> {
   try {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !eventType.trim()) return;
     const admin = createAdminClient();
     await admin.from('user_events').insert({
+      user_id: userId ?? null,
       user_email: normalizedEmail,
       event_type: eventType.trim(),
       label: label.trim(),
@@ -69,6 +74,7 @@ export async function logAdminAction({
   label = '',
   severity = 'info',
   metadata,
+  userId,
 }: LogUserEventInput & { adminEmail: string }): Promise<void> {
   try {
     const normalizedEmail = adminEmail.trim().toLowerCase();
@@ -76,6 +82,7 @@ export async function logAdminAction({
 
     const admin = createAdminClient();
     await admin.from('user_events').insert({
+      user_id: userId ?? null,
       user_email: normalizedEmail,
       event_type: eventType.trim(),
       label: label.trim(),

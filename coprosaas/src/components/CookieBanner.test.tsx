@@ -56,7 +56,7 @@ describe('CookieBanner', () => {
     expect(await screen.findByRole('dialog', { name: /Préférences cookies/i })).not.toBeNull();
   });
 
-  it('enregistre une acceptation et envoie immédiatement une pageview', async () => {
+  it('enregistre une acceptation sans pageview immédiate', async () => {
     const { default: CookieBanner } = await import('./CookieBanner');
     render(<CookieBanner />);
 
@@ -68,10 +68,6 @@ describe('CookieBanner', () => {
 
     const stored = JSON.parse(localStorage.getItem('cookie_consent') ?? '{}');
     expect(stored.value).toBe('accepted');
-    expect(window.dataLayer).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ event: 'virtual_pageview' }),
-      ])
-    );
+    expect(window.dataLayer).toEqual([]);
   });
 });

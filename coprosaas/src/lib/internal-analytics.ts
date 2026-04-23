@@ -1,4 +1,4 @@
-export type InternalAnalyticsArea = 'dashboard' | 'admin';
+export type InternalAnalyticsArea = 'dashboard';
 export type InternalAnalyticsRole = 'syndic' | 'copropriétaire' | 'admin';
 
 const UUID_SEGMENT_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -33,26 +33,20 @@ export function normalizeInternalAnalyticsPath(pathname: string) {
   return segments.length > 0 ? `/${segments.join('/')}` : '/';
 }
 
-export function getInternalPageViewEventName(area: InternalAnalyticsArea) {
-  return area === 'admin' ? 'admin_page_view' : 'dashboard_page_view';
+export function getInternalPageViewEventName() {
+  return 'dashboard_page_view';
 }
 
-export function getInternalAnalyticsContext(pathname: string, area: InternalAnalyticsArea) {
+export function getInternalAnalyticsContext(pathname: string) {
   const normalizedPath = normalizeInternalAnalyticsPath(pathname);
   const segments = normalizedPath.split('/').filter(Boolean);
-  const logicalSegments = area === 'admin' && segments[0] === 'admin'
-    ? segments.slice(1)
-    : segments;
-
-  const pageGroup = logicalSegments[0] ?? 'overview';
-  const pageName = logicalSegments.length === 0
-    ? area === 'admin' ? 'admin_home' : 'dashboard_home'
-    : logicalSegments.join('_');
+  const pageGroup = segments[0] ?? 'overview';
+  const pageName = segments.length === 0 ? 'dashboard_home' : segments.join('_');
 
   return {
     normalizedPath,
     pageGroup,
     pageName,
-    pageDepth: Math.max(logicalSegments.length, 1),
+    pageDepth: Math.max(segments.length, 1),
   };
 }
