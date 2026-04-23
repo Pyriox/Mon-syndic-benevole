@@ -579,7 +579,7 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
             {sendSummary.message}
           </span>
         )}
-        <Button variant="secondary" size="sm" onClick={() => setIsOpen(true)}>
+        <Button variant={sentDate ? 'secondary' : 'primary'} size="sm" onClick={() => setIsOpen(true)}>
           <Mail size={14} /> {sentDate ? 'Renvoyer le PV' : 'Envoyer le PV par e-mail'}
         </Button>
       </div>
