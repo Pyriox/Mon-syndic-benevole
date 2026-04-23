@@ -112,25 +112,26 @@ function SortableCard({
   const cfg = tr ? TYPES_RESOLUTION[tr] : null;
   const isPreLaunch = agStatut === 'creation' || agStatut === 'planifiee';
 
-  const cardColor = cfg?.hasBudget
+  const isFinancier = !!(cfg?.hasBudget || cfg?.hasFondsTravaux || tr === 'calendrier_financement');
+  const isDesignation = !!cfg?.designation;
+
+  const cardColor = isFinancier
     ? 'border-indigo-200 bg-indigo-50'
-    : cfg?.hasFondsTravaux
-    ? 'border-amber-200 bg-amber-50'
-    : tr === 'calendrier_financement'
-    ? 'border-green-200 bg-green-50'
-    : cfg?.designation
+    : isDesignation
     ? 'border-blue-200 bg-blue-50'
     : 'border-slate-200 bg-slate-50';
 
-  const numColor = cfg?.hasBudget
+  const numColor = isFinancier
     ? 'bg-indigo-100 text-indigo-500'
-    : cfg?.hasFondsTravaux
-    ? 'bg-amber-100 text-amber-600'
-    : tr === 'calendrier_financement'
-    ? 'bg-green-100 text-green-600'
-    : cfg?.designation
+    : isDesignation
     ? 'bg-blue-100 text-blue-500'
     : 'bg-slate-200 text-slate-500';
+
+  const categorieBadge = isFinancier
+    ? { label: 'Financier', cls: 'text-indigo-600 bg-indigo-100' }
+    : isDesignation
+    ? { label: 'Désignation', cls: 'text-blue-600 bg-blue-100' }
+    : null;
 
   return (
     <div
@@ -154,6 +155,11 @@ function SortableCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
             <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${numColor}`}>#{res.numero}</span>
+            {categorieBadge && (
+              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${categorieBadge.cls}`}>
+                {categorieBadge.label}
+              </span>
+            )}
             <h4 className="font-semibold text-gray-800 text-sm leading-snug">{res.titre}</h4>
             {!isPreLaunch && (
               <Badge variant={badgeVariant(res.statut)}>{labelStatut[res.statut] ?? res.statut}</Badge>
