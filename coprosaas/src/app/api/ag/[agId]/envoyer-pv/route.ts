@@ -137,7 +137,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
       <td style="padding:10px 12px;font-size:13px;font-weight:600;color:${COLOR.muted};white-space:nowrap">#${r.numero}</td>
       <td style="padding:10px 12px;font-size:13px;color:${COLOR.text}">${h(r.titre)}</td>
       <td style="padding:10px 12px;font-size:12px;font-weight:700;color:${statut.color};white-space:nowrap">${statut.label}</td>
-      <td style="padding:10px 12px;font-size:12px;color:${COLOR.muted};white-space:nowrap">${r.voix_pour}+ / ${r.voix_contre}− / ${r.voix_abstention}=</td>
     </tr>`;
   }).join('');
 
@@ -236,7 +235,6 @@ ${ctaButton('Accéder à mes documents →', documentsUrl, COLOR.green)}
       <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:${COLOR.muted};letter-spacing:.05em">N°</th>
       <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:${COLOR.muted};letter-spacing:.05em">Résolution</th>
       <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:${COLOR.muted};letter-spacing:.05em">Résultat</th>
-      <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:${COLOR.muted};letter-spacing:.05em">Votes</th>
     </tr>
   </thead>
   <tbody>${tableauResolutions}</tbody>

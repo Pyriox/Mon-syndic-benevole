@@ -9,15 +9,38 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 import {
   buildAGTermineeEmail,
   buildAGTermineeSubject,
 } from '@/lib/emails/syndic-notifications';
 import { trackResendSendResult } from '@/lib/email-delivery';
-import { getCanonicalSiteUrl } from '@/lib/site-url';import { pushNotification } from '@/lib/notification-center';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
+import { pushNotification } from '@/lib/notification-center';
+import { buildPVPdfAttachment } from '@/lib/ag-email-pdf';
+import { buildPvPdfDisplayName } from '@/lib/pdf-filenames';
+import { formatDate, getParisYear } from '@/lib/utils';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
+
+async function getOrCreateSubDossier(
+  admin: ReturnType<typeof createAdminClient>,
+  nom: string,
+  parentId: string | null,
+  syndicId: string,
+): Promise<string | null> {
+  const base = admin.from('document_dossiers').select('id').eq('syndic_id', syndicId).eq('nom', nom);
+  const query = parentId ? base.eq('parent_id', parentId) : base.is('parent_id', null);
+  const { data: existing } = await query.maybeSingle();
+  if (existing?.id) return existing.id;
+
+  const payload: Record<string, string | boolean | null> = { nom, syndic_id: syndicId, is_default: false };
+  if (parentId) payload.parent_id = parentId;
+
+  const { data: created } = await admin.from('document_dossiers').insert(payload).select('id').single();
+  return created?.id ?? null;
+}
 
 export async function POST(
   req: NextRequest,
@@ -44,7 +67,7 @@ export async function POST(
   const { data: ag } = await supabase
     .from('assemblees_generales')
     .select(
-      'id, date_ag, statut, copropriete_id, coproprietes(nom, syndic_id, profiles!coproprietes_syndic_id_fkey(email, full_name))'
+      'id, titre, date_ag, lieu, notes, statut, quorum_atteint, copropriete_id, coproprietes(nom, syndic_id, profiles!coproprietes_syndic_id_fkey(email, full_name))'
     )
     .eq('id', agId)
     .single();
@@ -76,6 +99,75 @@ export async function POST(
 
   if (updateError) {
     return NextResponse.json({ message: 'Erreur lors de la mise à jour' }, { status: 500 });
+  }
+
+  // Archivage automatique du PV dans les Documents (best-effort, non bloquant)
+  try {
+    const admin = createAdminClient();
+
+    const { data: resolutionsPV } = await supabase
+      .from('resolutions')
+      .select('numero, titre, statut, voix_pour, voix_contre, voix_abstention')
+      .eq('ag_id', agId)
+      .order('numero');
+
+    const pdfAttachment = buildPVPdfAttachment({
+      agId,
+      coproprieteNom: copro.nom ?? '',
+      titreAg: (ag as { titre?: string }).titre ?? '',
+      dateAg: ag.date_ag,
+      lieu: (ag as { lieu?: string | null }).lieu ?? null,
+      quorumAtteint,
+      notes: (ag as { notes?: string | null }).notes ?? null,
+      resolutions: (resolutionsPV ?? []).map((r) => ({
+        numero: r.numero,
+        titre: r.titre,
+        statut: r.statut,
+        voix_pour: r.voix_pour,
+        voix_contre: r.voix_contre,
+        voix_abstention: r.voix_abstention,
+      })),
+    });
+
+    // Créer/récupérer le dossier AG dans Documents
+    const agDateValue = ag.date_ag;
+    const agTitre = (ag as { titre?: string }).titre ?? '';
+    const rootFolderId = await getOrCreateSubDossier(admin, 'Assemblées Générales', null, user.id);
+    if (rootFolderId) {
+      const year = String(getParisYear(agDateValue) ?? new Date().getFullYear());
+      const yearFolderId = await getOrCreateSubDossier(admin, year, rootFolderId, user.id);
+      if (yearFolderId) {
+        const dateFr = formatDate(agDateValue, { day: 'numeric', month: 'long', year: 'numeric' });
+        const agFolderName = `${agTitre} — ${dateFr}`;
+        const agFolderId = await getOrCreateSubDossier(admin, agFolderName, yearFolderId, user.id);
+        if (agFolderId && ag.copropriete_id) {
+          const pdfBuffer = Buffer.from(pdfAttachment.content, 'base64');
+          const safeName = pdfAttachment.filename.replace(/\.pdf$/i, '')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9-_]+/g, '-')
+            .replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'pv-ag';
+          const storagePath = `${ag.copropriete_id}/${Date.now()}-${safeName}.pdf`;
+
+          const { data: uploadData, error: uploadError } = await admin.storage
+            .from('documents')
+            .upload(storagePath, pdfBuffer, { contentType: 'application/pdf', cacheControl: '3600', upsert: false });
+
+          if (!uploadError && uploadData) {
+            const pvNom = buildPvPdfDisplayName({ coproprieteNom: copro.nom, titreAg: agTitre, dateAg: agDateValue });
+            await admin.from('documents').upsert({
+              copropriete_id: ag.copropriete_id,
+              dossier_id: agFolderId,
+              nom: pvNom,
+              type: 'pv_ag',
+              url: uploadData.path,
+              taille: pdfBuffer.byteLength,
+              uploaded_by: user.id,
+            }, { onConflict: 'nom,copropriete_id' });
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[ag/terminer] Archivage PV échoué:', e);
   }
 
   if (user.email) {
