@@ -22,6 +22,8 @@ export default function InternalPageTracker({ area, role }: Props) {
   const prevPathRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (area === 'admin') return;
+
     const fullPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     if (fullPath === prevPathRef.current) return;
     prevPathRef.current = fullPath;

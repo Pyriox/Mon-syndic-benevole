@@ -10,7 +10,6 @@ const CUSTOM_EVENT_NAMES = [
   'purchase',
   'onboarding_complete',
   'dashboard_page_view',
-  'admin_page_view',
   'view_article',
   'click_cta',
   'form_abandonment',
@@ -283,7 +282,7 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
     notes: [
       'Les chiffres GA4 peuvent avoir un léger délai de traitement.',
       'Les répartitions par consentement nécessitent les dimensions personnalisées GA4 correspondantes.',
-      'Les pages internes dashboard/admin utilisent les événements `dashboard_page_view` et `admin_page_view`.',
+      'Les pages dashboard utilisent l’événement `dashboard_page_view` pour l’audit produit côté GA4.',
     ],
   };
 
@@ -317,7 +316,7 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
     const internalPlatformFilter = {
       filter: {
         fieldName: 'eventName',
-        inListFilter: { values: ['dashboard_page_view', 'admin_page_view'] },
+        inListFilter: { values: ['dashboard_page_view'] },
       },
     };
 

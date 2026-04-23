@@ -9,6 +9,7 @@ import { createClient, getAuthUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getDashboardLayoutData, getSyndicNotifications, getCoproNotifications } from '@/lib/cached-queries';
 import { getAvailableDashboardRoles, normalizeDashboardViewMode, resolveDashboardRole } from '@/lib/dashboard-view-mode';
+import ActivityHeartbeat from '@/components/ActivityHeartbeat';
 import DashboardShell from '@/components/layout/DashboardShell';
 import DashboardTracker from '@/components/DashboardTracker';
 import InternalPageTracker from '@/components/InternalPageTracker';
@@ -239,6 +240,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       userName={userName}
       notifications={notifications}
     >
+      <ActivityHeartbeat />
       <Suspense>
         <InternalPageTracker area="dashboard" role={userRole} />
       </Suspense>
