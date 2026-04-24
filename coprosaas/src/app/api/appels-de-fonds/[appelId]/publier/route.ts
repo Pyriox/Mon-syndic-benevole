@@ -9,8 +9,8 @@
 //    appel exigible dans plusieurs mois.
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { applyCoproprietaireBalanceDelta, resolveAppelBalanceAccountType } from '@/lib/coproprietaire-balance';
 import { parseBudgetPostesFromDescription, repartitionParPostes } from '@/lib/utils';
 import { Resend } from 'resend';
@@ -28,13 +28,7 @@ export async function POST(
   { params }: { params: Promise<{ appelId: string }> }
 ) {
   const { appelId } = await params;
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
-  );
+  const supabase = await createClient();
 
   // Auth check
   const { data: { user } } = await supabase.auth.getUser();
@@ -255,7 +249,7 @@ export async function POST(
     const cop = c as { nom: string; prenom: string; email: string; user_id: string | null };
     let email = cop.email ?? '';
     if (!email && cop.user_id) {
-      const { data: authData } = await supabase.auth.admin.getUserById(cop.user_id);
+      const { data: authData } = await createAdminClient().auth.admin.getUserById(cop.user_id);
       email = authData?.user?.email ?? '';
     }
     if (!email) continue;

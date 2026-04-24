@@ -5,8 +5,6 @@
 // e-mail au syndic pour lui rappeler de créer les appels de fonds.
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -56,12 +54,7 @@ export async function POST(
   } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
-  );
+  const supabase = authClient;
 
   // Récupère l'AG + copropriété + profil du syndic
   const { data: ag } = await supabase

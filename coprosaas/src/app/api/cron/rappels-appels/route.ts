@@ -15,7 +15,7 @@
 // Appelé par Vercel Cron (vercel.json) avec header Authorization
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 import { buildAppelEmail, buildAppelEmailSubject, type AppelEmailType } from '@/lib/emails/appel-de-fonds';
 import {
@@ -91,11 +91,7 @@ export async function GET(req: NextRequest) {
     hasTargetEmails: Boolean(onboardingTestEmail),
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
-  );
+  const supabase = createAdminClient();
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -630,7 +626,7 @@ function buildUtcRangeBounds(startDateIso: string | null, endDateIso: string): {
 }
 
 async function getConfirmedEmailsForDate(
-  supabase: ReturnType<typeof createServerClient>,
+  supabase: ReturnType<typeof createAdminClient>,
   window: {
     startDateIso: string | null;
     endDateIso: string;
@@ -654,7 +650,7 @@ async function getConfirmedEmailsForDate(
 }
 
 async function getAlreadyRemindedEmails(
-  supabase: ReturnType<typeof createServerClient>,
+  supabase: ReturnType<typeof createAdminClient>,
   eventType: string,
   emails: string[],
 ): Promise<Set<string>> {
@@ -670,7 +666,7 @@ async function getAlreadyRemindedEmails(
 }
 
 async function sendSyndicOnboardingReminders(
-  supabase: ReturnType<typeof createServerClient>,
+  supabase: ReturnType<typeof createAdminClient>,
   confirmationWindow: {
     startDateIso: string | null;
     endDateIso: string;
@@ -828,7 +824,7 @@ function getAppelLegalEventType(type: AppelEmailType): string {
 
 // ---- Envoi des notifications pour un appel donné ----
 async function sendRappelEmails(
-  supabase: ReturnType<typeof createServerClient>,
+  supabase: ReturnType<typeof createAdminClient>,
   appel: AppelRow,
   type: AppelEmailType
 ): Promise<number> {
@@ -934,7 +930,7 @@ async function sendRappelEmails(
 }
 
 async function sendSyndicImpayesRecap(
-  supabase: ReturnType<typeof createServerClient>,
+  supabase: ReturnType<typeof createAdminClient>,
   appel: AppelWithSyndicRow,
 ): Promise<number> {
   const copro = appel.coproprietes;

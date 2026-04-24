@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { wrapEmail, infoTable, infoRow, alertBanner, ctaButton, h, COLOR, SITE_URL } from '@/lib/emails/base';
 import { createClient } from '@/lib/supabase/server';
@@ -70,18 +68,13 @@ async function getDossierAGDocuments(
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ agId: string }> }) {
   const { agId } = await params;
-  const cookieStore = await cookies();
 
   // Vérification de l'authentification
   const authClient = await createClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
-  );
+  const supabase = authClient;
 
   const { data: ag } = await supabase
     .from('assemblees_generales')

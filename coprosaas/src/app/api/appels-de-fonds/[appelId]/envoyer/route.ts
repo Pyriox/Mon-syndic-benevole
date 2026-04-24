@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { isSubscribed } from '@/lib/subscription';
 import { buildAppelEmail, buildAppelEmailSubject } from '@/lib/emails/appel-de-fonds';
 import { trackEmailDelivery } from '@/lib/email-delivery';
@@ -16,18 +15,13 @@ export async function POST(
   { params }: { params: Promise<{ appelId: string }> }
 ) {
   const { appelId } = await params;
-  const cookieStore = await cookies();
 
   // Vérification de l'authentification
   const authClient = await createClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
-  );
+  const supabase = authClient;
 
   // Récupérer l'appel de fonds + copropriété
   const { data: appel } = await supabase
@@ -72,7 +66,7 @@ export async function POST(
     let email = c.email ?? '';
     // Fallback : récupérer l’e-mail depuis auth.users si le champ est vide
     if (!email && c.user_id) {
-      const { data: authData } = await supabase.auth.admin.getUserById(c.user_id);
+      const { data: authData } = await createAdminClient().auth.admin.getUserById(c.user_id);
       email = authData?.user?.email ?? '';
     }
     if (!email) continue;

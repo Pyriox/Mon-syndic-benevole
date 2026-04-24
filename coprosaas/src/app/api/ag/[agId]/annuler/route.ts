@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@/lib/supabase/server';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 
@@ -17,12 +15,7 @@ export async function POST(
 
   if (!user) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
-  );
+  const supabase = authClient;
 
   const { data: ag } = await supabase
     .from('assemblees_generales')
