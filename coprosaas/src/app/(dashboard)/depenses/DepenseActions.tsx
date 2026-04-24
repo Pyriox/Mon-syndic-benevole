@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { buildCoproStorageDownloadHref, extractStorageBasename } from '@/lib/storage-path';
 import Button from '@/components/ui/Button';
@@ -587,7 +588,13 @@ export function DepenseDelete({ depenseId, coproprieteId }: { depenseId: string;
     if (!confirm('Supprimer cette dépense ? Cette action est irréversible.')) return;
     setLoading(true);
     await supabase.from('repartitions_depenses').delete().eq('depense_id', depenseId);
-    await supabase.from('depenses').delete().eq('id', depenseId);
+    const { error } = await supabase.from('depenses').delete().eq('id', depenseId);
+    if (error) {
+      toast.error('Erreur lors de la suppression. Veuillez réessayer.');
+      setLoading(false);
+      return;
+    }
+    toast.success('Dépense supprimée.');
     await revalidateCoproFinance(coproprieteId);
     router.refresh();
   };

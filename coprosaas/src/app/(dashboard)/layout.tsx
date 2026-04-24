@@ -13,6 +13,7 @@ import ActivityHeartbeat from '@/components/ActivityHeartbeat';
 import DashboardShell from '@/components/layout/DashboardShell';
 import DashboardTracker from '@/components/DashboardTracker';
 import InternalPageTracker from '@/components/InternalPageTracker';
+import { Toaster } from 'sonner';
 import { Suspense } from 'react';
 import type { UserCopropriete, AppNotification } from '@/types';
 
@@ -240,6 +241,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       notifications={notifications}
     >
       <ActivityHeartbeat />
+      <Toaster richColors position="top-right" />
       <Suspense>
         <InternalPageTracker role={userRole} />
       </Suspense>

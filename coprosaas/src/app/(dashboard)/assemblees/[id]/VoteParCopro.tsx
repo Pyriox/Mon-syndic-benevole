@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import { Save, SkipForward, Plus, Trash2, CheckCircle2, Pencil, Users, AlertTriangle, Zap } from 'lucide-react';
@@ -209,7 +210,7 @@ export default function VoteParCopro({
       ...(isSyndic ? { date_fin_mandat: dateFinMandat || null } : {}),
     }).eq('id', resolutionId);
     if (error) {
-      alert('Erreur lors de l\'enregistrement du vote. Veuillez réessayer.');
+      toast.error('Erreur lors de l\'enregistrement du vote. Veuillez réessayer.');
       setSaving(false);
       return;
     }
@@ -231,7 +232,7 @@ export default function VoteParCopro({
     if (toUpsert.length > 0) {
       const { error: upsertError } = await supabase.from('votes_coproprietaires').upsert(toUpsert, { onConflict: 'resolution_id,coproprietaire_id' });
       if (upsertError) {
-        alert('Erreur lors de l\'enregistrement des votes. Veuillez réessayer.');
+        toast.error('Erreur lors de l\'enregistrement des votes. Veuillez réessayer.');
         setSaving(false);
         return;
       }
@@ -239,7 +240,7 @@ export default function VoteParCopro({
     if (toDeleteIds.length > 0) {
       const { error: deleteError } = await supabase.from('votes_coproprietaires').delete().eq('resolution_id', resolutionId).in('coproprietaire_id', toDeleteIds);
       if (deleteError) {
-        alert('Erreur lors de l\'enregistrement des votes. Veuillez réessayer.');
+        toast.error('Erreur lors de l\'enregistrement des votes. Veuillez réessayer.');
         setSaving(false);
         return;
       }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { applyProviderEvent } from '@/lib/email-delivery';
 import { pushAdminAlert } from '@/lib/notification-center';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -124,6 +125,19 @@ export async function POST(req: NextRequest) {
     }).catch((error) => {
       console.error('[resend/webhook] admin alert error:', error);
     });
+  }
+
+  // Hard bounce → blacklist the email address to suppress future sends
+  if (newStatus === 'bounced') {
+    const bouncedEmail = extractRecipientEmail(event);
+    if (bouncedEmail) {
+      const admin = createAdminClient();
+      await admin
+        .from('profiles')
+        .update({ email_bounced_hard: true })
+        .eq('email', bouncedEmail)
+        .eq('email_bounced_hard', false);
+    }
   }
 
   return NextResponse.json({ ok: true, matched: Boolean(delivery), status: newStatus });

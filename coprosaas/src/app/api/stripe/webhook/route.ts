@@ -14,6 +14,7 @@ import {
   buildRenewalEmail, buildRenewalSubject,
   buildPaymentFailedEmail, buildPaymentFailedSubject,
   buildCancelledEmail, buildCancelledSubject,
+  buildCancelScheduledEmail, buildCancelScheduledSubject,
   type SubscriptionEmailParams,
 } from '@/lib/emails/subscription';
 import { trackResendSendResult } from '@/lib/email-delivery';
@@ -22,6 +23,53 @@ import { getCanonicalSiteUrl } from '@/lib/site-url';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 const SITE_URL = getCanonicalSiteUrl();
+
+/**
+ * Envoie un événement `purchase` à GA4 via le Measurement Protocol (server-side).
+ * Best-effort : les erreurs sont loggées mais n'interrompent pas le traitement du webhook.
+ */
+async function sendGa4PurchaseEvent(params: {
+  transactionId: string;
+  clientId: string;
+  amountCents: number | null;
+  currency: string;
+  planId: string | null;
+}): Promise<void> {
+  const measurementId = process.env.NEXT_PUBLIC_GA_ID;
+  const apiSecret = process.env.GA4_API_SECRET;
+  if (!measurementId || !apiSecret) return;
+
+  const value = params.amountCents != null ? params.amountCents / 100 : 0;
+
+  try {
+    await fetch(
+      `https://www.google-analytics.com/mp/collect?measurement_id=${encodeURIComponent(measurementId)}&api_secret=${encodeURIComponent(apiSecret)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: params.clientId,
+          events: [{
+            name: 'purchase',
+            params: {
+              transaction_id: params.transactionId,
+              value,
+              currency: params.currency.toUpperCase(),
+              items: [{
+                item_id: params.planId ?? 'unknown',
+                item_name: getPlanLabel(params.planId),
+                quantity: 1,
+                price: value,
+              }],
+            },
+          }],
+        }),
+      }
+    );
+  } catch (e) {
+    console.error('[GA4 MP] Erreur envoi purchase event:', e);
+  }
+}
 
 function getPlanLabel(planId: string | null | undefined): string {
   if (planId === 'illimite') return 'Illimité';
@@ -224,6 +272,15 @@ export async function POST(req: NextRequest) {
         });
         await syncCoproAddons(coproId, subscriptionSnapshot);
 
+        // GA4 purchase event (Measurement Protocol, best-effort)
+        void sendGa4PurchaseEvent({
+          transactionId: session.id,
+          clientId: (session.customer as string | null) ?? session.id,
+          amountCents: session.amount_total,
+          currency: session.currency ?? 'eur',
+          planId: subscriptionSnapshot?.planId ?? session.metadata?.plan_id ?? null,
+        });
+
         // Marquer l'essai comme utilisé + envoyer email de confirmation
         const userId = session.metadata?.supabase_user_id;
         if (userId) {
@@ -315,7 +372,8 @@ export async function POST(req: NextRequest) {
         const prev = (event.data.previous_attributes ?? {}) as Record<string, unknown>;
         const isTrialToPaid = prev['status'] === 'trialing' && plan === 'actif';
         const isRenewal = prev['current_period_end'] !== undefined && plan === 'actif' && !isTrialToPaid;
-        if (isTrialToPaid || isRenewal) {
+        const isCancelScheduled = subscriptionSnapshot.cancelAtPeriodEnd && prev['cancel_at_period_end'] === false;
+        if (isTrialToPaid || isRenewal || isCancelScheduled) {
           try {
             const adminClient = createAdminClient();
             const { email, prenom, coproNom } = await getSyndicInfoByCoproId(adminClient, coproId);
@@ -327,17 +385,24 @@ export async function POST(req: NextRequest) {
                 periodEnd,
                 dashboardUrl: `${SITE_URL}/dashboard`,
               };
-              const [subject, html] = isTrialToPaid
+              const [subject, html] = isCancelScheduled
+                ? [buildCancelScheduledSubject(coproNom), buildCancelScheduledEmail(emailParams)]
+                : isTrialToPaid
                 ? [buildTrialToPaidSubject(coproNom), buildTrialToPaidEmail(emailParams)]
                 : [buildRenewalSubject(coproNom), buildRenewalEmail(emailParams)];
+              const templateKey = isCancelScheduled
+                ? 'subscription_cancel_scheduled'
+                : isTrialToPaid
+                ? 'subscription_trial_to_paid'
+                : 'subscription_renewal';
               await sendStripeEmail({
                 to: email,
                 subject,
                 html,
                 context: 'customer.subscription.updated',
-                templateKey: isTrialToPaid ? 'subscription_trial_to_paid' : 'subscription_renewal',
+                templateKey,
                 coproprieteId: coproId,
-                legalEventType: isTrialToPaid ? 'subscription_trial_to_paid' : 'subscription_renewal',
+                legalEventType: templateKey,
                 legalReference: sub['id'] as string,
                 payload: { planId: subMeta?.plan_id ?? null, status: subStatus },
               });

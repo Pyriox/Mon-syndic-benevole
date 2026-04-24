@@ -252,3 +252,41 @@ ${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.blue)}
 
   return wrapEmail(content, COLOR.amber, `Votre essai se termine le ${deadlineStr || 'dans 3 jours'} — le plan ${planLabel} démarrera automatiquement`);
 }
+
+// ── Résiliation programmée (cancel_at_period_end) ────────────────────────────
+
+export function buildCancelScheduledSubject(coproprieteNom: string): string {
+  return `Résiliation programmée de votre abonnement — ${coproprieteNom} — Mon Syndic Bénévole`;
+}
+
+export function buildCancelScheduledEmail(params: SubscriptionEmailParams): string {
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+  const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Résiliation programmée</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Nous avons bien pris en compte votre demande de résiliation. Votre abonnement <strong>${h(planLabel)}</strong> pour la copropriété <strong>${h(coproprieteNom)}</strong> restera actif jusqu'au ${endDateStr ? `<strong>${endDateStr}</strong>` : 'la fin de la période en cours'}, puis sera automatiquement résilié.
+</p>
+<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Vous pouvez annuler cette résiliation et conserver votre abonnement à tout moment depuis votre espace.
+</p>
+${endDateStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;border:1px solid ${COLOR.border}">
+  <tr>
+    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Fin d'accès prévue</td>
+    <td style="padding:12px 16px;font-size:14px;font-weight:600;color:${COLOR.text};text-align:right">${endDateStr}</td>
+  </tr>
+</table>` : ''}
+
+${ctaButton('Annuler la résiliation →', `${dashboardUrl}/abonnement`, COLOR.blue)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Des questions ? Écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
+</p>`;
+
+  return wrapEmail(content, COLOR.amber, `Votre accès reste actif jusqu'au ${endDateStr || 'fin de période'}`);
+}

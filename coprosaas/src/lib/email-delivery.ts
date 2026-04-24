@@ -500,3 +500,22 @@ export async function applyProviderEvent(params: {
     newStatus,
   };
 }
+
+/**
+ * Vérifie si un email est sur la liste noire des hard bounces.
+ * Retourne true si l'email ne doit pas recevoir de messages.
+ */
+export async function isEmailBounced(email: string): Promise<boolean> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return false;
+
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from('profiles')
+    .select('email_bounced_hard')
+    .eq('email', normalizedEmail)
+    .eq('email_bounced_hard', true)
+    .maybeSingle();
+
+  return Boolean(data);
+}

@@ -702,6 +702,7 @@ async function sendSyndicOnboardingReminders(
     .from('profiles')
     .select('id, email, full_name')
     .eq('role', 'syndic')
+    .eq('email_bounced_hard', false)
     .in('email', candidateEmails);
 
   const syndicProfiles = (profiles ?? []) as OnboardingSyndicProfile[];
