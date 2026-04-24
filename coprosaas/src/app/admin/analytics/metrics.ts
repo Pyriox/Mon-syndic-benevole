@@ -30,6 +30,13 @@ export type SourceMetric = {
   source: string;
 };
 
+export type TrendValue = {
+  current: number;
+  prev: number;
+  /** +/- percentage points, null if prev is 0 */
+  pct: number | null;
+};
+
 export type AdminAnalyticsMetrics = {
   gaMetrics: SourceMetric[];
   internalMetrics: SourceMetric[];
@@ -67,6 +74,16 @@ export type AdminAnalyticsMetrics = {
   stripeSubscriptions24h: number;
   stripeSubscriptions7d: number;
   stripeSubscriptions30d: number;
+  /** internalActive30d from a COUNT(*) query — no .limit() truncation */
+  internalActiveTotalCount: number;
+  /** Trends: current 7d vs previous 7d (j-14 to j-7) */
+  trendActive: TrendValue;
+  trendRegistrations: TrendValue;
+  trendOnboarding: TrendValue;
+  trendTrials: TrendValue;
+  trendSubscriptions: TrendValue;
+  /** Funnel conversion rates (7d) */
+  conversionCheckoutToTrial7d: number | null;
   latestActivityAt: string | null;
   latestActivityUser: string;
 };
@@ -76,6 +93,21 @@ function countSinceDateValues(values: Array<string | null | undefined>, sinceMs:
     const parsed = value ? Date.parse(value) : Number.NaN;
     return Number.isFinite(parsed) && parsed >= sinceMs ? sum + 1 : sum;
   }, 0);
+}
+
+function countBetweenDates(values: Array<string | null | undefined>, fromMs: number, toMs: number) {
+  return values.reduce((sum, value) => {
+    const parsed = value ? Date.parse(value) : Number.NaN;
+    return Number.isFinite(parsed) && parsed >= fromMs && parsed < toMs ? sum + 1 : sum;
+  }, 0);
+}
+
+function makeTrend(current: number, prev: number): TrendValue {
+  return {
+    current,
+    prev,
+    pct: prev > 0 ? Math.round(((current - prev) / prev) * 100) : null,
+  };
 }
 
 function isLegacyAdminEmail(email: string | null | undefined) {
@@ -88,6 +120,7 @@ export function buildAdminAnalyticsMetrics({
   recentCopros,
   recentProfiles,
   adminRows,
+  activeUsersCount,
   nowMs,
 }: {
   analytics: Ga4AdminAnalytics;
@@ -95,10 +128,13 @@ export function buildAdminAnalyticsMetrics({
   recentCopros: CoproActivityRow[];
   recentProfiles: ProfileActivityRow[];
   adminRows: AdminRow[];
+  /** COUNT(*) of non-admin profiles active in the last 30d — avoids .limit() truncation */
+  activeUsersCount: number;
   nowMs: number;
 }): AdminAnalyticsMetrics {
   const last24hMs = nowMs - 24 * 60 * 60 * 1000;
   const last7dMs = nowMs - 7 * 24 * 60 * 60 * 1000;
+  const last14dMs = nowMs - 14 * 24 * 60 * 60 * 1000;
   const adminUserIds = new Set(adminRows.map((row) => row.user_id));
 
   const filteredUserEvents = recentUserEvents.filter((event) => {
@@ -145,9 +181,11 @@ export function buildAdminAnalyticsMetrics({
   const internalActive30d = activeProfiles.length;
   const internalActive7d = countSinceDateValues(activeProfiles.map((profile) => profile.last_active_at), last7dMs);
   const internalActive24h = countSinceDateValues(activeProfiles.map((profile) => profile.last_active_at), last24hMs);
+  const internalActivePrev7d = countBetweenDates(activeProfiles.map((profile) => profile.last_active_at), last14dMs, last7dMs);
   const internalRegistrations30d = registrationEvents.length;
   const internalRegistrations7d = countSinceDateValues(registrationEvents.map((event) => event.created_at), last7dMs);
   const internalRegistrations24h = countSinceDateValues(registrationEvents.map((event) => event.created_at), last24hMs);
+  const internalRegistrationsPrev7d = countBetweenDates(registrationEvents.map((event) => event.created_at), last14dMs, last7dMs);
   const internalLoginForms30d = loginEvents.length;
   const internalLoginForms7d = countSinceDateValues(loginEvents.map((event) => event.created_at), last7dMs);
   const internalLoginForms24h = countSinceDateValues(loginEvents.map((event) => event.created_at), last24hMs);
@@ -157,14 +195,27 @@ export function buildAdminAnalyticsMetrics({
   const internalOnboarding30d = filteredCopros.length;
   const internalOnboarding7d = countSinceDateValues(filteredCopros.map((row) => row.created_at), last7dMs);
   const internalOnboarding24h = countSinceDateValues(filteredCopros.map((row) => row.created_at), last24hMs);
+  const internalOnboardingPrev7d = countBetweenDates(filteredCopros.map((row) => row.created_at), last14dMs, last7dMs);
   const stripeTrials30d = trialEvents.length;
   const stripeTrials7d = countSinceDateValues(trialEvents.map((event) => event.created_at), last7dMs);
   const stripeTrials24h = countSinceDateValues(trialEvents.map((event) => event.created_at), last24hMs);
+  const stripeTrialsPrev7d = countBetweenDates(trialEvents.map((event) => event.created_at), last14dMs, last7dMs);
   const stripeSubscriptions30d = subscriptionEvents.length;
   const stripeSubscriptions7d = countSinceDateValues(subscriptionEvents.map((event) => event.created_at), last7dMs);
   const stripeSubscriptions24h = countSinceDateValues(subscriptionEvents.map((event) => event.created_at), last24hMs);
+  const stripeSubscriptionsPrev7d = countBetweenDates(subscriptionEvents.map((event) => event.created_at), last14dMs, last7dMs);
   const latestActivityAt = activeProfiles[0]?.last_active_at ?? null;
   const latestActivityUser = activeProfiles[0]?.full_name?.trim() || 'Utilisateur non nommé';
+
+  const trendActive = makeTrend(internalActive7d, internalActivePrev7d);
+  const trendRegistrations = makeTrend(internalRegistrations7d, internalRegistrationsPrev7d);
+  const trendOnboarding = makeTrend(internalOnboarding7d, internalOnboardingPrev7d);
+  const trendTrials = makeTrend(stripeTrials7d, stripeTrialsPrev7d);
+  const trendSubscriptions = makeTrend(stripeSubscriptions7d, stripeSubscriptionsPrev7d);
+
+  const conversionCheckoutToTrial7d = internalCheckouts7d > 0
+    ? Math.round((stripeTrials7d / internalCheckouts7d) * 100)
+    : null;
 
   const gaMetrics: SourceMetric[] = [
     { label: 'Inscriptions GA4', value7d: gaSignUps7d, value30d: gaSignUps30d, source: 'GA4 sign_up / sign_up_anonymous' },
@@ -227,5 +278,12 @@ export function buildAdminAnalyticsMetrics({
     stripeSubscriptions30d,
     latestActivityAt,
     latestActivityUser,
+    internalActiveTotalCount: activeUsersCount,
+    trendActive,
+    trendRegistrations,
+    trendOnboarding,
+    trendTrials,
+    trendSubscriptions,
+    conversionCheckoutToTrial7d,
   };
 }

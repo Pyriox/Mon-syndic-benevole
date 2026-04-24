@@ -14,6 +14,8 @@ import {
   MousePointerClick,
   ShieldCheck,
   ShoppingCart,
+  TrendingDown,
+  TrendingUp,
   UserPlus,
   Users,
 } from 'lucide-react';
@@ -28,6 +30,7 @@ import {
   type CoproActivityRow,
   type ProfileActivityRow,
   type SourceMetric,
+  type TrendValue,
   type UserEventRow,
 } from './metrics';
 
@@ -49,18 +52,36 @@ function pct(part: number, total: number) {
   return Math.round((part / total) * 100);
 }
 
+function TrendBadge({ trend }: { trend: TrendValue }) {
+  if (trend.pct === null) {
+    return <span className="text-xs text-gray-400">vs 7j précédents : {trend.prev}</span>;
+  }
+  if (trend.pct === 0) {
+    return <span className="text-xs text-gray-400">= 7j précédents ({trend.prev})</span>;
+  }
+  const up = trend.pct > 0;
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${up ? 'text-emerald-600' : 'text-red-500'}`}>
+      {up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+      {up ? '+' : ''}{trend.pct} % vs 7j préc. ({trend.prev})
+    </span>
+  );
+}
+
 function StatCard({
   label,
   value,
   hint,
   icon: Icon,
   tone,
+  trend,
 }: {
   label: string;
   value: string;
   hint: string;
   icon: ElementType;
   tone: string;
+  trend?: TrendValue;
 }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -69,6 +90,7 @@ function StatCard({
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
           <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
           <p className="mt-1 text-xs text-gray-500">{hint}</p>
+          {trend && <div className="mt-1"><TrendBadge trend={trend} /></div>}
         </div>
         <div className={`rounded-xl p-2.5 ${tone}`}>
           <Icon size={18} />
@@ -164,18 +186,19 @@ export default async function AdminAnalyticsPage() {
   const admin = createAdminClient();
   const nowMs = Date.now();
   const last30dIso = new Date(nowMs - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const last14dIso = new Date(nowMs - 14 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [analytics, { data: recentUserEvents }, { data: recentCopros }, { data: recentProfiles }, { data: adminRows }] = await Promise.all([
+  const [analytics, { data: recentUserEvents }, { data: recentCopros }, { data: recentProfiles }, { data: adminRows }, activeUsersCountResult] = await Promise.all([
     getGa4AdminAnalytics(),
     admin
       .from('user_events')
       .select('event_type, created_at, user_email, user_id')
       .in('event_type', ['user_registered', 'begin_checkout', 'trial_started', 'subscription_created', 'login_success'])
-      .gte('created_at', last30dIso),
+      .gte('created_at', last14dIso),
     admin
       .from('coproprietes')
       .select('created_at, syndic_id')
-      .gte('created_at', last30dIso),
+      .gte('created_at', last14dIso),
     admin
       .from('profiles')
       .select('id, full_name, last_active_at')
@@ -186,7 +209,14 @@ export default async function AdminAnalyticsPage() {
     admin
       .from('admin_users')
       .select('user_id'),
+    admin
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .not('last_active_at', 'is', null)
+      .gte('last_active_at', last30dIso),
   ]);
+
+  const activeUsersCount = activeUsersCountResult.count ?? recentProfiles?.length ?? 0;
 
   const {
     gaMetrics,
@@ -197,6 +227,13 @@ export default async function AdminAnalyticsPage() {
     internalActive24h,
     internalActive7d,
     internalActive30d,
+    internalActiveTotalCount,
+    trendActive,
+    trendRegistrations,
+    trendOnboarding,
+    trendTrials,
+    trendSubscriptions,
+    conversionCheckoutToTrial7d,
     internalRegistrations24h,
     internalRegistrations7d,
     internalRegistrations30d,
@@ -223,6 +260,7 @@ export default async function AdminAnalyticsPage() {
     recentCopros: (recentCopros ?? []) as CoproActivityRow[],
     recentProfiles: (recentProfiles ?? []) as ProfileActivityRow[],
     adminRows: (adminRows ?? []) as AdminRow[],
+    activeUsersCount,
     nowMs,
   });
 
@@ -316,9 +354,10 @@ export default async function AdminAnalyticsPage() {
           <StatCard
             label="Utilisateurs actifs (7 j)"
             value={fmtNumber(internalActive7d)}
-            hint={`24 h : ${fmtNumber(internalActive24h)} · 30 j : ${fmtNumber(internalActive30d)} · logs internes`}
+            hint={`24 h : ${fmtNumber(internalActive24h)} · 30 j : ${fmtNumber(internalActiveTotalCount)} · logs internes`}
             icon={Users}
             tone="bg-blue-50 text-blue-600"
+            trend={trendActive}
           />
           <StatCard
             label="Dernière activité détectée"
@@ -333,6 +372,7 @@ export default async function AdminAnalyticsPage() {
             hint={`24 h : ${fmtNumber(internalRegistrations24h)} · 30 j : ${fmtNumber(internalRegistrations30d)} · logs internes`}
             icon={UserPlus}
             tone="bg-indigo-50 text-indigo-600"
+            trend={trendRegistrations}
           />
           <StatCard
             label="Connexions formulaire (7 j)"
@@ -354,6 +394,7 @@ export default async function AdminAnalyticsPage() {
             hint={`24 h : ${fmtNumber(internalOnboarding24h)} · 30 j : ${fmtNumber(internalOnboarding30d)} · logs internes`}
             icon={Building2}
             tone="bg-teal-50 text-teal-600"
+            trend={trendOnboarding}
           />
           <StatCard
             label="Essais démarrés (7 j)"
@@ -361,6 +402,7 @@ export default async function AdminAnalyticsPage() {
             hint={`24 h : ${fmtNumber(stripeTrials24h)} · 30 j : ${fmtNumber(stripeTrials30d)} · Stripe webhook`}
             icon={ShoppingCart}
             tone="bg-rose-50 text-rose-600"
+            trend={trendTrials}
           />
           <StatCard
             label="Abonnements activés (7 j)"
@@ -368,7 +410,39 @@ export default async function AdminAnalyticsPage() {
             hint={`24 h : ${fmtNumber(stripeSubscriptions24h)} · 30 j : ${fmtNumber(stripeSubscriptions30d)} · Stripe webhook`}
             icon={ShieldCheck}
             tone="bg-emerald-50 text-emerald-600"
+            trend={trendSubscriptions}
           />
+        </div>
+      </section>
+
+      {/* Funnel conversion */}
+      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <MousePointerClick size={16} className="text-indigo-600" />
+          <h2 className="text-sm font-semibold text-gray-900">Funnel billing — 7 jours</h2>
+        </div>
+        <p className="mt-1 text-xs text-gray-500">Sources internes + Stripe · les étapes sont indépendantes, pas un entonnoir strict.</p>
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+          <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-center">
+            <p className="text-lg font-bold text-gray-900">{fmtNumber(internalCheckouts7d)}</p>
+            <p className="text-xs text-gray-500">Checkouts</p>
+          </div>
+          <span className="text-gray-300">→</span>
+          <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-center">
+            <p className="text-lg font-bold text-rose-700">{fmtNumber(stripeTrials7d)}</p>
+            <p className="text-xs text-rose-500">Essais</p>
+          </div>
+          <span className="text-gray-300">→</span>
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-center">
+            <p className="text-lg font-bold text-emerald-700">{fmtNumber(stripeSubscriptions7d)}</p>
+            <p className="text-xs text-emerald-500">Abonnements</p>
+          </div>
+          {conversionCheckoutToTrial7d !== null && (
+            <div className="ml-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-center">
+              <p className="text-lg font-bold text-indigo-700">{conversionCheckoutToTrial7d} %</p>
+              <p className="text-xs text-indigo-500">Checkout → Essai</p>
+            </div>
+          )}
         </div>
       </section>
 
