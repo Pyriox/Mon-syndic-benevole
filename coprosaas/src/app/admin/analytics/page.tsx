@@ -78,7 +78,7 @@ function StatCard({
 }: {
   label: string;
   value: string;
-  hint: string;
+  hint: React.ReactNode;
   icon: ElementType;
   tone: string;
   trend?: TrendValue;
@@ -354,7 +354,7 @@ export default async function AdminAnalyticsPage() {
           <StatCard
             label="Utilisateurs actifs (7 j)"
             value={fmtNumber(internalActive7d)}
-            hint={`24 h : ${fmtNumber(internalActive24h)} · 30 j : ${fmtNumber(internalActiveTotalCount)} · logs internes`}
+            hint={<><strong>{fmtNumber(internalActive24h)}</strong> / 24 h &nbsp;·&nbsp; <strong>{fmtNumber(internalActiveTotalCount)}</strong> / 30 j &nbsp;·&nbsp; <span className="text-gray-400">logs internes</span></>}
             icon={Users}
             tone="bg-blue-50 text-blue-600"
             trend={trendActive}
@@ -369,7 +369,7 @@ export default async function AdminAnalyticsPage() {
           <StatCard
             label="Inscriptions (7 j)"
             value={fmtNumber(internalRegistrations7d)}
-            hint={`24 h : ${fmtNumber(internalRegistrations24h)} · 30 j : ${fmtNumber(internalRegistrations30d)} · logs internes`}
+            hint={<><strong>{fmtNumber(internalRegistrations24h)}</strong> / 24 h &nbsp;·&nbsp; <strong>{fmtNumber(internalRegistrations30d)}</strong> / 30 j &nbsp;·&nbsp; <span className="text-gray-400">logs internes</span></>}
             icon={UserPlus}
             tone="bg-indigo-50 text-indigo-600"
             trend={trendRegistrations}
@@ -377,21 +377,21 @@ export default async function AdminAnalyticsPage() {
           <StatCard
             label="Connexions formulaire (7 j)"
             value={fmtNumber(internalLoginForms7d)}
-            hint={`24 h : ${fmtNumber(internalLoginForms24h)} · 30 j : ${fmtNumber(internalLoginForms30d)} · logs internes`}
+            hint={<><strong>{fmtNumber(internalLoginForms24h)}</strong> / 24 h &nbsp;·&nbsp; <strong>{fmtNumber(internalLoginForms30d)}</strong> / 30 j &nbsp;·&nbsp; <span className="text-gray-400">logs internes</span></>}
             icon={Activity}
             tone="bg-violet-50 text-violet-600"
           />
           <StatCard
             label="Checkouts applicatifs (7 j)"
             value={fmtNumber(internalCheckouts7d)}
-            hint={`24 h : ${fmtNumber(internalCheckouts24h)} · 30 j : ${fmtNumber(internalCheckouts30d)} · logs internes`}
+            hint={<><strong>{fmtNumber(internalCheckouts24h)}</strong> / 24 h &nbsp;·&nbsp; <strong>{fmtNumber(internalCheckouts30d)}</strong> / 30 j &nbsp;·&nbsp; <span className="text-gray-400">logs internes</span></>}
             icon={MousePointerClick}
             tone="bg-amber-50 text-amber-600"
           />
           <StatCard
             label="Copros créées (7 j)"
             value={fmtNumber(internalOnboarding7d)}
-            hint={`24 h : ${fmtNumber(internalOnboarding24h)} · 30 j : ${fmtNumber(internalOnboarding30d)} · logs internes`}
+            hint={<><strong>{fmtNumber(internalOnboarding24h)}</strong> / 24 h &nbsp;·&nbsp; <strong>{fmtNumber(internalOnboarding30d)}</strong> / 30 j &nbsp;·&nbsp; <span className="text-gray-400">logs internes</span></>}
             icon={Building2}
             tone="bg-teal-50 text-teal-600"
             trend={trendOnboarding}
@@ -399,7 +399,7 @@ export default async function AdminAnalyticsPage() {
           <StatCard
             label="Essais démarrés (7 j)"
             value={fmtNumber(stripeTrials7d)}
-            hint={`24 h : ${fmtNumber(stripeTrials24h)} · 30 j : ${fmtNumber(stripeTrials30d)} · Stripe webhook`}
+            hint={<><strong>{fmtNumber(stripeTrials24h)}</strong> / 24 h &nbsp;·&nbsp; <strong>{fmtNumber(stripeTrials30d)}</strong> / 30 j &nbsp;·&nbsp; <span className="text-gray-400">Stripe</span></>}
             icon={ShoppingCart}
             tone="bg-rose-50 text-rose-600"
             trend={trendTrials}
@@ -407,7 +407,7 @@ export default async function AdminAnalyticsPage() {
           <StatCard
             label="Abonnements activés (7 j)"
             value={fmtNumber(stripeSubscriptions7d)}
-            hint={`24 h : ${fmtNumber(stripeSubscriptions24h)} · 30 j : ${fmtNumber(stripeSubscriptions30d)} · Stripe webhook`}
+            hint={<><strong>{fmtNumber(stripeSubscriptions24h)}</strong> / 24 h &nbsp;·&nbsp; <strong>{fmtNumber(stripeSubscriptions30d)}</strong> / 30 j &nbsp;·&nbsp; <span className="text-gray-400">Stripe</span></>}
             icon={ShieldCheck}
             tone="bg-emerald-50 text-emerald-600"
             trend={trendSubscriptions}
