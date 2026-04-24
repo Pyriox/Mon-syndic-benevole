@@ -24,7 +24,6 @@ function createAnalyticsStub(): Ga4AdminAnalytics {
     topPages: [],
     topEvents: [],
     internalPlatformPages: [],
-    measurementModes: [],
     consentStates: [],
     deviceCategories: [],
     notes: [],

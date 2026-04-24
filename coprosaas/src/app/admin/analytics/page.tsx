@@ -1,4 +1,4 @@
-export const revalidate = 300;
+﻿export const revalidate = 300;
 
 import type { ElementType } from 'react';
 import Link from 'next/link';
@@ -47,22 +47,6 @@ function fmtDateTime(value: string) {
 function pct(part: number, total: number) {
   if (!total) return 0;
   return Math.round((part / total) * 100);
-}
-
-function fmtRelativeTime(value: string | null) {
-  if (!value) return 'Aucune activité relevée';
-
-  const diffMs = Date.now() - Date.parse(value);
-  if (!Number.isFinite(diffMs)) return 'Aucune activité relevée';
-
-  const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
-  if (diffMinutes < 60) return `il y a ${diffMinutes} min`;
-
-  const diffHours = Math.round(diffMinutes / 60);
-  if (diffHours < 48) return `il y a ${diffHours} h`;
-
-  const diffDays = Math.round(diffHours / 24);
-  return `il y a ${diffDays} j`;
 }
 
 function StatCard({
@@ -131,24 +115,6 @@ function BreakdownCard({
   );
 }
 
-function SourceSummaryCard({
-  source,
-  title,
-  description,
-}: {
-  source: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{source}</p>
-      <p className="mt-1 text-lg font-semibold text-gray-900">{title}</p>
-      <p className="mt-2 text-sm text-gray-600">{description}</p>
-    </div>
-  );
-}
-
 function SourceMetricsTable({
   title,
   items,
@@ -195,13 +161,12 @@ export default async function AdminAnalyticsPage() {
     redirect('/dashboard');
   }
 
-  const analytics = await getGa4AdminAnalytics();
   const admin = createAdminClient();
-  const snapshotMs = Date.parse(analytics.fetchedAt);
-  const nowMs = Number.isFinite(snapshotMs) ? snapshotMs : 0;
+  const nowMs = Date.now();
   const last30dIso = new Date(nowMs - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ data: recentUserEvents }, { data: recentCopros }, { data: recentProfiles }, { data: adminRows }] = await Promise.all([
+  const [analytics, { data: recentUserEvents }, { data: recentCopros }, { data: recentProfiles }, { data: adminRows }] = await Promise.all([
+    getGa4AdminAnalytics(),
     admin
       .from('user_events')
       .select('event_type, created_at, user_email, user_id')
@@ -229,18 +194,25 @@ export default async function AdminAnalyticsPage() {
     stripeMetrics,
     dashboardPageViews7d,
     dashboardPageViews30d,
+    internalActive24h,
     internalActive7d,
     internalActive30d,
+    internalRegistrations24h,
     internalRegistrations7d,
     internalRegistrations30d,
+    internalLoginForms24h,
     internalLoginForms7d,
     internalLoginForms30d,
+    internalCheckouts24h,
     internalCheckouts7d,
     internalCheckouts30d,
+    internalOnboarding24h,
     internalOnboarding7d,
     internalOnboarding30d,
+    stripeTrials24h,
     stripeTrials7d,
     stripeTrials30d,
+    stripeSubscriptions24h,
     stripeSubscriptions7d,
     stripeSubscriptions30d,
     latestActivityAt,
@@ -344,87 +316,59 @@ export default async function AdminAnalyticsPage() {
           <StatCard
             label="Utilisateurs actifs (7 j)"
             value={fmtNumber(internalActive7d)}
-            hint={`${fmtNumber(internalActive30d)} sur 30 jours · logs internes`}
+            hint={`24 h : ${fmtNumber(internalActive24h)} · 30 j : ${fmtNumber(internalActive30d)} · logs internes`}
             icon={Users}
             tone="bg-blue-50 text-blue-600"
           />
           <StatCard
             label="Dernière activité détectée"
-            value={fmtRelativeTime(latestActivityAt)}
-            hint={latestActivityAt ? `${fmtDateTime(latestActivityAt)} · ${latestActivityUser} · logs internes` : 'Aucune activité client remontée'}
+            value={latestActivityAt ? fmtDateTime(latestActivityAt) : 'Aucune activité'}
+            hint={latestActivityAt ? `${latestActivityUser} · logs internes` : 'Aucune activité client remontée'}
             icon={Clock3}
             tone="bg-slate-50 text-slate-700"
           />
           <StatCard
             label="Inscriptions (7 j)"
             value={fmtNumber(internalRegistrations7d)}
-            hint={`${fmtNumber(internalRegistrations30d)} sur 30 jours · logs internes`}
+            hint={`24 h : ${fmtNumber(internalRegistrations24h)} · 30 j : ${fmtNumber(internalRegistrations30d)} · logs internes`}
             icon={UserPlus}
             tone="bg-indigo-50 text-indigo-600"
           />
           <StatCard
             label="Connexions formulaire (7 j)"
             value={fmtNumber(internalLoginForms7d)}
-            hint={`${fmtNumber(internalLoginForms30d)} sur 30 jours · logs internes`}
+            hint={`24 h : ${fmtNumber(internalLoginForms24h)} · 30 j : ${fmtNumber(internalLoginForms30d)} · logs internes`}
             icon={Activity}
             tone="bg-violet-50 text-violet-600"
           />
           <StatCard
             label="Checkouts applicatifs (7 j)"
             value={fmtNumber(internalCheckouts7d)}
-            hint={`${fmtNumber(internalCheckouts30d)} sur 30 jours · logs internes`}
+            hint={`24 h : ${fmtNumber(internalCheckouts24h)} · 30 j : ${fmtNumber(internalCheckouts30d)} · logs internes`}
             icon={MousePointerClick}
             tone="bg-amber-50 text-amber-600"
           />
           <StatCard
             label="Copros créées (7 j)"
             value={fmtNumber(internalOnboarding7d)}
-            hint={`${fmtNumber(internalOnboarding30d)} sur 30 jours · logs internes`}
+            hint={`24 h : ${fmtNumber(internalOnboarding24h)} · 30 j : ${fmtNumber(internalOnboarding30d)} · logs internes`}
             icon={Building2}
             tone="bg-teal-50 text-teal-600"
           />
           <StatCard
             label="Essais démarrés (7 j)"
             value={fmtNumber(stripeTrials7d)}
-            hint={`${fmtNumber(stripeTrials30d)} sur 30 jours · Stripe webhook`}
+            hint={`24 h : ${fmtNumber(stripeTrials24h)} · 30 j : ${fmtNumber(stripeTrials30d)} · Stripe webhook`}
             icon={ShoppingCart}
             tone="bg-rose-50 text-rose-600"
           />
           <StatCard
             label="Abonnements activés (7 j)"
             value={fmtNumber(stripeSubscriptions7d)}
-            hint={`${fmtNumber(stripeSubscriptions30d)} sur 30 jours · Stripe webhook`}
+            hint={`24 h : ${fmtNumber(stripeSubscriptions24h)} · 30 j : ${fmtNumber(stripeSubscriptions30d)} · Stripe webhook`}
             icon={ShieldCheck}
             tone="bg-emerald-50 text-emerald-600"
           />
-        </div>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-4">
-        <SourceSummaryCard
-          source="GA4"
-          title={analytics.configured && !analytics.error ? 'Audience web et diagnostic navigateur' : 'GA4 à vérifier'}
-          description="Sessions, pages vues, événements front, consentement, appareils et signaux sans source interne fiable."
-        />
-        <SourceSummaryCard
-          source="Logs internes"
-          title="Source de référence pour le produit"
-          description="Dernière activité, inscriptions, connexions formulaire, checkouts et créations de copropriété."
-        />
-        <SourceSummaryCard
-          source="Stripe"
-          title="Source de référence pour le billing"
-          description="Essais et abonnements activés depuis Stripe, sans dépendre du tracking navigateur."
-        />
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Clock3 size={16} className="text-indigo-600" />
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Fraîcheur</p>
-          </div>
-          <p className="mt-1 text-lg font-semibold text-gray-900">{fmtDateTime(analytics.fetchedAt)}</p>
-          <p className="mt-1 text-sm text-gray-600">
-            Snapshot serveur pour GA4 et lecture base. Les événements front peuvent avoir plus de latence que les logs internes et Stripe.
-          </p>
         </div>
       </section>
 
@@ -469,29 +413,19 @@ export default async function AdminAnalyticsPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-2 grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-2">
+        {analytics.consentStates.length > 0 && (
           <BreakdownCard
-            title="Répartition `consent_state`"
+            title="Répartition consent_state"
             items={analytics.consentStates}
-            emptyText="La dimension personnalisée `consent_state` n’est pas encore disponible dans GA4."
+            emptyText="La dimension personnalisée consent_state n’est pas encore disponible dans GA4."
           />
-          <BreakdownCard
-            title="Type d’appareil"
-            items={analytics.deviceCategories}
-            emptyText="GA4 ne renvoie pas encore la dimension `deviceCategory` pour cette propriété."
-          />
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-900">Lecture rapide</h2>
-          <div className="mt-4 space-y-3 text-sm text-gray-600">
-            <p>Les KPI produit en tête de page utilisent les logs internes dès qu’une mesure fiable existe côté base.</p>
-            <p>Stripe reste la source de vérité pour la facturation et les activations.</p>
-            <p>GA4 sert surtout à lire l’audience web, les pages vues et les signaux navigateur sans équivalent interne.</p>
-            <p>Les tableaux bruts par source restent en bas pour diagnostiquer les écarts d’instrumentation.</p>
-          </div>
-        </div>
+        )}
+        <BreakdownCard
+          title="Type d’appareil"
+          items={analytics.deviceCategories}
+          emptyText="GA4 ne renvoie pas encore la dimension deviceCategory pour cette propriété."
+        />
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
@@ -581,25 +515,6 @@ export default async function AdminAnalyticsPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center gap-2">
-          <ShieldCheck size={16} className="text-indigo-600" />
-          <h2 className="text-sm font-semibold text-gray-900">Notes de lecture</h2>
-        </div>
-        <ul className="mt-3 space-y-1.5 text-sm text-gray-600">
-          {[
-            ...analytics.notes,
-            'Les pages admin ne sont plus trackées par événements custom ; seul le dashboard reste instrumenté côté GA4.',
-            'Dernière activité détectée = `profiles.last_active_at`, mise à jour à l’entrée, au retour de focus, aux navigations et aux interactions utilisateur dans l’espace client.',
-            'Connexions formulaire = `user_events.login_success` uniquement, donc ce chiffre est volontairement plus strict que la dernière activité.',
-            'Les KPI quantifiables côté application utilisent les logs internes ou Stripe en priorité ; GA4 reste un bloc d’audience et de diagnostic web.',
-            'Les agrégats internes excluent les admins par `user_id`, avec repli email uniquement pour l’historique antérieur à la migration.',
-            'Les tableaux de synthèse sont volontairement séparés : aucune valeur n’est fusionnée, maximisée ou corrigée ici.',
-          ].map((note) => (
-            <li key={note}>• {note}</li>
-          ))}
-        </ul>
-      </section>
     </div>
   );
 }

@@ -46,18 +46,25 @@ export type AdminAnalyticsMetrics = {
   gaOnboarding30d: number;
   dashboardPageViews7d: number;
   dashboardPageViews30d: number;
+  internalActive24h: number;
   internalActive7d: number;
   internalActive30d: number;
+  internalRegistrations24h: number;
   internalRegistrations7d: number;
   internalRegistrations30d: number;
+  internalLoginForms24h: number;
   internalLoginForms7d: number;
   internalLoginForms30d: number;
+  internalCheckouts24h: number;
   internalCheckouts7d: number;
   internalCheckouts30d: number;
+  internalOnboarding24h: number;
   internalOnboarding7d: number;
   internalOnboarding30d: number;
+  stripeTrials24h: number;
   stripeTrials7d: number;
   stripeTrials30d: number;
+  stripeSubscriptions24h: number;
   stripeSubscriptions7d: number;
   stripeSubscriptions30d: number;
   latestActivityAt: string | null;
@@ -90,6 +97,7 @@ export function buildAdminAnalyticsMetrics({
   adminRows: AdminRow[];
   nowMs: number;
 }): AdminAnalyticsMetrics {
+  const last24hMs = nowMs - 24 * 60 * 60 * 1000;
   const last7dMs = nowMs - 7 * 24 * 60 * 60 * 1000;
   const adminUserIds = new Set(adminRows.map((row) => row.user_id));
 
@@ -136,18 +144,25 @@ export function buildAdminAnalyticsMetrics({
 
   const internalActive30d = activeProfiles.length;
   const internalActive7d = countSinceDateValues(activeProfiles.map((profile) => profile.last_active_at), last7dMs);
+  const internalActive24h = countSinceDateValues(activeProfiles.map((profile) => profile.last_active_at), last24hMs);
   const internalRegistrations30d = registrationEvents.length;
   const internalRegistrations7d = countSinceDateValues(registrationEvents.map((event) => event.created_at), last7dMs);
+  const internalRegistrations24h = countSinceDateValues(registrationEvents.map((event) => event.created_at), last24hMs);
   const internalLoginForms30d = loginEvents.length;
   const internalLoginForms7d = countSinceDateValues(loginEvents.map((event) => event.created_at), last7dMs);
+  const internalLoginForms24h = countSinceDateValues(loginEvents.map((event) => event.created_at), last24hMs);
   const internalCheckouts30d = checkoutEvents.length;
   const internalCheckouts7d = countSinceDateValues(checkoutEvents.map((event) => event.created_at), last7dMs);
+  const internalCheckouts24h = countSinceDateValues(checkoutEvents.map((event) => event.created_at), last24hMs);
   const internalOnboarding30d = filteredCopros.length;
   const internalOnboarding7d = countSinceDateValues(filteredCopros.map((row) => row.created_at), last7dMs);
+  const internalOnboarding24h = countSinceDateValues(filteredCopros.map((row) => row.created_at), last24hMs);
   const stripeTrials30d = trialEvents.length;
   const stripeTrials7d = countSinceDateValues(trialEvents.map((event) => event.created_at), last7dMs);
+  const stripeTrials24h = countSinceDateValues(trialEvents.map((event) => event.created_at), last24hMs);
   const stripeSubscriptions30d = subscriptionEvents.length;
   const stripeSubscriptions7d = countSinceDateValues(subscriptionEvents.map((event) => event.created_at), last7dMs);
+  const stripeSubscriptions24h = countSinceDateValues(subscriptionEvents.map((event) => event.created_at), last24hMs);
   const latestActivityAt = activeProfiles[0]?.last_active_at ?? null;
   const latestActivityUser = activeProfiles[0]?.full_name?.trim() || 'Utilisateur non nommé';
 
@@ -171,7 +186,6 @@ export function buildAdminAnalyticsMetrics({
   const stripeMetrics: SourceMetric[] = [
     { label: 'Essais démarrés', value7d: stripeTrials7d, value30d: stripeTrials30d, source: 'Webhook Stripe trial_started' },
     { label: 'Abonnements activés', value7d: stripeSubscriptions7d, value30d: stripeSubscriptions30d, source: 'Webhook Stripe subscription_created' },
-    { label: 'Activations billing', value7d: stripeTrials7d + stripeSubscriptions7d, value30d: stripeTrials30d + stripeSubscriptions30d, source: 'Webhook Stripe agrégé' },
   ];
 
   return {
@@ -190,18 +204,25 @@ export function buildAdminAnalyticsMetrics({
     gaOnboarding30d,
     dashboardPageViews7d,
     dashboardPageViews30d,
+    internalActive24h,
     internalActive7d,
     internalActive30d,
+    internalRegistrations24h,
     internalRegistrations7d,
     internalRegistrations30d,
+    internalLoginForms24h,
     internalLoginForms7d,
     internalLoginForms30d,
+    internalCheckouts24h,
     internalCheckouts7d,
     internalCheckouts30d,
+    internalOnboarding24h,
     internalOnboarding7d,
     internalOnboarding30d,
+    stripeTrials24h,
     stripeTrials7d,
     stripeTrials30d,
+    stripeSubscriptions24h,
     stripeSubscriptions7d,
     stripeSubscriptions30d,
     latestActivityAt,

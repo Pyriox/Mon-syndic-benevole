@@ -69,7 +69,6 @@ export type Ga4AdminAnalytics = {
     path: string;
     views: number;
   }>;
-  measurementModes: BreakdownItem[];
   consentStates: BreakdownItem[];
   deviceCategories: BreakdownItem[];
   notes: string[];
@@ -276,7 +275,6 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
     topPages: [],
     topEvents: [],
     internalPlatformPages: [],
-    measurementModes: [],
     consentStates: [],
     deviceCategories: [],
     notes: [
@@ -394,7 +392,6 @@ export async function getGa4AdminAnalytics(): Promise<Ga4AdminAnalytics> {
       topPages: parseTopPages(topPagesReport),
       topEvents,
       internalPlatformPages: parseInternalPlatformPages(internalPlatformPagesReport),
-      measurementModes: [],
       consentStates: parseBreakdown(consentStateReport),
       deviceCategories: parseBreakdown(deviceCategoryReport),
     };
