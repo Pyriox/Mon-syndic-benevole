@@ -223,8 +223,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       const admin = createAdminClient();
       await admin
         .from('profiles')
-        .update({ last_active_at: new Date().toISOString() })
-        .eq('id', user.id);
+        .upsert({ id: user.id, last_active_at: new Date().toISOString() }, { onConflict: 'id' });
     } catch {
       // Non critique
     }

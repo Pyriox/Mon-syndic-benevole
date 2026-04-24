@@ -11,6 +11,7 @@ import { AlertCircle } from 'lucide-react';
 import SiteLogo from '@/components/ui/SiteLogo';
 import AdminLogout from './AdminLogout';
 import AdminSidebar from './AdminSidebar';
+import ActivityHeartbeat from '@/components/ActivityHeartbeat';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -83,6 +84,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col md:flex-row gap-4 md:gap-6 items-start">
         <AdminSidebar badges={{ '/admin/support': pendingSupportCount }} />
         <main className="flex-1 min-w-0 w-full">
+          <ActivityHeartbeat />
           {children}
         </main>
       </div>

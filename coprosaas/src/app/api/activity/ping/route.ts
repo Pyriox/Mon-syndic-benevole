@@ -16,8 +16,7 @@ export async function POST() {
   const admin = createAdminClient();
   const { error } = await admin
     .from('profiles')
-    .update({ last_active_at: new Date().toISOString() })
-    .eq('id', user.id);
+    .upsert({ id: user.id, last_active_at: new Date().toISOString() }, { onConflict: 'id' });
 
   if (error) {
     return NextResponse.json({ ok: false }, { status: 500 });
