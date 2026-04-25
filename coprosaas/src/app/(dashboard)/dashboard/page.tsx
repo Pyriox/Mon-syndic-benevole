@@ -6,8 +6,10 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Tableau de bord' };
 
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
+import { createClient } from '@/lib/supabase/server';
 import { isSubscribed } from '@/lib/subscription';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import Card from '@/components/ui/Card';
 import PageHelp from '@/components/ui/PageHelp';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
@@ -25,25 +27,37 @@ import {
   SyndicDashboardMetrics,
   SyndicDashboardTasks,
   SyndicNextAction,
+  DashboardHeaderSkeleton,
+  DashboardAlertSkeleton,
+  DashboardKpiGridSkeleton,
+  DashboardPanelSkeleton,
 } from './DashboardSections';
 
 export default async function DashboardPage() {
   const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
   const scopeId = selectedCoproId ?? 'none';
 
+  const supabase = await createClient();
+  const { data: profile } = await supabase.from('profiles').select('trial_used').eq('id', user.id).single();
+  const trialUsed = profile?.trial_used === true;
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {userRole !== 'copropriétaire' && copropriete && !isSubscribed(copropriete.plan) && (
-        <ReadOnlyBanner freemium />
+        <ReadOnlyBanner freemium trialUsed={trialUsed} />
       )}
       {userRole === 'copropriétaire' ? (
-        <CoproDashboardHeader
-          userId={user.id}
-          coproId={scopeId}
-          coproprieteName={copropriete?.nom ?? null}
-        />
+        <Suspense fallback={<DashboardHeaderSkeleton />}>
+          <CoproDashboardHeader
+            userId={user.id}
+            coproId={scopeId}
+            coproprieteName={copropriete?.nom ?? null}
+          />
+        </Suspense>
       ) : (
-        <SyndicDashboardHeader coproId={scopeId} coproprieteName={copropriete?.nom ?? null} />
+        <Suspense fallback={<DashboardHeaderSkeleton />}>
+          <SyndicDashboardHeader coproId={scopeId} coproprieteName={copropriete?.nom ?? null} />
+        </Suspense>
       )}
 
       {copropriete && (
@@ -82,29 +96,49 @@ export default async function DashboardPage() {
 
       {copropriete && userRole === 'copropriétaire' && (
         <>
-          <CoproDashboardAlert userId={user.id} coproId={scopeId} />
+          <Suspense fallback={<DashboardAlertSkeleton />}>
+            <CoproDashboardAlert userId={user.id} coproId={scopeId} />
+          </Suspense>
 
-          <CoproDashboardKpis userId={user.id} coproId={scopeId} />
+          <Suspense fallback={<DashboardKpiGridSkeleton columns={3} />}>
+            <CoproDashboardKpis userId={user.id} coproId={scopeId} />
+          </Suspense>
 
-          <CoproDashboardCharges userId={user.id} coproId={scopeId} />
+          <Suspense fallback={<DashboardPanelSkeleton />}>
+            <CoproDashboardCharges userId={user.id} coproId={scopeId} />
+          </Suspense>
 
-          <CoproDashboardHistoryAndAssemblies userId={user.id} coproId={scopeId} />
+          <Suspense fallback={<DashboardPanelSkeleton cards={2} />}>
+            <CoproDashboardHistoryAndAssemblies userId={user.id} coproId={scopeId} />
+          </Suspense>
         </>
       )}
 
       {copropriete && userRole !== 'copropriétaire' && (
         <>
-          <SyndicDashboardAlert coproId={scopeId} />
+          <Suspense fallback={<DashboardAlertSkeleton />}>
+            <SyndicDashboardAlert coproId={scopeId} />
+          </Suspense>
 
-          <SyndicNextAction coproId={scopeId} />
+          <Suspense fallback={<DashboardPanelSkeleton />}>
+            <SyndicNextAction coproId={scopeId} />
+          </Suspense>
 
-          <SyndicDashboardMetrics coproId={scopeId} />
+          <Suspense fallback={<DashboardKpiGridSkeleton columns={3} />}>
+            <SyndicDashboardMetrics coproId={scopeId} />
+          </Suspense>
 
-          <SyndicDashboardBudgetPanels coproId={scopeId} />
+          <Suspense fallback={<DashboardPanelSkeleton cards={2} />}>
+            <SyndicDashboardBudgetPanels coproId={scopeId} />
+          </Suspense>
 
-          <SyndicDashboardTasks coproId={scopeId} />
+          <Suspense fallback={<DashboardPanelSkeleton cards={2} />}>
+            <SyndicDashboardTasks coproId={scopeId} />
+          </Suspense>
 
-          <SyndicDashboardAssemblies coproId={scopeId} />
+          <Suspense fallback={<DashboardPanelSkeleton />}>
+            <SyndicDashboardAssemblies coproId={scopeId} />
+          </Suspense>
         </>
       )}
     </div>

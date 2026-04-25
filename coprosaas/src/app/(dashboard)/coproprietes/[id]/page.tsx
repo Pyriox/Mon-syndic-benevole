@@ -65,16 +65,22 @@ export default async function CopropriétéDetailPage({ params }: Props) {
 
   if (!copro) notFound();
 
-  const { data: lots } = await supabase
-    .from('lots')
-    .select('id, numero, type, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes, position')
-    .eq('copropriete_id', id)
-    .order('position', { ascending: true, nullsFirst: false });
-
-  const { data: coproprietaires } = await supabase
-    .from('coproprietaires')
-    .select('id, nom, prenom, raison_sociale, user_id')
-    .eq('copropriete_id', id);
+  const [{ data: lots }, { data: coproprietaires }, { data: profile }] = await Promise.all([
+    supabase
+      .from('lots')
+      .select('id, numero, type, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes, position')
+      .eq('copropriete_id', id)
+      .order('position', { ascending: true, nullsFirst: false }),
+    supabase
+      .from('coproprietaires')
+      .select('id, nom, prenom, raison_sociale, user_id')
+      .eq('copropriete_id', id),
+    supabase
+      .from('profiles')
+      .select('trial_used')
+      .eq('id', user.id)
+      .single(),
+  ]);
   const coproMap = Object.fromEntries((coproprietaires ?? []).map((c) => [c.id, c]));
 
   const totalTantiemes = lots?.reduce((sum, lot) => sum + (lot.tantiemes ?? 0), 0) ?? 0;
@@ -92,10 +98,11 @@ export default async function CopropriétéDetailPage({ params }: Props) {
   ).size;
 
   const canWrite = isSubscribed(copro.plan);
+  const trialUsed = profile?.trial_used === true;
 
   return (
     <div className="space-y-6">
-      {!canWrite && <ReadOnlyBanner freemium />}
+      {!canWrite && <ReadOnlyBanner freemium trialUsed={trialUsed} />}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Lots & bâtiment</h2>

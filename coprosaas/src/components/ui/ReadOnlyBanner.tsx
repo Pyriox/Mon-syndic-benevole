@@ -1,7 +1,6 @@
 // Server component — bandeau CTA pour les modules en lecture seule ou version gratuite
 import Link from 'next/link';
 import { Lock, Sparkles, Zap } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
 
 interface ReadOnlyBannerProps {
   /**
@@ -11,21 +10,14 @@ interface ReadOnlyBannerProps {
   freemium?: boolean;
   /** Texte de description personnalisé (mode freemium). */
   description?: string;
+  /**
+   * Passé par la page parente (évite un appel DB supplémentaire dans ce composant).
+   * true = l'essai a déjà été consommé → pas de mention "14j gratuits".
+   */
+  trialUsed?: boolean;
 }
 
-export default async function ReadOnlyBanner({ freemium = false, description }: ReadOnlyBannerProps) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  let trialUsed = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('trial_used')
-      .eq('id', user.id)
-      .single();
-    trialUsed = profile?.trial_used === true;
-  }
-
+export default function ReadOnlyBanner({ freemium = false, description, trialUsed = false }: ReadOnlyBannerProps) {
   if (freemium) {
     return (
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-4 text-white shadow-md">
