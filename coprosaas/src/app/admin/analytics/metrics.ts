@@ -299,8 +299,10 @@ export function buildAdminAnalyticsMetrics({
   const conversionOnboardingToTrial7d = internalOnboarding7d > 0 ? Math.round((stripeTrials7d / internalOnboarding7d) * 100) : null;
 
   // Retention & friction
-  const churnRate30d = activeSubscriptions > 0
-    ? Math.round((subscriptionCancelled30d / activeSubscriptions) * 100)
+  // Dénominateur = stock début de période = actifs maintenant + ceux qui ont résilié sur 30j
+  const churnBase30d = activeSubscriptions + subscriptionCancelled30d;
+  const churnRate30d = churnBase30d > 0
+    ? Math.round((subscriptionCancelled30d / churnBase30d) * 100)
     : null;
   // Approximation : inscrits sans copro créée sur la période (1 inscription = 1 copro attendue)
   const blockedAtOnboarding30d = Math.max(0, internalRegistrations30d - internalOnboarding30d);

@@ -510,7 +510,7 @@ export default async function AdminAnalyticsPage() {
             <AlertCard
               label="Churn mensuel"
               value={m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
-              detail={`${m.activeSubscriptions} abonnements actifs · ${m.subscriptionCancelled30d} résiliation(s) 30j`}
+              detail={`${m.subscriptionCancelled30d} résiliation(s) / ${m.activeSubscriptions + m.subscriptionCancelled30d} abonnés début période`}
               level={m.churnRate30d !== null && m.churnRate30d > 5 ? 'warn' : 'ok'}
             />
           </div>
@@ -703,7 +703,7 @@ export default async function AdminAnalyticsPage() {
           <StatCard
             label="Churn 30j / abonnements"
             value={m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
-            hint={`${m.subscriptionCancelled30d} résiliation(s) · ${m.activeSubscriptions} abonnements actifs`}
+            hint={`${m.subscriptionCancelled30d} résiliation(s) / ${m.activeSubscriptions + m.subscriptionCancelled30d} abonnés début période`}
             icon={Percent}
             tone={m.churnRate30d !== null && m.churnRate30d > 5 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'}
           />
