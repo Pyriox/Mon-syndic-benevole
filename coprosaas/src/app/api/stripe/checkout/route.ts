@@ -126,7 +126,8 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
-      payment_method_types: ['card', 'sepa_debit'],
+      // Pas de payment_method_types → mode automatique : Stripe affiche toutes les méthodes
+      // activées dans le dashboard (carte, SEPA, Apple Pay, Google Pay, Link, virement…)
       // 'always' : exige la saisie d'un moyen de paiement même pendant l'essai gratuit (facture 0€)
       payment_method_collection: 'always',
       line_items: [{ price: priceId, quantity: 1 }],
