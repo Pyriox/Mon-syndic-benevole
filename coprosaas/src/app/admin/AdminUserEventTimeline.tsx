@@ -8,6 +8,7 @@ export type AdminUserEvent = {
   label: string;
   severity?: 'info' | 'warning' | 'error' | null;
   created_at: string;
+  metadata?: Record<string, unknown> | null;
 };
 
 const EVENT_META: Record<string, { icon: string; label: string; color: string }> = {
@@ -107,6 +108,16 @@ export default function AdminUserEventTimeline({
                     {meta?.icon ?? '·'} {meta?.label ?? event.event_type}
                   </span>
                   <p className="text-xs text-gray-500 mt-1 break-words">{event.label || event.event_type}</p>
+                  {event.metadata && Object.keys(event.metadata).length > 0 && (
+                    <dl className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                      {Object.entries(event.metadata).map(([k, v]) => (
+                        <div key={k} className="flex items-baseline gap-1 text-[10px] text-gray-400">
+                          <dt className="font-medium text-gray-500">{k}</dt>
+                          <dd className="font-mono truncate max-w-[160px]">{String(v)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
                 </div>
                 <p className="text-[11px] text-gray-400 shrink-0 mt-0.5 tabular-nums">{formatAdminDateTime(event.created_at)}</p>
               </div>

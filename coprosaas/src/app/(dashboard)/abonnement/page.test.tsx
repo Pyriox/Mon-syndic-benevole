@@ -154,9 +154,6 @@ vi.mock('./AddonBillingButton', () => ({
   default: () => <button type="button">Gérer l’option</button>,
 }));
 
-vi.mock('./SubscriptionSuccessTracker', () => ({
-  default: () => null,
-}));
 
 describe('AbonnementPage', () => {
   it('n’affiche que la copropriété sélectionnée quand le syndic en gère plusieurs', async () => {

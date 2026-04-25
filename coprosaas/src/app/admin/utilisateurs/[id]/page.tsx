@@ -91,14 +91,12 @@ export default async function AdminUtilisateurProfilePage({
           .order('updated_at', { ascending: false })
           .limit(10)
       : Promise.resolve({ data: [], error: null }),
-    email
-      ? admin
-          .from('user_events')
-          .select('id, event_type, label, created_at, severity')
-          .eq('user_email', email)
-          .order('created_at', { ascending: false })
-          .limit(100)
-      : Promise.resolve({ data: [], error: null }),
+    admin
+      .from('user_events')
+      .select('id, event_type, label, created_at, severity, metadata')
+      .eq('user_id', id)
+      .order('created_at', { ascending: false })
+      .limit(100),
   ]);
 
   const syndicCopros = (syndicCoprosRes.data ?? []) as { id: string; nom: string; plan: string | null; plan_id: string | null; created_at: string }[];
@@ -127,6 +125,7 @@ export default async function AdminUtilisateurProfilePage({
     label: string;
     created_at: string;
     severity?: 'info' | 'warning' | 'error';
+    metadata?: Record<string, unknown> | null;
   }>;
   const currentLogCategory = logCategory === 'billing' || logCategory === 'account' || logCategory === 'activity' || logCategory === 'admin'
     ? logCategory
@@ -235,14 +234,10 @@ export default async function AdminUtilisateurProfilePage({
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3 mt-4 text-xs">
+          <div className="grid md:grid-cols-3 gap-3 mt-4 text-xs">
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-gray-500">Inscription</p>
               <p className="font-semibold text-gray-800 mt-0.5">{formatAdminDateTime(authUser.created_at)}</p>
-            </div>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-              <p className="text-gray-500">Dernière activité</p>
-              <p className="font-semibold text-gray-800 mt-0.5">{formatAdminDateTime(lastActive)}</p>
             </div>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-gray-500">Email confirmé</p>
@@ -261,7 +256,7 @@ export default async function AdminUtilisateurProfilePage({
                 <p><span className="text-gray-500">ID :</span> {authUser.id}</p>
                 <p><span className="text-gray-500">Email :</span> {authUser.email ?? '—'}</p>
                 <p><span className="text-gray-500">Téléphone :</span> {phones[0] ?? '—'}</p>
-                <p><span className="text-gray-500">Dernière connexion :</span> {formatAdminDateTime(authUser.last_sign_in_at)}</p>
+                <p><span className="text-gray-500">Dernière connexion :</span> {formatAdminDateTime(lastActive)}</p>
               </div>
             </div>
 

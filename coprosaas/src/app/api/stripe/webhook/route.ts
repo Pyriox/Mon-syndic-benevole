@@ -273,9 +273,15 @@ export async function POST(req: NextRequest) {
         await syncCoproAddons(coproId, subscriptionSnapshot);
 
         // GA4 purchase event (Measurement Protocol, best-effort)
+        // client_id : GA4 cookie id passé depuis le browser via metadata Stripe.
+        // Fallback sur supabase_user_id pour garantir l'attribution même sans cookie.
+        const ga4ClientId =
+          session.metadata?.ga_client_id ??
+          (session.metadata?.supabase_user_id ? `supabase_${session.metadata.supabase_user_id}` : null) ??
+          session.id;
         void sendGa4PurchaseEvent({
           transactionId: session.id,
-          clientId: (session.customer as string | null) ?? session.id,
+          clientId: ga4ClientId,
           amountCents: session.amount_total,
           currency: session.currency ?? 'eur',
           planId: subscriptionSnapshot?.planId ?? session.metadata?.plan_id ?? null,

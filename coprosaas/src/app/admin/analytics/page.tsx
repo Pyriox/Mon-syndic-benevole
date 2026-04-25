@@ -193,7 +193,7 @@ export default async function AdminAnalyticsPage() {
     admin
       .from('user_events')
       .select('event_type, created_at, user_email, user_id')
-      .in('event_type', ['user_registered', 'begin_checkout', 'trial_started', 'subscription_created', 'login_success'])
+      .in('event_type', ['user_registered', 'begin_checkout', 'trial_started', 'subscription_created'])
       .gte('created_at', last30dIso),
     admin
       .from('coproprietes')
@@ -242,9 +242,6 @@ export default async function AdminAnalyticsPage() {
     internalRegistrations24h,
     internalRegistrations7d,
     internalRegistrations30d,
-    internalLoginForms24h,
-    internalLoginForms7d,
-    internalLoginForms30d,
     internalCheckouts24h,
     internalCheckouts7d,
     internalCheckouts30d,
@@ -376,13 +373,6 @@ export default async function AdminAnalyticsPage() {
             icon={UserPlus}
             tone="bg-indigo-50 text-indigo-600"
             trend={trendRegistrations}
-          />
-          <StatCard
-            label="Connexions formulaire (7 j)"
-            value={fmtNumber(internalLoginForms7d)}
-            hint={<><strong>{fmtNumber(internalLoginForms24h)}</strong> / 24 h &nbsp;·&nbsp; <strong>{fmtNumber(internalLoginForms30d)}</strong> / 30 j &nbsp;·&nbsp; <span className="text-gray-400">logs internes</span></>}
-            icon={Activity}
-            tone="bg-violet-50 text-violet-600"
           />
           <StatCard
             label="Checkouts applicatifs (7 j)"

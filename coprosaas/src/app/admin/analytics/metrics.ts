@@ -1,4 +1,4 @@
-import { ADMIN_EMAIL } from '@/lib/admin-config';
+﻿import { ADMIN_EMAIL } from '@/lib/admin-config';
 import type { Ga4AdminAnalytics } from '@/lib/ga4-admin';
 
 export type UserEventRow = {
@@ -59,9 +59,6 @@ export type AdminAnalyticsMetrics = {
   internalRegistrations24h: number;
   internalRegistrations7d: number;
   internalRegistrations30d: number;
-  internalLoginForms24h: number;
-  internalLoginForms7d: number;
-  internalLoginForms30d: number;
   internalCheckouts24h: number;
   internalCheckouts7d: number;
   internalCheckouts30d: number;
@@ -172,7 +169,6 @@ export function buildAdminAnalyticsMetrics({
 
   const registrationEvents = filteredUserEvents.filter((event) => event.event_type === 'user_registered');
   const checkoutEvents = filteredUserEvents.filter((event) => event.event_type === 'begin_checkout');
-  const loginEvents = filteredUserEvents.filter((event) => event.event_type === 'login_success');
   const trialEvents = filteredUserEvents.filter((event) => event.event_type === 'trial_started');
   const subscriptionEvents = filteredUserEvents.filter((event) => event.event_type === 'subscription_created');
 
@@ -184,9 +180,6 @@ export function buildAdminAnalyticsMetrics({
   const internalRegistrations7d = countSinceDateValues(registrationEvents.map((event) => event.created_at), last7dMs);
   const internalRegistrations24h = countSinceDateValues(registrationEvents.map((event) => event.created_at), last24hMs);
   const internalRegistrationsPrev7d = countBetweenDates(registrationEvents.map((event) => event.created_at), last14dMs, last7dMs);
-  const internalLoginForms30d = loginEvents.length;
-  const internalLoginForms7d = countSinceDateValues(loginEvents.map((event) => event.created_at), last7dMs);
-  const internalLoginForms24h = countSinceDateValues(loginEvents.map((event) => event.created_at), last24hMs);
   const internalCheckouts30d = checkoutEvents.length;
   const internalCheckouts7d = countSinceDateValues(checkoutEvents.map((event) => event.created_at), last7dMs);
   const internalCheckouts24h = countSinceDateValues(checkoutEvents.map((event) => event.created_at), last24hMs);
@@ -224,7 +217,6 @@ export function buildAdminAnalyticsMetrics({
   const internalMetrics: SourceMetric[] = [
     { label: 'Utilisateurs actifs internes', value7d: internalActive7d, value30d: internalActive30d, source: 'profiles.last_active_at hors admins' },
     { label: 'Inscriptions internes', value7d: internalRegistrations7d, value30d: internalRegistrations30d, source: 'user_events.user_registered' },
-    { label: 'Connexions formulaire', value7d: internalLoginForms7d, value30d: internalLoginForms30d, source: 'user_events.login_success' },
     { label: 'Checkouts applicatifs', value7d: internalCheckouts7d, value30d: internalCheckouts30d, source: 'user_events.begin_checkout' },
     { label: 'Copros créées', value7d: internalOnboarding7d, value30d: internalOnboarding30d, source: 'coproprietes.created_at hors admins' },
   ];
@@ -256,9 +248,6 @@ export function buildAdminAnalyticsMetrics({
     internalRegistrations24h,
     internalRegistrations7d,
     internalRegistrations30d,
-    internalLoginForms24h,
-    internalLoginForms7d,
-    internalLoginForms30d,
     internalCheckouts24h,
     internalCheckouts7d,
     internalCheckouts30d,

@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Loader2, Zap, ArrowRight } from 'lucide-react';
-import { trackEvent } from '@/lib/gtag';
+import { getGa4ClientId, trackConsentAwareEvent } from '@/lib/gtag';
 import Link from 'next/link';
 
 interface CheckoutButtonProps {
@@ -31,16 +31,17 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
     setLoading(true);
     setError('');
     try {
+      const gaClientId = await getGa4ClientId();
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, coproprieteid }),
+        body: JSON.stringify({ planId, coproprieteid, gaClientId }),
       });
       let json: { url?: string; error?: string } = {};
       try { json = await res.json(); } catch { /* non-JSON */ }
       if (!res.ok) { setError(json.error ?? `Erreur ${res.status}`); setLoading(false); return; }
       if (!json.url) { setError('URL de paiement manquante.'); setLoading(false); return; }
-      trackEvent('begin_checkout', { plan_id: planId });
+      trackConsentAwareEvent({ standardEvent: 'begin_checkout', anonymousEvent: 'begin_checkout_anonymous', params: { plan_id: planId } });
       window.location.href = json.url;
     } catch {
       setError('Erreur réseau — vérifiez votre connexion.');

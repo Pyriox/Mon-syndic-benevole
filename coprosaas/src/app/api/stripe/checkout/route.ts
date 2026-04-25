@@ -18,9 +18,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 });
     }
 
-    const { planId, coproprieteid } = await req.json() as {
+    const { planId, coproprieteid, gaClientId } = await req.json() as {
       planId: 'essentiel' | 'confort' | 'illimite';
       coproprieteid: string;
+      gaClientId?: string | null;
     };
 
     // Validation runtime du planId
@@ -133,6 +134,7 @@ export async function POST(req: NextRequest) {
         supabase_user_id: user.id,
         copropriete_id: coproprieteid,
         plan_id: planId,
+        ...(gaClientId ? { ga_client_id: gaClientId } : {}),
       },
       client_reference_id: user.id,
       success_url: `${siteUrl}/abonnement?success=1&coproId=${coproprieteid}`,

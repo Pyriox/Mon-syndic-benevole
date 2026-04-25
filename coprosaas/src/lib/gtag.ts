@@ -74,10 +74,6 @@ export function hasAnalyticsConsent(): boolean {
   return getConsentPreferences().analytics;
 }
 
-export function shouldTrackPurchaseEvent(): boolean {
-  return hasAnalyticsConsent();
-}
-
 function getMeasurementMode() {
   return hasAnalyticsConsent() ? 'consented' : 'cookieless';
 }
@@ -301,9 +297,19 @@ export function trackEvent(action: string, params?: Record<string, unknown>) {
 }
 
 /**
- * Envoie un événement anonyme à GTM / GA4.
- * Utilisé pour : vues dashboard, onboarding, CTA, lecture d'articles,
- * erreurs de parcours — sans email, user_id, transaction_id ni cookie obligatoire.
+ * Envoie un événement à GTM / GA4 sans données personnelles identifiables.
+ *
+ * Conforme Consent Mode v2 (analytics_storage = 'denied' par défaut) :
+ * - Sans consentement → GA4 émet un cookieless ping (sans _ga, sans cookie
+ *   persistant). Le client_id est en mémoire session uniquement. C'est
+ *   l'approche « audience measurement exemption » tolérée par la CNIL.
+ * - Avec consentement  → hit standard avec cookies.
+ *
+ * Ne doit JAMAIS contenir d'email, user_id, transaction_id ou toute autre
+ * donnée à caractère personnel. La sanitisation est appliquée sur les params.
+ *
+ * ⚠️  Les événements de conversion commerciale (begin_checkout, purchase)
+ * doivent utiliser trackConsentAwareEvent — pas cette fonction.
  */
 export function trackAnonymousEvent(action: string, params?: Record<string, unknown>) {
   if (typeof window === 'undefined') return;
@@ -371,4 +377,34 @@ export function grantConsent() {
 /** Refuse le consentement analytics — Consent Mode v2 (appelé quand l'utilisateur refuse ou retire son accord) */
 export function denyConsent() {
   updateConsent({ analytics: false, ads: false });
+}
+
+/**
+ * Récupère le GA4 client_id depuis le tag GTM/GA4 chargé en page.
+ *
+ * - Retourne le vrai client_id si GTM est chargé et répond dans 500 ms.
+ * - Retourne null sinon (analytics_storage denied, tag pas encore chargé, SSR…).
+ *
+ * Utilisé pour passer le client_id au backend (Stripe checkout metadata)
+ * afin que le Measurement Protocol puisse attribuer les conversions au bon
+ * utilisateur sans déclencher de hit côté client.
+ */
+export function getGa4ClientId(): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.gtag || !GA_ID) {
+      resolve(null);
+      return;
+    }
+
+    const timeout = setTimeout(() => resolve(null), 500);
+    try {
+      window.gtag('get', GA_ID, 'client_id', (clientId: unknown) => {
+        clearTimeout(timeout);
+        resolve(typeof clientId === 'string' && clientId ? clientId : null);
+      });
+    } catch {
+      clearTimeout(timeout);
+      resolve(null);
+    }
+  });
 }
