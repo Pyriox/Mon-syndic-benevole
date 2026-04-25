@@ -183,6 +183,7 @@ export function buildAdminAnalyticsMetrics({
   activeTrialsCount,
   sessionRows,
   recentFeedEvents,
+  paidUserEmails,
   nowMs,
 }: {
   analytics: Ga4AdminAnalytics;
@@ -196,6 +197,8 @@ export function buildAdminAnalyticsMetrics({
   activeTrialsCount: number;
   sessionRows: SessionRow[];
   recentFeedEvents: RecentFeedEvent[];
+  /** Ensemble de tous les emails ayant eu subscription_created (all-time) — pour reclassifier les anciens subscription_cancelled */
+  paidUserEmails: Set<string>;
   nowMs: number;
 }): AdminAnalyticsMetrics {
   const last24hMs = nowMs - 24 * 60 * 60 * 1000;
@@ -226,8 +229,20 @@ export function buildAdminAnalyticsMetrics({
 
   // Alertes billing
   const paymentFailedEvents = filteredBillingAlerts.filter((e) => e.event_type === 'payment_failed');
-  const cancelledEvents = filteredBillingAlerts.filter((e) => e.event_type === 'subscription_cancelled');
-  const trialCancelledEvents = filteredBillingAlerts.filter((e) => e.event_type === 'trial_cancelled');
+  // Un event est un churn payant si :
+  // - event_type = 'subscription_cancelled' ET l'email est dans paidUserEmails (a déjà payé)
+  // - OU event_type = 'trial_cancelled' ET l'email est dans paidUserEmails (rare, mais possible)
+  // Sinon c'est un essai abandonné (ancien log mal typé ou nouveau trial_cancelled)
+  const cancelledEvents = filteredBillingAlerts.filter((e) => {
+    const isPaidEvent = e.event_type === 'subscription_cancelled' || e.event_type === 'trial_cancelled';
+    if (!isPaidEvent) return false;
+    return paidUserEmails.has((e.user_email ?? '').toLowerCase());
+  });
+  const trialCancelledEvents = filteredBillingAlerts.filter((e) => {
+    const isCancelEvent = e.event_type === 'subscription_cancelled' || e.event_type === 'trial_cancelled';
+    if (!isCancelEvent) return false;
+    return !paidUserEmails.has((e.user_email ?? '').toLowerCase());
+  });
   const paymentFailed7d = countSinceDateValues(paymentFailedEvents.map((e) => e.created_at), last7dMs);
   const paymentFailed30d = paymentFailedEvents.length;
   const subscriptionCancelled7d = countSinceDateValues(cancelledEvents.map((e) => e.created_at), last7dMs);

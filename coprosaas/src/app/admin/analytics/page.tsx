@@ -306,6 +306,7 @@ export default async function AdminAnalyticsPage() {
     { data: sessionRows },
     { data: conversionFeedRows },
     { data: signupFeedRows },
+    { data: allTimePaidRows },
   ] = await Promise.all([
     getGa4AdminAnalytics(),
     // Acquisition events 30j
@@ -356,10 +357,17 @@ export default async function AdminAnalyticsPage() {
       .eq('event_type', 'user_registered')
       .order('created_at', { ascending: false })
       .limit(15),
+    // All-time : emails ayant eu subscription_created (pour reclassifier les anciens subscription_cancelled)
+    admin.from('user_events')
+      .select('user_email')
+      .eq('event_type', 'subscription_created'),
   ]);
 
   const activeUsersCount = activeUsersCountResult.count ?? recentProfiles?.length ?? 0;
   const activeTrialsCount = activeTrialsCountResult.count ?? 0;
+  const paidUserEmails = new Set(
+    (allTimePaidRows ?? []).map((r) => (r.user_email ?? '').toLowerCase()).filter(Boolean),
+  );
 
   const hasQueryError = [errUserEvents, errBillingAlerts, errCopros, errProfiles, errPlans].some(Boolean);
 
@@ -379,6 +387,7 @@ export default async function AdminAnalyticsPage() {
     activePlanRows:     (activePlanRows     ?? []) as PlanDistributionRow[],
     sessionRows:        (sessionRows        ?? []) as SessionRow[],
     recentFeedEvents:   combinedFeedRows,
+    paidUserEmails,
     activeUsersCount,
     activeTrialsCount,
     nowMs,
@@ -515,7 +524,7 @@ export default async function AdminAnalyticsPage() {
               level={m.trialCancelled30d > 0 ? 'warn' : 'ok'}
             />
             <AlertCard
-              label="Pipeline en essai"
+              label="Essais en cours"
               value={fmtNumber(m.activeTrials)}
               detail={m.trialToPaidRate30d !== null ? `Conv. 30j : ${m.trialToPaidRate30d}%` : 'Taux de conv. insuffisant'}
               level={m.activeTrials > 0 ? 'warn' : 'ok'}
