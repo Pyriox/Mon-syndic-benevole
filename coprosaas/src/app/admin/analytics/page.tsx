@@ -10,17 +10,18 @@ import {
   BarChart3,
   Building2,
   CheckCircle2,
-  CreditCard,
+  Clock,
   ExternalLink,
   Eye,
+  Percent,
   RefreshCcw,
   ShieldCheck,
   ShoppingCart,
   TrendingDown,
   TrendingUp,
+  UserMinus,
   UserPlus,
   Users,
-  Zap,
 } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
@@ -39,6 +40,7 @@ import {
   type TrendValue,
   type UserEventRow,
 } from './metrics';
+import { RefreshButton } from './RefreshButton';
 
 // ── Utilitaires d'affichage ─────────────────────────────────────
 
@@ -47,7 +49,9 @@ function fmtNumber(value: number) {
 }
 
 function fmtEur(value: number) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency', currency: 'EUR', maximumFractionDigits: 0,
+  }).format(value);
 }
 
 function fmtDateTime(value: string) {
@@ -177,7 +181,7 @@ function FunnelStep({
   value: number; label: string; source: string; colorClass: string; trend?: TrendValue;
 }) {
   return (
-    <div className={`flex-1 min-w-[90px] rounded-xl border px-3 py-3 text-center ${colorClass}`}>
+    <div className={`min-w-[88px] flex-1 rounded-xl border px-3 py-3 text-center ${colorClass}`}>
       <p className="text-xl font-bold">{fmtNumber(value)}</p>
       <p className="text-xs font-medium mt-0.5">{label}</p>
       <p className="text-[10px] opacity-60 mt-0.5">{source}</p>
@@ -192,35 +196,35 @@ function FunnelStep({
 
 function FunnelArrow({ rate }: { rate: number | null }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-0.5 shrink-0 px-1">
-      <span className="text-gray-300 text-lg leading-none">→</span>
+    <div className="flex shrink-0 flex-col items-center justify-center gap-0.5 px-1">
+      <span className="text-lg leading-none text-gray-300">→</span>
       {rate !== null && (
-        <span className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 rounded px-1 py-0.5">{rate}%</span>
+        <span className="rounded bg-indigo-50 px-1 py-0.5 text-[10px] font-semibold text-indigo-600">{rate}%</span>
       )}
     </div>
   );
 }
 
 const FEED_META: Record<string, { icon: string; label: string; color: string }> = {
-  user_registered:       { icon: '🆕', label: 'Inscription',           color: 'text-violet-700 bg-violet-50 border-violet-200' },
-  subscription_created:  { icon: '✓',  label: 'Abonnement activé',     color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-  trial_started:         { icon: '↗',  label: 'Essai démarré',         color: 'text-amber-700 bg-amber-50 border-amber-200' },
-  payment_failed:        { icon: '✗',  label: 'Paiement échoué',       color: 'text-red-700 bg-red-50 border-red-200' },
-  subscription_cancelled:{ icon: '↓',  label: 'Résiliation',           color: 'text-orange-700 bg-orange-50 border-orange-200' },
+  user_registered:        { icon: '🆕', label: 'Inscription',       color: 'text-violet-700 bg-violet-50 border-violet-200' },
+  subscription_created:   { icon: '✓',  label: 'Abonnement activé', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+  trial_started:          { icon: '↗',  label: 'Essai démarré',     color: 'text-amber-700 bg-amber-50 border-amber-200' },
+  payment_failed:         { icon: '✗',  label: 'Paiement échoué',   color: 'text-red-700 bg-red-50 border-red-200' },
+  subscription_cancelled: { icon: '↓',  label: 'Résiliation',       color: 'text-orange-700 bg-orange-50 border-orange-200' },
 };
 
 function FeedEvent({ event }: { event: RecentFeedEvent }) {
   const meta = FEED_META[event.event_type];
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
-      <span className={`shrink-0 inline-flex items-center gap-1 text-[11px] font-medium border rounded px-1.5 py-0.5 ${meta?.color ?? 'text-gray-600 bg-gray-50 border-gray-200'}`}>
+    <div className="flex items-start gap-3 border-b border-gray-50 py-2.5 last:border-0">
+      <span className={`shrink-0 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${meta?.color ?? 'border-gray-200 bg-gray-50 text-gray-600'}`}>
         {meta?.icon ?? '·'} {meta?.label ?? event.event_type}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-gray-700 truncate">{maskEmail(event.user_email)}</p>
-        {event.label && <p className="text-[10px] text-gray-400 truncate">{event.label}</p>}
+        <p className="truncate text-xs text-gray-700">{maskEmail(event.user_email)}</p>
+        {event.label && <p className="truncate text-[10px] text-gray-400">{event.label}</p>}
       </div>
-      <p className="shrink-0 text-[11px] text-gray-400 tabular-nums">{relativeTime(event.created_at)}</p>
+      <p className="ml-2 shrink-0 tabular-nums text-[11px] text-gray-400">{relativeTime(event.created_at)}</p>
     </div>
   );
 }
@@ -228,14 +232,16 @@ function FeedEvent({ event }: { event: RecentFeedEvent }) {
 function BreakdownBar({ items }: { items: Array<{ label: string; value: number }> }) {
   const total = items.reduce((s, i) => s + i.value, 0);
   return (
-    <div className="space-y-3 mt-3">
+    <div className="mt-3 space-y-3">
       {items.map((item) => (
         <div key={item.label} className="space-y-1">
           <div className="flex justify-between text-xs">
             <span className="text-gray-700">{item.label}</span>
-            <span className="font-medium text-gray-900">{fmtNumber(item.value)} <span className="text-gray-400">({pct(item.value, total)}%)</span></span>
+            <span className="font-medium text-gray-900">
+              {fmtNumber(item.value)} <span className="text-gray-400">({pct(item.value, total)}%)</span>
+            </span>
           </div>
-          <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+          <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
             <div className="h-full rounded-full bg-indigo-500" style={{ width: `${pct(item.value, total)}%` }} />
           </div>
         </div>
@@ -247,7 +253,7 @@ function BreakdownBar({ items }: { items: Array<{ label: string; value: number }
 function DiagTable({ title, items }: { title: string; items: SourceMetric[] }) {
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">{title}</h3>
+      <h3 className="mb-3 text-sm font-semibold text-gray-900">{title}</h3>
       <div className="overflow-x-auto">
         <table className="min-w-full text-xs">
           <thead>
@@ -284,83 +290,105 @@ export default async function AdminAnalyticsPage() {
   const admin = createAdminClient();
   const nowMs = Date.now();
   const last30dIso = new Date(nowMs - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const last14dIso = new Date(nowMs - 14 * 24 * 60 * 60 * 1000).toISOString();
   const last7dIso  = new Date(nowMs -  7 * 24 * 60 * 60 * 1000).toISOString();
 
   const [
     analytics,
-    { data: recentUserEvents },
-    { data: billingAlertEvents },
-    { data: recentCopros },
-    { data: recentProfiles },
+    { data: recentUserEvents,   error: errUserEvents },
+    { data: billingAlertEvents, error: errBillingAlerts },
+    { data: recentCopros,       error: errCopros },
+    { data: recentProfiles,     error: errProfiles },
     { data: adminRows },
     activeUsersCountResult,
-    { data: activePlanRows },
+    { data: activePlanRows,     error: errPlans },
     activeTrialsCountResult,
     { data: sessionRows },
-    { data: recentFeedRows },
+    { data: conversionFeedRows },
+    { data: signupFeedRows },
   ] = await Promise.all([
     getGa4AdminAnalytics(),
+    // Acquisition events 30j
     admin.from('user_events')
       .select('event_type, created_at, user_email, user_id')
       .in('event_type', ['user_registered', 'begin_checkout', 'trial_started', 'subscription_created'])
       .gte('created_at', last30dIso),
+    // Billing alerts 30j
     admin.from('user_events')
       .select('event_type, created_at, user_email, user_id')
       .in('event_type', ['payment_failed', 'subscription_cancelled'])
       .gte('created_at', last30dIso),
+    // Copros créées 30j
     admin.from('coproprietes')
       .select('created_at, syndic_id')
       .gte('created_at', last30dIso),
+    // Profils actifs 14j (pour tendances 7j vs 7j prec.) — limite réduite, total 30j via count
     admin.from('profiles')
-      .select('id, full_name, last_active_at')
+      .select('id, last_active_at')
       .not('last_active_at', 'is', null)
-      .gte('last_active_at', last30dIso)
+      .gte('last_active_at', last14dIso)
       .order('last_active_at', { ascending: false })
-      .limit(5000),
+      .limit(500),
+    // Admins
     admin.from('admin_users').select('user_id'),
+    // Count actifs 30j (source de vérité pour internalActive30d)
     admin.from('profiles')
       .select('id', { count: 'exact', head: true })
       .not('last_active_at', 'is', null)
       .gte('last_active_at', last30dIso),
+    // Plan actif pour MRR
     admin.from('coproprietes').select('plan_id').eq('plan', 'actif'),
+    // Essais actifs
     admin.from('coproprietes').select('id', { count: 'exact', head: true }).eq('plan', 'essai'),
+    // Sessions 7j
     admin.from('user_sessions')
       .select('started_at, ended_at')
       .gte('started_at', last7dIso),
+    // Feed événements clés (conversions + alertes) — séparé des inscriptions
     admin.from('user_events')
       .select('event_type, created_at, user_email, user_id, label, severity')
-      .in('event_type', ['user_registered', 'subscription_created', 'trial_started', 'payment_failed', 'subscription_cancelled'])
+      .in('event_type', ['subscription_created', 'trial_started', 'payment_failed', 'subscription_cancelled'])
       .order('created_at', { ascending: false })
-      .limit(30),
+      .limit(20),
+    // Feed inscriptions — séparé pour garantir la présence
+    admin.from('user_events')
+      .select('event_type, created_at, user_email, user_id, label, severity')
+      .eq('event_type', 'user_registered')
+      .order('created_at', { ascending: false })
+      .limit(15),
   ]);
 
   const activeUsersCount = activeUsersCountResult.count ?? recentProfiles?.length ?? 0;
   const activeTrialsCount = activeTrialsCountResult.count ?? 0;
 
+  const hasQueryError = [errUserEvents, errBillingAlerts, errCopros, errProfiles, errPlans].some(Boolean);
+
+  // Combine les deux feeds (déjà triés desc par created_at, merge stable)
+  const combinedFeedRows: RecentFeedEvent[] = [
+    ...(conversionFeedRows ?? []),
+    ...(signupFeedRows ?? []),
+  ].sort((a, b) => Date.parse(b.created_at ?? '0') - Date.parse(a.created_at ?? '0'));
+
   const m = buildAdminAnalyticsMetrics({
     analytics,
-    recentUserEvents:    (recentUserEvents    ?? []) as UserEventRow[],
-    billingAlertEvents:  (billingAlertEvents  ?? []) as UserEventRow[],
-    recentCopros:        (recentCopros        ?? []) as CoproActivityRow[],
-    recentProfiles:      (recentProfiles      ?? []) as ProfileActivityRow[],
-    adminRows:           (adminRows           ?? []) as AdminRow[],
-    activePlanRows:      (activePlanRows      ?? []) as PlanDistributionRow[],
-    sessionRows:         (sessionRows         ?? []) as SessionRow[],
-    recentFeedEvents:    (recentFeedRows      ?? []) as RecentFeedEvent[],
+    recentUserEvents:   (recentUserEvents   ?? []) as UserEventRow[],
+    billingAlertEvents: (billingAlertEvents ?? []) as UserEventRow[],
+    recentCopros:       (recentCopros       ?? []) as CoproActivityRow[],
+    recentProfiles:     (recentProfiles     ?? []) as ProfileActivityRow[],
+    adminRows:          (adminRows          ?? []) as AdminRow[],
+    activePlanRows:     (activePlanRows     ?? []) as PlanDistributionRow[],
+    sessionRows:        (sessionRows        ?? []) as SessionRow[],
+    recentFeedEvents:   combinedFeedRows,
     activeUsersCount,
     activeTrialsCount,
     nowMs,
   });
 
   const billingHealthy = m.paymentFailed7d === 0 && m.subscriptionCancelled30d === 0;
+  const diagSignalCount = m.gaMetrics.length + m.internalMetrics.length + m.stripeMetrics.length;
 
-  const recentSignups = m.recentFeedEvents
-    .filter((e) => e.event_type === 'user_registered')
-    .slice(0, 10);
-
-  const recentKeyEvents = m.recentFeedEvents
-    .filter((e) => e.event_type !== 'user_registered')
-    .slice(0, 12);
+  const signupFeedEvents = m.recentFeedEvents.filter((e) => e.event_type === 'user_registered');
+  const conversionFeedEvents = m.recentFeedEvents.filter((e) => e.event_type !== 'user_registered');
 
   return (
     <div className="space-y-6 pb-16">
@@ -388,49 +416,79 @@ export default async function AdminAnalyticsPage() {
                 <p className="text-slate-400 text-[10px] uppercase tracking-wide">Conv. essai→payant (30j)</p>
                 <p className="font-bold text-indigo-300">{m.trialToPaidRate30d !== null ? `${m.trialToPaidRate30d}%` : '—'}</p>
               </div>
+              <div>
+                <p className="text-slate-400 text-[10px] uppercase tracking-wide">Churn (30j)</p>
+                <p className={`font-bold ${m.churnRate30d !== null && m.churnRate30d > 5 ? 'text-red-300' : 'text-slate-200'}`}>
+                  {m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
+                </p>
+              </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="https://analytics.google.com" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/15">
-              GA4 <ExternalLink size={13} />
-            </Link>
-            <Link href="https://tagmanager.google.com" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/15">
-              GTM <ExternalLink size={13} />
-            </Link>
-            <Link href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/15">
-              Stripe <ExternalLink size={13} />
-            </Link>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Link href="https://analytics.google.com" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/15">
+                GA4 <ExternalLink size={13} />
+              </Link>
+              <Link href="https://tagmanager.google.com" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/15">
+                GTM <ExternalLink size={13} />
+              </Link>
+              <Link href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/15">
+                Stripe <ExternalLink size={13} />
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs text-slate-300">
+              <span className="rounded-full bg-white/10 px-2.5 py-1">GA4 : {analytics.propertyId ?? 'non configurée'}</span>
+              <RefreshButton fetchedAt={analytics.fetchedAt} />
+              {analytics.error && (
+                <span className="rounded-full bg-red-500/30 px-2.5 py-1 text-red-200">
+                  Erreur GA4 : {analytics.error.slice(0, 60)}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
-          <span className="rounded-full bg-white/10 px-2.5 py-1">GA4 : {analytics.propertyId ?? 'non configurée'}</span>
-          <span className="rounded-full bg-white/10 px-2.5 py-1">Màj : {fmtDateTime(analytics.fetchedAt)}</span>
-          {analytics.error && <span className="rounded-full bg-red-500/30 px-2.5 py-1 text-red-200">Erreur GA4 : {analytics.error.slice(0, 60)}</span>}
         </div>
       </header>
 
-      {/* ── Config warning ──────────────────────────────────── */}
-      {!analytics.configured && (
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-amber-900">Configuration GA4 requise</h2>
-          <p className="mt-1 text-xs text-amber-800">Variables manquantes : {analytics.missingVars.join(', ')}</p>
-        </section>
+      {/* ── Warnings ────────────────────────────────────────── */}
+      {(!analytics.configured || hasQueryError) && (
+        <div className="space-y-2">
+          {!analytics.configured && (
+            <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-amber-900">Configuration GA4 requise</h2>
+              <p className="mt-1 text-xs text-amber-800">Variables manquantes : {analytics.missingVars.join(', ')}</p>
+            </section>
+          )}
+          {hasQueryError && (
+            <section className="rounded-2xl border border-red-200 bg-red-50 p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-red-900">Erreur de chargement partielle</h2>
+              <p className="mt-1 text-xs text-red-800">
+                Une ou plusieurs requêtes ont échoué. Certaines métriques peuvent afficher 0. Actualiser la page pour réessayer.
+              </p>
+            </section>
+          )}
+        </div>
       )}
 
       {/* ── Alertes opérationnelles ─────────────────────────── */}
       <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <SectionHeader icon={AlertTriangle} title="Alertes opérationnelles" subtitle="Billing · 30 derniers jours" />
         {billingHealthy ? (
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             <AlertCard label="Paiements échoués (7j)" value="0" detail="Aucun incident de paiement" level="ok" />
             <AlertCard label="Résiliations (30j)" value="0" detail="Aucune résiliation" level="ok" />
             <AlertCard label="Billing" value="Sain" detail="Tout va bien sur les 30 derniers jours" level="ok" />
+            <AlertCard
+              label="Churn mensuel"
+              value={m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
+              detail={m.activeSubscriptions > 0 ? `${m.activeSubscriptions} abonnements actifs` : 'Aucun abonnement actif'}
+              level={m.churnRate30d !== null && m.churnRate30d > 5 ? 'warn' : 'ok'}
+            />
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             <AlertCard
               label="Paiements échoués (7j)"
               value={fmtNumber(m.paymentFailed7d)}
@@ -441,13 +499,19 @@ export default async function AdminAnalyticsPage() {
               label="Résiliations (30j)"
               value={fmtNumber(m.subscriptionCancelled30d)}
               detail={`${fmtNumber(m.subscriptionCancelled7d)} sur les 7 derniers jours`}
-              level={m.subscriptionCancelled30d > 2 ? 'warn' : m.subscriptionCancelled30d > 0 ? 'warn' : 'ok'}
+              level={m.subscriptionCancelled30d > 0 ? 'warn' : 'ok'}
             />
             <AlertCard
               label="Pipeline en essai"
               value={fmtNumber(m.activeTrials)}
-              detail={`${m.trialToPaidRate30d !== null ? `Conv. 30j : ${m.trialToPaidRate30d}%` : 'Taux de conv. insuffisant'}`}
+              detail={m.trialToPaidRate30d !== null ? `Conv. 30j : ${m.trialToPaidRate30d}%` : 'Taux de conv. insuffisant'}
               level={m.activeTrials > 0 ? 'warn' : 'ok'}
+            />
+            <AlertCard
+              label="Churn mensuel"
+              value={m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
+              detail={`${m.activeSubscriptions} abonnements actifs · ${m.subscriptionCancelled30d} résiliation(s) 30j`}
+              level={m.churnRate30d !== null && m.churnRate30d > 5 ? 'warn' : 'ok'}
             />
           </div>
         )}
@@ -460,19 +524,30 @@ export default async function AdminAnalyticsPage() {
           title="Funnel d'acquisition — 7 jours"
           subtitle="Visiteurs web GA4 · Inscriptions · Copros créées · Essais Stripe · Abonnements"
         />
-        <div className="flex flex-wrap items-center gap-2 mt-2">
-          <FunnelStep value={m.gaWebUsers7d} label="Visiteurs web" source="GA4" colorClass="border-slate-200 bg-slate-50 text-slate-700" />
-          <FunnelArrow rate={null} />
-          <FunnelStep value={m.internalRegistrations7d} label="Inscrits" source="Interne" colorClass="border-violet-200 bg-violet-50 text-violet-700" trend={m.trendRegistrations} />
-          <FunnelArrow rate={m.conversionSignupToOnboarding7d} />
-          <FunnelStep value={m.internalOnboarding7d} label="Copros créées" source="Interne" colorClass="border-sky-200 bg-sky-50 text-sky-700" trend={m.trendOnboarding} />
-          <FunnelArrow rate={m.conversionOnboardingToTrial7d} />
-          <FunnelStep value={m.stripeTrials7d} label="Essais" source="Stripe" colorClass="border-amber-200 bg-amber-50 text-amber-700" trend={m.trendTrials} />
-          <FunnelArrow rate={m.conversionCheckoutToTrial7d} />
-          <FunnelStep value={m.stripeSubscriptions7d} label="Abonnements" source="Stripe" colorClass="border-emerald-200 bg-emerald-50 text-emerald-700" trend={m.trendSubscriptions} />
+        {/* Scroll horizontal sur mobile, row sur sm+ */}
+        <div className="-mx-1 overflow-x-auto px-1">
+          <div className="flex min-w-max items-center gap-2 pt-1 pb-2">
+            <FunnelStep value={m.gaWebUsers7d} label="Visiteurs web" source="GA4" colorClass="border-slate-200 bg-slate-50 text-slate-700" />
+            <FunnelArrow rate={null} />
+            <FunnelStep value={m.internalRegistrations7d} label="Inscrits" source="Interne" colorClass="border-violet-200 bg-violet-50 text-violet-700" trend={m.trendRegistrations} />
+            <FunnelArrow rate={m.conversionSignupToOnboarding7d} />
+            <FunnelStep value={m.internalOnboarding7d} label="Copros créées" source="Interne" colorClass="border-sky-200 bg-sky-50 text-sky-700" trend={m.trendOnboarding} />
+            <FunnelArrow rate={m.conversionOnboardingToTrial7d} />
+            <FunnelStep value={m.stripeTrials7d} label="Essais" source="Stripe" colorClass="border-amber-200 bg-amber-50 text-amber-700" trend={m.trendTrials} />
+            <FunnelArrow rate={m.conversionCheckoutToTrial7d} />
+            <FunnelStep value={m.stripeSubscriptions7d} label="Abonnements" source="Stripe" colorClass="border-emerald-200 bg-emerald-50 text-emerald-700" trend={m.trendSubscriptions} />
+          </div>
         </div>
-        <p className="mt-3 text-[10px] text-gray-400">
-          Les pourcentages sont les taux de conversion entre chaque etape (7j). GA4 = audience web publique (peut inclure robots).
+        {m.blockedAtOnboarding30d > 0 && (
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+            <AlertTriangle size={13} className="shrink-0 text-amber-500" />
+            <p className="text-xs text-amber-800">
+              <strong>{fmtNumber(m.blockedAtOnboarding30d)}</strong> inscription(s) sans copro créée sur 30j — possible friction à l'onboarding.
+            </p>
+          </div>
+        )}
+        <p className="mt-2 text-[10px] text-gray-400">
+          % = taux de conversion entre chaque étape (7j). GA4 = audience web publique (peut inclure robots). Friction = inscrits sans copro créée sur 30j.
         </p>
       </section>
 
@@ -482,14 +557,14 @@ export default async function AdminAnalyticsPage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Actifs 24h"
-            value={fmtNumber(m.internalActive24h)}
-            hint="utilisateurs ayant accede a une page"
+            value={m.internalActive24h === 0 ? '—' : fmtNumber(m.internalActive24h)}
+            hint={m.internalActive24h === 0 ? 'Aucune activité détectée' : 'utilisateurs ayant accédé à une page'}
             icon={Users}
             tone="bg-blue-50 text-blue-600"
           />
           <StatCard
             label="Actifs 7j"
-            value={fmtNumber(m.internalActive7d)}
+            value={m.internalActive7d === 0 ? '—' : fmtNumber(m.internalActive7d)}
             hint={`${fmtNumber(m.internalActiveTotalCount)} sur 30j`}
             icon={Users}
             tone="bg-blue-50 text-blue-600"
@@ -497,16 +572,26 @@ export default async function AdminAnalyticsPage() {
           />
           <StatCard
             label="Sessions 7j"
-            value={fmtNumber(m.sessionsTotal7d)}
-            hint={m.sessionsTotal7d === 0 ? 'Donnees en cours de collecte' : 'Sessions demarrees (user_sessions)'}
+            value={m.sessionsTotal7d === 0 ? '—' : fmtNumber(m.sessionsTotal7d)}
+            hint={
+              m.sessionsTotal7d === 0
+                ? 'Données en cours de collecte'
+                : m.sessionsCompletedPct !== null
+                  ? `${m.sessionsCompletedPct}% terminées proprement`
+                  : 'Sessions démarrées (user_sessions)'
+            }
             icon={RefreshCcw}
             tone="bg-teal-50 text-teal-600"
           />
           <StatCard
-            label="Duree moy. session"
+            label="Durée moy. session"
             value={fmtDuration(m.avgSessionDurationMinutes)}
-            hint={m.avgSessionDurationMinutes === null ? 'Sessions encore ouvertes' : 'Sessions terminees (>30 min inactivite)'}
-            icon={Activity}
+            hint={
+              m.avgSessionDurationMinutes === null
+                ? 'Toutes sessions encore ouvertes'
+                : `Sur ${m.sessionsCompletedPct ?? '?'}% de sessions terminées`
+            }
+            icon={Clock}
             tone="bg-teal-50 text-teal-600"
           />
         </div>
@@ -515,20 +600,24 @@ export default async function AdminAnalyticsPage() {
       {/* ── Inscriptions + Activité récente ─────────────────── */}
       <div className="grid gap-4 xl:grid-cols-2">
         <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <SectionHeader icon={UserPlus} title="Dernières inscriptions" subtitle="hors admins · logs internes user_registered" />
-          {recentSignups.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">Aucune inscription recente.</p>
+          <SectionHeader icon={UserPlus} title="Dernières inscriptions" subtitle="hors admins · user_registered" />
+          {signupFeedEvents.length === 0 ? (
+            <div className="flex flex-col items-center py-8 text-center">
+              <UserPlus size={24} className="text-gray-200 mb-2" />
+              <p className="text-sm text-gray-400">Aucune inscription récente.</p>
+              <p className="text-xs text-gray-300 mt-1">Les nouvelles inscriptions apparaîtront ici.</p>
+            </div>
           ) : (
             <div className="divide-y divide-gray-50">
-              {recentSignups.map((event, i) => (
+              {signupFeedEvents.map((event, i) => (
                 <div key={`signup-${i}`} className="flex items-center justify-between py-2.5">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="h-7 w-7 rounded-full bg-violet-100 flex items-center justify-center text-xs font-bold text-violet-600 shrink-0">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-600">
                       {(event.user_email ?? '?').slice(0, 1).toUpperCase()}
                     </div>
-                    <p className="text-sm text-gray-700 truncate">{maskEmail(event.user_email)}</p>
+                    <p className="truncate text-sm text-gray-700">{maskEmail(event.user_email)}</p>
                   </div>
-                  <p className="text-[11px] text-gray-400 shrink-0 tabular-nums ml-3">{relativeTime(event.created_at)}</p>
+                  <p className="ml-3 shrink-0 tabular-nums text-[11px] text-gray-400">{relativeTime(event.created_at)}</p>
                 </div>
               ))}
             </div>
@@ -536,12 +625,20 @@ export default async function AdminAnalyticsPage() {
         </section>
 
         <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <SectionHeader icon={BarChart2} title="Evenements cles recents" subtitle="subscription_created · trial_started · payment_failed · subscription_cancelled" />
-          {recentKeyEvents.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">Aucun evenement recent.</p>
+          <SectionHeader
+            icon={BarChart2}
+            title="Événements clés récents"
+            subtitle="subscription_created · trial_started · payment_failed · subscription_cancelled"
+          />
+          {conversionFeedEvents.length === 0 ? (
+            <div className="flex flex-col items-center py-8 text-center">
+              <BarChart2 size={24} className="text-gray-200 mb-2" />
+              <p className="text-sm text-gray-400">Aucun événement de conversion récent.</p>
+              <p className="text-xs text-gray-300 mt-1">Les essais, abonnements et alertes apparaîtront ici.</p>
+            </div>
           ) : (
             <div>
-              {recentKeyEvents.map((event, i) => (
+              {conversionFeedEvents.map((event, i) => (
                 <FeedEvent key={`feed-${i}`} event={event} />
               ))}
             </div>
@@ -551,7 +648,7 @@ export default async function AdminAnalyticsPage() {
 
       {/* ── Acquisition (KPI cartes) ─────────────────────────── */}
       <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-        <SectionHeader icon={UserPlus} title="Acquisition — metriques detaillees" subtitle="Sources : logs internes + Stripe webhooks" />
+        <SectionHeader icon={UserPlus} title="Acquisition — métriques détaillées" subtitle="Sources : logs internes + Stripe webhooks" />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Inscriptions (7j)"
@@ -562,7 +659,7 @@ export default async function AdminAnalyticsPage() {
             trend={m.trendRegistrations}
           />
           <StatCard
-            label="Copros creees (7j)"
+            label="Copros créées (7j)"
             value={fmtNumber(m.internalOnboarding7d)}
             hint={`${fmtNumber(m.internalOnboarding24h)} / 24h  ·  ${fmtNumber(m.internalOnboarding30d)} / 30j`}
             icon={Building2}
@@ -570,7 +667,7 @@ export default async function AdminAnalyticsPage() {
             trend={m.trendOnboarding}
           />
           <StatCard
-            label="Essais demarres (7j)"
+            label="Essais démarrés (7j)"
             value={fmtNumber(m.stripeTrials7d)}
             hint={`${fmtNumber(m.stripeTrials24h)} / 24h  ·  ${fmtNumber(m.stripeTrials30d)} / 30j`}
             icon={ShoppingCart}
@@ -578,12 +675,32 @@ export default async function AdminAnalyticsPage() {
             trend={m.trendTrials}
           />
           <StatCard
-            label="Abonnements actives (7j)"
+            label="Bloqués à l'onboarding (30j)"
+            value={fmtNumber(m.blockedAtOnboarding30d)}
+            hint={
+              m.blockedAtOnboarding30d === 0
+                ? 'Tous les inscrits ont créé une copro'
+                : `${fmtNumber(m.internalRegistrations30d)} inscrits, ${fmtNumber(m.internalOnboarding30d)} copros`
+            }
+            icon={UserMinus}
+            tone={m.blockedAtOnboarding30d > 0 ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}
+          />
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <StatCard
+            label="Abonnements activés (7j)"
             value={fmtNumber(m.stripeSubscriptions7d)}
             hint={`${fmtNumber(m.stripeSubscriptions24h)} / 24h  ·  ${fmtNumber(m.stripeSubscriptions30d)} / 30j`}
             icon={ShieldCheck}
             tone="bg-emerald-50 text-emerald-600"
             trend={m.trendSubscriptions}
+          />
+          <StatCard
+            label="Churn 30j / abonnements"
+            value={m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
+            hint={`${m.subscriptionCancelled30d} résiliation(s) · ${m.activeSubscriptions} abonnements actifs`}
+            icon={Percent}
+            tone={m.churnRate30d !== null && m.churnRate30d > 5 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'}
           />
         </div>
       </section>
@@ -626,7 +743,7 @@ export default async function AdminAnalyticsPage() {
           <div className="mt-4 grid gap-4 xl:grid-cols-2">
             {analytics.topPages.length > 0 && (
               <div>
-                <h3 className="text-xs font-semibold text-gray-700 mb-2">Top pages web (30j)</h3>
+                <h3 className="mb-2 text-xs font-semibold text-gray-700">Top pages web (30j)</h3>
                 <div className="space-y-2">
                   {analytics.topPages.slice(0, 6).map((page) => (
                     <div key={`${page.path}-${page.title}`} className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2">
@@ -634,7 +751,7 @@ export default async function AdminAnalyticsPage() {
                         <p className="truncate text-xs font-medium text-gray-900">{page.title || page.path}</p>
                         <p className="truncate text-[10px] text-gray-400">{page.path}</p>
                       </div>
-                      <div className="shrink-0 text-right ml-3">
+                      <div className="ml-3 shrink-0 text-right">
                         <p className="text-sm font-semibold text-gray-900">{fmtNumber(page.views)}</p>
                         <p className="text-[10px] text-gray-400">{fmtNumber(page.users)} util.</p>
                       </div>
@@ -646,15 +763,15 @@ export default async function AdminAnalyticsPage() {
 
             {analytics.internalPlatformPages.length > 0 && (
               <div>
-                <h3 className="text-xs font-semibold text-gray-700 mb-2">Top pages dashboard (30j)</h3>
+                <h3 className="mb-2 text-xs font-semibold text-gray-700">Top pages dashboard (30j)</h3>
                 <div className="space-y-2">
                   {analytics.internalPlatformPages.slice(0, 6).map((page) => (
                     <div key={`${page.area}-${page.path}`} className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2">
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-gray-900 truncate">{page.path}</p>
+                        <p className="truncate text-xs font-medium text-gray-900">{page.path}</p>
                         <p className="text-[10px] text-gray-400">{page.area}</p>
                       </div>
-                      <p className="text-sm font-semibold text-gray-900 shrink-0 ml-3">{fmtNumber(page.views)}</p>
+                      <p className="ml-3 shrink-0 text-sm font-semibold text-gray-900">{fmtNumber(page.views)}</p>
                     </div>
                   ))}
                 </div>
@@ -663,14 +780,14 @@ export default async function AdminAnalyticsPage() {
 
             {analytics.deviceCategories.length > 0 && (
               <div>
-                <h3 className="text-xs font-semibold text-gray-700 mb-2">Appareils</h3>
+                <h3 className="mb-2 text-xs font-semibold text-gray-700">Appareils</h3>
                 <BreakdownBar items={analytics.deviceCategories} />
               </div>
             )}
 
             {analytics.consentStates.length > 0 && (
               <div>
-                <h3 className="text-xs font-semibold text-gray-700 mb-2">Etat consentement</h3>
+                <h3 className="mb-2 text-xs font-semibold text-gray-700">État consentement</h3>
                 <BreakdownBar items={analytics.consentStates} />
               </div>
             )}
@@ -681,9 +798,10 @@ export default async function AdminAnalyticsPage() {
       {/* ── Diagnostics bruts ───────────────────────────────── */}
       <section>
         <details className="group">
-          <summary className="cursor-pointer rounded-2xl border border-gray-200 bg-white p-3 shadow-sm flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-50 list-none">
+          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-2xl border border-gray-200 bg-white p-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
             <BarChart3 size={15} className="text-gray-400 group-open:text-indigo-500" />
             Diagnostics bruts (logs internes · GA4 · Stripe)
+            <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">{diagSignalCount} signaux</span>
             <span className="ml-auto text-xs text-gray-400">cliquer pour ouvrir</span>
           </summary>
           <div className="mt-3 grid gap-4 xl:grid-cols-3">
@@ -693,7 +811,7 @@ export default async function AdminAnalyticsPage() {
           </div>
           {analytics.topEvents.length > 0 && (
             <section className="mt-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Top evenements GA4 custom (30j)</h3>
+              <h3 className="mb-3 text-sm font-semibold text-gray-900">Top événements GA4 custom (30j)</h3>
               <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {analytics.topEvents.map((event) => (
                   <div key={event.name} className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2">

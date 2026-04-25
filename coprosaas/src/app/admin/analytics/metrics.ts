@@ -125,6 +125,11 @@ export type AdminAnalyticsMetrics = {
   trendTrials: TrendValue;
   trendSubscriptions: TrendValue;
 
+  // ── Retention & friction
+  churnRate30d: number | null;
+  blockedAtOnboarding30d: number;
+  sessionsCompletedPct: number | null;
+
   // ── Feed activite
   recentFeedEvents: RecentFeedEvent[];
 
@@ -256,7 +261,7 @@ export function buildAdminAnalyticsMetrics({
   const stripeSubscriptionsPrev7d = countBetweenDates(subscriptionEvents.map((e) => e.created_at), last14dMs, last7dMs);
 
   // Engagement
-  const internalActive30d = activeProfiles.length;
+  const internalActive30d = activeUsersCount; // use the server-side COUNT query (full 30d window)
   const internalActive7d = countSinceDateValues(activeProfiles.map((p) => p.last_active_at), last7dMs);
   const internalActive24h = countSinceDateValues(activeProfiles.map((p) => p.last_active_at), last24hMs);
   const internalActivePrev7d = countBetweenDates(activeProfiles.map((p) => p.last_active_at), last14dMs, last7dMs);
@@ -292,6 +297,16 @@ export function buildAdminAnalyticsMetrics({
   const conversionTrialToPaid30d = trialToPaidRate30d;
   const conversionSignupToOnboarding7d = internalRegistrations7d > 0 ? Math.round((internalOnboarding7d / internalRegistrations7d) * 100) : null;
   const conversionOnboardingToTrial7d = internalOnboarding7d > 0 ? Math.round((stripeTrials7d / internalOnboarding7d) * 100) : null;
+
+  // Retention & friction
+  const churnRate30d = activeSubscriptions > 0
+    ? Math.round((subscriptionCancelled30d / activeSubscriptions) * 100)
+    : null;
+  // Approximation : inscrits sans copro créée sur la période (1 inscription = 1 copro attendue)
+  const blockedAtOnboarding30d = Math.max(0, internalRegistrations30d - internalOnboarding30d);
+  const sessionsCompletedPct = sessionsTotal7d > 0
+    ? Math.round((completedSessions.length / sessionsTotal7d) * 100)
+    : null;
 
   // Trends
   const trendActive = makeTrend(internalActive7d, internalActivePrev7d);
@@ -371,6 +386,9 @@ export function buildAdminAnalyticsMetrics({
     trendOnboarding,
     trendTrials,
     trendSubscriptions,
+    churnRate30d,
+    blockedAtOnboarding30d,
+    sessionsCompletedPct,
     recentFeedEvents: filteredFeedEvents,
     gaMetrics,
     internalMetrics,

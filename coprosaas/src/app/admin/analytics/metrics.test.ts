@@ -74,5 +74,9 @@ describe('buildAdminAnalyticsMetrics', () => {
     expect(metrics.internalActiveTotalCount).toBe(1);
     // trend: all prev7d events are outside the 14d window → prev = 0, pct = null
     expect(metrics.trendRegistrations.pct).toBeNull();
+    // new fields
+    expect(metrics.churnRate30d).toBeNull(); // no active subscriptions
+    expect(metrics.blockedAtOnboarding30d).toBe(0); // registrations(0) - copros(1) → max(0, -1) = 0
+    expect(metrics.sessionsCompletedPct).toBeNull(); // no sessions
   });
 });
