@@ -41,10 +41,9 @@ export default function MentionsLegalesPage() {
           <ul className="mt-3 space-y-1 text-gray-400">
             <li><span className="text-gray-300 font-medium">Raison sociale :</span> Mon Syndic Bénévole</li>
             <li><span className="text-gray-300 font-medium">Forme juridique :</span> Auto-entrepreneur (micro-entrepreneur)</li>
-            <li><span className="text-gray-300 font-medium">Siège social :</span> [À COMPLÉTER — adresse postale]</li>
             <li><span className="text-gray-300 font-medium">SIRET :</span> 533 018 693 00051</li>
             <li>
-              <span className="text-gray-300 font-medium">Email :</span>{" "}
+              <span className="text-gray-300 font-medium">Contact :</span>{" "}
               <a href="mailto:contact@mon-syndic-benevole.fr" className="text-blue-400 hover:text-blue-300 transition-colors">
                 contact@mon-syndic-benevole.fr
               </a>
@@ -55,7 +54,10 @@ export default function MentionsLegalesPage() {
         {/* 2. Directeur de la publication */}
         <Section title="2. Directeur de la publication">
           <p>
-            Le directeur de la publication est <strong className="text-white">[À COMPLÉTER — Prénom Nom]</strong>, auto-entrepreneur responsable de Mon Syndic Bénévole.
+            Le directeur de la publication est l&apos;éditeur de Mon Syndic Bénévole, joignable à l&apos;adresse{" "}
+            <a href="mailto:contact@mon-syndic-benevole.fr" className="text-blue-400 hover:text-blue-300 transition-colors">
+              contact@mon-syndic-benevole.fr
+            </a>.
           </p>
         </Section>
 
