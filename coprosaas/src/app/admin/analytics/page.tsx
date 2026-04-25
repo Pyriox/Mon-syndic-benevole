@@ -550,7 +550,12 @@ export default async function AdminAnalyticsPage() {
           % = taux de conversion entre chaque étape (7j). GA4 = audience web publique (peut inclure robots). Friction = inscrits sans copro créée sur 30j.
         </p>
       </section>
-
+      {/* ── Tier 2 : Comprendre le business ─────────────── */}
+      <div className="flex items-center gap-3 py-1">
+        <div className="h-px flex-1 bg-gray-200" />
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Comprendre le business</span>
+        <div className="h-px flex-1 bg-gray-200" />
+      </div>
       {/* ── Engagement ──────────────────────────────────────── */}
       <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <SectionHeader icon={Activity} title="Engagement utilisateurs" subtitle="Logs internes (last_active_at) · hors admins" />
@@ -615,7 +620,7 @@ export default async function AdminAnalyticsPage() {
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-600">
                       {(event.user_email ?? '?').slice(0, 1).toUpperCase()}
                     </div>
-                    <p className="truncate text-sm text-gray-700">{maskEmail(event.user_email)}</p>
+                    <p className="truncate text-sm text-gray-700">{event.user_email ?? '—'}</p>
                   </div>
                   <p className="ml-3 shrink-0 tabular-nums text-[11px] text-gray-400">{relativeTime(event.created_at)}</p>
                 </div>
@@ -705,10 +710,24 @@ export default async function AdminAnalyticsPage() {
         </div>
       </section>
 
+      {/* ── Tier 3 : Instrumentation ────────────────────── */}
+      <div className="flex items-center gap-3 py-1">
+        <div className="h-px flex-1 bg-gray-200" />
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Instrumentation & diagnostics</span>
+        <div className="h-px flex-1 bg-gray-200" />
+      </div>
+
       {/* ── Audience web GA4 ────────────────────────────────── */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-        <SectionHeader icon={Eye} title="Audience web — GA4" subtitle="Pages publiques uniquement · Consent Mode v2 · latence possible 24h" />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section>
+        <details className="group">
+          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-2xl border border-gray-200 bg-white p-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+            <Eye size={15} className="text-gray-400 group-open:text-indigo-500" />
+            Audience web — GA4
+            <span className="ml-1 text-[10px] text-gray-400">pages publiques · Consent Mode v2 · latence 24h</span>
+            <span className="ml-auto text-xs text-gray-400">cliquer pour ouvrir</span>
+          </summary>
+          <div className="mt-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Visiteurs uniques (7j)"
             value={fmtNumber(m.gaWebUsers7d)}
@@ -793,6 +812,8 @@ export default async function AdminAnalyticsPage() {
             )}
           </div>
         )}
+          </div>
+        </details>
       </section>
 
       {/* ── Diagnostics bruts ───────────────────────────────── */}
