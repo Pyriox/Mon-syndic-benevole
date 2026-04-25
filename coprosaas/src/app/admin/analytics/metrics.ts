@@ -1,6 +1,15 @@
 ﻿import { ADMIN_EMAIL } from '@/lib/admin-config';
 import type { Ga4AdminAnalytics } from '@/lib/ga4-admin';
 
+/** Prix mensuel par plan (abonnement annuel / 12). */
+const PLAN_MONTHLY_PRICE: Record<string, number> = {
+  essentiel: 30,
+  confort: 45,
+  illimite: 80,
+};
+
+// ── Types d'entrée ──────────────────────────────────────────────
+
 export type UserEventRow = {
   event_type: string;
   created_at: string | null;
@@ -23,6 +32,26 @@ export type AdminRow = {
   user_id: string;
 };
 
+export type PlanDistributionRow = {
+  plan_id: string | null;
+};
+
+export type SessionRow = {
+  started_at: string | null;
+  ended_at: string | null;
+};
+
+export type RecentFeedEvent = {
+  event_type: string;
+  created_at: string | null;
+  user_email: string | null;
+  user_id: string | null;
+  label: string | null;
+  severity: string | null;
+};
+
+// ── Types de sortie ─────────────────────────────────────────────
+
 export type SourceMetric = {
   label: string;
   value7d: number | null;
@@ -38,50 +67,74 @@ export type TrendValue = {
 };
 
 export type AdminAnalyticsMetrics = {
-  gaMetrics: SourceMetric[];
-  internalMetrics: SourceMetric[];
-  stripeMetrics: SourceMetric[];
-  gaSignUps7d: number;
-  gaSignUps30d: number;
-  gaLogins7d: number;
-  gaLogins30d: number;
-  gaCheckouts7d: number;
-  gaCheckouts30d: number;
-  gaPurchases7d: number;
-  gaPurchases30d: number;
-  gaOnboarding7d: number;
-  gaOnboarding30d: number;
-  dashboardPageViews7d: number;
-  dashboardPageViews30d: number;
-  internalActive24h: number;
-  internalActive7d: number;
-  internalActive30d: number;
+  // ── Revenue & Billing
+  mrrEstimate: number;
+  activeSubscriptions: number;
+  activeTrials: number;
+  trialToPaidRate30d: number | null;
+  paymentFailed7d: number;
+  paymentFailed30d: number;
+  subscriptionCancelled7d: number;
+  subscriptionCancelled30d: number;
+
+  // ── Acquisition
   internalRegistrations24h: number;
   internalRegistrations7d: number;
   internalRegistrations30d: number;
-  internalCheckouts24h: number;
-  internalCheckouts7d: number;
-  internalCheckouts30d: number;
   internalOnboarding24h: number;
   internalOnboarding7d: number;
   internalOnboarding30d: number;
+  internalCheckouts24h: number;
+  internalCheckouts7d: number;
+  internalCheckouts30d: number;
   stripeTrials24h: number;
   stripeTrials7d: number;
   stripeTrials30d: number;
   stripeSubscriptions24h: number;
   stripeSubscriptions7d: number;
   stripeSubscriptions30d: number;
-  /** internalActive30d from a COUNT(*) query — no .limit() truncation */
+
+  // ── Engagement
+  internalActive24h: number;
+  internalActive7d: number;
+  internalActive30d: number;
   internalActiveTotalCount: number;
-  /** Trends: current 7d vs previous 7d (j-14 to j-7) */
+  sessionsTotal7d: number;
+  avgSessionDurationMinutes: number | null;
+
+  // ── GA4 web
+  gaWebUsers7d: number;
+  gaWebUsers30d: number;
+  gaWebSessions7d: number;
+  gaWebPageViews7d: number;
+  gaSignUps7d: number;
+  gaSignUps30d: number;
+  dashboardPageViews7d: number;
+  dashboardPageViews30d: number;
+
+  // ── Funnel conversion rates
+  conversionCheckoutToTrial7d: number | null;
+  conversionTrialToPaid30d: number | null;
+  conversionSignupToOnboarding7d: number | null;
+  conversionOnboardingToTrial7d: number | null;
+
+  // ── Trends (7j actuel vs 7j precedents)
   trendActive: TrendValue;
   trendRegistrations: TrendValue;
   trendOnboarding: TrendValue;
   trendTrials: TrendValue;
   trendSubscriptions: TrendValue;
-  /** Funnel conversion rates (7d) */
-  conversionCheckoutToTrial7d: number | null;
+
+  // ── Feed activite
+  recentFeedEvents: RecentFeedEvent[];
+
+  // ── Diagnostics bruts
+  gaMetrics: SourceMetric[];
+  internalMetrics: SourceMetric[];
+  stripeMetrics: SourceMetric[];
 };
+
+// ── Helpers ─────────────────────────────────────────────────────
 
 function countSinceDateValues(values: Array<string | null | undefined>, sinceMs: number) {
   return values.reduce((sum, value) => {
@@ -109,22 +162,33 @@ function isLegacyAdminEmail(email: string | null | undefined) {
   return (email ?? '').trim().toLowerCase() === ADMIN_EMAIL;
 }
 
+// ── Fonction principale ─────────────────────────────────────────
+
 export function buildAdminAnalyticsMetrics({
   analytics,
   recentUserEvents,
+  billingAlertEvents,
   recentCopros,
   recentProfiles,
   adminRows,
   activeUsersCount,
+  activePlanRows,
+  activeTrialsCount,
+  sessionRows,
+  recentFeedEvents,
   nowMs,
 }: {
   analytics: Ga4AdminAnalytics;
   recentUserEvents: UserEventRow[];
+  billingAlertEvents: UserEventRow[];
   recentCopros: CoproActivityRow[];
   recentProfiles: ProfileActivityRow[];
   adminRows: AdminRow[];
-  /** COUNT(*) of non-admin profiles active in the last 30d — avoids .limit() truncation */
   activeUsersCount: number;
+  activePlanRows: PlanDistributionRow[];
+  activeTrialsCount: number;
+  sessionRows: SessionRow[];
+  recentFeedEvents: RecentFeedEvent[];
   nowMs: number;
 }): AdminAnalyticsMetrics {
   const last24hMs = nowMs - 24 * 60 * 60 * 1000;
@@ -132,140 +196,184 @@ export function buildAdminAnalyticsMetrics({
   const last14dMs = nowMs - 14 * 24 * 60 * 60 * 1000;
   const adminUserIds = new Set(adminRows.map((row) => row.user_id));
 
-  const filteredUserEvents = recentUserEvents.filter((event) => {
-    if (event.user_id && adminUserIds.has(event.user_id)) return false;
-    if (!event.user_id && isLegacyAdminEmail(event.user_email)) return false;
-    return true;
-  });
+  const filterAdmins = <T extends { user_id: string | null; user_email: string | null }>(rows: T[]) =>
+    rows.filter((row) => {
+      if (row.user_id && adminUserIds.has(row.user_id)) return false;
+      if (!row.user_id && isLegacyAdminEmail(row.user_email)) return false;
+      return true;
+    });
 
-  const filteredCopros = recentCopros.filter((copro) => (
-    !copro.syndic_id || !adminUserIds.has(copro.syndic_id)
-  ));
+  const filteredUserEvents = filterAdmins(recentUserEvents);
+  const filteredBillingAlerts = filterAdmins(billingAlertEvents);
+  const filteredFeedEvents = filterAdmins(recentFeedEvents);
+  const filteredCopros = recentCopros.filter((copro) => !copro.syndic_id || !adminUserIds.has(copro.syndic_id));
+  const activeProfiles = recentProfiles.filter((profile) => !adminUserIds.has(profile.id) && !!profile.last_active_at);
 
-  const activeProfiles = recentProfiles.filter((profile) => (
-    !adminUserIds.has(profile.id) && !!profile.last_active_at
-  ));
+  // Revenue
+  const mrrEstimate = activePlanRows.reduce((sum, row) => {
+    const price = PLAN_MONTHLY_PRICE[row.plan_id ?? ''] ?? PLAN_MONTHLY_PRICE.essentiel;
+    return sum + price;
+  }, 0);
+  const activeSubscriptions = activePlanRows.length;
+  const activeTrials = activeTrialsCount;
 
-  const gaSignUps7d =
-    (analytics.businessEvents7d.sign_up ?? 0) +
-    (analytics.businessEvents7d.sign_up_anonymous ?? 0);
-  const gaSignUps30d =
-    (analytics.businessEvents30d.sign_up ?? 0) +
-    (analytics.businessEvents30d.sign_up_anonymous ?? 0);
-  const gaLogins7d =
-    (analytics.businessEvents7d.login ?? 0) +
-    (analytics.businessEvents7d.login_anonymous ?? 0);
-  const gaLogins30d =
-    (analytics.businessEvents30d.login ?? 0) +
-    (analytics.businessEvents30d.login_anonymous ?? 0);
+  // Alertes billing
+  const paymentFailedEvents = filteredBillingAlerts.filter((e) => e.event_type === 'payment_failed');
+  const cancelledEvents = filteredBillingAlerts.filter((e) => e.event_type === 'subscription_cancelled');
+  const paymentFailed7d = countSinceDateValues(paymentFailedEvents.map((e) => e.created_at), last7dMs);
+  const paymentFailed30d = paymentFailedEvents.length;
+  const subscriptionCancelled7d = countSinceDateValues(cancelledEvents.map((e) => e.created_at), last7dMs);
+  const subscriptionCancelled30d = cancelledEvents.length;
+
+  // Acquisition
+  const registrationEvents = filteredUserEvents.filter((e) => e.event_type === 'user_registered');
+  const checkoutEvents = filteredUserEvents.filter((e) => e.event_type === 'begin_checkout');
+  const trialEvents = filteredUserEvents.filter((e) => e.event_type === 'trial_started');
+  const subscriptionEvents = filteredUserEvents.filter((e) => e.event_type === 'subscription_created');
+
+  const internalRegistrations30d = registrationEvents.length;
+  const internalRegistrations7d = countSinceDateValues(registrationEvents.map((e) => e.created_at), last7dMs);
+  const internalRegistrations24h = countSinceDateValues(registrationEvents.map((e) => e.created_at), last24hMs);
+  const internalRegistrationsPrev7d = countBetweenDates(registrationEvents.map((e) => e.created_at), last14dMs, last7dMs);
+
+  const internalCheckouts30d = checkoutEvents.length;
+  const internalCheckouts7d = countSinceDateValues(checkoutEvents.map((e) => e.created_at), last7dMs);
+  const internalCheckouts24h = countSinceDateValues(checkoutEvents.map((e) => e.created_at), last24hMs);
+
+  const internalOnboarding30d = filteredCopros.length;
+  const internalOnboarding7d = countSinceDateValues(filteredCopros.map((row) => row.created_at), last7dMs);
+  const internalOnboarding24h = countSinceDateValues(filteredCopros.map((row) => row.created_at), last24hMs);
+  const internalOnboardingPrev7d = countBetweenDates(filteredCopros.map((row) => row.created_at), last14dMs, last7dMs);
+
+  const stripeTrials30d = trialEvents.length;
+  const stripeTrials7d = countSinceDateValues(trialEvents.map((e) => e.created_at), last7dMs);
+  const stripeTrials24h = countSinceDateValues(trialEvents.map((e) => e.created_at), last24hMs);
+  const stripeTrialsPrev7d = countBetweenDates(trialEvents.map((e) => e.created_at), last14dMs, last7dMs);
+
+  const stripeSubscriptions30d = subscriptionEvents.length;
+  const stripeSubscriptions7d = countSinceDateValues(subscriptionEvents.map((e) => e.created_at), last7dMs);
+  const stripeSubscriptions24h = countSinceDateValues(subscriptionEvents.map((e) => e.created_at), last24hMs);
+  const stripeSubscriptionsPrev7d = countBetweenDates(subscriptionEvents.map((e) => e.created_at), last14dMs, last7dMs);
+
+  // Engagement
+  const internalActive30d = activeProfiles.length;
+  const internalActive7d = countSinceDateValues(activeProfiles.map((p) => p.last_active_at), last7dMs);
+  const internalActive24h = countSinceDateValues(activeProfiles.map((p) => p.last_active_at), last24hMs);
+  const internalActivePrev7d = countBetweenDates(activeProfiles.map((p) => p.last_active_at), last14dMs, last7dMs);
+
+  const sessionsTotal7d = sessionRows.length;
+  const completedSessions = sessionRows.filter((s) => s.started_at && s.ended_at);
+  const avgSessionDurationMinutes = completedSessions.length > 0
+    ? Math.round(
+        completedSessions.reduce((sum, s) => {
+          const dur = (Date.parse(s.ended_at!) - Date.parse(s.started_at!)) / 60_000;
+          return sum + (Number.isFinite(dur) && dur > 0 ? dur : 0);
+        }, 0) / completedSessions.length,
+      )
+    : null;
+
+  // GA4
+  const gaSignUps7d = (analytics.businessEvents7d.sign_up ?? 0) + (analytics.businessEvents7d.sign_up_anonymous ?? 0);
+  const gaSignUps30d = (analytics.businessEvents30d.sign_up ?? 0) + (analytics.businessEvents30d.sign_up_anonymous ?? 0);
+  const dashboardPageViews7d = analytics.businessEvents7d.dashboard_page_view ?? 0;
+  const dashboardPageViews30d = analytics.businessEvents30d.dashboard_page_view ?? 0;
+  const gaLogins7d = (analytics.businessEvents7d.login ?? 0) + (analytics.businessEvents7d.login_anonymous ?? 0);
+  const gaLogins30d = (analytics.businessEvents30d.login ?? 0) + (analytics.businessEvents30d.login_anonymous ?? 0);
   const gaCheckouts7d = analytics.businessEvents7d.begin_checkout ?? 0;
   const gaCheckouts30d = analytics.businessEvents30d.begin_checkout ?? 0;
   const gaPurchases7d = analytics.businessEvents7d.purchase ?? 0;
   const gaPurchases30d = analytics.businessEvents30d.purchase ?? 0;
   const gaOnboarding7d = analytics.businessEvents7d.onboarding_complete ?? 0;
   const gaOnboarding30d = analytics.businessEvents30d.onboarding_complete ?? 0;
-  const dashboardPageViews7d = analytics.businessEvents7d.dashboard_page_view ?? 0;
-  const dashboardPageViews30d = analytics.businessEvents30d.dashboard_page_view ?? 0;
 
-  const registrationEvents = filteredUserEvents.filter((event) => event.event_type === 'user_registered');
-  const checkoutEvents = filteredUserEvents.filter((event) => event.event_type === 'begin_checkout');
-  const trialEvents = filteredUserEvents.filter((event) => event.event_type === 'trial_started');
-  const subscriptionEvents = filteredUserEvents.filter((event) => event.event_type === 'subscription_created');
+  // Funnel
+  const trialToPaidRate30d = stripeTrials30d > 0 ? Math.round((stripeSubscriptions30d / stripeTrials30d) * 100) : null;
+  const conversionCheckoutToTrial7d = internalCheckouts7d > 0 ? Math.round((stripeTrials7d / internalCheckouts7d) * 100) : null;
+  const conversionTrialToPaid30d = trialToPaidRate30d;
+  const conversionSignupToOnboarding7d = internalRegistrations7d > 0 ? Math.round((internalOnboarding7d / internalRegistrations7d) * 100) : null;
+  const conversionOnboardingToTrial7d = internalOnboarding7d > 0 ? Math.round((stripeTrials7d / internalOnboarding7d) * 100) : null;
 
-  const internalActive30d = activeProfiles.length;
-  const internalActive7d = countSinceDateValues(activeProfiles.map((profile) => profile.last_active_at), last7dMs);
-  const internalActive24h = countSinceDateValues(activeProfiles.map((profile) => profile.last_active_at), last24hMs);
-  const internalActivePrev7d = countBetweenDates(activeProfiles.map((profile) => profile.last_active_at), last14dMs, last7dMs);
-  const internalRegistrations30d = registrationEvents.length;
-  const internalRegistrations7d = countSinceDateValues(registrationEvents.map((event) => event.created_at), last7dMs);
-  const internalRegistrations24h = countSinceDateValues(registrationEvents.map((event) => event.created_at), last24hMs);
-  const internalRegistrationsPrev7d = countBetweenDates(registrationEvents.map((event) => event.created_at), last14dMs, last7dMs);
-  const internalCheckouts30d = checkoutEvents.length;
-  const internalCheckouts7d = countSinceDateValues(checkoutEvents.map((event) => event.created_at), last7dMs);
-  const internalCheckouts24h = countSinceDateValues(checkoutEvents.map((event) => event.created_at), last24hMs);
-  const internalOnboarding30d = filteredCopros.length;
-  const internalOnboarding7d = countSinceDateValues(filteredCopros.map((row) => row.created_at), last7dMs);
-  const internalOnboarding24h = countSinceDateValues(filteredCopros.map((row) => row.created_at), last24hMs);
-  const internalOnboardingPrev7d = countBetweenDates(filteredCopros.map((row) => row.created_at), last14dMs, last7dMs);
-  const stripeTrials30d = trialEvents.length;
-  const stripeTrials7d = countSinceDateValues(trialEvents.map((event) => event.created_at), last7dMs);
-  const stripeTrials24h = countSinceDateValues(trialEvents.map((event) => event.created_at), last24hMs);
-  const stripeTrialsPrev7d = countBetweenDates(trialEvents.map((event) => event.created_at), last14dMs, last7dMs);
-  const stripeSubscriptions30d = subscriptionEvents.length;
-  const stripeSubscriptions7d = countSinceDateValues(subscriptionEvents.map((event) => event.created_at), last7dMs);
-  const stripeSubscriptions24h = countSinceDateValues(subscriptionEvents.map((event) => event.created_at), last24hMs);
-  const stripeSubscriptionsPrev7d = countBetweenDates(subscriptionEvents.map((event) => event.created_at), last14dMs, last7dMs);
+  // Trends
   const trendActive = makeTrend(internalActive7d, internalActivePrev7d);
   const trendRegistrations = makeTrend(internalRegistrations7d, internalRegistrationsPrev7d);
   const trendOnboarding = makeTrend(internalOnboarding7d, internalOnboardingPrev7d);
   const trendTrials = makeTrend(stripeTrials7d, stripeTrialsPrev7d);
   const trendSubscriptions = makeTrend(stripeSubscriptions7d, stripeSubscriptionsPrev7d);
 
-  const conversionCheckoutToTrial7d = internalCheckouts7d > 0
-    ? Math.round((stripeTrials7d / internalCheckouts7d) * 100)
-    : null;
-
+  // Diagnostics
   const gaMetrics: SourceMetric[] = [
-    { label: 'Inscriptions GA4', value7d: gaSignUps7d, value30d: gaSignUps30d, source: 'GA4 sign_up / sign_up_anonymous' },
-    { label: 'Connexions GA4', value7d: gaLogins7d, value30d: gaLogins30d, source: 'GA4 login / login_anonymous' },
-    { label: 'Checkouts GA4', value7d: gaCheckouts7d, value30d: gaCheckouts30d, source: 'GA4 begin_checkout' },
-    { label: 'Purchases GA4', value7d: gaPurchases7d, value30d: gaPurchases30d, source: 'GA4 purchase' },
-    { label: 'Onboarding GA4', value7d: gaOnboarding7d, value30d: gaOnboarding30d, source: 'GA4 onboarding_complete' },
-    { label: 'Pages dashboard GA4', value7d: dashboardPageViews7d, value30d: dashboardPageViews30d, source: 'GA4 dashboard_page_view' },
+    { label: 'Inscriptions', value7d: gaSignUps7d, value30d: gaSignUps30d, source: 'GA4 sign_up / sign_up_anonymous' },
+    { label: 'Connexions', value7d: gaLogins7d, value30d: gaLogins30d, source: 'GA4 login / login_anonymous' },
+    { label: 'Checkouts', value7d: gaCheckouts7d, value30d: gaCheckouts30d, source: 'GA4 begin_checkout' },
+    { label: 'Purchases', value7d: gaPurchases7d, value30d: gaPurchases30d, source: 'GA4 purchase' },
+    { label: 'Onboarding', value7d: gaOnboarding7d, value30d: gaOnboarding30d, source: 'GA4 onboarding_complete' },
+    { label: 'Pages dashboard', value7d: dashboardPageViews7d, value30d: dashboardPageViews30d, source: 'GA4 dashboard_page_view' },
   ];
 
   const internalMetrics: SourceMetric[] = [
-    { label: 'Utilisateurs actifs internes', value7d: internalActive7d, value30d: internalActive30d, source: 'profiles.last_active_at hors admins' },
-    { label: 'Inscriptions internes', value7d: internalRegistrations7d, value30d: internalRegistrations30d, source: 'user_events.user_registered' },
-    { label: 'Checkouts applicatifs', value7d: internalCheckouts7d, value30d: internalCheckouts30d, source: 'user_events.begin_checkout' },
-    { label: 'Copros créées', value7d: internalOnboarding7d, value30d: internalOnboarding30d, source: 'coproprietes.created_at hors admins' },
+    { label: 'Utilisateurs actifs', value7d: internalActive7d, value30d: internalActive30d, source: 'profiles.last_active_at hors admins' },
+    { label: 'Inscriptions', value7d: internalRegistrations7d, value30d: internalRegistrations30d, source: 'user_events.user_registered' },
+    { label: 'Checkouts', value7d: internalCheckouts7d, value30d: internalCheckouts30d, source: 'user_events.begin_checkout' },
+    { label: 'Copros creees', value7d: internalOnboarding7d, value30d: internalOnboarding30d, source: 'coproprietes.created_at hors admins' },
+    { label: 'Paiements echoues', value7d: paymentFailed7d, value30d: paymentFailed30d, source: 'user_events.payment_failed' },
+    { label: 'Resiliations', value7d: subscriptionCancelled7d, value30d: subscriptionCancelled30d, source: 'user_events.subscription_cancelled' },
   ];
 
   const stripeMetrics: SourceMetric[] = [
-    { label: 'Essais démarrés', value7d: stripeTrials7d, value30d: stripeTrials30d, source: 'Webhook Stripe trial_started' },
-    { label: 'Abonnements activés', value7d: stripeSubscriptions7d, value30d: stripeSubscriptions30d, source: 'Webhook Stripe subscription_created' },
+    { label: 'Essais demarres', value7d: stripeTrials7d, value30d: stripeTrials30d, source: 'Webhook Stripe trial_started' },
+    { label: 'Abonnements actives', value7d: stripeSubscriptions7d, value30d: stripeSubscriptions30d, source: 'Webhook Stripe subscription_created' },
   ];
 
   return {
-    gaMetrics,
-    internalMetrics,
-    stripeMetrics,
-    gaSignUps7d,
-    gaSignUps30d,
-    gaLogins7d,
-    gaLogins30d,
-    gaCheckouts7d,
-    gaCheckouts30d,
-    gaPurchases7d,
-    gaPurchases30d,
-    gaOnboarding7d,
-    gaOnboarding30d,
-    dashboardPageViews7d,
-    dashboardPageViews30d,
-    internalActive24h,
-    internalActive7d,
-    internalActive30d,
+    mrrEstimate,
+    activeSubscriptions,
+    activeTrials,
+    trialToPaidRate30d,
+    paymentFailed7d,
+    paymentFailed30d,
+    subscriptionCancelled7d,
+    subscriptionCancelled30d,
     internalRegistrations24h,
     internalRegistrations7d,
     internalRegistrations30d,
-    internalCheckouts24h,
-    internalCheckouts7d,
-    internalCheckouts30d,
     internalOnboarding24h,
     internalOnboarding7d,
     internalOnboarding30d,
+    internalCheckouts24h,
+    internalCheckouts7d,
+    internalCheckouts30d,
     stripeTrials24h,
     stripeTrials7d,
     stripeTrials30d,
     stripeSubscriptions24h,
     stripeSubscriptions7d,
     stripeSubscriptions30d,
+    internalActive24h,
+    internalActive7d,
+    internalActive30d,
     internalActiveTotalCount: activeUsersCount,
+    sessionsTotal7d,
+    avgSessionDurationMinutes,
+    gaWebUsers7d: analytics.last7d.activeUsers,
+    gaWebUsers30d: analytics.last30d.activeUsers,
+    gaWebSessions7d: analytics.last7d.sessions,
+    gaWebPageViews7d: analytics.last7d.pageViews,
+    gaSignUps7d,
+    gaSignUps30d,
+    dashboardPageViews7d,
+    dashboardPageViews30d,
+    conversionCheckoutToTrial7d,
+    conversionTrialToPaid30d,
+    conversionSignupToOnboarding7d,
+    conversionOnboardingToTrial7d,
     trendActive,
     trendRegistrations,
     trendOnboarding,
     trendTrials,
     trendSubscriptions,
-    conversionCheckoutToTrial7d,
+    recentFeedEvents: filteredFeedEvents,
+    gaMetrics,
+    internalMetrics,
+    stripeMetrics,
   };
 }

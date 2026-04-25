@@ -6,7 +6,10 @@ import {
   buildAdminAnalyticsMetrics,
   type AdminRow,
   type CoproActivityRow,
+  type PlanDistributionRow,
   type ProfileActivityRow,
+  type RecentFeedEvent,
+  type SessionRow,
   type UserEventRow,
 } from './metrics';
 
@@ -54,14 +57,18 @@ describe('buildAdminAnalyticsMetrics', () => {
     const metrics = buildAdminAnalyticsMetrics({
       analytics: createAnalyticsStub(),
       recentUserEvents,
+      billingAlertEvents: [] as UserEventRow[],
       recentCopros,
       recentProfiles,
       adminRows,
       activeUsersCount: 1,
+      activePlanRows: [] as PlanDistributionRow[],
+      activeTrialsCount: 0,
+      sessionRows: [] as SessionRow[],
+      recentFeedEvents: [] as RecentFeedEvent[],
       nowMs,
     });
 
-    expect(metrics.internalLoginForms30d).toBe(1);
     expect(metrics.internalRegistrations30d).toBe(0);
     expect(metrics.internalOnboarding30d).toBe(1);
     expect(metrics.internalActiveTotalCount).toBe(1);
