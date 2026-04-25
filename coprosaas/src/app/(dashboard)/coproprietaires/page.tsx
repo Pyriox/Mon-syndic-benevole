@@ -10,10 +10,12 @@ export const revalidate = 60;
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
+import { isSubscribed } from '@/lib/subscription';
 import type { CoproprietaireBalanceAccountType, CoproprietaireBalanceSourceType } from '@/lib/coproprietaire-balance';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
 import PageHelp from '@/components/ui/PageHelp';
+import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import CoproprietaireActions from './CoproprietaireActions';
 import CoproprietairesTable from './CoproprietairesTable';
 import { Building2, UserCheck, Users } from 'lucide-react';
@@ -23,6 +25,7 @@ export default async function CoproprietairesPage() {
   // Syndic : accès complet + actions | Copropriétaire : lecture seule (sans email/telephone/solde)
   const { selectedCoproId, role, copro: copropriete, user } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
+  const canWrite = isSubscribed(copropriete?.plan);
 
   // Aucune copropriété accessible (nouveau compte) → inviter à en créer une
   if (!copropriete) {
@@ -125,12 +128,13 @@ export default async function CoproprietairesPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {isSyndic && !canWrite && <ReadOnlyBanner />}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Copropriétaires</h2>
           <p className="text-gray-500 mt-1">{coproprietaires?.length ?? 0} copropriétaire(s)</p>
         </div>
-        {isSyndic && (coproprietaires?.length ?? 0) > 0 && <CoproprietaireActions coproprietes={coproprietes} />}
+        {isSyndic && canWrite && (coproprietaires?.length ?? 0) > 0 && <CoproprietaireActions coproprietes={coproprietes} />}
       </div>
 
       <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
@@ -175,7 +179,7 @@ export default async function CoproprietairesPage() {
             lotsByOwner={lotsByOwner}
             lotsForSelect={isSyndic ? lotsForSelect : undefined}
             totalTantiemes={totalTantiemes}
-            readOnly={!isSyndic}
+            readOnly={!isSyndic || !canWrite}
             currentUserId={user.id}
             coproprieteId={selectedCoproId ?? undefined}
             balanceEventsByCoproprietaire={balanceEventsByCoproprietaire}
@@ -187,7 +191,7 @@ export default async function CoproprietairesPage() {
             icon={<Users size={48} strokeWidth={1.5} />}
             title="Aucun copropriétaire"
             description={isSyndic ? "Ajoutez les copropriétaires en les associant à leurs lots." : "Aucun copropriétaire n'est encore enregistré pour cette copropriété."}
-            action={isSyndic ? <CoproprietaireActions coproprietes={coproprietes} showLabel /> : undefined}
+            action={isSyndic && canWrite ? <CoproprietaireActions coproprietes={coproprietes} showLabel /> : undefined}
           />
           {isSyndic && (
             <div className="flex items-start gap-3 max-w-lg mx-auto p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">

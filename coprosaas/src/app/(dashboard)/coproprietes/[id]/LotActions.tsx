@@ -40,9 +40,11 @@ interface LotActionsProps {
   // Limite de lots : undefined = pas de restriction (mode édition)
   canAdd?: boolean;
   lotLimit?: number;
+  // false = non abonné, cache les boutons d'action
+  canWrite?: boolean;
 }
 
-export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotLimit }: LotActionsProps) {
+export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotLimit, canWrite = true }: LotActionsProps) {
   const router = useRouter();
   const isEdit = Boolean(lot);
   const assignedKeys = Array.from(new Set([
@@ -98,6 +100,8 @@ export default function LotActions({ coproprieteId, showLabel, lot, canAdd, lotL
     setLoading(false);
     setIsOpen(true);
   };
+
+  if (!canWrite) return null;
 
   return (
     <>
@@ -181,9 +185,10 @@ interface LotDeleteProps {
   lotId: string;
   lotNumero: string;
   coproprieteId: string;
+  canWrite?: boolean;
 }
 
-export function LotDelete({ lotId, lotNumero, coproprieteId }: LotDeleteProps) {
+export function LotDelete({ lotId, lotNumero, coproprieteId, canWrite = true }: LotDeleteProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -195,6 +200,8 @@ export function LotDelete({ lotId, lotNumero, coproprieteId }: LotDeleteProps) {
     setConfirmOpen(false);
     router.refresh();
   };
+
+  if (!canWrite) return null;
 
   return (
     <>
