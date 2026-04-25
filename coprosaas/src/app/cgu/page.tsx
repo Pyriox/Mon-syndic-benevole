@@ -23,7 +23,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function CguPage() {
-  const lastUpdate = new Date("2026-03-24").toLocaleDateString("fr-FR", {
+  const lastUpdate = new Date("2026-04-25").toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",

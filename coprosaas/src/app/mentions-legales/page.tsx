@@ -33,18 +33,16 @@ export default function MentionsLegalesPage() {
       <main className="max-w-4xl mx-auto px-6 py-16">
 
         <h1 className="text-3xl font-bold text-white mb-2">Mentions légales</h1>
-        <p className="text-gray-500 text-sm mb-12">Dernière mise à jour : 26 mars 2026</p>
+        <p className="text-gray-500 text-sm mb-12">Dernière mise à jour : 25 avril 2026</p>
 
         {/* 1. Éditeur */}
         <Section title="1. Éditeur du site">
           <p>Le site <strong className="text-white">mon-syndic-benevole.fr</strong> est édité par :</p>
           <ul className="mt-3 space-y-1 text-gray-400">
             <li><span className="text-gray-300 font-medium">Raison sociale :</span> Mon Syndic Bénévole</li>
-            <li><span className="text-gray-300 font-medium">Forme juridique :</span> [Forme juridique — ex. SAS, SARL, auto-entrepreneur…]</li>
-            <li><span className="text-gray-300 font-medium">Capital social :</span> [Montant du capital]</li>
-            <li><span className="text-gray-300 font-medium">Siège social :</span> [Adresse complète]</li>
-            <li><span className="text-gray-300 font-medium">SIRET :</span> [Numéro SIRET]</li>
-            <li><span className="text-gray-300 font-medium">N° TVA intracommunautaire :</span> [N° TVA si applicable]</li>
+            <li><span className="text-gray-300 font-medium">Forme juridique :</span> Auto-entrepreneur (micro-entrepreneur)</li>
+            <li><span className="text-gray-300 font-medium">Siège social :</span> [À COMPLÉTER — adresse postale]</li>
+            <li><span className="text-gray-300 font-medium">SIRET :</span> 533 018 693 00051</li>
             <li>
               <span className="text-gray-300 font-medium">Email :</span>{" "}
               <a href="mailto:contact@mon-syndic-benevole.fr" className="text-blue-400 hover:text-blue-300 transition-colors">
@@ -57,8 +55,7 @@ export default function MentionsLegalesPage() {
         {/* 2. Directeur de la publication */}
         <Section title="2. Directeur de la publication">
           <p>
-            Le directeur de la publication est <strong className="text-white">[Prénom Nom]</strong>, en sa qualité de
-            [gérant / président / auto-entrepreneur] de Mon Syndic Bénévole.
+            Le directeur de la publication est <strong className="text-white">[À COMPLÉTER — Prénom Nom]</strong>, auto-entrepreneur responsable de Mon Syndic Bénévole.
           </p>
         </Section>
 
