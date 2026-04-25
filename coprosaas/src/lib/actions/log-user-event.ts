@@ -5,12 +5,25 @@ import { createClient } from '@/lib/supabase/server';
 
 export type EventSeverity = 'info' | 'warning' | 'error';
 
+/**
+ * Format canonique d'un événement interne.
+ *
+ * ── Règles de normalisation ────────────────────────────────────
+ * - `eventType`  : identifiant snake_case unique par action métier
+ * - `label`      : description humaine courte (affiché dans l'admin)
+ * - `metadata`   : conteneur JSONB flexible pour toute donnée structurée
+ *                  → ajouter toute nouvelle donnée ici, pas en colonne
+ * - `sessionId`  : UUID de la session d'utilisation (optionnel, côté client)
+ * - `severity`   : 'info' par défaut, 'warning'/'error' pour les alertes
+ */
 export type LogUserEventInput = {
   eventType: string;
   label?: string;
   severity?: EventSeverity;
   metadata?: Record<string, unknown>;
   userId?: string | null;
+  /** Session d'utilisation interne. Disponible via getCurrentSessionId() (client uniquement). */
+  sessionId?: string | null;
 };
 
 export async function logCurrentUserEvent({
@@ -19,6 +32,7 @@ export async function logCurrentUserEvent({
   severity = 'info',
   metadata,
   userId,
+  sessionId,
 }: LogUserEventInput): Promise<void> {
   try {
     const supabase = await createClient();
@@ -35,6 +49,7 @@ export async function logCurrentUserEvent({
       label: label.trim(),
       severity,
       metadata: metadata ?? null,
+      session_id: sessionId ?? null,
     });
   } catch {
     // Journal non bloquant
@@ -49,6 +64,7 @@ export async function logEventForEmail({
   severity = 'info',
   metadata,
   userId,
+  sessionId,
 }: LogUserEventInput & { email: string }): Promise<void> {
   try {
     const normalizedEmail = email.trim().toLowerCase();
@@ -61,6 +77,7 @@ export async function logEventForEmail({
       label: label.trim(),
       severity,
       metadata: metadata ?? null,
+      session_id: sessionId ?? null,
     });
   } catch {
     // Journal non bloquant
@@ -75,6 +92,7 @@ export async function logAdminAction({
   severity = 'info',
   metadata,
   userId,
+  sessionId,
 }: LogUserEventInput & { adminEmail: string }): Promise<void> {
   try {
     const normalizedEmail = adminEmail.trim().toLowerCase();
@@ -91,6 +109,7 @@ export async function logAdminAction({
         scope: 'admin',
         ...(metadata ?? {}),
       },
+      session_id: sessionId ?? null,
     });
   } catch {
     // Journal non bloquant

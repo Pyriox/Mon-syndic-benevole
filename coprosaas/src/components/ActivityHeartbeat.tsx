@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
 const STORAGE_KEY = 'msb:last-activity-heartbeat';
+const SESSION_ID_KEY = 'msb:session-id';
 
 function getLastHeartbeatAt() {
   try {
@@ -24,13 +25,31 @@ function setLastHeartbeatAt(value: number) {
   }
 }
 
+/**
+ * Retourne l'ID de la session d'utilisation interne courante.
+ * Disponible uniquement dans les composants client après le premier ping.
+ */
+export function getCurrentSessionId(): string | null {
+  try {
+    return sessionStorage.getItem(SESSION_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
 async function pingActivity() {
   try {
-    await fetch('/api/activity/ping', {
+    const res = await fetch('/api/activity/ping', {
       method: 'POST',
       cache: 'no-store',
       keepalive: true,
     });
+    if (res.ok) {
+      const data = await res.json().catch(() => ({})) as { sessionId?: string | null };
+      if (data.sessionId) {
+        try { sessionStorage.setItem(SESSION_ID_KEY, data.sessionId); } catch { /* ignore */ }
+      }
+    }
   } catch {
     // Heartbeat best-effort only.
   }
