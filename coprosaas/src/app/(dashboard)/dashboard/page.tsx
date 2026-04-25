@@ -6,9 +6,11 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Tableau de bord' };
 
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
+import { isSubscribed } from '@/lib/subscription';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
 import PageHelp from '@/components/ui/PageHelp';
+import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import { Building2 } from 'lucide-react';
 import {
   CoproDashboardAlert,
@@ -31,6 +33,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {userRole !== 'copropriétaire' && copropriete && !isSubscribed(copropriete.plan) && (
+        <ReadOnlyBanner />
+      )}
       {userRole === 'copropriétaire' ? (
         <CoproDashboardHeader
           userId={user.id}
