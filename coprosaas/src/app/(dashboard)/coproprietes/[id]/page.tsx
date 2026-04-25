@@ -95,12 +95,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      {!canWrite && (
-        <ReadOnlyBanner
-          freemium
-          description={`Gestion limitée à ${lotLimit === Infinity ? '∞' : lotLimit} lots en version gratuite. Abonnez-vous pour gérer jusqu'à 20 ou en illimité.`}
-        />
-      )}
+      {!canWrite && <ReadOnlyBanner freemium />}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Lots & bâtiment</h2>
