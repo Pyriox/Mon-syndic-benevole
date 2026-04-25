@@ -38,6 +38,7 @@ export interface CoproAccess {
   selectedCoproId: string | null;
   role: CoproRole | null;
   copro: CoproInfo | null;
+  trialUsed: boolean;
 }
 
 async function resolveFirstAccessibleCopro({
@@ -50,7 +51,7 @@ async function resolveFirstAccessibleCopro({
   userId: string;
   normalizedEmail: string;
   preferredViewMode: ReturnType<typeof normalizeDashboardViewMode>;
-}): Promise<Omit<CoproAccess, 'user'>> {
+}): Promise<Omit<CoproAccess, 'user' | 'trialUsed'>> {
   const [{ data: firstSyndic }, { data: firstCopro }, { data: firstCoproByEmail }] = await Promise.all([
     admin
       .from('coproprietes')
@@ -104,6 +105,11 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
   if (!user) redirect('/login');
 
   const admin = createAdminClient();
+  const trialUsedPromise = admin
+    .from('profiles')
+    .select('trial_used')
+    .eq('id', user.id)
+    .maybeSingle();
   const cookieStore = await cookies();
   const selectedCoproId = cookieStore.get('selected_copro_id')?.value ?? null;
   const preferredViewMode = normalizeDashboardViewMode(cookieStore.get('dashboard_view_mode')?.value ?? null);
@@ -112,23 +118,27 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
   // Pas de cookie : fallback sur la première copropriété accessible
   // (même logique que le layout — évite une vue vide avant que CoproSelector pose le cookie)
   if (!selectedCoproId) {
-    const fallbackAccess = await resolveFirstAccessibleCopro({
-      admin,
-      userId: user.id,
-      normalizedEmail,
-      preferredViewMode,
-    });
+    const [{ data: profile }, fallbackAccess] = await Promise.all([
+      trialUsedPromise,
+      resolveFirstAccessibleCopro({
+        admin,
+        userId: user.id,
+        normalizedEmail,
+        preferredViewMode,
+      }),
+    ]);
+    const trialUsed = profile?.trial_used === true;
 
     if (fallbackAccess.role && allowedRoles && !allowedRoles.includes(fallbackAccess.role)) {
       redirect('/dashboard');
     }
 
     if (!fallbackAccess.role && allowedRoles) redirect('/dashboard');
-    return { user, ...fallbackAccess };
+    return { user, trialUsed, ...fallbackAccess };
   }
 
   // Cookie présent : utilise le client admin pour bypasser la RLS sur coproprietes
-  const [{ data: asSyndic }, { data: asCopro }, { data: asCoproByEmail }] = await Promise.all([
+  const [{ data: asSyndic }, { data: asCopro }, { data: asCoproByEmail }, { data: profile }] = await Promise.all([
     admin
       .from('coproprietes')
       .select('id, nom, syndic_id, plan, plan_id')
@@ -150,7 +160,9 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
           .is('user_id', null)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    trialUsedPromise,
   ]);
+  const trialUsed = profile?.trial_used === true;
 
   const coproRelation = asCopro?.coproprietes ?? asCoproByEmail?.coproprietes ?? null;
   const coproData = (Array.isArray(coproRelation) ? coproRelation[0] : coproRelation) as CoproInfo | null;
@@ -163,12 +175,12 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
 
   if (resolvedRole === 'syndic' && asSyndic) {
     if (allowedRoles && !allowedRoles.includes('syndic')) redirect('/dashboard');
-    return { user, selectedCoproId: asSyndic.id, role: 'syndic', copro: asSyndic };
+    return { user, trialUsed, selectedCoproId: asSyndic.id, role: 'syndic', copro: asSyndic };
   }
 
   if (resolvedRole === 'copropriétaire' && coproData) {
     if (allowedRoles && !allowedRoles.includes('copropriétaire')) redirect('/dashboard');
-    return { user, selectedCoproId: coproData.id, role: 'copropriétaire', copro: coproData };
+    return { user, trialUsed, selectedCoproId: coproData.id, role: 'copropriétaire', copro: coproData };
   }
 
   const fallbackAccess = await resolveFirstAccessibleCopro({
@@ -180,10 +192,10 @@ export const requireCoproAccess = cache(async function requireCoproAccess(allowe
 
   if (fallbackAccess.role) {
     if (allowedRoles && !allowedRoles.includes(fallbackAccess.role)) redirect('/dashboard');
-    return { user, ...fallbackAccess };
+    return { user, trialUsed, ...fallbackAccess };
   }
 
   // Cookie présent mais aucun accès
   if (allowedRoles) redirect('/dashboard');
-  return { user, selectedCoproId: null, role: null, copro: null };
+  return { user, trialUsed, selectedCoproId: null, role: null, copro: null };
 });

@@ -228,7 +228,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
   const currentPage = Math.max(1, parseInt(pageParam ?? '1') || 1);
 
   const supabase = await createClient();
-  const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
+  const { user, selectedCoproId, role: userRole, copro: copropriete, trialUsed } = await requireCoproAccess();
 
   // ================================================================
   // VUE LECTURE SEULE — Copropriétaires
@@ -619,7 +619,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* ── Bandeau lecture seule ── */}
-      {!canWrite && <ReadOnlyBanner />}
+      {!canWrite && <ReadOnlyBanner trialUsed={trialUsed} />}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>

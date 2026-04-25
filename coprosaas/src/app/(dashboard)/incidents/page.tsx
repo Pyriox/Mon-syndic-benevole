@@ -18,7 +18,7 @@ export const metadata: Metadata = { title: 'Incidents & travaux' };
 
 export default async function IncidentsPage() {
   const supabase = await createClient();
-  const { selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
+  const { selectedCoproId, role: userRole, copro: copropriete, trialUsed } = await requireCoproAccess();
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const isSyndic = userRole === 'syndic';
@@ -42,7 +42,7 @@ export default async function IncidentsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      {!canWrite && <ReadOnlyBanner />}
+      {!canWrite && <ReadOnlyBanner trialUsed={trialUsed} />}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>

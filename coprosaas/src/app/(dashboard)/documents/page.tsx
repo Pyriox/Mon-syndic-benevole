@@ -93,7 +93,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   const sort = sortParam ?? 'date';
   const dir = dirParam ?? 'desc';
   const supabase = await createClient();
-  const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
+  const { user, selectedCoproId, role: userRole, copro: copropriete, trialUsed } = await requireCoproAccess();
 
   // ================================================================
   // VUE LECTURE SEULE — Copropriétaires
@@ -390,7 +390,7 @@ export default async function DocumentsPage({ searchParams }: Props) {
   return (
     <div className="max-w-5xl mx-auto space-y-4">
       {/* Bandeau lecture seule */}
-      {!canWrite && <ReadOnlyBanner />}
+      {!canWrite && <ReadOnlyBanner trialUsed={trialUsed} />}
 
       {/* Fil d'Ariane */}
       <div className="flex items-center gap-1 text-sm flex-wrap">

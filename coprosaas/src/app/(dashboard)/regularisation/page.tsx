@@ -31,7 +31,7 @@ export default async function RegularisationPage({
   const annee = parseInt(anneeParam ?? String(currentYear - 1));
 
   const supabase = await createClient();
-  const { selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
+  const { selectedCoproId, role: userRole, copro: copropriete, trialUsed } = await requireCoproAccess();
 
   const isSyndic = userRole === 'syndic' || userRole === null;
   const canWrite = isSubscribed(copropriete?.plan);
@@ -66,7 +66,7 @@ export default async function RegularisationPage({
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {isSyndic && !canWrite && <ReadOnlyBanner />}
+      {isSyndic && !canWrite && <ReadOnlyBanner trialUsed={trialUsed} />}
 
       {/* ── En-tête ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

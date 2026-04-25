@@ -40,7 +40,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   const annee = parseInt(anneeParam ?? String(new Date().getFullYear()));
 
   const supabase = await createClient();
-  const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
+  const { user, selectedCoproId, role: userRole, copro: copropriete, trialUsed } = await requireCoproAccess();
 
   const coproprietes = copropriete ? [{ id: copropriete.id, nom: copropriete.nom }] : [];
   const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
@@ -142,7 +142,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* ── Bandeau lecture seule ── */}
-      {isSyndic && !canWrite && <ReadOnlyBanner />}
+      {isSyndic && !canWrite && <ReadOnlyBanner trialUsed={trialUsed} />}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>

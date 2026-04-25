@@ -6,7 +6,6 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Tableau de bord' };
 
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
-import { createClient } from '@/lib/supabase/server';
 import { isSubscribed } from '@/lib/subscription';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -34,12 +33,8 @@ import {
 } from './DashboardSections';
 
 export default async function DashboardPage() {
-  const { user, selectedCoproId, role: userRole, copro: copropriete } = await requireCoproAccess();
+  const { user, selectedCoproId, role: userRole, copro: copropriete, trialUsed } = await requireCoproAccess();
   const scopeId = selectedCoproId ?? 'none';
-
-  const supabase = await createClient();
-  const { data: profile } = await supabase.from('profiles').select('trial_used').eq('id', user.id).single();
-  const trialUsed = profile?.trial_used === true;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">

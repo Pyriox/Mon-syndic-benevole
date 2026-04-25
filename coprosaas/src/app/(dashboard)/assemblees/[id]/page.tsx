@@ -27,7 +27,7 @@ interface Props {
 export default async function AGDetailPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
-  const { selectedCoproId, role, copro } = await requireCoproAccess();
+  const { selectedCoproId, role, copro, trialUsed } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
   const canWrite = isSubscribed(copro?.plan);
   const db = supabase; // Les RLS policies autorisent la lecture pour les deux rôles
@@ -150,7 +150,7 @@ export default async function AGDetailPage({ params }: Props) {
       </Link>
 
       {/* ── Bandeau lecture seule ── */}
-      {isSyndic && !canWrite && <ReadOnlyBanner />}
+      {isSyndic && !canWrite && <ReadOnlyBanner trialUsed={trialUsed} />}
 
       {/* En-tête */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

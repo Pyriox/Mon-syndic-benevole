@@ -23,7 +23,7 @@ import { Building2, UserCheck, Users } from 'lucide-react';
 export default async function CoproprietairesPage() {
   const supabase = await createClient();
   // Syndic : accès complet + actions | Copropriétaire : lecture seule (sans email/telephone/solde)
-  const { selectedCoproId, role, copro: copropriete, user } = await requireCoproAccess();
+  const { selectedCoproId, role, copro: copropriete, user, trialUsed } = await requireCoproAccess();
   const isSyndic = role === 'syndic';
   const canWrite = isSubscribed(copropriete?.plan);
 
@@ -128,7 +128,7 @@ export default async function CoproprietairesPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      {isSyndic && !canWrite && <ReadOnlyBanner freemium />}
+      {isSyndic && !canWrite && <ReadOnlyBanner freemium trialUsed={trialUsed} />}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Copropriétaires</h2>

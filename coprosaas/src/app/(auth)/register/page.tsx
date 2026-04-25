@@ -14,8 +14,6 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
 import { Lock, ArrowRight, Building2, Users, FileText, CalendarDays } from 'lucide-react';
-import { trackAnonymousEvent, trackConsentAwareEvent } from '@/lib/gtag';
-import { logEventForEmail } from '@/lib/actions/log-user-event';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
 import { buildInvitationLoginHref, getInvitationAcceptanceState } from '@/lib/invitation-acceptance';
 
@@ -25,6 +23,35 @@ const BENEFITS = [
   { icon: FileText,  text: 'Documents, dépenses et appels de fonds centralisés' },
   { icon: CalendarDays, text: 'Assemblées générales, votes et PV en quelques clics' },
 ];
+
+async function trackAnonymousRegisterEvent(params: Record<string, string>) {
+  const { trackAnonymousEvent } = await import('@/lib/gtag');
+  trackAnonymousEvent('registration_error', params);
+}
+
+async function trackFormAbandonment(role: 'syndic' | 'coproprietaire' | 'loading' | 'invalid') {
+  const { trackAnonymousEvent } = await import('@/lib/gtag');
+  trackAnonymousEvent('form_abandonment', { form: 'register', role });
+}
+
+async function trackRegisterSuccess(params: { role: string; method: string }) {
+  const { trackConsentAwareEvent } = await import('@/lib/gtag');
+  trackConsentAwareEvent({
+    standardEvent: 'sign_up',
+    anonymousEvent: 'sign_up_anonymous',
+    params,
+  });
+}
+
+async function logRegisteredEmailEvent(payload: { email: string; userId: string | null }) {
+  const { logEventForEmail } = await import('@/lib/actions/log-user-event');
+  return logEventForEmail({
+    email: payload.email,
+    eventType: 'user_registered',
+    label: 'Inscription du compte',
+    userId: payload.userId,
+  });
+}
 
 // ---- Formulaire (utilise useSearchParams → doit être dans Suspense) ----
 function RegisterForm() {
@@ -53,7 +80,7 @@ function RegisterForm() {
   useEffect(() => {
     return () => {
       if (formStartedRef.current && !formSubmittedRef.current) {
-        trackAnonymousEvent('form_abandonment', { form: 'register', role: mode });
+        void trackFormAbandonment(mode);
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -163,19 +190,19 @@ function RegisterForm() {
     if (formData.password !== formData.confirmPassword) {
       const errMsg = 'Les mots de passe ne correspondent pas.';
       setError(errMsg);
-      trackAnonymousEvent('registration_error', { error: 'password_mismatch' });
+      void trackAnonymousRegisterEvent({ error: 'password_mismatch' });
       return;
     }
     if (formData.password.length < 8) {
       const errMsg = 'Le mot de passe doit contenir au moins 8 caractères.';
       setError(errMsg);
-      trackAnonymousEvent('registration_error', { error: 'password_too_short' });
+      void trackAnonymousRegisterEvent({ error: 'password_too_short' });
       return;
     }
     if (!acceptCgu) {
       const errMsg = "Vous devez accepter les conditions générales d'utilisation.";
       setError(errMsg);
-      trackAnonymousEvent('registration_error', { error: 'cgu_not_accepted' });
+      void trackAnonymousRegisterEvent({ error: 'cgu_not_accepted' });
       return;
     }
 
@@ -199,7 +226,7 @@ function RegisterForm() {
       if (!res.ok) {
         const errMsg = result.error ?? 'Impossible de finaliser l\'inscription pour cette invitation. Réessayez ou demandez un nouveau lien.';
         setError(errMsg);
-        trackAnonymousEvent('registration_error', { error: result.error ?? 'invitation_error', role: 'copropriétaire' });
+        void trackAnonymousRegisterEvent({ error: result.error ?? 'invitation_error', role: 'copropriétaire' });
         setLoading(false);
         return;
       }
@@ -210,15 +237,11 @@ function RegisterForm() {
       });
       if (signInError) {
         setError(signInError.message);
-        trackAnonymousEvent('registration_error', { error: 'sign_in_failed', role: 'copropriétaire' });
+        void trackAnonymousRegisterEvent({ error: 'sign_in_failed', role: 'copropriétaire' });
         setLoading(false);
         return;
       }
-      trackConsentAwareEvent({
-        standardEvent: 'sign_up',
-        anonymousEvent: 'sign_up_anonymous',
-        params: { role: 'copropriétaire', method: 'invitation' },
-      });
+      void trackRegisterSuccess({ role: 'copropriétaire', method: 'invitation' });
       redirectToDashboard();
       return;
     }
@@ -238,7 +261,7 @@ function RegisterForm() {
     if (authError) {
       const errMsg = 'Inscription impossible pour le moment. Vérifiez vos informations et réessayez. Si le problème persiste, contactez le support.';
       setError(errMsg);
-      trackAnonymousEvent('registration_error', { error: authError.code ?? 'sign_up_failed', role: 'syndic' });
+      void trackAnonymousRegisterEvent({ error: authError.code ?? 'sign_up_failed', role: 'syndic' });
       setLoading(false);
       return;
     }
@@ -247,20 +270,14 @@ function RegisterForm() {
     if (data.user?.identities?.length === 0) {
       const errMsg = 'Cette adresse email est déjà utilisée. Essayez de vous connecter.';
       setError(errMsg);
-      trackAnonymousEvent('registration_error', { error: 'email_already_exists', role: 'syndic' });
+      void trackAnonymousRegisterEvent({ error: 'email_already_exists', role: 'syndic' });
       setLoading(false);
       return;
     }
 
-    trackConsentAwareEvent({
-      standardEvent: 'sign_up',
-      anonymousEvent: 'sign_up_anonymous',
-      params: { role: 'syndic', method: 'email' },
-    });
-    void logEventForEmail({
+    void trackRegisterSuccess({ role: 'syndic', method: 'email' });
+    void logRegisteredEmailEvent({
       email: formData.email,
-      eventType: 'user_registered',
-      label: 'Inscription du compte',
       userId: data.user?.id ?? null,
     }).catch(() => undefined);
 
