@@ -184,6 +184,7 @@ export function buildAdminAnalyticsMetrics({
   sessionRows,
   recentFeedEvents,
   paidUserEmails,
+  syndicIdsWithCopro,
   nowMs,
 }: {
   analytics: Ga4AdminAnalytics;
@@ -199,6 +200,8 @@ export function buildAdminAnalyticsMetrics({
   recentFeedEvents: RecentFeedEvent[];
   /** Ensemble de tous les emails ayant eu subscription_created (all-time) — pour reclassifier les anciens subscription_cancelled */
   paidUserEmails: Set<string>;
+  /** Ensemble de tous les syndic_id ayant au moins une copropriété (all-time) — pour bloqués onboarding exact */
+  syndicIdsWithCopro: Set<string>;
   nowMs: number;
 }): AdminAnalyticsMetrics {
   const last24hMs = nowMs - 24 * 60 * 60 * 1000;
@@ -324,8 +327,13 @@ export function buildAdminAnalyticsMetrics({
   const churnRate30d = churnBase30d > 0
     ? Math.round((subscriptionCancelled30d / churnBase30d) * 100)
     : null;
-  // Approximation : inscrits sans copro créée sur la période (1 inscription = 1 copro attendue)
-  const blockedAtOnboarding30d = Math.max(0, internalRegistrations30d - internalOnboarding30d);
+  // Inscrits 30j sans copropriété (jamais) : calcul exact par user_id
+  // Remplace l'approximation inscrits30j - copros30j qui était fausse
+  const registeredWithUserId = filteredUserEvents
+    .filter((e) => e.event_type === 'user_registered' && !!e.user_id);
+  const blockedAtOnboarding30d = registeredWithUserId
+    .filter((e) => !syndicIdsWithCopro.has(e.user_id!))
+    .length;
   const sessionsCompletedPct = sessionsTotal7d > 0
     ? Math.round((completedSessions.length / sessionsTotal7d) * 100)
     : null;

@@ -307,6 +307,7 @@ export default async function AdminAnalyticsPage() {
     { data: conversionFeedRows },
     { data: signupFeedRows },
     { data: allTimePaidRows },
+    { data: allCoproRows },
   ] = await Promise.all([
     getGa4AdminAnalytics(),
     // Acquisition events 30j
@@ -361,12 +362,19 @@ export default async function AdminAnalyticsPage() {
     admin.from('user_events')
       .select('user_email')
       .eq('event_type', 'subscription_created'),
+    // All-time : syndic_id de toutes les copropriétés (pour bloqués à l'onboarding exact)
+    admin.from('coproprietes')
+      .select('syndic_id')
+      .not('syndic_id', 'is', null),
   ]);
 
   const activeUsersCount = activeUsersCountResult.count ?? recentProfiles?.length ?? 0;
   const activeTrialsCount = activeTrialsCountResult.count ?? 0;
   const paidUserEmails = new Set(
     (allTimePaidRows ?? []).map((r) => (r.user_email ?? '').toLowerCase()).filter(Boolean),
+  );
+  const syndicIdsWithCopro = new Set(
+    (allCoproRows ?? []).map((r) => r.syndic_id).filter(Boolean) as string[],
   );
 
   const hasQueryError = [errUserEvents, errBillingAlerts, errCopros, errProfiles, errPlans].some(Boolean);
@@ -388,6 +396,7 @@ export default async function AdminAnalyticsPage() {
     sessionRows:        (sessionRows        ?? []) as SessionRow[],
     recentFeedEvents:   combinedFeedRows,
     paidUserEmails,
+    syndicIdsWithCopro,
     activeUsersCount,
     activeTrialsCount,
     nowMs,
