@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('server-only', () => ({}));
+
 const verifyMock = vi.fn();
 const applyProviderEventMock = vi.fn();
 const pushAdminAlertMock = vi.fn();
@@ -16,6 +18,14 @@ vi.mock('@/lib/email-delivery', () => ({
 
 vi.mock('@/lib/notification-center', () => ({
   pushAdminAlert: pushAdminAlertMock,
+}));
+
+const adminFromMock = vi.fn(() => ({
+  update: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+}));
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: vi.fn(() => ({ from: adminFromMock })),
 }));
 
 function makeRequest(headers?: Record<string, string>, body = '{}'): Request {

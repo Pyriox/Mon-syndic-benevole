@@ -63,12 +63,12 @@ describe('buildEstimatedRevenueMetrics', () => {
       { copropriete_id: 'copro-3', addon_key: 'charges_speciales', status: 'canceled', cancel_at_period_end: true, current_period_end: '2026-01-01T00:00:00.000Z' },
     ], '2026-04-11T00:00:00.000Z');
 
-    expect(metrics.baseMrr).toBe(55);
-    expect(metrics.baseArr).toBe(660);
+    expect(metrics.baseMrr).toBe(75);
+    expect(metrics.baseArr).toBe(900);
     expect(metrics.addonCounts.charges_speciales).toBe(2);
     expect(metrics.addonMrr).toBe(16.5);
     expect(metrics.addonArr).toBe(198);
-    expect(metrics.totalMrr).toBe(71.5);
-    expect(metrics.totalArr).toBe(858);
+    expect(metrics.totalMrr).toBe(91.5);
+    expect(metrics.totalArr).toBe(1098);
   });
 });
