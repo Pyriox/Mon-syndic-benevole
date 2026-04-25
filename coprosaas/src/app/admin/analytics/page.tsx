@@ -187,7 +187,6 @@ export default async function AdminAnalyticsPage() {
   const admin = createAdminClient();
   const nowMs = Date.now();
   const last30dIso = new Date(nowMs - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const last14dIso = new Date(nowMs - 14 * 24 * 60 * 60 * 1000).toISOString();
 
   const [analytics, { data: recentUserEvents }, { data: recentCopros }, { data: recentProfiles }, { data: adminRows }, activeUsersCountResult] = await Promise.all([
     getGa4AdminAnalytics(),
@@ -195,11 +194,11 @@ export default async function AdminAnalyticsPage() {
       .from('user_events')
       .select('event_type, created_at, user_email, user_id')
       .in('event_type', ['user_registered', 'begin_checkout', 'trial_started', 'subscription_created', 'login_success'])
-      .gte('created_at', last14dIso),
+      .gte('created_at', last30dIso),
     admin
       .from('coproprietes')
       .select('created_at, syndic_id')
-      .gte('created_at', last14dIso),
+      .gte('created_at', last30dIso),
     admin
       .from('profiles')
       .select('id, full_name, last_active_at')
