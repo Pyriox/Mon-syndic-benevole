@@ -76,6 +76,8 @@ export type AdminAnalyticsMetrics = {
   paymentFailed30d: number;
   subscriptionCancelled7d: number;
   subscriptionCancelled30d: number;
+  trialCancelled7d: number;
+  trialCancelled30d: number;
 
   // ── Acquisition
   internalRegistrations24h: number;
@@ -225,10 +227,13 @@ export function buildAdminAnalyticsMetrics({
   // Alertes billing
   const paymentFailedEvents = filteredBillingAlerts.filter((e) => e.event_type === 'payment_failed');
   const cancelledEvents = filteredBillingAlerts.filter((e) => e.event_type === 'subscription_cancelled');
+  const trialCancelledEvents = filteredBillingAlerts.filter((e) => e.event_type === 'trial_cancelled');
   const paymentFailed7d = countSinceDateValues(paymentFailedEvents.map((e) => e.created_at), last7dMs);
   const paymentFailed30d = paymentFailedEvents.length;
   const subscriptionCancelled7d = countSinceDateValues(cancelledEvents.map((e) => e.created_at), last7dMs);
   const subscriptionCancelled30d = cancelledEvents.length;
+  const trialCancelled7d = countSinceDateValues(trialCancelledEvents.map((e) => e.created_at), last7dMs);
+  const trialCancelled30d = trialCancelledEvents.length;
 
   // Acquisition
   const registrationEvents = filteredUserEvents.filter((e) => e.event_type === 'user_registered');
@@ -333,7 +338,8 @@ export function buildAdminAnalyticsMetrics({
     { label: 'Checkouts', value7d: internalCheckouts7d, value30d: internalCheckouts30d, source: 'user_events.begin_checkout' },
     { label: 'Copros creees', value7d: internalOnboarding7d, value30d: internalOnboarding30d, source: 'coproprietes.created_at hors admins' },
     { label: 'Paiements echoues', value7d: paymentFailed7d, value30d: paymentFailed30d, source: 'user_events.payment_failed' },
-    { label: 'Resiliations', value7d: subscriptionCancelled7d, value30d: subscriptionCancelled30d, source: 'user_events.subscription_cancelled' },
+    { label: 'Résiliations payants', value7d: subscriptionCancelled7d, value30d: subscriptionCancelled30d, source: 'user_events.subscription_cancelled' },
+    { label: 'Essais abandonnés', value7d: trialCancelled7d, value30d: trialCancelled30d, source: 'user_events.trial_cancelled' },
   ];
 
   const stripeMetrics: SourceMetric[] = [
@@ -350,6 +356,8 @@ export function buildAdminAnalyticsMetrics({
     paymentFailed30d,
     subscriptionCancelled7d,
     subscriptionCancelled30d,
+    trialCancelled7d,
+    trialCancelled30d,
     internalRegistrations24h,
     internalRegistrations7d,
     internalRegistrations30d,

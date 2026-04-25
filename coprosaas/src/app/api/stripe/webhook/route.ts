@@ -476,11 +476,22 @@ export async function POST(req: NextRequest) {
               legalReference: sub.id,
               payload: { planId: sub.metadata?.plan_id ?? null },
             });
+
+            // Distingue churn payant (a déjà eu subscription_created) vs essai abandonné
+            const { count: paidCount } = await adminClient
+              .from('user_events')
+              .select('id', { count: 'exact', head: true })
+              .eq('event_type', 'subscription_created')
+              .eq('user_email', email.toLowerCase());
+            const churnEventType = (paidCount ?? 0) > 0 ? 'subscription_cancelled' : 'trial_cancelled';
+
             await logUserEvent(
               adminClient,
               email,
-              'subscription_cancelled',
-              `Abonnement résilié — ${coproNom}`,
+              churnEventType,
+              churnEventType === 'trial_cancelled'
+                ? `Essai abandonné — ${coproNom}`
+                : `Abonnement résilié — ${coproNom}`,
               userId,
             );
           }

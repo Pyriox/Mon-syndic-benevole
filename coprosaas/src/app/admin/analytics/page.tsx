@@ -313,10 +313,10 @@ export default async function AdminAnalyticsPage() {
       .select('event_type, created_at, user_email, user_id')
       .in('event_type', ['user_registered', 'begin_checkout', 'trial_started', 'subscription_created'])
       .gte('created_at', last30dIso),
-    // Billing alerts 30j
+    // Billing alerts 30j (payants + essais abandonnés)
     admin.from('user_events')
       .select('event_type, created_at, user_email, user_id')
-      .in('event_type', ['payment_failed', 'subscription_cancelled'])
+      .in('event_type', ['payment_failed', 'subscription_cancelled', 'trial_cancelled'])
       .gte('created_at', last30dIso),
     // Copros créées 30j
     admin.from('coproprietes')
@@ -384,7 +384,7 @@ export default async function AdminAnalyticsPage() {
     nowMs,
   });
 
-  const billingHealthy = m.paymentFailed7d === 0 && m.subscriptionCancelled30d === 0;
+  const billingHealthy = m.paymentFailed7d === 0 && m.subscriptionCancelled30d === 0 && m.trialCancelled30d === 0;
   const diagSignalCount = m.gaMetrics.length + m.internalMetrics.length + m.stripeMetrics.length;
 
   const signupFeedEvents = m.recentFeedEvents.filter((e) => e.event_type === 'user_registered');
@@ -417,9 +417,15 @@ export default async function AdminAnalyticsPage() {
                 <p className="font-bold text-indigo-300">{m.trialToPaidRate30d !== null ? `${m.trialToPaidRate30d}%` : '—'}</p>
               </div>
               <div>
-                <p className="text-slate-400 text-[10px] uppercase tracking-wide">Churn (30j)</p>
+                <p className="text-slate-400 text-[10px] uppercase tracking-wide">Churn payants (30j)</p>
                 <p className={`font-bold ${m.churnRate30d !== null && m.churnRate30d > 5 ? 'text-red-300' : 'text-slate-200'}`}>
                   {m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-400 text-[10px] uppercase tracking-wide">Essais abandonnés (30j)</p>
+                <p className={`font-bold ${m.trialCancelled30d > 0 ? 'text-orange-300' : 'text-slate-200'}`}>
+                  {fmtNumber(m.trialCancelled30d)}
                 </p>
               </div>
             </div>
@@ -476,19 +482,20 @@ export default async function AdminAnalyticsPage() {
       <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <SectionHeader icon={AlertTriangle} title="Alertes opérationnelles" subtitle="Billing · 30 derniers jours" />
         {billingHealthy ? (
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <AlertCard label="Paiements échoués (7j)" value="0" detail="Aucun incident de paiement" level="ok" />
-            <AlertCard label="Résiliations (30j)" value="0" detail="Aucune résiliation" level="ok" />
+            <AlertCard label="Résiliations payants (30j)" value="0" detail="Aucune résiliation" level="ok" />
+            <AlertCard label="Essais abandonnés (30j)" value="0" detail="Tous les essais ont converti" level="ok" />
             <AlertCard label="Billing" value="Sain" detail="Tout va bien sur les 30 derniers jours" level="ok" />
             <AlertCard
-              label="Churn mensuel"
+              label="Churn payants (30j)"
               value={m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
-              detail={m.activeSubscriptions > 0 ? `${m.activeSubscriptions} abonnements actifs` : 'Aucun abonnement actif'}
+              detail={m.activeSubscriptions > 0 ? `${m.activeSubscriptions} abonnés actifs` : 'Aucun abonné actif'}
               level={m.churnRate30d !== null && m.churnRate30d > 5 ? 'warn' : 'ok'}
             />
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <AlertCard
               label="Paiements échoués (7j)"
               value={fmtNumber(m.paymentFailed7d)}
@@ -496,10 +503,16 @@ export default async function AdminAnalyticsPage() {
               level={m.paymentFailed7d > 0 ? 'error' : 'ok'}
             />
             <AlertCard
-              label="Résiliations (30j)"
+              label="Résiliations payants (30j)"
               value={fmtNumber(m.subscriptionCancelled30d)}
               detail={`${fmtNumber(m.subscriptionCancelled7d)} sur les 7 derniers jours`}
               level={m.subscriptionCancelled30d > 0 ? 'warn' : 'ok'}
+            />
+            <AlertCard
+              label="Essais abandonnés (30j)"
+              value={fmtNumber(m.trialCancelled30d)}
+              detail={`${fmtNumber(m.trialCancelled7d)} sur les 7 derniers jours`}
+              level={m.trialCancelled30d > 0 ? 'warn' : 'ok'}
             />
             <AlertCard
               label="Pipeline en essai"
@@ -508,7 +521,7 @@ export default async function AdminAnalyticsPage() {
               level={m.activeTrials > 0 ? 'warn' : 'ok'}
             />
             <AlertCard
-              label="Churn mensuel"
+              label="Churn payants (30j)"
               value={m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
               detail={`${m.subscriptionCancelled30d} résiliation(s) / ${m.activeSubscriptions + m.subscriptionCancelled30d} abonnés début période`}
               level={m.churnRate30d !== null && m.churnRate30d > 5 ? 'warn' : 'ok'}
@@ -701,11 +714,18 @@ export default async function AdminAnalyticsPage() {
             trend={m.trendSubscriptions}
           />
           <StatCard
-            label="Churn 30j / abonnements"
+            label="Churn payants (30j)"
             value={m.churnRate30d !== null ? `${m.churnRate30d}%` : '—'}
             hint={`${m.subscriptionCancelled30d} résiliation(s) / ${m.activeSubscriptions + m.subscriptionCancelled30d} abonnés début période`}
             icon={Percent}
             tone={m.churnRate30d !== null && m.churnRate30d > 5 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'}
+          />
+          <StatCard
+            label="Essais abandonnés (30j)"
+            value={fmtNumber(m.trialCancelled30d)}
+            hint={`${fmtNumber(m.trialCancelled7d)} sur 7j · essais terminés sans conversion`}
+            icon={UserMinus}
+            tone={m.trialCancelled30d > 0 ? 'bg-orange-50 text-orange-600' : 'bg-gray-50 text-gray-600'}
           />
         </div>
       </section>
