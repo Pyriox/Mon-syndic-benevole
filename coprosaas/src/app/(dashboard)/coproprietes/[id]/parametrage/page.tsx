@@ -87,12 +87,19 @@ export default async function CoproprieteParametragePage({ params }: Props) {
           <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">{specialKeyCount} clés spéciales</span>
         </div>
         {!specialChargesEnabled && (
-          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            Les clés de répartition spéciales font partie de l&apos;option payante <strong>Charges spéciales</strong>.{' '}
-            <Link href="/abonnement" className="font-semibold underline underline-offset-2">
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-4 text-white shadow-md">
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm leading-snug">Option Charges spéciales non activée.</p>
+              <p className="text-sm opacity-90 mt-0.5">
+                Les clés de répartition spéciales font partie de l&apos;option payante <strong>Charges spéciales</strong>.
+              </p>
+            </div>
+            <Link
+              href="/abonnement"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-bold text-orange-600 hover:bg-orange-50 transition-colors shadow-sm whitespace-nowrap"
+            >
               L&apos;activer depuis l&apos;abonnement
             </Link>
-            .
           </div>
         )}
       </div>
