@@ -84,8 +84,6 @@ export type AdminAnalyticsMetrics = {
   trendSubscriptions: TrendValue;
   /** Funnel conversion rates (7d) */
   conversionCheckoutToTrial7d: number | null;
-  latestActivityAt: string | null;
-  latestActivityUser: string;
 };
 
 function countSinceDateValues(values: Array<string | null | undefined>, sinceMs: number) {
@@ -204,9 +202,6 @@ export function buildAdminAnalyticsMetrics({
   const stripeSubscriptions7d = countSinceDateValues(subscriptionEvents.map((event) => event.created_at), last7dMs);
   const stripeSubscriptions24h = countSinceDateValues(subscriptionEvents.map((event) => event.created_at), last24hMs);
   const stripeSubscriptionsPrev7d = countBetweenDates(subscriptionEvents.map((event) => event.created_at), last14dMs, last7dMs);
-  const latestActivityAt = activeProfiles[0]?.last_active_at ?? null;
-  const latestActivityUser = activeProfiles[0]?.full_name?.trim() || 'Utilisateur non nommé';
-
   const trendActive = makeTrend(internalActive7d, internalActivePrev7d);
   const trendRegistrations = makeTrend(internalRegistrations7d, internalRegistrationsPrev7d);
   const trendOnboarding = makeTrend(internalOnboarding7d, internalOnboardingPrev7d);
@@ -276,8 +271,6 @@ export function buildAdminAnalyticsMetrics({
     stripeSubscriptions24h,
     stripeSubscriptions7d,
     stripeSubscriptions30d,
-    latestActivityAt,
-    latestActivityUser,
     internalActiveTotalCount: activeUsersCount,
     trendActive,
     trendRegistrations,

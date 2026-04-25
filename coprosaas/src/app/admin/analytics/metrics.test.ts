@@ -64,7 +64,6 @@ describe('buildAdminAnalyticsMetrics', () => {
     expect(metrics.internalLoginForms30d).toBe(1);
     expect(metrics.internalRegistrations30d).toBe(0);
     expect(metrics.internalOnboarding30d).toBe(1);
-    expect(metrics.latestActivityUser).toBe('Client Actif');
     expect(metrics.internalActiveTotalCount).toBe(1);
     // trend: all prev7d events are outside the 14d window → prev = 0, pct = null
     expect(metrics.trendRegistrations.pct).toBeNull();

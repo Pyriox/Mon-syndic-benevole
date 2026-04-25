@@ -7,7 +7,6 @@ import {
   Activity,
   BarChart3,
   Building2,
-  Clock3,
   Cookie,
   ExternalLink,
   Eye,
@@ -18,6 +17,7 @@ import {
   TrendingUp,
   UserPlus,
   Users,
+  Zap,
 } from 'lucide-react';
 
 import { isAdminUser } from '@/lib/admin-config';
@@ -188,7 +188,7 @@ export default async function AdminAnalyticsPage() {
   const nowMs = Date.now();
   const last30dIso = new Date(nowMs - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [analytics, { data: recentUserEvents }, { data: recentCopros }, { data: recentProfiles }, { data: adminRows }, activeUsersCountResult] = await Promise.all([
+  const [analytics, { data: recentUserEvents }, { data: recentCopros }, { data: recentProfiles }, { data: adminRows }, activeUsersCountResult, activeSubscriptionsCountResult] = await Promise.all([
     getGa4AdminAnalytics(),
     admin
       .from('user_events')
@@ -214,9 +214,14 @@ export default async function AdminAnalyticsPage() {
       .select('id', { count: 'exact', head: true })
       .not('last_active_at', 'is', null)
       .gte('last_active_at', last30dIso),
+    admin
+      .from('coproprietes')
+      .select('id', { count: 'exact', head: true })
+      .eq('plan', 'actif'),
   ]);
 
   const activeUsersCount = activeUsersCountResult.count ?? recentProfiles?.length ?? 0;
+  const activeSubscriptionsCount = activeSubscriptionsCountResult.count ?? 0;
 
   const {
     gaMetrics,
@@ -251,9 +256,7 @@ export default async function AdminAnalyticsPage() {
     stripeTrials30d,
     stripeSubscriptions24h,
     stripeSubscriptions7d,
-    stripeSubscriptions30d,
-    latestActivityAt,
-    latestActivityUser,
+    stripeSubscriptions30d
   } = buildAdminAnalyticsMetrics({
     analytics,
     recentUserEvents: (recentUserEvents ?? []) as UserEventRow[],
@@ -360,11 +363,11 @@ export default async function AdminAnalyticsPage() {
             trend={trendActive}
           />
           <StatCard
-            label="Dernière activité détectée"
-            value={latestActivityAt ? fmtDateTime(latestActivityAt) : 'Aucune activité'}
-            hint={latestActivityAt ? `${latestActivityUser} · logs internes` : 'Aucune activité client remontée'}
-            icon={Clock3}
-            tone="bg-slate-50 text-slate-700"
+            label="Abonnements actifs"
+            value={fmtNumber(activeSubscriptionsCount)}
+            hint={<><span className="text-gray-400">copropriétés avec plan = actif · base de données</span></>}
+            icon={Zap}
+            tone="bg-yellow-50 text-yellow-600"
           />
           <StatCard
             label="Inscriptions (7 j)"
