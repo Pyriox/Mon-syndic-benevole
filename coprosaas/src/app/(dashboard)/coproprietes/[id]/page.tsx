@@ -8,14 +8,13 @@ import { redirect, notFound } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import PageHelp from '@/components/ui/PageHelp';
-import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import CoproDelete from './CoproDelete';
 import LotActions from './LotActions';
 import LotsTable from './LotsTable';
 import TransfertSyndic from './TransfertSyndic';
 import { formatDate } from '@/lib/utils';
-import { getLotLimit } from '@/lib/subscription';
-import { isSubscribed } from '@/lib/subscription';
+import { getLotLimit, isSubscribed } from '@/lib/subscription';
+import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import {
   Building2,
   CalendarDays,
@@ -83,7 +82,6 @@ export default async function CopropriétéDetailPage({ params }: Props) {
   const nbAttribues = (lots ?? []).filter((lot) => lot.coproprietaire_id).length;
   const lotLimit = getLotLimit(copro.plan, copro.plan_id);
   const canAddLot = lotCount < lotLimit;
-  const canWrite = isSubscribed(copro.plan);
   const batimentCount = new Set(
     (lots ?? [])
       .map((lot) => lot.batiment?.trim())
@@ -93,9 +91,16 @@ export default async function CopropriétéDetailPage({ params }: Props) {
     (lots ?? []).flatMap((lot) => Object.keys(lot.tantiemes_groupes ?? {}))
   ).size;
 
+  const canWrite = isSubscribed(copro.plan);
+
   return (
     <div className="space-y-6">
-      {!canWrite && <ReadOnlyBanner />}
+      {!canWrite && (
+        <ReadOnlyBanner
+          freemium
+          description={`Gestion limitée à ${lotLimit === Infinity ? '∞' : lotLimit} lots en version gratuite. Abonnez-vous pour gérer jusqu'à 20 ou en illimité.`}
+        />
+      )}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Lots & bâtiment</h2>
@@ -165,7 +170,6 @@ export default async function CopropriétéDetailPage({ params }: Props) {
             showLabel
             canAdd={canAddLot}
             lotLimit={lotLimit === Infinity ? undefined : lotLimit}
-            canWrite={canWrite}
           />
         </div>
 
@@ -175,7 +179,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
 
         {lotCount > 0 ? (
           <Card>
-            <LotsTable initialLots={lots ?? []} coproMap={coproMap} coproprieteId={id} currentUserId={user.id} canWrite={canWrite} />
+            <LotsTable initialLots={lots ?? []} coproMap={coproMap} coproprieteId={id} currentUserId={user.id} />
           </Card>
         ) : (
           <Card>
@@ -187,7 +191,6 @@ export default async function CopropriétéDetailPage({ params }: Props) {
                   showLabel
                   canAdd={canAddLot}
                   lotLimit={lotLimit === Infinity ? undefined : lotLimit}
-                  canWrite={canWrite}
                 />
                 <Link href={`/coproprietes/${copro.id}/parametrage`}>
                   <Button variant="secondary">
