@@ -117,6 +117,8 @@ export default function AdminSupportShell({
   const [refreshing, setRefreshing] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Contrôle l'auto-scroll : true seulement lors d'un chargement initial ou d'un envoi
+  const shouldScrollToBottom = useRef(false);
 
   const selectedTicket = tickets.find((t) => t.id === selectedId) ?? null;
 
@@ -141,13 +143,17 @@ export default function AdminSupportShell({
       setReply('');
       setSendError('');
       setSendEmailWarning(false);
+      shouldScrollToBottom.current = true; // scroll lors du chargement initial du ticket
       loadMessages(selectedId);
     }
   }, [selectedId, loadMessages]);
 
-  // Scroll to bottom when messages load
+  // Scroll to bottom uniquement quand explicitement demandé (chargement initial ou envoi)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (shouldScrollToBottom.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      shouldScrollToBottom.current = false;
+    }
   }, [messages]);
 
   // ── Rafraîchir la liste des tickets ──
@@ -209,6 +215,7 @@ export default function AdminSupportShell({
       setReply('');
       // Optimistic update
       const nowIso = new Date().toISOString();
+      shouldScrollToBottom.current = true; // scroll après envoi d'un message
       setMessages((prev) => [
         ...prev,
         {
