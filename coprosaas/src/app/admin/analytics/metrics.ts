@@ -41,6 +41,7 @@ export type SessionRow = {
   started_at: string | null;
   ended_at: string | null;
   last_activity_at: string | null;
+  user_id: string | null;
 };
 
 export type RecentFeedEvent = {
@@ -295,8 +296,8 @@ export function buildAdminAnalyticsMetrics({
   const internalActive24h = countSinceDateValues(activeProfiles.map((p) => p.last_active_at), last24hMs);
   const internalActivePrev7d = countBetweenDates(activeProfiles.map((p) => p.last_active_at), last14dMs, last7dMs);
 
-  const sessionsTotal7d = sessionRows.length;
-  const completedSessions = sessionRows.filter((s) => s.started_at && s.ended_at);
+  const sessionsTotal7d = sessionRows.filter((s) => !s.user_id || !adminUserIds.has(s.user_id)).length;
+  const completedSessions = sessionRows.filter((s) => s.started_at && s.ended_at && (!s.user_id || !adminUserIds.has(s.user_id)));
   const avgSessionDurationMinutes = completedSessions.length > 0
     ? Math.round(
         completedSessions.reduce((sum, s) => {
