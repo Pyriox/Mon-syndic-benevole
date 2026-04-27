@@ -40,6 +40,7 @@ export type PlanDistributionRow = {
 export type SessionRow = {
   started_at: string | null;
   ended_at: string | null;
+  last_activity_at: string | null;
 };
 
 export type RecentFeedEvent = {
@@ -299,7 +300,10 @@ export function buildAdminAnalyticsMetrics({
   const avgSessionDurationMinutes = completedSessions.length > 0
     ? Math.round(
         completedSessions.reduce((sum, s) => {
-          const dur = (Date.parse(s.ended_at!) - Date.parse(s.started_at!)) / 60_000;
+          // Utilise last_activity_at (dernier heartbeat réel) plutôt qu'ended_at
+          // ended_at = last_activity_at + 30 min (délai d'inactivité), ce qui gonfle la durée
+          const endTs = Date.parse(s.last_activity_at ?? s.ended_at!);
+          const dur = (endTs - Date.parse(s.started_at!)) / 60_000;
           return sum + (Number.isFinite(dur) && dur > 0 ? dur : 0);
         }, 0) / completedSessions.length,
       )

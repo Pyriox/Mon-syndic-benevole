@@ -344,7 +344,7 @@ export default async function AdminAnalyticsPage() {
     admin.from('coproprietes').select('id', { count: 'exact', head: true }).eq('plan', 'essai'),
     // Sessions 7j
     admin.from('user_sessions')
-      .select('started_at, ended_at')
+      .select('started_at, ended_at, last_activity_at')
       .gte('started_at', last7dIso),
     // Feed événements clés (conversions + alertes) — séparé des inscriptions
     admin.from('user_events')
