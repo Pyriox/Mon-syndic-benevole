@@ -231,6 +231,10 @@ export default async function AdminEmailsPage({
   const rangeStart = (safePage - 1) * PAGE_SIZE;
   const rangeEnd = rangeStart + PAGE_SIZE - 1;
 
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const last7dMs = sevenDaysAgo.getTime();
+
   let pageQuery = admin
     .from('email_deliveries')
     .select('id, provider_message_id, template_key, status, recipient_email, recipient_user_id, copropriete_id, ag_id, subject, legal_event_type, legal_reference, created_at, sent_at, opened_at, clicked_at, failed_at, bounced_at, complained_at, last_error, next_retry_at')
@@ -250,8 +254,9 @@ export default async function AdminEmailsPage({
       .from('email_deliveries')
       .select('id, status, recipient_email, subject, template_key, last_error, created_at')
       .in('status', ['failed', 'bounced', 'complained'])
+      .gte('created_at', sevenDaysAgo.toISOString())
       .order('created_at', { ascending: false })
-      .limit(5),
+      .limit(20),
   ]);
 
   const pageRows = (pageResult.data ?? []) as EmailDeliveryRow[];
@@ -272,10 +277,6 @@ export default async function AdminEmailsPage({
 
   const coproNameById = new Map((coproLookupRows.data ?? []).map((item) => [item.id, item.nom ?? 'Copropriété']));
   const profileById = new Map((profileLookupRows.data ?? []).map((item) => [item.id, item]));
-
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const last7dMs = sevenDaysAgo.getTime();
 
   const actionNeeded7d = recentRows.filter((row) => TROUBLE_STATUSES.has(row.status) && isOnOrAfter(row.created_at, last7dMs)).length;
   const pending7d = recentRows.filter((row) => PENDING_STATUSES.has(row.status) && isOnOrAfter(row.created_at, last7dMs)).length;

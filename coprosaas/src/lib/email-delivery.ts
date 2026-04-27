@@ -262,6 +262,7 @@ export function mapProviderEventToStatus(providerEvent: string): EmailDeliverySt
   if (normalizedEvent.includes('opened') || normalizedEvent.includes('open')) return 'opened';
   if (normalizedEvent.includes('clicked') || normalizedEvent.includes('click')) return 'clicked';
   if (normalizedEvent.includes('bounced') || normalizedEvent.includes('bounce')) return 'bounced';
+  if (normalizedEvent.includes('cancel') || normalizedEvent.includes('suppress')) return 'bounced';
   if (normalizedEvent.includes('complained') || normalizedEvent.includes('complaint')) return 'complained';
   if (normalizedEvent.includes('failed') || normalizedEvent.includes('fail')) return 'failed';
   if (normalizedEvent.includes('sent')) return 'sent';
