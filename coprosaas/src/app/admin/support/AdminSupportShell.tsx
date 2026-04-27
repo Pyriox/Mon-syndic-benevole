@@ -476,8 +476,8 @@ export default function AdminSupportShell({
                     onChange={(e) => setReply(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Répondre au client… (Ctrl+Entrée pour envoyer)"
-                    rows={3}
-                    className="w-full resize-none text-sm border border-gray-200 bg-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={8}
+                    className="w-full resize-y text-sm border border-gray-200 bg-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
                     disabled={sending}
                   />
                   {sendError && (
