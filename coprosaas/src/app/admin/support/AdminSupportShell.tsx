@@ -169,30 +169,7 @@ export default function AdminSupportShell({
     }
   }, []);
 
-  // ── Polling fiable côté admin (fallback au lieu du realtime bloqué par RLS) ──
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      void refreshTickets();
-      if (selectedId) {
-        void loadMessages(selectedId);
-      }
-    }, 15000);
 
-    const handleFocus = () => {
-      void refreshTickets();
-      if (selectedId) {
-        void loadMessages(selectedId);
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [loadMessages, refreshTickets, selectedId]);
 
   // ── Envoyer une réponse admin ──
   const handleSend = async (e: React.FormEvent) => {
