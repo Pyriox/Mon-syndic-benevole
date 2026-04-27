@@ -33,3 +33,16 @@ Ce document décrit le contrat minimal entre le code applicatif et le conteneur 
 - Une navigation dashboard ne pousse pas de `page_view` public, mais peut pousser `dashboard_page_view`.
 - Une navigation admin ne pousse aucun événement de page custom.
 - Les événements `sign_up`, `login`, `begin_checkout` et `purchase` ne sont pas dupliqués par un tag GTM générique.
+
+## Google Ads
+
+- ID Google Ads : `AW-18027963981` (tag de conversion chargé via GTM).
+- Variables d'environnement nécessaires :
+  - `NEXT_PUBLIC_GOOGLE_ADS_ID` = `AW-18027963981`
+  - `NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL` = label de la conversion « Abonnement » (à récupérer dans Google Ads → Objectifs → Conversions)
+- Conversions déclenchées côté client :
+  - **Inscription** (`sign_up`) : déjà pushée dans `dataLayer` depuis `register/page.tsx` → GTM doit configurer un tag Ads sur l'événement `sign_up`.
+  - **Abonnement** (`purchase`) : `SubscriptionSuccessTracker` appelle `trackAdsConversion(PURCHASE_LABEL, { value, currency: 'EUR' })` via `gtag('event', 'conversion', { send_to: 'AW-18027963981/LABEL' })` lorsque l'utilisateur atterrit sur `/abonnement?success=1`. Ne se déclenche que si `ad_storage` est accordé (Consent Mode v2). La conversion GA4 `purchase` reste envoyée côté serveur via Measurement Protocol et est indépendante.
+- Configuration requise dans GTM :
+  - Tag GA4 déclenché sur `sign_up` → conversion Ads « Inscription » (ou configurer directement une conversion Ads sur l'événement `sign_up` dans GTM).
+  - Aucun tag Ads supplémentaire n'est nécessaire pour `purchase` : le code applicatif appelle directement `gtag('event', 'conversion', ...)` via `trackAdsConversion`.

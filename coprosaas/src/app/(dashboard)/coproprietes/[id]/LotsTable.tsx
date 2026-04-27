@@ -81,7 +81,6 @@ interface LotsTableProps {
   coproMap: Record<string, CoproEntry>;
   coproprieteId: string;
   currentUserId?: string | null;
-  canWrite?: boolean;
 }
 
 function LotScopeBadges({ lot }: { lot: Pick<LotRow, 'batiment' | 'groupes_repartition' | 'tantiemes_groupes'> }) {
@@ -121,14 +120,12 @@ function SortableLotRow({
   coproMap,
   coproprieteId,
   currentUserId,
-  canWrite = true,
 }: {
   lot: LotRow;
   totalTantiemes: number;
   coproMap: Record<string, CoproEntry>;
   coproprieteId: string;
   currentUserId?: string | null;
-  canWrite?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lot.id });
   const style = {
@@ -217,9 +214,8 @@ function SortableLotRow({
               groupes_repartition: lot.groupes_repartition,
               tantiemes_groupes: lot.tantiemes_groupes,
             }}
-            canWrite={canWrite}
           />
-          <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} canWrite={canWrite} />
+          <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} />
         </div>
       </td>
     </tr>
@@ -233,14 +229,12 @@ function SortableLotCard({
   coproMap,
   coproprieteId,
   currentUserId,
-  canWrite = true,
 }: {
   lot: LotRow;
   totalTantiemes: number;
   coproMap: Record<string, CoproEntry>;
   coproprieteId: string;
   currentUserId?: string | null;
-  canWrite?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lot.id });
   const style = {
@@ -320,9 +314,8 @@ function SortableLotCard({
                   groupes_repartition: lot.groupes_repartition,
                   tantiemes_groupes: lot.tantiemes_groupes,
                 }}
-                canWrite={canWrite}
               />
-              <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} canWrite={canWrite} />
+              <LotDelete lotId={lot.id} lotNumero={lot.numero} coproprieteId={coproprieteId} />
             </div>
           </div>
         </div>
@@ -332,7 +325,7 @@ function SortableLotCard({
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
-export default function LotsTable({ initialLots, coproMap, coproprieteId, currentUserId, canWrite = true }: LotsTableProps) {
+export default function LotsTable({ initialLots, coproMap, coproprieteId, currentUserId }: LotsTableProps) {
   const [lots, setLots] = useState<LotRow[]>(initialLots);
   const supabase = createClient();
 
@@ -374,7 +367,6 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId, curren
               coproMap={coproMap}
               coproprieteId={coproprieteId}
               currentUserId={currentUserId}
-              canWrite={canWrite}
             />
           ))}
         </div>
@@ -402,7 +394,6 @@ export default function LotsTable({ initialLots, coproMap, coproprieteId, curren
                   coproMap={coproMap}
                   coproprieteId={coproprieteId}
                   currentUserId={currentUserId}
-                  canWrite={canWrite}
                 />
               ))}
             </tbody>

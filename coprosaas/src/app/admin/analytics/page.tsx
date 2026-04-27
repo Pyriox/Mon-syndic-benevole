@@ -339,7 +339,7 @@ export default async function AdminAnalyticsPage() {
       .not('last_active_at', 'is', null)
       .gte('last_active_at', last30dIso),
     // Plan actif pour MRR
-    admin.from('coproprietes').select('plan_id').eq('plan', 'actif'),
+    admin.from('coproprietes').select('plan_id, syndic_id').eq('plan', 'actif'),
     // Essais actifs
     admin.from('coproprietes').select('id', { count: 'exact', head: true }).eq('plan', 'essai'),
     // Sessions 7j

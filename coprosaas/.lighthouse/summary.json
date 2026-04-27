@@ -1,0 +1,182 @@
+[
+  {
+    "file": "home.json",
+    "url": "http://localhost:3000/",
+    "performance": 99,
+    "fcpMs": 680,
+    "lcpMs": 824,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 680
+  },
+  {
+    "file": "home2.json",
+    "url": "http://localhost:3000/",
+    "performance": 99,
+    "fcpMs": 667,
+    "lcpMs": 809,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 667
+  },
+  {
+    "file": "aide.json",
+    "url": "http://localhost:3000/login",
+    "performance": 99,
+    "fcpMs": 660,
+    "lcpMs": 942,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 660
+  },
+  {
+    "file": "blog__assemblee-generale-copropriete-guide.json",
+    "url": "http://localhost:3000/blog/assemblee-generale-copropriete-guide",
+    "performance": 100,
+    "fcpMs": 660,
+    "lcpMs": 706,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 660
+  },
+  {
+    "file": "blog__migrer-vers-mon-syndic-benevole.json",
+    "url": "http://localhost:3000/blog/migrer-vers-mon-syndic-benevole",
+    "performance": 100,
+    "fcpMs": 658,
+    "lcpMs": 704,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 658
+  },
+  {
+    "file": "blog__fonds-de-travaux-alur-obligations-montant-gestion.json",
+    "url": "http://localhost:3000/blog/fonds-de-travaux-alur-obligations-montant-gestion",
+    "performance": 100,
+    "fcpMs": 655,
+    "lcpMs": 702,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 655
+  },
+  {
+    "file": "blog.json",
+    "url": "http://localhost:3000/blog",
+    "performance": 100,
+    "fcpMs": 636,
+    "lcpMs": 686,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 636
+  },
+  {
+    "file": "login.json",
+    "url": "http://localhost:3000/login",
+    "performance": 99,
+    "fcpMs": 626,
+    "lcpMs": 819,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 626
+  },
+  {
+    "file": "reset-password.json",
+    "url": "http://localhost:3000/reset-password",
+    "performance": 99,
+    "fcpMs": 620,
+    "lcpMs": 809,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 620
+  },
+  {
+    "file": "register.json",
+    "url": "http://localhost:3000/register",
+    "performance": 99,
+    "fcpMs": 612,
+    "lcpMs": 797,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 612
+  },
+  {
+    "file": "blog__appel-de-fonds-copropriete-calcul-repartition.json",
+    "url": "http://localhost:3000/blog/appel-de-fonds-copropriete-calcul-repartition",
+    "performance": 100,
+    "fcpMs": 249,
+    "lcpMs": 569,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 278
+  },
+  {
+    "file": "blog__gerer-copropriete-sans-syndic-professionnel.json",
+    "url": "http://localhost:3000/blog/gerer-copropriete-sans-syndic-professionnel",
+    "performance": 100,
+    "fcpMs": 248,
+    "lcpMs": 568,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 283
+  },
+  {
+    "file": "blog__comment-devenir-syndic-benevole.json",
+    "url": "http://localhost:3000/blog/comment-devenir-syndic-benevole",
+    "performance": 100,
+    "fcpMs": 247,
+    "lcpMs": 567,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 286
+  },
+  {
+    "file": "blog__logiciel-syndic-benevole.json",
+    "url": "http://localhost:3000/blog/logiciel-syndic-benevole",
+    "performance": 100,
+    "fcpMs": 247,
+    "lcpMs": 567,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 279
+  },
+  {
+    "file": "blog__obligations-syndic-benevole.json",
+    "url": "http://localhost:3000/blog/obligations-syndic-benevole",
+    "performance": 100,
+    "fcpMs": 246,
+    "lcpMs": 566,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 278
+  },
+  {
+    "file": "cgu.json",
+    "url": "http://localhost:3000/cgu",
+    "performance": 100,
+    "fcpMs": 246,
+    "lcpMs": 798,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 246
+  },
+  {
+    "file": "mentions-legales.json",
+    "url": "http://localhost:3000/mentions-legales",
+    "performance": 100,
+    "fcpMs": 245,
+    "lcpMs": 525,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 245
+  },
+  {
+    "file": "politique-confidentialite.json",
+    "url": "http://localhost:3000/politique-confidentialite",
+    "performance": 100,
+    "fcpMs": 245,
+    "lcpMs": 810,
+    "tbtMs": 0,
+    "cls": 0,
+    "speedIndexMs": 245
+  }
+]

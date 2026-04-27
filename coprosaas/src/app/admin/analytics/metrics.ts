@@ -34,6 +34,7 @@ export type AdminRow = {
 
 export type PlanDistributionRow = {
   plan_id: string | null;
+  syndic_id: string | null;
 };
 
 export type SessionRow = {
@@ -222,12 +223,16 @@ export function buildAdminAnalyticsMetrics({
   const filteredCopros = recentCopros.filter((copro) => !copro.syndic_id || !adminUserIds.has(copro.syndic_id));
   const activeProfiles = recentProfiles.filter((profile) => !adminUserIds.has(profile.id) && !!profile.last_active_at);
 
-  // Revenue
-  const mrrEstimate = activePlanRows.reduce((sum, row) => {
+  // Revenue (hors comptes admin)
+  const filteredPlanRows = activePlanRows.filter((row) => {
+    if (!row.syndic_id) return true;
+    return !adminUserIds.has(row.syndic_id);
+  });
+  const mrrEstimate = filteredPlanRows.reduce((sum, row) => {
     const price = PLAN_MONTHLY_PRICE[row.plan_id ?? ''] ?? PLAN_MONTHLY_PRICE.essentiel;
     return sum + price;
   }, 0);
-  const activeSubscriptions = activePlanRows.length;
+  const activeSubscriptions = filteredPlanRows.length;
   const activeTrials = activeTrialsCount;
 
   // Alertes billing

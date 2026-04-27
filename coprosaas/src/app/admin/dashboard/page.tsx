@@ -200,10 +200,9 @@ export default async function AdminDashboardPage() {
   const stripeFailures = stripeCharges.filter((c) => c.status === 'failed');
   const alertNonConfirmedOld = authUsers.filter((u) => !u.email_confirmed_at && u.created_at < new Date(todayTs - 7 * 86400000).toISOString() && !adminUserIds.has(u.id));
   const alertInvitationsExpirees = (invitations ?? []).filter((inv) => inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date());
-  const alertCoprosWithoutLots = coprosTyped.filter((c) => (lotsCount[c.id] ?? 0) === 0);
   const alertPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du');
   const pendingSupportCount = supportAttention.pendingCount;
-  const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertCoprosWithoutLots.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length + pendingSupportCount;
+  const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length + pendingSupportCount;
   const priorityActions = [
     pendingSupportCount > 0 ? { label: 'Tickets support', value: pendingSupportCount, href: '/admin/support', tone: 'indigo' } : null,
     alertPasseDu.length > 0 ? { label: 'Abonnements impayés', value: alertPasseDu.length, href: '/admin/abonnements', tone: 'red' } : null,
@@ -421,15 +420,6 @@ export default async function AdminDashboardPage() {
                 <div>
                   <p className="text-sm font-semibold text-orange-800">{alertInvitationsExpirees.length} invitation{alertInvitationsExpirees.length > 1 ? 's' : ''} expirée{alertInvitationsExpirees.length > 1 ? 's' : ''}</p>
                   <Link href="/admin/utilisateurs" className="text-xs text-orange-600 mt-0.5 hover:underline">Voir utilisateurs</Link>
-                </div>
-              </div>
-            )}
-            {alertCoprosWithoutLots.length > 0 && (
-              <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-3">
-                <DoorOpen size={14} className="text-blue-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-blue-800">{alertCoprosWithoutLots.length} copropriété{alertCoprosWithoutLots.length > 1 ? 's' : ''} sans lots</p>
-                  <Link href="/admin/coproprietes" className="text-xs text-blue-600 mt-0.5 hover:underline">Voir copropriétés</Link>
                 </div>
               </div>
             )}

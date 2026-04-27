@@ -14,7 +14,7 @@ import { extractStripeSubscriptionSnapshot, mapStripeSubscriptionStatus, STRIPE_
 import { syncCoproAddonsFromSnapshot } from '@/lib/stripe-addon-management';
 import { hasChargesSpecialesAddon, type CoproAddon } from '@/lib/subscription';
 import CheckoutButton from './CheckoutButton';
-
+import SubscriptionSuccessTracker from './SubscriptionSuccessTracker';
 import AddonBillingButton from './AddonBillingButton';
 import { AlertCircle, CheckCircle, Clock, Lock, Settings2 } from 'lucide-react';
 
@@ -370,6 +370,9 @@ export default async function AbonnementPage({
                 : 'Abonnement activé avec succès.'}
             </p>
           </div>
+        )}
+        {success === '1' && (
+          <SubscriptionSuccessTracker planId={syncedCopro?.plan_id ?? null} />
         )}
 
         {canceled === '1' && (

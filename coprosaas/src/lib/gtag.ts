@@ -4,6 +4,7 @@
 
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? '';
 export const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? '';
+export const GADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? '';
 export const CONSENT_KEY = 'cookie_consent';
 
 const GOOGLE_COOKIE_HINTS = ['_ga', '_gid', '_gat', '_gac', '_gcl'];
@@ -349,6 +350,33 @@ export function trackConsentAwareEvent({
   }
 
   trackAnonymousEvent(anonymousEvent, params);
+}
+
+/**
+ * Déclenche une conversion Google Ads.
+ *
+ * - Utilise gtag direct si GADS_ID et label sont définis (tag déjà initialisé par GTM).
+ * - Ne se déclenche que si le consentement publicitaire (ads) est accordé.
+ * - Sans consentement, ne fait rien : Google Ads Consent Mode empêche déjà
+ *   le dépôt de cookies, mais la conversion ne doit pas non plus être comptabilisée.
+ */
+export function trackAdsConversion(label: string, params?: {
+  value?: number;
+  currency?: string;
+  transaction_id?: string;
+}) {
+  if (typeof window === 'undefined') return;
+  if (!getConsentPreferences().ads) return;
+  if (!GADS_ID || !label) return;
+
+  if (window.gtag) {
+    window.gtag('event', 'conversion', {
+      send_to: `${GADS_ID}/${label}`,
+      value: params?.value,
+      currency: params?.currency ?? 'EUR',
+      transaction_id: params?.transaction_id,
+    });
+  }
 }
 
 export function updateConsent(preferences: ConsentPreferences) {
