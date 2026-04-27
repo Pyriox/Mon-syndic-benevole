@@ -67,7 +67,7 @@ export default async function AdminDashboardPage() {
     admin.from('assemblees_generales').select('id', { count: 'exact', head: true }),
     admin.from('incidents').select('id', { count: 'exact', head: true }).in('statut', ['ouvert', 'en_cours']),
     admin.from('appels_de_fonds').select('id', { count: 'exact', head: true }),
-    admin.from('coproprietes').select('id, nom, plan, plan_id, stripe_customer_id, plan_period_end, created_at').order('created_at', { ascending: false }),
+    admin.from('coproprietes').select('id, nom, plan, plan_id, stripe_customer_id, plan_period_end, created_at, syndic_id').order('created_at', { ascending: false }),
     listAllAdminAuthUsers(admin),
     admin.from('invitations').select('id, email, statut, expires_at, created_at').order('created_at', { ascending: false }).limit(100),
     admin.from('support_tickets').select('id, user_name, user_email, subject, status, updated_at').in('status', ['ouvert', 'en_cours']).order('updated_at', { ascending: false }).limit(8),
@@ -123,25 +123,27 @@ export default async function AdminDashboardPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coprosTyped = (coproprietes ?? []) as any[];
+  // Copros hors comptes admin (pour les métriques financières)
+  const coprosReal = coprosTyped.filter((c) => !c.syndic_id || !adminUserIds.has(c.syndic_id));
   const nbCoproprietes = coprosTyped.length;
-  const nbActifs  = coprosTyped.filter((c) => c.plan === 'actif').length;
-  const nbEssai   = coprosTyped.filter((c) => !c.plan || c.plan === 'essai').length;
-  const nbPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du').length;
+  const nbActifs  = coprosReal.filter((c) => c.plan === 'actif').length;
+  const nbEssai   = coprosReal.filter((c) => !c.plan || c.plan === 'essai').length;
+  const nbPasseDu = coprosReal.filter((c) => c.plan === 'passe_du').length;
   const planBreakdown: Record<string, number> = { essentiel: 0, confort: 0, illimite: 0 };
-  for (const c of coprosTyped) {
+  for (const c of coprosReal) {
     if (c.plan === 'actif' && c.plan_id) planBreakdown[c.plan_id] = (planBreakdown[c.plan_id] ?? 0) + 1;
   }
   const revenueMetrics = buildEstimatedRevenueMetrics(planBreakdown, coproAddons ?? []);
   const arr = revenueMetrics.totalArr;
-  const conversionPct = nbCoproprietes > 0 ? Math.round((nbActifs / nbCoproprietes) * 100) : 0;
+  const conversionPct = coprosReal.length > 0 ? Math.round((nbActifs / coprosReal.length) * 100) : 0;
   const nbChargesSpecialesActives = countActiveAddonCopros(coproAddons ?? []);
 
-  const hadStripe = coprosTyped.filter((c) => c.stripe_customer_id);
+  const hadStripe = coprosReal.filter((c) => c.stripe_customer_id);
   const churned   = hadStripe.filter((c) => c.plan === 'resilie');
   const churnRate = hadStripe.length > 0 ? Math.round((churned.length / hadStripe.length) * 100) : 0;
 
   const in14d = new Date(todayTs + 14 * 86400000).toISOString();
-  const upcomingRenewals = coprosTyped.filter((c) =>
+  const upcomingRenewals = coprosReal.filter((c) =>
     c.plan === 'actif' && c.plan_period_end && c.plan_period_end >= new Date().toISOString() && c.plan_period_end <= in14d
   );
 
@@ -197,7 +199,7 @@ export default async function AdminDashboardPage() {
   const stripeFailures = stripeCharges.filter((c) => c.status === 'failed');
   const alertNonConfirmedOld = authUsers.filter((u) => !u.email_confirmed_at && u.created_at < new Date(todayTs - 7 * 86400000).toISOString() && !adminUserIds.has(u.id));
   const alertInvitationsExpirees = (invitations ?? []).filter((inv) => inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date());
-  const alertPasseDu = coprosTyped.filter((c) => c.plan === 'passe_du');
+  const alertPasseDu = coprosReal.filter((c) => c.plan === 'passe_du');
   const pendingSupportCount = supportAttention.pendingCount;
   const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length + pendingSupportCount;
   const priorityActions = [
