@@ -109,10 +109,7 @@ export default async function AdminDashboardPage() {
       created: inv.created,
       billingReason: inv.billing_reason ?? null,
     }));
-    if (stripeCharges.length === 0 && stripeInvoices.length === 0) {
-      stripeStatus = 'warning';
-      stripeStatusMessage = 'Aucune donnée Stripe récente trouvée. L’ARR reste calculée depuis les plans internes, mais les encaissements peuvent être incomplets.';
-    }
+
   } catch (error) {
     stripeStatus = 'warning';
     stripeStatusMessage = `Stripe indisponible : ${error instanceof Error ? error.message : 'erreur inconnue'}. Les KPI financiers utilisent le fallback interne quand c’est possible.`;
