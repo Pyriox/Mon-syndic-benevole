@@ -17,7 +17,7 @@ import {
   CheckCircle, Clock, XCircle, Loader2,
   ChevronUp, X, ReceiptText, FileDown,
 } from 'lucide-react';
-import { buildAvisPersonnelPDF } from './AppelFondsPDF';
+
 
 interface PosteDetail {
   libelle: string;
@@ -327,7 +327,8 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                 <button
                   type="button"
                   title={`Télécharger l'avis de paiement — ${nom}`}
-                  onClick={() => {
+                  onClick={async () => {
+                    const { buildAvisPersonnelPDF } = await import('./AppelFondsPDF');
                     const detailPostes = ligne.coproprietaires?.id ? (detailByCoproId.get(ligne.coproprietaires.id) ?? []) : [];
                     const pdf = buildAvisPersonnelPDF(appel, ligne, detailPostes);
                     pdf.save(buildAvisAppelFondsPdfFileName({

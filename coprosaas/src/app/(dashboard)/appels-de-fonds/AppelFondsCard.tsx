@@ -17,7 +17,9 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import { buildAvisAppelFondsPdfDisplayName, buildAvisAppelFondsPdfFileName } from '@/lib/pdf-filenames';
-import AppelFondsPDF, { buildAvisPersonnelPDF, type AvisPersonnelInput, type PersonalPosteDetail } from './AppelFondsPDF';
+import dynamic from 'next/dynamic';
+import type { AvisPersonnelInput, PersonalPosteDetail } from './AppelFondsPDF';
+const AppelFondsPDF = dynamic(() => import('./AppelFondsPDF'), { ssr: false });
 import AppelFondsPaiement, { type Ligne } from './AppelFondsPaiement';
 
 interface Poste {
@@ -259,6 +261,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
 
   const saveToDocuments = async (freshLignes?: Ligne[]): Promise<{ ok: boolean; error?: string }> => {
     try {
+      const { buildAvisPersonnelPDF } = await import('./AppelFondsPDF');
       const effectiveLignes = freshLignes ?? localLignes;
       if (!appel.copropriete_id) return { ok: false, error: 'Copropriété introuvable pour archiver les avis.' };
 
