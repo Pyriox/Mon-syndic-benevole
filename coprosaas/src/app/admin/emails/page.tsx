@@ -256,7 +256,7 @@ export default async function AdminEmailsPage({
       .in('status', ['failed', 'bounced', 'complained'])
       .gte('created_at', sevenDaysAgo.toISOString())
       .order('created_at', { ascending: false })
-      .limit(20),
+      .limit(5),
   ]);
 
   const pageRows = (pageResult.data ?? []) as EmailDeliveryRow[];
