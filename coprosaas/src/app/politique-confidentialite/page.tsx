@@ -25,7 +25,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function PolitiqueConfidentialitePage() {
-  const lastUpdate = new Date("2026-03-24").toLocaleDateString("fr-FR", {
+  const lastUpdate = new Date("2026-04-27").toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -102,6 +102,11 @@ export default function PolitiqueConfidentialitePage() {
                   <td className="py-2">Mesure d{"'"}audience (avec consentement)</td>
                 </tr>
                 <tr className="border-b border-slate-800">
+                  <td className="py-2 pr-4">Données de conversion publicitaire (clics, actions post-clic)</td>
+                  <td className="py-2 pr-4">Google Ads (via GTM)</td>
+                  <td className="py-2">Mesure de l{"'"}efficacité des campagnes publicitaires (avec consentement)</td>
+                </tr>
+                <tr className="border-b border-slate-800">
                   <td className="py-2 pr-4">Journaux applicatifs (email, type d'événement, métadonnées techniques)</td>
                   <td className="py-2 pr-4">Application / base de données</td>
                   <td className="py-2">Sécurité, support, preuve d'actions et diagnostic</td>
@@ -136,8 +141,8 @@ export default function PolitiqueConfidentialitePage() {
               des fraudes, amélioration des fonctionnalités.
             </li>
             <li>
-              <strong className="text-gray-300">Consentement</strong> — cookies analytiques Google Analytics
-              (révocable à tout moment via le bandeau cookies).
+              <strong className="text-gray-300">Consentement</strong> — cookies analytiques (Google Analytics 4)
+              et cookies publicitaires (Google Ads) — révocable à tout moment via le bandeau cookies.
             </li>
             <li>
               <strong className="text-gray-300">Obligation légale</strong> — conservation des factures et
@@ -173,6 +178,9 @@ export default function PolitiqueConfidentialitePage() {
               <strong className="text-gray-300">Données analytiques (GA4) :</strong> 14 mois maximum (paramètre
               par défaut Google Analytics).
             </li>
+            <li>
+              <strong className="text-gray-300">Données de conversion publicitaire (Google Ads) :</strong> selon les paramètres de conservation du compte Google Ads (90 jours par défaut pour les conversions).
+            </li>
           </ul>
         </Section>
 
@@ -200,7 +208,7 @@ export default function PolitiqueConfidentialitePage() {
             </li>
             <li>
               <strong className="text-gray-300">Google LLC</strong> — mesure d{"'"}audience via Google Analytics
-              4 (avec votre consentement).
+              4 et mesure des conversions publicitaires via Google Ads (avec votre consentement).
             </li>
           </ul>
         </Section>
@@ -248,7 +256,7 @@ export default function PolitiqueConfidentialitePage() {
             </li>
             <li>
               <strong className="text-gray-300">Retrait du consentement</strong> — à tout moment pour les
-              traitements fondés sur le consentement (cookies analytiques).
+              traitements fondés sur le consentement (cookies analytiques et cookies publicitaires).
             </li>
           </ul>
           <p className="mt-4">
@@ -306,6 +314,10 @@ export default function PolitiqueConfidentialitePage() {
             <li>
               <strong className="text-gray-300">Cookies analytiques optionnels</strong> — Google Analytics 4, activés
               avec votre consentement explicite pour enrichir cette mesure dans le temps.
+            </li>
+            <li>
+              <strong className="text-gray-300">Cookies publicitaires optionnels</strong> — Google Ads, activés
+              avec votre consentement explicite pour mesurer l&apos;efficacité des campagnes et attribuer les conversions.
             </li>
           </ul>
           <p>
