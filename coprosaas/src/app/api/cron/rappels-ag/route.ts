@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
   const today = now.toISOString().slice(0, 10);
   const j14 = addDays(now, 14);
   const j7 = addDays(now, 7);
+  const j2 = addDays(now, 2);
 
   let sent = 0;
   let retries = 0;
@@ -233,14 +234,20 @@ export async function GET(req: NextRequest) {
     .lt('sent_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
     .limit(300);
 
+  if ((unopened?.length ?? 0) >= 300) {
+    console.warn('[cron/rappels-ag] Limite de relances non-ouvertes atteinte (300) — file partiellement traitée, certains destinataires reportés au prochain run');
+  }
+
   for (const d of unopened ?? []) {
     if (!d.ag_id || !d.copropriete_id) continue;
 
+    // On n'envoie pas la relance si l'AG est dans moins de 3 jours (j2 = today+2)
+    // pour éviter de polluer les destinataires à la veille de l'événement.
     const { data: ag } = await admin
       .from('assemblees_generales')
       .select('id, titre, date_ag, lieu, coproprietes(nom, syndic_id)')
       .eq('id', d.ag_id)
-      .gte('date_ag', today)
+      .gt('date_ag', j2)
       .maybeSingle();
 
     if (!ag) continue;
@@ -301,6 +308,10 @@ export async function GET(req: NextRequest) {
     .lt('retry_count', 3)
     .in('template_key', ['ag_convocation', 'ag_convocation_reminder_j14', 'ag_convocation_reminder_j7', 'ag_convocation_unopened_relance'])
     .limit(200);
+
+  if ((retryRows?.length ?? 0) >= 200) {
+    console.warn('[cron/rappels-ag] Limite de retries atteinte (200) — file partiellement traitée, certains retries reportés au prochain run');
+  }
 
   for (const row of retryRows ?? []) {
     if (!row.ag_id || !row.copropriete_id) continue;

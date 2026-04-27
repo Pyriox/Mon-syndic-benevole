@@ -31,8 +31,10 @@ export function resolveOnboardingConfirmationWindow(params: {
     };
   }
 
+  // Fenêtre de rattrapage plafonnée à 30 jours pour éviter de cibler
+  // des syndics très anciens si l'idempotence user_events est corrompue.
   return {
-    startDateIso: catchUp ? null : addUtcDays(referenceDate, -7),
+    startDateIso: catchUp ? addUtcDays(referenceDate, -30) : addUtcDays(referenceDate, -7),
     endDateIso: addUtcDays(referenceDate, -7),
   };
 }

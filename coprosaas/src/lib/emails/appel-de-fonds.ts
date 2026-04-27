@@ -44,7 +44,7 @@ export function buildAppelEmailSubject(params: {
     avis:            `Avis d'appel de fonds — ${params.coproprieteNom}`,
     rappel:          `Rappel de paiement — ${params.coproprieteNom}`,
     rappel_j1:       `Relance de paiement — ${params.coproprieteNom}`,
-    mise_en_demeure: `Rappel d'impayé — ${params.coproprieteNom}`,
+    mise_en_demeure: `Rappel d'impayé (J+15) — ${params.coproprieteNom}`,
   };
   return `${prefixes[params.type]} — Échéance ${formatDateFR(params.dateEcheance)} — Mon Syndic Bénévole`;
 }
@@ -64,7 +64,7 @@ export function buildAppelEmail(params: AppelEmailParams): string {
     avis: `Un avis d'appel de fonds est disponible pour la copropriété <strong>${h(coproprieteNom)}</strong>.`,
     rappel: `Cet appel de fonds pour la copropriété <strong>${h(coproprieteNom)}</strong> arrive à échéance dans <strong>7 jours</strong>.`,
     rappel_j1: `Nous n'avons pas encore enregistré votre règlement pour la copropriété <strong>${h(coproprieteNom)}</strong>. L'échéance de cet appel de fonds est <strong>dépassée depuis 1 jour</strong>.`,
-    mise_en_demeure: `À ce jour, nous n'avons pas encore enregistré votre règlement pour la copropriété <strong>${h(coproprieteNom)}</strong>. Il peut s'agir d'un paiement en cours de traitement ou non encore pointé par votre syndic.`,
+    mise_en_demeure: `Votre règlement pour l'appel de fonds de la copropriété <strong>${h(coproprieteNom)}</strong> n'a pas été enregistré à ce jour. <strong>15 jours se sont écoulés depuis l'échéance</strong> de cet appel.`,
   };
 
   const closing: Record<AppelEmailType, string> = {
@@ -75,9 +75,9 @@ export function buildAppelEmail(params: AppelEmailParams): string {
       COLOR.amber, '#fffbeb'
     )}<p style="margin:20px 0 0;font-size:14px;color:${COLOR.muted}">Si vous avez déjà payé, vous pouvez ignorer ce message : votre syndic mettra votre situation à jour dès l'encaissement confirmé.</p>`,
     mise_en_demeure: `${alertBanner(
-      'Si vous avez déjà réglé cet appel, vous pouvez ignorer ce message ou contacter votre syndic afin que votre situation soit vérifiée et mise à jour.',
+      'Conformément à la loi n°65-557 du 10 juillet 1965, tout copropriétaire est tenu de verser sa quote-part des charges dans les délais fixés par l\'assemblée. Si vous avez déjà effectué ce règlement, contactez votre syndic pour qu\'il mette votre situation à jour.',
       COLOR.red, '#fff5f5'
-    )}<p style="margin:20px 0 0;font-size:14px;color:${COLOR.muted}">Si le solde vous semble incorrect, il peut simplement s'agir d'un paiement non encore enregistré.</p>`,
+    )}<p style="margin:20px 0 0;font-size:14px;color:${COLOR.muted}">En cas de difficulté, rapprochez-vous de votre syndic pour convenir d\'un arrangement.</p>`,
   };
 
   const preheader: Record<AppelEmailType, string> = {

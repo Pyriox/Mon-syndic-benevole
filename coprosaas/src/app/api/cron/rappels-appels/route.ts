@@ -30,7 +30,7 @@ import {
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
-import { buildTrialEndingEmail, buildTrialEndingSubject } from '@/lib/emails/subscription';
+import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
 import { getCronAuthState } from '@/lib/cron-auth';
@@ -102,6 +102,7 @@ export async function GET(req: NextRequest) {
   const dateJ7  = addDays(today, 7);   // appels avec échéance dans 7 jours
   const dateJ1  = addDays(today, -1);  // appels échus hier, encore impayés
   const dateJ15 = addDays(today, -15); // appels avec échéance il y a 15 jours
+  const dateJ90 = addDays(today, -90); // borne inférieure anti-backlog pour J+15
   const onboardingJ2Window = resolveOnboardingConfirmationWindow({ kind: 'j2', referenceDate: today });
   const onboardingJ7Window = resolveOnboardingConfirmationWindow({ kind: 'j7', referenceDate: today });
 
@@ -143,6 +144,7 @@ export async function GET(req: NextRequest) {
     .eq('statut', 'publie')
     .not('emailed_at', 'is', null)
     .lte('date_echeance', dateJ15)
+    .gte('date_echeance', dateJ90)
     .is('rappel_j15_at', null);
 
   // Récapitulatif syndic à l'échéance (J0)
@@ -224,6 +226,10 @@ export async function GET(req: NextRequest) {
         .lt('retry_count', 3)
         .in('template_key', ['appel_avis', 'appel_rappel', 'appel_rappel_j1', 'appel_mise_en_demeure'])
         .limit(200);
+
+  if ((retryRows?.length ?? 0) >= 200) {
+    console.warn('[cron/rappels-appels] Limite de retries atteinte (200) — file partiellement traitée, certains retries reportés au prochain run');
+  }
 
   for (const row of retryRows ?? []) {
     if (!row.appel_de_fonds_id || !row.copropriete_id) continue;
@@ -329,6 +335,7 @@ export async function GET(req: NextRequest) {
     .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
     .eq('statut', 'brouillon')
     .lt('created_at', threeDaysAgo)
+    .gte('date_echeance', todayStr)
     .is('rappel_brouillon_at', null);
 
   const { data: brouillonsJ14 } = await supabase
@@ -510,6 +517,7 @@ export async function GET(req: NextRequest) {
   // On envoie un email au syndic quand plan='essai' et plan_period_end = today + 3 jours.
   // Le cron quotidien garantit qu'il ne sera envoyé qu'une seule fois (la période est fixe).
   const dateJ3 = addDays(today, 3);
+  const dateTrialEndingJ1 = addDays(today, 1);
 
   const { data: trialsEndingJ3 } = onboardingOnly
     ? { data: [] }
@@ -517,7 +525,17 @@ export async function GET(req: NextRequest) {
       .from('coproprietes')
       .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
       .eq('plan', 'essai')
-      .eq('plan_period_end', dateJ3);
+      .eq('plan_period_end', dateJ3)
+      .is('rappel_trial_j3_at', null);
+
+  const { data: trialsEndingJ1 } = onboardingOnly
+    ? { data: [] }
+    : await supabase
+      .from('coproprietes')
+      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+      .eq('plan', 'essai')
+      .eq('plan_period_end', dateTrialEndingJ1)
+      .is('rappel_trial_j1_at', null);
 
   type TrialRow = {
     id: string;
@@ -558,8 +576,57 @@ export async function GET(req: NextRequest) {
       legalReference: row.id,
       payload: { trigger: 'cron', reminderType: 'trial_j3', planId: row.plan_id },
     });
-    if (!result.error) totalSent++;
-    else console.error('[cron] Erreur email trial J-3:', result.error);
+    if (!result.error) {
+      await supabase.from('coproprietes').update({ rappel_trial_j3_at: new Date().toISOString() }).eq('id', row.id);
+      totalSent++;
+    } else console.error('[cron] Erreur email trial J-3:', result.error);
+  }
+
+  // ── Rappel J-1 veille de fin d'essai ──────────────────────────────────────
+  // Dernier avertissement avant prélèvement effectif. Ton plus urgent.
+  let trialJ1Sent = 0;
+  for (const row of (trialsEndingJ1 ?? []) as unknown as TrialRow[]) {
+    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+    if (!profile?.email) continue;
+
+    const prenom = (profile.full_name ?? '').split(' ')[0] || null;
+    const planLabel = row.plan_id === 'illimite' ? 'Illimité' : row.plan_id === 'confort' ? 'Confort' : 'Essentiel';
+    const subject = buildTrialEndingJ1Subject(row.nom);
+
+    const result = await resend.emails.send({
+      from: FROM,
+      to: profile.email,
+      subject,
+      html: buildTrialEndingJ1Email({
+        prenom,
+        coproprieteNom: row.nom,
+        planLabel,
+        periodEnd: row.plan_period_end,
+        dashboardUrl: `${SITE_URL}`,
+      }),
+    });
+    await trackCronEmail({
+      providerMessageId: result.data?.id,
+      errorMessage: result.error?.message,
+      templateKey: 'subscription_trial_ending_j1',
+      recipientEmail: profile.email,
+      subject,
+      coproprieteId: row.id,
+      legalEventType: 'subscription_trial_ending',
+      legalReference: row.id,
+      payload: { trigger: 'cron', reminderType: 'trial_j1', planId: row.plan_id },
+    });
+    if (!result.error) {
+      await supabase.from('coproprietes').update({ rappel_trial_j1_at: new Date().toISOString() }).eq('id', row.id);
+      totalSent++;
+      trialJ1Sent++;
+    } else console.error('[cron] Erreur email trial J-1:', result.error);
+  }
+
+  // ── Garde-fou volume ────────────────────────────────────────────────────────
+  const MAX_EMAILS_PER_RUN = 500;
+  if (totalSent > MAX_EMAILS_PER_RUN) {
+    console.warn(`[cron/rappels-appels] Volume inhabituel : ${totalSent} emails envoyés en un seul run (seuil : ${MAX_EMAILS_PER_RUN})`);
   }
 
   return NextResponse.json({
@@ -581,6 +648,7 @@ export async function GET(req: NextRequest) {
     onboarding_j2: onboardingJ2Sent,
     onboarding_j7: onboardingJ7Sent,
     trial_j3:          trialsEndingJ3?.length ?? 0,
+    trial_j1:          trialJ1Sent,
     sent: totalSent,
     retries,
   });
@@ -870,9 +938,13 @@ async function sendRappelEmails(
     });
   }
 
-  // Envoi des emails
+  // Envoi des emails par lots de 10 pour respecter le rate-limit Resend
+  // et éviter des pics simultanés sur des copropriétés avec beaucoup de lots.
+  const CHUNK_SIZE = 10;
   let sent = 0;
-  await Promise.all(rows.map(async ({ cop, montant_du, regularisation_ajustement }) => {
+  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+    const chunk = rows.slice(i, i + CHUNK_SIZE);
+    await Promise.all(chunk.map(async ({ cop, montant_du, regularisation_ajustement }) => {
     const email = cop.email || (cop.user_id ? emailByUserId.get(cop.user_id) ?? '' : '');
     if (!email) return;
 
@@ -926,6 +998,7 @@ async function sendRappelEmails(
     });
     sent++;
   }));
+  }
 
   return sent;
 }
