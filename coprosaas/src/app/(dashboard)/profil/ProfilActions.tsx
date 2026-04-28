@@ -559,10 +559,11 @@ export function SecurityActions({ currentEmail }: { currentEmail: string }) {
 // ============================================================
 // Gestion des lots du syndic pour une copropriété
 // ============================================================
-export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
+export function LotsActions({ copropriete, ficheSyndic, userEmail, fullName = '' }: {
   copropriete: Copropriete;
   ficheSyndic?: FicheSyndic;
   userEmail: string;
+  fullName?: string;
 }) {
   const supabase = createClient();
   const router = useRouter();
@@ -576,6 +577,16 @@ export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
 
   const [selectedLotIds, setSelectedLotIds] = useState<string[]>(myCurrentLotIds);
   const [currentLotIds, setCurrentLotIds] = useState<string[]>(myCurrentLotIds);
+
+  // Identity fields — collected on first linking when no fiche exists yet
+  const nameParts = fullName.trim().split(' ');
+  const [nom, setNom] = useState(ficheSyndic?.nom ?? nameParts.slice(1).join(' ') ?? '');
+  const [prenom, setPrenom] = useState(ficheSyndic?.prenom ?? nameParts[0] ?? '');
+  const [telephone, setTelephone] = useState(ficheSyndic?.telephone ?? '');
+  const [adresse, setAdresse] = useState('');
+  const [complementAdresse, setComplementAdresse] = useState('');
+  const [codePostal, setCodePostal] = useState('');
+  const [ville, setVille] = useState('');
 
   const toggleLot = (lotId: string) => {
     setSelectedLotIds((prev) =>
@@ -593,16 +604,19 @@ export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
     let copro = ficheSyndic;
 
     if (!copro) {
-      const nameParts = (user.user_metadata?.full_name ?? '').trim().split(' ');
       const { data, error: insErr } = await supabase
         .from('coproprietaires')
         .insert({
           copropriete_id: copropriete.id,
           lot_id: selectedLotIds[0] ?? null,
-          nom: nameParts.slice(1).join(' ') || nameParts[0],
-          prenom: nameParts[0] ?? '',
+          nom: nom.trim() || nameParts.slice(1).join(' ') || nameParts[0],
+          prenom: prenom.trim() || nameParts[0] || '',
           email: userEmail,
-          telephone: null,
+          telephone: normalizePhone(telephone) || null,
+          adresse: adresse.trim() || null,
+          complement_adresse: complementAdresse.trim() || null,
+          code_postal: codePostal.trim() || null,
+          ville: ville.trim() || null,
           solde: 0,
           user_id: user.id,
         })
@@ -623,6 +637,7 @@ export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
 
     setCurrentLotIds(selectedLotIds);
     setIsOpen(false);
+    router.refresh();
   };
 
   return (
@@ -670,6 +685,28 @@ export function LotsActions({ copropriete, ficheSyndic, userEmail }: {
                   </label>
                 );
               })}
+            </div>
+          )}
+
+          {!ficheSyndic && (
+            <div className="border-t border-gray-100 pt-4 space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Vos coordonnées</p>
+                <p className="text-xs text-gray-500 mt-0.5">Utilisées dans les documents et avis de la copropriété.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="Prénom" value={prenom} onChange={(e) => setPrenom(e.target.value)} required />
+                <Input label="Nom" value={nom} onChange={(e) => setNom(e.target.value)} required />
+              </div>
+              <Input label="Téléphone" value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="06 12 34 56 78" type="tel" required />
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} placeholder="12 rue de la Paix" required />
+                <Input label="Complément" value={complementAdresse} onChange={(e) => setComplementAdresse(e.target.value)} placeholder="Bât. A, appt. 12" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="Code postal" value={codePostal} onChange={(e) => setCodePostal(e.target.value)} placeholder="75001" required />
+                <Input label="Ville" value={ville} onChange={(e) => setVille(e.target.value)} required />
+              </div>
             </div>
           )}
 

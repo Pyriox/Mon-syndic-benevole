@@ -419,8 +419,12 @@ export default async function AdminAnalyticsPage() {
             <h1 className="mt-1 text-2xl font-bold">Pilotage SaaS</h1>
             <div className="mt-3 flex flex-wrap gap-4 text-sm">
               <div>
+                <p className="text-slate-400 text-[10px] uppercase tracking-wide">ARR estimé</p>
+                <p className="font-bold text-emerald-300">{fmtEur(m.arrEstimate)}/an</p>
+              </div>
+              <div>
                 <p className="text-slate-400 text-[10px] uppercase tracking-wide">MRR estimé</p>
-                <p className="font-bold text-emerald-300">{fmtEur(m.mrrEstimate)}/mois</p>
+                <p className="font-bold text-emerald-200">{fmtEur(m.mrrEstimate)}/mois</p>
               </div>
               <div>
                 <p className="text-slate-400 text-[10px] uppercase tracking-wide">Abonnements actifs</p>

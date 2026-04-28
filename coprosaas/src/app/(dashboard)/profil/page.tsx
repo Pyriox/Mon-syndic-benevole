@@ -190,6 +190,7 @@ export default async function ProfilPage() {
                     copropriete={{ ...copropriete, lots: lotsArray }}
                     ficheSyndic={fiche}
                     userEmail={email}
+                    fullName={fullName}
                   />
                 </div>
               );

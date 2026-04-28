@@ -358,7 +358,7 @@ export default async function AdminUtilisateursPage({
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Utilisateur</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Rôle</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut / alertes</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Dernière connexion</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Dernière visite</th>
               <th className="px-4 py-3 w-10" />
             </tr>
           </thead>
@@ -504,7 +504,7 @@ export default async function AdminUtilisateursPage({
                     </div>
                   </td>
 
-                  {/* Dernière connexion */}
+                  {/* Dernière visite */}
                   <td className="px-4 py-3 hidden md:table-cell">
                     <p className="text-xs font-medium text-gray-700 leading-tight">{timeAgo(activityRef)}</p>
                     <p className="text-[11px] text-gray-400 leading-tight">{formatAdminDate(activityRef)}</p>

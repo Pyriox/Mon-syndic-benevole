@@ -113,7 +113,8 @@ export default async function AdminUtilisateurProfilePage({
     return true;
   });
 
-  const lastActive = (profileRes.data as { last_active_at: string | null } | null)?.last_active_at ?? authUser.last_sign_in_at;
+  const lastVisit = (profileRes.data as { last_active_at: string | null } | null)?.last_active_at ?? null;
+  const lastActive = lastVisit ?? authUser.last_sign_in_at;
   const fullName = ((authUser.user_metadata as Record<string, string> | null)?.full_name
     ?? (profileRes.data as { full_name: string | null } | null)?.full_name
     ?? null);
@@ -256,7 +257,7 @@ export default async function AdminUtilisateurProfilePage({
                 <p><span className="text-gray-500">ID :</span> {authUser.id}</p>
                 <p><span className="text-gray-500">Email :</span> {authUser.email ?? '—'}</p>
                 <p><span className="text-gray-500">Téléphone :</span> {phones[0] ?? '—'}</p>
-                <p><span className="text-gray-500">Dernière connexion :</span> {formatAdminDateTime(lastActive)}</p>
+                <p><span className="text-gray-500">Dernière visite :</span> {lastVisit ? formatAdminDateTime(lastVisit) : '—'}</p>
               </div>
             </div>
 

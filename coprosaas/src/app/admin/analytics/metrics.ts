@@ -71,6 +71,7 @@ export type TrendValue = {
 
 export type AdminAnalyticsMetrics = {
   // ── Revenue & Billing
+  arrEstimate: number;
   mrrEstimate: number;
   activeSubscriptions: number;
   activeTrials: number;
@@ -230,8 +231,17 @@ export function buildAdminAnalyticsMetrics({
     if (!row.syndic_id) return true;
     return !adminUserIds.has(row.syndic_id);
   });
+  const PLAN_ANNUAL_PRICE: Record<string, number> = {
+    essentiel: 360,
+    confort: 540,
+    illimite: 960,
+  };
   const mrrEstimate = filteredPlanRows.reduce((sum, row) => {
     const price = PLAN_MONTHLY_PRICE[row.plan_id ?? ''] ?? PLAN_MONTHLY_PRICE.essentiel;
+    return sum + price;
+  }, 0);
+  const arrEstimate = filteredPlanRows.reduce((sum, row) => {
+    const price = PLAN_ANNUAL_PRICE[row.plan_id ?? ''] ?? PLAN_ANNUAL_PRICE.essentiel;
     return sum + price;
   }, 0);
   const activeSubscriptions = filteredPlanRows.length;
@@ -381,6 +391,7 @@ export function buildAdminAnalyticsMetrics({
   ];
 
   return {
+    arrEstimate,
     mrrEstimate,
     activeSubscriptions,
     activeTrials,
