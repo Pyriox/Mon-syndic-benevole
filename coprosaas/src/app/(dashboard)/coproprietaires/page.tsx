@@ -125,10 +125,27 @@ export default async function CoproprietairesPage() {
   }, {});
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nbInscrits = (coproprietaires ?? []).filter((c: any) => c.user_id).length;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const syndicAlreadyLinked = isSyndic && (coproprietaires ?? []).some((c: any) => c.user_id === user.id);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {isSyndic && !canWrite && <ReadOnlyBanner freemium trialUsed={trialUsed} />}
+
+      {/* Bannière persistante si le syndic n'est pas encore lié comme copropriétaire */}
+      {isSyndic && !syndicAlreadyLinked && (coproprietaires?.length ?? 0) > 0 && (
+        <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
+          <span className="text-lg shrink-0">💡</span>
+          <p>
+            <span className="font-semibold">Vous êtes aussi copropriétaire de cet immeuble ?</span>{' '}
+            Ne vous ajoutez pas via le bouton « Ajouter » — rendez-vous sur{' '}
+            <Link href="/profil" className="font-semibold underline hover:text-blue-900">
+              Mon profil
+            </Link>{' '}
+            puis « Mon statut de copropriétaire » pour vous lier directement à vos lots.
+          </p>
+        </div>
+      )}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Copropriétaires</h2>
@@ -197,11 +214,12 @@ export default async function CoproprietairesPage() {
             <div className="flex items-start gap-3 max-w-lg mx-auto p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
               <span className="text-lg shrink-0">💡</span>
               <p>
-                Vous êtes aussi copropriétaire de cet immeuble ?{' '}
+                <span className="font-semibold">Vous êtes aussi copropriétaire de cet immeuble ?</span>{' '}
+                Ne vous ajoutez pas via le bouton « Ajouter » — rendez-vous sur{' '}
                 <Link href="/profil" className="font-semibold underline hover:text-blue-900">
-                  Complétez votre profil
+                  Mon profil
                 </Link>{' '}
-                — vos informations (nom, prénom, email) seront préremplies lors de l&apos;ajout.
+                puis « Mon statut de copropriétaire » pour vous lier directement à vos lots.
               </p>
             </div>
           )}
