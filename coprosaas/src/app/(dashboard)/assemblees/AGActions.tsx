@@ -11,7 +11,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
-import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
+import { logClientEvent } from '@/lib/client-log-event';
 import {
   collectAvailableRepartitionGroups,
   formatEuros,
@@ -308,12 +308,12 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
       await supabase.from('resolutions').insert(toInsert);
     }
 
-    // Log événement (fire-and-forget via action serveur)
-    void logCurrentUserEvent({
+    // Log événement (keepalive fetch — survit aux navigations immédiates)
+    logClientEvent({
       eventType: 'ag_created',
       label: `AG créée — ${titreFinal}`,
       coproprieteId: formData.copropriete_id,
-    }).catch(() => undefined);
+    });
 
     const createdAgId = ag.id;
     resetAndClose();

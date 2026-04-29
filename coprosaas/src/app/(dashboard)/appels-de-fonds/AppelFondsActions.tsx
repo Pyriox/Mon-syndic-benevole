@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
+import { logClientEvent } from '@/lib/client-log-event';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import {
   collectAvailableRepartitionGroups,
@@ -680,13 +680,13 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
     }
 
     close();
-    // Log événement (fire-and-forget via action serveur)
+    // Log événement (keepalive fetch — survit aux navigations immédiates)
     const nb = finalVersements.length;
-    void logCurrentUserEvent({
+    logClientEvent({
       eventType: 'appel_fonds_created',
       label: `${nb} appel${nb > 1 ? 's' : ''} de fonds créé${nb > 1 ? 's' : ''} — ${titre.trim()}`,
       coproprieteId: coproprieteId,
-    }).catch(() => undefined);
+    });
     await revalidateCoproFinance(coproprieteId);
     router.refresh();
   };
