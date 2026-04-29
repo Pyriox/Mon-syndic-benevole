@@ -43,6 +43,7 @@ export async function createCopropriete(formData: {
         user_email: userEmail.toLowerCase(),
         event_type: 'copropriete_created',
         label: `Copropriété créée — ${coproNom}`,
+        severity: 'info',
         copropriete_id: data.id,
       });
     } catch { /* non critique */ }

@@ -147,8 +147,6 @@ export default async function AdminUtilisateurProfilePage({
   const totalEventPages = Math.max(1, Math.ceil(filteredEvents.length / EVENT_PAGE_SIZE));
   const currentLogPage = Math.min(Math.max(1, Number(logPage) || 1), totalEventPages);
   const pagedEvents = filteredEvents.slice((currentLogPage - 1) * EVENT_PAGE_SIZE, currentLogPage * EVENT_PAGE_SIZE);
-  const warningCount = allEvents.filter((event) => event.severity === 'warning').length;
-  const errorCount = allEvents.filter((event) => event.severity === 'error').length;
 
   const authMeta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
   const authPhone = (typeof authUser.phone === 'string' && authUser.phone.trim())
@@ -218,14 +216,14 @@ export default async function AdminUtilisateurProfilePage({
                 <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 font-medium text-blue-700">
                   {allEvents.length} événements récents
                 </span>
-                {warningCount > 0 && (
+                {countEventsForLevel('warning') > 0 && (
                   <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-medium text-amber-700">
-                    {warningCount} warning{warningCount > 1 ? 's' : ''}
+                    {countEventsForLevel('warning')} warning{countEventsForLevel('warning') > 1 ? 's' : ''}
                   </span>
                 )}
-                {errorCount > 0 && (
+                {countEventsForLevel('error') > 0 && (
                   <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2 py-0.5 font-medium text-red-700">
-                    {errorCount} erreur{errorCount > 1 ? 's' : ''}
+                    {countEventsForLevel('error')} erreur{countEventsForLevel('error') > 1 ? 's' : ''}
                   </span>
                 )}
               </div>
@@ -428,6 +426,7 @@ export default async function AdminUtilisateurProfilePage({
                     from,
                     logCategory: item.key !== 'all' ? item.key : undefined,
                     logLevel: currentLogLevel !== 'all' ? currentLogLevel : undefined,
+                    logPage: undefined,
                   })}
                   className={`rounded-full border px-2.5 py-1 font-medium ${currentLogCategory === item.key ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300'}`}
                 >
@@ -448,6 +447,7 @@ export default async function AdminUtilisateurProfilePage({
                     from,
                     logCategory: currentLogCategory !== 'all' ? currentLogCategory : undefined,
                     logLevel: item.key !== 'all' ? item.key : undefined,
+                    logPage: undefined,
                   })}
                   className={`rounded-full border px-2.5 py-1 font-medium ${currentLogLevel === item.key ? 'border-gray-800 bg-gray-800 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'}`}
                 >

@@ -77,25 +77,28 @@ export default async function AdminCoproDetail({
       .from('copro_addons')
       .select('addon_key, status, cancel_at_period_end')
       .eq('copropriete_id', id),
-    admin
-      .from('user_events')
-      .select('id, event_type, label, created_at, severity, metadata')
-      .eq('copropriete_id', id)
-      .order('created_at', { ascending: false })
-      .limit(200),
+    (() => {
+      let eventsQuery = admin
+        .from('user_events')
+        .select('id, event_type, label, created_at, severity, metadata')
+        .eq('copropriete_id', id)
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (logLevel && logLevel !== 'all') {
+        eventsQuery = eventsQuery.eq('severity', logLevel);
+      }
+      return eventsQuery;
+    })(),
   ]);
 
   if (!copro) notFound();
 
-  // Journal copropriété
+  // Journal copropriété — la sévérité est filtrée en base si logLevel est actif
   const LOG_PAGE_SIZE = 20;
   const coproEvents = (coproEventsRaw ?? []) as { id: string; event_type: string; label: string; created_at: string; severity: 'info' | 'warning' | 'error' | null; metadata: Record<string, unknown> | null }[];
-  const filteredCoproEvents = logLevel && logLevel !== 'all'
-    ? coproEvents.filter(e => e.severity === logLevel)
-    : coproEvents;
   const logCurrentPage = Math.max(1, parseInt(logPage ?? '1', 10));
-  const logTotalPages = Math.max(1, Math.ceil(filteredCoproEvents.length / LOG_PAGE_SIZE));
-  const coproEventsPage = filteredCoproEvents.slice((logCurrentPage - 1) * LOG_PAGE_SIZE, logCurrentPage * LOG_PAGE_SIZE);
+  const logTotalPages = Math.max(1, Math.ceil(coproEvents.length / LOG_PAGE_SIZE));
+  const coproEventsPage = coproEvents.slice((logCurrentPage - 1) * LOG_PAGE_SIZE, logCurrentPage * LOG_PAGE_SIZE);
 
   function daysFromNow(dateStr: string): number {
     return Math.round((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -623,7 +626,7 @@ export default async function AdminCoproDetail({
             <Clock size={16} className="text-gray-400" />
             <p className="text-sm font-semibold text-gray-900">
               Journal d&apos;activité
-              <span className="ml-2 text-xs font-normal text-gray-500">({filteredCoproEvents.length} événement{filteredCoproEvents.length !== 1 ? 's' : ''})</span>
+              <span className="ml-2 text-xs font-normal text-gray-500">({coproEvents.length} événement{coproEvents.length !== 1 ? 's' : ''})</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -645,7 +648,7 @@ export default async function AdminCoproDetail({
           events={coproEventsPage}
           currentPage={logCurrentPage}
           totalPages={logTotalPages}
-          totalItems={filteredCoproEvents.length}
+          totalItems={coproEvents.length}
           basePath={`/admin/coproprietes/${id}`}
           pageParamName="logPage"
           pageSize={LOG_PAGE_SIZE}
