@@ -113,7 +113,7 @@ export default function DepenseActions({
 
       const { data, error: fetchError } = await supabase
         .from('lots')
-        .select('id, numero, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes, coproprietaires(id, nom, prenom)')
+        .select('id, numero, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes')
         .eq('copropriete_id', formData.copropriete_id);
 
       if (cancelled) return;
@@ -125,10 +125,24 @@ export default function DepenseActions({
         return;
       }
 
+      const coproIds = Array.from(new Set((data ?? []).map((lot) => lot.coproprietaire_id).filter(Boolean))) as string[];
+      let coproById = new Map<string, { id: string; nom: string; prenom: string }>();
+
+      if (coproIds.length > 0) {
+        const { data: coproRows } = await supabase
+          .from('coproprietaires')
+          .select('id, nom, prenom')
+          .in('id', coproIds);
+
+        if (cancelled) return;
+
+        coproById = new Map((coproRows ?? []).map((copro) => [copro.id, copro]));
+      }
+
       setLots((data ?? []).map((lot) => ({
         ...lot,
         coproprietaire_id: lot.coproprietaire_id ?? null,
-        coproprietaire: Array.isArray(lot.coproprietaires) ? (lot.coproprietaires[0] ?? null) : (lot.coproprietaires ?? null),
+        coproprietaire: lot.coproprietaire_id ? (coproById.get(lot.coproprietaire_id) ?? null) : null,
       })));
       setLotsLoading(false);
     };
