@@ -70,7 +70,7 @@ export default async function AdminCoproDetail({
       .limit(50),
     admin
       .from('assemblees_generales')
-      .select('id, statut, titre, date_ag, type_ag, created_at')
+      .select('id, statut, titre, date_ag, created_at')
       .eq('copropriete_id', id)
       .order('date_ag', { ascending: false })
       .limit(30),
@@ -534,26 +534,26 @@ export default async function AdminCoproDetail({
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Titre</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Type</th>
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date AG</th>
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {(ags ?? []).map((ag) => {
-                  const a = ag as { id: string; statut: string; titre: string | null; date_ag: string | null; type_ag: string | null };
+                  const a = ag as { id: string; statut: string; titre: string | null; date_ag: string | null };
                   return (
                     <tr key={a.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-800">{a.titre ?? '—'}</p>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell capitalize">{a.type_ag ?? '—'}</td>
                       <td className="px-4 py-3 text-xs text-gray-600">{a.date_ag ? formatAdminDateTime(a.date_ag) : '—'}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
-                          a.statut === 'cloture' ? 'bg-emerald-50 text-emerald-700' :
-                          a.statut === 'brouillon' ? 'bg-gray-100 text-gray-600' :
-                          'bg-amber-50 text-amber-700'
+                          a.statut === 'terminee' ? 'bg-emerald-50 text-emerald-700' :
+                          a.statut === 'en_cours' ? 'bg-blue-50 text-blue-700' :
+                          a.statut === 'planifiee' ? 'bg-amber-50 text-amber-700' :
+                          a.statut === 'annulee' ? 'bg-red-50 text-red-700' :
+                          'bg-gray-100 text-gray-600'
                         }`}>{a.statut}</span>
                       </td>
                     </tr>
