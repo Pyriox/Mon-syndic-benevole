@@ -62,6 +62,11 @@ const SEVERITY_DOT: Record<string, string> = {
   error: 'bg-red-500',
 };
 
+/** Renvoie true si la valeur est un tableau ne contenant que des UUID (pas utile à afficher). */
+function isUuidArray(v: unknown): boolean {
+  return Array.isArray(v) && v.length > 0 && (v as unknown[]).every(isUuid);
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function isUuid(v: unknown): boolean {
@@ -102,6 +107,8 @@ function parseMetadataEntries(metadata: Record<string, unknown>): {
       // Ignorer les clés id (jamais significatives dans un diff)
       if (k === 'id') continue;
       if (JSON.stringify(b[k]) !== JSON.stringify(a[k])) {
+        // Masquer les champs dont les deux valeurs sont des tableaux de UUID
+        if (isUuidArray(b[k]) && isUuidArray(a[k])) continue;
         diff.push({ key: k, oldVal: formatMetaValue(b[k]), newVal: formatMetaValue(a[k]) });
       }
     }

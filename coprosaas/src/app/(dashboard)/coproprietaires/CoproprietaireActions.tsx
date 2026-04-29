@@ -486,7 +486,7 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
           code_postal: coproprietaire.code_postal,
           ville: coproprietaire.ville,
           solde: coproprietaire.solde,
-          assignedLotIds,
+          lotIds: assignedLotIds,
         },
         after: {
           nom: formData.nom.trim() || null,
@@ -498,7 +498,7 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
           code_postal: formData.code_postal.trim() || null,
           ville: formData.ville.trim() || null,
           solde: formData.solde,
-          selectedLotIds,
+          lotIds: selectedLotIds,
         },
       },
     }).catch(() => undefined);
