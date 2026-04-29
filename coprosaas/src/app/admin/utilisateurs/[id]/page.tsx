@@ -78,6 +78,7 @@ export default async function AdminUtilisateurProfilePage({
     ticketsRes,
     eventsRes,
     lastEventRes,
+    lastSessionRes,
   ] = await Promise.all([
     admin
       .from('coproprietaires')
@@ -114,6 +115,14 @@ export default async function AdminUtilisateurProfilePage({
           .limit(1)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    // Dernière session active (heartbeat, le plus fiable)
+    admin
+      .from('user_sessions')
+      .select('last_activity_at')
+      .eq('user_id', id)
+      .order('last_activity_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const syndicCopros = (syndicCoprosRes.data ?? []) as { id: string; nom: string; plan: string | null; plan_id: string | null; created_at: string }[];
@@ -132,11 +141,13 @@ export default async function AdminUtilisateurProfilePage({
 
   const lastVisit = (profileRes.data as { last_active_at: string | null } | null)?.last_active_at ?? null;
   const lastEventAt = (lastEventRes.data as { created_at: string } | null)?.created_at ?? null;
-  // Prend le timestamp le plus récent parmi : heartbeat profil, dernier event, dernière connexion
-  const candidates = [lastVisit, lastEventAt, authUser.last_sign_in_at].filter((v): v is string => !!v);
+  const lastSessionAt = (lastSessionRes.data as { last_activity_at: string } | null)?.last_activity_at ?? null;
+  // Prend le timestamp le plus récent parmi : session heartbeat, heartbeat profil, dernier event, dernière connexion
+  const candidates = [lastSessionAt, lastVisit, lastEventAt, authUser.last_sign_in_at].filter((v): v is string => !!v);
   const lastActive = candidates.length > 0 ? candidates.sort().at(-1)! : null;
-  const lastActiveSource: 'heartbeat' | 'event' | 'login' | null =
+  const lastActiveSource: 'session' | 'heartbeat' | 'event' | 'login' | null =
     !lastActive ? null
+    : lastActive === lastSessionAt ? 'session'
     : lastActive === lastVisit ? 'heartbeat'
     : lastActive === lastEventAt ? 'event'
     : 'login';
@@ -280,7 +291,7 @@ export default async function AdminUtilisateurProfilePage({
                 <p><span className="text-gray-500">ID :</span> {authUser.id}</p>
                 <p><span className="text-gray-500">Email :</span> {authUser.email ?? '—'}</p>
                 <p><span className="text-gray-500">Téléphone :</span> {phones[0] ?? '—'}</p>
-                <p><span className="text-gray-500">Dernière visite :</span> {lastActive ? formatAdminDateTime(lastActive) : '—'}{lastActiveSource === 'event' ? <span className="ml-1.5 text-xs text-gray-400">(activité récente)</span> : lastActiveSource === 'login' ? <span className="ml-1.5 text-xs text-gray-400">(dernière connexion)</span> : null}</p>
+                <p><span className="text-gray-500">Dernière visite :</span> {lastActive ? formatAdminDateTime(lastActive) : '—'}{lastActiveSource === 'session' || lastActiveSource === 'event' ? <span className="ml-1.5 text-xs text-gray-400">(activité récente)</span> : lastActiveSource === 'login' ? <span className="ml-1.5 text-xs text-gray-400">(dernière connexion)</span> : null}</p>
               </div>
             </div>
 

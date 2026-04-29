@@ -91,6 +91,7 @@ export default async function AdminUtilisateursPage({
     { data: coproprietairesData },
     { data: supportTicketsData },
     { data: profilesData },
+    { data: sessionsData },
   ] = await Promise.all([
     listAllAdminAuthUsers(admin),
     admin.from('coproprietes').select('id, nom, syndic_id, plan, plan_id'),
@@ -98,17 +99,30 @@ export default async function AdminUtilisateursPage({
     admin.from('coproprietaires').select('email, user_id, copropriete_id'),
     admin.from('support_tickets').select('user_email'),
     admin.from('profiles').select('id, last_active_at, suspended_at'),
+    // Dernière activité par user_id depuis les sessions heartbeat
+    admin.from('user_sessions').select('user_id, last_activity_at').order('last_activity_at', { ascending: false }),
   ]);
 
   const adminUserIds = new Set((adminRows ?? []).map((r) => r.user_id as string));
 
-  // userId → last_active_at
+  // userId → last_active_at (profiles)
   const lastActiveById: Record<string, string | null> = {};
   const suspendedById: Record<string, boolean> = {};
   for (const p of profilesData ?? []) {
     const typed = p as { id: string; last_active_at: string | null; suspended_at: string | null };
     lastActiveById[typed.id] = typed.last_active_at;
     suspendedById[typed.id] = !!typed.suspended_at;
+  }
+
+  // userId → last_activity_at from user_sessions (most recent, overrides profiles if more recent)
+  const seenSessionUser = new Set<string>();
+  for (const s of (sessionsData ?? []) as { user_id: string; last_activity_at: string }[]) {
+    if (seenSessionUser.has(s.user_id)) continue;
+    seenSessionUser.add(s.user_id);
+    const existing = lastActiveById[s.user_id];
+    if (!existing || s.last_activity_at > existing) {
+      lastActiveById[s.user_id] = s.last_activity_at;
+    }
   }
 
   // copropriete_id → détails copro
