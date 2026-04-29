@@ -77,6 +77,7 @@ export default async function AdminUtilisateurProfilePage({
     memberByEmailRes,
     ticketsRes,
     eventsRes,
+    lastEventRes,
   ] = await Promise.all([
     admin
       .from('coproprietaires')
@@ -103,6 +104,16 @@ export default async function AdminUtilisateurProfilePage({
       .in('event_type', USER_LEVEL_EVENT_TYPES)
       .order('created_at', { ascending: false })
       .limit(100),
+    // Dernière activité réelle (toutes actions métier, pas seulement connexion)
+    email
+      ? admin
+          .from('user_events')
+          .select('created_at')
+          .eq('user_email', email)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const syndicCopros = (syndicCoprosRes.data ?? []) as { id: string; nom: string; plan: string | null; plan_id: string | null; created_at: string }[];
@@ -120,7 +131,15 @@ export default async function AdminUtilisateurProfilePage({
   });
 
   const lastVisit = (profileRes.data as { last_active_at: string | null } | null)?.last_active_at ?? null;
-  const lastActive = lastVisit ?? authUser.last_sign_in_at;
+  const lastEventAt = (lastEventRes.data as { created_at: string } | null)?.created_at ?? null;
+  // Prend le timestamp le plus récent parmi : heartbeat profil, dernier event, dernière connexion
+  const candidates = [lastVisit, lastEventAt, authUser.last_sign_in_at].filter((v): v is string => !!v);
+  const lastActive = candidates.length > 0 ? candidates.sort().at(-1)! : null;
+  const lastActiveSource: 'heartbeat' | 'event' | 'login' | null =
+    !lastActive ? null
+    : lastActive === lastVisit ? 'heartbeat'
+    : lastActive === lastEventAt ? 'event'
+    : 'login';
   const fullName = ((authUser.user_metadata as Record<string, string> | null)?.full_name
     ?? (profileRes.data as { full_name: string | null } | null)?.full_name
     ?? null);
@@ -261,7 +280,7 @@ export default async function AdminUtilisateurProfilePage({
                 <p><span className="text-gray-500">ID :</span> {authUser.id}</p>
                 <p><span className="text-gray-500">Email :</span> {authUser.email ?? '—'}</p>
                 <p><span className="text-gray-500">Téléphone :</span> {phones[0] ?? '—'}</p>
-                <p><span className="text-gray-500">Dernière visite :</span> {lastActive ? formatAdminDateTime(lastActive) : '—'}{lastVisit === null && lastActive ? <span className="ml-1.5 text-xs text-gray-400">(dernière connexion)</span> : null}</p>
+                <p><span className="text-gray-500">Dernière visite :</span> {lastActive ? formatAdminDateTime(lastActive) : '—'}{lastActiveSource === 'event' ? <span className="ml-1.5 text-xs text-gray-400">(activité récente)</span> : lastActiveSource === 'login' ? <span className="ml-1.5 text-xs text-gray-400">(dernière connexion)</span> : null}</p>
               </div>
             </div>
 

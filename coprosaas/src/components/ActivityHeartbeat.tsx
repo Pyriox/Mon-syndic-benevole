@@ -59,19 +59,27 @@ export default function ActivityHeartbeat() {
   const pathname = usePathname();
   const previousPathRef = useRef<string | null>(null);
   const lastHeartbeatRef = useRef(0);
+  const initialPingSentRef = useRef(false);
 
   useEffect(() => {
     lastHeartbeatRef.current = getLastHeartbeatAt();
   }, []);
 
-  const maybePing = () => {
+  const maybePing = (force = false) => {
     const now = Date.now();
-    if (now - lastHeartbeatRef.current < HEARTBEAT_INTERVAL_MS) return;
+    if (!force && now - lastHeartbeatRef.current < HEARTBEAT_INTERVAL_MS) return;
 
     lastHeartbeatRef.current = now;
     setLastHeartbeatAt(now);
     void pingActivity();
   };
+
+  // Ping immédiat au premier montage pour garantir la fraîcheur de last_active_at
+  useEffect(() => {
+    if (initialPingSentRef.current) return;
+    initialPingSentRef.current = true;
+    void pingActivity();
+  }, []);
 
   useEffect(() => {
     if (!pathname || pathname === previousPathRef.current) return;
