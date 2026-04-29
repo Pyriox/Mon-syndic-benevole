@@ -15,6 +15,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import {
   calculerPart,
   collectAvailableRepartitionGroups,
@@ -358,6 +359,14 @@ export default function DepenseActions({
     }
     router.refresh();
     void revalidateCoproFinance(formData.copropriete_id);
+    void logCurrentUserEvent({
+      eventType: isEdit ? 'depense_updated' : 'depense_created',
+      label: isEdit
+        ? `Dépense modifiée — ${formData.titre.trim()} (${formData.montant} €)`
+        : `Dépense ajoutée — ${formData.titre.trim()} (${formData.montant} €)`,
+      coproprieteId: formData.copropriete_id,
+      metadata: { categorie: formData.categorie, montant: formData.montant },
+    });
   };
 
   return (
@@ -611,6 +620,13 @@ export function DepenseDelete({ depenseId, coproprieteId }: { depenseId: string;
     toast.success('Dépense supprimée.');
     router.refresh();
     void revalidateCoproFinance(coproprieteId);
+    void logCurrentUserEvent({
+      eventType: 'depense_deleted',
+      label: 'Dépense supprimée',
+      coproprieteId: coproprieteId,
+      severity: 'warning',
+      metadata: { depenseId },
+    });
   };
 
   return (
