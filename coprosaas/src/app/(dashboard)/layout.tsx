@@ -219,14 +219,19 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   }
 
   // --- Mise à jour last_active_at (non-bloquant, après réponse) ---
+  // On utilise update() plutôt que upsert() pour ne jamais tenter un INSERT
+  // incomplet si la ligne profiles n'existe pas (évite les échecs silencieux
+  // sur des colonnes NOT NULL sans valeur fournie).
   after(async () => {
     try {
       const admin = createAdminClient();
-      await admin
+      const { error } = await admin
         .from('profiles')
-        .upsert({ id: user.id, last_active_at: new Date().toISOString() }, { onConflict: 'id' });
-    } catch {
-      // Non critique
+        .update({ last_active_at: new Date().toISOString() })
+        .eq('id', user.id);
+      if (error) console.error('[layout] last_active_at update failed:', error.message);
+    } catch (err) {
+      console.error('[layout] last_active_at after() exception:', err);
     }
   });
 

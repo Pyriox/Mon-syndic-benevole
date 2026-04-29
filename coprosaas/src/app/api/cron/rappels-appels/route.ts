@@ -27,6 +27,8 @@ import {
   buildSyndicOnboardingReminderSubject,
   buildSyndicImpayesRecapEmail,
   buildSyndicImpayesRecapSubject,
+  buildSyndicReactivationEmail,
+  buildSyndicReactivationSubject,
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
@@ -105,6 +107,7 @@ export async function GET(req: NextRequest) {
   const dateJ90 = addDays(today, -90); // borne inférieure anti-backlog pour J+15
   const onboardingJ2Window = resolveOnboardingConfirmationWindow({ kind: 'j2', referenceDate: today });
   const onboardingJ7Window = resolveOnboardingConfirmationWindow({ kind: 'j7', referenceDate: today });
+  const onboardingJ21Window = resolveOnboardingConfirmationWindow({ kind: 'j21', referenceDate: today });
 
   // ── Avis J-30 : appels publiés dont l'email n'a pas encore été envoyé ──
   // .gte('date_echeance', todayStr) empêche d'envoyer un "avis J-30" pour un
@@ -486,6 +489,7 @@ export async function GET(req: NextRequest) {
   const onboardingTargetEmails = onboardingTestEmail ? [onboardingTestEmail] : undefined;
   let onboardingJ2Sent = 0;
   let onboardingJ7Sent = 0;
+  let onboardingJ21Sent = 0;
 
   if (onboardingKinds.includes('j2')) {
     onboardingJ2Sent = await sendSyndicOnboardingReminders(
@@ -511,6 +515,19 @@ export async function GET(req: NextRequest) {
       },
     );
     totalSent += onboardingJ7Sent;
+  }
+
+  if (onboardingKinds.includes('j21')) {
+    onboardingJ21Sent = await sendSyndicOnboardingReminders(
+      supabase,
+      onboardingJ21Window,
+      'j21',
+      {
+        force: onboardingForce,
+        targetEmails: onboardingTargetEmails,
+      },
+    );
+    totalSent += onboardingJ21Sent;
   }
 
   // ── Rappel J-3 fin d'essai ──────────────────────────────────────────────────
@@ -647,6 +664,7 @@ export async function GET(req: NextRequest) {
     brouillon_j1_urgent_groupes: brouillonJ1UrgentGroups.size,
     onboarding_j2: onboardingJ2Sent,
     onboarding_j7: onboardingJ7Sent,
+    onboarding_j21: onboardingJ21Sent,
     trial_j3:          trialsEndingJ3?.length ?? 0,
     trial_j1:          trialJ1Sent,
     sent: totalSent,
@@ -756,7 +774,9 @@ async function sendSyndicOnboardingReminders(
 
   const eventType = kind === 'j2'
     ? 'onboarding_copro_reminder_j2_sent'
-    : 'onboarding_copro_reminder_j7_sent';
+    : kind === 'j7'
+      ? 'onboarding_copro_reminder_j7_sent'
+      : 'onboarding_copro_reminder_j21_sent';
 
   const alreadyReminded = force
     ? new Set<string>()
@@ -817,13 +837,21 @@ async function sendSyndicOnboardingReminders(
     const prenom = (profile.full_name ?? '').split(' ')[0] || 'Syndic';
     const actionUrl = coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/coproprietaires`;
     const subject = buildSyndicOnboardingReminderSubject({ kind, coproCount });
-    const html = buildSyndicOnboardingReminderEmail({
-      syndicPrenom: prenom,
-      kind,
-      coproCount,
-      coproprietairesCount,
-      actionUrl,
-    });
+
+    const html = kind === 'j21'
+      ? buildSyndicReactivationEmail({
+          syndicPrenom: prenom,
+          coproCount,
+          coproprietairesCount,
+          dashboardUrl: coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/dashboard`,
+        })
+      : buildSyndicOnboardingReminderEmail({
+          syndicPrenom: prenom,
+          kind,
+          coproCount,
+          coproprietairesCount,
+          actionUrl,
+        });
 
     const result = await resend.emails.send({
       from: FROM,

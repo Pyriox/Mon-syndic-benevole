@@ -39,6 +39,8 @@ const EVENT_META: Record<string, { icon: string; label: string; color: string }>
   lot_added: { icon: '▣', label: 'Lot ajouté', color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
   lot_updated: { icon: '✎', label: 'Lot modifié', color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
   lot_deleted: { icon: '🗑️', label: 'Lot supprimé', color: 'text-rose-700 bg-rose-50 border-rose-200' },
+  paiement_confirme: { icon: '✔', label: 'Paiement reçu', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+  paiement_annule: { icon: '↺', label: 'Paiement annulé', color: 'text-orange-700 bg-orange-50 border-orange-200' },
   copropriete_updated: { icon: '🏢', label: 'Copropriété modifiée', color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
   admin_user_deleted: { icon: '🛑', label: 'Compte supprimé (admin)', color: 'text-red-700 bg-red-50 border-red-200' },
   admin_resend_confirmation: { icon: '✉', label: 'Confirmation renvoyée (admin)', color: 'text-sky-700 bg-sky-50 border-sky-200' },
@@ -59,6 +61,51 @@ const SEVERITY_DOT: Record<string, string> = {
   warning: 'bg-amber-400',
   error: 'bg-red-500',
 };
+
+function formatMetaValue(v: unknown, maxLen = 80): string {
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'string') return v.length > maxLen ? `${v.slice(0, maxLen)}…` : v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  try {
+    const s = JSON.stringify(v);
+    return s.length > maxLen ? `${s.slice(0, maxLen)}…` : s;
+  } catch {
+    return String(v);
+  }
+}
+
+type DiffEntry = { key: string; oldVal: string; newVal: string };
+type PlainEntry = { key: string; val: string };
+
+function parseMetadataEntries(metadata: Record<string, unknown>): {
+  diff: DiffEntry[];
+  plain: PlainEntry[];
+} {
+  const { before, after, ...rest } = metadata;
+  const diff: DiffEntry[] = [];
+  const plain: PlainEntry[] = [];
+
+  if (before && after && typeof before === 'object' && typeof after === 'object') {
+    const b = before as Record<string, unknown>;
+    const a = after as Record<string, unknown>;
+    const keys = new Set([...Object.keys(b), ...Object.keys(a)]);
+    for (const k of keys) {
+      if (JSON.stringify(b[k]) !== JSON.stringify(a[k])) {
+        diff.push({ key: k, oldVal: formatMetaValue(b[k]), newVal: formatMetaValue(a[k]) });
+      }
+    }
+    // Si rien n'a changé (before === after), on ne montre rien
+  } else {
+    if (before !== undefined) plain.push({ key: 'before', val: formatMetaValue(before) });
+    if (after !== undefined) plain.push({ key: 'after', val: formatMetaValue(after) });
+  }
+
+  for (const [k, v] of Object.entries(rest)) {
+    plain.push({ key: k, val: formatMetaValue(v) });
+  }
+
+  return { diff, plain };
+}
 
 interface Props {
   events: AdminUserEvent[];
@@ -108,16 +155,29 @@ export default function AdminUserEventTimeline({
                     {meta?.icon ?? '·'} {meta?.label ?? event.event_type}
                   </span>
                   <p className="text-xs text-gray-500 mt-1 break-words">{event.label || event.event_type}</p>
-                  {event.metadata && Object.keys(event.metadata).length > 0 && (
-                    <dl className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
-                      {Object.entries(event.metadata).map(([k, v]) => (
-                        <div key={k} className="flex items-baseline gap-1 text-[10px] text-gray-400">
-                          <dt className="font-medium text-gray-500">{k}</dt>
-                          <dd className="font-mono truncate max-w-[160px]">{String(v)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  )}
+                  {event.metadata && Object.keys(event.metadata).length > 0 && (() => {
+                    const { diff, plain } = parseMetadataEntries(event.metadata);
+                    return (
+                      <dl className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                        {diff.map(({ key, oldVal, newVal }) => (
+                          <div key={key} className="flex items-baseline gap-1 text-[10px] text-gray-400">
+                            <dt className="font-medium text-gray-500">{key}</dt>
+                            <dd className="font-mono">
+                              <span className="line-through text-red-400">{oldVal}</span>
+                              <span className="mx-0.5 text-gray-400">→</span>
+                              <span className="text-emerald-600">{newVal}</span>
+                            </dd>
+                          </div>
+                        ))}
+                        {plain.map(({ key, val }) => (
+                          <div key={key} className="flex items-baseline gap-1 text-[10px] text-gray-400">
+                            <dt className="font-medium text-gray-500">{key}</dt>
+                            <dd className="font-mono truncate max-w-[160px]">{val}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    );
+                  })()}
                 </div>
                 <p className="text-[11px] text-gray-400 shrink-0 mt-0.5 tabular-nums">{formatAdminDateTime(event.created_at)}</p>
               </div>

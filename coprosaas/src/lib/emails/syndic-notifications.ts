@@ -212,7 +212,7 @@ export interface IncidentResoluEmailParams {
 
 // ── Onboarding syndic (J+2 / J+7) ───────────────────────────────────────────
 
-export type SyndicOnboardingReminderKind = 'j2' | 'j7';
+export type SyndicOnboardingReminderKind = 'j2' | 'j7' | 'j21';
 
 export interface SyndicOnboardingReminderEmailParams {
   syndicPrenom: string;
@@ -226,6 +226,9 @@ export function buildSyndicOnboardingReminderSubject(params: {
   kind: SyndicOnboardingReminderKind;
   coproCount: number;
 }): string {
+  if (params.kind === 'j21') {
+    return 'On ne vous a pas oublié — reprenez la gestion de votre copropriété — Mon Syndic Bénévole';
+  }
   const prefix = params.kind === 'j2'
     ? 'Votre espace syndic est prêt'
     : 'Poursuivez la configuration de votre copropriété';
@@ -298,6 +301,87 @@ ${ctaButton(ctaLabel, actionUrl, color)}
   return wrapEmail(content, color, hasNoCopro
     ? 'Créez votre première copropriété'
     : 'Ajoutez vos copropriétaires pour poursuivre la configuration');
+}
+
+// ── Réactivation syndic (J+21) ───────────────────────────────────────────────
+
+export interface SyndicReactivationEmailParams {
+  syndicPrenom: string;
+  coproCount: number;
+  coproprietairesCount: number;
+  dashboardUrl: string;
+}
+
+export function buildSyndicReactivationSubject(): string {
+  return 'On ne vous a pas oublié — reprenez la gestion de votre copropriété — Mon Syndic Bénévole';
+}
+
+export function buildSyndicReactivationEmail(params: SyndicReactivationEmailParams): string {
+  const { syndicPrenom, coproCount, coproprietairesCount, dashboardUrl } = params;
+
+  const hasNoCopro = coproCount === 0;
+
+  const stateText = hasNoCopro
+    ? `Vous n'avez pas encore créé de copropriété dans votre espace.`
+    : coproprietairesCount < 2
+      ? `Votre copropriété est créée, mais vous n'avez pas encore ajouté vos copropriétaires.`
+      : `Votre espace est configuré — vous pouvez pleinement gérer votre copropriété.`;
+
+  const ctaLabel = hasNoCopro
+    ? 'Créer ma copropriété →'
+    : coproprietairesCount < 2
+      ? 'Ajouter mes copropriétaires →'
+      : 'Accéder à mon tableau de bord →';
+
+  const features = `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:10px;border:1px solid ${COLOR.border};overflow:hidden">
+  <tr style="background:#f8fafc">
+    <td style="padding:12px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0;font-size:14px;font-weight:700;color:${COLOR.text}">📋 Appels de fonds</p>
+      <p style="margin:4px 0 0;font-size:13px;color:${COLOR.muted};line-height:1.5">
+        Créez et envoyez vos avis de paiement en quelques clics. Les relances aux copropriétaires impayés sont automatiques.
+      </p>
+    </td>
+  </tr>
+  <tr style="background:${COLOR.white}">
+    <td style="padding:12px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0;font-size:14px;font-weight:700;color:${COLOR.text}">📄 Documents</p>
+      <p style="margin:4px 0 0;font-size:13px;color:${COLOR.muted};line-height:1.5">
+        Centralisez PV d'AG, contrats et règlements. Vos copropriétaires y accèdent directement.
+      </p>
+    </td>
+  </tr>
+  <tr style="background:#f8fafc">
+    <td style="padding:12px 16px">
+      <p style="margin:0;font-size:14px;font-weight:700;color:${COLOR.text}">🔔 Incidents & communication</p>
+      <p style="margin:4px 0 0;font-size:13px;color:${COLOR.muted};line-height:1.5">
+        Suivez les incidents déclarés par les copropriétaires et communiquez sans passer par les e-mails personnels.
+      </p>
+    </td>
+  </tr>
+</table>`;
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.green}">Votre espace vous attend</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">Mon Syndic Bénévole</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">Bonjour <strong>${h(syndicPrenom)}</strong>,</p>
+<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Il y a 3 semaines, vous avez rejoint Mon Syndic Bénévole. ${h(stateText)}
+</p>
+<p style="margin:0 0 4px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Gérer une copropriété en bénévole, c'est chronophage — on le sait. La plateforme est là pour vous faire gagner du temps sur les tâches répétitives :
+</p>
+
+${features}
+
+${ctaButton(ctaLabel, dashboardUrl, COLOR.green)}
+
+<p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};line-height:1.6">
+  Cet e-mail vous est envoyé car votre compte Mon Syndic Bénévole est actif. Si vous souhaitez ne plus recevoir ces messages, contactez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.muted}">contact@mon-syndic-benevole.fr</a>.
+</p>`;
+
+  return wrapEmail(content, COLOR.green, 'Votre espace Mon Syndic Bénévole vous attend — 3 min pour reprendre en main');
 }
 
 export function buildIncidentResoluSubject(titreIncident: string): string {

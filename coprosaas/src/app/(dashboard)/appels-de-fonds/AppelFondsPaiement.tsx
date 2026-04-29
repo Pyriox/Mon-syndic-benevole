@@ -17,7 +17,7 @@ import {
   CheckCircle, Clock, XCircle, Loader2,
   ChevronUp, X, ReceiptText, FileDown,
 } from 'lucide-react';
-
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 
 interface PosteDetail {
   libelle: string;
@@ -197,6 +197,20 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
 
     updateLignesState(ligne.id, { paye: true, date_paiement: date });
     await revalidateCoproFinance(appel.copropriete_id);
+    void logCurrentUserEvent({
+      eventType: 'paiement_confirme',
+      label: `Paiement reçu — ${appel.titre} — ${ligne.coproprietaires?.prenom ?? ''} ${ligne.coproprietaires?.nom ?? ''}`.trim(),
+      metadata: {
+        appelId: appel.id,
+        appelTitre: appel.titre,
+        ligneId: ligne.id,
+        coproprietaireId: ligne.coproprietaires?.id ?? null,
+        coproprietaireNom: `${ligne.coproprietaires?.prenom ?? ''} ${ligne.coproprietaires?.nom ?? ''}`.trim(),
+        montant: ligne.montant_du,
+        datePaiement: date,
+        coproprieteId: appel.copropriete_id ?? null,
+      },
+    });
     setPayingId(null);
     setToggling(null);
   };
@@ -242,6 +256,19 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
 
     updateLignesState(ligne.id, { paye: false, date_paiement: null });
     await revalidateCoproFinance(appel.copropriete_id);
+    void logCurrentUserEvent({
+      eventType: 'paiement_annule',
+      label: `Paiement annulé — ${appel.titre} — ${ligne.coproprietaires?.prenom ?? ''} ${ligne.coproprietaires?.nom ?? ''}`.trim(),
+      metadata: {
+        appelId: appel.id,
+        appelTitre: appel.titre,
+        ligneId: ligne.id,
+        coproprietaireId: ligne.coproprietaires?.id ?? null,
+        coproprietaireNom: `${ligne.coproprietaires?.prenom ?? ''} ${ligne.coproprietaires?.nom ?? ''}`.trim(),
+        montant: ligne.montant_du,
+        coproprieteId: appel.copropriete_id ?? null,
+      },
+    });
     setToggling(null);
   };
 

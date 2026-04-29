@@ -17,12 +17,15 @@ export async function POST() {
   const now = new Date().toISOString();
 
   // Mise à jour du profil + session atomique en parallèle (best-effort)
+  // update() plutôt que upsert() : évite un INSERT incomplet si la ligne
+  // profiles n'existe pas encore (colonnes NOT NULL sans valeur fournie).
   const [{ data: sessionId }, { error: profileError }] = await Promise.all([
     admin.rpc('upsert_user_session', { p_user_id: user.id }),
-    admin.from('profiles').upsert({ id: user.id, last_active_at: now }, { onConflict: 'id' }),
+    admin.from('profiles').update({ last_active_at: now }).eq('id', user.id),
   ]);
 
   if (profileError) {
+    console.error('[ping] last_active_at update failed:', profileError.message);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 
