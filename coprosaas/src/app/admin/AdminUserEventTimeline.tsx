@@ -62,6 +62,15 @@ const SEVERITY_DOT: Record<string, string> = {
   error: 'bg-red-500',
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuid(v: unknown): boolean {
+  return typeof v === 'string' && UUID_RE.test(v.trim());
+}
+
+/** Clés dont la valeur est un identifiant sans utilité dans l'affichage. */
+const SKIP_PLAIN_KEYS = new Set(['id', 'coproid', 'copropriete_id', 'coproprietaireid', 'coproprietaireld', 'lot_id', 'appel_id', 'session_id']);
+
 function formatMetaValue(v: unknown, maxLen = 80): string {
   if (v === null || v === undefined) return '—';
   if (typeof v === 'string') return v.length > maxLen ? `${v.slice(0, maxLen)}…` : v;
@@ -90,6 +99,8 @@ function parseMetadataEntries(metadata: Record<string, unknown>): {
     const a = after as Record<string, unknown>;
     const keys = new Set([...Object.keys(b), ...Object.keys(a)]);
     for (const k of keys) {
+      // Ignorer les clés id (jamais significatives dans un diff)
+      if (k === 'id') continue;
       if (JSON.stringify(b[k]) !== JSON.stringify(a[k])) {
         diff.push({ key: k, oldVal: formatMetaValue(b[k]), newVal: formatMetaValue(a[k]) });
       }
@@ -101,6 +112,9 @@ function parseMetadataEntries(metadata: Record<string, unknown>): {
   }
 
   for (const [k, v] of Object.entries(rest)) {
+    // Ignorer les clés d'identifiant pur et les valeurs UUID isolées
+    if (SKIP_PLAIN_KEYS.has(k.toLowerCase())) continue;
+    if (isUuid(v)) continue;
     plain.push({ key: k, val: formatMetaValue(v) });
   }
 
