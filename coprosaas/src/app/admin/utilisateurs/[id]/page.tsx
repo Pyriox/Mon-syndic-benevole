@@ -16,7 +16,7 @@ import { PlanBadge, RoleBadge } from '../../AdminBadges';
 
 const EVENT_CATEGORY_MAP = {
   billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_succeeded', 'payment_failed'],
-  account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'login_success', 'login_failed', 'email_confirmation_resent'],
+  account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'login_success', 'login_failed', 'email_confirmation_resent', 'ticket_created'],
   admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
 } as const;
 
@@ -413,7 +413,7 @@ export default async function AdminUtilisateurProfilePage({
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <Clock size={14} className="text-gray-500" />
-              <p className="text-sm font-semibold text-gray-800">Journal utilisateur (100 derniers événements)</p>
+              <p className="text-sm font-semibold text-gray-800">Journal utilisateur</p>
             </div>
             <p className="text-xs text-gray-400">{filteredEvents.length} résultat{filteredEvents.length > 1 ? 's' : ''} · 10 par page</p>
           </div>

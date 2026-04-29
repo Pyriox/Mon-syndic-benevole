@@ -168,7 +168,8 @@ export async function POST(
       email: user.email,
       eventType: 'ag_status_changed',
       label: `Statut AG modifié : ${ag.statut} → terminee`,
-      metadata: { agId, coproId: copro.syndic_id, oldStatus: ag.statut, newStatus: 'terminee', quorumAtteint },
+      coproprieteId: ag.copropriete_id,
+      metadata: { agId, coproId: ag.copropriete_id, oldStatus: ag.statut, newStatus: 'terminee', quorumAtteint },
     });
   }
 

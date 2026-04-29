@@ -82,7 +82,7 @@ export async function saveLot(data: {
         coproId: data.coproprieteId,
         lotId: data.lotId,
         before: previousLot,
-        updates: {
+        after: {
           numero: data.numero.trim(),
           type: data.type,
         },

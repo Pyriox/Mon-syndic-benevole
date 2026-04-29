@@ -209,7 +209,6 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
         coproprietaireNom: `${ligne.coproprietaires?.prenom ?? ''} ${ligne.coproprietaires?.nom ?? ''}`.trim(),
         montant: ligne.montant_du,
         datePaiement: date,
-        coproprieteId: appel.copropriete_id ?? null,
       },
     });
     setPayingId(null);
@@ -268,7 +267,6 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
         coproprietaireId: ligne.coproprietaires?.id ?? null,
         coproprietaireNom: `${ligne.coproprietaires?.prenom ?? ''} ${ligne.coproprietaires?.nom ?? ''}`.trim(),
         montant: ligne.montant_du,
-        coproprieteId: appel.copropriete_id ?? null,
       },
     });
     setToggling(null);

@@ -19,7 +19,7 @@ export async function POST(
 
   const { data: ag } = await supabase
     .from('assemblees_generales')
-    .select('id, titre, statut, convocation_envoyee_le, coproprietes(syndic_id)')
+    .select('id, titre, statut, convocation_envoyee_le, copropriete_id, coproprietes(syndic_id)')
     .eq('id', agId)
     .single();
 
@@ -52,6 +52,7 @@ export async function POST(
       eventType: 'ag_status_changed',
       label: `Statut AG modifié : ${ag.statut} → annulee (${ag.titre})`,
       severity: 'warning',
+      coproprieteId: (ag as { copropriete_id?: string }).copropriete_id,
       metadata: { agId, oldStatus: ag.statut, newStatus: 'annulee' },
     });
   }
