@@ -17,7 +17,6 @@ import { PlanBadge, RoleBadge } from '../../AdminBadges';
 const EVENT_CATEGORY_MAP = {
   billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_succeeded', 'payment_failed'],
   account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'login_success', 'login_failed', 'email_confirmation_resent'],
-  activity: ['copropriete_created', 'copropriete_updated', 'appel_fonds_created', 'appel_fonds_status_changed', 'appel_fonds_deleted', 'ag_created', 'ag_status_changed', 'coproprietaire_added', 'coproprietaire_updated', 'coproprietaire_deleted', 'lot_added', 'lot_updated', 'lot_deleted', 'document_added', 'document_updated', 'document_deleted', 'ticket_created', 'paiement_confirme', 'paiement_annule'],
   admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
 } as const;
 
@@ -95,6 +94,7 @@ export default async function AdminUtilisateurProfilePage({
       .from('user_events')
       .select('id, event_type, label, created_at, severity, metadata')
       .eq('user_id', id)
+      .is('copropriete_id', null)
       .order('created_at', { ascending: false })
       .limit(100),
   ]);
@@ -128,7 +128,7 @@ export default async function AdminUtilisateurProfilePage({
     severity?: 'info' | 'warning' | 'error';
     metadata?: Record<string, unknown> | null;
   }>;
-  const currentLogCategory = logCategory === 'billing' || logCategory === 'account' || logCategory === 'activity' || logCategory === 'admin'
+  const currentLogCategory = logCategory === 'billing' || logCategory === 'account' || logCategory === 'admin'
     ? logCategory
     : 'all';
   const currentLogLevel = logLevel === 'warning' || logLevel === 'error'
@@ -420,7 +420,6 @@ export default async function AdminUtilisateurProfilePage({
                 { key: 'all', label: 'Tout' },
                 { key: 'account', label: 'Compte' },
                 { key: 'billing', label: 'Facturation' },
-                { key: 'activity', label: 'Activité' },
                 { key: 'admin', label: 'Admin' },
               ] as const).map((item) => (
                 <Link

@@ -214,6 +214,7 @@ export async function POST(
       email: user.email,
       eventType: 'appel_fonds_status_changed',
       label: `Statut appel de fonds modifié : brouillon → publie (${appel.titre})`,
+      coproprieteId: appel.copropriete_id,
       metadata: { appelId, oldStatus: 'brouillon', newStatus: 'publie', sendImmediately },
     });
   }

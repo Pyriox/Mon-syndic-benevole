@@ -312,6 +312,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
     void logCurrentUserEvent({
       eventType: 'ag_created',
       label: `AG créée — ${titreFinal}`,
+      coproprieteId: formData.copropriete_id,
     }).catch(() => undefined);
 
     const createdAgId = ag.id;

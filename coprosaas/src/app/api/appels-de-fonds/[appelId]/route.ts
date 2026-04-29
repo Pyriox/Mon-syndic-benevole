@@ -50,6 +50,7 @@ export async function DELETE(
         email: user.email,
         eventType: 'appel_fonds_deleted',
         label: `Appel de fonds supprimé : ${appel.titre}`,
+        coproprieteId: appel.copropriete_id,
         severity: 'warning',
         metadata: { appelId, previousStatus: appel.statut },
       });
@@ -122,6 +123,7 @@ export async function DELETE(
       email: user.email,
       eventType: 'appel_fonds_status_changed',
       label: `Statut appel de fonds modifié : ${appel.statut} → annulee (${appel.titre})`,
+      coproprieteId: appel.copropriete_id,
       severity: 'warning',
       metadata: { appelId, oldStatus: appel.statut, newStatus: 'annulee' },
     });

@@ -685,6 +685,7 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
     void logCurrentUserEvent({
       eventType: 'appel_fonds_created',
       label: `${nb} appel${nb > 1 ? 's' : ''} de fonds créé${nb > 1 ? 's' : ''} — ${titre.trim()}`,
+      coproprieteId: coproprieteId,
     }).catch(() => undefined);
     await revalidateCoproFinance(coproprieteId);
     router.refresh();

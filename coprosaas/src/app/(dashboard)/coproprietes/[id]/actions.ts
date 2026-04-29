@@ -77,6 +77,7 @@ export async function saveLot(data: {
     await logCurrentUserEvent({
       eventType: 'lot_updated',
       label: `Lot modifié : ${data.numero.trim()}`,
+      coproprieteId: data.coproprieteId,
       metadata: {
         coproId: data.coproprieteId,
         lotId: data.lotId,
@@ -106,6 +107,7 @@ export async function saveLot(data: {
     await logCurrentUserEvent({
       eventType: 'lot_added',
       label: `Lot ajouté : ${payload.numero}`,
+      coproprieteId: data.coproprieteId,
       metadata: {
         coproId: data.coproprieteId,
         lotId: createdLot?.id,
@@ -148,6 +150,7 @@ export async function deleteLot(lotId: string, coproprieteId: string): Promise<{
   await logCurrentUserEvent({
     eventType: 'lot_deleted',
     label: `Lot supprimé : ${previousLot?.numero ?? lotId}`,
+    coproprieteId: coproprieteId,
     metadata: {
       coproId: coproprieteId,
       lotId,
@@ -226,6 +229,7 @@ export async function saveCoproprieteSettings(data: {
   await logCurrentUserEvent({
     eventType: 'copropriete_updated',
     label: `Paramétrage de la copropriété modifié : ${data.nom.trim()}`,
+    coproprieteId: data.coproprieteId,
     metadata: {
       coproId: data.coproprieteId,
       before: copro,
@@ -276,6 +280,7 @@ export async function updateCopropriete(data: {
   await logCurrentUserEvent({
     eventType: 'copropriete_updated',
     label: `Copropriété modifiée : ${data.nom.trim()}`,
+    coproprieteId: data.coproprieteId,
     metadata: {
       coproId: data.coproprieteId,
       before,

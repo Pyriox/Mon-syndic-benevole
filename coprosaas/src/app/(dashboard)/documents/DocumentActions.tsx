@@ -329,7 +329,7 @@ export function DocumentMenu({
   dossiers,
   readOnly = false,
 }: {
-  doc: { id: string; nom: string };
+  doc: { id: string; nom: string; copropriete_id?: string | null };
   dossiers: { id: string; nom: string; parent_id?: string | null }[];
   readOnly?: boolean;
 }) {
@@ -356,6 +356,7 @@ export function DocumentMenu({
     void logCurrentUserEvent({
       eventType: 'document_updated',
       label: `Document renommé : ${localDoc.nom} → ${nextNom}`,
+      coproprieteId: localDoc.copropriete_id ?? null,
       metadata: { documentId: localDoc.id, before: { nom: localDoc.nom }, after: { nom: nextNom } },
     }).catch(() => undefined);
     setLocalDoc((prev) => ({ ...prev, nom: nextNom }));
@@ -370,6 +371,7 @@ export function DocumentMenu({
     void logCurrentUserEvent({
       eventType: 'document_updated',
       label: `Document déplacé : ${localDoc.nom}`,
+      coproprieteId: localDoc.copropriete_id ?? null,
       metadata: {
         documentId: localDoc.id,
         after: { dossier_id: targetId, dossier_nom: dossiers.find((d) => d.id === targetId)?.nom ?? null },
@@ -386,6 +388,7 @@ export function DocumentMenu({
     void logCurrentUserEvent({
       eventType: 'document_deleted',
       label: `Document supprimé : ${localDoc.nom}`,
+      coproprieteId: localDoc.copropriete_id ?? null,
       metadata: { documentId: localDoc.id },
       severity: 'warning',
     }).catch(() => undefined);

@@ -53,8 +53,9 @@ const EVENT_META: Record<string, { icon: string; label: string; color: string }>
   admin_syndic_reassigned: { icon: '⇆', label: 'Syndic réassigné (admin)', color: 'text-cyan-700 bg-cyan-50 border-cyan-200' },
   admin_copro_updated: { icon: '🏢', label: 'Copropriété modifiée (admin)', color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
   admin_impersonation_link_created: { icon: '🔐', label: 'Lien d’impersonation généré', color: 'text-purple-700 bg-purple-50 border-purple-200' },
-  admin_coproprietaire_updated: { icon: '👤', label: 'Copropriétaire modifié (admin)', color: 'text-teal-700 bg-teal-50 border-teal-200' },
-};
+  admin_coproprietaire_updated: { icon: '👤', label: 'Copropriétaire modifié (admin)', color: 'text-teal-700 bg-teal-50 border-teal-200' },  onboarding_copro_reminder_j2_sent: { icon: '✉', label: 'Email relance J+2', color: 'text-sky-600 bg-sky-50 border-sky-200' },
+  onboarding_copro_reminder_j7_sent: { icon: '✉', label: 'Email relance J+7', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  onboarding_copro_reminder_j21_sent: { icon: '↺', label: 'Email réactivation J+21', color: 'text-orange-600 bg-orange-50 border-orange-200' },};
 
 const SEVERITY_DOT: Record<string, string> = {
   info: 'bg-gray-300',

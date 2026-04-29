@@ -149,6 +149,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
     void logCurrentUserEvent({
       eventType: 'coproprietaire_added',
       label: `Copropriétaire ajouté — ${nom}`,
+      coproprieteId: formData.copropriete_id,
       metadata: {
         coproId: formData.copropriete_id,
         coproprietaireId: cp.id,
@@ -473,6 +474,7 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
     void logCurrentUserEvent({
       eventType: 'coproprietaire_updated',
       label: `Copropriétaire modifié — ${nextNom}`,
+      coproprieteId: coproprieteId,
       metadata: {
         coproId: coproprieteId,
         coproprietaireId: coproprietaire.id,
@@ -638,11 +640,13 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
 // ============================================================
 export function CoproprietaireDelete({
   id,
+  coproprieteId,
   nom,
   assignedLotIds = [],
   onDeleted,
 }: {
   id: string;
+  coproprieteId?: string | null;
   nom: string;
   assignedLotIds?: string[];
   onDeleted?: (id: string, freedLotIds: string[]) => void;
@@ -659,6 +663,7 @@ export function CoproprietaireDelete({
     void logCurrentUserEvent({
       eventType: 'coproprietaire_deleted',
       label: `Copropriétaire supprimé — ${nom}`,
+      coproprieteId: coproprieteId ?? null,
       metadata: {
         coproprietaireId: id,
         freedLotIds: assignedLotIds,

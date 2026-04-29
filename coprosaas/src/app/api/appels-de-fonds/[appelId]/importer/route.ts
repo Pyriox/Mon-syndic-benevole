@@ -111,6 +111,7 @@ export async function POST(
       email: user.email,
       eventType: 'appel_fonds_status_changed',
       label: `Statut appel de fonds modifié : ${appel.statut} → confirme (${appel.titre})`,
+      coproprieteId: appel.copropriete_id,
       metadata: { appelId, oldStatus: appel.statut, newStatus: 'confirme' },
     });
   }

@@ -5,14 +5,15 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { isAdminUser } from '@/lib/admin-config';
-import { ArrowLeft, History, TrendingDown, TrendingUp, Users, FileText, CalendarDays, CreditCard, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Clock, History, TrendingDown, TrendingUp, Users, FileText, CalendarDays, CreditCard, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import AdminCoproprietaireActionsLazy from '../../AdminCoproprietaireActionsLazy';
 import AdminPagination from '../../AdminPagination';
 import AdminSearch from '../../AdminSearch';
 import CoproprietaireBalanceHistoryLazy from '../../CoproprietaireBalanceHistoryLazy';
 import AdminStorageExplorerLazy from './AdminStorageExplorerLazy';
-import { resolveAdminBackHref } from '@/lib/admin-list-params';
+import AdminUserEventTimeline from '../../AdminUserEventTimeline';
+import { resolveAdminBackHref, buildAdminPath } from '@/lib/admin-list-params';
 import { formatAdminDate, formatAdminDateTime } from '@/lib/admin-format';
 import { buildAdminCoproFinancialView, getAdminBalanceSourceLabel } from '@/lib/admin-copro-finance';
 import { PlanBadge } from '../../AdminBadges';
@@ -22,20 +23,20 @@ export default async function AdminCoproDetail({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ from?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ from?: string; q?: string; page?: string; logPage?: string; logLevel?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !(await isAdminUser(user.id, supabase))) redirect('/dashboard');
 
   const { id } = await params;
-  const { from, q, page } = await searchParams;
+  const { from, q, page, logPage, logLevel } = await searchParams;
   const backHref = resolveAdminBackHref(from, '/admin/coproprietes');
   const admin = createAdminClient();
 
   const today = new Date().toISOString().split('T')[0];
 
-  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }, { data: allAppels }, { data: ags }, { data: coproAddons }] = await Promise.all([
+  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }, { data: allAppels }, { data: ags }, { data: coproAddons }, { data: coproEventsRaw }] = await Promise.all([
     admin
       .from('coproprietes')
       .select('id, nom, adresse, code_postal, ville, nombre_lots, plan, plan_id, plan_period_end, plan_cancel_at_period_end, stripe_customer_id, stripe_subscription_id, created_at')
@@ -76,9 +77,25 @@ export default async function AdminCoproDetail({
       .from('copro_addons')
       .select('addon_key, status, cancel_at_period_end')
       .eq('copropriete_id', id),
+    admin
+      .from('user_events')
+      .select('id, event_type, label, created_at, severity, metadata')
+      .eq('copropriete_id', id)
+      .order('created_at', { ascending: false })
+      .limit(200),
   ]);
 
   if (!copro) notFound();
+
+  // Journal copropriété
+  const LOG_PAGE_SIZE = 20;
+  const coproEvents = (coproEventsRaw ?? []) as { id: string; event_type: string; label: string; created_at: string; severity: 'info' | 'warning' | 'error' | null; metadata: Record<string, unknown> | null }[];
+  const filteredCoproEvents = logLevel && logLevel !== 'all'
+    ? coproEvents.filter(e => e.severity === logLevel)
+    : coproEvents;
+  const logCurrentPage = Math.max(1, parseInt(logPage ?? '1', 10));
+  const logTotalPages = Math.max(1, Math.ceil(filteredCoproEvents.length / LOG_PAGE_SIZE));
+  const coproEventsPage = filteredCoproEvents.slice((logCurrentPage - 1) * LOG_PAGE_SIZE, logCurrentPage * LOG_PAGE_SIZE);
 
   function daysFromNow(dateStr: string): number {
     return Math.round((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -597,6 +614,44 @@ export default async function AdminCoproDetail({
           <p className="text-sm font-semibold text-gray-900">Documents (Storage)</p>
         </div>
         <AdminStorageExplorerLazy coproId={id} />
+      </section>
+
+      {/* ── Journal d'activité ── */}
+      <section id="journal" className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-gray-400" />
+            <p className="text-sm font-semibold text-gray-900">
+              Journal d&apos;activité
+              <span className="ml-2 text-xs font-normal text-gray-500">({filteredCoproEvents.length} événement{filteredCoproEvents.length !== 1 ? 's' : ''})</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {(['all', 'info', 'warning', 'error'] as const).map(level => (
+              <Link
+                key={level}
+                href={buildAdminPath(`/admin/coproprietes/${id}`, { from, q, page, logPage: '1', logLevel: level === 'all' ? undefined : level })}
+                className={`text-xs px-2 py-0.5 rounded border transition-colors ${
+                  (logLevel ?? 'all') === level
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                }`}
+              >
+                {level === 'all' ? 'Tous' : level}
+              </Link>
+            ))}          </div>
+        </div>
+        <AdminUserEventTimeline
+          events={coproEventsPage}
+          currentPage={logCurrentPage}
+          totalPages={logTotalPages}
+          totalItems={filteredCoproEvents.length}
+          basePath={`/admin/coproprietes/${id}`}
+          pageParamName="logPage"
+          pageSize={LOG_PAGE_SIZE}
+          queryParams={{ from, q, page, logLevel: logLevel ?? undefined }}
+          emptyMessage="Aucun événement enregistré pour cette copropriété."
+        />
       </section>
     </div>
   );

@@ -174,6 +174,7 @@ export async function POST(req: NextRequest) {
       email: user.email,
       eventType: 'document_added',
       label: `Document ajouté : ${nom.trim()}`,
+      coproprieteId: copropriete_id,
       metadata: {
         copropriete_id,
         dossier_id: dossier_id || null,

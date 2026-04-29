@@ -200,6 +200,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
     void logCurrentUserEvent({
       eventType: 'paiement_confirme',
       label: `Paiement reçu — ${appel.titre} — ${ligne.coproprietaires?.prenom ?? ''} ${ligne.coproprietaires?.nom ?? ''}`.trim(),
+      coproprieteId: appel.copropriete_id ?? null,
       metadata: {
         appelId: appel.id,
         appelTitre: appel.titre,
@@ -259,6 +260,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
     void logCurrentUserEvent({
       eventType: 'paiement_annule',
       label: `Paiement annulé — ${appel.titre} — ${ligne.coproprietaires?.prenom ?? ''} ${ligne.coproprietaires?.nom ?? ''}`.trim(),
+      coproprieteId: appel.copropriete_id ?? null,
       metadata: {
         appelId: appel.id,
         appelTitre: appel.titre,

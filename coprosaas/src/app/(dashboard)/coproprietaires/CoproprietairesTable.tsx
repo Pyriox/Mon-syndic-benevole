@@ -318,6 +318,7 @@ function MobileCoproCard({
           />
           <CoproprietaireDelete
             id={cp.id}
+            coproprieteId={coproprieteId}
             nom={displayName}
             assignedLotIds={ownedLots.map((l) => l.id)}
             onDeleted={onDeleteCoproprietaire}
@@ -438,6 +439,7 @@ function SortableCoproRow({
           />
           <CoproprietaireDelete
             id={cp.id}
+            coproprieteId={coproprieteId}
             nom={displayName}
             assignedLotIds={ownedLots.map((l) => l.id)}
             onDeleted={onDeleteCoproprietaire}

@@ -667,6 +667,7 @@ export default function AGStatusActions({
     void logCurrentUserEvent({
       eventType: 'ag_status_changed',
       label: 'Statut AG modifié : creation → planifiee',
+      coproprieteId: coproprieteId,
       metadata: { agId, coproId: coproprieteId, oldStatus: 'creation', newStatus: 'planifiee' },
     }).catch(() => undefined);
     router.refresh();

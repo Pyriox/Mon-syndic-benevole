@@ -22,6 +22,8 @@ export type LogUserEventInput = {
   severity?: EventSeverity;
   metadata?: Record<string, unknown>;
   userId?: string | null;
+  /** Copropriété associée à l'événement (pour les événements d'activité). */
+  coproprieteId?: string | null;
   /** Session d'utilisation interne. Disponible via getCurrentSessionId() (client uniquement). */
   sessionId?: string | null;
 };
@@ -32,6 +34,7 @@ export async function logCurrentUserEvent({
   severity = 'info',
   metadata,
   userId,
+  coproprieteId,
   sessionId,
 }: LogUserEventInput): Promise<void> {
   try {
@@ -49,6 +52,7 @@ export async function logCurrentUserEvent({
       label: label.trim(),
       severity,
       metadata: metadata ?? null,
+      copropriete_id: coproprieteId ?? null,
       session_id: sessionId ?? null,
     });
   } catch {
@@ -64,6 +68,7 @@ export async function logEventForEmail({
   severity = 'info',
   metadata,
   userId,
+  coproprieteId,
   sessionId,
 }: LogUserEventInput & { email: string }): Promise<void> {
   try {
@@ -77,6 +82,7 @@ export async function logEventForEmail({
       label: label.trim(),
       severity,
       metadata: metadata ?? null,
+      copropriete_id: coproprieteId ?? null,
       session_id: sessionId ?? null,
     });
   } catch {
