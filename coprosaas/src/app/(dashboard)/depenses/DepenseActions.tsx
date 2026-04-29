@@ -356,8 +356,8 @@ export default function DepenseActions({
         repartition_cible: '',
       });
     }
-    await revalidateCoproFinance(formData.copropriete_id);
     router.refresh();
+    void revalidateCoproFinance(formData.copropriete_id);
   };
 
   return (
@@ -609,8 +609,8 @@ export function DepenseDelete({ depenseId, coproprieteId }: { depenseId: string;
       return;
     }
     toast.success('Dépense supprimée.');
-    await revalidateCoproFinance(coproprieteId);
     router.refresh();
+    void revalidateCoproFinance(coproprieteId);
   };
 
   return (
