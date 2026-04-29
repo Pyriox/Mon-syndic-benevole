@@ -20,6 +20,12 @@ const EVENT_CATEGORY_MAP = {
   admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
 } as const;
 
+const USER_LEVEL_EVENT_TYPES: string[] = [
+  ...EVENT_CATEGORY_MAP.billing,
+  ...EVENT_CATEGORY_MAP.account,
+  ...EVENT_CATEGORY_MAP.admin,
+];
+
 export default async function AdminUtilisateurProfilePage({
   params,
   searchParams,
@@ -94,7 +100,7 @@ export default async function AdminUtilisateurProfilePage({
       .from('user_events')
       .select('id, event_type, label, created_at, severity, metadata')
       .eq('user_id', id)
-      .is('copropriete_id', null)
+      .in('event_type', USER_LEVEL_EVENT_TYPES)
       .order('created_at', { ascending: false })
       .limit(100),
   ]);
