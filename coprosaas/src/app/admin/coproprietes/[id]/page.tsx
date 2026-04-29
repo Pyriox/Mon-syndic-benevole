@@ -620,41 +620,44 @@ export default async function AdminCoproDetail({
       </section>
 
       {/* ── Journal d'activité ── */}
-      <section id="journal" className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock size={16} className="text-gray-400" />
-            <p className="text-sm font-semibold text-gray-900">
-              Journal d&apos;activité
-              <span className="ml-2 text-xs font-normal text-gray-500">({coproEvents.length} événement{coproEvents.length !== 1 ? 's' : ''})</span>
-            </p>
+      <section id="journal">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Clock size={14} className="text-gray-500" />
+              <p className="text-sm font-semibold text-gray-800">
+                Journal d&apos;activité
+                <span className="ml-2 text-xs font-normal text-gray-500">({coproEvents.length} événement{coproEvents.length !== 1 ? 's' : ''})</span>
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(['all', 'info', 'warning', 'error'] as const).map(level => (
+                <Link
+                  key={level}
+                  href={buildAdminPath(`/admin/coproprietes/${id}`, { from, q, page, logPage: '1', logLevel: level === 'all' ? undefined : level })}
+                  className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                    (logLevel ?? 'all') === level
+                      ? 'border-gray-800 bg-gray-800 text-white'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
+                  }`}
+                >
+                  {level === 'all' ? 'Tous niveaux' : level === 'info' ? 'Info' : level === 'warning' ? 'Warnings' : 'Erreurs'}
+                </Link>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {(['all', 'info', 'warning', 'error'] as const).map(level => (
-              <Link
-                key={level}
-                href={buildAdminPath(`/admin/coproprietes/${id}`, { from, q, page, logPage: '1', logLevel: level === 'all' ? undefined : level })}
-                className={`text-xs px-2 py-0.5 rounded border transition-colors ${
-                  (logLevel ?? 'all') === level
-                    ? 'bg-gray-900 text-white border-gray-900'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-                }`}
-              >
-                {level === 'all' ? 'Tous' : level}
-              </Link>
-            ))}          </div>
+          <AdminUserEventTimeline
+            events={coproEventsPage}
+            currentPage={logCurrentPage}
+            totalPages={logTotalPages}
+            totalItems={coproEvents.length}
+            basePath={`/admin/coproprietes/${id}`}
+            pageParamName="logPage"
+            pageSize={LOG_PAGE_SIZE}
+            queryParams={{ from, q, page, logLevel: logLevel ?? undefined }}
+            emptyMessage="Aucun événement enregistré pour cette copropriété."
+          />
         </div>
-        <AdminUserEventTimeline
-          events={coproEventsPage}
-          currentPage={logCurrentPage}
-          totalPages={logTotalPages}
-          totalItems={coproEvents.length}
-          basePath={`/admin/coproprietes/${id}`}
-          pageParamName="logPage"
-          pageSize={LOG_PAGE_SIZE}
-          queryParams={{ from, q, page, logLevel: logLevel ?? undefined }}
-          emptyMessage="Aucun événement enregistré pour cette copropriété."
-        />
       </section>
     </div>
   );
