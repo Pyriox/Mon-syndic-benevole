@@ -42,6 +42,7 @@ FROM (
     c.id   AS copropriete_id
   FROM public.user_events ue2
   JOIN auth.users au ON au.email = ue2.user_email
+  -- Seulement les utilisateurs ayant exactement une copropriété
   JOIN public.coproprietes c ON c.syndic_id = au.id
   WHERE ue2.copropriete_id IS NULL
     AND ue2.event_type IN (
@@ -53,9 +54,12 @@ FROM (
       'document_added', 'document_updated', 'document_deleted',
       'paiement_confirme', 'paiement_annule'
     )
-  GROUP BY ue2.id, c.id
-  -- N'agir que si l'utilisateur n'a qu'une seule copropriété
-  -- (évite toute attribution erronée sur les comptes multi-copros)
-  HAVING COUNT(c.id) OVER (PARTITION BY ue2.user_email) = 1
+    -- N'agir que si l'utilisateur n'a qu'une seule copropriété
+    -- (évite toute attribution erronée sur les comptes multi-copros)
+    AND (
+      SELECT COUNT(*)
+      FROM public.coproprietes c2
+      WHERE c2.syndic_id = au.id
+    ) = 1
 ) sub
 WHERE ue.id = sub.event_id;
