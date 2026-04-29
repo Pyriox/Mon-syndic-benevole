@@ -113,7 +113,7 @@ export default function DepenseActions({
 
       const { data, error: fetchError } = await supabase
         .from('lots')
-        .select('id, numero, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes')
+        .select('id, numero, tantiemes, coproprietaire_id, batiment, groupes_repartition, tantiemes_groupes, coproprietaires(id, nom, prenom)')
         .eq('copropriete_id', formData.copropriete_id);
 
       if (cancelled) return;
@@ -128,7 +128,7 @@ export default function DepenseActions({
       setLots((data ?? []).map((lot) => ({
         ...lot,
         coproprietaire_id: lot.coproprietaire_id ?? null,
-        coproprietaire: null,
+        coproprietaire: Array.isArray(lot.coproprietaires) ? (lot.coproprietaires[0] ?? null) : (lot.coproprietaires ?? null),
       })));
       setLotsLoading(false);
     };
