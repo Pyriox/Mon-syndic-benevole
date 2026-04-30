@@ -18,7 +18,7 @@ export function buildWelcomeEmail(params: WelcomeEmailParams): string {
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bienvenue';
   const coproUrl = `${SITE_URL}/coproprietes`;
   const coproprietairesUrl = `${SITE_URL}/coproprietaires`;
-  const appelsUrl = `${SITE_URL}/appels-de-fonds`;
+  const documentsUrl = `${SITE_URL}/documents`;
 
   const content = `
 <h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Bienvenue sur Mon Syndic Bénévole</h1>
@@ -53,16 +53,11 @@ export function buildWelcomeEmail(params: WelcomeEmailParams): string {
   <tr><td style="height:8px"></td></tr>
   <tr>
     <td style="padding:12px 16px;border-left:3px solid #8b5cf6;background:#f5f3ff;border-radius:0 6px 6px 0">
-      <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:${COLOR.text}">4. Ajouter vos copropriétaires puis créer votre premier appel de fonds</p>
-      <p style="margin:0;font-size:13px;color:${COLOR.muted}">Associez chaque copropriétaire à ses lots, puis ouvrez « Appels de fonds » pour publier votre premier appel.</p>
+      <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:${COLOR.text}">4. Ajouter vos copropriétaires et déposer vos documents</p>
+      <p style="margin:0;font-size:13px;color:${COLOR.muted}">Associez chaque copropriétaire à ses lots. Déposez ensuite dans l'espace « Documents » les pièces essentielles de votre copropriété&nbsp;: règlement de copropriété, état descriptif de division, contrats en cours (assurance multirisque…).</p>
     </td>
   </tr>
 </table>
-
-<div style="margin:0 0 20px;padding:12px 14px;background:#eff6ff;border-left:3px solid ${COLOR.blue};border-radius:0 8px 8px 0">
-  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#1d4ed8">Important</p>
-  <p style="margin:0;font-size:13px;color:#1e3a8a;line-height:1.5">Les tantièmes généraux se règlent désormais dans <strong>Paramétrage</strong>, onglet <strong>Répartition des charges</strong> — plus dans la fiche lot.</p>
-</div>
 
 ${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.green)}
 
@@ -72,12 +67,12 @@ ${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.green)}
   &nbsp;·&nbsp;
   <a href="${coproprietairesUrl}" style="color:${COLOR.blue};font-weight:600">Copropriétaires</a>
   &nbsp;·&nbsp;
-  <a href="${appelsUrl}" style="color:${COLOR.blue};font-weight:600">Appels de fonds</a>
+  <a href="${documentsUrl}" style="color:${COLOR.blue};font-weight:600">Documents</a>
 </p>
 
 <div style="margin:20px 0;padding:14px 16px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0">
   <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#92400e">Besoin d'un coup de main&nbsp;?</p>
-  <p style="margin:0 0 8px;font-size:13px;color:#78350f;line-height:1.5">Consultez notre guide de prise en main pour configurer vos lots, vos tantièmes, vos copropriétaires et votre premier appel de fonds.</p>
+  <p style="margin:0 0 8px;font-size:13px;color:#78350f;line-height:1.5">Consultez notre guide de prise en main pour configurer vos lots, vos tantièmes et vos copropriétaires.</p>
   <a href="${SITE_URL}/blog/migrer-vers-mon-syndic-benevole" style="font-size:13px;font-weight:600;color:#92400e">Lire le guide →</a>
 </div>
 
