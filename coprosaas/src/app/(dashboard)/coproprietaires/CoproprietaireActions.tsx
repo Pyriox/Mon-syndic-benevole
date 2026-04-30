@@ -15,6 +15,7 @@ import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
 import { setCoproprietaireBalanceManually } from '@/lib/coproprietaire-balance';
 import { Plus, Mail, UserPlus, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Copropriete {
   id: string;
@@ -187,6 +188,7 @@ export default function CoproprietaireActions({ coproprietes, showLabel, onAdded
     setFormData({ copropriete_id: coproprietes[0]?.id ?? '', nom: '', prenom: '', email: '', telephone: '', adresse: '', complement_adresse: '', code_postal: '', ville: '', raison_sociale: '', solde_reprise: '', solde_reason: '' });
     setIsSci(false);
     setSelectedLotIds([]);
+    toast.success('Copropriétaire ajouté.');
     if (onAdded) {
       onAdded(nextCoproprietaire, selectedLotIds);
     } else {
@@ -521,6 +523,7 @@ export function CoproprietaireEdit({ coproprieteId, coproprietaire, lots, assign
 
     setLoading(false);
     setIsOpen(false);
+    toast.success('Copropriétaire modifié.');
     if (onSaved) {
       onSaved(nextCoproprietaire, selectedLotIds);
     } else {
@@ -672,6 +675,7 @@ export function CoproprietaireDelete({
     }).catch(() => undefined);
     setIsOpen(false);
     setLoading(false);
+    toast.success('Copropriétaire supprimé.');
     if (onDeleted) {
       onDeleted(id, assignedLotIds);
     } else {

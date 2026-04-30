@@ -13,6 +13,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { logClientEvent } from '@/lib/client-log-event';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
+import { toast } from 'sonner';
 import {
   collectAvailableRepartitionGroups,
   formatEuros,
@@ -687,6 +688,7 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
       label: `${nb} appel${nb > 1 ? 's' : ''} de fonds créé${nb > 1 ? 's' : ''} — ${titre.trim()}`,
       coproprieteId: coproprieteId,
     });
+    toast.success(`${nb} appel${nb > 1 ? 's' : ''} de fonds créé${nb > 1 ? 's' : ''}.`);
     await revalidateCoproFinance(coproprieteId);
     router.refresh();
   };

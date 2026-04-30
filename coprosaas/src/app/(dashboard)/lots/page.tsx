@@ -12,6 +12,7 @@ import { getLots, getCoproprietaires } from '@/lib/cached-queries';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
 import PageHelp from '@/components/ui/PageHelp';
+import TermTooltip from '@/components/ui/TermTooltip';
 import Link from 'next/link';
 import { Building2, Car, Archive, ShoppingBag, Briefcase, LayoutGrid, ExternalLink, Users, UserCheck, Mail, AlertCircle } from 'lucide-react';
 import { getLotRepartitionGroups, sanitizeTantiemesGroupesMap } from '@/lib/utils';
@@ -182,8 +183,9 @@ export default async function LotsPage() {
         )}
       </div>
 
-      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
-        Chaque lot correspond à une partie privative ou annexe de l’immeuble et sert de base aux tantièmes, aux votes d’AG et aux répartitions de charges.
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'} helpHref="/aide#tantiemes-repartition">
+        Chaque lot correspond à une partie privative ou annexe de l’immeuble et sert de base aux{' '}
+        <TermTooltip term="tantiemes" />, aux votes d’AG et aux répartitions de charges.
       </PageHelp>
 
       {allLots.length > 0 ? (
@@ -346,7 +348,9 @@ export default async function LotsPage() {
                   <th className="text-left py-3 px-5 font-medium text-gray-500">Lot</th>
                   <th className="text-left py-3 px-5 font-medium text-gray-500">Type</th>
                   <th className="py-3 px-5 font-medium text-gray-500">
-                    <span className="flex items-center justify-end gap-1">Tantièmes</span>
+                    <span className="flex items-center justify-end gap-1">
+                      <TermTooltip term="tantiemes">Tantièmes</TermTooltip>
+                    </span>
                   </th>
                   <th className="text-left py-3 px-5 font-medium text-gray-500 w-40">Quote-part</th>
                   <th className="text-left py-3 px-5 font-medium text-gray-500">Copropriétaire</th>

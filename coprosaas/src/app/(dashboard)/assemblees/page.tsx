@@ -107,7 +107,7 @@ export default async function AssembleesPage({ searchParams }: { searchParams: P
         </div>
       </div>
 
-      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'} helpHref={isSyndic ? '/aide#creer-convocation-ag' : undefined}>
         {isSyndic
           ? 'Préparez ici l’ordre du jour, suivez le déroulé de l’assemblée générale et conservez les résolutions et procès-verbaux.'
           : 'Retrouvez ici les dates d’AG, les convocations et les résolutions liées à votre copropriété.'}

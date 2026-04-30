@@ -12,6 +12,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import { logClientEvent } from '@/lib/client-log-event';
+import { toast } from 'sonner';
 import {
   collectAvailableRepartitionGroups,
   formatEuros,
@@ -315,6 +316,7 @@ export default function AGActions({ coproprietes, showLabel, specialChargesEnabl
       coproprieteId: formData.copropriete_id,
     });
 
+    toast.success('Brouillon d’AG créé.');
     const createdAgId = ag.id;
     resetAndClose();
     router.push(`/assemblees/${createdAgId}`);

@@ -154,7 +154,7 @@ export default async function CoproprietairesPage() {
         {isSyndic && (coproprietaires?.length ?? 0) > 0 && <CoproprietaireActions coproprietes={coproprietes} />}
       </div>
 
-      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'} helpHref={isSyndic ? '/aide#inviter-coproprietaires' : undefined}>
         {isSyndic
           ? 'Tenez ici le registre des copropriétaires, utile pour les convocations d’AG, les appels de fonds, le suivi des lots et l’historique financier des soldes.'
           : 'Consultez ici la liste des copropriétaires et la répartition des tantièmes au sein de l’immeuble.'}

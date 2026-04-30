@@ -79,7 +79,7 @@ export default async function RegularisationPage({
         <AnneeSelector annee={annee} />
       </div>
 
-      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'} helpHref="/aide#regularisation-annuelle">
         {isSyndic
           ? 'Comparez ici les provisions appelées et les dépenses réelles de l’exercice pour déterminer le solde final de chaque copropriétaire.'
           : 'Consultez ici si l’exercice fait apparaître un complément à payer ou un trop-perçu à reporter sur votre compte.'}

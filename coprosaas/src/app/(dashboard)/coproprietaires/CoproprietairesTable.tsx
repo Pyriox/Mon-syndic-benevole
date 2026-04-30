@@ -23,6 +23,7 @@ import { CoproprietaireEdit, CoproprietaireDelete, CoproprietaireInvite, type Co
 import CoproprietaireBalanceHistory, { type BalanceEventRow } from './CoproprietaireBalanceHistory';
 import { formatEuros } from '@/lib/utils';
 import { GripVertical, Mail, Phone, UserCheck } from 'lucide-react';
+import TermTooltip from '@/components/ui/TermTooltip';
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return '';
@@ -611,9 +612,9 @@ export default function CoproprietairesTable({
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="py-3 px-2 w-6"></th>
                 <th className="text-left py-3 px-5 font-medium text-gray-500">Copropriétaire</th>
-                <th className="text-left py-3 px-5 font-medium text-gray-500 min-w-[200px]">Lots &amp; tantièmes</th>
+                <th className="text-left py-3 px-5 font-medium text-gray-500 min-w-[200px]">Lots &amp; <TermTooltip term="tantiemes">tantièmes</TermTooltip></th>
                 <th className="text-left py-3 px-5 font-medium text-gray-500">Contact</th>
-                <th className="text-right py-3 px-5 font-medium text-gray-500">Solde</th>
+                <th className="text-right py-3 px-5 font-medium text-gray-500"><TermTooltip term="solde">Solde</TermTooltip></th>
                 <th className="py-3 px-5"></th>
               </tr>
             </thead>

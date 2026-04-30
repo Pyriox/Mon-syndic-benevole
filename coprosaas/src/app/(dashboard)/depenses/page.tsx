@@ -634,7 +634,7 @@ export default async function DepensesPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
 
-      <PageHelp>
+      <PageHelp helpHref="/aide#enregistrer-depense">
         Enregistrez ici les factures et charges réellement payées par la copropriété pour suivre l’exécution du budget et préparer la régularisation annuelle.
       </PageHelp>
 

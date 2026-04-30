@@ -963,3 +963,113 @@ export async function SyndicDashboardAssemblies({ coproId }: { coproId: string }
     </Card>
   );
 }
+
+// ============================================================
+// OnboardingChecklist : guide pas-à-pas pour les nouveaux syndics
+// N'est affiché que si la copropriété vient d'être créée
+// (aucun lot, aucun copropriétaire, aucune AG, aucun appel).
+// ============================================================
+export async function OnboardingChecklist({ coproId }: { coproId: string }) {
+  const data = await getSyndicDashboardSnapshotCached(coproId);
+
+  const hasLots        = data.nbLots > 0;
+  const hasCopros      = data.nbCoproprietaires > 0;
+  const hasAG          = data.assemblees.length > 0 || data.agEnCours !== null || data.prochaineAG !== null;
+  const hasAppels      = data.hasProvisions;
+
+  // Ne plus afficher une fois tous les modules remplis
+  if (hasLots && hasCopros && hasAG && hasAppels) return null;
+
+  const steps: { done: boolean; label: string; href: string; hint: string }[] = [
+    {
+      done: true,
+      label: 'Copropriété créée',
+      href: '/coproprietes',
+      hint: 'Votre espace est prêt.',
+    },
+    {
+      done: hasLots,
+      label: 'Ajouter les lots',
+      href: '/lots',
+      hint: 'Renseignez les parties privatives (appartements, caves, parkings…) et leurs tantièmes.',
+    },
+    {
+      done: hasCopros,
+      label: 'Ajouter les copropriétaires',
+      href: '/coproprietaires',
+      hint: 'Créez les fiches de chaque copropriétaire, associez-les à leurs lots.',
+    },
+    {
+      done: hasAG,
+      label: 'Préparer la première AG',
+      href: '/assemblees',
+      hint: 'Créez le brouillon, ajoutez l\'ordre du jour et le budget prévisionnel.',
+    },
+    {
+      done: hasAppels,
+      label: 'Émettre un appel de fonds',
+      href: '/appels-de-fonds',
+      hint: 'Publiez votre premier appel après approbation du budget en AG.',
+    },
+  ];
+
+  const doneCount = steps.filter((s) => s.done).length;
+  const pct = Math.round((doneCount / steps.length) * 100);
+  const nextStep = steps.find((s) => !s.done);
+
+  return (
+    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3">
+      {/* En-tête */}
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-blue-900">Démarrage — {doneCount}/{steps.length} étapes complètes</p>
+          {nextStep && (
+            <p className="text-xs text-blue-700 mt-0.5">
+              Prochaine étape : <span className="font-medium">{nextStep.label}</span>
+            </p>
+          )}
+        </div>
+        <span className="shrink-0 text-xs font-bold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
+          {pct} %
+        </span>
+      </div>
+
+      {/* Barre de progression */}
+      <div className="h-1.5 rounded-full bg-blue-200 overflow-hidden">
+        <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${pct}%` }} />
+      </div>
+
+      {/* Étapes */}
+      <ol className="space-y-2">
+        {steps.map((step, i) => (
+          <li key={i} className="flex items-start gap-2.5">
+            <span
+              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                step.done
+                  ? 'bg-green-500 text-white'
+                  : 'bg-white border-2 border-blue-300 text-blue-500'
+              }`}
+            >
+              {step.done ? '✓' : i + 1}
+            </span>
+            <div className="min-w-0">
+              {step.done ? (
+                <span className="text-sm text-gray-500 line-through">{step.label}</span>
+              ) : (
+                <Link
+                  href={step.href}
+                  className="text-sm font-medium text-blue-700 hover:underline"
+                >
+                  {step.label} →
+                </Link>
+              )}
+              {!step.done && (
+                <p className="text-xs text-gray-500 mt-0.5">{step.hint}</p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}

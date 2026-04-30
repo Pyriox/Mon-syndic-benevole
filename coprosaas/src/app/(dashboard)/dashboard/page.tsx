@@ -12,6 +12,7 @@ import { Suspense } from 'react';
 import Card from '@/components/ui/Card';
 import PageHelp from '@/components/ui/PageHelp';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
+import SectionErrorBoundary from '@/components/ui/SectionErrorBoundary';
 import { Building2 } from 'lucide-react';
 import {
   CoproDashboardAlert,
@@ -26,6 +27,7 @@ import {
   SyndicDashboardMetrics,
   SyndicDashboardTasks,
   SyndicNextAction,
+  OnboardingChecklist,
   DashboardHeaderSkeleton,
   DashboardAlertSkeleton,
   DashboardKpiGridSkeleton,
@@ -111,28 +113,46 @@ export default async function DashboardPage() {
 
       {copropriete && userRole !== 'copropriétaire' && (
         <>
+          <Suspense fallback={null}>
+            <SectionErrorBoundary>
+              <OnboardingChecklist coproId={scopeId} />
+            </SectionErrorBoundary>
+          </Suspense>
+
           <Suspense fallback={<DashboardAlertSkeleton />}>
-            <SyndicDashboardAlert coproId={scopeId} />
+            <SectionErrorBoundary>
+              <SyndicDashboardAlert coproId={scopeId} />
+            </SectionErrorBoundary>
           </Suspense>
 
           <Suspense fallback={<DashboardPanelSkeleton />}>
-            <SyndicNextAction coproId={scopeId} />
+            <SectionErrorBoundary>
+              <SyndicNextAction coproId={scopeId} />
+            </SectionErrorBoundary>
           </Suspense>
 
           <Suspense fallback={<DashboardKpiGridSkeleton columns={3} />}>
-            <SyndicDashboardMetrics coproId={scopeId} />
+            <SectionErrorBoundary>
+              <SyndicDashboardMetrics coproId={scopeId} />
+            </SectionErrorBoundary>
           </Suspense>
 
           <Suspense fallback={<DashboardPanelSkeleton cards={2} />}>
-            <SyndicDashboardBudgetPanels coproId={scopeId} />
+            <SectionErrorBoundary>
+              <SyndicDashboardBudgetPanels coproId={scopeId} />
+            </SectionErrorBoundary>
           </Suspense>
 
           <Suspense fallback={<DashboardPanelSkeleton cards={2} />}>
-            <SyndicDashboardTasks coproId={scopeId} />
+            <SectionErrorBoundary>
+              <SyndicDashboardTasks coproId={scopeId} />
+            </SectionErrorBoundary>
           </Suspense>
 
           <Suspense fallback={<DashboardPanelSkeleton />}>
-            <SyndicDashboardAssemblies coproId={scopeId} />
+            <SectionErrorBoundary>
+              <SyndicDashboardAssemblies coproId={scopeId} />
+            </SectionErrorBoundary>
           </Suspense>
         </>
       )}

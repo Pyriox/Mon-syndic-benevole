@@ -155,7 +155,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
         </div>
       </div>
 
-      <PageHelp tone={isSyndic ? 'blue' : 'slate'}>
+      <PageHelp tone={isSyndic ? 'blue' : 'slate'} helpHref={isSyndic ? '/aide#premier-appel-fonds' : undefined}>
         {isSyndic
           ? 'Les appels de fonds correspondent aux provisions demandées aux copropriétaires pour financer le budget voté en AG et les dépenses à venir. Pour un appel standard, terminez d’abord votre AG ; sinon, créez un appel exceptionnel.'
           : 'Consultez ici vos avis de paiement, leurs échéances et l’état de vos règlements pour l’exercice en cours.'}

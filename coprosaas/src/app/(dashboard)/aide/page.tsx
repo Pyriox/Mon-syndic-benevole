@@ -80,21 +80,26 @@ type FaqEntry = {
   answer: ReactNode;
   category: keyof typeof CATEGORIES;
   links?: Array<{ href: string; label: string }>;
+  /** Ancre HTML utilisée pour les liens directs depuis d'autres pages (#slug) */
+  slug?: string;
 };
 
 const FAQ: FaqEntry[] = [
   {
     category: 'demarrage',
+    slug: 'demarrage-etapes',
     question: 'Quelles sont les étapes pour configurer ma copropriété et émettre mon premier appel de fonds ?',
     answer: 'Commencez par renseigner vos Lots, ajoutez les Copropriétaires, configurez le Paramétrage, préparez votre première AG, puis émettez vos Appels de fonds.',
   },
   {
     category: 'demarrage',
+    slug: 'demarrage-reprise',
     question: "Je prends la gestion en cours d'année — que faire des appels de fonds déjà émis ?",
     answer: "Ressaisissez les appels de fonds de l'année en cours (même un seul appel global couvrant les trimestres passés) et marquez directement comme payés les versements déjà encaissés après publication. Le tableau de bord affichera ainsi les bons soldes et impayés dès le premier jour. Pour les copropriétaires qui avaient un solde sur l'ancien outil, utilisez le champ « Solde à la reprise » lors de leur ajout.",
   },
   {
     category: 'demarrage',
+    slug: 'inviter-coproprietaires',
     question: "Comment inviter mes copropriétaires sur la plateforme ?",
     answer: "Depuis la page Copropriétaires, cliquez sur le bouton « Inviter » en face de chaque copropriétaire. Un e-mail leur sera envoyé avec un lien d'accès à leur espace personnel (solde, documents, convocations AG). L'invitation est facultative : la plateforme fonctionne pleinement sans que les copropriétaires soient connectés.",
   },
@@ -105,11 +110,13 @@ const FAQ: FaqEntry[] = [
   },
   {
     category: 'finances',
+    slug: 'premier-appel-fonds',
     question: "Comment émettre un premier appel de fonds ?",
     answer: "Depuis « Appels de fonds », cliquez sur « Créer ». Si vous avez déjà une AG terminée avec un budget approuvé, l'application la présélectionne automatiquement et importe le budget. Sinon, choisissez « Appel exceptionnel sans AG » pour saisir le montant et la date librement. La répartition par tantièmes est calculée automatiquement.",
   },
   {
     category: 'finances',
+    slug: 'enregistrer-depense',
     question: "Comment enregistrer une dépense et la répartir entre copropriétaires ?",
     answer: "Depuis la page « Dépenses », cliquez sur « Ajouter », puis renseignez le titre, la catégorie, le montant et la date. L'application calcule automatiquement la répartition entre copropriétaires selon les tantièmes (ou selon la clé choisie si vous utilisez les charges spéciales). Les montants sont ensuite repris dans la régularisation annuelle ; les paiements, eux, se suivent dans « Appels de fonds ».",
   },
@@ -120,11 +127,13 @@ const FAQ: FaqEntry[] = [
   },
   {
     category: 'finances',
+    slug: 'regularisation-annuelle',
     question: "Comment fonctionne la régularisation annuelle des charges ?",
     answer: "En fin d'exercice, depuis la page « Régularisation », l'application compare les provisions appelées et les dépenses réelles pour calculer automatiquement le solde de chaque copropriétaire (complément à payer ou trop-perçu à rembourser). La régularisation est disponible à partir du 1er janvier de l'année suivante.",
   },
   {
     category: 'ag',
+    slug: 'creer-convocation-ag',
     question: "Comment créer et envoyer une convocation d'AG ?",
     answer: "Depuis « Assemblées », créez une AG (type, date, lieu) et ajoutez les résolutions à l'ordre du jour. Une fois planifiée, le bouton « Envoyer la convocation » génère un PDF et l'envoie par e-mail à tous les copropriétaires. Le délai légal est de 21 jours avant la date de l'AG.",
   },
@@ -140,6 +149,7 @@ const FAQ: FaqEntry[] = [
   },
   {
     category: 'app',
+    slug: 'tantiemes-repartition',
     question: 'Où régler les tantièmes et les clés de répartition spéciales ?',
     answer: 'Depuis la page de la copropriété, ouvrez « Paramétrage », puis l’onglet « Répartition des charges ». C’est ici que vous ajustez les tantièmes généraux, ajoutez les clés spéciales (ascenseur, bâtiment, parking…) et vérifiez les bases utilisées dans les appels de fonds, les dépenses et la régularisation.',
   },
@@ -189,13 +199,13 @@ const FAQ_COPRO: FaqEntry[] = [
 ];
 
 // ── Composant accordéon FAQ ──────────────────────────────────
-function FaqItem({ question, answer, category, links, defaultOpen = false }: FaqEntry & {
+function FaqItem({ question, answer, category, links, slug, defaultOpen = false }: FaqEntry & {
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const cat = CATEGORIES[category];
   return (
-    <div className="border-b border-gray-100 last:border-0">
+    <div id={slug} className="border-b border-gray-100 last:border-0" style={slug ? { scrollMarginTop: '5rem' } : undefined}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

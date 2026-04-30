@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
@@ -100,6 +101,7 @@ export default function IncidentActions({ coproprietes, showLabel }: IncidentAct
 
       setLoading(false);
       closeModal();
+      toast.success(isTravaux ? 'Travaux ajoutés.' : 'Incident signalé.');
       router.replace('/incidents');
     } catch {
       setError('Une erreur réseau est survenue. Réessayez.');
