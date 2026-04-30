@@ -4,6 +4,7 @@ import Card from '@/components/ui/Card';
 import CoproprietaireBalanceHistory from '../coproprietaires/CoproprietaireBalanceHistory';
 import { getCoproprietaireDashboardSnapshot, getSyndicDashboardSnapshot } from '@/lib/cached-queries';
 import { formatDate, formatEuros, LABELS_CATEGORIE } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/server';
 import {
   AlertTriangle,
   ArrowDown,
@@ -974,8 +975,16 @@ export async function OnboardingChecklist({ coproId }: { coproId: string }) {
 
   const hasLots        = data.nbLots > 0;
   const hasCopros      = data.nbCoproprietaires > 0;
-  const hasAG          = data.assemblees.length > 0 || data.agEnCours !== null || data.prochaineAG !== null;
   const hasAppels      = data.hasProvisions;
+
+  // Compte toutes les AG (y compris terminées / annulées) pour ne pas
+  // recréditer l'étape après clôture d'une AG.
+  const supabase = await createClient();
+  const { count: agCount } = await supabase
+    .from('assemblees_generales')
+    .select('id', { count: 'exact', head: true })
+    .eq('copropriete_id', coproId);
+  const hasAG = (agCount ?? 0) > 0;
 
   // Ne plus afficher une fois tous les modules remplis
   if (hasLots && hasCopros && hasAG && hasAppels) return null;
