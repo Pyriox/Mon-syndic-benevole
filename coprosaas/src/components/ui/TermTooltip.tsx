@@ -13,7 +13,7 @@ const GLOSSARY: Record<string, { label: string; definition: string }> = {
   tantiemes: {
     label: 'tantièmes',
     definition:
-      'Fraction de la valeur totale de l'immeuble attribuée à chaque lot. Ils déterminent la quote-part de chaque copropriétaire dans les charges et les votes d'AG. La somme des tantièmes vaut généralement 1 000 ou 10 000.',
+      `Fraction de la valeur totale de l'immeuble attribuée à chaque lot. Ils déterminent la quote-part de chaque copropriétaire dans les charges et les votes d'AG. La somme des tantièmes vaut généralement 1 000 ou 10 000.`,
   },
   solde: {
     label: 'solde',
@@ -28,7 +28,7 @@ const GLOSSARY: Record<string, { label: string; definition: string }> = {
   regularisation: {
     label: 'régularisation',
     definition:
-      'Opération annuelle comparant les provisions appelées pendant l'exercice aux dépenses réelles. Elle génère soit un complément à payer, soit un trop-perçu à créditer sur le solde de chaque copropriétaire.',
+      `Opération annuelle comparant les provisions appelées pendant l'exercice aux dépenses réelles. Elle génère soit un complément à payer, soit un trop-perçu à créditer sur le solde de chaque copropriétaire.`,
   },
   quote_part: {
     label: 'quote-part',
@@ -43,7 +43,7 @@ const GLOSSARY: Record<string, { label: string; definition: string }> = {
   postes: {
     label: 'postes',
     definition:
-      'Lignes de détail d'un appel de fonds ou d'un budget d'AG. Chaque poste correspond à une nature de dépense (ex. entretien courant, assurance, travaux) avec son propre montant et sa clé de répartition.',
+      `Lignes de détail d'un appel de fonds ou d'un budget d'AG. Chaque poste correspond à une nature de dépense (ex. entretien courant, assurance, travaux) avec son propre montant et sa clé de répartition.`,
   },
   fonds_travaux: {
     label: 'fonds de travaux',
@@ -53,7 +53,7 @@ const GLOSSARY: Record<string, { label: string; definition: string }> = {
   quorum: {
     label: 'quorum',
     definition:
-      'Nombre minimal de voix (en tantièmes) nécessaire pour que l'assemblée générale puisse valablement délibérer. Sans quorum, l'AG doit être reconvoquée.',
+      `Nombre minimal de voix (en tantièmes) nécessaire pour que l'assemblée générale puisse valablement délibérer. Sans quorum, l'AG doit être reconvoquée.`,
   },
 };
 
