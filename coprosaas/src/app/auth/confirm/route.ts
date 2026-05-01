@@ -175,7 +175,11 @@ export async function GET(request: NextRequest) {
   const next        = getSafeAuthRedirectPath(searchParams.get('next'), defaultNext);
   // Pour une confirmation d'inscription réussie, on ajoute ?compte=active pour
   // afficher un message de confirmation sur la page de destination.
-  const nextWithConfirmation = (type === 'signup' && next === '/dashboard')
+  // - Flux PKCE (code) : emailRedirectTo n'est utilisé que dans signUp(), donc
+  //   tout code arrivant ici est une confirmation d'inscription. Supabase n'ajoute
+  //   pas systématiquement type=signup dans le redirect.
+  // - Flux token_hash : on peut se fier à type=signup.
+  const nextWithConfirmation = ((code != null || type === 'signup') && next === '/dashboard')
     ? '/dashboard?compte=active'
     : next;
 
@@ -214,11 +218,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Les follow-ups d'inscription (liaison invitation, log account_confirmed,
-    // e-mail de bienvenue) sont désormais idempotents et basés sur l'historique réel,
-    // plutôt que sur une fenêtre temporelle fragile de 2 minutes.
-    // On ne les déclenche que pour type=signup : les flux recovery/email_change
-    // n'ont pas à envoyer l'e-mail de bienvenue ni à lier les invitations.
-    if (type === 'signup' && data.user) {
+    // e-mail de bienvenue) sont désormais idempotents et basés sur l'historique réel.
+    // emailRedirectTo n'est utilisé que dans signUp(), donc tout code arrivant ici
+    // est une confirmation d'inscription — même si Supabase n'ajoute pas type=signup.
+    if (data.user) {
       const { id: userId, email } = data.user;
       if (email) {
         try {
