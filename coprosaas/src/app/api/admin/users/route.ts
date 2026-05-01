@@ -3,7 +3,7 @@
 // Toutes les actions requièrent d'être authentifié en tant qu'admin
 //
 // DELETE /api/admin/users?userId=xxx         → supprimer un utilisateur
-// POST   /api/admin/users  { action, ... }   → actions : resend_confirmation
+// POST   /api/admin/users  { action, ... }   → actions : resend_confirmation, resend_welcome
 // PATCH  /api/admin/users  { userId, email?, fullName? } → modifier email/nom
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
@@ -122,6 +122,70 @@ export async function POST(request: NextRequest) {
   const { action, email, userId } = body;
 
   const admin = createAdminClient();
+
+  // Renvoyer l'e-mail de bienvenue (réinitialise l'état idempotent puis renvoie)
+  if (action === 'resend_welcome') {
+    if (!email || !userId) return NextResponse.json({ error: 'email et userId requis' }, { status: 400 });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Supprimer les enregistrements d'idempotence pour autoriser le renvoi
+    await Promise.all([
+      admin
+        .from('email_deliveries')
+        .delete()
+        .eq('recipient_email', normalizedEmail)
+        .eq('template_key', 'welcome'),
+      admin
+        .from('user_events')
+        .delete()
+        .eq('user_email', normalizedEmail)
+        .eq('event_type', 'account_confirmed'),
+    ]);
+
+    // Récupérer les métadonnées pour le prénom
+    const { data: authUserData } = await admin.auth.admin.getUserById(userId);
+    const fullName = authUserData?.user?.user_metadata?.full_name as string | undefined;
+    const prenom = fullName ? (fullName.trim().split(' ')[0] ?? null) : null;
+
+    const { buildWelcomeEmail, buildWelcomeSubject } = await import('@/lib/emails/welcome');
+    const { trackResendSendResult } = await import('@/lib/email-delivery');
+    const { Resend } = await import('resend');
+    const { getCanonicalSiteUrl } = await import('@/lib/site-url');
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
+    const SITE_URL = getCanonicalSiteUrl();
+    const subject = buildWelcomeSubject();
+
+    const result = await resend.emails.send({
+      from: FROM,
+      to: normalizedEmail,
+      subject,
+      html: buildWelcomeEmail({ prenom, dashboardUrl: `${SITE_URL}/dashboard` }),
+    });
+
+    const tracked = await trackResendSendResult(result, {
+      templateKey: 'welcome',
+      recipientEmail: normalizedEmail,
+      recipientUserId: userId,
+      subject,
+      legalEventType: 'welcome_email',
+      legalReference: normalizedEmail,
+      payload: { flow: 'admin_resend' },
+    });
+
+    if (!tracked.ok) {
+      return NextResponse.json({ error: tracked.errorMessage ?? 'Erreur envoi' }, { status: 500 });
+    }
+
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_resend_confirmation',
+      label: `E-mail de bienvenue renvoyé — ${normalizedEmail}`,
+      metadata: { targetEmail: normalizedEmail, targetUserId: userId },
+    });
+    return NextResponse.json({ success: true });
+  }
 
   // Renvoyer l'email de confirmation (en utilisant magiclink au lieu de signup qui requiert password)
   if (action === 'resend_confirmation') {
