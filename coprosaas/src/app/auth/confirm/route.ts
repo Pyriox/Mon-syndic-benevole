@@ -173,13 +173,18 @@ export async function GET(request: NextRequest) {
   // Destination par défaut selon le type
   const defaultNext = type === 'recovery' ? '/reset-password' : '/dashboard';
   const next        = getSafeAuthRedirectPath(searchParams.get('next'), defaultNext);
+  // Pour une confirmation d'inscription réussie, on ajoute ?compte=active pour
+  // afficher un message de confirmation sur la page de destination.
+  const nextWithConfirmation = (type === 'signup' && next === '/dashboard')
+    ? '/dashboard?compte=active'
+    : next;
 
   // ── Flux PKCE : échange du code d'autorisation ──────────────────────
   // Supabase redirige ici avec ?code=AUTH_CODE après avoir vérifié le
   // token OTP sur ses serveurs (template {{ .ConfirmationURL }}).
   // Le code_verifier est dans les cookies du navigateur (@supabase/ssr).
   if (code) {
-    const successUrl = new URL(next, request.url);
+    const successUrl = new URL(nextWithConfirmation, request.url);
     const response   = NextResponse.redirect(successUrl);
 
     const supabase = createServerClient(
@@ -211,7 +216,9 @@ export async function GET(request: NextRequest) {
     // Les follow-ups d'inscription (liaison invitation, log account_confirmed,
     // e-mail de bienvenue) sont désormais idempotents et basés sur l'historique réel,
     // plutôt que sur une fenêtre temporelle fragile de 2 minutes.
-    if (data.user) {
+    // On ne les déclenche que pour type=signup : les flux recovery/email_change
+    // n'ont pas à envoyer l'e-mail de bienvenue ni à lier les invitations.
+    if (type === 'signup' && data.user) {
       const { id: userId, email } = data.user;
       if (email) {
         try {
@@ -249,7 +256,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Pré-création de la réponse de redirection pour pouvoir y attacher les cookies
-  const successUrl  = new URL(next, request.url);
+  const successUrl  = new URL(nextWithConfirmation, request.url);
   const response    = NextResponse.redirect(successUrl);
 
   const supabase = createServerClient(

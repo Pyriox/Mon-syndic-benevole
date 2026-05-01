@@ -12,6 +12,7 @@ import { Suspense } from 'react';
 import Card from '@/components/ui/Card';
 import PageHelp from '@/components/ui/PageHelp';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
+import AccountActivatedBanner from '@/components/ui/AccountActivatedBanner';
 import SectionErrorBoundary from '@/components/ui/SectionErrorBoundary';
 import { Building2 } from 'lucide-react';
 import {
@@ -40,6 +41,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <Suspense fallback={null}>
+        <AccountActivatedBanner />
+      </Suspense>
       {userRole !== 'copropriétaire' && copropriete && !isSubscribed(copropriete.plan) && (
         <ReadOnlyBanner freemium trialUsed={trialUsed} />
       )}

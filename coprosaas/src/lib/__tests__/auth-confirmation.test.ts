@@ -45,4 +45,15 @@ describe('shouldRunSignupFollowups', () => {
       }),
     ).toBe(true);
   });
+
+  it('runs follow-ups for PKCE even when emailConfirmedAt is null (Supabase may not populate it immediately)', () => {
+    expect(
+      shouldRunSignupFollowups({
+        flow: 'pkce',
+        emailConfirmedAt: null,
+        hasAccountConfirmedEvent: false,
+        hasWelcomeEmailDelivery: false,
+      }),
+    ).toBe(true);
+  });
 });

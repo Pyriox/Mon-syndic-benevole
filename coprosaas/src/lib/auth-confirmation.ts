@@ -26,11 +26,12 @@ export function shouldRunSignupFollowups(params: {
   hasAccountConfirmedEvent: boolean;
   hasWelcomeEmailDelivery: boolean;
 }): boolean {
-  const isConfirmed = params.flow === 'token_hash' || Boolean(params.emailConfirmedAt);
-
-  if (!isConfirmed) {
-    return false;
-  }
+  // Les deux flux n'atteignent cette fonction qu'après une confirmation réussie :
+  // - token_hash : verifyOtp a réussi
+  // - pkce : exchangeCodeForSession a réussi
+  // email_confirmed_at peut être null dans la réponse Supabase même si le compte
+  // vient d'être confirmé ; on ne l'utilise donc pas comme condition bloquante.
+  void params.emailConfirmedAt;
 
   return !params.hasAccountConfirmedEvent || !params.hasWelcomeEmailDelivery;
 }
