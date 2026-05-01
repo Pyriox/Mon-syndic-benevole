@@ -144,21 +144,12 @@ async function runSignupFollowups(params: {
 
   const { hasAccountConfirmedEvent, hasWelcomeEmailDelivery } = await getSignupFollowupState(admin, normalizedEmail);
 
-  console.log('[auth/confirm] followup-state', {
-    email: normalizedEmail,
-    flow,
-    emailConfirmedAt,
-    hasAccountConfirmedEvent,
-    hasWelcomeEmailDelivery,
-  });
-
   if (!shouldRunSignupFollowups({
     flow: flow === 'PKCE' ? 'pkce' : 'token_hash',
     emailConfirmedAt,
     hasAccountConfirmedEvent,
     hasWelcomeEmailDelivery,
   })) {
-    console.log('[auth/confirm] followup-skipped (shouldRunSignupFollowups=false)');
     return;
   }
 
@@ -169,9 +160,7 @@ async function runSignupFollowups(params: {
   }
 
   if (!hasWelcomeEmailDelivery) {
-    console.log('[auth/confirm] sending welcome email to', normalizedEmail);
     await sendWelcomeEmail({ email: normalizedEmail, prenom, flow, userId });
-    console.log('[auth/confirm] welcome email sent to', normalizedEmail);
   }
 }
 
