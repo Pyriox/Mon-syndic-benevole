@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, ShieldCheck, UserCog, Pencil, Loader2 } from 'lucide-react';
+import { Trash2, UserCog, Pencil, Loader2 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { AdminConfirmDialog, AdminDialogNotice, AdminPromptDialog } from './AdminActionDialog';
 
@@ -18,7 +18,7 @@ interface Props {
   userRole: 'syndic' | 'membre' | 'admin';
 }
 
-type ConfirmAction = 'delete' | 'toggle_admin' | 'toggle_role';
+type ConfirmAction = 'delete' | 'toggle_role';
 
 async function getErrorMessage(response: Response, fallback = 'Une erreur est survenue.'): Promise<string> {
   try {
@@ -156,17 +156,6 @@ export default function AdminUserActionsDetail({ userId, userEmail, fullName, is
       </Modal>
 
       <AdminConfirmDialog
-        isOpen={confirmAction === 'toggle_admin'}
-        onClose={() => setConfirmAction(null)}
-        title={isAdmin ? 'Retirer les droits admin' : 'Accorder les droits admin'}
-        description={<p>{isAdmin ? 'Retirer' : 'Accorder'} les droits administrateur à <strong>{userEmail}</strong> ?</p>}
-        confirmLabel={isAdmin ? 'Retirer admin' : 'Accorder admin'}
-        onConfirm={executeConfirmedAction}
-        isLoading={pendingAction === 'toggle_admin'}
-        tone={isAdmin ? 'danger' : 'primary'}
-      />
-
-      <AdminConfirmDialog
         isOpen={confirmAction === 'toggle_role'}
         onClose={() => setConfirmAction(null)}
         title={role === 'membre' ? 'Passer en Syndic' : 'Passer en Membre'}
@@ -209,10 +198,6 @@ export default function AdminUserActionsDetail({ userId, userEmail, fullName, is
           </button>
         )}
 
-        <button onClick={() => setConfirmAction('toggle_admin')} disabled={!!pendingAction} className={btnCls}>
-          <ShieldCheck size={12} className="mr-1.5" />
-          {isAdmin ? 'Retirer admin' : 'Rôle admin'}
-        </button>
       </div>
 
       <div className="mt-2 pt-2 border-t border-red-200/60">
