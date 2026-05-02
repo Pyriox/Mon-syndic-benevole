@@ -89,7 +89,7 @@ export default function AdminUserActionsDetail({ userId, userEmail, fullName, is
       response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: action === 'toggle_admin' ? 'toggle_admin' : 'toggle_role', userId }),
+        body: JSON.stringify({ action: 'toggle_role', userId }),
       });
     }
 
