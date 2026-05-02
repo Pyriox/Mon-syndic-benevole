@@ -172,6 +172,7 @@ export async function POST(req: NextRequest) {
   if (user.email) {
     await logEventForEmail({
       email: user.email,
+      userId: user.id,
       eventType: 'document_added',
       label: `Document ajouté : ${nom.trim()}`,
       coproprieteId: copropriete_id,

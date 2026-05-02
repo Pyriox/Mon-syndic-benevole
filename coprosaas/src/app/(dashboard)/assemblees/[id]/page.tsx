@@ -239,7 +239,7 @@ export default async function AGDetailPage({ params }: Props) {
           {/* Actions de gestion (modification / suppression) */}
           {(ag.statut === 'creation' || ag.statut === 'planifiee' || ag.statut === 'en_cours') && (
             <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
-              {canEdit && <AGEditInfos agId={id} dateAg={ag.date_ag} lieu={ag.lieu} />}
+              {canEdit && <AGEditInfos agId={id} dateAg={ag.date_ag} lieu={ag.lieu} coproprieteId={ag.copropriete_id} />}
               {ag.statut === 'creation' && <AGDelete agId={id} />}
               {(ag.statut === 'planifiee' || ag.statut === 'en_cours') && <AGAnnuler agId={id} />}
             </div>

@@ -7,7 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { isAdminUser } from '@/lib/admin-config';
-import { ArrowLeft, Clock, History, TrendingDown, TrendingUp, Users, FileText, CalendarDays, CreditCard, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Clock, History, TrendingDown, TrendingUp, Users, FileText, CalendarDays, CreditCard, ExternalLink, Send } from 'lucide-react';
 import Link from 'next/link';
 import AdminCoproprietaireActionsLazy from '../../AdminCoproprietaireActionsLazy';
 import AdminPagination from '../../AdminPagination';
@@ -38,7 +38,7 @@ export default async function AdminCoproDetail({
 
   const today = new Date().toISOString().split('T')[0];
 
-  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }, { data: allAppels }, { data: ags }, { data: coproAddons }, { data: coproEventsRaw }] = await Promise.all([
+  const [{ data: copro }, { data: coproprietaires }, { data: balanceEventsRows }, { data: appelsEchus }, { data: allAppels }, { data: ags }, { data: coproAddons }, { data: coproEventsRaw }, { data: coproEmailDeliveries }] = await Promise.all([
     admin
       .from('coproprietes')
       .select('id, nom, adresse, code_postal, ville, nombre_lots, plan, plan_id, plan_period_end, plan_cancel_at_period_end, stripe_customer_id, stripe_subscription_id, created_at')
@@ -91,6 +91,12 @@ export default async function AdminCoproDetail({
       }
       return eventsQuery;
     })(),
+    admin
+      .from('email_deliveries')
+      .select('id, template_key, subject, status, recipient_email, legal_event_type, sent_at, created_at')
+      .eq('copropriete_id', id)
+      .order('created_at', { ascending: false })
+      .limit(50),
   ]);
 
   if (!copro) notFound();
@@ -620,6 +626,33 @@ export default async function AdminCoproDetail({
         </div>
         <AdminStorageExplorerLazy coproId={id} />
       </section>
+
+      {/* ── Emails envoyés ── */}
+      {(coproEmailDeliveries ?? []).length > 0 && (
+        <section id="emails" className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Send size={16} className="text-gray-400" />
+            <p className="text-sm font-semibold text-gray-900">Emails envoyés ({(coproEmailDeliveries ?? []).length})</p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="divide-y divide-gray-100">
+              {(coproEmailDeliveries ?? []).map((d) => {
+                const delivery = d as { id: string; template_key: string; subject: string | null; status: string; recipient_email: string; legal_event_type: string | null; sent_at: string | null; created_at: string };
+                const statusColor = delivery.status === 'opened' ? 'text-green-700 bg-green-50 border-green-200' : delivery.status === 'delivered' ? 'text-blue-700 bg-blue-50 border-blue-200' : delivery.status === 'bounced' || delivery.status === 'failed' ? 'text-red-700 bg-red-50 border-red-200' : 'text-gray-600 bg-gray-50 border-gray-200';
+                return (
+                  <div key={delivery.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-gray-800 truncate">{delivery.subject ?? delivery.template_key}</p>
+                      <p className="text-xs text-gray-400">{delivery.recipient_email} · {formatAdminDateTime(delivery.sent_at ?? delivery.created_at)}</p>
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ${statusColor}`}>{delivery.status}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Journal d'activité ── */}
       <section id="journal">

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, Clock, LifeBuoy, Mail, MapPin, Phone, ShieldAlert, User2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, Clock, LifeBuoy, Mail, MapPin, Phone, ShieldAlert, User2, Send } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminUser } from '@/lib/admin-config';
@@ -17,14 +17,16 @@ import { PlanBadge, RoleBadge } from '../../AdminBadges';
 
 const EVENT_CATEGORY_MAP = {
   billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_succeeded', 'payment_failed'],
-  account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'login_success', 'login_failed', 'email_confirmation_resent', 'ticket_created'],
+  account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'password_reset_completed', 'login_success', 'login_failed', 'email_confirmation_resent', 'ticket_created'],
   admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
+  copro: ['copropriete_created', 'copropriete_updated', 'coproprietaire_added', 'coproprietaire_updated', 'coproprietaire_deleted', 'lot_added', 'lot_updated', 'lot_deleted', 'document_added', 'document_updated', 'document_deleted', 'ag_created', 'ag_updated', 'ag_status_changed', 'ag_pv_envoye', 'appel_fonds_created', 'appel_fonds_deleted', 'appel_fonds_status_changed', 'paiement_confirme', 'paiement_annule', 'depense_created', 'depense_updated', 'depense_deleted', 'invitation_accepted'],
 } as const;
 
 const USER_LEVEL_EVENT_TYPES: string[] = [
   ...EVENT_CATEGORY_MAP.billing,
   ...EVENT_CATEGORY_MAP.account,
   ...EVENT_CATEGORY_MAP.admin,
+  ...EVENT_CATEGORY_MAP.copro,
 ];
 
 export default async function AdminUtilisateurProfilePage({
@@ -80,6 +82,7 @@ export default async function AdminUtilisateurProfilePage({
     eventsRes,
     lastEventRes,
     lastSessionRes,
+    emailDeliveriesRes,
   ] = await Promise.all([
     admin
       .from('coproprietaires')
@@ -105,7 +108,7 @@ export default async function AdminUtilisateurProfilePage({
       .eq('user_id', id)
       .in('event_type', USER_LEVEL_EVENT_TYPES)
       .order('created_at', { ascending: false })
-      .limit(100),
+      .limit(200),
     // Dernière activité réelle (toutes actions métier, pas seulement connexion)
     email
       ? admin
@@ -124,6 +127,14 @@ export default async function AdminUtilisateurProfilePage({
       .order('last_activity_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    email
+      ? admin
+          .from('email_deliveries')
+          .select('id, template_key, subject, status, sent_at, created_at')
+          .eq('recipient_email', email)
+          .order('created_at', { ascending: false })
+          .limit(20)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   const syndicCopros = (syndicCoprosRes.data ?? []) as { id: string; nom: string; plan: string | null; plan_id: string | null; created_at: string }[];
@@ -165,7 +176,7 @@ export default async function AdminUtilisateurProfilePage({
     severity?: 'info' | 'warning' | 'error';
     metadata?: Record<string, unknown> | null;
   }>;
-  const currentLogCategory = logCategory === 'billing' || logCategory === 'account' || logCategory === 'admin'
+  const currentLogCategory = logCategory === 'billing' || logCategory === 'account' || logCategory === 'admin' || logCategory === 'copro'
     ? logCategory
     : 'all';
   const currentLogLevel = logLevel === 'warning' || logLevel === 'error'
@@ -448,6 +459,34 @@ export default async function AdminUtilisateurProfilePage({
         </section>
       </div>
 
+      {/* Emails reçus */}
+      {(emailDeliveriesRes.data ?? []).length > 0 && (
+        <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Send size={14} className="text-gray-500" />
+              <p className="text-sm font-semibold text-gray-800">Emails reçus ({(emailDeliveriesRes.data ?? []).length})</p>
+            </div>
+            <Link href={`/admin/emails?q=${encodeURIComponent(email)}`} className="text-xs text-indigo-600 hover:underline">Voir tout →</Link>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {(emailDeliveriesRes.data ?? []).map((d) => {
+              const delivery = d as { id: string; template_key: string; subject: string | null; status: string; sent_at: string | null; created_at: string };
+              const statusColor = delivery.status === 'opened' ? 'text-green-700 bg-green-50 border-green-200' : delivery.status === 'delivered' ? 'text-blue-700 bg-blue-50 border-blue-200' : delivery.status === 'bounced' || delivery.status === 'failed' ? 'text-red-700 bg-red-50 border-red-200' : 'text-gray-600 bg-gray-50 border-gray-200';
+              return (
+                <div key={delivery.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-gray-800 truncate">{delivery.subject ?? delivery.template_key}</p>
+                    <p className="text-xs text-gray-400">{formatAdminDateTime(delivery.sent_at ?? delivery.created_at)}</p>
+                  </div>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${statusColor}`}>{delivery.status}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 space-y-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -464,6 +503,7 @@ export default async function AdminUtilisateurProfilePage({
                 { key: 'all', label: 'Tout' },
                 { key: 'account', label: 'Compte' },
                 { key: 'billing', label: 'Facturation' },
+                { key: 'copro', label: 'Copropriété' },
                 { key: 'admin', label: 'Admin' },
               ] as const).map((item) => (
                 <Link

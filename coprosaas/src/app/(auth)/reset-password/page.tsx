@@ -18,6 +18,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
 import { ArrowLeft, ShieldCheck, KeyRound } from 'lucide-react';
+import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 
 type Stage =
   | 'verify_prompt'   // token_hash présent, en attente du clic utilisateur
@@ -103,6 +104,7 @@ function ResetPasswordForm() {
       return;
     }
 
+    logCurrentUserEvent({ eventType: 'password_reset_completed', label: 'Mot de passe réinitialisé' }).catch(() => undefined);
     setStage('done');
     setTimeout(() => router.push('/login'), 3000);
   };

@@ -79,7 +79,7 @@ async function getDossierConvocationsAG(
 }
 
 // ---- Modification de la date/heure et du lieu ----
-export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: string; lieu: string | null }) {
+export function AGEditInfos({ agId, dateAg, lieu, coproprieteId }: { agId: string; dateAg: string; lieu: string | null; coproprieteId: string }) {
   const router = useRouter();
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -114,6 +114,7 @@ export function AGEditInfos({ agId, dateAg, lieu }: { agId: string; dateAg: stri
       setLoading(false);
       return;
     }
+    logCurrentUserEvent({ eventType: 'ag_updated', label: `AG modifiée — date/lieu`, coproprieteId, metadata: { agId } }).catch(() => undefined);
     setIsOpen(false);
     router.refresh();
     setLoading(false);

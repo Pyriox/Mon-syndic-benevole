@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
   // Marquer l'invitation comme acceptée
   await admin.from('invitations').update({ statut: 'acceptee' }).eq('token', token);
 
-  await Promise.resolve(
+  await Promise.all([
     admin.from('user_events').insert({
       user_id: userId,
       user_email: invitation.email.toLowerCase(),
@@ -120,7 +120,16 @@ export async function POST(request: NextRequest) {
         copropriete_id: invitation.copropriete_id,
       },
     }),
-  ).catch(() => undefined);
+    admin.from('user_events').insert({
+      user_id: userId,
+      user_email: invitation.email.toLowerCase(),
+      event_type: 'invitation_accepted',
+      label: 'Invitation acceptée',
+      severity: 'info',
+      copropriete_id: invitation.copropriete_id,
+      metadata: { copropriete_id: invitation.copropriete_id },
+    }),
+  ]).catch(() => undefined);
 
   return NextResponse.json({ email: invitation.email });
 }

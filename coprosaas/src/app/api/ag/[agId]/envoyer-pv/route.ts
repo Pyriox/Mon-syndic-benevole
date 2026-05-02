@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
+import { logEventForEmail } from '@/lib/actions/log-user-event';
 import { buildPvPdfDisplayName } from '@/lib/pdf-filenames';
 import { formatDate, getParisYear } from '@/lib/utils';
 import { buildPVPdfAttachment } from '@/lib/ag-email-pdf';
@@ -281,6 +282,16 @@ ${ag.notes ? alertBanner(h(ag.notes), COLOR.amber, '#fffbeb') : ''}
 
   // Marquer la date du dernier envoi (côté serveur — le client fait la même chose en parallèle)
   if (sent > 0) {
+    if (user.email) {
+      logEventForEmail({
+        email: user.email,
+        userId: user.id,
+        eventType: 'ag_pv_envoye',
+        label: `PV AG envoyé — ${ag.titre}`,
+        coproprieteId: ag.copropriete_id,
+        metadata: { agId, sent, copropriete_id: ag.copropriete_id },
+      }).catch(() => undefined);
+    }
     await supabase
       .from('assemblees_generales')
       .update({ pv_envoye_le: new Date().toISOString() } as Record<string, unknown>)
