@@ -7,8 +7,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { isAdminUser } from '@/lib/admin-config';
-import { ArrowLeft, Clock, History, TrendingDown, TrendingUp, Users, FileText, CalendarDays, CreditCard, ExternalLink, Send } from 'lucide-react';
+import { ArrowLeft, Clock, History, TrendingDown, TrendingUp, Users, FileText, CalendarDays, CreditCard, ExternalLink, Send, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
+import AdminCoproActions from '../../AdminCoproActions';
 import AdminCoproprietaireActionsLazy from '../../AdminCoproprietaireActionsLazy';
 import AdminPagination from '../../AdminPagination';
 import AdminSearch from '../../AdminSearch';
@@ -179,6 +180,22 @@ export default async function AdminCoproDetail({
           {[copro.adresse, copro.code_postal, copro.ville].filter(Boolean).join(' · ')}
           {copro.nombre_lots ? ` · ${copro.nombre_lots} lot${copro.nombre_lots > 1 ? 's' : ''}` : ''}
         </p>
+      </div>
+
+      {/* ── Actions ── */}
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-4">
+        <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+          <ShieldAlert size={14} className="text-gray-500" /> Actions
+        </p>
+        <AdminCoproActions
+          coproId={id}
+          coproNom={copro.nom}
+          adresse={(copro as { adresse?: string | null }).adresse ?? null}
+          codePostal={(copro as { code_postal?: string | null }).code_postal ?? null}
+          ville={(copro as { ville?: string | null }).ville ?? null}
+          nombreLots={(copro as { nombre_lots?: number | null }).nombre_lots ?? null}
+          inlineMode
+        />
       </div>
 
       {/* ── Abonnement ── */}

@@ -5,7 +5,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MoreHorizontal, Loader2, UserCog, Pencil, Users } from 'lucide-react';
+import { MoreHorizontal, Loader2, UserCog, Pencil } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { appendAdminFrom } from '@/lib/admin-list-params';
 import { AdminDialogNotice, AdminPromptDialog } from './AdminActionDialog';
@@ -19,6 +19,7 @@ interface Props {
   ville?: string | null;
   nombreLots?: number | null;
   contextHref?: string;
+  inlineMode?: boolean;
 }
 
 async function getErrorMessage(response: Response, fallback = 'Une erreur est survenue.') {
@@ -39,6 +40,7 @@ export default function AdminCoproActions({
   ville,
   nombreLots,
   contextHref,
+  inlineMode = false,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -145,7 +147,81 @@ export default function AdminCoproActions({
     router.push(appendAdminFrom(`/admin/coproprietes/${coproId}`, contextHref ?? null));
   };
 
+  const btnCls = 'inline-flex items-center rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-gray-300 disabled:opacity-50 transition-colors';
+
   if (done) return <span className="text-xs font-medium text-green-600">✓</span>;
+
+  if (inlineMode) {
+    return (
+      <>
+        <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Modifier la copropriété" size="lg">
+          <form onSubmit={handleEditSubmit} className="space-y-3">
+            <AdminDialogNotice message={error} />
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700">Nom</label>
+              <input type="text" value={editNom} onChange={(e) => setEditNom(e.target.value)} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700">Adresse</label>
+              <input type="text" value={editAdresse} onChange={(e) => setEditAdresse(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700">Code postal</label>
+                <input type="text" value={editCodePostal} onChange={(e) => setEditCodePostal(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700">Ville</label>
+                <input type="text" value={editVille} onChange={(e) => setEditVille(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-700">Nombre de lots</label>
+              <input type="number" min={0} value={editNbLots} onChange={(e) => setEditNbLots(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button type="button" onClick={() => setEditOpen(false)} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-50">Annuler</button>
+              <button type="submit" disabled={pendingAction === 'edit'} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-blue-700 disabled:opacity-50">
+                {pendingAction === 'edit' && <Loader2 size={12} className="animate-spin" />}
+                {pendingAction === 'edit' ? 'Enregistrement…' : 'Enregistrer'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+
+        <AdminPromptDialog
+          isOpen={reassignOpen}
+          onClose={() => setReassignOpen(false)}
+          title="Réassigner le syndic"
+          description={<p>Entrez l&apos;adresse email du nouveau syndic pour <strong>{coproNom}</strong>.</p>}
+          label="Email du nouveau syndic"
+          value={reassignEmail}
+          onChange={setReassignEmail}
+          onConfirm={submitReassign}
+          confirmLabel="Réassigner"
+          placeholder="nom@exemple.fr"
+          isLoading={pendingAction === 'reassign_syndic'}
+          error={error}
+        />
+
+        <div className="flex flex-wrap gap-1.5">
+          <button onClick={openEdit} disabled={!!pendingAction} className={btnCls}>
+            {pendingAction === 'edit' ? <Loader2 size={12} className="mr-1.5 animate-spin" /> : <Pencil size={12} className="mr-1.5" />}
+            Modifier
+          </button>
+          <button
+            onClick={() => { setError(''); setReassignEmail(''); setReassignOpen(true); }}
+            disabled={!!pendingAction}
+            className={btnCls}
+          >
+            {pendingAction === 'reassign_syndic' ? <Loader2 size={12} className="mr-1.5 animate-spin" /> : <UserCog size={12} className="mr-1.5" />}
+            Réassigner le syndic
+          </button>
+          {error && !editOpen && !reassignOpen && <p className="w-full text-[11px] text-red-600">{error}</p>}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -269,14 +345,6 @@ export default function AdminCoproActions({
                   <Pencil size={12} className="shrink-0" />
                   Modifier les infos
                 </button>
-                <button
-                  onClick={openDetails}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-gray-700 transition-colors hover:bg-gray-50"
-                >
-                  <Users size={12} className="shrink-0" />
-                  Voir les copropriétaires
-                </button>
-                <div className="my-1 border-t border-gray-100" />
                 <button
                   onClick={() => {
                     setError('');
