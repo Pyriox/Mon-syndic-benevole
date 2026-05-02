@@ -79,9 +79,9 @@ export default async function AdminCopropietesPage({
   const query = q?.trim().toLowerCase() ?? '';
   const currentPage = Math.max(1, Number(page) || 1);
   const PAGE_SIZE = 20;
-  const sortBy = sort === 'name' || sort === 'health' || sort === 'incidents' || sort === 'depenses' || sort === 'lots' || sort === 'members' || sort === 'renewal'
+  const sortBy = sort === 'name' || sort === 'health' || sort === 'incidents' || sort === 'depenses' || sort === 'lots' || sort === 'members' || sort === 'renewal' || sort === 'created'
     ? sort
-    : 'created';
+    : 'status';
   const sortOrder = order === 'asc' ? 'asc' : 'desc';
   const filterOrphaned = orphaned === '1';
   const filterNoLots = no_lots === '1';
@@ -246,7 +246,18 @@ export default async function AdminCopropietesPage({
         return true;
       });
 
+  const planGroup = (plan: string | null) =>
+    plan === 'actif' ? 0 : (!plan || plan === 'essai') ? 1 : 2;
+
   const sortedCopros = [...displayedCopros].sort((a, b) => {
+    if (sortBy === 'status') {
+      const ga = planGroup(a.plan);
+      const gb = planGroup(b.plan);
+      if (ga !== gb) return ga - gb;
+      // Inactives: sort by health descending (best first)
+      if (ga === 2) return getHealthScore(b) - getHealthScore(a);
+      return 0;
+    }
     if (sortBy === 'health') {
       const av = getHealthScore(a);
       const bv = getHealthScore(b);
