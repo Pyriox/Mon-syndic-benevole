@@ -60,6 +60,11 @@ const EVENT_META: Record<string, { icon: string; label: string; color: string }>
   onboarding_copro_reminder_j2_sent: { icon: '✉', label: 'Email relance J+2', color: 'text-sky-600 bg-sky-50 border-sky-200' },
   onboarding_copro_reminder_j7_sent: { icon: '✉', label: 'Email relance J+7', color: 'text-amber-600 bg-amber-50 border-amber-200' },
   onboarding_copro_reminder_j21_sent: { icon: '↺', label: 'Email réactivation J+21', color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  invitation_accepted: { icon: '✓', label: 'Invitation acceptée', color: 'text-cyan-600 bg-cyan-50 border-cyan-200' },
+  password_reset_completed: { icon: '🔑', label: 'Mot de passe réinitialisé', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+  ag_updated: { icon: '✎', label: 'AG modifiée', color: 'text-sky-700 bg-sky-50 border-sky-200' },
+  ag_pv_envoye: { icon: '📤', label: 'PV AG envoyé', color: 'text-sky-600 bg-sky-50 border-sky-200' },
+  email_delivery: { icon: '✉', label: 'Email', color: 'text-violet-600 bg-violet-50 border-violet-200' },
 };
 
 const SEVERITY_DOT: Record<string, string> = {
