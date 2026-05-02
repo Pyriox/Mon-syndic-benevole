@@ -12,6 +12,7 @@ import AdminUserEventTimeline from '../../AdminUserEventTimeline';
 import AdminUserConfirmActions from '../../AdminUserConfirmActions';
 import AdminLinkCoproprietaireUser from '../../AdminLinkCoproprietaireUser';
 import AdminUserSuspendAction from '../../AdminUserSuspendAction';
+import AdminUserActionsDetail from '../../AdminUserActionsDetail';
 import { PlanBadge, RoleBadge } from '../../AdminBadges';
 
 const EVENT_CATEGORY_MAP = {
@@ -344,6 +345,15 @@ export default async function AdminUtilisateurProfilePage({
                   <Link href={`/admin/support?q=${encodeURIComponent(authUser.email ?? '')}`} className="inline-flex items-center rounded-lg border border-red-200 bg-white px-2.5 py-1.5 font-medium text-red-700 hover:border-red-300">
                     Voir le support
                   </Link>
+                )}
+                {user.id !== id && (
+                  <AdminUserActionsDetail
+                    userId={id}
+                    userEmail={authUser.email ?? ''}
+                    fullName={fullName ?? undefined}
+                    isAdmin={isAdmin}
+                    userRole={role}
+                  />
                 )}
               </div>
               <p className="mt-2 text-red-700/80">

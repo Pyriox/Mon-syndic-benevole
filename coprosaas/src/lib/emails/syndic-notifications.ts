@@ -253,7 +253,7 @@ export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingRemin
 
   const body = hasNoCopro
     ? `Pour commencer, créez votre copropriété. Vous pourrez ensuite paramétrer vos lots, vos copropriétaires et vos appels de fonds.`
-    : `Votre copropriété est déjà créée. Vous avez actuellement <strong>${coproprietairesCount}</strong> copropriétaire${coproprietairesCount > 1 ? 's' : ''}. Ajoutez les copropriétaires manquants pour poursuivre la configuration et centraliser les échanges.`;
+    : `Votre copropriété est déjà créée. Vous avez actuellement <strong>${coproprietairesCount}</strong> copropriétaire${coproprietairesCount > 1 ? 's' : ''}. Commencez par créer vos lots et paramétrer leurs tantièmes, puis attribuez-les à chaque copropriétaire pour finaliser la configuration.`;
 
   const stepsSummary = hasNoCopro
     ? `<div style="margin:16px 0 0;padding:14px 16px;border:1px solid ${COLOR.border};border-radius:10px;background:#f8fafc">
@@ -267,8 +267,8 @@ export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingRemin
     : `<div style="margin:16px 0 0;padding:14px 16px;border:1px solid ${COLOR.border};border-radius:10px;background:#f8fafc">
   <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:${COLOR.text}">Résumé des étapes à effectuer</p>
   <ol style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:${COLOR.text}">
-    <li>Ajouter les copropriétaires (nom, e-mail, lots).</li>
-    <li>Contrôler rapidement les données saisies.</li>
+    <li>Créer les lots et paramétrer leurs tantièmes.</li>
+    <li>Ajouter les copropriétaires et leur attribuer leurs lots.</li>
     <li>Poursuivre avec vos appels de fonds et documents.</li>
   </ol>
 </div>`;
@@ -279,7 +279,7 @@ export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingRemin
 </p>`
     : '';
 
-  const ctaLabel = hasNoCopro ? 'Créer ma copropriété →' : 'Ajouter mes copropriétaires →';
+  const ctaLabel = hasNoCopro ? 'Créer ma copropriété →' : 'Configurer mes lots →';
   const color = isJ7 ? COLOR.amber : COLOR.blue;
 
   const content = `
@@ -300,7 +300,7 @@ ${ctaButton(ctaLabel, actionUrl, color)}
 
   return wrapEmail(content, color, hasNoCopro
     ? 'Créez votre première copropriété'
-    : 'Ajoutez vos copropriétaires pour poursuivre la configuration');
+    : 'Configurez vos lots et copropriétaires pour poursuivre');
 }
 
 // ── Réactivation syndic (J+21) ───────────────────────────────────────────────
