@@ -723,74 +723,86 @@ export default function CoproSettingsPanel({
               </div>
 
               {keyNames.length === 0 ? (
-                <div className="mt-4 space-y-3">
-                  {filteredLots.map((lot) => {
-                    const ownerName = getOwnerName(lot.coproprietaire_id, coproMap);
-
-                    return (
-                      <div
-                        key={lot.id}
-                        className="rounded-xl border border-gray-200 bg-white px-3 py-3 shadow-sm"
-                      >
-                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-6">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-gray-900">{lot.numero}</p>
-                            <p className="text-xs text-gray-500">{getLotTypeLabel(lot.type)}</p>
-                            {ownerName && <p className="mt-1 text-xs text-gray-500">{ownerName}</p>}
-                          </div>
-
-                          <label className="block w-full md:w-[220px] md:shrink-0">
-                            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Charges générales</span>
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={lot.tantiemes}
-                              onChange={(e) => handleLotChange(lot.id, 'tantiemes', e.target.value)}
-                              className={cn(
-                                'w-full rounded-lg border px-2.5 py-2 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none',
-                                parseNumericValue(lot.tantiemes) <= 0 ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-gray-50',
-                              )}
-                            />
-                          </label>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  <div className="flex justify-stretch md:justify-end">
-                    <div className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700 md:w-[220px] md:shrink-0">
-                      <span>Base totale</span>
-                      <span>{formatBase(generalTotal)}</span>
-                    </div>
-                  </div>
+                <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
+                  <table className="w-full min-w-[480px] text-sm">
+                    <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold">Lot</th>
+                        <th className="w-[200px] px-4 py-3 text-right font-semibold">Charges générales</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 bg-white">
+                      {filteredLots.length === 0 ? (
+                        <tr>
+                          <td colSpan={2} className="px-4 py-8 text-center text-sm text-gray-500">
+                            Aucun lot ne correspond aux filtres sélectionnés.
+                          </td>
+                        </tr>
+                      ) : filteredLots.map((lot) => {
+                        const ownerName = getOwnerName(lot.coproprietaire_id, coproMap);
+                        return (
+                          <tr key={lot.id} className="align-middle hover:bg-slate-50">
+                            <td className="px-4 py-3">
+                              <p className="font-semibold text-gray-900">{lot.numero}</p>
+                              <p className="text-xs text-gray-500">{getLotTypeLabel(lot.type)}</p>
+                              {ownerName && <p className="mt-0.5 text-xs text-gray-500">{ownerName}</p>}
+                            </td>
+                            <td className="w-[200px] px-4 py-3">
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={lot.tantiemes}
+                                onChange={(e) => handleLotChange(lot.id, 'tantiemes', e.target.value)}
+                                className={cn(
+                                  'w-full rounded-lg border px-2.5 py-2 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none',
+                                  parseNumericValue(lot.tantiemes) <= 0 ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-gray-50',
+                                )}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot className="border-t-2 border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">
+                      <tr>
+                        <td className="px-4 py-3">Base totale</td>
+                        <td className="px-4 py-3 text-right">{formatBase(generalTotal)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               ) : (
                 <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
                   <table className={cn('w-full text-sm', keyNames.length > 2 ? 'min-w-[920px]' : 'min-w-[760px]')}>
                     <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
                       <tr>
-                        <th className="sticky left-0 z-10 bg-slate-50 px-3 py-3 text-left font-semibold">Lot</th>
-                        <th className="px-3 py-3 text-right font-semibold">Charges générales</th>
+                        <th className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-left font-semibold">Lot</th>
+                        <th className="min-w-[150px] px-4 py-3 text-right font-semibold">Charges générales</th>
                         {keyNames.map((key) => (
-                          <th key={key} className="px-3 py-3 text-right font-semibold min-w-[140px]">{key}</th>
+                          <th key={key} className="min-w-[150px] px-4 py-3 text-right font-semibold">{key}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 bg-white">
-                      {filteredLots.map((lot) => {
+                      {filteredLots.length === 0 ? (
+                        <tr>
+                          <td colSpan={2 + keyNames.length} className="px-4 py-8 text-center text-sm text-gray-500">
+                            Aucun lot ne correspond aux filtres sélectionnés.
+                          </td>
+                        </tr>
+                      ) : filteredLots.map((lot) => {
                         const ownerName = getOwnerName(lot.coproprietaire_id, coproMap);
-
                         return (
-                          <tr key={lot.id} className="align-top">
-                            <td className="sticky left-0 bg-white px-3 py-3">
+                          <tr key={lot.id} className="align-middle hover:bg-slate-50">
+                            <td className="sticky left-0 bg-white px-4 py-3 hover:bg-inherit">
                               <div className="min-w-[200px]">
                                 <p className="font-semibold text-gray-900">{lot.numero}</p>
                                 <p className="text-xs text-gray-500">{getLotTypeLabel(lot.type)}</p>
-                                {ownerName && <p className="mt-1 text-xs text-gray-500">{ownerName}</p>}
+                                {ownerName && <p className="mt-0.5 text-xs text-gray-500">{ownerName}</p>}
                               </div>
                             </td>
-                            <td className="px-3 py-3 min-w-[130px]">
+                            <td className="min-w-[150px] px-4 py-3">
                               <input
                                 type="number"
                                 min="0"
@@ -804,16 +816,16 @@ export default function CoproSettingsPanel({
                               />
                             </td>
                             {keyNames.map((key) => (
-                              <td key={`${lot.id}-${key}`} className="px-3 py-3 min-w-[130px]">
+                              <td key={`${lot.id}-${key}`} className="min-w-[150px] px-4 py-3">
                                 <input
                                   type="number"
                                   min="0"
                                   step="0.01"
                                   value={lot.keyValues[key] ?? ''}
                                   onChange={(e) => handleKeyValueChange(lot.id, key, e.target.value)}
-                                  placeholder="0"
+                                  placeholder="—"
                                   disabled={!specialChargesEnabled}
-                                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-right text-sm text-gray-900 placeholder:text-gray-300 focus:border-blue-500 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
                                 />
                               </td>
                             ))}
@@ -821,12 +833,12 @@ export default function CoproSettingsPanel({
                         );
                       })}
                     </tbody>
-                    <tfoot className="bg-slate-50 text-sm font-semibold text-slate-700">
+                    <tfoot className="border-t-2 border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">
                       <tr>
-                        <td className="sticky left-0 bg-slate-50 px-3 py-3">Base totale</td>
-                        <td className="px-3 py-3 text-right">{formatBase(generalTotal)}</td>
+                        <td className="sticky left-0 bg-slate-50 px-4 py-3">Base totale</td>
+                        <td className="px-4 py-3 text-right">{formatBase(generalTotal)}</td>
                         {keyNames.map((key) => (
-                          <td key={`total-${key}`} className="px-3 py-3 text-right">{formatBase(totalsByKey[key] ?? 0)}</td>
+                          <td key={`total-${key}`} className="px-4 py-3 text-right">{formatBase(totalsByKey[key] ?? 0)}</td>
                         ))}
                       </tr>
                     </tfoot>
