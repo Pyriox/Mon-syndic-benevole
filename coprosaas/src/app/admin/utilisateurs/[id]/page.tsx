@@ -373,28 +373,48 @@ export default async function AdminUtilisateurProfilePage({
               <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-red-800">
                 <ShieldAlert size={14} /> Actions sensibles
               </p>
-              <div className="flex flex-wrap gap-2">
-                <AdminCopyId id={id} />
-                {!isAdmin && <AdminImpersonate email={authUser.email ?? ''} />}
-                {!authUser.email_confirmed_at && (
-                  <AdminUserConfirmActions userId={id} userEmail={authUser.email ?? ''} />
+              <div className="space-y-3">
+                {/* Utilitaires */}
+                <div>
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-red-400/80">Utilitaires</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    <AdminCopyId id={id} />
+                    {!isAdmin && <AdminImpersonate email={authUser.email ?? ''} />}
+                    {supportCount > 0 && (
+                      <Link href={`/admin/support?q=${encodeURIComponent(authUser.email ?? '')}`} className="inline-flex items-center rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-medium text-red-700 hover:border-red-300">
+                        Voir le support
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                {/* Gestion du compte */}
+                {(!isAdmin || !authUser.email_confirmed_at) && (
+                  <div>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-red-400/80">Gestion du compte</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {!authUser.email_confirmed_at && (
+                        <AdminUserConfirmActions userId={id} userEmail={authUser.email ?? ''} />
+                      )}
+                      {!isAdmin && (
+                        <AdminUserSuspendAction userId={id} userEmail={authUser.email ?? ''} isSuspended={isSuspended} />
+                      )}
+                    </div>
+                  </div>
                 )}
-                {!isAdmin && (
-                  <AdminUserSuspendAction userId={id} userEmail={authUser.email ?? ''} isSuspended={isSuspended} />
-                )}
-                {supportCount > 0 && (
-                  <Link href={`/admin/support?q=${encodeURIComponent(authUser.email ?? '')}`} className="inline-flex items-center rounded-lg border border-red-200 bg-white px-2.5 py-1.5 font-medium text-red-700 hover:border-red-300">
-                    Voir le support
-                  </Link>
-                )}
+
+                {/* Rôle & modifications */}
                 {user.id !== id && (
-                  <AdminUserActionsDetail
-                    userId={id}
-                    userEmail={authUser.email ?? ''}
-                    fullName={fullName ?? undefined}
-                    isAdmin={isAdmin}
-                    userRole={role}
-                  />
+                  <div>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-red-400/80">Rôle &amp; modifications</p>
+                    <AdminUserActionsDetail
+                      userId={id}
+                      userEmail={authUser.email ?? ''}
+                      fullName={fullName ?? undefined}
+                      isAdmin={isAdmin}
+                      userRole={role}
+                    />
+                  </div>
                 )}
               </div>
               <p className="mt-2 text-red-700/80">

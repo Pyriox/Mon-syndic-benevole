@@ -91,6 +91,8 @@ interface PromptDialogProps {
   isLoading?: boolean;
   error?: string;
   tone?: Tone;
+  inputType?: string;
+  requiredValue?: string;
 }
 
 export function AdminPromptDialog({
@@ -108,6 +110,8 @@ export function AdminPromptDialog({
   isLoading = false,
   error,
   tone = 'primary',
+  inputType = 'email',
+  requiredValue,
 }: PromptDialogProps) {
   return (
     <Modal isOpen={isOpen} onClose={() => !isLoading && onClose()} title={title} size="sm">
@@ -123,7 +127,7 @@ export function AdminPromptDialog({
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-700">{label}</label>
           <input
-            type="email"
+            type={inputType}
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={placeholder}
@@ -142,7 +146,7 @@ export function AdminPromptDialog({
           </button>
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || (requiredValue !== undefined && value !== requiredValue)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors disabled:opacity-50 ${confirmButtonClasses[tone]}`}
           >
             {isLoading && <Loader2 size={13} className="animate-spin" />}

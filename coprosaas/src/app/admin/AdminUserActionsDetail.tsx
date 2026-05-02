@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2, ShieldCheck, UserCog, Pencil, Loader2 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
-import { AdminConfirmDialog, AdminDialogNotice } from './AdminActionDialog';
+import { AdminConfirmDialog, AdminDialogNotice, AdminPromptDialog } from './AdminActionDialog';
 
 interface Props {
   userId: string;
@@ -39,6 +39,7 @@ export default function AdminUserActionsDetail({ userId, userEmail, fullName, is
   const [editOpen, setEditOpen] = useState(false);
   const [editEmail, setEditEmail] = useState(userEmail);
   const [editFullName, setEditFullName] = useState(fullName ?? '');
+  const [deleteInput, setDeleteInput] = useState('');
 
   const openEdit = () => {
     setError('');
@@ -176,43 +177,53 @@ export default function AdminUserActionsDetail({ userId, userEmail, fullName, is
         isLoading={pendingAction === 'toggle_role'}
       />
 
-      <AdminConfirmDialog
+      <AdminPromptDialog
         isOpen={confirmAction === 'delete'}
-        onClose={() => setConfirmAction(null)}
+        onClose={() => { setConfirmAction(null); setDeleteInput(''); }}
         title="Supprimer le compte"
-        description={<p>Supprimer définitivement <strong>{userEmail}</strong> ? Cette action est irréversible.</p>}
-        confirmLabel="Supprimer"
+        description={<p>Supprimer définitivement <strong>{userEmail}</strong> ? Cette action est <strong>irréversible</strong>.</p>}
+        label='Tapez “SUPPRIMER” pour confirmer'
+        value={deleteInput}
+        onChange={(v) => setDeleteInput(v)}
         onConfirm={executeConfirmedAction}
+        confirmLabel="Supprimer définitivement"
+        placeholder="SUPPRIMER"
+        inputType="text"
+        requiredValue="SUPPRIMER"
         isLoading={pendingAction === 'delete'}
         tone="danger"
       />
 
       {error && !editOpen && <p className="text-[11px] text-red-600">{error}</p>}
 
-      <button onClick={openEdit} disabled={!!pendingAction} className={btnCls}>
-        <Pencil size={12} className="mr-1.5" />
-        Modifier
-      </button>
-
-      {!isAdmin && (
-        <button onClick={() => setConfirmAction('toggle_role')} disabled={!!pendingAction} className={btnCls}>
-          <UserCog size={12} className="mr-1.5" />
-          {role === 'membre' ? 'Passer Syndic' : 'Passer Membre'}
+      <div className="flex flex-wrap gap-1.5">
+        <button onClick={openEdit} disabled={!!pendingAction} className={btnCls}>
+          <Pencil size={12} className="mr-1.5" />
+          Modifier
         </button>
-      )}
 
-      <button onClick={() => setConfirmAction('toggle_admin')} disabled={!!pendingAction} className={btnCls}>
-        <ShieldCheck size={12} className="mr-1.5" />
-        {isAdmin ? 'Retirer admin' : 'Rôle admin'}
-      </button>
+        {!isAdmin && (
+          <button onClick={() => setConfirmAction('toggle_role')} disabled={!!pendingAction} className={btnCls}>
+            <UserCog size={12} className="mr-1.5" />
+            {role === 'membre' ? 'Passer Syndic' : 'Passer Membre'}
+          </button>
+        )}
 
-      <button onClick={() => setConfirmAction('delete')} disabled={!!pendingAction} className={btnCls}>
-        {pendingAction === 'delete'
-          ? <Loader2 size={12} className="mr-1.5 animate-spin" />
-          : <Trash2 size={12} className="mr-1.5" />
-        }
-        Supprimer le compte
-      </button>
+        <button onClick={() => setConfirmAction('toggle_admin')} disabled={!!pendingAction} className={btnCls}>
+          <ShieldCheck size={12} className="mr-1.5" />
+          {isAdmin ? 'Retirer admin' : 'Rôle admin'}
+        </button>
+      </div>
+
+      <div className="mt-2 pt-2 border-t border-red-200/60">
+        <button onClick={() => setConfirmAction('delete')} disabled={!!pendingAction} className={btnCls}>
+          {pendingAction === 'delete'
+            ? <Loader2 size={12} className="mr-1.5 animate-spin" />
+            : <Trash2 size={12} className="mr-1.5" />
+          }
+          Supprimer le compte
+        </button>
+      </div>
     </>
   );
 }

@@ -75,7 +75,7 @@ export default async function AdminUtilisateursPage({
   const query = q?.trim().toLowerCase() ?? '';
   const roleFilter = role === 'admin' || role === 'syndic' || role === 'membre' ? role : 'all';
   const verifiedFilter = verified === 'yes' || verified === 'no' ? verified : 'all';
-  const sortBy = sort === 'last_active' || sort === 'tickets' ? sort : 'created';
+  const sortBy = sort === 'created' || sort === 'tickets' ? sort : 'last_active';
   const sortOrder = order === 'asc' ? 'asc' : 'desc';
   const currentPage = Math.max(1, Number(page) || 1);
   const PAGE_SIZE = 25;
