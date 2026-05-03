@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw, Send, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, Link2, Mail, Loader2, CalendarCheck2, RefreshCw, Send, Trash2, Eye, XCircle, CheckCircle2 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { applyCoproprietaireBalanceDelta, resolveAppelBalanceAccountType } from '@/lib/coproprietaire-balance';
 import {
@@ -60,15 +60,17 @@ interface AppelCardProps {
   nbPayes: number;
   nbImpayes: number;
   pctPaye: number;
+  emailStats?: { opened: number; errors: number; sent: number } | null;
 }
 
-export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWrite = true, nbPayes, nbImpayes, pctPaye }: AppelCardProps) {
+export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWrite = true, nbPayes, nbImpayes, pctPaye, emailStats }: AppelCardProps) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendMsg, setSendMsg] = useState('');
   const [sendOk, setSendOk] = useState<boolean | null>(null);
   const [statut, setStatut] = useState(appel.statut ?? null);
   const [emailedAt, setEmailedAt] = useState<string | null>(appel.emailed_at ?? null);
+  const [localEmailStats, setLocalEmailStats] = useState<{ opened: number; errors: number; sent: number } | null>(emailStats ?? null);
   const [lignesCount, setLignesCount] = useState(lignes.length);
   const [localLignes, setLocalLignes] = useState<Ligne[]>(lignes);
   const [regenerating, setRegenerating] = useState(false);
@@ -91,9 +93,10 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
   useEffect(() => {
     setStatut(appel.statut ?? null);
     setEmailedAt(appel.emailed_at ?? null);
+    setLocalEmailStats(emailStats ?? null);
     setLignesCount(lignes.length);
     setLocalLignes(lignes);
-  }, [appel.emailed_at, appel.statut, lignes]);
+  }, [appel.emailed_at, appel.statut, emailStats, lignes]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -411,6 +414,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
       setSendOk(res.ok);
       if (res.ok) {
         setEmailedAt(new Date().toISOString());
+        setLocalEmailStats({ sent: lignesCount, opened: 0, errors: 0 });
         const saveResult = await saveToDocuments();
         if (!saveResult.ok) {
           setSendMsg((prev) => `${prev} (envoi OK, archivage impossible: ${saveResult.error})`);
@@ -645,9 +649,33 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
         </div>
       )}
       {emailedAt && !sendMsg && (
-        <div className="mx-5 mb-3 flex items-center gap-1.5 text-xs text-indigo-500">
-          <CalendarCheck2 size={12} className="shrink-0" />
-          <span>Envoyé le {new Date(emailedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} à {new Date(emailedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+        <div className="mx-5 mb-3 flex items-center gap-2 flex-wrap text-xs">
+          <div className="flex items-center gap-1.5 text-indigo-500">
+            <CalendarCheck2 size={12} className="shrink-0" />
+            <span>Envoyé le {new Date(emailedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} à {new Date(emailedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          {isSyndic && localEmailStats && (
+            <>
+              {localEmailStats.opened > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-green-100 text-green-700 font-medium">
+                  <Eye size={10} />
+                  {localEmailStats.opened} ouvert{localEmailStats.opened > 1 ? 's' : ''}
+                </span>
+              )}
+              {localEmailStats.errors > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-red-100 text-red-700 font-medium">
+                  <XCircle size={10} />
+                  {localEmailStats.errors} erreur{localEmailStats.errors > 1 ? 's' : ''}
+                </span>
+              )}
+              {localEmailStats.opened === 0 && localEmailStats.errors === 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-blue-50 text-blue-600 font-medium">
+                  <CheckCircle2 size={10} />
+                  Envoyé
+                </span>
+              )}
+            </>
+          )}
         </div>
       )}
 

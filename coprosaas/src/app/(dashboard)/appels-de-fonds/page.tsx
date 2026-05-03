@@ -59,6 +59,24 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
       .eq('copropriete_id', selectedCoproId ?? 'none'),
   ]);
 
+  // Statuts e-mail par appel (Envoyé / Ouvert / Erreur)
+  const emailStatsByAppelId = new Map<string, { opened: number; errors: number; sent: number }>();
+  const appelIds = (appels ?? []).map((a) => a.id);
+  if (appelIds.length > 0) {
+    const { data: emailDeliveries } = await db
+      .from('email_deliveries')
+      .select('appel_de_fonds_id, status')
+      .in('appel_de_fonds_id', appelIds);
+    for (const d of emailDeliveries ?? []) {
+      if (!d.appel_de_fonds_id) continue;
+      const cur = emailStatsByAppelId.get(d.appel_de_fonds_id) ?? { opened: 0, errors: 0, sent: 0 };
+      if (d.status === 'opened' || d.status === 'clicked') cur.opened++;
+      else if (d.status === 'failed' || d.status === 'bounced' || d.status === 'complained') cur.errors++;
+      else cur.sent++;
+      emailStatsByAppelId.set(d.appel_de_fonds_id, cur);
+    }
+  }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   // role === null = nouveau compte sans copropriété → traité comme syndic (cohérent avec le layout)
@@ -191,6 +209,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
                   nbPayes={item.nbPayes}
                   nbImpayes={item.nbImpayes}
                   pctPaye={item.pctPaye}
+                  emailStats={emailStatsByAppelId.get(item.appel.id) ?? null}
                 />
               ))}
             />
@@ -208,6 +227,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
               nbPayes={item.nbPayes}
               nbImpayes={item.nbImpayes}
               pctPaye={item.pctPaye}
+              emailStats={emailStatsByAppelId.get(item.appel.id) ?? null}
             />
           ))}
         </div>

@@ -11,7 +11,7 @@ import { redirectToDashboard } from '@/lib/auth-redirect';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
-import { ArrowRight, MailCheck, Shield, Clock, MessageCircle } from 'lucide-react';
+import { ArrowRight, MailCheck, Shield, Clock, MessageCircle, Loader2 } from 'lucide-react';
 import { trackAnonymousEvent, trackConsentAwareEvent } from '@/lib/gtag';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 
@@ -42,6 +42,7 @@ function LoginForm() {
   const inviteEmail = searchParams.get('email');
 
   const [mode, setMode] = useState<'login' | 'forgot'>('login');
+  const [redirecting, setRedirecting] = useState(false);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -164,6 +165,7 @@ function LoginForm() {
       label: 'Connexion réussie',
       userId: data.user.id,
     }).catch(() => undefined);
+    setRedirecting(true);
     redirectToDashboard();
   };
 
@@ -228,6 +230,29 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-950 flex items-center justify-center p-4">
+
+      {/* Overlay de redirection après connexion réussie */}
+      {redirecting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 to-indigo-950">
+          <div className="w-full max-w-md rounded-3xl bg-white/95 shadow-2xl border border-white/60 p-6 sm:p-8 text-center">
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <SiteLogo size={34} />
+              <span className="font-bold text-gray-900">Mon Syndic Bénévole</span>
+            </div>
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+              <Loader2 size={22} className="animate-spin" />
+            </div>
+            <h1 className="text-lg font-bold text-gray-900">Connexion réussie…</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Ouverture de votre espace de gestion.
+            </p>
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+              <Shield size={13} /> Session sécurisée établie
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-0 shadow-2xl rounded-3xl overflow-hidden">
 
         {/* ── Panneau gauche ── */}
