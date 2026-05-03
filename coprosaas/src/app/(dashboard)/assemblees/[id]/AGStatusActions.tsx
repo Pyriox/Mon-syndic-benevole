@@ -22,7 +22,7 @@ import {
   toParisISOString,
 } from '@/lib/utils';
 import { buildConvocationPdfDisplayName, buildConvocationPdfFileName } from '@/lib/pdf-filenames';
-import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, AlertTriangle, Mail } from 'lucide-react';
+import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, AlertTriangle, Mail, Eye } from 'lucide-react';
 import LancerAGModal from './LancerAGModal';
 import { genererConvocationDoc, type ConvocationAGData, type ConvocationResolution } from './ConvocationPDF';
 
@@ -31,6 +31,9 @@ type EmailSendSummary = {
   message: string;
   details: string[];
 };
+
+type AgEmailStatut = 'ouvert' | 'envoyé' | 'erreur';
+type AgRecipient = { id: string; nom: string; prenom: string; email: string };
 
 // ---- Helper : trouver ou créer un sous-dossier ----
 async function getOrCreateSubDossier(
@@ -316,12 +319,16 @@ export function AGEnvoyerConvocation({
   ag,
   resolutions,
   convocationEnvoyeeLe,
+  emailStatusByEmail,
+  recipients,
 }: {
   agId: string;
   coproprieteId: string;
   ag: ConvocationAGData;
   resolutions: ConvocationResolution[];
   convocationEnvoyeeLe?: string | null;
+  emailStatusByEmail?: Record<string, AgEmailStatut> | null;
+  recipients?: AgRecipient[];
 }) {
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -330,6 +337,7 @@ export function AGEnvoyerConvocation({
   const [error, setError] = useState('');
   const [emailCount, setEmailCount] = useState<number | null>(null);
   const [sendSummary, setSendSummary] = useState<EmailSendSummary | null>(null);
+  const [localEmailStatus, setLocalEmailStatus] = useState<Record<string, AgEmailStatut> | null>(emailStatusByEmail ?? null);
 
   useEffect(() => {
     if (!isOpen || emailCount !== null) return;
@@ -394,6 +402,13 @@ export function AGEnvoyerConvocation({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await supabase.from('assemblees_generales').update({ convocation_envoyee_le: now } as any).eq('id', agId);
           setSentDate(now);
+          // Optimistic status — preserve 'ouvert', set others to 'envoyé'
+          const optimistic: Record<string, AgEmailStatut> = { ...localEmailStatus };
+          for (const r of recipients ?? []) {
+            const em = r.email.toLowerCase();
+            if (optimistic[em] !== 'ouvert') optimistic[em] = 'envoyé';
+          }
+          setLocalEmailStatus(optimistic);
         }
 
         setSendSummary({
@@ -483,6 +498,35 @@ export function AGEnvoyerConvocation({
               )}
             </div>
           )}
+          {sentDate && recipients && recipients.length > 0 && (
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-500 border-b border-gray-200">
+                Statut par destinataire
+              </div>
+              <ul className="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                {recipients.map((r) => {
+                  const statut = localEmailStatus?.[r.email.toLowerCase()];
+                  return (
+                    <li key={r.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
+                      <span className="text-xs text-gray-700 min-w-0 truncate">{r.prenom} {r.nom}</span>
+                      {statut === 'ouvert' && (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700"><Eye size={9} />Ouvert</span>
+                      )}
+                      {statut === 'erreur' && (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-red-100 text-red-700"><XCircle size={9} />Échec</span>
+                      )}
+                      {statut === 'envoyé' && (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-600"><CheckCircle size={9} />Envoyé</span>
+                      )}
+                      {!statut && (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border border-gray-200 text-gray-400">Non envoyé</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
             <Button loading={loading} onClick={handleEnvoyer} disabled={emailCount === 0}>
@@ -497,7 +541,13 @@ export function AGEnvoyerConvocation({
 }
 
 // ---- Envoi du PV par e-mail (statut 'terminee') ----
-export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string; coproprieteId: string; pvEnvoyeLe?: string | null }) {
+export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe, emailStatusByEmail, recipients }: {
+  agId: string;
+  coproprieteId: string;
+  pvEnvoyeLe?: string | null;
+  emailStatusByEmail?: Record<string, AgEmailStatut> | null;
+  recipients?: AgRecipient[];
+}) {
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -505,6 +555,7 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
   const [error, setError] = useState('');
   const [emailCount, setEmailCount] = useState<number | null>(null);
   const [sendSummary, setSendSummary] = useState<EmailSendSummary | null>(null);
+  const [localEmailStatus, setLocalEmailStatus] = useState<Record<string, AgEmailStatut> | null>(emailStatusByEmail ?? null);
 
   useEffect(() => {
     if (!isOpen || emailCount !== null) return;
@@ -540,6 +591,13 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await supabase.from('assemblees_generales').update({ pv_envoye_le: now } as any).eq('id', agId);
           setSentDate(now);
+          // Optimistic status — preserve 'ouvert', set others to 'envoyé'
+          const optimistic: Record<string, AgEmailStatut> = { ...localEmailStatus };
+          for (const r of recipients ?? []) {
+            const em = r.email.toLowerCase();
+            if (optimistic[em] !== 'ouvert') optimistic[em] = 'envoyé';
+          }
+          setLocalEmailStatus(optimistic);
         }
 
         setSendSummary({
@@ -623,6 +681,35 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe }: { agId: string;
                   ))}
                 </ul>
               )}
+            </div>
+          )}
+          {sentDate && recipients && recipients.length > 0 && (
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-500 border-b border-gray-200">
+                Statut par destinataire
+              </div>
+              <ul className="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                {recipients.map((r) => {
+                  const statut = localEmailStatus?.[r.email.toLowerCase()];
+                  return (
+                    <li key={r.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
+                      <span className="text-xs text-gray-700 min-w-0 truncate">{r.prenom} {r.nom}</span>
+                      {statut === 'ouvert' && (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700"><Eye size={9} />Ouvert</span>
+                      )}
+                      {statut === 'erreur' && (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-red-100 text-red-700"><XCircle size={9} />Échec</span>
+                      )}
+                      {statut === 'envoyé' && (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-600"><CheckCircle size={9} />Envoyé</span>
+                      )}
+                      {!statut && (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border border-gray-200 text-gray-400">Non envoyé</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}

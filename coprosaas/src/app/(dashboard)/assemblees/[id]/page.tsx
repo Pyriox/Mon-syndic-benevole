@@ -61,7 +61,7 @@ export default async function AGDetailPage({ params }: Props) {
     // Copropriétaires de la copropriété (pour présences, votes et PV)
     db
       .from('coproprietaires')
-      .select('id, nom, prenom')
+      .select('id, nom, prenom, email')
       .eq('copropriete_id', ag.copropriete_id)
       .order('nom'),
     // Lots et tantièmes de la copropriété (pour le calcul légal des votes)
@@ -102,6 +102,43 @@ export default async function AGDetailPage({ params }: Props) {
 
   const isVisio = ag.lieu === 'Visioconférence';
   const specialChargesEnabled = hasChargesSpecialesAddon(coproAddons ?? []);
+
+  // Statuts e-mail par destinataire pour convocation et PV
+  type AgEmailStatut = 'ouvert' | 'envoyé' | 'erreur';
+  const EMAIL_PRIORITY: Record<AgEmailStatut, number> = { ouvert: 3, envoyé: 2, erreur: 1 };
+  const convocationStatusByEmail: Record<string, AgEmailStatut> = {};
+  const pvStatusByEmail: Record<string, AgEmailStatut> = {};
+  if (isSyndic) {
+    const CONVOCATION_KEYS = ['ag_convocation', 'ag_convocation_reminder_j14', 'ag_convocation_reminder_j7', 'ag_convocation_unopened_relance'];
+    const { data: deliveries } = await db
+      .from('email_deliveries')
+      .select('recipient_email, status, template_key')
+      .eq('ag_id', id);
+    for (const d of deliveries ?? []) {
+      if (!d.recipient_email || !d.template_key) continue;
+      const email = d.recipient_email.toLowerCase();
+      let statut: AgEmailStatut;
+      if (d.status === 'opened' || d.status === 'clicked') statut = 'ouvert';
+      else if (d.status === 'failed' || d.status === 'bounced' || d.status === 'complained') statut = 'erreur';
+      else statut = 'envoyé';
+      const isConvoc = (CONVOCATION_KEYS as string[]).includes(d.template_key);
+      const isPv = d.template_key === 'ag_pv';
+      if (isConvoc) {
+        const ex = convocationStatusByEmail[email] as AgEmailStatut | undefined;
+        if (!ex || EMAIL_PRIORITY[statut] > EMAIL_PRIORITY[ex]) convocationStatusByEmail[email] = statut;
+      }
+      if (isPv) {
+        const ex = pvStatusByEmail[email] as AgEmailStatut | undefined;
+        if (!ex || EMAIL_PRIORITY[statut] > EMAIL_PRIORITY[ex]) pvStatusByEmail[email] = statut;
+      }
+    }
+  }
+
+  type AgRecipient = { id: string; nom: string; prenom: string; email: string };
+  const agRecipients: AgRecipient[] = (coproprietaires ?? [])
+    .filter((c) => !!c.email)
+    .map((c) => ({ id: c.id, nom: c.nom, prenom: c.prenom, email: c.email! }));
+
   const isLaunched = ag.statut === 'en_cours' || ag.statut === 'terminee' || Boolean(ag.convocation_envoyee_le);
   const canVote = isSyndic && canWrite && (ag.statut === 'en_cours' || ag.statut === 'terminee');
   const canEdit = isSyndic && canWrite && (ag.statut === 'creation' || ag.statut === 'planifiee') && !isLaunched;
@@ -208,10 +245,18 @@ export default async function AGDetailPage({ params }: Props) {
                   ag={agWithCopropriete}
                   resolutions={resolutions ?? []}
                   convocationEnvoyeeLe={ag.convocation_envoyee_le ?? null}
+                  emailStatusByEmail={convocationStatusByEmail}
+                  recipients={agRecipients}
                 />
               )}
               {ag.statut === 'terminee' && (
-                <AGEnvoyerPV agId={id} coproprieteId={ag.copropriete_id} pvEnvoyeLe={ag.pv_envoye_le ?? null} />
+                <AGEnvoyerPV
+                  agId={id}
+                  coproprieteId={ag.copropriete_id}
+                  pvEnvoyeLe={ag.pv_envoye_le ?? null}
+                  emailStatusByEmail={pvStatusByEmail}
+                  recipients={agRecipients}
+                />
               )}
             </div>
           )}
@@ -272,6 +317,8 @@ export default async function AGDetailPage({ params }: Props) {
                 ag={agWithCopropriete}
                 resolutions={resolutions ?? []}
                 convocationEnvoyeeLe={ag.convocation_envoyee_le ?? null}
+                emailStatusByEmail={convocationStatusByEmail}
+                recipients={agRecipients}
               />
               <ConvocationPDF ag={agWithCopropriete} resolutions={resolutions ?? []} />
             </div>
