@@ -15,7 +15,7 @@ import { formatEuros, LABELS_CATEGORIE, parseBudgetPostesFromDescription, repart
 import { buildAvisAppelFondsPdfFileName } from '@/lib/pdf-filenames';
 import {
   CheckCircle, Clock, XCircle, Loader2,
-  ChevronUp, X, ReceiptText, FileDown,
+  ChevronUp, X, ReceiptText, FileDown, Eye, CheckCircle2, XCircle as XCircleErr,
 } from 'lucide-react';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 
@@ -31,7 +31,7 @@ export interface Ligne {
   regularisation_ajustement?: number;
   paye: boolean;
   date_paiement: string | null;
-  coproprietaires: { id: string; nom: string; prenom: string } | null;
+  coproprietaires: { id: string; nom: string; prenom: string; email?: string | null } | null;
 }
 
 interface AppelPartiel {
@@ -54,9 +54,10 @@ interface AppelFondsPaiementProps {
   isSyndic: boolean;
   canWrite?: boolean;
   onLignesChange?: (lignes: Ligne[]) => void;
+  emailStatusByEmail?: Record<string, 'ouvert' | 'envoyé' | 'erreur'> | null;
 }
 
-export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite = true, onLignesChange }: AppelFondsPaiementProps) {
+export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite = true, onLignesChange, emailStatusByEmail }: AppelFondsPaiementProps) {
   const supabase = createClient();
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -313,7 +314,29 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
 
                 {/* Nom + date paiement */}
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-gray-800">{nom}</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm font-medium text-gray-800">{nom}</span>
+                    {(() => {
+                      const email = ligne.coproprietaires?.email;
+                      const emailStatut = email ? emailStatusByEmail?.[email.toLowerCase()] : undefined;
+                      if (!emailStatut) return null;
+                      if (emailStatut === 'ouvert') return (
+                        <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-green-100 text-green-700">
+                          <Eye size={9} />Ouvert
+                        </span>
+                      );
+                      if (emailStatut === 'erreur') return (
+                        <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-red-100 text-red-700">
+                          <XCircleErr size={9} />Erreur
+                        </span>
+                      );
+                      return (
+                        <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-600">
+                          <CheckCircle2 size={9} />Envoyé
+                        </span>
+                      );
+                    })()}
+                  </div>
                   {hasRegularisationAjustement && (
                     <span className="ml-2 text-xs text-indigo-700">
                       · {regularisationAjustement > 0 ? 'débit' : 'crédit'} de régularisation {formatEuros(regularisationAjustement)} imputé dans le total dû

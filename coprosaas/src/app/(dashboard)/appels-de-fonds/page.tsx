@@ -48,7 +48,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   const [{ data: appels }, { data: coproAddons }] = await Promise.all([
     db
       .from('appels_de_fonds')
-      .select('*, coproprietes(nom), lignes_appels_de_fonds(id, montant_du, regularisation_ajustement, paye, date_paiement, coproprietaires(id, nom, prenom))')
+      .select('*, coproprietes(nom), lignes_appels_de_fonds(id, montant_du, regularisation_ajustement, paye, date_paiement, coproprietaires(id, nom, prenom, email))')
       .eq('copropriete_id', selectedCoproId ?? 'none')
       .gte('date_echeance', `${annee}-01-01`)
       .lt('date_echeance', `${annee + 1}-01-01`)
@@ -59,21 +59,28 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
       .eq('copropriete_id', selectedCoproId ?? 'none'),
   ]);
 
-  // Statuts e-mail par appel (Envoyé / Ouvert / Erreur)
-  const emailStatsByAppelId = new Map<string, { opened: number; errors: number; sent: number }>();
+  // Statuts e-mail par appel et par destinataire (Envoyé / Ouvert / Erreur)
+  type EmailStatut = 'ouvert' | 'envoyé' | 'erreur';
+  const EMAIL_PRIORITY: Record<EmailStatut, number> = { ouvert: 3, envoyé: 2, erreur: 1 };
+  const emailStatusByAppelId = new Map<string, Record<string, EmailStatut>>();
   const appelIds = (appels ?? []).map((a) => a.id);
   if (appelIds.length > 0) {
     const { data: emailDeliveries } = await db
       .from('email_deliveries')
-      .select('appel_de_fonds_id, status')
+      .select('appel_de_fonds_id, recipient_email, status')
       .in('appel_de_fonds_id', appelIds);
     for (const d of emailDeliveries ?? []) {
-      if (!d.appel_de_fonds_id) continue;
-      const cur = emailStatsByAppelId.get(d.appel_de_fonds_id) ?? { opened: 0, errors: 0, sent: 0 };
-      if (d.status === 'opened' || d.status === 'clicked') cur.opened++;
-      else if (d.status === 'failed' || d.status === 'bounced' || d.status === 'complained') cur.errors++;
-      else cur.sent++;
-      emailStatsByAppelId.set(d.appel_de_fonds_id, cur);
+      if (!d.appel_de_fonds_id || !d.recipient_email) continue;
+      let statut: EmailStatut;
+      if (d.status === 'opened' || d.status === 'clicked') statut = 'ouvert';
+      else if (d.status === 'failed' || d.status === 'bounced' || d.status === 'complained') statut = 'erreur';
+      else statut = 'envoyé';
+      const map = emailStatusByAppelId.get(d.appel_de_fonds_id) ?? {};
+      const existing = map[d.recipient_email] as EmailStatut | undefined;
+      if (!existing || EMAIL_PRIORITY[statut] > EMAIL_PRIORITY[existing]) {
+        map[d.recipient_email] = statut;
+      }
+      emailStatusByAppelId.set(d.appel_de_fonds_id, map);
     }
   }
 
@@ -209,7 +216,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
                   nbPayes={item.nbPayes}
                   nbImpayes={item.nbImpayes}
                   pctPaye={item.pctPaye}
-                  emailStats={emailStatsByAppelId.get(item.appel.id) ?? null}
+                  emailStatusByEmail={emailStatusByAppelId.get(item.appel.id) ?? null}
                 />
               ))}
             />
@@ -227,7 +234,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
               nbPayes={item.nbPayes}
               nbImpayes={item.nbImpayes}
               pctPaye={item.pctPaye}
-              emailStats={emailStatsByAppelId.get(item.appel.id) ?? null}
+              emailStatusByEmail={emailStatusByAppelId.get(item.appel.id) ?? null}
             />
           ))}
         </div>
