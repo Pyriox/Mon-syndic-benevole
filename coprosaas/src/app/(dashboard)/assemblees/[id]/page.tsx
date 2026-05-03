@@ -254,16 +254,7 @@ export default async function AGDetailPage({ params }: Props) {
               pvEnvoyeLe={ag.pv_envoye_le ?? null}
               emailStatusByEmail={pvStatusByEmail}
               recipients={agRecipients}
-            />
-          )}
-
-          {/* Documents PDF */}
-          {((ag.statut === 'planifiee' && !needsConvocation) || ag.statut === 'terminee') && (
-            <div className="flex items-center gap-2">
-              {ag.statut === 'planifiee' && (
-                <ConvocationPDF ag={agWithCopropriete} resolutions={resolutions ?? []} />
-              )}
-              {ag.statut === 'terminee' && (
+              exportSlot={
                 <PVPDF
                   ag={agWithCopropriete}
                   coproprieteId={ag.copropriete_id}
@@ -273,7 +264,14 @@ export default async function AGDetailPage({ params }: Props) {
                   coproprietaires={coproprietaires ?? []}
                   tantiemesParCopro={tantiemesMap}
                 />
-              )}
+              }
+            />
+          )}
+
+          {/* Documents PDF */}
+          {ag.statut === 'planifiee' && !needsConvocation && (
+            <div className="flex items-center gap-2">
+              <ConvocationPDF ag={agWithCopropriete} resolutions={resolutions ?? []} />
             </div>
           )}
 

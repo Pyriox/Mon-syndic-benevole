@@ -7,7 +7,7 @@
 // ============================================================
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
@@ -22,7 +22,7 @@ import {
   toParisISOString,
 } from '@/lib/utils';
 import { buildConvocationPdfDisplayName, buildConvocationPdfFileName } from '@/lib/pdf-filenames';
-import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, AlertTriangle, Mail, Eye, MailCheck } from 'lucide-react';
+import { CheckCircle, Trash2, XCircle, Send, CalendarCheck, Pencil, Video, AlertTriangle, Mail } from 'lucide-react';
 import LancerAGModal from './LancerAGModal';
 import { genererConvocationDoc, type ConvocationAGData, type ConvocationResolution } from './ConvocationPDF';
 
@@ -312,88 +312,70 @@ export function AGAnnuler({ agId }: { agId: string }) {
   );
 }
 
-// ---- Panneau de suivi e-mail partagé (convocation + PV) ----
-function EmailStatusPanel({ recipients, statusMap, title }: {
-  recipients: AgRecipient[];
-  statusMap: Record<string, AgEmailStatut> | null;
-  title: string;
-}) {
-  const counts = recipients.reduce(
-    (acc, r) => {
-      const s = statusMap?.[r.email.toLowerCase()];
-      if (s === 'ouvert') acc.ouvert++;
-      else if (s === 'envoy\u00e9') acc.envoy\u00e9++;
-      else if (s === 'erreur') acc.erreur++;
-      else acc.none++;
-      return acc;
-    },
-    { ouvert: 0, envoy\u00e9: 0, erreur: 0, none: 0 }
+// ---- Panneau de suivi e-mail (convocation + PV) ----
+function StatusBadge({ statut }: { statut: AgEmailStatut | undefined }) {
+  if (statut === 'ouvert') return (
+    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold text-green-700">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />Ouvert
+    </span>
+  );
+  if (statut === 'erreur') return (
+    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold text-red-600">
+      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />Échec
+    </span>
+  );
+  if (statut === 'envoyé') return (
+    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold text-blue-600">
+      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />Envoyé
+    </span>
   );
   return (
-    <div className="w-full rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      {/* En-t\u00eate avec compteurs */}
-      <div className="flex items-center justify-between gap-2 px-3.5 py-2 bg-gray-50/80 border-b border-gray-100">
-        <div className="flex items-center gap-1.5">
-          <MailCheck size={12} className="text-gray-400" />
-          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{title}</span>
-        </div>
-        <div className="flex items-center gap-2.5">
-          {counts.ouvert > 0 && (
-            <span className="flex items-center gap-1 text-[10px] font-medium text-green-600">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-              {counts.ouvert} ouvert{counts.ouvert > 1 ? 's' : ''}
-            </span>
-          )}
-          {counts.envoy\u00e9 > 0 && (
-            <span className="flex items-center gap-1 text-[10px] font-medium text-blue-600">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
-              {counts.envoy\u00e9} envoy\u00e9{counts.envoy\u00e9 > 1 ? 's' : ''}
-            </span>
-          )}
-          {counts.erreur > 0 && (
-            <span className="flex items-center gap-1 text-[10px] font-medium text-red-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
-              {counts.erreur} \u00e9chec{counts.erreur > 1 ? 's' : ''}
-            </span>
-          )}
-        </div>
+    <span className="shrink-0 text-[10px] text-gray-300">—</span>
+  );
+}
+
+function EmailStatusPanel({ recipients, statusMap }: {
+  recipients: AgRecipient[];
+  statusMap: Record<string, AgEmailStatut> | null;
+}) {
+  const counts = { ouvert: 0, envoyé: 0, erreur: 0 };
+  for (const r of recipients) {
+    const s = statusMap?.[r.email.toLowerCase()];
+    if (s === 'ouvert') counts.ouvert++;
+    else if (s === 'envoyé') counts.envoyé++;
+    else if (s === 'erreur') counts.erreur++;
+  }
+  return (
+    <div>
+      {/* Compteurs résumé */}
+      <div className="flex items-center gap-x-3 gap-y-1 flex-wrap px-3.5 py-2 border-b border-gray-100">
+        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mr-1">Suivi e-mail</span>
+        {counts.ouvert > 0 && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />{counts.ouvert} ouvert{counts.ouvert > 1 ? 's' : ''}
+          </span>
+        )}
+        {counts.envoyé > 0 && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />{counts.envoyé} envoyé{counts.envoyé > 1 ? 's' : ''}
+          </span>
+        )}
+        {counts.erreur > 0 && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400" />{counts.erreur} échec{counts.erreur > 1 ? 's' : ''}
+          </span>
+        )}
       </div>
-      {/* Lignes par destinataire */}
-      <ul className="divide-y divide-gray-50 max-h-52 overflow-y-auto">
+      {/* Lignes */}
+      <ul className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
         {recipients.map((r) => {
           const statut = statusMap?.[r.email.toLowerCase()];
           const ini = `${r.prenom[0] ?? ''}${r.nom[0] ?? ''}`.toUpperCase();
           return (
-            <li
-              key={r.id}
-              className={`flex items-center gap-2.5 px-3.5 py-2${
-                statut === 'erreur' ? ' bg-red-50/40' : ''
-              }`}
-            >
-              <span className="shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-[9px] font-bold flex items-center justify-center select-none">
-                {ini}
-              </span>
+            <li key={r.id} className={`flex items-center gap-2.5 px-3.5 py-1.5${statut === 'erreur' ? ' bg-red-50/50' : ''}`}>
+              <span className="shrink-0 w-5 h-5 rounded-full bg-gray-100 text-gray-500 text-[9px] font-bold flex items-center justify-center select-none">{ini}</span>
               <span className="flex-1 text-xs text-gray-700 min-w-0 truncate">{r.prenom} {r.nom}</span>
-              {statut === 'ouvert' && (
-                <span className="shrink-0 flex items-center gap-1 text-[10px] font-semibold text-green-700">
-                  <Eye size={10} className="text-green-500" />Ouvert
-                </span>
-              )}
-              {statut === 'erreur' && (
-                <span className="shrink-0 flex items-center gap-1 text-[10px] font-semibold text-red-600">
-                  <XCircle size={10} className="text-red-400" />\u00c9chec
-                </span>
-              )}
-              {statut === 'envoy\u00e9' && (
-                <span className="shrink-0 flex items-center gap-1 text-[10px] font-semibold text-blue-600">
-                  <CheckCircle size={10} className="text-blue-400" />Envoy\u00e9
-                </span>
-              )}
-              {!statut && (
-                <span className="shrink-0 flex items-center gap-1 text-[10px] font-medium text-gray-400">
-                  <span className="w-1.5 h-1.5 rounded-full border border-gray-300 inline-block" />\u2014
-                </span>
-              )}
+              <StatusBadge statut={statut} />
             </li>
           );
         })}
@@ -522,32 +504,27 @@ export function AGEnvoyerConvocation({
 
   return (
     <>
-      <div className="flex flex-col items-end gap-1">
+      <div className="w-full rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        {/* Bandeau "Convocation envoyée le..." */}
         {sentDate && (
-          <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
-            <CheckCircle size={13} /> Envoyée le {fmtDate(sentDate)}
-          </span>
+          <div className="flex items-center gap-2 px-3.5 py-2 bg-green-50 border-b border-green-100">
+            <CheckCircle size={13} className="text-green-600 shrink-0" />
+            <span className="text-xs text-green-700 font-medium">Envoyée le {fmtDate(sentDate)}</span>
+          </div>
         )}
-        {sendSummary && (
-          <span className={`max-w-xs text-right text-xs font-medium ${
-            sendSummary.level === 'success'
-              ? 'text-green-600'
-              : sendSummary.level === 'warning'
-                ? 'text-amber-700'
-                : 'text-red-600'
-          }`}>
-            {sendSummary.message}
-          </span>
-        )}
-        <Button variant={sentDate ? 'secondary' : 'primary'} size="sm" onClick={() => setIsOpen(true)}>
-          <Mail size={14} /> {sentDate ? 'Renvoyer la convocation' : 'Envoyer la convocation'}
-        </Button>
-      </div>
-      {sentDate && recipients && recipients.length > 0 && (
-        <div className="mt-2 w-full">
-          <EmailStatusPanel recipients={recipients} statusMap={localEmailStatus} title="Convocation" />
+        {/* Bouton d'action */}
+        <div className="flex items-center gap-2 px-3 py-2.5">
+          <Button variant={sentDate ? 'secondary' : 'primary'} size="sm" onClick={() => setIsOpen(true)}>
+            <Mail size={13} /> {sentDate ? 'Renvoyer la convocation' : 'Envoyer la convocation'}
+          </Button>
         </div>
-      )}
+        {/* Suivi e-mail par destinataire */}
+        {sentDate && recipients && recipients.length > 0 && (
+          <div className="border-t border-gray-100">
+            <EmailStatusPanel recipients={recipients} statusMap={localEmailStatus} />
+          </div>
+        )}
+      </div>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Envoyer la convocation par e-mail" size="sm">
         <div className="space-y-4">
@@ -594,7 +571,7 @@ export function AGEnvoyerConvocation({
             </div>
           )}
           {sentDate && recipients && recipients.length > 0 && (
-            <EmailStatusPanel recipients={recipients} statusMap={localEmailStatus} title="Statut par destinataire" />
+            <EmailStatusPanel recipients={recipients} statusMap={localEmailStatus} />
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
@@ -610,12 +587,13 @@ export function AGEnvoyerConvocation({
 }
 
 // ---- Envoi du PV par e-mail (statut 'terminee') ----
-export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe, emailStatusByEmail, recipients }: {
+export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe, emailStatusByEmail, recipients, exportSlot }: {
   agId: string;
   coproprieteId: string;
   pvEnvoyeLe?: string | null;
   emailStatusByEmail?: Record<string, AgEmailStatut> | null;
   recipients?: AgRecipient[];
+  exportSlot?: ReactNode;
 }) {
   const supabase = createClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -690,32 +668,28 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe, emailStatusByEmai
 
   return (
     <>
-      <div className="flex flex-col items-end gap-1">
+      <div className="w-full rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        {/* Bandeau "PV envoyé le..." */}
         {sentDate && (
-          <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
-            <CheckCircle size={13} /> PV envoyé le {fmtDate(sentDate)}
-          </span>
+          <div className="flex items-center gap-2 px-3.5 py-2 bg-green-50 border-b border-green-100">
+            <CheckCircle size={13} className="text-green-600 shrink-0" />
+            <span className="text-xs text-green-700 font-medium">PV envoyé le {fmtDate(sentDate)}</span>
+          </div>
         )}
-        {sendSummary && (
-          <span className={`max-w-xs text-right text-xs font-medium ${
-            sendSummary.level === 'success'
-              ? 'text-green-600'
-              : sendSummary.level === 'warning'
-                ? 'text-amber-700'
-                : 'text-red-600'
-          }`}>
-            {sendSummary.message}
-          </span>
-        )}
-        <Button variant={sentDate ? 'secondary' : 'primary'} size="sm" onClick={() => setIsOpen(true)}>
-          <Mail size={14} /> {sentDate ? 'Renvoyer le PV' : 'Envoyer le PV par e-mail'}
-        </Button>
-      </div>
-      {sentDate && recipients && recipients.length > 0 && (
-        <div className="mt-2 w-full">
-          <EmailStatusPanel recipients={recipients} statusMap={localEmailStatus} title="PV" />
+        {/* Boutons d'action */}
+        <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap">
+          <Button variant="secondary" size="sm" onClick={() => setIsOpen(true)}>
+            <Mail size={13} /> {sentDate ? 'Renvoyer le PV' : 'Envoyer le PV par e-mail'}
+          </Button>
+          {exportSlot}
         </div>
-      )}
+        {/* Suivi e-mail par destinataire */}
+        {recipients && recipients.length > 0 && (
+          <div className="border-t border-gray-100">
+            <EmailStatusPanel recipients={recipients} statusMap={localEmailStatus} />
+          </div>
+        )}
+      </div>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Envoyer le procès-verbal par e-mail" size="sm">
         <div className="space-y-4">
@@ -758,7 +732,7 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe, emailStatusByEmai
             </div>
           )}
           {sentDate && recipients && recipients.length > 0 && (
-            <EmailStatusPanel recipients={recipients} statusMap={localEmailStatus} title="Statut par destinataire" />
+            <EmailStatusPanel recipients={recipients} statusMap={localEmailStatus} />
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-1">
