@@ -5,7 +5,8 @@
 // ============================================================
 'use client';
 
-import { useState, useId, type ReactNode } from 'react';
+import { useState, useId, useRef, useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { HelpCircle } from 'lucide-react';
 
 // ── Dictionnaire des termes métier ──────────────────────────
@@ -71,19 +72,32 @@ interface TermTooltipProps {
 export default function TermTooltip({ term, children, className }: TermTooltipProps) {
   const entry = GLOSSARY[term];
   const [visible, setVisible] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const tooltipId = useId();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   if (!entry) return <>{children ?? term}</>;
 
   const label = children ?? entry.label;
 
+  const show = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setCoords({ top: r.top + window.scrollY, left: r.left + window.scrollX });
+    }
+    setVisible(true);
+  };
+  const hide = () => setVisible(false);
+
   return (
     <span
       className={`relative inline-flex items-center gap-0.5 ${className ?? ''}`}
-      onMouseEnter={() => setVisible(true)}
-      onMouseLeave={() => setVisible(false)}
-      onFocus={() => setVisible(true)}
-      onBlur={() => setVisible(false)}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
     >
       {/* Terme souligné en pointillés */}
       <span className="underline decoration-dotted decoration-gray-400 cursor-help">
@@ -92,30 +106,32 @@ export default function TermTooltip({ term, children, className }: TermTooltipPr
 
       {/* Icône d'aide accessible */}
       <button
+        ref={btnRef}
         type="button"
         aria-describedby={tooltipId}
         tabIndex={0}
         className="shrink-0 text-gray-400 hover:text-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
-        onClick={(e) => { e.stopPropagation(); setVisible((v) => !v); }}
+        onClick={(e) => { e.stopPropagation(); visible ? hide() : show(); }}
         aria-label={`Définition : ${entry.label}`}
       >
         <HelpCircle size={13} />
       </button>
 
-      {/* Bulle */}
-      {visible && (
+      {/* Bulle — rendue dans body pour échapper aux overflow:hidden */}
+      {mounted && visible && coords && createPortal(
         <span
           id={tooltipId}
           role="tooltip"
-          className="
-            absolute z-50 bottom-full left-0 mb-2
-            w-64 rounded-xl border border-blue-100 bg-white shadow-lg
-            px-3 py-2.5 text-xs text-gray-700 leading-relaxed
-          "
+          style={{
+            position: 'absolute',
+            top: coords.top - 8,
+            left: coords.left,
+            transform: 'translateY(-100%)',
+          }}
+          className="z-[9999] w-64 rounded-xl border border-blue-100 bg-white shadow-lg px-3 py-2.5 text-xs text-gray-700 leading-relaxed pointer-events-none"
         >
           <span className="block font-semibold text-blue-700 mb-1 capitalize">{entry.label}</span>
           {entry.definition}
-          {/* Flèche vers le bas */}
           <span
             className="absolute top-full left-4 -translate-y-px w-0 h-0"
             style={{
@@ -125,7 +141,8 @@ export default function TermTooltip({ term, children, className }: TermTooltipPr
               filter: 'drop-shadow(0 1px 0 #bfdbfe)',
             }}
           />
-        </span>
+        </span>,
+        document.body
       )}
     </span>
   );
