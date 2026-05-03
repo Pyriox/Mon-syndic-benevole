@@ -23,8 +23,10 @@ import {
   buildBrouillonRappelSubject,
   buildBrouillonEcheanceEmail,
   buildBrouillonEcheanceSubject,
-  buildSyndicOnboardingReminderEmail,
-  buildSyndicOnboardingReminderSubject,
+  buildSyndicOnboardingJ2Email,
+  buildSyndicOnboardingJ2Subject,
+  buildSyndicOnboardingJ7Email,
+  buildSyndicOnboardingJ7Subject,
   buildSyndicImpayesRecapEmail,
   buildSyndicImpayesRecapSubject,
   buildSyndicReactivationEmail,
@@ -836,7 +838,11 @@ async function sendSyndicOnboardingReminders(
 
     const prenom = (profile.full_name ?? '').split(' ')[0] || 'Syndic';
     const actionUrl = coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/coproprietaires`;
-    const subject = buildSyndicOnboardingReminderSubject({ kind, coproCount });
+    const subject = kind === 'j21'
+      ? buildSyndicReactivationSubject()
+      : kind === 'j7'
+        ? buildSyndicOnboardingJ7Subject({ coproCount })
+        : buildSyndicOnboardingJ2Subject({ coproCount });
 
     const html = kind === 'j21'
       ? buildSyndicReactivationEmail({
@@ -845,13 +851,9 @@ async function sendSyndicOnboardingReminders(
           coproprietairesCount,
           dashboardUrl: coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/dashboard`,
         })
-      : buildSyndicOnboardingReminderEmail({
-          syndicPrenom: prenom,
-          kind,
-          coproCount,
-          coproprietairesCount,
-          actionUrl,
-        });
+      : kind === 'j7'
+        ? buildSyndicOnboardingJ7Email({ syndicPrenom: prenom, coproCount, actionUrl })
+        : buildSyndicOnboardingJ2Email({ syndicPrenom: prenom, coproCount, actionUrl });
 
     const result = await resend.emails.send({
       from: FROM,
