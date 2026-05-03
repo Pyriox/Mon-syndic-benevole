@@ -312,31 +312,9 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                   {statut === 'en_attente' && <Clock size={16} className="text-amber-400" />}
                 </div>
 
-                {/* Nom + date paiement */}
+                {/* Nom */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-sm font-medium text-gray-800">{nom}</span>
-                    {(() => {
-                      const email = ligne.coproprietaires?.email;
-                      const emailStatut = email ? emailStatusByEmail?.[email.toLowerCase()] : undefined;
-                      if (!emailStatut) return null;
-                      if (emailStatut === 'ouvert') return (
-                        <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-green-100 text-green-700">
-                          <Eye size={9} />Ouvert
-                        </span>
-                      );
-                      if (emailStatut === 'erreur') return (
-                        <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-red-100 text-red-700">
-                          <XCircleErr size={9} />Erreur
-                        </span>
-                      );
-                      return (
-                        <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-600">
-                          <CheckCircle2 size={9} />Envoyé
-                        </span>
-                      );
-                    })()}
-                  </div>
+                  <span className="text-sm font-medium text-gray-800">{nom}</span>
                   {hasRegularisationAjustement && (
                     <span className="ml-2 text-xs text-indigo-700">
                       · {regularisationAjustement > 0 ? 'débit' : 'crédit'} de régularisation {formatEuros(regularisationAjustement)} imputé dans le total dû
@@ -351,6 +329,32 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                     <span className="ml-2 text-xs text-red-500 font-semibold">· impayé</span>
                   )}
                 </div>
+
+                {/* Colonne statut e-mail (visible uniquement si des envois ont été tracés) */}
+                {emailStatusByEmail && (() => {
+                  const email = ligne.coproprietaires?.email?.toLowerCase();
+                  const emailStatut = email ? emailStatusByEmail[email] : undefined;
+                  if (emailStatut === 'ouvert') return (
+                    <span className="shrink-0 w-28 inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-green-100 text-green-700 border border-green-200">
+                      <Eye size={9} className="shrink-0" />Avis ouvert
+                    </span>
+                  );
+                  if (emailStatut === 'erreur') return (
+                    <span className="shrink-0 w-28 inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-red-100 text-red-700 border border-red-200">
+                      <XCircleErr size={9} className="shrink-0" />Échec d&apos;envoi
+                    </span>
+                  );
+                  if (emailStatut === 'envoyé') return (
+                    <span className="shrink-0 w-28 inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-200">
+                      <CheckCircle2 size={9} className="shrink-0" />Avis envoyé
+                    </span>
+                  );
+                  return (
+                    <span className="shrink-0 w-28 inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-gray-400 border border-gray-200">
+                      Non envoyé
+                    </span>
+                  );
+                })()}
 
                 {/* Montant */}
                 <span className={`text-sm font-bold shrink-0 tabular-nums ${
