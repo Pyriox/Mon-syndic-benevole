@@ -11,19 +11,25 @@ import { redirectToDashboard } from '@/lib/auth-redirect';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import SiteLogo from '@/components/ui/SiteLogo';
-import { ArrowRight, MailCheck, Shield, Clock, TrendingUp } from 'lucide-react';
+import { ArrowRight, MailCheck, Shield, Clock, MessageCircle } from 'lucide-react';
 import { trackAnonymousEvent, trackConsentAwareEvent } from '@/lib/gtag';
 import { logEventForEmail } from '@/lib/actions/log-user-event';
 
 const REASSURANCES = [
   { icon: Shield,      text: 'Données sécurisées et hébergées en Europe' },
   { icon: Clock,       text: "Accès 24h/24 depuis n'importe quel appareil" },
-  { icon: TrendingUp,  text: 'Mis à jour régulièrement, sans frais supplémentaires' },
+  { icon: MessageCircle,  text: 'Support inclus, réponse rapide à vos questions' },
 ];
 
 export default function LoginPage() {
   return (
-    <Suspense>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-950 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
@@ -278,7 +284,7 @@ function LoginForm() {
           {mode === 'login' && (
             <>
               <div className="mb-8">
-                <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Connexion</h1>
+                <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Se connecter</h1>
                 <p className="text-sm text-gray-500">
                   Pas encore de compte ?{' '}
                   <Link href="/register" className="text-blue-600 hover:underline font-medium">
@@ -290,6 +296,7 @@ function LoginForm() {
               <form onSubmit={handleLogin} className="space-y-4">
                 <Input
                   label="Adresse email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmailTracked(e.target.value)}
@@ -301,6 +308,7 @@ function LoginForm() {
                 <div>
                   <Input
                     label="Mot de passe"
+                    name="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPasswordTracked(e.target.value)}
@@ -320,13 +328,13 @@ function LoginForm() {
                 </div>
 
                 {success && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700 font-medium">
+                  <div role="alert" className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700 font-medium">
                     {success}
                   </div>
                 )}
 
                 {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+                  <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
                     {error}
                   </div>
                 )}
@@ -361,9 +369,6 @@ function LoginForm() {
                 </div>
               </form>
 
-              <p className="text-center text-xs text-gray-500 mt-8">
-                © {new Date().getFullYear()} Mon Syndic Bénévole
-              </p>
             </>
           )}
 
@@ -394,6 +399,7 @@ function LoginForm() {
                   </div>
                   <button
                     onClick={() => setMode('login')}
+                    aria-label="Retour à la connexion"
                     className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium"
                   >
                     ← Retour à la connexion
@@ -403,6 +409,7 @@ function LoginForm() {
                 <form onSubmit={handleForgot} className="space-y-4">
                   <Input
                     label="Adresse email"
+                    name="email"
                     type="email"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
@@ -412,7 +419,7 @@ function LoginForm() {
                   />
 
                   {resetError && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+                    <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
                       {resetError}
                     </div>
                   )}
@@ -427,6 +434,7 @@ function LoginForm() {
                   <button
                     type="button"
                     onClick={() => setMode('login')}
+                    aria-label="Retour à la connexion"
                     className="w-full text-center text-sm text-gray-500 hover:text-gray-700 transition-colors pt-1"
                   >
                     ← Retour à la connexion
@@ -434,9 +442,6 @@ function LoginForm() {
                 </form>
               )}
 
-              <p className="text-center text-xs text-gray-500 mt-8">
-                © {new Date().getFullYear()} Mon Syndic Bénévole
-              </p>
             </>
           )}
 

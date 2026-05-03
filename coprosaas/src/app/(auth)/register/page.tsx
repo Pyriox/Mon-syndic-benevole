@@ -18,10 +18,10 @@ import { getCanonicalSiteUrl } from '@/lib/site-url';
 import { buildInvitationLoginHref, getInvitationAcceptanceState } from '@/lib/invitation-acceptance';
 
 const BENEFITS = [
-  { icon: Building2, text: 'Gérez plusieurs copropriétés depuis un seul espace' },
-  { icon: Users,     text: 'Annuaire des copropriétaires et suivi des lots' },
-  { icon: FileText,  text: 'Documents, dépenses et appels de fonds centralisés' },
-  { icon: CalendarDays, text: 'Assemblées générales, votes et PV en quelques clics' },
+  { icon: Building2,    text: 'Gardez le fil de chaque copropriété sans effort' },
+  { icon: Users,        text: 'Retrouvez en un clic les coordonnées de chaque propriétaire' },
+  { icon: FileText,     text: 'Fini les tableurs : charges, appels et documents au même endroit' },
+  { icon: CalendarDays, text: 'Préparez vos AG et rédigez le PV en quelques minutes' },
 ];
 
 async function trackAnonymousRegisterEvent(params: Record<string, string>) {
@@ -342,10 +342,10 @@ function RegisterForm() {
         {/* ── Panneau gauche : valeur ── */}
         <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-blue-600 to-indigo-700 p-12 text-white">
           <div>
-            <div className="flex items-center gap-3 mb-12">
+            <Link href="/" className="flex items-center gap-3 mb-12 group">
               <SiteLogo size={40} />
               <span className="font-bold text-lg tracking-tight">Mon Syndic Bénévole</span>
-            </div>
+            </Link>
 
             <h2 className="text-3xl font-extrabold leading-tight mb-4">
               La gestion de copropriété,{' '}
@@ -378,7 +378,7 @@ function RegisterForm() {
                 ))}
               </div>
               <p className="text-blue-100/70 text-xs leading-relaxed">
-                Rejoignez des syndics bénévoles<br/>qui ont simplifié leur gestion.
+                Déjà utilisé par des syndics bénévoles<br/>qui gèrent leur immeuble en toute autonomie.
               </p>
             </div>
           </div>
@@ -480,7 +480,7 @@ function RegisterForm() {
                 autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="vous@email.fr"
+                placeholder="syndic@monimmeuble.fr"
                 required
               />
             )}
@@ -516,18 +516,20 @@ function RegisterForm() {
               onChange={handleChange}
               placeholder="Minimum 8 caractères"
               required
-              hint="Au moins 8 caractères"
+              hint={!formData.password || formData.password.length >= 8 ? 'Au moins 8 caractères' : undefined}
+              error={formData.password && formData.password.length < 8 ? 'Au moins 8 caractères requis.' : undefined}
             />
 
             <Input
               label="Confirmer le mot de passe"
               name="confirmPassword"
               type="password"
-              autoComplete="new-password"
+              autoComplete="off"
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="••••••••"
               required
+              error={formData.confirmPassword && formData.password !== formData.confirmPassword ? 'Les mots de passe ne correspondent pas.' : undefined}
             />
 
             {/* ── CGU / CGV ── */}
@@ -541,18 +543,18 @@ function RegisterForm() {
               />
               <span className="text-xs text-gray-500 leading-snug">
                 J&apos;ai lu et j&apos;accepte les{' '}
-                <Link href="/cgu" target="_blank" className="text-blue-600 hover:underline font-medium">
+                <Link href="/cgu" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">
                   Conditions Générales d&apos;Utilisation
                 </Link>{' '}
                 ainsi que la{' '}
-                <Link href="/politique-confidentialite" target="_blank" className="text-blue-600 hover:underline font-medium">
+                <Link href="/politique-confidentialite" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">
                   Politique de Confidentialité
                 </Link>.
               </span>
             </label>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{error}</div>
+              <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{error}</div>
             )}
 
             <div className="pt-1">
