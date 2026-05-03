@@ -236,29 +236,25 @@ export default async function AGDetailPage({ params }: Props) {
           />
 
           {/* Actions secondaires : e-mails */}
-          {((ag.statut === 'planifiee' && !needsConvocation) || ag.statut === 'terminee') && (
-            <div className="flex items-center gap-2">
-              {ag.statut === 'planifiee' && (
-                <AGEnvoyerConvocation
-                  agId={id}
-                  coproprieteId={ag.copropriete_id}
-                  ag={agWithCopropriete}
-                  resolutions={resolutions ?? []}
-                  convocationEnvoyeeLe={ag.convocation_envoyee_le ?? null}
-                  emailStatusByEmail={convocationStatusByEmail}
-                  recipients={agRecipients}
-                />
-              )}
-              {ag.statut === 'terminee' && (
-                <AGEnvoyerPV
-                  agId={id}
-                  coproprieteId={ag.copropriete_id}
-                  pvEnvoyeLe={ag.pv_envoye_le ?? null}
-                  emailStatusByEmail={pvStatusByEmail}
-                  recipients={agRecipients}
-                />
-              )}
-            </div>
+          {ag.statut === 'planifiee' && !needsConvocation && (
+            <AGEnvoyerConvocation
+              agId={id}
+              coproprieteId={ag.copropriete_id}
+              ag={agWithCopropriete}
+              resolutions={resolutions ?? []}
+              convocationEnvoyeeLe={ag.convocation_envoyee_le ?? null}
+              emailStatusByEmail={convocationStatusByEmail}
+              recipients={agRecipients}
+            />
+          )}
+          {ag.statut === 'terminee' && (
+            <AGEnvoyerPV
+              agId={id}
+              coproprieteId={ag.copropriete_id}
+              pvEnvoyeLe={ag.pv_envoye_le ?? null}
+              emailStatusByEmail={pvStatusByEmail}
+              recipients={agRecipients}
+            />
           )}
 
           {/* Documents PDF */}

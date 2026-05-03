@@ -453,6 +453,25 @@ export function AGEnvoyerConvocation({
           <Mail size={14} /> {sentDate ? 'Renvoyer la convocation' : 'Envoyer la convocation'}
         </Button>
       </div>
+      {sentDate && recipients && recipients.length > 0 && (
+        <div className="mt-2 border border-gray-200 rounded-lg overflow-hidden w-full">
+          <div className="bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-500 border-b border-gray-200">Suivi des e-mails — convocation</div>
+          <ul className="divide-y divide-gray-100 max-h-52 overflow-y-auto">
+            {recipients.map((r) => {
+              const statut = localEmailStatus?.[r.email.toLowerCase()];
+              return (
+                <li key={r.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
+                  <span className="text-xs text-gray-700 min-w-0 truncate">{r.prenom} {r.nom}</span>
+                  {statut === 'ouvert' && <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700"><Eye size={9} />Ouvert</span>}
+                  {statut === 'erreur' && <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-red-100 text-red-700"><XCircle size={9} />Échec</span>}
+                  {statut === 'envoyé' && <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-600"><CheckCircle size={9} />Envoyé</span>}
+                  {!statut && <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border border-gray-200 text-gray-400">Non envoyé</span>}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Envoyer la convocation par e-mail" size="sm">
         <div className="space-y-4">
@@ -642,6 +661,25 @@ export function AGEnvoyerPV({ agId, coproprieteId, pvEnvoyeLe, emailStatusByEmai
           <Mail size={14} /> {sentDate ? 'Renvoyer le PV' : 'Envoyer le PV par e-mail'}
         </Button>
       </div>
+      {sentDate && recipients && recipients.length > 0 && (
+        <div className="mt-2 border border-gray-200 rounded-lg overflow-hidden w-full">
+          <div className="bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-500 border-b border-gray-200">Suivi des e-mails — PV</div>
+          <ul className="divide-y divide-gray-100 max-h-52 overflow-y-auto">
+            {recipients.map((r) => {
+              const statut = localEmailStatus?.[r.email.toLowerCase()];
+              return (
+                <li key={r.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
+                  <span className="text-xs text-gray-700 min-w-0 truncate">{r.prenom} {r.nom}</span>
+                  {statut === 'ouvert' && <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700"><Eye size={9} />Ouvert</span>}
+                  {statut === 'erreur' && <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-red-100 text-red-700"><XCircle size={9} />Échec</span>}
+                  {statut === 'envoyé' && <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-600"><CheckCircle size={9} />Envoyé</span>}
+                  {!statut && <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border border-gray-200 text-gray-400">Non envoyé</span>}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Envoyer le procès-verbal par e-mail" size="sm">
         <div className="space-y-4">
