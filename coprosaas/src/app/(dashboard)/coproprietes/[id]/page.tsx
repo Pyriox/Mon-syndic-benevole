@@ -19,6 +19,7 @@ import OnboardingWizard from '@/components/ui/OnboardingWizard';
 import {
   Building2,
   CalendarDays,
+  ChevronRight,
   Hash,
   Layers,
   MapPin,
@@ -107,6 +108,11 @@ export default async function CopropriétéDetailPage({ params, searchParams }: 
     <div className="space-y-6">
       {!canWrite && <ReadOnlyBanner freemium trialUsed={trialUsed} />}
       {sp?.onboarding === '1' && <OnboardingWizard step={2} nextHref="/coproprietaires?onboarding=1" />}
+      <nav aria-label="fil d'Ariane" className="flex items-center gap-1.5 text-sm text-gray-500 flex-wrap">
+        <Link href="/coproprietes" className="hover:text-gray-700 transition-colors">Mes copropriétés</Link>
+        <ChevronRight size={14} className="shrink-0 text-gray-400" />
+        <span className="text-gray-900 font-medium truncate max-w-xs">{copro.nom}</span>
+      </nav>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Lots & bâtiment</h2>

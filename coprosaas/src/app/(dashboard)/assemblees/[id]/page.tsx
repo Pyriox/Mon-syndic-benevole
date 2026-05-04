@@ -15,7 +15,7 @@ import AGStatusActions from './AGStatusActions';
 import { AGDelete, AGAnnuler, AGEnvoyerPV, AGEnvoyerConvocation, AGEditInfos } from './AGStatusActions';
 import PresencePanel from './PresencePanel';
 import { formatDate, formatTime, LABELS_STATUT_AG } from '@/lib/utils';
-import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video, ChevronRight } from 'lucide-react';
+import { ArrowLeft as _ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video, ChevronRight } from 'lucide-react';
 import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import TermTooltip from '@/components/ui/TermTooltip';
@@ -183,9 +183,11 @@ export default async function AGDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <Link href="/assemblees" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-        <ArrowLeft size={16} /> Retour aux assemblées
-      </Link>
+      <nav aria-label="fil d'Ariane" className="flex items-center gap-1.5 text-sm text-gray-500 flex-wrap">
+        <Link href="/assemblees" className="hover:text-gray-700 transition-colors">Assemblées</Link>
+        <ChevronRight size={14} className="shrink-0 text-gray-400" />
+        <span className="text-gray-900 font-medium truncate max-w-xs">{ag.titre}</span>
+      </nav>
 
       {/* ── Bandeau lecture seule ── */}
       {isSyndic && !canWrite && <ReadOnlyBanner trialUsed={trialUsed} />}

@@ -14,6 +14,7 @@ import LandingNav from './LandingNav';
 import PublicEnhancements from './PublicEnhancements';
 import CtaLink from '@/components/ui/CtaLink';
 import PublicFooter from '@/components/layout/PublicFooter';
+import Link from 'next/link';
 
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
@@ -244,6 +245,13 @@ export default function HomePage() {
               Voir l&apos;aperçu
             </a>
           </div>
+
+          <p className="text-sm text-blue-300/70 -mt-6 mb-2">
+            Déjà inscrit ?{' '}
+            <Link href="/login" className="underline underline-offset-2 hover:text-white transition-colors">
+              Se connecter
+            </Link>
+          </p>
 
           {/* Badges rassurants */}
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-blue-200/70">

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { hasChargesSpecialesAddon } from '@/lib/subscription';
@@ -72,6 +73,13 @@ export default async function CoproprieteParametragePage({ params }: Props) {
 
   return (
     <div className="space-y-4">
+      <nav aria-label="fil d'Ariane" className="flex items-center gap-1.5 text-sm text-gray-500 flex-wrap">
+        <Link href="/coproprietes" className="hover:text-gray-700 transition-colors">Mes copropriétés</Link>
+        <ChevronRight size={14} className="shrink-0 text-gray-400" />
+        <Link href={`/coproprietes/${copro.id}`} className="hover:text-gray-700 transition-colors truncate max-w-xs">{copro.nom}</Link>
+        <ChevronRight size={14} className="shrink-0 text-gray-400" />
+        <span className="text-gray-900 font-medium">Paramétrage</span>
+      </nav>
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Paramétrage</h2>
         <p className="mt-1 text-sm font-medium text-gray-600">{copro.nom}</p>
