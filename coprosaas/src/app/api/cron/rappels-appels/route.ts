@@ -340,7 +340,7 @@ export async function GET(req: NextRequest) {
     .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
     .eq('statut', 'brouillon')
     .lt('created_at', threeDaysAgo)
-    .gte('date_echeance', todayStr)
+    .gt('date_echeance', dateJ14) // exclusif avec brouillonsJ14 (≤ J+14) et brouillonsJ7 (≤ J+7)
     .is('rappel_brouillon_at', null);
 
   const { data: brouillonsJ14 } = await supabase
@@ -544,7 +544,8 @@ export async function GET(req: NextRequest) {
       .from('coproprietes')
       .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
       .eq('plan', 'essai')
-      .eq('plan_period_end', dateJ3)
+      .gte('plan_period_end', addDays(today, 2)) // rattrapage : fenêtre J+2 → J+3
+      .lte('plan_period_end', dateJ3)
       .is('rappel_trial_j3_at', null);
 
   const { data: trialsEndingJ1 } = onboardingOnly
@@ -553,7 +554,8 @@ export async function GET(req: NextRequest) {
       .from('coproprietes')
       .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
       .eq('plan', 'essai')
-      .eq('plan_period_end', dateTrialEndingJ1)
+      .gte('plan_period_end', todayStr) // rattrapage : fenêtre J+0 → J+1
+      .lte('plan_period_end', dateTrialEndingJ1)
       .is('rappel_trial_j1_at', null);
 
   type TrialRow = {
@@ -621,7 +623,7 @@ export async function GET(req: NextRequest) {
         coproprieteNom: row.nom,
         planLabel,
         periodEnd: row.plan_period_end,
-        dashboardUrl: `${SITE_URL}`,
+        dashboardUrl: `${SITE_URL}/abonnement`,
       }),
     });
     await trackCronEmail({
@@ -968,6 +970,23 @@ async function sendRappelEmails(
     });
   }
 
+  // Filtre hard bounce : exclure les destinataires marqués en bounce permanent dans profiles
+  const allCandidateEmails = rows
+    .map(({ cop }) => cop.email || (cop.user_id ? emailByUserId.get(cop.user_id) ?? '' : ''))
+    .filter((e): e is string => e.length > 0)
+    .map((e) => e.trim().toLowerCase());
+  const bouncedEmails = new Set<string>();
+  if (allCandidateEmails.length > 0) {
+    const { data: bouncedProfiles } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('email_bounced_hard', true)
+      .in('email', allCandidateEmails);
+    for (const p of (bouncedProfiles ?? []) as Array<{ email: string }>) {
+      if (p.email) bouncedEmails.add(p.email.trim().toLowerCase());
+    }
+  }
+
   // Envoi des emails par lots de 10 pour respecter le rate-limit Resend
   // et éviter des pics simultanés sur des copropriétés avec beaucoup de lots.
   const CHUNK_SIZE = 10;
@@ -977,6 +996,7 @@ async function sendRappelEmails(
     await Promise.all(chunk.map(async ({ cop, montant_du, regularisation_ajustement }) => {
     const email = cop.email || (cop.user_id ? emailByUserId.get(cop.user_id) ?? '' : '');
     if (!email) return;
+    if (bouncedEmails.has(email.trim().toLowerCase())) return;
 
     const subject = buildAppelEmailSubject({ type, coproprieteNom, dateEcheance: appel.date_echeance });
 
