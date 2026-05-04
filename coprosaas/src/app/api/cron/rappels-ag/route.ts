@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 import { buildAGReminderEmail, buildAGReminderSubject } from '@/lib/emails/ag-reminders';
+import { buildMilestoneAGPlanifieeSubject, buildMilestoneAGPlanifieeEmail } from '@/lib/emails/syndic-notifications';
 import { pushNotification, pushAdminAlert } from '@/lib/notification-center';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { getCronAuthState } from '@/lib/cron-auth';
@@ -393,9 +394,82 @@ export async function GET(req: NextRequest) {
     retries++;
   }
 
+  // ── Milestone : première AG planifiée ─────────────────────────────────────
+  // Cible : copropriétés dont la première AG vient d'être planifiée
+  // (créée dans les 2 derniers jours) — syndic pas encore notifié.
+  let milestoneAGSent = 0;
+  const yesterday = addDays(now, -1);
+  const { data: firstAGCandidates } = await admin
+    .from('assemblees_generales')
+    .select('id, copropriete_id, titre, date_ag, coproprietes!inner(nom, syndic_id)')
+    .gte('created_at', `${yesterday}T00:00:00.000Z`)
+    .in('statut', ['creation', 'planifiee']);
+
+  for (const ag of firstAGCandidates ?? []) {
+    const copro = Array.isArray(ag.coproprietes) ? ag.coproprietes[0] : ag.coproprietes;
+    if (!copro?.syndic_id) continue;
+
+    // Vérifie si c'est bien la première AG de cette copropriété
+    const { count: totalAGs } = await admin
+      .from('assemblees_generales')
+      .select('id', { count: 'exact', head: true })
+      .eq('copropriete_id', ag.copropriete_id)
+      .neq('statut', 'annulee');
+
+    if ((totalAGs ?? 0) !== 1) continue;
+
+    // Récupère le profil du syndic
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', copro.syndic_id)
+      .maybeSingle();
+
+    if (!profile?.email) continue;
+
+    // Idempotence via user_events
+    const { count: alreadySent } = await admin
+      .from('user_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_email', profile.email)
+      .eq('event_type', 'milestone_premiere_ag_planifiee')
+      .eq('copropriete_id', ag.copropriete_id);
+
+    if (alreadySent) continue;
+
+    const syndicPrenom = (profile.full_name ?? '').split(' ')[0] || '';
+    const subject = buildMilestoneAGPlanifieeSubject(copro.nom);
+    const result = await resend.emails.send({
+      from: FROM,
+      to: profile.email,
+      subject,
+      html: buildMilestoneAGPlanifieeEmail({
+        syndicPrenom,
+        coproprieteNom: copro.nom,
+        agTitre: ag.titre,
+        dateAg: ag.date_ag,
+        agUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/assemblees/${ag.id}`,
+      }),
+    });
+
+    if (!result.error) {
+      await admin.from('user_events').insert({
+        user_email: profile.email,
+        event_type: 'milestone_premiere_ag_planifiee',
+        label: `Milestone : première AG planifiée (${ag.titre})`,
+        copropriete_id: ag.copropriete_id,
+      });
+      sent++;
+      milestoneAGSent++;
+    } else {
+      console.error('[cron/rappels-ag] Erreur email milestone AG:', result.error);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     sent,
     retries,
+    milestone_ag: milestoneAGSent,
   });
 }

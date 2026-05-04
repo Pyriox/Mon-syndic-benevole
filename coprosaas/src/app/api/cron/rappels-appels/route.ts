@@ -34,7 +34,7 @@ import {
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
-import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject } from '@/lib/emails/subscription';
+import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject, buildChurnReactivationEmail, buildChurnReactivationSubject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
 import { getCronAuthState } from '@/lib/cron-auth';
@@ -694,6 +694,105 @@ export async function GET(req: NextRequest) {
     } else console.error('[cron] Erreur email trial J-1:', result.error);
   }
 
+  // ── Réactivation post-churn J+7 / J+30 ─────────────────────────────────────
+  // Cible : syndics dont l'abonnement a été résilié il y a ~7j ou ~30j,
+  // qui n'ont pas recréé un abonnement (plan toujours 'resilie').
+  // Idempotence : event_type churn_reactivation_j7_sent / churn_reactivation_j30_sent.
+  let churnReactivationSent = 0;
+  if (!onboardingOnly) {
+    for (const [reminderKind, daysAgo, eventType] of [
+      ['j7',  7,  'churn_reactivation_j7_sent'] as const,
+      ['j30', 30, 'churn_reactivation_j30_sent'] as const,
+    ]) {
+      const windowEnd = addDays(today, -daysAgo);
+      const windowStart = addDays(today, -(daysAgo + 1));
+
+      // Récupère les événements de résiliation dans la fenêtre ±1j
+      const { data: churnEvents } = await supabase
+        .from('user_events')
+        .select('user_email, copropriete_id')
+        .in('event_type', ['subscription_cancelled', 'trial_cancelled'])
+        .gte('created_at', `${windowStart}T00:00:00.000Z`)
+        .lt('created_at', `${windowEnd}T23:59:59.999Z`);
+
+      if (!churnEvents?.length) continue;
+
+      const churnEmails = [...new Set((churnEvents as Array<{ user_email: string | null; copropriete_id: string | null }>)
+        .map((e) => e.user_email?.trim().toLowerCase())
+        .filter((e): e is string => Boolean(e)))];
+
+      // Filtre ceux qui ont déjà reçu cette relance
+      const { data: alreadySentRows } = await supabase
+        .from('user_events')
+        .select('user_email')
+        .eq('event_type', eventType)
+        .in('user_email', churnEmails);
+      const alreadySentSet = new Set(
+        (alreadySentRows ?? []).map((r: { user_email: string | null }) => r.user_email?.trim().toLowerCase()).filter(Boolean),
+      );
+
+      const candidateEmails = churnEmails.filter((e) => !alreadySentSet.has(e));
+      if (!candidateEmails.length) continue;
+
+      // Récupère les profils + copropriété encore résiliée
+      for (const churnEmail of candidateEmails) {
+        const churnEvent = (churnEvents as Array<{ user_email: string | null; copropriete_id: string | null }>)
+          .find((e) => e.user_email?.trim().toLowerCase() === churnEmail);
+        if (!churnEvent?.copropriete_id) continue;
+
+        const { data: copro } = await supabase
+          .from('coproprietes')
+          .select('id, nom, plan, plan_id, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+          .eq('id', churnEvent.copropriete_id)
+          .eq('plan', 'resilie')
+          .maybeSingle();
+
+        if (!copro) continue; // s'est réabonné entre temps
+
+        const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
+        if (!coproProfile?.email) continue;
+
+        const prenom = (coproProfile.full_name ?? '').split(' ')[0] || null;
+        const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
+        const subject = buildChurnReactivationSubject(copro.nom, reminderKind);
+
+        const result = await resend.emails.send({
+          from: FROM,
+          to: coproProfile.email,
+          subject,
+          html: buildChurnReactivationEmail({
+            prenom,
+            coproprieteNom: copro.nom,
+            planLabel,
+            dashboardUrl: `${SITE_URL}/abonnement`,
+            kind: reminderKind,
+          }),
+        });
+        await trackCronEmail({
+          providerMessageId: result.data?.id,
+          errorMessage: result.error?.message,
+          templateKey: `subscription_churn_reactivation_${reminderKind}`,
+          recipientEmail: coproProfile.email,
+          subject,
+          coproprieteId: copro.id,
+          legalEventType: 'subscription_reactivation',
+          legalReference: copro.id,
+          payload: { trigger: 'cron', reminderType: `churn_${reminderKind}`, planId: copro.plan_id },
+        });
+        if (!result.error) {
+          await supabase.from('user_events').insert({
+            user_email: churnEmail,
+            event_type: eventType,
+            label: `Relance réactivation post-churn envoyée (${reminderKind.toUpperCase()})`,
+            copropriete_id: copro.id,
+          });
+          totalSent++;
+          churnReactivationSent++;
+        } else console.error(`[cron] Erreur email churn réactivation ${reminderKind}:`, result.error);
+      }
+    }
+  }
+
   // ── Garde-fou volume ────────────────────────────────────────────────────────
   const MAX_EMAILS_PER_RUN = 500;
   if (totalSent > MAX_EMAILS_PER_RUN) {
@@ -722,6 +821,7 @@ export async function GET(req: NextRequest) {
     trial_j7:          trialsEndingJ7?.length ?? 0,
     trial_j3:          trialsEndingJ3?.length ?? 0,
     trial_j1:          trialJ1Sent,
+    churn_reactivation: churnReactivationSent,
     sent: totalSent,
     retries,
   });

@@ -219,6 +219,71 @@ ${ctaButton('Réactiver mon abonnement →', `${dashboardUrl}`, COLOR.blue)}
   return wrapEmail(content, COLOR.muted, 'Vos données sont conservées — vous pouvez vous réabonner à tout moment');
 }
 
+// ── Réactivation post-churn J+7 ───────────────────────────────────────────────
+
+export interface ChurnReactivationEmailParams {
+  prenom: string | null;
+  coproprieteNom: string;
+  planLabel: string;
+  dashboardUrl: string;
+  /** 'j7' = relance douce ; 'j30' = dernière chance avant suppression probable */
+  kind: 'j7' | 'j30';
+}
+
+export function buildChurnReactivationSubject(coproprieteNom: string, kind: 'j7' | 'j30'): string {
+  return kind === 'j30'
+    ? `Vos données sont toujours là — revenez gérer ${coproprieteNom} — Mon Syndic Bénévole`
+    : `Reprenez là où vous en étiez — ${coproprieteNom} — Mon Syndic Bénévole`;
+}
+
+export function buildChurnReactivationEmail(params: ChurnReactivationEmailParams): string {
+  const { prenom, coproprieteNom, planLabel, dashboardUrl, kind } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+
+  const isJ30 = kind === 'j30';
+
+  const intro = isJ30
+    ? `Il y a un mois, votre abonnement pour la copropriété <strong>${h(coproprieteNom)}</strong> a pris fin. Vos données (appels de fonds, documents, copropriétaires) sont toujours conservées sur la plateforme.`
+    : `La semaine dernière, votre abonnement pour la copropriété <strong>${h(coproprieteNom)}</strong> a pris fin. Nous espérons que votre départ était temporaire.`;
+
+  const body = isJ30
+    ? `Si vous gérez encore cette copropriété, il suffit de quelques secondes pour réactiver votre accès et retrouver exactement où vous en étiez.`
+    : `La gestion de la copropriété continue — les appels de fonds, les convocations d'AG et les relances d'impayés n'attendent pas. Reprenez dès maintenant sans rien reconfigurer.`;
+
+  const reassurance = `
+<div style="margin:20px 0;padding:14px 16px;background:#f0fdf4;border-left:3px solid ${COLOR.green};border-radius:0 8px 8px 0">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#166534">Vos données sont intactes</p>
+  <p style="margin:0;font-size:13px;color:#15803d;line-height:1.5">Copropriétaires, appels de fonds, documents et historique sont conservés. Aucune reconfiguration nécessaire.</p>
+</div>`;
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">
+  ${isJ30 ? 'Vos données vous attendent' : 'Reprenez là où vous en étiez'}
+</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">${intro}</p>
+<p style="margin:0 0 0;font-size:14px;color:${COLOR.text};line-height:1.6">${body}</p>
+
+${reassurance}
+
+${ctaButton('Réactiver mon abonnement →', dashboardUrl, COLOR.green)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Plan <strong>${h(planLabel)}</strong> — sans engagement. Annulation possible à tout moment.
+  Des questions ? <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
+</p>`;
+
+  return wrapEmail(
+    content,
+    COLOR.green,
+    isJ30
+      ? 'Vos données sont toujours là — réactivez votre abonnement en quelques secondes'
+      : 'Retrouvez vos copropriétaires, appels et documents exactement où vous les avez laissés',
+  );
+}
+
 // ── Rappel J-7 avant fin d'essai ─────────────────────────────────────────────
 
 export function buildTrialEndingJ7Subject(coproprieteNom: string): string {

@@ -503,3 +503,89 @@ ${ctaButton('Consulter l\'incident →', incidentsUrl, COLOR.green)}
 
   return wrapEmail(content, COLOR.green, `L'incident ${titreIncident} est résolu`);
 }
+
+// ── Milestones syndic ─────────────────────────────────────────────────────────
+// Emails de célébration envoyés lors d'événements clés du parcours syndic.
+// Idempotence via user_events (event_type: milestone_premier_appel_publie,
+// milestone_premiere_ag_planifiee).
+
+export interface MilestoneAppelPublieEmailParams {
+  syndicPrenom: string;
+  coproprieteNom: string;
+  appelTitre: string;
+  dashboardUrl: string;
+}
+
+export function buildMilestoneAppelPublieSubject(coproprieteNom: string): string {
+  return `Votre premier appel de fonds est publié — ${coproprieteNom} — Mon Syndic Bénévole`;
+}
+
+export function buildMilestoneAppelPublieEmail(params: MilestoneAppelPublieEmailParams): string {
+  const { syndicPrenom, coproprieteNom, appelTitre, dashboardUrl } = params;
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.green}">Premier appel de fonds publié !</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">Bonjour <strong>${h(syndicPrenom)}</strong>,</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  L'appel de fonds <strong>${h(appelTitre)}</strong> pour la copropriété <strong>${h(coproprieteNom)}</strong> vient d'être publié. Vos copropriétaires vont recevoir automatiquement leur avis de paiement.
+</p>
+
+<div style="margin:0 0 20px;padding:14px 16px;background:#f0fdf4;border-left:3px solid ${COLOR.green};border-radius:0 8px 8px 0">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#166534">Ce qui va se passer automatiquement</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 0">
+    <tr><td style="padding:3px 0;font-size:13px;color:#15803d">→ Avis de paiement envoyé à chaque copropriétaire</td></tr>
+    <tr><td style="padding:3px 0;font-size:13px;color:#15803d">→ Rappel automatique J-7 avant l'échéance</td></tr>
+    <tr><td style="padding:3px 0;font-size:13px;color:#15803d">→ Relance des impayés à J+1 et J+15</td></tr>
+    <tr><td style="padding:3px 0;font-size:13px;color:#15803d">→ Récapitulatif des impayés le jour de l'échéance</td></tr>
+  </table>
+</div>
+
+${ctaButton('Suivre les paiements →', dashboardUrl, COLOR.green)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted}">
+  Vous recevrez un récapitulatif des impayés le jour de l'échéance.
+</p>`;
+
+  return wrapEmail(content, COLOR.green, 'Vos copropriétaires reçoivent leur avis — les relances sont automatiques');
+}
+
+export interface MilestoneAGPlanifieeEmailParams {
+  syndicPrenom: string;
+  coproprieteNom: string;
+  agTitre: string;
+  dateAg: string;
+  agUrl: string;
+}
+
+export function buildMilestoneAGPlanifieeSubject(coproprieteNom: string): string {
+  return `Votre première AG est planifiée — ${coproprieteNom} — Mon Syndic Bénévole`;
+}
+
+export function buildMilestoneAGPlanifieeEmail(params: MilestoneAGPlanifieeEmailParams): string {
+  const { syndicPrenom, coproprieteNom, agTitre, dateAg, agUrl } = params;
+  const dateStr = formatDateFR(dateAg);
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.blue}">Première AG planifiée !</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">Bonjour <strong>${h(syndicPrenom)}</strong>,</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  L'assemblée générale <strong>${h(agTitre)}</strong> pour la copropriété <strong>${h(coproprieteNom)}</strong> est planifiée le <strong>${dateStr}</strong>.
+</p>
+
+<div style="margin:0 0 20px;padding:14px 16px;background:#eff6ff;border-left:3px solid ${COLOR.blue};border-radius:0 8px 8px 0">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#1e40af">Prochaines étapes recommandées</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 0">
+    <tr><td style="padding:3px 0;font-size:13px;color:#1d4ed8">→ Préparez l'ordre du jour et les résolutions</td></tr>
+    <tr><td style="padding:3px 0;font-size:13px;color:#1d4ed8">→ Envoyez la convocation — les rappels J-14 et J-7 seront automatiques</td></tr>
+    <tr><td style="padding:3px 0;font-size:13px;color:#1d4ed8">→ Après l'AG, le PV sera archivé automatiquement</td></tr>
+  </table>
+</div>
+
+${ctaButton("Accéder à l'assemblée générale →", agUrl, COLOR.blue)}`;
+
+  return wrapEmail(content, COLOR.blue, 'Convocation, rappels et PV — tout se gère depuis la plateforme');
+}

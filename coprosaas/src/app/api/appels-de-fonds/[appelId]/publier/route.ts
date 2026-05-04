@@ -15,6 +15,7 @@ import { applyCoproprietaireBalanceDelta, resolveAppelBalanceAccountType } from 
 import { parseBudgetPostesFromDescription, repartitionParPostes } from '@/lib/utils';
 import { Resend } from 'resend';
 import { buildAppelEmail, buildAppelEmailSubject } from '@/lib/emails/appel-de-fonds';
+import { buildMilestoneAppelPublieSubject, buildMilestoneAppelPublieEmail } from '@/lib/emails/syndic-notifications';
 import { isSubscribed } from '@/lib/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushNotification } from '@/lib/notification-center';
@@ -217,6 +218,47 @@ export async function POST(
       coproprieteId: appel.copropriete_id,
       metadata: { appelId, oldStatus: 'brouillon', newStatus: 'publie', sendImmediately },
     });
+
+    // ── Milestone : premier appel de fonds publié ─────────────────────────────
+    // Vérifie si c'est le premier appel publié/confirmé pour cette copropriété.
+    const { count: totalPublished } = await supabase
+      .from('appels_de_fonds')
+      .select('id', { count: 'exact', head: true })
+      .eq('copropriete_id', appel.copropriete_id)
+      .in('statut', ['publie', 'confirme']);
+
+    if (totalPublished === 1) {
+      // Vérifie l'idempotence
+      const { count: alreadySent } = await supabase
+        .from('user_events')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_email', user.email)
+        .eq('event_type', 'milestone_premier_appel_publie')
+        .eq('copropriete_id', appel.copropriete_id);
+
+      if (!alreadySent) {
+        const coproprieteNom = (appel.coproprietes as { nom: string } | null)?.nom ?? '';
+        const milestoneSubject = buildMilestoneAppelPublieSubject(coproprieteNom);
+        await resend.emails.send({
+          from: FROM,
+          to: user.email,
+          subject: milestoneSubject,
+          html: buildMilestoneAppelPublieEmail({
+            syndicPrenom: (user.user_metadata?.full_name as string | undefined ?? '').split(' ')[0] || '',
+            coproprieteNom,
+            appelTitre: appel.titre,
+            dashboardUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/dashboard`,
+          }),
+        });
+        await logEventForEmail({
+          email: user.email,
+          eventType: 'milestone_premier_appel_publie',
+          label: `Milestone : premier appel de fonds publié (${appel.titre})`,
+          coproprieteId: appel.copropriete_id,
+          metadata: { appelId },
+        });
+      }
+    }
   }
 
   if (promptEmailSend) {
