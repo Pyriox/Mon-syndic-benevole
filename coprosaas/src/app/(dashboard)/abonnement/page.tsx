@@ -607,6 +607,9 @@ export default async function AbonnementPage({
                     <p className="text-sm text-gray-600">
                       Débloque les répartitions par bâtiment, ascenseur, parking ou toute autre clé spéciale de votre copropriété.
                     </p>
+                    <p className="text-xs text-gray-400 italic">
+                      Ex. : travaux d&apos;étanchéité spécifiques à l&apos;escalier B, charges d&apos;ascenseur hors rez-de-chaussée, eau froide par bâtiment.
+                    </p>
                     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tarif de l’option</p>
                       <p className="mt-1 text-2xl font-bold text-slate-900">{chargesAddonPricing.headline}</p>

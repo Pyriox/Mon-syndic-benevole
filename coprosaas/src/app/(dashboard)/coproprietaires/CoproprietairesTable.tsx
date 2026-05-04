@@ -345,9 +345,16 @@ function MobileCoproCard({
       {/* Contact + Solde */}
       <div className="flex items-center justify-between gap-2">
         <ContactBlock email={cp.email} telephone={cp.telephone} />
-        <Badge variant={(cp.solde ?? 0) > 0 ? 'danger' : (cp.solde ?? 0) < 0 ? 'success' : 'default'} className="shrink-0">
-          {formatEuros(cp.solde ?? 0)}
-        </Badge>
+        <div className="flex flex-col items-end gap-0.5 shrink-0">
+          <Badge variant={(cp.solde ?? 0) > 0 ? 'danger' : (cp.solde ?? 0) < 0 ? 'success' : 'default'}>
+            {formatEuros(cp.solde ?? 0)}
+          </Badge>
+          {(cp.solde ?? 0) !== 0 && initialEvents && initialEvents.length > 0 && (
+            <span className="text-[10px] text-gray-400">
+              {new Date(initialEvents[0].event_date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+          )}
+        </div>
       </div>
       </Card>
   );
@@ -434,9 +441,16 @@ function SortableCoproRow({
 
       {/* Solde */}
       <td className="py-2.5 px-5 text-right">
-        <Badge variant={(cp.solde ?? 0) > 0 ? 'danger' : (cp.solde ?? 0) < 0 ? 'success' : 'default'}>
-          {formatEuros(cp.solde ?? 0)}
-        </Badge>
+        <div className="flex flex-col items-end gap-0.5">
+          <Badge variant={(cp.solde ?? 0) > 0 ? 'danger' : (cp.solde ?? 0) < 0 ? 'success' : 'default'}>
+            {formatEuros(cp.solde ?? 0)}
+          </Badge>
+          {(cp.solde ?? 0) !== 0 && initialEvents && initialEvents.length > 0 && (
+            <span className="text-[10px] text-gray-400 tabular-nums">
+              {new Date(initialEvents[0].event_date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+          )}
+        </div>
       </td>
 
       {/* Actions */}

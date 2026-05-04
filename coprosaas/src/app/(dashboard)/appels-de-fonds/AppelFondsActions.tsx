@@ -1141,6 +1141,18 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
 
               {error && <p className="text-sm text-red-600">{error}</p>}
 
+              {/* ── Récap avant enregistrement ──────────────── */}
+              {totalBudgetAvecFT > 0 && repartition.length > 0 && (
+                <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm">
+                  <span className="text-gray-700">
+                    Total appelé : <strong className="text-gray-900">{formatEuros(totalBudgetAvecFT)}</strong>
+                  </span>
+                  <span className="shrink-0 text-xs text-gray-500">
+                    {repartition.length} copropriétaire{repartition.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+
               {/* Bandeau appels passés */}
               {(() => {
                 const today = new Date().toISOString().slice(0, 10);
