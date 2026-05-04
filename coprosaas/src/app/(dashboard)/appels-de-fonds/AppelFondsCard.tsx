@@ -21,6 +21,7 @@ import dynamic from 'next/dynamic';
 import type { AvisPersonnelInput, PersonalPosteDetail } from './AppelFondsPDF';
 const AppelFondsPDF = dynamic(() => import('./AppelFondsPDF'), { ssr: false });
 import AppelFondsPaiement, { type Ligne } from './AppelFondsPaiement';
+import TermTooltip from '@/components/ui/TermTooltip';
 
 interface Poste {
   libelle: string;
@@ -668,7 +669,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
           {/* Postes de charges */}
           {postes && postes.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Postes de charges</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2"><TermTooltip term="postes">Postes de charges</TermTooltip></p>
               <div className="border border-gray-200 rounded-xl overflow-hidden">
                 {postes.map((p, i) => (
                   <div key={i} className={`flex items-center justify-between px-3 py-2 text-xs ${i > 0 ? 'border-t border-gray-100' : ''} bg-white`}>
@@ -687,7 +688,7 @@ export default function AppelFondsCard({ appel, lignes, postes, isSyndic, canWri
                 {(appel.montant_fonds_travaux ?? 0) > 0 && !postes.some((p) => p.categorie === 'fonds_travaux_alur') && (
                   <div className="flex items-center justify-between px-3 py-2 text-xs border-t border-amber-100 bg-amber-50">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-medium text-amber-800">Fonds travaux ALUR</span>
+                      <span className="font-medium text-amber-800"><TermTooltip term="fonds_travaux">Fonds travaux ALUR</TermTooltip></span>
                       <span className="text-amber-500 shrink-0">Fonds travaux</span>
                     </div>
                     <span className="font-semibold text-amber-700 tabular-nums shrink-0 ml-3">{formatEuros(appel.montant_fonds_travaux!)}</span>

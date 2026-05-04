@@ -5,6 +5,7 @@ import { updateSoldeReprise, updateModeLigne } from './actions';
 import Card from '@/components/ui/Card';
 import { formatEuros } from '@/lib/utils';
 import { CheckCircle2, Clock, RefreshCw, TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import TermTooltip from '@/components/ui/TermTooltip';
 
 type CoproEntry = {
   id?: string;
@@ -194,12 +195,12 @@ export default function RegularisationTable({ lignes, isCloture, isSyndic, canWr
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Copropriétaire</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-500">Provisions appelées</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-500"><TermTooltip term="provisions">Provisions appelées</TermTooltip></th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500">Dépenses réelles</th>
                 {showRepriseCol && (
-                  <th className="text-right px-4 py-3 font-medium text-gray-500">Solde reprise</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-500"><TermTooltip term="solde_reprise">Solde reprise</TermTooltip></th>
                 )}
-                <th className="text-right px-4 py-3 font-medium text-gray-500">Solde final</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-500"><TermTooltip term="regularisation">Solde final</TermTooltip></th>
                 {isSyndic && (
                   <th className="text-left px-4 py-3 font-medium text-gray-500">Mode règlement</th>
                 )}
@@ -278,7 +279,7 @@ export default function RegularisationTable({ lignes, isCloture, isSyndic, canWr
               </div>
               <div className="mt-3 space-y-1.5 text-sm">
                 <div className="flex justify-between text-gray-600">
-                  <span>Provisions appelées</span>
+                  <span><TermTooltip term="provisions">Provisions appelées</TermTooltip></span>
                   <span>{formatEuros(l.montant_appele)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">

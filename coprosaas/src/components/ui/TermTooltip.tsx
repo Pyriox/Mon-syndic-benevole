@@ -56,6 +56,26 @@ const GLOSSARY: Record<string, { label: string; definition: string }> = {
     definition:
       `Nombre minimal de voix (en tantièmes) nécessaire pour que l'assemblée générale puisse valablement délibérer. Sans quorum, l'AG doit être reconvoquée.`,
   },
+  majorite: {
+    label: 'majorité',
+    definition:
+      `Seuil de votes requis pour qu'une résolution soit adoptée. Art. 24 = majorité simple des votants ; Art. 25 = majorité absolue de tous les tantièmes ; Art. 26 = double majorité (2/3 des tantièmes + majorité des copropriétaires).`,
+  },
+  provisions: {
+    label: 'provisions',
+    definition:
+      `Sommes versées par les copropriétaires en cours d'exercice pour couvrir les dépenses prévisionnelles. Leur total est comparé aux dépenses réelles lors de la régularisation annuelle.`,
+  },
+  solde_reprise: {
+    label: 'solde de reprise',
+    definition:
+      `Solde initial saisi lors d'une migration depuis un autre outil ou en début de gestion. Il représente une dette (négatif) ou un crédit (positif) antérieur, intégré dans le calcul de la régularisation.`,
+  },
+  regularisation: {
+    label: 'régularisation',
+    definition:
+      `Opération annuelle comparant les provisions appelées pendant l'exercice aux dépenses réelles. Elle génère soit un complément à payer, soit un trop-perçu à créditer sur le solde de chaque copropriétaire.`,
+  },
 };
 
 export type TermKey = keyof typeof GLOSSARY;

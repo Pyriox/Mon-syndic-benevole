@@ -18,6 +18,7 @@ import { formatDate, formatTime, LABELS_STATUT_AG } from '@/lib/utils';
 import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video } from 'lucide-react';
 import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
+import TermTooltip from '@/components/ui/TermTooltip';
 import { PVPDF, ConvocationPDF } from './PDFButtons';
 
 interface Props {
@@ -373,7 +374,7 @@ export default async function AGDetailPage({ params }: Props) {
             <p className={`text-sm font-semibold ${
               !hasPresences ? 'text-gray-500' : quorumAtteintCalcule ? 'text-green-700' : 'text-red-600'
             }`}>
-              Quorum : {!hasPresences ? 'En attente de la feuille de présence' : quorumAtteintCalcule ? 'Atteint' : 'Non atteint'}
+              <TermTooltip term="quorum">Quorum</TermTooltip> : {!hasPresences ? 'En attente de la feuille de présence' : quorumAtteintCalcule ? 'Atteint' : 'Non atteint'}
             </p>
             {hasPresences && totalTantiemes > 0 ? (
               <div className="mt-1 flex items-center gap-3">
