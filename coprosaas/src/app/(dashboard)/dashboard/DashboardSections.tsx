@@ -1038,8 +1038,12 @@ export async function OnboardingChecklist({ coproId }: { coproId: string }) {
             </p>
           )}
         </div>
-        <span className="shrink-0 text-xs font-bold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
-          {pct} %
+        <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${
+          pct >= 60
+            ? 'bg-green-100 text-green-700'
+            : 'text-blue-700 bg-blue-100'
+        }`}>
+          {pct >= 60 ? '🎉 Presque prêt !' : `${pct} %`}
         </span>
       </div>
 

@@ -14,6 +14,7 @@ import { extractStripeSubscriptionSnapshot, mapStripeSubscriptionStatus, STRIPE_
 import { syncCoproAddonsFromSnapshot } from '@/lib/stripe-addon-management';
 import { hasChargesSpecialesAddon, type CoproAddon } from '@/lib/subscription';
 import CheckoutButton from './CheckoutButton';
+import PlansGridSection from './PlansGridSection';
 import SubscriptionSuccessTracker from './SubscriptionSuccessTracker';
 import AddonBillingButton from './AddonBillingButton';
 import { AlertCircle, CheckCircle, Clock, Lock, Settings2 } from 'lucide-react';
@@ -574,93 +575,13 @@ export default async function AbonnementPage({
               )}
 
               {/* Grille des plans */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {PLANS.map((plan) => {
-                  const isCurrentPlan = currentPlanId === plan.id;
-                  const isLocked = (isSubscribed || isPastDue) && !isCurrentPlan;
-                  const isRecommended = !isSubscribed && !isPastDue && plan.id === recommendedPlan;
-                  const isPrimary = plan.highlight || isRecommended;
-
-                  return (
-                    <div
-                      key={plan.id}
-                      className={`relative rounded-2xl p-5 flex flex-col transition-all ${
-                        isCurrentPlan
-                          ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-900/20 ring-2 ring-offset-1 ring-blue-500'
-                          : isLocked
-                          ? 'bg-gray-50 border border-gray-100 opacity-55 cursor-not-allowed'
-                          : isPrimary
-                          ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-900/20'
-                          : 'bg-white border border-gray-200 hover:border-blue-200 hover:shadow-sm'
-                      }`}
-                    >
-                      {/* Badges en-tête */}
-                      <div className="flex items-start justify-between gap-1 mb-3">
-                        <div>
-                          <p className={`text-sm font-bold ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-white' : 'text-gray-900'}`}>
-                            {plan.name}
-                          </p>
-                          <p className={`text-xs mt-0.5 ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-blue-200' : 'text-gray-400'}`}>
-                            {plan.desc}
-                          </p>
-                        </div>
-                        <div className="shrink-0">
-                          {isCurrentPlan && (
-                            <span className="flex items-center gap-1 bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                              <CheckCircle size={10} /> Actuel
-                            </span>
-                          )}
-                          {isLocked && (
-                            <Lock size={13} className="text-gray-400 mt-0.5" />
-                          )}
-                          {!isLocked && !isCurrentPlan && plan.badge && (
-                            <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                              {plan.badge}
-                            </span>
-                          )}
-                          {!isLocked && !isCurrentPlan && !plan.badge && isRecommended && (
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isPrimary ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'}`}>
-                              Recommandé
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Prix */}
-                      <div className="flex items-end gap-1 mb-0.5">
-                        <span className={`text-3xl font-extrabold ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-white' : 'text-gray-900'}`}>
-                          {plan.annual}&nbsp;€
-                        </span>
-                        <span className={`pb-0.5 text-sm ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-blue-200' : 'text-gray-400'}`}>
-                          /an
-                        </span>
-                      </div>
-                      <p className={`text-xs mb-4 ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-blue-200' : 'text-gray-400'}`}>
-                        soit{' '}
-                        <span className={`font-semibold ${isCurrentPlan || (!isLocked && isPrimary) ? 'text-white' : 'text-gray-700'}`}>
-                          {plan.monthlyLabel}/mois
-                        </span>
-                      </p>
-
-                      {/* CTA */}
-                      <div className="mt-auto">
-                        {isCurrentPlan ? (
-                          <div className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold bg-white/20 text-white cursor-default select-none">
-                            <CheckCircle size={14} />
-                            Plan actuel
-                          </div>
-                        ) : isLocked ? null : (
-                          <CheckoutButton
-                            planId={plan.id}
-                            coproprieteid={copro.id}
-                            isPrimary={isPrimary}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <PlansGridSection
+                coproprieteId={copro.id}
+                currentPlanId={currentPlanId}
+                isSubscribed={isSubscribed}
+                isPastDue={isPastDue}
+                initialLotCount={totalLots}
+              />
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

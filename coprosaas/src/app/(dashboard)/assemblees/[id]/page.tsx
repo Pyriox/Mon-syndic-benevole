@@ -15,7 +15,7 @@ import AGStatusActions from './AGStatusActions';
 import { AGDelete, AGAnnuler, AGEnvoyerPV, AGEnvoyerConvocation, AGEditInfos } from './AGStatusActions';
 import PresencePanel from './PresencePanel';
 import { formatDate, formatTime, LABELS_STATUT_AG } from '@/lib/utils';
-import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video } from 'lucide-react';
+import { ArrowLeft, MapPin, CalendarDays, CheckCircle, XCircle, Clock, Video, ChevronRight } from 'lucide-react';
 import { hasChargesSpecialesAddon, isSubscribed } from '@/lib/subscription';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import TermTooltip from '@/components/ui/TermTooltip';
@@ -268,7 +268,45 @@ export default async function AGDetailPage({ params }: Props) {
         )}
       </div>
 
-      {/* Suivi PV et e-mail — pleine largeur sous l'en-tête */}
+      {/* ── Stepper workflow AG ── */}
+      <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3.5 space-y-2.5">
+        <div className="overflow-x-auto pb-1">
+          <div className="flex items-start min-w-max">
+            {workflowSteps.map((step, i) => {
+              const done = step.done;
+              const current = 'current' in step && step.current;
+              return (
+                <div key={step.label} className="flex items-start">
+                  <div className="flex flex-col items-center gap-1 w-[88px]">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 shrink-0 ${
+                      done
+                        ? 'bg-green-500 border-green-500 text-white'
+                        : current
+                          ? 'bg-blue-600 border-blue-600 text-white ring-2 ring-blue-200 ring-offset-1'
+                          : 'bg-white border-gray-300 text-gray-400'
+                    }`}>
+                      {done ? '\u2713' : i + 1}
+                    </div>
+                    <p className={`text-[10px] text-center font-medium leading-tight px-0.5 ${
+                      done ? 'text-green-700' : current ? 'text-blue-700' : 'text-gray-400'
+                    }`}>
+                      {step.label}
+                    </p>
+                  </div>
+                  {i < workflowSteps.length - 1 && (
+                    <div className={`h-0.5 w-6 mt-[13px] shrink-0 ${
+                      done ? 'bg-green-300' : 'bg-gray-200'
+                    }`} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <p className="text-xs text-gray-500">{nextActionLabel}</p>
+      </div>
+
+      {/* Suivi PV et e-mail — pleine largeur sous l’en-tête */}
       {ag.statut === 'terminee' && isSyndic && canWrite && (
         <AGEnvoyerPV
           agId={id}
@@ -327,36 +365,6 @@ export default async function AGDetailPage({ params }: Props) {
           <p className="text-sm text-gray-600 whitespace-pre-wrap">{ag.notes}</p>
         </Card>
       )}
-
-      <Card>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-gray-900">Suivi du parcours AG</p>
-            <p className="text-xs text-gray-500 mt-1">{nextActionLabel}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {workflowSteps.map((step) => {
-              const done = step.done;
-              const current = 'current' in step && step.current;
-              return (
-                <span
-                  key={step.label}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                    done
-                      ? 'bg-green-100 text-green-700'
-                      : current
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  {done ? <CheckCircle size={12} /> : <Clock size={12} />}
-                  {step.label}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      </Card>
 
       {/* Quorum — calculé dynamiquement depuis la feuille de présence */}
       {(ag.statut === 'en_cours' || ag.statut === 'terminee') && (

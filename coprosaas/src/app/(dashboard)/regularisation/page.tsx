@@ -81,9 +81,15 @@ export default async function RegularisationPage({
       </div>
 
       <PageHelp tone={isSyndic ? 'blue' : 'slate'} helpHref="/aide#regularisation-annuelle">
-        {isSyndic
-          ? 'Comparez ici les provisions appelées et les dépenses réelles de l’exercice pour déterminer le solde final de chaque copropriétaire.'
-          : 'Consultez ici si l’exercice fait apparaître un complément à payer ou un trop-perçu à reporter sur votre compte.'}
+        {isSyndic ? (
+          <span>
+            Comparez les provisions appelées aux dépenses réelles pour déterminer le solde de chaque copropriétaire.{' '}
+            <strong className="text-blue-900">Solde positif</strong> → créditez ou remboursez le trop-perçu via un appel de régularisation.{' '}
+            <strong className="text-blue-900">Solde négatif</strong> → émettez un appel de régularisation pour appeler le complément dû.
+          </span>
+        ) : (
+          'Consultez ici si l\u2019exercice fait apparaître un complément à payer ou un trop-perçu à reporter sur votre compte.'
+        )}
       </PageHelp>
 
       {/* ── Exercice non encore clôturé (année en cours ou future) ── */}
