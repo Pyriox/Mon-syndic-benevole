@@ -71,11 +71,6 @@ const GLOSSARY: Record<string, { label: string; definition: string }> = {
     definition:
       `Solde initial saisi lors d'une migration depuis un autre outil ou en début de gestion. Il représente une dette (négatif) ou un crédit (positif) antérieur, intégré dans le calcul de la régularisation.`,
   },
-  regularisation: {
-    label: 'régularisation',
-    definition:
-      `Opération annuelle comparant les provisions appelées pendant l'exercice aux dépenses réelles. Elle génère soit un complément à payer, soit un trop-perçu à créditer sur le solde de chaque copropriétaire.`,
-  },
 };
 
 export type TermKey = keyof typeof GLOSSARY;
