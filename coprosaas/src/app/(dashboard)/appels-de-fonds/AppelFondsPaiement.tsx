@@ -403,7 +403,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                       type="button"
                       onClick={() => handleUnpay(ligne)}
                       disabled={isToggling}
-                      className="shrink-0 w-24 text-center text-xs px-2.5 py-1 rounded-lg font-medium bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
+                      className="shrink-0 w-28 text-center text-xs px-2.5 py-1 rounded-lg font-medium bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
                     >
                       {isToggling ? <Loader2 size={11} className="animate-spin inline" /> : 'Annuler'}
                     </button>
@@ -412,7 +412,7 @@ export default function AppelFondsPaiement({ appel, lignes, isSyndic, canWrite =
                       type="button"
                       onClick={() => { setPayDate(todayStr); setPayingId(ligne.id); }}
                       disabled={isToggling}
-                      className="shrink-0 w-24 text-center text-xs px-2.5 py-1 rounded-lg font-medium bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors disabled:opacity-50"
+                      className="shrink-0 w-28 text-center text-xs px-2.5 py-1 rounded-lg font-medium bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors disabled:opacity-50"
                     >
                       {isToggling ? <Loader2 size={11} className="animate-spin inline" /> : 'Marquer payé'}
                     </button>
