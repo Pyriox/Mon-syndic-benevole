@@ -34,7 +34,7 @@ import {
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
-import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject } from '@/lib/emails/subscription';
+import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
 import { getCronAuthState } from '@/lib/cron-auth';
@@ -532,11 +532,22 @@ export async function GET(req: NextRequest) {
     totalSent += onboardingJ21Sent;
   }
 
-  // ── Rappel J-3 fin d'essai ──────────────────────────────────────────────────
-  // On envoie un email au syndic quand plan='essai' et plan_period_end = today + 3 jours.
-  // Le cron quotidien garantit qu'il ne sera envoyé qu'une seule fois (la période est fixe).
+  // ── Rappels J-7 / J-3 / J-1 fin d'essai ────────────────────────────────────
+  // Séquence : J-7 (préparation décision) → J-3 (urgence douce) → J-1 (dernier rappel).
+  // Chaque email est idémpotent via une colonne dédiée + fenêtre de rattrapage de ±1 jour.
+  const dateJ7Trial = addDays(today, 7);
   const dateJ3 = addDays(today, 3);
   const dateTrialEndingJ1 = addDays(today, 1);
+
+  const { data: trialsEndingJ7 } = onboardingOnly
+    ? { data: [] }
+    : await supabase
+      .from('coproprietes')
+      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+      .eq('plan', 'essai')
+      .gte('plan_period_end', addDays(today, 6)) // rattrapage : fenêtre J+6 → J+7
+      .lte('plan_period_end', dateJ7Trial)
+      .is('rappel_trial_j7_at', null);
 
   const { data: trialsEndingJ3 } = onboardingOnly
     ? { data: [] }
@@ -566,6 +577,45 @@ export async function GET(req: NextRequest) {
     profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null;
   };
 
+  // ── Envoi J-7 ──
+  for (const row of (trialsEndingJ7 ?? []) as unknown as TrialRow[]) {
+    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+    if (!profile?.email) continue;
+
+    const prenom = (profile.full_name ?? '').split(' ')[0] || null;
+    const planLabel = row.plan_id === 'illimite' ? 'Illimité' : row.plan_id === 'confort' ? 'Confort' : 'Essentiel';
+    const subject = buildTrialEndingJ7Subject(row.nom);
+
+    const result = await resend.emails.send({
+      from: FROM,
+      to: profile.email,
+      subject,
+      html: buildTrialEndingJ7Email({
+        prenom,
+        coproprieteNom: row.nom,
+        planLabel,
+        periodEnd: row.plan_period_end,
+        dashboardUrl: `${SITE_URL}/abonnement`,
+      }),
+    });
+    await trackCronEmail({
+      providerMessageId: result.data?.id,
+      errorMessage: result.error?.message,
+      templateKey: 'subscription_trial_ending_j7',
+      recipientEmail: profile.email,
+      subject,
+      coproprieteId: row.id,
+      legalEventType: 'subscription_trial_ending',
+      legalReference: row.id,
+      payload: { trigger: 'cron', reminderType: 'trial_j7', planId: row.plan_id },
+    });
+    if (!result.error) {
+      await supabase.from('coproprietes').update({ rappel_trial_j7_at: new Date().toISOString() }).eq('id', row.id);
+      totalSent++;
+    } else console.error('[cron] Erreur email trial J-7:', result.error);
+  }
+
+  // ── Envoi J-3 ──
   for (const row of (trialsEndingJ3 ?? []) as unknown as TrialRow[]) {
     const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
     if (!profile?.email) continue;
@@ -669,6 +719,7 @@ export async function GET(req: NextRequest) {
     onboarding_j2: onboardingJ2Sent,
     onboarding_j7: onboardingJ7Sent,
     onboarding_j21: onboardingJ21Sent,
+    trial_j7:          trialsEndingJ7?.length ?? 0,
     trial_j3:          trialsEndingJ3?.length ?? 0,
     trial_j1:          trialJ1Sent,
     sent: totalSent,
@@ -998,7 +1049,15 @@ async function sendRappelEmails(
     if (!email) return;
     if (bouncedEmails.has(email.trim().toLowerCase())) return;
 
-    const subject = buildAppelEmailSubject({ type, coproprieteNom, dateEcheance: appel.date_echeance });
+    // P2.c : copropriétaire avec compte → lien direct vers le dashboard.
+    // P2.a : montant passé au builder du sujet pour l'avis initial.
+    const espaceUrl = cop.user_id ? `${SITE_URL}/dashboard` : `${SITE_URL}/login`;
+    const subject = buildAppelEmailSubject({
+      type,
+      coproprieteNom,
+      dateEcheance: appel.date_echeance,
+      montantDu: type === 'avis' ? montant_du : undefined,
+    });
 
     const result = await resend.emails.send({
       from: FROM,
@@ -1013,6 +1072,7 @@ async function sendRappelEmails(
         montantDu:      montant_du,
         regularisationAjustement: regularisation_ajustement,
         dateEcheance:   appel.date_echeance,
+        espaceUrl,
       }),
     });
 

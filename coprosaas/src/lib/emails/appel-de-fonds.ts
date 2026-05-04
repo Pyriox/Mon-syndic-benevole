@@ -39,14 +39,28 @@ export function buildAppelEmailSubject(params: {
   type: AppelEmailType;
   coproprieteNom: string;
   dateEcheance: string;
+  /** Montant individuel dû — utilisé pour enrichir le sujet de l'avis initial (P2.a) */
+  montantDu?: number;
 }): string {
+  // P2.a : le sujet de l'avis initial inclut le montant pour augmenter le taux d'ouverture.
+  const avisPrefix = params.montantDu
+    ? `Appel de fonds de ${formatEurosFR(params.montantDu)} — ${params.coproprieteNom}`
+    : `Avis d'appel de fonds — ${params.coproprieteNom}`;
+
   const prefixes: Record<AppelEmailType, string> = {
-    avis:            `Avis d'appel de fonds — ${params.coproprieteNom}`,
+    avis:            avisPrefix,
     rappel:          `Rappel de paiement — ${params.coproprieteNom}`,
-    rappel_j1:       `Relance de paiement — ${params.coproprieteNom}`,
+    // P2.b : évite d'afficher une date passée dans le sujet de la relance post-échéance.
+    rappel_j1:       `Règlement en attente — ${params.coproprieteNom}`,
     mise_en_demeure: `Rappel d'impayé (J+15) — ${params.coproprieteNom}`,
   };
-  return `${prefixes[params.type]} — Échéance ${formatDateFR(params.dateEcheance)} — Mon Syndic Bénévole`;
+
+  // P2.b : pas de suffixe de date pour rappel_j1 (la date serait déjà dépassée).
+  const dateSuffix = params.type !== 'rappel_j1'
+    ? ` — Échéance ${formatDateFR(params.dateEcheance)}`
+    : '';
+
+  return `${prefixes[params.type]}${dateSuffix} — Mon Syndic Bénévole`;
 }
 
 export function buildAppelEmail(params: AppelEmailParams): string {
