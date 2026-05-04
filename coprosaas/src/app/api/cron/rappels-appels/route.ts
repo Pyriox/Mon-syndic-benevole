@@ -36,6 +36,7 @@ import {
 } from '@/lib/emails/syndic-notifications';
 import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject, buildChurnReactivationEmail, buildChurnReactivationSubject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
+import { pushAdminAlert } from '@/lib/notification-center';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
 import { getCronAuthState } from '@/lib/cron-auth';
 
@@ -120,7 +121,8 @@ export async function GET(req: NextRequest) {
     .eq('statut', 'publie')
     .is('emailed_at', null)
     .gte('date_echeance', todayStr)
-    .lte('date_echeance', dateJ30);
+    .lte('date_echeance', dateJ30)
+    .limit(100);
 
   // Appels à rappeler (J-7)
   const { data: j7Appels } = await supabase
@@ -130,7 +132,8 @@ export async function GET(req: NextRequest) {
     .not('emailed_at', 'is', null)
     .gte('date_echeance', todayStr)
     .lte('date_echeance', dateJ7)
-    .is('rappel_j7_at', null);
+    .is('rappel_j7_at', null)
+    .limit(100);
 
   // Appels à relancer le lendemain de l'échéance (J+1), avec rattrapage si un cron a été manqué.
   const { data: j1Appels } = await supabase
@@ -140,7 +143,8 @@ export async function GET(req: NextRequest) {
     .not('emailed_at', 'is', null)
     .lte('date_echeance', dateJ1)
     .gt('date_echeance', dateJ15)
-    .is('rappel_j1_at', null);
+    .is('rappel_j1_at', null)
+    .limit(100);
 
   // Appels en rappel d'impayé (J+15), avec rattrapage si le cron ne s'est pas exécuté le jour exact.
   const { data: j15Appels } = await supabase
@@ -150,7 +154,8 @@ export async function GET(req: NextRequest) {
     .not('emailed_at', 'is', null)
     .lte('date_echeance', dateJ15)
     .gte('date_echeance', dateJ90)
-    .is('rappel_j15_at', null);
+    .is('rappel_j15_at', null)
+    .limit(100);
 
   // Récapitulatif syndic à l'échéance (J0)
   const { data: j0SyndicAppels } = await supabase
@@ -158,7 +163,8 @@ export async function GET(req: NextRequest) {
     .select('id, copropriete_id, titre, date_echeance, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
     .eq('statut', 'publie')
     .eq('date_echeance', todayStr)
-    .is('rappel_syndic_j0_at', null);
+    .is('rappel_syndic_j0_at', null)
+    .limit(100);
 
   let totalSent = 0;
   let retries = 0;
@@ -793,10 +799,37 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // ── Garde-fou volume ────────────────────────────────────────────────────────
+  // ── Garde-fou volume (P4.a) ──────────────────────────────────────────────────
   const MAX_EMAILS_PER_RUN = 500;
   if (totalSent > MAX_EMAILS_PER_RUN) {
     console.warn(`[cron/rappels-appels] Volume inhabituel : ${totalSent} emails envoyés en un seul run (seuil : ${MAX_EMAILS_PER_RUN})`);
+    await pushAdminAlert({
+      title: 'Volume cron emails inhabituel',
+      body: `${totalSent} emails envoyés en un seul run (seuil : ${MAX_EMAILS_PER_RUN})`,
+      href: '/admin/emails',
+      severity: 'warning',
+      metadata: { totalSent, maxAllowed: MAX_EMAILS_PER_RUN, date: today.toISOString().slice(0, 10) },
+    });
+  }
+
+  // ── Monitoring file retry (P4.b) ─────────────────────────────────────────────
+  // Seuil d'alerte : >50 messages en failed/bounced avec des retries restants.
+  const { count: failedRetryCount } = await supabase
+    .from('email_deliveries')
+    .select('id', { count: 'exact', head: true })
+    .in('status', ['failed', 'bounced'])
+    .lt('retry_count', 3)
+    .not('next_retry_at', 'is', null);
+
+  const RETRY_ALERT_THRESHOLD = 50;
+  if ((failedRetryCount ?? 0) > RETRY_ALERT_THRESHOLD) {
+    await pushAdminAlert({
+      title: 'File email_deliveries retry élevée',
+      body: `${failedRetryCount} emails en échec avec des retries restants (seuil : ${RETRY_ALERT_THRESHOLD})`,
+      href: '/admin/emails',
+      severity: 'danger',
+      metadata: { failedRetryCount, threshold: RETRY_ALERT_THRESHOLD },
+    });
   }
 
   return NextResponse.json({
@@ -822,6 +855,7 @@ export async function GET(req: NextRequest) {
     trial_j3:          trialsEndingJ3?.length ?? 0,
     trial_j1:          trialJ1Sent,
     churn_reactivation: churnReactivationSent,
+    failed_retry_queue: failedRetryCount ?? 0,
     sent: totalSent,
     retries,
   });
