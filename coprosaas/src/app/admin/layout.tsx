@@ -81,9 +81,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       {/* Corps : sidebar + contenu */}
-      <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col md:flex-row gap-4 md:gap-6 items-start">
-        <AdminSidebar badges={{ '/admin/support': pendingSupportCount }} />
-        <main className="flex-1 min-w-0 w-full">
+      <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 pb-4 sm:pb-6 md:py-6 flex flex-col md:flex-row gap-0 md:gap-6 items-start">
+        {/* Nav : sticky sous la header sur mobile, sidebar statique sur desktop */}
+        <div className="sticky top-[52px] z-30 md:static bg-gray-100 -mx-3 px-3 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 py-2 md:py-0 border-b border-gray-200/70 md:border-0 md:bg-transparent md:pt-6 w-full md:w-auto shrink-0">
+          <AdminSidebar badges={{ '/admin/support': pendingSupportCount }} />
+        </div>
+        <main className="flex-1 min-w-0 w-full pt-4 md:pt-6">
           <ActivityHeartbeat />
           {children}
         </main>

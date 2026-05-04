@@ -22,7 +22,7 @@ function AdminSidebarInner({ badges = {} }: { badges?: Record<string, number> })
   const pathname = usePathname();
 
   return (
-    <nav className="w-full md:w-52 shrink-0 flex md:flex-col gap-2 md:gap-0.5 pt-0 md:pt-1 overflow-x-auto md:overflow-visible pb-1">
+    <nav className="w-full md:w-52 shrink-0 flex md:flex-col gap-1 md:gap-0.5 pt-0 md:pt-1 overflow-x-auto md:overflow-visible pb-1">
       {NAV.map(({ href, label, icon: Icon, soon }) => {
         const active = pathname === href || pathname.startsWith(href + '/');
         const badge = badges[href] ?? 0;
@@ -32,7 +32,8 @@ function AdminSidebarInner({ badges = {} }: { badges?: Record<string, number> })
             key={href}
             href={soon ? '#' : href}
             aria-disabled={soon}
-            className={`shrink-0 min-w-[144px] md:min-w-0 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+            title={label}
+            className={`flex-1 sm:flex-none shrink-0 sm:min-w-[130px] md:min-w-0 flex items-center justify-center sm:justify-start gap-2 sm:gap-2.5 px-2 sm:px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               active
                 ? 'bg-white shadow-sm text-gray-900 border border-gray-200'
                 : needsAttention
@@ -41,14 +42,14 @@ function AdminSidebarInner({ badges = {} }: { badges?: Record<string, number> })
             } ${soon ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <Icon size={15} className={active ? 'text-indigo-600' : needsAttention ? 'text-red-600' : 'text-gray-400'} />
-            <span className="flex-1">{label}</span>
+            <span className="hidden sm:inline flex-1">{label}</span>
             {badge > 0 && (
               <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-white text-[10px] font-bold leading-none ${needsAttention ? 'bg-red-600 ring-4 ring-red-100' : 'bg-red-500'}`}>
                 {badge > 99 ? '99+' : badge}
               </span>
             )}
             {soon && (
-              <span className="text-[9px] font-semibold bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded uppercase tracking-wide">
+              <span className="hidden sm:inline text-[9px] font-semibold bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded uppercase tracking-wide">
                 Bientôt
               </span>
             )}
