@@ -247,27 +247,6 @@ export default async function AGDetailPage({ params }: Props) {
               recipients={agRecipients}
             />
           )}
-          {ag.statut === 'terminee' && (
-            <AGEnvoyerPV
-              agId={id}
-              coproprieteId={ag.copropriete_id}
-              pvEnvoyeLe={ag.pv_envoye_le ?? null}
-              emailStatusByEmail={pvStatusByEmail}
-              recipients={agRecipients}
-              exportSlot={
-                <PVPDF
-                  ag={agWithCopropriete}
-                  coproprieteId={ag.copropriete_id}
-                  resolutions={resolutions ?? []}
-                  presences={presences ?? []}
-                  votesCopro={votesCopro}
-                  coproprietaires={coproprietaires ?? []}
-                  tantiemesParCopro={tantiemesMap}
-                />
-              }
-            />
-          )}
-
           {/* Documents PDF */}
           {ag.statut === 'planifiee' && !needsConvocation && (
             <div className="flex items-center gap-2">
@@ -287,6 +266,28 @@ export default async function AGDetailPage({ params }: Props) {
         </div>
         )}
       </div>
+
+      {/* Suivi PV et e-mail — pleine largeur sous l'en-tête */}
+      {ag.statut === 'terminee' && isSyndic && canWrite && (
+        <AGEnvoyerPV
+          agId={id}
+          coproprieteId={ag.copropriete_id}
+          pvEnvoyeLe={ag.pv_envoye_le ?? null}
+          emailStatusByEmail={pvStatusByEmail}
+          recipients={agRecipients}
+          exportSlot={
+            <PVPDF
+              ag={agWithCopropriete}
+              coproprieteId={ag.copropriete_id}
+              resolutions={resolutions ?? []}
+              presences={presences ?? []}
+              votesCopro={votesCopro}
+              coproprietaires={coproprietaires ?? []}
+              tantiemesParCopro={tantiemesMap}
+            />
+          }
+        />
+      )}
 
       {needsConvocation && isSyndic && canWrite && (
         <Card className="border-amber-200 bg-amber-50/70">
