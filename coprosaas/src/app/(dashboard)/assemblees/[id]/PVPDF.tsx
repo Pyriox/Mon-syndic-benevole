@@ -666,7 +666,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <Button variant="secondary" size="sm" onClick={handleExport}>
-        <FileDown size={14} /> Exporter PV
+        <FileDown size={14} /> Télécharger PV
       </Button>
       {sendResult && (
         <span className={`text-xs font-medium ${sendResult.ok ? 'text-green-600' : 'text-red-600'}`}>
