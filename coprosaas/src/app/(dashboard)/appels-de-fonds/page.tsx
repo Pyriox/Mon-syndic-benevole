@@ -35,8 +35,8 @@ function parseSerie(titre: string): { base: string; n: number; total: number } |
   return { base: m[1], n: parseInt(m[2]), total: parseInt(m[3]) };
 }
 
-export default async function AppelsDeFondsPage({ searchParams }: { searchParams: Promise<{ annee?: string }> }) {
-  const { annee: anneeParam } = await searchParams;
+export default async function AppelsDeFondsPage({ searchParams }: { searchParams: Promise<{ annee?: string; new?: string }> }) {
+  const { annee: anneeParam, new: newParam } = await searchParams;
   const annee = parseInt(anneeParam ?? String(new Date().getFullYear()));
 
   const supabase = await createClient();
@@ -176,7 +176,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
         </div>
         <div className="flex items-center gap-3">
           <AnneeSelector annee={annee} />
-          {isSyndic && totalCount > 0 && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} specialChargesEnabled={specialChargesEnabled} /> : <UpgradeBanner compact />)}
+          {isSyndic && totalCount > 0 && (canWrite ? <AppelFondsActions coproprietes={coproprietes ?? []} specialChargesEnabled={specialChargesEnabled} autoOpen={newParam === '1'} /> : <UpgradeBanner compact />)}
         </div>
       </div>
 

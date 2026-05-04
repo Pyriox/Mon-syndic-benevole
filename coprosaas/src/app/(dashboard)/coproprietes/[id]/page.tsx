@@ -15,6 +15,7 @@ import TransfertSyndic from './TransfertSyndic';
 import { formatDate } from '@/lib/utils';
 import { getLotLimit, isSubscribed } from '@/lib/subscription';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
+import OnboardingWizard from '@/components/ui/OnboardingWizard';
 import {
   Building2,
   CalendarDays,
@@ -27,6 +28,7 @@ import {
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ onboarding?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -50,8 +52,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function CopropriétéDetailPage({ params }: Props) {
+export default async function CopropriétéDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const sp = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -103,6 +106,7 @@ export default async function CopropriétéDetailPage({ params }: Props) {
   return (
     <div className="space-y-6">
       {!canWrite && <ReadOnlyBanner freemium trialUsed={trialUsed} />}
+      {sp?.onboarding === '1' && <OnboardingWizard step={2} nextHref="/coproprietaires?onboarding=1" />}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Lots & bâtiment</h2>

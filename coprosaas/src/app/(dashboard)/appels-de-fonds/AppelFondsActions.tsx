@@ -23,7 +23,7 @@ import {
 import { Plus, Trash2, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 
 interface Copropriete { id: string; nom: string; }
-interface AppelFondsActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; specialChargesEnabled?: boolean; }
+interface AppelFondsActionsProps { coproprietes: Copropriete[]; showLabel?: boolean; specialChargesEnabled?: boolean; autoOpen?: boolean; }
 
 interface Poste {
   libelle: string;
@@ -105,11 +105,11 @@ function detectPeriodicite(dates: string[]): 'mensuel' | 'trimestriel' | 'semest
   return 'annuel';
 }
 
-export default function AppelFondsActions({ coproprietes, showLabel, specialChargesEnabled = true }: AppelFondsActionsProps) {
+export default function AppelFondsActions({ coproprietes, showLabel, specialChargesEnabled = true, autoOpen }: AppelFondsActionsProps) {
   const router = useRouter();
   const supabase = createClient();
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(autoOpen ?? false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lotsLoading, setLotsLoading] = useState(false);

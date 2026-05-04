@@ -17,7 +17,8 @@ export default function DashboardTracker({ userRole }: Props) {
 
   // ── Onboarding complete (première copropriété créée) ──────────────────
   useEffect(() => {
-    if (searchParams.get('copro_cree') !== '1') return;
+    const hasCoproCree = searchParams.get('copro_cree') === '1';
+    if (!hasCoproCree) return;
 
     trackAnonymousEvent('onboarding_complete', {
       role: userRole,

@@ -16,6 +16,7 @@ import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import UpgradeBanner from '@/components/ui/UpgradeBanner';
 import PageHelp from '@/components/ui/PageHelp';
 import { ArrowLeftRight, Info, Lock } from 'lucide-react';
+import Link from 'next/link';
 import ExerciceCreate from './ExerciceCreate';
 import RegularisationTable from './RegularisationTable';
 import CloturerButton from './CloturerButton';
@@ -210,6 +211,25 @@ export default async function RegularisationPage({
                 isRecalculate
               />
               <CloturerButton exerciceId={exercice.id} />
+            </div>
+          )}
+
+          {/* ── CTA appel de régularisation ── */}
+          {isSyndic && canWrite && lignes && lignes.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-green-900 text-sm">Solder les comptes des copropriétaires</p>
+                <p className="text-xs text-green-700 mt-0.5">
+                  Émettez un appel de régularisation pour créditer les trop-perçus et appeler les compléments dus.
+                </p>
+              </div>
+              <Link
+                href="/appels-de-fonds?new=1"
+                className="shrink-0 inline-flex items-center gap-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-xl transition-colors"
+              >
+                <ArrowLeftRight size={16} />
+                Créer un appel de régularisation
+              </Link>
             </div>
           )}
         </>

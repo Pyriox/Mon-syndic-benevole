@@ -18,9 +18,10 @@ import EmptyState from '@/components/ui/EmptyState';
 import PageHelp from '@/components/ui/PageHelp';
 import CoproprietaireActions from './CoproprietaireActions';
 import CoproprietairesTable from './CoproprietairesTable';
+import OnboardingWizard from '@/components/ui/OnboardingWizard';
 import { Building2, UserCheck, Users } from 'lucide-react';
 
-export default async function CoproprietairesPage() {
+export default async function CoproprietairesPage({ searchParams }: { searchParams?: Promise<{ onboarding?: string }> }) {
   const supabase = await createClient();
   // Syndic : accès complet + actions | Copropriétaire : lecture seule (sans email/telephone/solde)
   const { selectedCoproId, role, copro: copropriete, user, trialUsed } = await requireCoproAccess();
@@ -56,7 +57,7 @@ export default async function CoproprietairesPage() {
 
   // Copropriétaires + tous les lots de la copropriété, en parallèle
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [coproResult, { data: allLots }, { data: balanceEventsRows }] = await Promise.all([
+  const [coproResult, { data: allLots }, { data: balanceEventsRows }, { data: invitationRows }] = await Promise.all([
     isSyndic
       ? supabase.from('coproprietaires').select('id, nom, prenom, raison_sociale, email, telephone, adresse, code_postal, ville, solde, user_id').eq('copropriete_id', selectedCoproId ?? 'none').order('position', { ascending: true, nullsFirst: false })
       : supabase.from('coproprietaires').select('id, nom, prenom, raison_sociale, adresse, code_postal, ville, user_id').eq('copropriete_id', selectedCoproId ?? 'none').order('position', { ascending: true, nullsFirst: false }),
@@ -74,6 +75,14 @@ export default async function CoproprietairesPage() {
           .order('event_date', { ascending: false })
           .limit(500)
       : Promise.resolve({ data: [] }),
+    isSyndic
+      ? supabase
+          .from('invitations')
+          .select('email')
+          .eq('copropriete_id', selectedCoproId ?? 'none')
+          .eq('statut', 'en_attente')
+          .gt('expires_at', new Date().toISOString())
+      : Promise.resolve({ data: [] as { email: string }[] }),
   ]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const coproprietaires = (coproResult as { data: any[] | null }).data;
@@ -127,10 +136,15 @@ export default async function CoproprietairesPage() {
   const nbInscrits = (coproprietaires ?? []).filter((c: any) => c.user_id).length;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const syndicAlreadyLinked = isSyndic && (coproprietaires ?? []).some((c: any) => c.user_id === user.id);
+  const invitedEmails = new Set<string>(
+    (invitationRows ?? []).map((i: { email: string }) => i.email.toLowerCase())
+  );
+  const onboarding = searchParams ? (await searchParams)?.onboarding : undefined;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {isSyndic && !canWrite && <ReadOnlyBanner freemium trialUsed={trialUsed} />}
+      {isSyndic && onboarding === '1' && <OnboardingWizard step={3} nextHref="/dashboard" />}
 
       {/* Bannière persistante si le syndic n'est pas encore lié comme copropriétaire */}
       {isSyndic && !syndicAlreadyLinked && (coproprietaires?.length ?? 0) > 0 && (
@@ -200,6 +214,7 @@ export default async function CoproprietairesPage() {
             currentUserId={user.id}
             coproprieteId={selectedCoproId ?? undefined}
             balanceEventsByCoproprietaire={balanceEventsByCoproprietaire}
+            invitedEmails={isSyndic ? invitedEmails : undefined}
           />
         </Card>
       ) : (

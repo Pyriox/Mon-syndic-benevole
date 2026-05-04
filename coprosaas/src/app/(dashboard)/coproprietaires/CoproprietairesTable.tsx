@@ -83,6 +83,7 @@ interface CoproprietairesTableProps {
   coproprieteId?: string;
   currentUserId?: string;
   balanceEventsByCoproprietaire?: Record<string, BalanceEventRow[]>;
+  invitedEmails?: Set<string>;
 }
 
 // ── Helpers partagés ──────────────────────────────────────────────────────────
@@ -104,10 +105,12 @@ function IdentityBlock({
   cp,
   currentUserId,
   inviteButton,
+  invitedEmails,
 }: {
   cp: CoproRow;
   currentUserId?: string;
   inviteButton?: React.ReactNode;
+  invitedEmails?: Set<string>;
 }) {
   const displayName = computeDisplayName(cp);
   const isCurrentUser = cp.user_id !== null && cp.user_id === currentUserId;
@@ -125,6 +128,13 @@ function IdentityBlock({
               className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
             >
               <UserCheck size={11} />Inscrit
+            </span>
+          ) : invitedEmails?.has((cp.email ?? '').toLowerCase()) ? (
+            <span
+              title="Invitation envoyée"
+              className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0"
+            >
+              <Mail size={11} />Invité
             </span>
           ) : (
             inviteButton ?? null
@@ -277,6 +287,7 @@ function MobileCoproCard({
   onSaveCoproprietaire,
   onDeleteCoproprietaire,
   initialEvents,
+  invitedEmails,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
@@ -287,6 +298,7 @@ function MobileCoproCard({
   onSaveCoproprietaire: (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => void;
   onDeleteCoproprietaire: (id: string, freedLotIds: string[]) => void;
   initialEvents?: BalanceEventRow[];
+  invitedEmails?: Set<string>;
 }) {
   const { cpTantiemes, cpPercent } = computeTantiemes(ownedLots, totalTantiemes);
   const displayName = computeDisplayName(cp);
@@ -303,6 +315,7 @@ function MobileCoproCard({
           cp={cp}
           currentUserId={currentUserId}
           inviteButton={<CoproprietaireInvite coproprietaireId={cp.id} displayName={displayName} />}
+          invitedEmails={invitedEmails}
         />
         <div className="flex items-center gap-1 shrink-0">
           <CoproprietaireBalanceHistory
@@ -351,6 +364,7 @@ function SortableCoproRow({
   onSaveCoproprietaire,
   onDeleteCoproprietaire,
   initialEvents,
+  invitedEmails,
 }: {
   cp: CoproRow;
   ownedLots: LotEntry[];
@@ -361,6 +375,7 @@ function SortableCoproRow({
   onSaveCoproprietaire: (coproprietaire: CoproprietaireListItem, selectedLotIds: string[]) => void;
   onDeleteCoproprietaire: (id: string, freedLotIds: string[]) => void;
   initialEvents?: BalanceEventRow[];
+  invitedEmails?: Set<string>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: cp.id,
@@ -403,6 +418,7 @@ function SortableCoproRow({
           cp={cp}
           currentUserId={currentUserId}
           inviteButton={<CoproprietaireInvite coproprietaireId={cp.id} displayName={displayName} />}
+          invitedEmails={invitedEmails}
         />
       </td>
 
@@ -463,6 +479,7 @@ export default function CoproprietairesTable({
   currentUserId,
   coproprieteId,
   balanceEventsByCoproprietaire = {},
+  invitedEmails,
 }: CoproprietairesTableProps) {
   const [coproprietaires, setCoproprietaires] = useState<CoproRow[]>(initialCoproprietaires);
   const [lotsState, setLotsState] = useState<LotForSelect[]>(lotsForSelect);
@@ -595,6 +612,7 @@ export default function CoproprietairesTable({
             onSaveCoproprietaire={handleSavedCoproprietaire}
             onDeleteCoproprietaire={handleDeletedCoproprietaire}
             initialEvents={balanceEventsByCoproprietaire[cp.id]}
+            invitedEmails={invitedEmails}
           />
         ))}
       </div>
@@ -631,6 +649,7 @@ export default function CoproprietairesTable({
                   onSaveCoproprietaire={handleSavedCoproprietaire}
                   onDeleteCoproprietaire={handleDeletedCoproprietaire}
                   initialEvents={balanceEventsByCoproprietaire[cp.id]}
+                  invitedEmails={invitedEmails}
                 />
               ))}
             </tbody>

@@ -62,5 +62,5 @@ export async function createCopropriete(formData: {
     secure: process.env.NODE_ENV === 'production',
   });
 
-  redirect('/dashboard?copro_cree=1');
+  redirect(`/coproprietes/${data.id}?onboarding=1&copro_cree=1`);
 }
