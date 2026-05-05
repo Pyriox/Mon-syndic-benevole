@@ -280,7 +280,7 @@ export function buildSyndicOnboardingJ2Email(params: SyndicOnboardingJ2EmailPara
 
 ${nextSteps}
 
-${ctaButton(ctaLabel, actionUrl, COLOR.blue)}\`;
+${ctaButton(ctaLabel, actionUrl, COLOR.blue)}`;
 
   return wrapEmail(
     content,
@@ -332,7 +332,7 @@ ${banner}
   ${impact}
 </p>
 
-${ctaButton(ctaLabel, actionUrl, COLOR.amber)}\`;
+${ctaButton(ctaLabel, actionUrl, COLOR.amber)}`;
 
   return wrapEmail(
     content,
