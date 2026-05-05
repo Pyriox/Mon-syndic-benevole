@@ -17,12 +17,12 @@ import Textarea from '@/components/ui/Textarea';
 import { revalidateCoproFinance } from '@/lib/actions/revalidate-copro-finance';
 import { logClientEvent } from '@/lib/client-log-event';
 import {
-  calculerPart,
   collectAvailableRepartitionGroups,
   filterLotsByRepartitionScope,
   formatEuros,
   formatRepartitionScope,
   getLotTantiemesForRepartitionScope,
+  repartirMontant,
   LABELS_CATEGORIE,
 } from '@/lib/utils';
 import { Plus, Calculator, Upload, Pencil, Trash2, Paperclip, X, ExternalLink } from 'lucide-react';
@@ -90,7 +90,7 @@ export default function DepenseActions({
     copropriete_id: depense?.copropriete_id ?? coproprietes[0]?.id ?? '',
     titre: depense?.titre ?? '',
     categorie: depense?.categorie ?? 'entretien',
-    montant: depense ? String(depense.montant) : '',
+    montant: depense ? depense.montant.toFixed(2) : '',
     date_depense: depense?.date_depense ?? new Date().toISOString().split('T')[0],
     description: depense?.description ?? '',
     repartition_type: depense?.repartition_type ?? 'generale',
@@ -194,11 +194,7 @@ export default function DepenseActions({
   const totalTantiemes = lotsRepartitionPonderee.reduce((sum, row) => sum + row.tantiemes, 0);
   const montantNum = parseFloat(formData.montant) || 0;
 
-  const repartition = lotsRepartitionPonderee.map(({ lot, tantiemes }) => ({
-    lot,
-    tantiemes,
-    montant: calculerPart(montantNum, tantiemes, totalTantiemes),
-  }));
+  const repartition = repartirMontant(montantNum, lotsRepartitionPonderee);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
