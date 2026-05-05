@@ -280,11 +280,7 @@ export function buildSyndicOnboardingJ2Email(params: SyndicOnboardingJ2EmailPara
 
 ${nextSteps}
 
-${ctaButton(ctaLabel, actionUrl, COLOR.blue)}
-
-<p style="margin:0;font-size:12px;color:${COLOR.muted}">
-  Cette relance est envoyée 2 jours après la création de votre compte.
-</p>`;
+${ctaButton(ctaLabel, actionUrl, COLOR.blue)}\`;
 
   return wrapEmail(
     content,
@@ -336,11 +332,7 @@ ${banner}
   ${impact}
 </p>
 
-${ctaButton(ctaLabel, actionUrl, COLOR.amber)}
-
-<p style="margin:0;font-size:12px;color:${COLOR.muted}">
-  Cette relance est envoyée 7 jours après la création de votre compte.
-</p>`;
+${ctaButton(ctaLabel, actionUrl, COLOR.amber)}\`;
 
   return wrapEmail(
     content,
