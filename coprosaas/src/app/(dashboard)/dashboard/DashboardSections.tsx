@@ -229,7 +229,7 @@ function renderCoproDashboardKpis(
           <Scale size={24} className={hasDebt ? 'text-red-600' : hasCredit ? 'text-green-600' : 'text-gray-500'} />
         </div>
         <div>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Mon solde</p>
+          <p className="text-xs text-gray-500 font-medium">Mon solde</p>
           <p className={`text-2xl font-bold ${hasDebt ? 'text-red-600' : hasCredit ? 'text-green-700' : 'text-gray-900'}`}>
             {hasCredit ? '+' : ''}{formatEuros(displayedSolde)}
           </p>
@@ -245,7 +245,7 @@ function renderCoproDashboardKpis(
         </div>
         {data.prochaineAG ? (
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
+            <p className="text-xs text-gray-500 font-medium">Prochaine AG</p>
             <p className="font-bold text-gray-900 truncate">{data.prochaineAG.titre}</p>
             <p className="text-xs text-gray-500 mt-0.5">
               {new Date(data.prochaineAG.date_ag).toLocaleDateString('fr-FR', {
@@ -257,7 +257,7 @@ function renderCoproDashboardKpis(
           </div>
         ) : (
           <div>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Prochaine AG</p>
+            <p className="text-xs text-gray-500 font-medium">Prochaine AG</p>
             <p className="text-sm text-gray-500 mt-1 italic">Aucune AG planifiée</p>
           </div>
         )}
@@ -271,7 +271,7 @@ function renderCoproDashboardCharges(data: Awaited<ReturnType<typeof getCopropri
     return (
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">Mes charges à régler</h3>
+          <h3 className="font-semibold text-gray-900">Mes charges en attente</h3>
           <Link href="/appels-de-fonds" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
             Voir tout <ArrowRight size={14} />
           </Link>
@@ -375,7 +375,7 @@ export async function SyndicDashboardHeader({
       <h2 className="text-2xl font-bold text-gray-900">Tableau de bord</h2>
       <p className="text-gray-500 mt-1">
         {coproprieteName
-          ? `${data.nbLots} lot(s) · ${data.nbCoproprietaires} copropriétaire(s)`
+          ? `${data.nbLots} lot${data.nbLots > 1 ? 's' : ''} · ${data.nbCoproprietaires} copropriétaire${data.nbCoproprietaires > 1 ? 's' : ''}`
           : 'Sélectionnez une copropriété dans le menu de navigation'}
       </p>
     </div>
@@ -389,59 +389,35 @@ export async function SyndicDashboardAlert({ coproId }: { coproId: string }) {
   const showUnpaidAlert = data.totalMontantImpaye > 0 && overdueLineCount > 0;
   const showAgAlert = Boolean(data.agUrgente && data.prochaineAG && data.joursAvantAG !== null);
 
-  if (!showUnpaidAlert && !showAgAlert) {
+  if (!showAgAlert) {
     return null;
   }
 
   return (
-    <div className="space-y-3">
-      {showUnpaidAlert && (
-        <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          <BellRing size={18} className="text-red-700 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-red-800">
-              {overdueLineCount} ligne{overdueLineCount > 1 ? 's' : ''}{' '}d&apos;appel de fonds en retard
-            </p>
-            <p className="text-xs text-red-700 mt-0.5 truncate">
-              {formatEuros(data.totalMontantImpaye)} à régulariser · {data.nbImpayes} copropriétaire{data.nbImpayes > 1 ? 's' : ''} concerné{data.nbImpayes > 1 ? 's' : ''}
-            </p>
-          </div>
-          <Link
-            href="/appels-de-fonds"
-            className="shrink-0 text-xs text-red-700 hover:text-red-900 font-semibold underline-offset-2 hover:underline"
-          >
-            Voir &rarr;
-          </Link>
-        </div>
-      )}
-
-      {showAgAlert && data.prochaineAG && data.joursAvantAG !== null && (
-        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <BellRing size={18} className="text-amber-700 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-amber-800">
-              Assemblée Générale dans{' '}
-              <span className="inline-flex items-center bg-amber-100 text-amber-700 rounded-md px-2 py-0.5 text-xs font-bold">
-                J&minus;{data.joursAvantAG}
-              </span>
-            </p>
-            <p className="text-xs text-amber-700 mt-0.5 truncate">
-              {data.prochaineAG.titre} &middot;{' '}
-              {new Date(data.prochaineAG.date_ag).toLocaleDateString('fr-FR', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
-            </p>
-          </div>
-          <Link
-            href={`/assemblees/${data.prochaineAG.id}`}
-            className="shrink-0 text-xs text-amber-700 hover:text-amber-900 font-semibold underline-offset-2 hover:underline"
-          >
-            Voir &rarr;
-          </Link>
-        </div>
-      )}
+    <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+      <BellRing size={18} className="text-amber-700 shrink-0 mt-0.5" />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-amber-800">
+          Assemblée Générale dans{' '}
+          <span className="inline-flex items-center bg-amber-100 text-amber-700 rounded-md px-2 py-0.5 text-xs font-bold">
+            J&minus;{data.joursAvantAG}
+          </span>
+        </p>
+        <p className="text-xs text-amber-700 mt-0.5 line-clamp-2">
+          {data.prochaineAG!.titre} &middot;{' '}
+          {new Date(data.prochaineAG!.date_ag).toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+          })}
+        </p>
+      </div>
+      <Link
+        href={`/assemblees/${data.prochaineAG!.id}`}
+        className="shrink-0 text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+      >
+        Préparer l&apos;AG →
+      </Link>
     </div>
   );
 }
@@ -457,7 +433,7 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
             <Wallet size={24} className="text-indigo-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Provisions {data.currentYear}</p>
+            <p className="text-xs text-gray-500 font-medium">Charges appelées {data.currentYear}</p>
             {data.hasProvisions ? (
               <>
                 <p className="text-2xl font-bold text-gray-900">{formatEuros(data.totalProvisions)}</p>
@@ -483,48 +459,45 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
             <Receipt size={24} className="text-blue-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dépenses réelles {data.currentYear}</p>
+            <p className="text-xs text-gray-500 font-medium">Dépenses réelles {data.currentYear}</p>
             <p className="text-2xl font-bold text-gray-900">{formatEuros(data.totalDepensesAvecFT)}</p>
-            {data.totalFondsTravaux > 0 ? (
+            {data.totalFondsTravaux > 0 && (
               <p className="text-xs text-amber-500 font-medium mt-0.5">
                 dont {formatEuros(data.totalFondsTravaux)} fonds travaux ALUR
               </p>
-            ) : (
-              <>
-                {data.tendanceDepenses === 'hausse' && (
-                  <p className="text-xs text-red-600 flex items-center gap-0.5 mt-0.5 font-medium">
-                    <ArrowUp size={11} />{data.pctTendance}% vs {data.prevYear}
-                  </p>
-                )}
-                {data.tendanceDepenses === 'baisse' && (
-                  <p className="text-xs text-green-600 flex items-center gap-0.5 mt-0.5 font-medium">
-                    <ArrowDown size={11} />{Math.abs(data.pctTendance)}% vs {data.prevYear}
-                  </p>
-                )}
-                {data.tendanceDepenses === 'stable' && (
-                  <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5">
-                    <Minus size={11} />Stable vs {data.prevYear}
-                  </p>
-                )}
-              </>
+            )}
+            {data.tendanceDepenses === 'hausse' && (
+              <p className="text-xs text-red-600 flex items-center gap-0.5 mt-0.5 font-medium">
+                <ArrowUp size={11} />{data.pctTendance}% vs {data.prevYear}
+              </p>
+            )}
+            {data.tendanceDepenses === 'baisse' && (
+              <p className="text-xs text-green-600 flex items-center gap-0.5 mt-0.5 font-medium">
+                <ArrowDown size={11} />{Math.abs(data.pctTendance)}% vs {data.prevYear}
+              </p>
+            )}
+            {data.tendanceDepenses === 'stable' && (
+              <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5">
+                <Minus size={11} />Stable vs {data.prevYear}
+              </p>
             )}
           </div>
         </Card>
 
         {data.hasProvisions ? (
-          <Card className="flex items-center gap-4">
-            <div className={`p-3 rounded-xl shrink-0 ${data.ecartPrevisionnel > 0 ? 'bg-green-100' : data.ecartPrevisionnel < 0 ? 'bg-orange-100' : 'bg-gray-100'}`}>
+          <Card className={`flex items-center gap-4${data.ecartPrevisionnel < 0 ? ' border-red-300 bg-red-50/40' : ''}`}>
+            <div className={`p-3 rounded-xl shrink-0 ${data.ecartPrevisionnel > 0 ? 'bg-green-100' : data.ecartPrevisionnel < 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
               {data.ecartPrevisionnel > 0 ? (
                 <TrendingUp size={24} className="text-green-600" />
               ) : data.ecartPrevisionnel < 0 ? (
-                <TrendingDown size={24} className="text-orange-600" />
+                <TrendingDown size={24} className="text-red-600" />
               ) : (
                 <Minus size={24} className="text-gray-500" />
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
-              <p className={`text-2xl font-bold ${data.ecartPrevisionnel > 0 ? 'text-green-700' : data.ecartPrevisionnel < 0 ? 'text-orange-600' : 'text-gray-700'}`}>
+              <p className="text-xs text-gray-500 font-medium">Bilan prévisionnel</p>
+              <p className={`text-2xl font-bold ${data.ecartPrevisionnel > 0 ? 'text-green-700' : data.ecartPrevisionnel < 0 ? 'text-red-600' : 'text-gray-700'}`}>
                 {data.ecartPrevisionnel > 0 ? '+' : ''}{formatEuros(data.ecartPrevisionnel)}
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
@@ -542,7 +515,7 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
               <Minus size={24} className="text-gray-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Écart prévisionnel</p>
+              <p className="text-xs text-gray-500 font-medium">Bilan prévisionnel</p>
               <p className="text-sm text-gray-700 font-semibold mt-0.5">—</p>
               <p className="text-xs text-gray-500 mt-0.5">
                 Aucune provision saisie pour {data.currentYear}.{' '}
@@ -555,13 +528,14 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
         )}
       </div>
 
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest -mb-2">Situation actuelle</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="flex items-center gap-4">
           <div className={`p-3 rounded-xl shrink-0 ${data.totalMontantImpaye > 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
             <Banknote size={24} className={data.totalMontantImpaye > 0 ? 'text-red-600' : 'text-gray-500'} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Solde impayé</p>
+            <p className="text-xs text-gray-500 font-medium">Solde impayé</p>
             <p className={`text-2xl font-bold ${data.totalMontantImpaye > 0 ? 'text-red-600' : 'text-gray-900'}`}>
               {formatEuros(data.totalMontantImpaye)}
             </p>
@@ -580,7 +554,7 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
             <AlertTriangle size={24} className="text-yellow-600" />
           </div>
           <div>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Incidents en cours</p>
+            <p className="text-xs text-gray-500 font-medium">Incidents en cours</p>
             <p className="text-2xl font-bold text-gray-900">{data.nbIncidentsOuverts}</p>
             {data.nbIncidentsOuverts === 0 && <p className="text-xs text-green-700 mt-0.5">Aucun incident ouvert</p>}
           </div>
@@ -591,7 +565,7 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
             <Users size={24} className="text-green-600" />
           </div>
           <div>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Copropriétaires</p>
+            <p className="text-xs text-gray-500 font-medium">Copropriétaires</p>
             <p className="text-2xl font-bold text-gray-900">{data.nbCoproprietaires}</p>
             <p className="text-xs text-gray-500 mt-0.5">{data.nbLots} lot{data.nbLots > 1 ? 's' : ''}</p>
           </div>
@@ -677,7 +651,7 @@ export async function SyndicDashboardBudgetPanels({ coproId }: { coproId: string
                       <span className="font-semibold text-gray-700 w-9 text-right">{pct}%</span>
                     </div>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                     <div className={`${colors.bar} h-full rounded-full transition-all`} style={{ width: `${pct}%` }} />
                   </div>
                 </div>
@@ -753,7 +727,7 @@ export async function SyndicNextAction({ coproId }: { coproId: string }) {
         </div>
         <Link
           href="/appels-de-fonds"
-          className="shrink-0 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors"
+          className="shrink-0 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-lg transition-colors"
         >
           Gérer les impayés →
         </Link>
@@ -935,7 +909,25 @@ export async function SyndicDashboardAssemblies({ coproId }: { coproId: string }
   const data = await getSyndicDashboardSnapshotCached(coproId);
 
   if (data.assemblees.length === 0) {
-    return null;
+    return (
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-900">
+            <CalendarDays size={18} className="inline mr-2 text-purple-600" />
+            Assemblées générales à venir
+          </h3>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+          <p className="text-sm text-gray-500">Aucune AG planifiée pour le moment.</p>
+          <Link
+            href="/assemblees/nouvelle"
+            className="shrink-0 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Créer une AG →
+          </Link>
+        </div>
+      </Card>
+    );
   }
 
   return (
@@ -949,7 +941,7 @@ export async function SyndicDashboardAssemblies({ coproId }: { coproId: string }
           Voir tout <ArrowRight size={14} />
         </Link>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {data.assemblees.map((ag) => (
           <Link
             key={ag.id}
@@ -987,7 +979,19 @@ export async function OnboardingChecklist({ coproId }: { coproId: string }) {
   const hasAG = (agCount ?? 0) > 0;
 
   // Ne plus afficher une fois tous les modules remplis
-  if (hasLots && hasCopros && hasAG && hasAppels) return null;
+  if (hasLots && hasCopros && hasAG && hasAppels) {
+    return (
+      <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 flex items-center gap-3">
+        <div className="p-2 bg-green-100 rounded-lg shrink-0">
+          <CheckCircle2 size={18} className="text-green-600" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-green-800">Configuration terminée — votre copropriété est opérationnelle !</p>
+          <p className="text-xs text-green-700 mt-0.5">Tous les modules sont configurés. Vous pouvez gérer votre copropriété en toute autonomie.</p>
+        </div>
+      </div>
+    );
+  }
 
   const steps: { done: boolean; label: string; href: string; hint: string }[] = [
     {
