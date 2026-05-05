@@ -9,6 +9,7 @@ export type AdminUserEvent = {
   severity?: 'info' | 'warning' | 'error' | null;
   created_at: string;
   metadata?: Record<string, unknown> | null;
+  coproprieteContext?: { id: string; nom: string } | null;
 };
 
 const EVENT_META: Record<string, { icon: string; label: string; color: string }> = {
@@ -186,6 +187,14 @@ export default function AdminUserEventTimeline({
                   <span className={`inline-flex items-center gap-1 text-xs font-medium border rounded px-1.5 py-0.5 ${meta?.color ?? 'text-gray-600 bg-gray-50 border-gray-200'}`}>
                     {meta?.icon ?? '·'} {meta?.label ?? event.event_type}
                   </span>
+                  {event.coproprieteContext && (
+                    <Link
+                      href={`/admin/coproprietes/${event.coproprieteContext.id}`}
+                      className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] text-indigo-500 hover:text-indigo-700 hover:underline"
+                    >
+                      🏢 {event.coproprieteContext.nom}
+                    </Link>
+                  )}
                   <p className="text-xs text-gray-500 mt-1 break-words">{event.label || event.event_type}</p>
                   {event.metadata && Object.keys(event.metadata).length > 0 && (() => {
                     const { diff, plain } = parseMetadataEntries(event.metadata);

@@ -106,7 +106,7 @@ export default async function AdminUtilisateurProfilePage({
       : Promise.resolve({ data: [], error: null }),
     admin
       .from('user_events')
-      .select('id, event_type, label, created_at, severity, metadata')
+      .select('id, event_type, label, created_at, severity, metadata, copropriete_id')
       .eq('user_id', id)
       .in('event_type', USER_LEVEL_EVENT_TYPES)
       .order('created_at', { ascending: false })
@@ -190,7 +190,19 @@ export default async function AdminUtilisateurProfilePage({
     created_at: string;
     severity?: 'info' | 'warning' | 'error';
     metadata?: Record<string, unknown> | null;
+    copropriete_id?: string | null;
   }>;
+
+  const coproNomMap = new Map(syndicCopros.map((c) => [c.id, c.nom]));
+  const COPRO_EVENT_TYPES = new Set<string>(EVENT_CATEGORY_MAP.copro);
+
+  const enrichedUserEvents = userEvents.map((e) => {
+    const coproId = e.copropriete_id;
+    const coproprieteContext = (coproId && COPRO_EVENT_TYPES.has(e.event_type) && coproNomMap.has(coproId))
+      ? { id: coproId, nom: coproNomMap.get(coproId)! }
+      : null;
+    return { ...e, coproprieteContext };
+  });
 
   const emailEvents = (emailDeliveriesRes.data ?? []).map((d) => {
     const delivery = d as { id: string; template_key: string; subject: string | null; status: string; sent_at: string | null; created_at: string };
@@ -204,7 +216,7 @@ export default async function AdminUtilisateurProfilePage({
     };
   });
 
-  const allEvents = [...userEvents, ...emailEvents].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const allEvents = [...enrichedUserEvents, ...emailEvents].sort((a, b) => b.created_at.localeCompare(a.created_at));
 
   const currentLogCategory = logCategory === 'billing' || logCategory === 'account' || logCategory === 'admin' || logCategory === 'copro' || logCategory === 'email'
     ? logCategory
