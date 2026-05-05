@@ -920,7 +920,7 @@ export async function SyndicDashboardAssemblies({ coproId }: { coproId: string }
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
           <p className="text-sm text-gray-500">Aucune AG planifiée pour le moment.</p>
           <Link
-            href="/assemblees/nouvelle"
+            href="/assemblees"
             className="shrink-0 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors"
           >
             Créer une AG →
