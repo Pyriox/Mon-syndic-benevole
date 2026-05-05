@@ -426,7 +426,7 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
   const data = await getSyndicDashboardSnapshotCached(coproId);
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="flex items-center gap-4">
           <div className="p-3 bg-indigo-100 rounded-xl shrink-0">
@@ -528,7 +528,7 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
         )}
       </div>
 
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest -mb-2">Situation actuelle</p>
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Situation actuelle</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="flex items-center gap-4">
           <div className={`p-3 rounded-xl shrink-0 ${data.totalMontantImpaye > 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
@@ -571,7 +571,7 @@ export async function SyndicDashboardMetrics({ coproId }: { coproId: string }) {
           </div>
         </Card>
       </div>
-    </>
+    </div>
   );
 }
 
