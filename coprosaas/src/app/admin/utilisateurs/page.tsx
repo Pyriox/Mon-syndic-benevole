@@ -97,7 +97,7 @@ export default async function AdminUtilisateursPage({
     admin.from('coproprietes').select('id, nom, syndic_id, plan, plan_id'),
     admin.from('admin_users').select('user_id'),
     admin.from('coproprietaires').select('email, user_id, copropriete_id'),
-    admin.from('support_tickets').select('user_email'),
+    admin.from('support_tickets').select('user_email, status'),
     admin.from('profiles').select('id, last_active_at, suspended_at'),
     // Dernière activité par user_id depuis les sessions heartbeat
     admin.from('user_sessions').select('user_id, last_activity_at').order('last_activity_at', { ascending: false }),
@@ -161,10 +161,12 @@ export default async function AdminUtilisateursPage({
     }
   }
 
-  // email → ticket count
+  // email → ticket count (tickets non résolus uniquement)
   const ticketCount: Record<string, number> = {};
   for (const t of supportTicketsData ?? []) {
-    const email = ((t as { user_email: string | null }).user_email ?? '').toLowerCase();
+    const row = t as { user_email: string | null; status: string };
+    if (row.status === 'resolu') continue;
+    const email = (row.user_email ?? '').toLowerCase();
     if (email) ticketCount[email] = (ticketCount[email] ?? 0) + 1;
   }
 
