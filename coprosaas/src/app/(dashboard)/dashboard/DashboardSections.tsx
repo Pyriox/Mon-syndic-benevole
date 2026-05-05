@@ -400,7 +400,7 @@ export async function SyndicDashboardAlert({ coproId }: { coproId: string }) {
           <BellRing size={18} className="text-red-700 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-red-800">
-              {overdueLineCount} ligne{overdueLineCount > 1 ? 's' : ''} d&apos;appel de fonds en retard
+              {overdueLineCount} ligne{overdueLineCount > 1 ? 's' : ''}{' '}d&apos;appel de fonds en retard
             </p>
             <p className="text-xs text-red-700 mt-0.5 truncate">
               {formatEuros(data.totalMontantImpaye)} à régulariser · {data.nbImpayes} copropriétaire{data.nbImpayes > 1 ? 's' : ''} concerné{data.nbImpayes > 1 ? 's' : ''}
@@ -744,7 +744,7 @@ export async function SyndicNextAction({ coproId }: { coproId: string }) {
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-900">
-              {formatEuros(data.totalMontantImpaye)} d&apos;impayés à régulariser
+              {formatEuros(data.totalMontantImpaye)}{' '}d&apos;impayés à régulariser
             </p>
             <p className="text-xs text-gray-600 mt-0.5">
               {data.nbImpayes} copropriétaire{data.nbImpayes > 1 ? 's' : ''} concerné{data.nbImpayes > 1 ? 's' : ''} — relancez-les ou enregistrez les paiements.
