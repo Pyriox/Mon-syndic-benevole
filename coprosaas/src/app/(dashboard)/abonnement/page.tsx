@@ -356,7 +356,7 @@ export default async function AbonnementPage({
           <h1 className="text-2xl font-bold text-gray-900">Abonnement</h1>
           <p className="text-sm text-gray-500 mt-1">
             {currentCoproName
-              ? <>Vous consultez l’abonnement de <strong>{currentCoproName}</strong>. Utilisez le sélecteur de copropriété pour en changer.</>
+              ? <>Gérez l&apos;abonnement de <strong>{currentCoproName}</strong>.</>
               : 'Chaque copropriété dispose de son propre abonnement, indépendant des autres.'}
           </p>
         </div>
@@ -574,6 +574,21 @@ export default async function AbonnementPage({
                 </div>
               )}
 
+              {/* Fonctionnalités incluses */}
+              <div className="bg-gray-50 rounded-xl px-5 py-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
+                  Inclus dans tous les plans
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
+                  {FEATURES.map((f) => (
+                    <div key={f} className="flex items-center gap-2.5 text-sm text-gray-700">
+                      <CheckCircle size={14} className="text-green-600 shrink-0" />
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Grille des plans */}
               <PlansGridSection
                 coproprieteId={copro.id}
@@ -604,6 +619,9 @@ export default async function AbonnementPage({
                         </span>
                       )}
                     </div>
+                    <p className="text-sm font-medium text-gray-800">
+                      Votre copropriété a des clés de répartition particulières ?
+                    </p>
                     <p className="text-sm text-gray-600">
                       Débloque les répartitions par bâtiment, ascenseur, parking ou toute autre clé spéciale de votre copropriété.
                     </p>
@@ -671,25 +689,8 @@ export default async function AbonnementPage({
           );
         })}
 
-        {/* ── Fonctionnalités incluses */}
-        {(coproprietes ?? []).length > 0 && (
-          <div className="bg-gray-50 rounded-2xl p-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
-              Inclus dans tous les plans
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-              {FEATURES.map((f) => (
-                <div key={f} className="flex items-center gap-2.5 text-sm text-gray-700">
-                  <CheckCircle size={15} className="text-green-600 shrink-0" />
-                  {f}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         <p className="text-xs text-gray-500 text-center pb-4">
-          Facturation annuelle. Sans engagement.{' '}
+          Facturation annuelle · Résiliable à tout moment, sans préavis.{' '}
           Pour toute question :{' '}
           <Link
             href="/aide"

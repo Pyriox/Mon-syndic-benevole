@@ -67,34 +67,37 @@ export default function PlansGridSection({
 
   return (
     <div className="space-y-4">
-      {/* ── Micro-selector "Combien de lots ?" ── */}
+      {/* ── Sélecteur de plan ── */}
       {showSelector && (
-        <div className="flex flex-wrap items-center gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
-          <label htmlFor="lot-count-selector" className="text-sm font-medium text-indigo-900 shrink-0">
-            Combien de lots avez-vous ?
-          </label>
-          <div className="flex items-center gap-3">
-            <input
-              id="lot-count-selector"
-              type="number"
-              min={1}
-              max={500}
-              value={lotInput || ''}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                setLotInput(isNaN(val) ? 0 : Math.max(0, val));
-              }}
-              className="w-20 rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-sm text-center font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              placeholder="ex: 12"
-            />
-            {lotInput > 0 && (
-              <span className="text-xs text-indigo-700">
-                → Plan recommandé :{' '}
-                <strong className="text-indigo-900">
-                  {PLANS.find((p) => p.id === dynamicRecommended)?.name}
-                </strong>
-              </span>
-            )}
+        <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+          <p className="text-sm font-semibold text-indigo-900 mb-3">Quel plan pour votre copropriété ?</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <label htmlFor="lot-count-selector" className="text-sm text-indigo-800 shrink-0">
+              Nombre de lots :
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                id="lot-count-selector"
+                type="number"
+                min={1}
+                max={500}
+                value={lotInput || ''}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setLotInput(isNaN(val) ? 0 : Math.max(0, val));
+                }}
+                className="w-24 rounded-lg border border-indigo-200 bg-white px-2.5 py-2 text-sm text-center font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                placeholder="ex: 12"
+              />
+              {lotInput > 0 && (
+                <span className="text-sm text-indigo-700">
+                  → Plan recommandé :{' '}
+                  <strong className="text-indigo-900">
+                    {PLANS.find((p) => p.id === dynamicRecommended)?.name}
+                  </strong>
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -141,14 +144,14 @@ export default function PlansGridSection({
                     {plan.desc}
                   </p>
                 </div>
-                <div className="shrink-0">
+                <div className="shrink-0 flex flex-col items-end gap-1">
                   {isCurrentPlan && (
                     <span className="flex items-center gap-1 bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                       <CheckCircle size={10} /> Actuel
                     </span>
                   )}
                   {isLocked && <Lock size={13} className="text-gray-400 mt-0.5" />}
-                  {!isLocked && !isCurrentPlan && plan.badge && !isRecommended && (
+                  {!isLocked && !isCurrentPlan && plan.badge && (
                     <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
                       {plan.badge}
                     </span>
@@ -172,14 +175,14 @@ export default function PlansGridSection({
                     isCurrentPlan || (!isLocked && isPrimary) ? 'text-white' : 'text-gray-900'
                   }`}
                 >
-                  {plan.annual}&nbsp;€
+                  {plan.monthlyLabel}
                 </span>
                 <span
                   className={`pb-0.5 text-sm ${
                     isCurrentPlan || (!isLocked && isPrimary) ? 'text-blue-200' : 'text-gray-400'
                   }`}
                 >
-                  /an
+                  /mois
                 </span>
               </div>
               <p
@@ -193,8 +196,9 @@ export default function PlansGridSection({
                     isCurrentPlan || (!isLocked && isPrimary) ? 'text-white' : 'text-gray-700'
                   }`}
                 >
-                  {plan.monthlyLabel}/mois
+                  {plan.annual}&nbsp;€/an
                 </span>
+                {' '}facturés en une fois
               </p>
 
               {/* CTA */}
@@ -204,8 +208,18 @@ export default function PlansGridSection({
                     <CheckCircle size={14} />
                     Plan actuel
                   </div>
-                ) : isLocked ? null : (
-                  <CheckoutButton planId={plan.id} coproprieteid={coproprieteId} isPrimary={isPrimary} />
+                ) : isLocked ? (
+                  <p className="text-xs text-center text-gray-400">
+                    Changement via{' '}
+                    <span className="font-medium">Gérer &amp; factures</span>
+                  </p>
+                ) : (
+                  <>
+                    <CheckoutButton planId={plan.id} coproprieteid={coproprieteId} isPrimary={isPrimary} />
+                    <p className={`mt-2 text-[11px] text-center ${isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>
+                      14 jours d&apos;essai gratuit inclus
+                    </p>
+                  </>
                 )}
               </div>
             </div>
