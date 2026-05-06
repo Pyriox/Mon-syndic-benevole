@@ -286,6 +286,18 @@ export const posts: BlogPost[] = [
         q: "Combien de temps faut-il conserver les documents de copropriété ?",
         a: "Les documents doivent être conservés pendant au moins 10 ans : procès-verbaux d'AG, contrats, factures, correspondances importantes.",
       },
+      {
+        q: "Quelles sanctions encourt le syndic bénévole en cas de manquement ?",
+        a: "Les sanctions varient selon la gravité : contestation des résolutions d'AG dans les 2 mois suivant la notification du PV, action en responsabilité civile devant le tribunal judiciaire si la faute cause un préjudice, et dans les cas les plus graves, désignation d'un administrateur provisoire par le président du TJ.",
+      },
+      {
+        q: "Le syndic bénévole est-il obligé de tenir une comptabilité ?",
+        a: "Oui. Le décret 2005-240 impose une comptabilité d'engagement pour toutes les copropriétés de plus de 10 lots. Pour les copropriétés de 10 lots ou moins, une comptabilité de caisse est tolérée. Dans tous les cas, des annexes comptables doivent être présentées en AG et les comptes (courant + fonds de travaux) doivent rester séparés.",
+      },
+      {
+        q: "Qu'est-ce que l'état daté et qui doit le fournir ?",
+        a: "L'état daté est un document établi par le syndic lors de la vente d'un lot : il récapitule les charges dues par le vendeur et les appels votés à venir. Le syndic dispose de 15 jours pour le fournir au notaire. Tout retard peut bloquer la signature de l'acte.",
+      },
     ],
   },
   {

@@ -23,22 +23,39 @@ export default function ArticleObligationsSyndicBenevole() {
 
       <h2 id="cadre-legal" className={h2}>Le cadre légal du syndic bénévole</h2>
       <p className={p}>
-        Le syndic non-professionnel exerce dans le cadre de la <strong className={strong}>loi du 10 juillet 1965</strong> et du <strong className={strong}>décret du 17 mars 1967</strong>. Ces textes s&apos;appliquent à tous les syndics, qu&apos;ils soient professionnels ou bénévoles. Il n&apos;existe pas de régime allégé pour les bénévoles — les mêmes obligations s&apos;appliquent, les mêmes délais, les mêmes documents.
+        Le syndic non-professionnel exerce dans le cadre de la <strong className={strong}>loi du 10 juillet 1965</strong> et du <strong className={strong}>décret du 17 mars 1967</strong>. Ces textes s&apos;appliquent à tous les syndics — bénévoles comme professionnels. Il n&apos;existe pas de régime allégé pour les bénévoles.
       </p>
       <p className={p}>
-        La seule différence : le syndic bénévole n&apos;est pas soumis à la loi Hoguet (licence professionnelle, assurance RCP obligatoire). Il doit en revanche être copropriétaire de l&apos;immeuble concerné.
+        La seule différence avec un professionnel : le syndic bénévole n&apos;est pas soumis à la loi Hoguet (aucune licence professionnelle requise, pas d&apos;assurance RCP légalement obligatoire). Il doit en revanche être copropriétaire de l&apos;immeuble concerné.
       </p>
+
+      <div className="my-6 rounded-2xl border border-red-200 bg-red-50 p-5">
+        <p className="text-sm font-bold text-red-800 mb-3">Responsabilité civile personnelle : ce que cela signifie concrètement</p>
+        <p className="text-sm text-gray-700 mb-3">
+          Le syndic bénévole peut être poursuivi personnellement si une faute dans l&apos;exercice de son mandat cause un préjudice au syndicat ou à un copropriétaire. Trois bases juridiques sont couramment invoquées :
+        </p>
+        <ul className="space-y-2 text-sm text-gray-700 mb-3">
+          <li className="flex gap-2.5">
+            <span className="text-red-500 font-mono font-bold flex-shrink-0">Art. 18</span>
+            <span><strong>loi 1965</strong> — manquement direct aux missions du syndic (convocation, comptabilité, assurance immeuble, fonds de travaux)</span>
+          </li>
+          <li className="flex gap-2.5">
+            <span className="text-red-500 font-mono font-bold flex-shrink-0">Art. 1240</span>
+            <span><strong>Code civil</strong> — faute délictuelle : tout acte ou omission dommageable, même sans lien direct avec le mandat</span>
+          </li>
+          <li className="flex gap-2.5">
+            <span className="text-red-500 font-mono font-bold flex-shrink-0">Art. 1231-1</span>
+            <span><strong>Code civil</strong> — inexécution du contrat de mandat (si l&apos;AG a voté une rémunération)</span>
+          </li>
+        </ul>
+        <p className="text-xs text-red-600 font-semibold">Fautes les plus sanctionnées : AG convoquée hors délai, fonds du syndicat mélangés aux fonds personnels, travaux votés non engagés.</p>
+      </div>
 
       <div className="my-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles utiles</p>
         <p className="text-sm text-gray-700">
           Pour recouper ce guide avec les références publiques, consultez la fiche <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur le syndic de copropriété</a>, le dossier <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/N31338" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur les acteurs de la copropriété</a>, la page <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/" target="_blank" rel="noopener noreferrer" className={a}>ANIL sur le syndic</a> et la page ANIL sur <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/immatriculation-des-coproprietes/" target="_blank" rel="noopener noreferrer" className={a}>l&apos;immatriculation des copropriétés</a>.
         </p>
-      </div>
-
-      <div className="my-6 bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-gray-700">
-        <p className="font-semibold text-amber-800 mb-2">Responsabilité personnelle</p>
-        <p>Le syndic bénévole peut être tenu responsable de ses fautes dans l&apos;exercice de son mandat (gestion de fonds, décisions prises sans AG, délais manqués). Sa responsabilité civile personnelle peut être engagée si le syndicat des copropriétaires subit un préjudice.</p>
       </div>
 
       <h2 id="calendrier-annuel" className={h2}>Le calendrier complet des obligations annuelles</h2>
@@ -412,6 +429,15 @@ export default function ArticleObligationsSyndicBenevole() {
 
       <h3 className={h3}>Que faire si un copropriétaire conteste une résolution d&apos;AG ?</h3>
       <p className={p}>Le recours doit être formé dans les 2 mois suivant la notification du PV. Avant tout contentieux, une tentative de médiation ou de conciliation peut être proposée. Si le délai de 2 mois est expiré, la résolution est définitive. La bonne pratique est d&apos;envoyer les PV rapidement — et de conserver les preuves d&apos;envoi.</p>
+
+      <h3 className={h3}>Quelles sanctions encourt le syndic bénévole en cas de manquement ?</h3>
+      <p className={p}>Les sanctions varient selon la gravité de la faute. <strong className={strong}>Contestation des résolutions d&apos;AG</strong> : les copropriétaires lésés ont 2 mois après notification du PV pour saisir le tribunal judiciaire. <strong className={strong}>Action en responsabilité civile</strong> : le syndicat peut réclamer des dommages-intérêts si la faute lui a causé un préjudice direct. <strong className={strong}>Désignation d&apos;un administrateur provisoire</strong> : en cas de carence grave et avouée, le président du TJ peut nommer un tiers pour assurer la gestion aux frais de la copropriété.</p>
+
+      <h3 className={h3}>Le syndic bénévole est-il obligé de tenir une comptabilité ?</h3>
+      <p className={p}>Oui. Le décret 2005-240 impose une <strong className={strong}>comptabilité d&apos;engagement</strong> (enregistrement des charges à la date du fait générateur, pas du paiement) pour toutes les copropriétés de plus de 10 lots. Pour les petites copropriétés (≤ 10 lots), une comptabilité de caisse est tolérée. Dans tous les cas, des annexes comptables doivent être présentées à l&apos;AG lors de l&apos;approbation des comptes, et les deux comptes (courant + fonds de travaux) doivent être distincts.</p>
+
+      <h3 className={h3}>Qu&apos;est-ce que l&apos;état daté et qui doit le fournir ?</h3>
+      <p className={p}>L&apos;état daté est un document établi par le syndic lors de la <strong className={strong}>vente d&apos;un lot</strong>. Il récapitule les sommes dues par le vendeur (charges courantes, fonds de travaux, appels votés non encore échus) et celles à venir. Le syndic dispose de <strong className={strong}>15 jours</strong> pour le fournir au notaire après réception de la demande. En cas de retard, la signature peut être bloquée. Le coût maximum est encadré par décret.</p>
 
       <h2 id="en-resume" className={h2}>En résumé</h2>
       <p className={p}>
