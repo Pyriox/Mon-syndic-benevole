@@ -7,7 +7,7 @@ import {
   AlertTriangle, FileText, Wallet, ArrowRight,
   Shield, Scale, ArrowUp, BellRing, Banknote,
   LayoutDashboard, HelpCircle, UserCircle, LogOut, CreditCard,
-  X, Clock, ChevronDown,
+  X, Clock, ChevronDown, Settings, Bell,
 } from 'lucide-react';
 import SiteLogo from '@/components/ui/SiteLogo';
 import LandingNav from './LandingNav';
@@ -594,8 +594,8 @@ export default function HomePage() {
             {/* Fenêtre navigateur */}
             <div className="rounded-t-2xl overflow-hidden shadow-2xl shadow-black/40 border border-white/10 relative">
               {/* Barre navigateur */}
-              <div className="bg-gray-800 px-4 py-3 flex items-center gap-3">
-                <div className="flex gap-1.5">
+              <div className="bg-gray-800 px-4 py-2.5 flex items-center gap-3">
+                <div className="flex gap-1.5 shrink-0">
                   <div className="w-3 h-3 rounded-full bg-red-500" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
                   <div className="w-3 h-3 rounded-full bg-green-500" />
@@ -604,8 +604,32 @@ export default function HomePage() {
                   mon-syndic-benevole.fr
                 </div>
               </div>
+              {/* Barre d'en-tête app */}
+              <div className="bg-white border-b border-gray-100 px-4 py-2 flex items-center">
+                {/* Réserve sidebar */}
+                <div className="w-56 shrink-0" />
+                {/* Centre : nom copro + badges rôle */}
+                <div className="flex-1 flex items-center justify-center gap-2">
+                  <span className="text-sm font-bold text-gray-900">Résidence Les Acacias</span>
+                  <span className="text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">Syndic</span>
+                  <span className="text-[10px] font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">Copropriétaire</span>
+                </div>
+                {/* Droite : cloche + utilisateur */}
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Bell size={15} className="text-gray-500" />
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-[8px] text-white flex items-center justify-center font-bold">1</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-600 font-medium">
+                    <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
+                      <UserCircle size={13} className="text-blue-600" />
+                    </div>
+                    Fabien TURPIN
+                  </div>
+                </div>
+              </div>
               {/* Contenu app simulé */}
-              <div className="bg-gray-50 flex" style={{ height: '460px' }}>
+              <div className="bg-gray-50 flex" style={{ height: '440px' }}>
                 {/* Sidebar */}
                 <div className="w-56 bg-white border-r border-gray-100 flex flex-col shrink-0 overflow-hidden">
                   {/* Logo */}
@@ -642,6 +666,7 @@ export default function HomePage() {
                       {[
                         { label: 'Lots & bâtiment', Icon: Building2 },
                         { label: 'Copropriétaires', Icon: Users },
+                        { label: 'Paramétrage', Icon: Settings },
                       ].map(({ label, Icon }) => (
                         <div key={label} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-gray-500">
                           <Icon size={13} className="text-gray-400 shrink-0" />
@@ -656,6 +681,7 @@ export default function HomePage() {
                         { label: 'Assemblées Générales', Icon: CalendarDays },
                         { label: 'Appels de fonds', Icon: Wallet },
                         { label: 'Dépenses', Icon: Receipt },
+                        { label: 'Régularisation', Icon: Scale },
                       ].map(({ label, Icon }) => (
                         <div key={label} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-gray-500">
                           <Icon size={13} className="text-gray-400 shrink-0" />
@@ -707,9 +733,6 @@ export default function HomePage() {
                     <div>
                       <h3 className="text-sm font-bold text-gray-800">Tableau de bord</h3>
                       <p className="text-xs text-gray-400">Résidence Les Acacias · 12 lots · 10 copropriétaires</p>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500" /> En ligne
                     </div>
                   </div>
   
