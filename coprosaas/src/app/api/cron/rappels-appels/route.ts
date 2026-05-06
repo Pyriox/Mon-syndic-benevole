@@ -157,6 +157,19 @@ export async function GET(req: NextRequest) {
     .is('rappel_j15_at', null)
     .limit(100);
 
+  // Appels publiés après leur échéance (publication tardive ou cron manqué au moment de la publication).
+  // emailed_at IS NULL = l'avis initial n'a jamais été envoyé. On envoie directement la relance
+  // appropriée selon l'ancienneté du retard et on marque emailed_at en même temps.
+  const { data: latePublishAppels } = await supabase
+    .from('appels_de_fonds')
+    .select('id, copropriete_id, titre, montant_total, date_echeance, emailed_at, coproprietes(nom)')
+    .eq('statut', 'publie')
+    .is('emailed_at', null)
+    .lt('date_echeance', todayStr)
+    .gte('date_echeance', dateJ90)
+    .is('rappel_j1_at', null)
+    .limit(100);
+
   // Récapitulatif syndic à l'échéance (J0)
   const { data: j0SyndicAppels } = await supabase
     .from('appels_de_fonds')
@@ -210,6 +223,21 @@ export async function GET(req: NextRequest) {
         await supabase.from('appels_de_fonds')
           .update({ rappel_j15_at: new Date().toISOString() })
           .eq('id', appel.id);
+      }
+      totalSent += sent;
+    }
+
+    // Traitement appels publiés tardivement (emailed_at jamais défini, échéance déjà passée)
+    // Si > 15 jours de retard → mise en demeure directe ; sinon → rappel J+1
+    for (const appel of latePublishAppels ?? []) {
+      const isVeryLate = appel.date_echeance <= dateJ15;
+      const type: AppelEmailType = isVeryLate ? 'mise_en_demeure' : 'rappel_j1';
+      const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, type);
+      if (sent > 0) {
+        const now = new Date().toISOString();
+        const fields: Record<string, string> = { emailed_at: now, rappel_j1_at: now };
+        if (isVeryLate) fields.rappel_j15_at = now;
+        await supabase.from('appels_de_fonds').update(fields).eq('id', appel.id);
       }
       totalSent += sent;
     }
