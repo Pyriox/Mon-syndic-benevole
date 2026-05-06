@@ -133,19 +133,71 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       }) ?? accountRoleFromDb
     : accountRoleFromDb;
 
-  // --- Notifications persistantes (centre de notifications) ---
-  const notifications: AppNotification[] = [];
+  // --- Notifications : 3 sources en parallèle pour ne pas bloquer le streaming ---
+  // Avant : séquentiel → ~1-1,5 s de page blanche (persistantes → dynamiques → support)
+  // Après : parallel Promise.all → durée = max(3 sources) au lieu de la somme
 
-  const { data: persistentNotifs } = await supabase
-    .from('app_notifications')
-    .select('id, type, severity, title, body, href, action_label, is_read, created_at, copropriete_id')
-    .eq('user_id', user.id)
-    .or(selectedCoproId ? `copropriete_id.is.null,copropriete_id.eq.${selectedCoproId}` : 'copropriete_id.is.null')
-    .order('created_at', { ascending: false })
-    .limit(30);
+  const fetchDynamicNotifications = (): Promise<AppNotification[]> => {
+    if (selectedCoproId && userRole === 'syndic') {
+      return getSyndicNotifications(selectedCoproId);
+    }
+    if (selectedCoproId && userRole === 'copropriétaire') {
+      return getCoproNotifications(user.id, selectedCoproId);
+    }
+    return Promise.resolve([]);
+  };
 
-  for (const n of persistentNotifs ?? []) {
-    notifications.push({
+  const fetchSupportNotifications = async (): Promise<AppNotification[]> => {
+    try {
+      const { data: unreadMsgs } = await supabase
+        .from('support_messages')
+        .select('ticket_id')
+        .eq('author', 'admin')
+        .eq('client_read', false);
+
+      if (!unreadMsgs || unreadMsgs.length === 0) return [];
+
+      const ticketIds = [...new Set(unreadMsgs.map((m) => m.ticket_id))];
+      const { data: ticketsWithUnread } = await supabase
+        .from('support_tickets')
+        .select('id, subject')
+        .in('id', ticketIds)
+        .limit(3);
+
+      return (ticketsWithUnread ?? []).map((t) => {
+        const count = unreadMsgs.filter((m) => m.ticket_id === t.id).length;
+        return {
+          id: `support-${t.id}`,
+          type: 'support',
+          label: t.subject,
+          sublabel: `${count} nouveau${count > 1 ? 'x' : ''} message${count > 1 ? 's' : ''} du support`,
+          href: '/aide',
+          severity: 'info' as const,
+          isRead: false,
+          source: 'support' as const,
+          canMarkRead: false,
+        };
+      });
+    } catch {
+      // Tables support pas encore créées ou autre erreur non bloquante
+      return [];
+    }
+  };
+
+  const [persistentNotifsResult, dynamicNotifs, supportNotifs] = await Promise.all([
+    supabase
+      .from('app_notifications')
+      .select('id, type, severity, title, body, href, action_label, is_read, created_at, copropriete_id')
+      .eq('user_id', user.id)
+      .or(selectedCoproId ? `copropriete_id.is.null,copropriete_id.eq.${selectedCoproId}` : 'copropriete_id.is.null')
+      .order('created_at', { ascending: false })
+      .limit(30),
+    fetchDynamicNotifications(),
+    fetchSupportNotifications(),
+  ]);
+
+  const notifications: AppNotification[] = [
+    ...(persistentNotifsResult.data ?? []).map((n) => ({
       id: n.id,
       type: n.type,
       severity: n.severity,
@@ -155,68 +207,16 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       actionLabel: n.action_label ?? undefined,
       isRead: n.is_read,
       createdAt: n.created_at,
-      source: 'persistent',
+      source: 'persistent' as const,
       canMarkRead: true,
-    });
-  }
-
-  // --- Alertes dynamiques (uniquement pour le syndic sur la copropriété sélectionnée) ---
-
-  if (selectedCoproId && userRole === 'syndic') {
-    notifications.push(
-      ...(await getSyndicNotifications(selectedCoproId)).map((notification) => ({
-        ...notification,
-        source: 'dynamic' as const,
-        canMarkRead: false,
-      }))
-    );
-  }
-
-  // --- Notifications pour les copropriétaires ---
-  if (selectedCoproId && userRole === 'copropriétaire') {
-    notifications.push(
-      ...(await getCoproNotifications(user.id, selectedCoproId)).map((notification) => ({
-        ...notification,
-        source: 'dynamic' as const,
-        canMarkRead: false,
-      }))
-    );
-  }
-
-  // --- Messages support non lus (tous les rôles) ---
-  try {
-    const { data: unreadMsgs } = await supabase
-      .from('support_messages')
-      .select('ticket_id')
-      .eq('author', 'admin')
-      .eq('client_read', false);
-
-    if (unreadMsgs && unreadMsgs.length > 0) {
-      const ticketIds = [...new Set(unreadMsgs.map((m) => m.ticket_id))];
-      const { data: ticketsWithUnread } = await supabase
-        .from('support_tickets')
-        .select('id, subject')
-        .in('id', ticketIds)
-        .limit(3);
-
-      for (const t of ticketsWithUnread ?? []) {
-        const count = unreadMsgs.filter((m) => m.ticket_id === t.id).length;
-        notifications.push({
-          id: `support-${t.id}`,
-          type: 'support',
-          label: t.subject,
-          sublabel: `${count} nouveau${count > 1 ? 'x' : ''} message${count > 1 ? 's' : ''} du support`,
-          href: '/aide',
-          severity: 'info',
-          isRead: false,
-          source: 'support',
-          canMarkRead: false,
-        });
-      }
-    }
-  } catch {
-    // Tables support pas encore créées ou autre erreur non bloquante
-  }
+    })),
+    ...dynamicNotifs.map((notification) => ({
+      ...notification,
+      source: 'dynamic' as const,
+      canMarkRead: false,
+    })),
+    ...supportNotifs,
+  ];
 
   // --- Mise à jour last_active_at (non-bloquant, après réponse) ---
   // On utilise update() plutôt que upsert() pour ne jamais tenter un INSERT
