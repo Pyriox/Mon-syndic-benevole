@@ -373,10 +373,10 @@ export const posts: BlogPost[] = [
   },
   {
     slug: 'assemblee-generale-copropriete-guide',
-    title: 'Assemblée générale copropriété : guide complet pour syndic bénévole',
+    title: 'Assemblée générale copropriété : guide complet 2026 (convocation, votes, PV)',
     description:
-      'Assemblée générale copropriété : convocation J-21, ordre du jour, règles de majorité (art. 24/25/26), procès-verbal — guide complet pour syndic bénévole.',
-    // 153 chars
+      'Assemblée générale de copropriété : convocation J-21, ordre du jour, règles de majorité art. 24/25/26, modèle de PV. Guide complet + templates légaux.',
+    // 149 chars
     publishedAt: '2026-04-15',
     updatedAt: '2026-04-15',
     readingTime: 11,
@@ -427,6 +427,18 @@ export const posts: BlogPost[] = [
       {
         q: "Combien de temps faut-il pour préparer une AG de copropriété ?",
         a: "Sans outil dédié : 6 à 9 heures sur 3 à 4 semaines (clôture des comptes, convocations, publipostage, rédaction du PV). Avec Mon Syndic Bénévole, où les données sont enregistrées au fil de l'année : 1 h 30 à 2 heures au total.",
+      },
+      {
+        q: "Quel est le délai légal pour contester une décision d'assemblée générale de copropriété ?",
+        a: "Le délai de contestation est de 2 mois à compter de la notification du procès-verbal aux copropriétaires opposants ou défaillants (art. 42 de la loi du 10 juillet 1965). Tant que le PV n'a pas été notifié, ce délai ne commence pas à courir. Seuls les copropriétaires qui ont voté contre (opposants) ou qui étaient absents sans représentation (défaillants) peuvent contester.",
+      },
+      {
+        q: "Un locataire peut-il assister à l'assemblée générale de copropriété ?",
+        a: "Oui, un locataire peut assister à l'AG mais sans droit de vote. Seuls les copropriétaires (ou leurs mandataires munis d'une délégation de pouvoir) peuvent voter. Le locataire peut être entendu à titre consultatif sur les questions relatives à la jouissance de son lot si le syndic l'accepte.",
+      },
+      {
+        q: "Que faire si le syndic ne convoque pas l'assemblée générale dans les délais ?",
+        a: "Le conseil syndical peut mettre en demeure le syndic d'organiser l'AG. À défaut, un ou plusieurs copropriétaires représentant au moins 15 % des voix peuvent convoquer eux-mêmes l'AG (art. 8 du décret du 17 mars 1967). En cas de carence grave, le président du tribunal judiciaire peut désigner un administrateur provisoire.",
       },
     ],
   },

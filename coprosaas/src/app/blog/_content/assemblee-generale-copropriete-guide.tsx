@@ -12,7 +12,9 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleAssembleeGenerale() {
   return (
     <>
-      <h2 id="probleme" className={h2}>Le problème</h2>
+      <p className={p}>
+        Chaque année, des milliers de syndics bénévoles ratent leur AG — pas par négligence, mais parce que personne ne leur a dit que le <strong className={strong}>délai de 21 jours se calcule à partir de la première présentation du recommandé</strong>, pas de la date d&apos;envoi. Une erreur de 48 h et toutes les résolutions votées deviennent contestables.
+      </p>
       <p className={p}>
         Il est 23 h. L&apos;assemblée générale est dans trois semaines et Anne-Sophie, syndic bénévole d&apos;une résidence de 10 lots à Nantes, en est encore à chercher les relevés bancaires dans ses e-mails, à reconstituer les dépenses de l&apos;année poste par poste, à vérifier si elle a bien tous les devis annexés à convoquer. &ldquo;La première fois, j&apos;ai passé quatre week-ends entiers à préparer une réunion de deux heures.&rdquo;
       </p>
@@ -20,7 +22,7 @@ export default function ArticleAssembleeGenerale() {
         La deuxième année, après avoir migré vers un outil dédié, la même AG lui a pris <strong className={strong}>une matinée</strong>{' '}— comptes bouclés, convocations générées, envoyées avec le bon délai. La réunion elle-même s&apos;est tenue en 1 h 30 chrono.
       </p>
       <p className={p}>
-        Ce guide couvre l&apos;intégralité du cycle AG — de la préparation des comptes à la notification du PV — avec les templates légaux, les règles de majorité, les erreurs à éviter, et ce que vous pouvez déléguer à un outil pour ne plus jamais rater une date critique.
+        Ce guide couvre l&apos;intégralité du cycle légal en une seule page : <strong className={strong}>quand convoquer, quoi mettre à l&apos;ordre du jour, comment calculer les majorités (articles 24, 25 et 26), rédiger le PV séance tenante et notifier dans les délais</strong>. Avec les templates conformes que vous pouvez utiliser directement. Temps estimé pour une AG de 10 lots : <strong className={strong}>6 à 9 heures sans outil, 1 h 30 avec un outil dédié</strong>. Le guide explique pourquoi.
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
@@ -35,6 +37,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Préparer mon AG gratuitement →
         </CtaLink>
+        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="quand-ag" className={h2}>Quand tenir l&apos;AG : les dates légales</h2>
@@ -204,6 +207,48 @@ export default function ArticleAssembleeGenerale() {
         </ul>
       </div>
 
+      <h3 id="formulaire-vote-correspondance" className={h3}>Modèle de formulaire de vote par correspondance</h3>
+      <p className={p}>
+        Ce formulaire doit être joint à chaque convocation depuis le décret du 2 juillet 2020. Adaptez le nombre de lignes au nombre de résolutions de votre ordre du jour.
+      </p>
+
+      <div className="my-6 bg-gray-50 border border-gray-200 rounded-xl p-6 text-sm leading-relaxed">
+        <p className="text-gray-400 text-xs mb-4 font-sans uppercase tracking-wider">— Formulaire de vote par correspondance —</p>
+        <p className="mb-3 text-gray-800 font-semibold font-mono">VOTE PAR CORRESPONDANCE</p>
+        <p className="mb-1 text-gray-700 font-mono">Assemblée générale du [date] à [heure] — [adresse]</p>
+        <p className="mb-4 text-gray-700 font-mono">Copropriété : [Nom de la résidence] — [Adresse]</p>
+        <p className="mb-1 text-gray-700 font-mono">Je soussigné(e) [Prénom NOM], copropriétaire du lot n° [X],</p>
+        <p className="mb-4 text-gray-700 font-mono">ne pouvant assister à l&apos;assemblée générale, exprime mes votes ci-dessous :</p>
+        <div className="overflow-x-auto mb-4">
+          <table className="w-full text-xs border border-gray-300 border-collapse min-w-[400px]">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border border-gray-300 py-2 px-3 text-left font-medium text-gray-600">N°</th>
+                <th className="border border-gray-300 py-2 px-3 text-left font-medium text-gray-600">Résolution</th>
+                <th className="border border-gray-300 py-2 px-3 text-center font-medium text-gray-600">Pour</th>
+                <th className="border border-gray-300 py-2 px-3 text-center font-medium text-gray-600">Contre</th>
+                <th className="border border-gray-300 py-2 px-3 text-center font-medium text-gray-600">Abstention</th>
+              </tr>
+            </thead>
+            <tbody>
+              {['1', '2', '3', '4', '5'].map((n) => (
+                <tr key={n}>
+                  <td className="border border-gray-300 py-2 px-3 text-gray-500 font-mono">{n}</td>
+                  <td className="border border-gray-300 py-2 px-3 text-gray-500 font-mono">___________________________</td>
+                  <td className="border border-gray-300 py-2 px-3 text-center text-gray-400">☐</td>
+                  <td className="border border-gray-300 py-2 px-3 text-center text-gray-400">☐</td>
+                  <td className="border border-gray-300 py-2 px-3 text-center text-gray-400">☐</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mb-1 text-gray-600 text-xs italic">Une seule case cochée par résolution. En cas d&apos;abstention ou d&apos;absence de vote sur une résolution, le copropriétaire est réputé s&apos;être abstenu.</p>
+        <p className="mt-4 text-gray-700 font-mono">Fait à [Ville], le [date]</p>
+        <p className="text-gray-700 font-mono">Signature : __________</p>
+        <p className="mt-3 text-gray-500 text-xs italic">À retourner au syndic avant la tenue de l&apos;AG, par tout moyen permettant d&apos;en accuser réception.</p>
+      </div>
+
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Mon Syndic Bénévole calcule automatiquement le bon délai</p>
         <p className="text-sm text-gray-600 mb-4">
@@ -216,6 +261,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Générer ma convocation automatiquement →
         </CtaLink>
+        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="regles-majorite" className={h2}>Les règles de majorité : articles 24, 25 et 26</h2>
@@ -373,6 +419,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Générer mon PV d&apos;AG automatiquement →
         </CtaLink>
+        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="apres-ag" className={h2}>Après l&apos;AG : les suites à donner sans attendre</h2>
@@ -459,6 +506,21 @@ export default function ArticleAssembleeGenerale() {
             <p className="text-xs text-gray-600">Obligatoire depuis le décret du 2 juillet 2020 (loi ELAN). Chaque copropriétaire doit pouvoir voter sans être présent. Le formulaire doit être joint à chaque convocation, même si personne ne l&apos;utilise jamais.</p>
           </div>
         </div>
+      </div>
+
+      <div className="my-8 rounded-2xl bg-red-50 border border-red-100 p-6">
+        <p className="text-sm font-semibold text-red-700 mb-1">Ces 5 erreurs coûtent cher — un outil les vérifie à votre place.</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole calcule automatiquement le délai J-21, joint le formulaire de vote par correspondance à chaque convocation et vous alerte avant chaque date critique. Le coût d&apos;une AG annulée sur recours dépasse souvent 500 €.
+        </p>
+        <CtaLink
+          ctaLocation="blog_article"
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester gratuitement 14 jours →
+        </CtaLink>
+        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="outil" className={h2}>Ce que Mon Syndic Bénévole automatise dans le cycle AG</h2>
@@ -571,6 +633,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Préparer mon AG avec Mon Syndic Bénévole →
         </CtaLink>
+        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
@@ -610,6 +673,21 @@ export default function ArticleAssembleeGenerale() {
         Le PV est signé par le <strong className={strong}>président de séance</strong> et le <strong className={strong}>secrétaire de séance</strong>, désignés en début d&apos;AG. Le syndic (même bénévole) peut être élu président de séance, mais ce n&apos;est pas automatique. Si le syndic est aussi président de séance, il signe en les deux qualités. Les scrutateurs (si désignés) signent également.
       </p>
 
+      <h3 className={h3}>Quel est le délai légal pour contester une décision d&apos;assemblée générale ?</h3>
+      <p className={p}>
+        <strong className={strong}>2 mois</strong> à compter de la notification du procès-verbal aux copropriétaires opposants ou défaillants (art. 42 de la loi du 10 juillet 1965). Tant que le PV n&apos;a pas été notifié, ce délai ne commence pas à courir — d&apos;où l&apos;importance d&apos;envoyer le PV rapidement après l&apos;AG. Les copropriétaires <em>présents et ayant voté pour</em> la résolution ne peuvent pas la contester. Seuls les opposants (ayant voté contre) et les défaillants (absents, non représentés) ont cette faculté.
+      </p>
+
+      <h3 className={h3}>Un locataire peut-il assister à l&apos;assemblée générale de copropriété ?</h3>
+      <p className={p}>
+        Oui, un locataire peut assister à l&apos;AG, <strong className={strong}>mais sans droit de vote</strong>. Seuls les copropriétaires (ou leurs mandataires) votent. Le locataire peut être entendu à titre consultatif sur les questions qui concernent directement la jouissance de son lot, si le syndic l&apos;accepte. En pratique, sa présence est rare et n&apos;est pas requise.
+      </p>
+
+      <h3 className={h3}>Que faire si le syndic ne convoque pas l&apos;AG dans les délais ?</h3>
+      <p className={p}>
+        Si le syndic tarde à convoquer l&apos;AG annuelle, les copropriétaires peuvent agir. Le <strong className={strong}>conseil syndical peut mettre en demeure le syndic</strong> d&apos;organiser l&apos;AG. À défaut de réponse, <strong className={strong}>un ou plusieurs copropriétaires représentant au moins 15 % des voix peuvent convoquer eux-mêmes l&apos;AG</strong> (art. 8 du décret du 17 mars 1967). En cas de carence grave, le président du tribunal judiciaire peut désigner un administrateur provisoire. Dans une copropriété gérée en syndic bénévole, cette situation est rarissime — elle survient généralement lors de vacance du poste.
+      </p>
+
       <h2 id="en-resume" className={h2}>En résumé</h2>
       <p className={p}>
         L&apos;assemblée générale n&apos;est pas une réunion de routine — c&apos;est le moment où se prennent toutes les décisions engageant la copropriété pour l&apos;année. Bien préparée, elle se tient en 1 h 30 et donne à tous les copropriétaires une vision claire des finances et des projets. Mal préparée (délai manqué, résolution hors ordre du jour, PV non envoyé), elle peut déboucher sur des contentieux coûteux.
@@ -633,7 +711,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Créer mon espace gratuit →
         </CtaLink>
-        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
     </>
   );
