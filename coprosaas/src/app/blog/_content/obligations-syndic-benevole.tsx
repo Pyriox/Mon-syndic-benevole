@@ -11,12 +11,14 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleObligationsSyndicBenevole() {
   return (
     <>
-      <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        Juin 2023. Christophe, syndic bénévole d&apos;une résidence de 9 lots à Nantes, reçoit une mise en demeure d&apos;un copropriétaire. Motif : l&apos;assemblée générale a été convoquée 18 jours avant la réunion, au lieu des 21 jours légaux. Deux résolutions votées lors de cette AG sont potentiellement annulables. Travaux de ravalement déjà engagés pour 28 000 €.
+        Le syndic bénévole exerce dans le même cadre légal qu&apos;un syndic professionnel. Les mêmes délais, les mêmes documents, les mêmes obligations — sans l&apos;équipe administrative derrière.
       </p>
       <p className={p}>
-        Christophe n&apos;était pas négligent — il ne savait simplement pas. La gestion bénévole est gratuite pour la copropriété, mais elle n&apos;est pas exempte d&apos;obligations. Ce guide les répertorie toutes, avec les dates qui comptent.
+        Juin 2023. Christophe, syndic bénévole d&apos;une résidence de 9 lots, reçoit une mise en demeure. Motif : AG convoquée à J-18 au lieu de J-21. Deux résolutions potentiellement annulables. Travaux de ravalement déjà engagés pour <strong className={strong}>28 000 €</strong>. Il ne savait pas que le délai de 21 jours court à partir de la <strong className={strong}>première présentation du recommandé</strong>, pas de la date d&apos;envoi.
+      </p>
+      <p className={p}>
+        Ce guide répertorie toutes les obligations du syndic bénévole — les <strong className={strong}>11 échéances légales</strong>, les documents obligatoires, les erreurs qui finissent en contentieux — avec les modèles de lettres conformes que vous pouvez utiliser directement.
       </p>
 
       <h2 id="cadre-legal" className={h2}>Le cadre légal du syndic bénévole</h2>
@@ -124,7 +126,7 @@ export default function ArticleObligationsSyndicBenevole() {
         </CtaLink>
       </div>
 
-      <h2 id="convocation-ag" className={h2}>Template : convocation d&apos;AG conforme</h2>
+      <h2 id="convocation-ag" className={h2}>Modèle de convocation d&apos;AG conforme</h2>
       <p className={p}>
         La convocation doit être envoyée par <strong className={strong}>lettre recommandée avec accusé de réception</strong> (LRAR) ou par tout autre moyen permettant de justifier la date de remise (remise en main propre avec émargement, voie électronique avec accord préalable écrit des copropriétaires concernés).
       </p>
@@ -176,7 +178,7 @@ export default function ArticleObligationsSyndicBenevole() {
         </ul>
       </div>
 
-      <h2 id="pv-ag" className={h2}>Template : procès-verbal d&apos;AG</h2>
+      <h2 id="pv-ag" className={h2}>Modèle de procès-verbal d&apos;AG de copropriété</h2>
       <p className={p}>
         Le PV doit être signé séance tenante par le président de séance, le secrétaire, et les scrutateurs. Il doit être notifié dans le mois aux copropriétaires opposants ou défaillants. En pratique, beaucoup de syndics l&apos;adressent à tous pour simplifier le suivi.
       </p>
@@ -201,7 +203,7 @@ export default function ArticleObligationsSyndicBenevole() {
         <p>[Signature Président] __________ [Signature Secrétaire] __________</p>
       </div>
 
-      <h2 id="mise-en-demeure" className={h2}>Template : mise en demeure pour charges impayées</h2>
+      <h2 id="mise-en-demeure" className={h2}>Modèle de mise en demeure pour charges impayées</h2>
       <p className={p}>
         Avant toute procédure judiciaire, la mise en demeure par LRAR est l&apos;étape obligatoire. Elle fait courir les intérêts de retard (taux légal) et constitue la preuve que le débiteur a été formellement informé.
       </p>
@@ -285,6 +287,21 @@ export default function ArticleObligationsSyndicBenevole() {
             <p className="text-xs text-gray-600">Le registre national des copropriétés doit être actualisé chaque année avec les données financières de l&apos;exercice clos.</p>
           </div>
         </div>
+      </div>
+
+      <div className="my-8 rounded-2xl bg-amber-50 border border-amber-100 p-6">
+        <p className="text-sm font-semibold text-amber-800 mb-1">Ces 5 erreurs sont évitables avec les bons outils.</p>
+        <p className="text-sm text-gray-600 mb-4">
+          Mon Syndic Bénévole calcule le délai J-21, génère le rappel de notification du PV et archive chaque action avec horodatage. Zéro erreur de calendrier.
+        </p>
+        <CtaLink
+          ctaLocation="blog_article"
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Tester gratuitement 14 jours →
+        </CtaLink>
+        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="checklist" className={h2}>Checklist des obligations par période</h2>
@@ -391,7 +408,7 @@ export default function ArticleObligationsSyndicBenevole() {
       <p className={p}>Oui. Depuis 2014, l&apos;AG peut voter une rémunération pour le syndic bénévole à la majorité de l&apos;article 25. Cette rémunération doit être votée explicitement — elle ne peut pas être fixée unilatéralement. Elle est soumise à imposition dans la catégorie des revenus correspondants.</p>
 
       <h3 className={h3}>Combien de temps faut-il conserver les archives ?</h3>
-      <p className={p}>5 ans pour les documents comptables et les convocations/PV d&apos;AG. 10 ans pour les contrats de travaux et les documents de garantie. Certains documents (acte de propriété, règlement de copropriété, carnet d&apos;entretien) doivent être conservés sans limite de durée.</p>
+      <p className={p}><strong className={strong}>10 ans</strong> pour les convocations, procès-verbaux d&apos;AG et documents comptables — c&apos;est la durée recommandée par la pratique professionnelle et la jurisprudence. 10 ans également pour les contrats de travaux et documents de garantie. Certains documents (règlement de copropriété, état descriptif de division, carnet d&apos;entretien) doivent être conservés sans limite de durée et transmis au syndic suivant.</p>
 
       <h3 className={h3}>Que faire si un copropriétaire conteste une résolution d&apos;AG ?</h3>
       <p className={p}>Le recours doit être formé dans les 2 mois suivant la notification du PV. Avant tout contentieux, une tentative de médiation ou de conciliation peut être proposée. Si le délai de 2 mois est expiré, la résolution est définitive. La bonne pratique est d&apos;envoyer les PV rapidement — et de conserver les preuves d&apos;envoi.</p>
@@ -414,7 +431,7 @@ export default function ArticleObligationsSyndicBenevole() {
         >
           Créer votre syndic en moins de 30 minutes →
         </CtaLink>
-        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire</p>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
     </>
   );

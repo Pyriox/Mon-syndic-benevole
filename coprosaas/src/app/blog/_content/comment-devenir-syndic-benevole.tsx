@@ -11,18 +11,17 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleCommentDevenirSyndicBenevole() {
   return (
     <>
-      <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        Il est 21 h 15. L&apos;assemblée générale vient de se terminer. Pierre, 52 ans, a levé la main quand personne d&apos;autre ne se proposait. &ldquo;D&apos;accord, je veux bien essayer.&rdquo; Le voilà syndic bénévole d&apos;un immeuble de 8 lots. Il rentre chez lui avec le procès-verbal sous le bras et une seule question en tête : <strong className={strong}>par où je commence demain matin ?</strong>
+        Devenir syndic bénévole ne nécessite ni diplôme, ni carte professionnelle, ni formation. <strong className={strong}>Il suffit d&apos;être copropriétaire et d&apos;être élu à la majorité de l&apos;article 25.</strong> C&apos;est tout — et plus de 60 % des immeubles de moins de 10 lots sont gérés sans cabinet professionnel.
       </p>
       <p className={p}>
-        C&apos;est le scénario le plus courant. On accepte le rôle avec les meilleures intentions. Puis on découvre les archives en désordre, les délais légaux qu&apos;on ne connaissait pas, les copropriétaires qui posent des questions auxquelles on ne sait pas encore répondre. <strong className={strong}>Sans méthode ni outil, les 6 premiers mois peuvent être épuisants.</strong>
+        Il est 21 h 15. L&apos;assemblée générale vient de se terminer. Pierre, 52 ans, a levé la main quand personne d&apos;autre ne se proposait. «D&apos;accord, je veux bien essayer.» Il rentre chez lui avec le procès-verbal sous le bras et une seule question : <strong className={strong}>par où je commence demain matin ?</strong>
       </p>
       <p className={p}>
-        Ce guide répond à la question de Pierre dans l&apos;ordre où vous allez rencontrer les problèmes : l&apos;élection, les 30 premiers jours, les obligations récurrentes, les erreurs classiques.
+        Ce guide répond à cette question dans l&apos;ordre exact où vous allez rencontrer les problèmes : les conditions légales, l&apos;élection, <strong className={strong}>les démarches des 30 premiers jours</strong>, les obligations récurrentes, et les erreurs qui coûtent le plus cher aux syndics bénévoles débutants. Avec les modèles de courriers prêts à envoyer.
       </p>
 
-      <h2 id="explication" className={h2}>L&apos;explication : conditions, démarches et obligations</h2>
+
       <h2 id="conditions-legales" className={h2}>Qui peut devenir syndic bénévole ? Ce que la loi exige — et ce qu&apos;elle n&apos;exige pas</h2>
       <p className={p}>
         La loi du 10 juillet 1965 impose l&apos;existence d&apos;un syndic dans toute copropriété, mais elle n&apos;impose pas qu&apos;il soit professionnel. Les seules conditions légales sont :
@@ -66,8 +65,42 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         >
           Créer votre syndic en moins de 30 minutes →
         </CtaLink>
+        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
+      <h2 id="remplacer-syndic-professionnel" className={h2}>Remplacer un syndic professionnel par un syndic bénévole</h2>
+      <p className={p}>
+        C&apos;est l&apos;un des cas les plus courants. La copropriété paie un cabinet professionnel, les honoraires augmentent chaque année, et un copropriétaire décide de reprendre la main. La démarche est possible — mais elle a ses contraintes.
+      </p>
 
+      <h3 className={h3}>Le préavis : vérifiez le contrat avant de voter</h3>
+      <p className={p}>
+        La plupart des contrats de syndic professionnel comportent une <strong className={strong}>clause de préavis de 3 mois</strong> avant la date de renouvellement tacite. Si vous manquez cette fenêtre, le contrat est reconduit automatiquement pour un an et vous devrez attendre la prochaine échéance.
+      </p>
+      <p className={p}>
+        Première étape donc : demandez au syndic sortant une copie de son contrat. La date de renouvellement et le préavis y figurent. Planifiez l&apos;AG de remplacement en conséquence, avec suffisamment d&apos;avance pour respecter ce préavis.
+      </p>
+
+      <h3 className={h3}>L&apos;élection à l&apos;AG : mode opératoire</h3>
+      <p className={p}>
+        La résolution doit figurer explicitement à l&apos;ordre du jour de la convocation : <em>« Désignation du nouveau syndic — candidature de [Prénom NOM] »</em>. Un candidat non mentionné dans la convocation ne peut pas être élu valablement ce soir-là.
+      </p>
+      <ul className={ul}>
+        <li className={li}><strong className={strong}>Étape 1 :</strong> signalez votre candidature par écrit au président du conseil syndical avant l&apos;envoi des convocations.</li>
+        <li className={li}><strong className={strong}>Étape 2 :</strong> l&apos;élection se tient à la majorité absolue de l&apos;article 25. En cas de second vote (art. 25-1), la majorité simple suffit si vous avez obtenu plus du tiers des voix au premier tour.</li>
+        <li className={li}><strong className={strong}>Étape 3 :</strong> le PV mentionne votre nom, la durée du mandat et la date d&apos;entrée en vigueur — qui coïncide avec la fin du contrat du syndic sortant.</li>
+      </ul>
+
+      <h3 className={h3}>Ce que le syndic professionnel doit vous remettre</h3>
+      <p className={p}>
+        Dès la fin de son mandat, le syndic professionnel dispose de <strong className={strong}>15 jours pour transférer l&apos;intégralité des archives</strong> (art. 18-2 de la loi de 1965). En pratique, les cabinets professionnels sont souvent mieux organisés que les particuliers sur ce point — mais ils peuvent facturer ce transfert comme « frais de sortie ». Vérifiez ce point dans le contrat avant l&apos;AG.
+      </p>
+
+      <div className="my-6 bg-emerald-50 border border-emerald-200 rounded-xl p-5">
+        <p className="text-sm font-semibold text-emerald-800 mb-2">Ce que vous économisez</p>
+        <p className="text-sm text-gray-700">
+          Un syndic professionnel coûte en moyenne <strong>2 000 à 4 000 €/an</strong> pour un immeuble de 5 à 15 lots — auxquels s&apos;ajoutent souvent des frais annexes (état daté, photocopies, recommandés). En passant en syndic bénévole, cette somme reste dans le budget de la copropriété. Sur 5 ans : 10 000 à 20 000 € d&apos;économies réinvestissables en travaux ou en réduction des charges.
+        </p>
+      </div>
       <h2 id="48h" className={h2}>J+1 : ce que Pierre a fait le lendemain matin (et ce que vous devriez faire)</h2>
       <p className={p}>
         Le premier réflexe de Pierre a été de ne rien faire — &ldquo;ça peut attendre quelques jours.&rdquo; Erreur. Les délais légaux courent dès la fin du mandat de l&apos;ancien syndic. Voici les 3 choses à faire dans les 48 heures :
@@ -238,7 +271,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
           >
             Créer votre syndic en moins de 30 minutes →
           </CtaLink>
-          <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire · Résiliable à tout moment</p>
+          <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
         </div>
       </div>
 
@@ -353,6 +386,21 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       <h3 className={h3}>Un copropriétaire peut-il se présenter en étant en retard de paiement ?</h3>
       <p className={p}>La loi ne l&apos;interdit pas explicitement. En revanche, c&apos;est une situation délicate qui peut être soulevée par d&apos;autres copropriétaires lors de l&apos;élection. Idéalement, soldez les impayés avant de vous présenter.</p>
 
+      <h3 className={h3}>Comment remplacer un syndic professionnel par un syndic bénévole ?</h3>
+      <p className={p}>
+        La résolution doit figurer à l&apos;ordre du jour de l&apos;AG avec candidature formalisée. L&apos;élection se fait à la majorité de l&apos;article 25. <strong className={strong}>La prise d&apos;effet coïncide avec la fin du contrat du syndic professionnel</strong> — respectez le préavis contractuel (généralement 3 mois avant l&apos;AG où le contrat n&apos;est pas renouvelé). Demandez au syndic sortant son contrat pour vérifier la clause de résiliation. Une fois élu, les mêmes 15 jours de transfert d&apos;archives s&apos;appliquent.
+      </p>
+
+      <h3 className={h3}>Quelle est la durée d&apos;un mandat de syndic bénévole ?</h3>
+      <p className={p}>
+        La durée est fixée par l&apos;assemblée générale, dans la limite de <strong className={strong}>3 ans maximum</strong> (art. 28 du décret du 17 mars 1967). En pratique, la plupart des AG votent des mandats de 1 ou 2 ans. Le mandat est renouvelable indéfiniment, à condition d&apos;être réélu à chaque fois. Anticipez votre réélection en l&apos;inscrivant à l&apos;ordre du jour <em>avant</em> l&apos;expiration du mandat en cours.
+      </p>
+
+      <h3 className={h3}>Le syndic bénévole est-il responsable en cas de sinistre ?</h3>
+      <p className={p}>
+        Oui, en tant que mandataire, le syndic bénévole engage sa <strong className={strong}>responsabilité civile</strong> s&apos;il commet une faute dans l&apos;exercice de ses fonctions — par exemple, ne pas déclarer un sinistre dans les délais ou ne pas maintenir l&apos;assurance MRI. En revanche, il n&apos;est pas responsable des dégâts eux-mêmes si l&apos;assurance multirisques immeuble est en cours de validité et correctement maintenue. Vérifiez que votre assurance habitation personnelle couvre la responsabilité civile du mandataire — certaines polices l&apos;incluent, d&apos;autres non.
+      </p>
+
       <h2 id="en-resume" className={h2}>En résumé</h2>
       <p className={p}>
         Devenir syndic bénévole est accessible à tout copropriétaire motivé. Les conditions légales sont minimales. Ce qui fait la différence dans les 6 premiers mois : récupérer les archives rapidement, ouvrir les bons comptes, notifier les prestataires — et s&apos;équiper d&apos;un outil qui gère les flux récurrents sans se perdre dans des tableurs.
@@ -370,7 +418,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         >
           Créer votre syndic en moins de 30 minutes →
         </CtaLink>
-        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire</p>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
     </>
   );

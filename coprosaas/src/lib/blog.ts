@@ -181,10 +181,12 @@ export const posts: BlogPost[] = [
   // ── Nouveaux articles ────────────────────────────────────────────────────────
   {
     slug: 'comment-devenir-syndic-benevole',
-    title: 'Comment devenir syndic bénévole : les 6 étapes indispensables',
+    title: 'Comment devenir syndic bénévole ? Guide complet : élection, démarches, obligations',
     description:
-      'Comment devenir syndic bénévole : conditions légales, élection en AG, démarches dans les 30 premiers jours et obligations récurrentes. Guide complet 2026.',
+      'Élu syndic bénévole ? Voici quoi faire : archives en 15 jours, compte bancaire du syndicat, prestataires notifiés. Checklist + modèles LRAR inclus.',
+    // 147 chars
     publishedAt: '2026-03-21',
+    updatedAt: '2026-05-06',
     readingTime: 10,
     category: 'Guide pratique – Devenir syndic',
     keywords: [
@@ -198,6 +200,7 @@ export const posts: BlogPost[] = [
     toc: [
       { id: 'conditions-legales', text: 'Qui peut devenir syndic bénévole ?' },
       { id: 'election-ag', text: 'L\'élection en AG : comment ça se passe ?' },
+      { id: 'remplacer-syndic-professionnel', text: 'Remplacer un syndic professionnel par un syndic bénévole' },
       { id: '48h', text: 'J+1 : les premières actions dans les 48h' },
       { id: '30-premiers-jours', text: 'Les 30 premiers jours : 5 démarches indispensables' },
       { id: 'premier-trimestre', text: 'Le premier trimestre : ce qui vous attend concrètement' },
@@ -224,13 +227,25 @@ export const posts: BlogPost[] = [
         q: "Combien de temps prend la gestion d'une copropriété en syndic bénévole ?",
         a: "Pour un immeuble de 5 à 20 lots, comptez entre 2 et 5 heures par mois en gestion courante, plus 4 à 8 heures pour la préparation de l'AG annuelle. Un logiciel dédié réduit significativement ce temps.",
       },
+      {
+        q: "Comment remplacer un syndic professionnel par un syndic bénévole ?",
+        a: "La résolution doit figurer à l'ordre du jour de l'AG avec une candidature formalisée à l'avance. L'élection se fait à la majorité de l'article 25. La prise d'effet coïncide avec la fin du contrat du syndic professionnel — respectez le préavis contractuel (généralement 3 mois avant l'AG). Une fois élu, l'ancien syndic dispose de 15 jours pour transmettre les archives.",
+      },
+      {
+        q: "Quelle est la durée d'un mandat de syndic bénévole ?",
+        a: "La durée est fixée par l'assemblée générale, dans la limite de 3 ans maximum (art. 28 du décret du 17 mars 1967). La plupart des AG votent des mandats de 1 ou 2 ans. Le mandat est renouvelable indéfiniment, à condition d'être réélu à chaque fois.",
+      },
+      {
+        q: "Le syndic bénévole est-il responsable en cas de sinistre ?",
+        a: "Le syndic bénévole engage sa responsabilité civile s'il commet une faute dans l'exercice de ses fonctions — par exemple, ne pas déclarer un sinistre dans les délais ou laisser l'assurance MRI expirer. Il n'est pas personnellement responsable des dégâts si l'assurance multirisques immeuble est valide et correctement maintenue. Vérifiez que votre assurance habitation couvre la responsabilité civile du mandataire.",
+      },
     ],
   },
   {
     slug: 'obligations-syndic-benevole',
-    title: 'Obligations du syndic bénévole : ce qu’il faut savoir',
+    title: 'Obligations du syndic bénévole : liste complète, délais légaux et sanctions (2026)',
     description:
-      'Quelles sont les obligations légales du syndic bénévole ? AG, comptabilité, documents, assurance, fonds travaux et responsabilités à connaître.',
+      'Syndic bénévole : 11 échéances légales, 5 fautes qui engagent votre responsabilité, modèles convocation/PV/mise en demeure. Checklist 2026 incluse.',
     publishedAt: '2026-03-21',
     updatedAt: '2026-04-15',
     readingTime: 9,
@@ -246,9 +261,9 @@ export const posts: BlogPost[] = [
     toc: [
       { id: 'cadre-legal', text: 'D\'où viennent ces obligations ? Le cadre légal' },
       { id: 'calendrier-annuel', text: 'Le calendrier complet des obligations annuelles' },
-      { id: 'convocation-ag', text: 'Template : convocation d\'AG conforme' },
-      { id: 'pv-ag', text: 'Template : procès-verbal d\'AG' },
-      { id: 'mise-en-demeure', text: 'Template : mise en demeure pour charges impayées' },
+      { id: 'convocation-ag', text: 'Modèle de convocation d’AG conforme' },
+      { id: 'pv-ag', text: 'Modèle de procès-verbal d’AG' },
+      { id: 'mise-en-demeure', text: 'Modèle de mise en demeure pour charges impayées' },
       { id: 'erreurs-a-eviter', text: '5 erreurs qui finissent en contentieux' },
       { id: 'checklist', text: 'Checklist des obligations par période' },
       { id: 'questions-frequentes', text: 'Questions fréquentes' },
