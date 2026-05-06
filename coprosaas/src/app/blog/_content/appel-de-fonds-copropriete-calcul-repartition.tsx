@@ -12,13 +12,13 @@ export default function ArticleAppelDeFonds() {
     <>
       <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        Chaque trimestre, c&apos;est la même scène : ouvrir le fichier Excel, retrouver les tantièmes de chacun, recalculer les quotes-parts, rédiger 8 avis de paiement un par un, les envoyer par mail. Quelques jours plus tard, les questions arrivent : &ldquo;Pourquoi ce montant ?&rdquo; Et les relances pour les impayés commencent.
+        C&apos;est début janvier. Vous ouvrez le fichier Excel de la copropriété — celui que le précédent syndic vous a transmis il y a dix-huit mois. Trois onglets. Des formules qui se réfèrent à des cellules renommées depuis. Vous devez envoyer les appels de fonds du premier trimestre à quinze copropriétaires avant le 15.
       </p>
       <p className={p}>
-        Pour un syndic bénévole sans outil adapté, l&apos;appel de fonds trimestriel représente facilement <strong className={strong}>4 à 6 heures de travail répétitif</strong> — sans filet, sans traçabilité, et avec le risque permanent d&apos;une erreur sur les tantièmes que personne ne détecte avant l&apos;AG.
+        Vous recalculez les montants. Vous vérifiez les tantièmes. Vous envoyez les mails un par un. Le lendemain : <em>&ldquo;Pourquoi je paie plus que ma voisine ?&rdquo;</em> <em>&ldquo;C&apos;est quoi cette ligne fonds de travaux ?&rdquo;</em> <em>&ldquo;J&apos;ai changé de RIB en novembre.&rdquo;</em>
       </p>
       <p className={p}>
-        Ce guide explique le calcul, les modèles de documents, et la procédure de relance. Il montre aussi ce qui peut être entièrement automatisé — pour que vous ne recommenciez plus ce calcul depuis zéro chaque trimestre.
+        Et dans trois mois, vous recommencez. Ce guide explique comment fonctionne l&apos;appel de fonds en copropriété, comment le calculer correctement, comment le répartir selon les tantièmes — et pourquoi un suivi sans outil adapté expose la copropriété à des erreurs silencieuses dont les effets se voient souvent trop tard.
       </p>
 
       <h2 id="explication" className={h2}>L&apos;explication : comment fonctionne un appel de fonds</h2>
@@ -124,6 +124,7 @@ export default function ArticleAppelDeFonds() {
         >
           Générer mes appels de fonds automatiquement →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="types-charges" className={h2}>Charges générales vs charges spéciales : une distinction qui change tout</h2>
@@ -231,6 +232,7 @@ export default function ArticleAppelDeFonds() {
         >
           Générer mes appels de fonds automatiquement →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="appel-exceptionnel" className={h2}>L&apos;appel de fonds exceptionnel : même logique, calendrier différent</h2>
@@ -394,6 +396,7 @@ export default function ArticleAppelDeFonds() {
         >
           Générer mes appels de fonds automatiquement →
         </CtaLink>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
     </>
   );

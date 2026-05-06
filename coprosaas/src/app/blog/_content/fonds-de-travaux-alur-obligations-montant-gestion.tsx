@@ -12,10 +12,13 @@ export default function ArticleFondsTravaux() {
     <>
       <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        C&apos;était un vendredi de janvier. La chaudière collective de la Résidence des Érables — 14 lots, immeuble de 1982 — a rendu l&apos;âme à 23 h. Il faisait -5 °C dehors. Le syndic bénévole, Isabelle, a passé la nuit à trouver un chauffagiste d&apos;urgence. Résultat : 6 800 € de remplacement, payés en 3 semaines grâce à... 0 € de fonds de travaux constitués. Un appel d&apos;urgence de 485 € par copropriétaire, envoyé par SMS à 7 h du matin un samedi. Trois copropriétaires ont refusé de payer.
+        Mme Lefranc a vendu son appartement en mars. Le compromis était signé, le notaire avait préparé l&apos;acte. Et puis, trois jours avant la signature définitive, le notaire a demandé l&apos;état du fonds de travaux — avec l&apos;historique des versements par copropriétaire depuis sa création.
       </p>
       <p className={p}>
-        Ce n&apos;est pas un cas isolé — c&apos;est ce qui arrive quand une copropriété n&apos;a pas de réserve. Et pour beaucoup de syndics bénévoles, le <strong className={strong}>fonds de travaux ALUR</strong> reste mal connu, mal géré, ou carrément absent — parfois sans le savoir.
+        Le syndic bénévole n&apos;avait pas d&apos;historique. Les versements avaient été intégrés dans le compte courant de la copropriété depuis quatre ans — jamais séparés, jamais tracés individuellement. La vente a été reportée de six semaines. L&apos;acquéreur a failli se retirer.
+      </p>
+      <p className={p}>
+        Ce scénario se reproduit régulièrement dans des copropriétés gérées sans méthode. Non par mauvaise volonté, mais parce que le <strong className={strong}>fonds de travaux ALUR</strong> est souvent mal compris — ou géré comme une ligne de plus dans un fichier Excel qui fait déjà tout le reste.
       </p>
 
       <h2 id="explication" className={h2}>L&apos;explication : ce que la loi impose</h2>
@@ -57,6 +60,7 @@ export default function ArticleFondsTravaux() {
         >
           Tester gratuitement — 14 jours offerts →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="montant-minimum" className={h2}>Combien mettre de côté : le minimum légal, et ce qu&apos;il faut vraiment prévoir</h2>
@@ -263,6 +267,7 @@ export default function ArticleFondsTravaux() {
         >
           Tester Mon Syndic Bénévole gratuitement →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <div className="my-6 rounded-xl border border-gray-200 p-5">
@@ -407,6 +412,7 @@ export default function ArticleFondsTravaux() {
         >
           Créer ma copropriété sur Mon Syndic Bénévole →
         </CtaLink>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
     </>
   );

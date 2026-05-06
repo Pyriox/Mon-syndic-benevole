@@ -69,6 +69,7 @@ export default function ArticleGererCopropriete() {
         >
           Tester gratuitement — 14 jours offerts →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="temps-reel" className={h2}>Combien de temps ça prend vraiment — décomposition par tâche</h2>
@@ -160,6 +161,7 @@ export default function ArticleGererCopropriete() {
         >
           Créer ma copropriété gratuitement →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="responsabilites" className={h2}>Les vraies responsabilités — ce qui vous revient concrètement</h2>
@@ -241,6 +243,7 @@ export default function ArticleGererCopropriete() {
         >
           Tester Mon Syndic Bénévole gratuitement →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="quand-professionnel" className={h2}>Les 4 cas où un syndic professionnel reste plus adapté</h2>
@@ -273,6 +276,7 @@ export default function ArticleGererCopropriete() {
         >
           Créer ma copropriété gratuitement →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>
@@ -312,6 +316,7 @@ export default function ArticleGererCopropriete() {
         >
           Créer ma copropriété sur Mon Syndic Bénévole →
         </CtaLink>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
     </>
   );

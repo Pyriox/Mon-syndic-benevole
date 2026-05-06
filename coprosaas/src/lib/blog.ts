@@ -18,11 +18,11 @@ export interface BlogPost {
 export const posts: BlogPost[] = [
   {
     slug: 'gerer-copropriete-sans-syndic-professionnel',
-    title: 'Gérer une copropriété sans syndic professionnel : guide pratique',
+    title: 'Gérer sa copropriété sans syndic professionnel : guide complet 2026',
     description:
-      'Peut-on gérer une copropriété sans syndic professionnel ? Étapes, obligations, avantages, limites et outils utiles pour un syndic bénévole.',
-    // 143 chars — dans la limite Google
+      'Est-ce légal de gérer sa copropriété sans syndic professionnel ? Oui — et plus de 40 % des copropriétés françaises le font. Découvrez les obligations, les erreurs à éviter et les outils pour se lancer sereinement.',
     publishedAt: '2026-03-19',
+    updatedAt: '2026-05-06',
     readingTime: 8,
     category: 'Guide pratique',
     keywords: [
@@ -72,15 +72,27 @@ export const posts: BlogPost[] = [
         q: "Quelles sont les obligations légales d'une copropriété gérée en bénévole ?",
         a: "Les obligations sont identiques à celles d'une copropriété avec un syndic professionnel : AG annuelle avec 21 jours de préavis minimum, appels de fonds trimestriels, compte bancaire séparé au nom du syndicat, fonds de travaux ALUR sur compte rémunéré séparé (si plus de 10 lots), assurance multirisques immeuble, archivage des documents pendant 10 ans. Le bénévolat concerne la personne qui exerce — pas le niveau d'exigence légale.",
       },
+      {
+        q: "Peut-on rémunérer un syndic bénévole ?",
+        a: "Oui. L'assemblée générale peut voter une rémunération forfaitaire ou des défraiements pour les dépenses engagées dans l'exercice du mandat. Il n'existe aucune obligation de travailler gratuitement.",
+      },
+      {
+        q: "Et si personne ne veut endosser le rôle de syndic bénévole ?",
+        a: "En l'absence de syndic, tout copropriétaire peut saisir le tribunal judiciaire pour faire désigner un administrateur provisoire — en général un professionnel dont les honoraires sont à la charge de la copropriété. Mieux vaut anticiper la passation de mandat avant d'en arriver là.",
+      },
+      {
+        q: "Le syndic bénévole peut-il gérer les impayés de charges ?",
+        a: "Oui. Il dispose des mêmes recours légaux qu'un professionnel : mise en demeure par lettre recommandée, injonction de payer auprès du tribunal judiciaire, inscription d'hypothèque légale sur le lot du débiteur. La procédure est identique — seule l'organisation interne diffère.",
+      },
     ],
   },
   {
     slug: 'appel-de-fonds-copropriete-calcul-repartition',
-    title: 'Appel de fonds copropriété : calcul, répartition et modèle',
+    title: 'Appel de fonds copropriété : calcul, répartition et erreurs à éviter (2026)',
     description:
-      'Comment calculer un appel de fonds en copropriété ? Méthode, répartition par tantièmes, obligations et conseils pratiques pour syndic bénévole.',
-    // 152 chars
+      'Comment calculer et répartir un appel de fonds en copropriété selon les tantièmes ? Guide complet pour syndics bénévoles : méthode pas à pas, erreurs fréquentes et conséquences à éviter.',
     publishedAt: '2026-03-19',
+    updatedAt: '2026-05-06',
     readingTime: 9,
     category: 'Guide pratique – Finances',
     keywords: [
@@ -124,16 +136,23 @@ export const posts: BlogPost[] = [
         q: "Quelle est la différence entre appel de fonds et fonds de travaux ALUR ?",
         a: "L'appel de fonds couvre les charges courantes et les travaux votés. Le fonds de travaux ALUR est une cotisation annuelle obligatoire (5 % du budget minimum) placée sur un compte séparé pour anticiper les gros travaux futurs.",
       },
+      {
+        q: "Les tantièmes peuvent-ils changer au cours de la vie d'une copropriété ?",
+        a: "Rarement. Une modification des tantièmes nécessite un vote à l'unanimité des copropriétaires en assemblée générale, puis une modification du règlement de copropriété enregistrée chez le notaire. En pratique, les tantièmes restent stables toute la vie d'une copropriété sauf réunion ou division de lots.",
+      },
+      {
+        q: "Que se passe-t-il si l'AG n'a pas encore voté le budget avant l'échéance de l'appel ?",
+        a: "Le syndic peut appeler des provisions égales au quart du dernier budget approuvé (article 14-2 de la loi de 1965), dans l'attente de la tenue de l'AG. Cette disposition légale évite une rupture de trésorerie sans nécessiter de nouveau vote.",
+      },
     ],
   },
   {
     slug: 'fonds-de-travaux-alur-obligations-montant-gestion',
-    title: 'Fonds de travaux ALUR : obligations, montant et gestion',
+    title: 'Fonds de travaux ALUR : obligations, montant et gestion pratique (2026)',
     description:
-      'Tout comprendre sur le fonds de travaux ALUR : montant minimum, copropriétés concernées, règles de gestion et impact pour un syndic bénévole.',
-    // 150 chars
+      'Fonds de travaux ALUR obligatoire depuis 2017 : qui est concerné, quel montant minimum, comment le gérer et quelles erreurs éviter ? Guide complet pour syndics bénévoles, avec exemples concrets.',
     publishedAt: '2026-03-19',
-    updatedAt: '2026-04-15',
+    updatedAt: '2026-05-06',
     readingTime: 8,
     category: 'Guide pratique – Finances & Réglementation',
     keywords: [
@@ -175,6 +194,22 @@ export const posts: BlogPost[] = [
       {
         q: "Sur quel compte bancaire doit être placé le fonds de travaux ?",
         a: "Le fonds de travaux doit obligatoirement être placé sur un compte bancaire séparé du compte courant de la copropriété, au nom du syndicat des copropriétaires.",
+      },
+      {
+        q: "Le montant du fonds de travaux peut-il être augmenté en cours d'exercice ?",
+        a: "Non sans nouveau vote. Si des travaux importants sont projetés, c'est à l'AG de voter un montant supérieur au plancher légal. Il est possible de convoquer une AG extraordinaire pour cela.",
+      },
+      {
+        q: "Que se passe-t-il si le fonds est insuffisant pour financer les travaux votés ?",
+        a: "L'écart est couvert par un appel exceptionnel complémentaire, voté en AG. Le fonds de travaux existant vient en déduction du total à appeler.",
+      },
+      {
+        q: "Un copropriétaire peut-il refuser de payer la cotisation fonds de travaux ?",
+        a: "Non. Une fois voté en AG, ce montant est exigible de tous selon leurs tantièmes. Les procédures de recouvrement sont identiques à celles utilisées pour les charges impayées ordinaires.",
+      },
+      {
+        q: "Que se passe-t-il si l'AG ne vote pas le montant du fonds de travaux ?",
+        a: "La copropriété est en infraction légale. Tout copropriétaire peut saisir le tribunal judiciaire pour faire constater l'irrégularité et contraindre la tenue d'une nouvelle AG avec cette résolution à l'ordre du jour.",
       },
     ],
   },
