@@ -302,10 +302,11 @@ export const posts: BlogPost[] = [
   },
   {
     slug: 'logiciel-syndic-benevole',
-    title: 'Logiciel syndic bénévole : comment choisir le bon outil ?',
+    title: 'Meilleur logiciel syndic bénévole (2026) : fonctions, prix, migration',
     description:
-      'Quel logiciel choisir pour un syndic bénévole ? Comparez les fonctions essentielles : appels de fonds, AG, documents, charges et suivi des incidents.',
+      'Quel logiciel pour gérer une copropriété en syndic bénévole ? Comparatif fonctions, prix (à partir de 240 €/an) et migration depuis Excel. Essai 14 jours.',
     publishedAt: '2026-03-21',
+    updatedAt: '2026-05-06',
     readingTime: 9,
     category: 'Guide pratique – Outils & Logiciels',
     keywords: [
@@ -322,8 +323,9 @@ export const posts: BlogPost[] = [
       { id: 'fonctionnalites-indispensables', text: 'Les 6 fonctionnalités vraiment indispensables' },
       { id: 'migration-excel', text: 'Comment migrer depuis Excel en 30 minutes' },
       { id: 'couts', text: 'Le vrai coût : Excel, logiciel dédié, syndic pro' },
-      { id: 'criteres-de-choix', text: 'Les critères qui font vraiment la différence' },
+      { id: 'criteres-de-choix', text: 'Les critères de choix décisifs' },
       { id: 'questions-frequentes', text: 'Questions fréquentes' },
+      { id: 'logiciel-gratuit', text: 'Existe-t-il un logiciel syndic bénévole gratuit ?' },
       { id: 'en-resume', text: 'En résumé' },
     ],
     faqs: [
@@ -342,6 +344,22 @@ export const posts: BlogPost[] = [
       {
         q: "Un logiciel de syndic bénévole est-il conforme aux obligations légales ?",
         a: "Mon Syndic Bénévole intègre la gestion du fonds de travaux ALUR sur compte séparé, la comptabilité en parties doubles pour les copropriétés de plus de 10 lots, et les modèles de documents conformes aux obligations légales.",
+      },
+      {
+        q: "Existe-t-il un logiciel gratuit pour syndic bénévole ?",
+        a: "Excel est gratuit mais ne produit aucun document légal conforme, ne gère pas le fonds de travaux ALUR sur compte séparé, et ne trace pas les relances. Pour les petites copropriétés, c'est tenable la première année. Au-delà, le coût réel c'est votre temps (6–10 h/mois) et le risque légal. Mon Syndic Bénévole propose un essai gratuit de 14 jours sans engagement.",
+      },
+      {
+        q: "Quelle est la différence entre un logiciel syndic bénévole et un logiciel de syndic professionnel ?",
+        a: "Un logiciel pour syndic bénévole est conçu pour être utilisé directement par le copropriétaire élu, sans formation technique. Il automatise les calculs, génère les documents légaux et alerte sur les échéances. Un logiciel de syndic professionnel est plus complexe, plus cher (1 000 à 5 000 €/mois) et surdimensionné pour une copropriété de 5 à 50 lots.",
+      },
+      {
+        q: "Peut-on essayer un logiciel de gestion de copropriété avant d'acheter ?",
+        a: "Oui. Mon Syndic Bénévole propose un essai gratuit de 14 jours donnant accès à toutes les fonctionnalités. Aucun engagement ni paiement requis pour démarrer.",
+      },
+      {
+        q: "Le logiciel syndic bénévole fonctionne-t-il sur mobile ?",
+        a: "Oui. Mon Syndic Bénévole est accessible depuis un navigateur mobile pour les consultations rapides — vérifier un solde, voir l'historique d'un paiement, consulter une convocation. Les fonctions de saisie complexes restent plus confortables sur ordinateur.",
       },
     ],
   },

@@ -11,12 +11,14 @@ import { h2, h3, p, ul, ol, li, strong, a } from './styles';
 export default function ArticleLogicielSyndicBenevole() {
   return (
     <>
-      <h2 id="probleme" className={h2}>Le problème</h2>
       <p className={p}>
-        Marc gère une copropriété de 12 lots depuis 2 ans avec Excel. En mars dernier, il a passé 6 heures à préparer son AG : reconstituer les dépenses poste par poste, vérifier qui avait payé quoi, recalculer les quotes-parts du budget prévisionnel, produire un PV lisible. &ldquo;J&apos;ai failli démissionner ce week-end-là.&rdquo;
+        Excel tient jusqu&apos;à la première vraie AG. Puis vient la nuit du dimanche à reconstituer deux ans de dépenses, vérifier qui a payé quoi, recalculer les quotes-parts — et se demander si le délai de convocation de 21 jours court depuis l&apos;envoi ou depuis la première présentation du recommandé.
       </p>
       <p className={p}>
-        Il a migré vers un logiciel de gestion dédié en avril. Son AG de juin a pris 2 heures de préparation. Voici la différence concrète entre les deux approches — et comment choisir le bon outil.
+        Marc, syndic bénévole de 12 lots depuis 2 ans, a vécu ça en mars 2025. <strong className={strong}>6 heures de préparation</strong> pour son AG. Après migration vers un logiciel dédié : <strong className={strong}>2 heures</strong>. La migration depuis Excel : <strong className={strong}>35 minutes</strong>.
+      </p>
+      <p className={p}>
+        Ce guide compare les trois options réelles — Excel, logiciel dédié, syndic professionnel — avec les prix, les fonctions qui comptent vraiment, et comment migrer sans douleur.
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
@@ -31,6 +33,7 @@ export default function ArticleLogicielSyndicBenevole() {
         >
           Créer votre syndic en moins de 30 minutes →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="excel-vs-logiciel" className={h2}>La comparaison honnête : Excel, logiciel dédié, syndic pro</h2>
@@ -190,8 +193,9 @@ export default function ArticleLogicielSyndicBenevole() {
           href="/register"
           className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
         >
-          Créer votre syndic en moins de 30 minutes →
+          Tester les 6 fonctionnalités gratuitement →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="migration-excel" className={h2}>Comment migrer depuis Excel en 30 minutes</h2>
@@ -254,7 +258,20 @@ export default function ArticleLogicielSyndicBenevole() {
         Pour 12 lots, passer à Mon Syndic Bénévole représente une économie de <strong className={strong}>2 160 à 3 960 € par an</strong> par rapport à un syndic professionnel. Une économie qui revient directement aux copropriétaires sous forme de charges moins élevées.
       </p>
 
-      <h2 id="criteres-de-choix" className={h2}>Les critères qui font vraiment la différence dans le choix d&apos;un outil</h2>
+      <div className="my-8 rounded-2xl bg-green-50 border border-green-100 p-6">
+        <p className="text-sm font-semibold text-green-700 mb-1">2 160 à 3 960 € économisés par an — directement sur les charges.</p>
+        <p className="text-sm text-gray-600 mb-4">Migration depuis Excel en 35 minutes. Premier appel de fonds le jour même.</p>
+        <CtaLink
+          ctaLocation="blog_article"
+          href="/register"
+          className="inline-block text-sm font-semibold bg-green-600 hover:bg-green-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Commencer l&apos;essai gratuit →
+        </CtaLink>
+        <p className="text-xs text-green-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
+      </div>
+
+      <h2 id="criteres-de-choix" className={h2}>Les critères de choix décisifs</h2>
 
       <h3 className={h3}>Le temps de mise en route</h3>
       <p className={p}>
@@ -293,6 +310,38 @@ export default function ArticleLogicielSyndicBenevole() {
       <h3 className={h3}>Les données sont-elles sécurisées ?</h3>
       <p className={p}>Les données financières et les coordonnées des copropriétaires sont des données personnelles et sensibles. Mon Syndic Bénévole est hébergé sur une infrastructure européenne conforme au RGPD, avec authentification sécurisée et sauvegardes automatiques quotidiennes.</p>
 
+      <h3 className={h3}>Existe-t-il un logiciel gratuit pour syndic bénévole ?</h3>
+      <p className={p}>Excel est gratuit mais ne produit aucun document légal conforme, ne gère pas le fonds de travaux ALUR sur compte séparé, et ne trace pas les relances. Pour une toute petite copropriété avec une gestion minimaliste, c&apos;est tenable la première année. Au-delà, le coût réel d&apos;Excel c&apos;est votre temps — 6 à 10 heures par mois — et le risque légal. Mon Syndic Bénévole propose un <strong className={strong}>essai gratuit de 14 jours</strong> sans engagement.</p>
+
+      <h3 className={h3}>Quelle est la différence entre un logiciel syndic bénévole et un logiciel de syndic professionnel ?</h3>
+      <p className={p}>Un logiciel pour syndic bénévole est conçu pour être utilisé directement par le copropriétaire élu, sans formation technique. Il automatise les calculs, génère les documents légaux et alerte sur les échéances. Un logiciel de syndic professionnel s&apos;adresse à des gestionnaires gérant des centaines de lots : il est plus complexe, plus cher (1 000 à 5 000 €/mois) et inutilement surdimensionné pour une copropriété de 5 à 50 lots.</p>
+
+      <h3 className={h3}>Peut-on essayer un logiciel de gestion copropriété avant d&apos;acheter ?</h3>
+      <p className={p}>Oui. Mon Syndic Bénévole propose un essai gratuit de 14 jours donnant accès à toutes les fonctionnalités — création de la copropriété, lots, appels de fonds, AG, espace copropriétaires. Aucun engagement ni paiement requis pour démarrer.</p>
+
+      <h3 className={h3}>Le logiciel fonctionne-t-il sur mobile ?</h3>
+      <p className={p}>Oui. Mon Syndic Bénévole est accessible depuis un navigateur mobile pour les consultations rapides — vérifier un solde, voir l&apos;historique d&apos;un paiement, consulter une convocation. Les fonctions de saisie complexes (paramétrage des tantièmes, création de budget) restent plus confortables sur ordinateur.</p>
+
+      <h2 id="logiciel-gratuit" className={h2}>Existe-t-il un logiciel syndic bénévole gratuit ?</h2>
+      <p className={p}>
+        Oui, dans un sens limité. Excel est gratuit. Mais il ne produit aucun document légal conforme, ne gère pas le fonds de travaux ALUR sur compte séparé, et ne trace pas les relances envoyées — ce qui expose en cas de litige.
+      </p>
+      <p className={p}>
+        Pour une copropriété de 3 ou 4 lots avec une gestion très simple, Excel tient la première année. Au-delà, le coût réel d&apos;Excel c&apos;est votre temps (6 à 10 heures par mois) et le risque légal. L&apos;essai gratuit de 14 jours de Mon Syndic Bénévole permet de mesurer le gain concret avant toute décision.
+      </p>
+      <div className="my-6 rounded-2xl bg-blue-50 border border-blue-100 p-6">
+        <p className="text-sm font-semibold text-blue-700 mb-1">Mesurez le gain vous-même — sans engagement.</p>
+        <p className="text-sm text-gray-600 mb-4">14 jours, toutes les fonctionnalités, aucun paiement requis.</p>
+        <CtaLink
+          ctaLocation="blog_article"
+          href="/register"
+          className="inline-block text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Commencer l&apos;essai gratuit →
+        </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
+      </div>
+
       <h2 id="en-resume" className={h2}>En résumé</h2>
       <p className={p}>
         Un logiciel de syndic bénévole n&apos;est pas un luxe. C&apos;est la condition pour exercer ce mandat sereinement au-delà d&apos;un an, sans risquer des erreurs de calcul, des délais manqués ou une comptabilité impossible à présenter en AG.
@@ -311,7 +360,7 @@ export default function ArticleLogicielSyndicBenevole() {
         >
           Créer votre syndic en moins de 30 minutes →
         </CtaLink>
-        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
     </>
   );
