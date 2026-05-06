@@ -948,7 +948,7 @@ export default function HomePage() {
       </section>
 
             {/* ── Tarif ── */}
-      <section id="tarif" aria-labelledby="pricing-heading" className="py-10 sm:py-20 px-4 sm:px-6 bg-white">
+      <section id="tarifs" aria-labelledby="pricing-heading" className="py-10 sm:py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-violet-600 uppercase tracking-widest mb-3">Tarifs</p>

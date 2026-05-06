@@ -30,7 +30,7 @@ export const metadata: Metadata = {
       { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
     shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    // apple-touch-icon généré via app/apple-icon.tsx (180×180, PNG)
   },
 
   title: {
@@ -108,6 +108,12 @@ export default function RootLayout({
 
   return (
     <html lang="fr">
+      <head>
+        {/* Preconnect aux domaines tiers critiques — réduit la latence de connexion (LCP) */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
+        <link rel="dns-prefetch" href="https://js.stripe.com" />
+      </head>
       <body className={`${geist.variable} ${geist.className} antialiased overflow-x-hidden`}>
         {/* Pas de fallback <noscript> GTM : cela peut déclencher des requêtes Google avant le consentement JS. */}
         {children}
