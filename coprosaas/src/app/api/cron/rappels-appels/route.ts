@@ -160,7 +160,7 @@ export async function GET(req: NextRequest) {
   // Récapitulatif syndic à l'échéance (J0)
   const { data: j0SyndicAppels } = await supabase
     .from('appels_de_fonds')
-    .select('id, copropriete_id, titre, date_echeance, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .select('id, copropriete_id, titre, date_echeance, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(id, email, full_name))')
     .eq('statut', 'publie')
     .eq('date_echeance', todayStr)
     .is('rappel_syndic_j0_at', null)
@@ -870,7 +870,7 @@ interface AppelRow {
   coproprietes: { nom: string } | null;
 }
 
-type SyndicProfileRow = { email: string | null; full_name: string | null };
+type SyndicProfileRow = { id: string; email: string | null; full_name: string | null };
 
 interface AppelWithSyndicRow extends Omit<AppelRow, 'coproprietes'> {
   coproprietes: {
@@ -1253,7 +1253,13 @@ async function sendSyndicImpayesRecap(
 ): Promise<number> {
   const copro = appel.coproprietes;
   const profile = Array.isArray(copro?.profiles) ? copro.profiles[0] : copro?.profiles;
-  const syndicEmail = normalizeEmail(profile?.email ?? null);
+  let syndicEmail = normalizeEmail(profile?.email ?? null);
+
+  // Fallback : si l'email n'est pas dans profiles, on le résout via auth.users
+  if (!syndicEmail && profile?.id) {
+    const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
+    syndicEmail = normalizeEmail(authUser?.user?.email ?? null);
+  }
 
   if (!copro || !syndicEmail) return 0;
 
