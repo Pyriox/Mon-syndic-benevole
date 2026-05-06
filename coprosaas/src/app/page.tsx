@@ -624,7 +624,7 @@ export default function HomePage() {
                     <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
                       <UserCircle size={13} className="text-blue-600" />
                     </div>
-                    Fabien TURPIN
+                    Marie Dupont
                   </div>
                 </div>
               </div>
