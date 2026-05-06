@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // Article : Préparer et organiser une AG de copropriété — guide complet
 // Target KW : "assemblée générale copropriété", "préparer AG copropriété",
 //             "convoquer assemblée générale copropriété", "ordre du jour AG copropriété"
@@ -37,7 +37,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Préparer mon AG gratuitement →
         </CtaLink>
-        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="quand-ag" className={h2}>Quand tenir l&apos;AG : les dates légales</h2>
@@ -261,7 +261,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Générer ma convocation automatiquement →
         </CtaLink>
-        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="regles-majorite" className={h2}>Les règles de majorité : articles 24, 25 et 26</h2>
@@ -419,7 +419,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Générer mon PV d&apos;AG automatiquement →
         </CtaLink>
-        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="apres-ag" className={h2}>Après l&apos;AG : les suites à donner sans attendre</h2>
@@ -520,7 +520,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Tester gratuitement 14 jours →
         </CtaLink>
-        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="outil" className={h2}>Ce que Mon Syndic Bénévole automatise dans le cycle AG</h2>
@@ -633,7 +633,7 @@ export default function ArticleAssembleeGenerale() {
         >
           Préparer mon AG avec Mon Syndic Bénévole →
         </CtaLink>
-        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="questions-frequentes" className={h2}>Questions fréquentes</h2>

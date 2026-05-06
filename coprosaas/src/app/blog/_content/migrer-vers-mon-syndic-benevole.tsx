@@ -68,6 +68,7 @@ export default function ArticleMigrer() {
         >
           Créer mon espace gratuit →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="etape-1" className={h2}>Étape 1 — Créer la copropriété</h2>
@@ -190,6 +191,7 @@ export default function ArticleMigrer() {
         >
           Démarrer ma migration →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="etape-5" className={h2}>Étape 5 — Créer le premier appel de fonds</h2>
@@ -384,7 +386,7 @@ export default function ArticleMigrer() {
         >
           Démarrer ma migration →
         </CtaLink>
-        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Sans carte bancaire · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
     </>
   );

@@ -320,7 +320,7 @@ export default function ArticleObligationsSyndicBenevole() {
         >
           Tester gratuitement 14 jours →
         </CtaLink>
-        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="checklist" className={h2}>Checklist des obligations par période</h2>

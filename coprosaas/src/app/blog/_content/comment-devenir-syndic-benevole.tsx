@@ -65,7 +65,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         >
           Créer votre syndic en moins de 30 minutes →
         </CtaLink>
-        <p className="text-xs text-gray-500 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
       <h2 id="remplacer-syndic-professionnel" className={h2}>Remplacer un syndic professionnel par un syndic bénévole</h2>
       <p className={p}>

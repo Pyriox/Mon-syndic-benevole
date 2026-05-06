@@ -405,6 +405,7 @@ export const posts: BlogPost[] = [
       'Migrez vers Mon Syndic Bénévole en une demi-journée : lots, tantièmes, soldes de départ, fonds de travaux, premier appel de fonds — guide complet en 7 étapes.',
     // 155 chars
     publishedAt: '2026-03-28',
+    updatedAt: '2026-05-06',
     readingTime: 10,
     category: 'Guide pratique – Migration & Prise en main',
     keywords: [
@@ -458,7 +459,7 @@ export const posts: BlogPost[] = [
       'Assemblée générale de copropriété : convocation J-21, ordre du jour, règles de majorité art. 24/25/26, modèle de PV. Guide complet + templates légaux.',
     // 149 chars
     publishedAt: '2026-04-15',
-    updatedAt: '2026-04-15',
+    updatedAt: '2026-05-06',
     readingTime: 11,
     category: 'Guide pratique – Assemblée générale',
     keywords: [

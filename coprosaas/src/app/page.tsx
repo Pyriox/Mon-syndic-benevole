@@ -236,7 +236,7 @@ export default function HomePage() {
               ctaLocation="landing_hero"
               className="flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg shadow-lg shadow-blue-900/30 w-full sm:w-auto justify-center"
             >
-              Créer ma copro gratuitement <ArrowRight size={18} />
+              Commencer l'essai gratuit <ArrowRight size={18} />
             </CtaLink>
             <a
               href="#demo"
@@ -271,7 +271,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 id="probleme-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Marre des syndics inefficaces et trop chers&nbsp;?
+              Logiciel syndic bénévole vs cabinet professionnel&nbsp;: la comparaison honnête
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
               Pour une copropriété de <strong className="text-gray-700">10 lots</strong>, le coût annuel
@@ -388,7 +388,91 @@ export default function HomePage() {
               C&apos;est votre copropriété. La loi vous autorise à la gérer vous-même — syndic bénévole, sans agrémentation requise.
             </p>
             <CtaLink href="/register" ctaLocation="landing_comparison" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-7 py-3.5 rounded-xl transition-colors text-sm">
-              Démarrer gratuitement — 14 jours offerts <ArrowRight size={14} />
+              Commencer l'essai gratuit — 14 jours offerts <ArrowRight size={14} />
+            </CtaLink>
+          </div>
+        </div>
+      </section>
+
+      {/* ── L'histoire derrière le projet ── */}
+      <section aria-labelledby="histoire-heading" className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-10 sm:py-20 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-3">L&apos;histoire derrière le projet</p>
+            <h2 id="histoire-heading" className="text-3xl md:text-4xl font-bold text-white">
+              Le problème que rencontrent tous les syndics bénévoles
+            </h2>
+          </div>
+
+          {/* Témoignage fondateur */}
+          <div className="bg-white/5 border border-white/15 rounded-2xl p-6 sm:p-8 mb-12 max-w-2xl mx-auto">
+            <div className="text-blue-300/40 text-6xl font-serif leading-none mb-2 select-none">&ldquo;</div>
+            <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6">
+              <p className="sm:hidden">
+                Avec un syndic pro, tout coûtait cher et manquait de clarté. Avec Excel, tout était à refaire chaque trimestre. J&apos;ai donc créé l&apos;outil que j&apos;aurais aimé avoir comme syndic bénévole.
+              </p>
+              <div className="hidden sm:block space-y-3">
+                <p>
+                  On avait un syndic professionnel.{' '}
+                  <span className="text-white font-medium">Factures qu&apos;on ne comprenait pas, impossible de les joindre, un forfait de base et des frais sur tout le reste.</span>{' '}
+                  En AG, on a décidé de s&apos;en passer.
+                </p>
+                <p>
+                  On a essayé avec Excel et Google Drive. <span className="text-white font-medium">Chaque trimestre, je recommençais de zéro</span> : recalculer les quotes-parts, retrouver qui avait payé, envoyer les convocations à la main&hellip; C&apos;était chronophage et stressant.
+                </p>
+                <p>
+                  Je n&apos;ai pas trouvé d&apos;outil fait pour ça — alors{' '}
+                  <span className="text-white font-medium">je l&apos;ai construit moi-même.</span>
+                </p>
+              </div>
+            </blockquote>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-500/30 rounded-full flex items-center justify-center shrink-0">
+                <UserCircle size={20} className="text-blue-300" />
+              </div>
+              <div>
+                <p className="text-white font-semibold text-sm">Fabien</p>
+                <p className="text-blue-300/60 text-xs">Fondateur &amp; syndic bénévole</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+            {[
+              {
+                value: '14 jours',
+                label: "d'essai gratuit",
+                sublabel: 'Résiliable à tout moment',
+                Icon: Building2,
+                color: 'text-blue-400',
+              },
+              {
+                value: "jusqu'à 2 600 €",
+                label: 'économisés par an',
+                sublabel: 'vs un cabinet syndic professionnel',
+                Icon: Banknote,
+                color: 'text-yellow-400',
+              },
+              {
+                value: '30 min',
+                label: 'pour démarrer',
+                sublabel: 'de la création à votre premier appel de fonds',
+                Icon: Clock,
+                color: 'text-green-400',
+              },
+            ].map(({ value, label, sublabel, Icon, color }) => (
+              <div key={label} className="text-center bg-white/5 border border-white/10 rounded-2xl px-6 py-8">
+                <Icon size={28} className={`${color} mx-auto mb-4`} />
+                <p className={`text-3xl sm:text-4xl font-extrabold ${color} mb-2 whitespace-nowrap`}>{value}</p>
+                <p className="text-base font-semibold text-white mb-1">{label}</p>
+                <p className="text-sm text-blue-200/60">{sublabel}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <CtaLink href="/register" ctaLocation="landing_testimonials" className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30 w-full sm:w-auto">
+              Commencer l'essai gratuit <ArrowRight size={16} />
             </CtaLink>
           </div>
         </div>
@@ -399,8 +483,8 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 id="solution-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Tout ce que fait un syndic professionnel —{' '}
-              <span className="text-blue-600">pour 360&nbsp;€/an</span>
+              Les fonctionnalités du logiciel syndic bénévole —{' '}
+              <span className="text-blue-600">à partir de 360&nbsp;€/an</span>
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
               Mon Syndic Bénévole vous donne les mêmes outils qu&apos;un cabinet syndic, sans le contrat ni les frais.
@@ -443,7 +527,7 @@ export default function HomePage() {
 
           <div className="mt-10 text-center">
             <CtaLink href="/register" ctaLocation="landing_features" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
-              Créer ma copro gratuitement <ArrowRight size={16} />
+              Commencer l'essai gratuit <ArrowRight size={16} />
             </CtaLink>
             <p className="mt-3 text-sm text-gray-500">Moyen de paiement requis — aucun débit pendant 14 jours &middot; Résiliable à tout moment</p>
           </div>
@@ -456,7 +540,7 @@ export default function HomePage() {
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Comment ça marche</p>
             <h2 id="howto-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Opérationnel en moins de 30&nbsp;minutes
+              Logiciel syndic bénévole&nbsp;: opérationnel en 30 minutes
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
               Aucune formation, aucune migration. Suivez les 4 étapes et votre copropriété est en ligne.
@@ -521,7 +605,7 @@ export default function HomePage() {
 
           <div className="mt-10 text-center">
             <CtaLink href="/register" ctaLocation="landing_howto" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
-              Démarrer maintenant <ArrowRight size={16} />
+              Commencer l'essai gratuit <ArrowRight size={16} />
             </CtaLink>
             <p className="mt-3 text-sm text-gray-500">Opérationnel en 30 minutes · Aucune formation requise</p>
           </div>
@@ -879,93 +963,9 @@ export default function HomePage() {
           </div>
           <div className="text-center mt-10 sm:mt-14">
             <CtaLink href="/register" ctaLocation="landing_demo" className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg shadow-lg shadow-blue-900/30">
-              Tester pendant 14 jours <ArrowRight size={18} />
+              Commencer l'essai gratuit <ArrowRight size={18} />
             </CtaLink>
             <p className="mt-3 text-blue-300/50 text-sm">14 jours offerts · Annulation sans frais</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── L'histoire derrière le projet ── */}
-      <section aria-labelledby="histoire-heading" className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-10 sm:py-20 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-blue-300 uppercase tracking-widest mb-3">L&apos;histoire derrière le projet</p>
-            <h2 id="histoire-heading" className="text-3xl md:text-4xl font-bold text-white">
-              Le problème que rencontrent tous les syndics bénévoles
-            </h2>
-          </div>
-
-          {/* Témoignage fondateur */}
-          <div className="bg-white/5 border border-white/15 rounded-2xl p-6 sm:p-8 mb-12 max-w-2xl mx-auto">
-            <div className="text-blue-300/40 text-6xl font-serif leading-none mb-2 select-none">&ldquo;</div>
-            <blockquote className="text-blue-100 text-base sm:text-lg leading-relaxed mb-6">
-              <p className="sm:hidden">
-                Avec un syndic pro, tout coûtait cher et manquait de clarté. Avec Excel, tout était à refaire chaque trimestre. J&apos;ai donc créé l&apos;outil que j&apos;aurais aimé avoir comme syndic bénévole.
-              </p>
-              <div className="hidden sm:block space-y-3">
-                <p>
-                  On avait un syndic professionnel.{' '}
-                  <span className="text-white font-medium">Factures qu&apos;on ne comprenait pas, impossible de les joindre, un forfait de base et des frais sur tout le reste.</span>{' '}
-                  En AG, on a décidé de s&apos;en passer.
-                </p>
-                <p>
-                  On a essayé avec Excel et Google Drive. <span className="text-white font-medium">Chaque trimestre, je recommençais de zéro</span> : recalculer les quotes-parts, retrouver qui avait payé, envoyer les convocations à la main&hellip; C&apos;était chronophage et stressant.
-                </p>
-                <p>
-                  Je n&apos;ai pas trouvé d&apos;outil fait pour ça — alors{' '}
-                  <span className="text-white font-medium">je l&apos;ai construit moi-même.</span>
-                </p>
-              </div>
-            </blockquote>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500/30 rounded-full flex items-center justify-center shrink-0">
-                <UserCircle size={20} className="text-blue-300" />
-              </div>
-              <div>
-                <p className="text-white font-semibold text-sm">Fabien</p>
-                <p className="text-blue-300/60 text-xs">Fondateur &amp; syndic bénévole</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-            {[
-              {
-                value: '14 jours',
-                label: 'd’essai gratuit',
-                sublabel: 'Résiliable à tout moment',
-                Icon: Building2,
-                color: 'text-blue-400',
-              },
-              {
-                value: "jusqu'à 2 600 €",
-                label: 'économisés par an',
-                sublabel: 'vs un cabinet syndic professionnel',
-                Icon: Banknote,
-                color: 'text-yellow-400',
-              },
-              {
-                value: '30 min',
-                label: 'pour démarrer',
-                sublabel: 'de la création à votre premier appel de fonds',
-                Icon: Clock,
-                color: 'text-green-400',
-              },
-            ].map(({ value, label, sublabel, Icon, color }) => (
-              <div key={label} className="text-center bg-white/5 border border-white/10 rounded-2xl px-6 py-8">
-                <Icon size={28} className={`${color} mx-auto mb-4`} />
-                <p className={`text-3xl sm:text-4xl font-extrabold ${color} mb-2 whitespace-nowrap`}>{value}</p>
-                <p className="text-base font-semibold text-white mb-1">{label}</p>
-                <p className="text-sm text-blue-200/60">{sublabel}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <CtaLink href="/register" ctaLocation="landing_testimonials" className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30 w-full sm:w-auto">
-              Créer votre syndic en moins de 30 minutes <ArrowRight size={16} />
-            </CtaLink>
           </div>
         </div>
       </section>
@@ -1006,13 +1006,13 @@ export default function HomePage() {
                   </div>
                   <p className="text-blue-200/80 text-xs mb-6">soit <span className="font-semibold text-white">30 €/mois</span></p>
                 <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-white text-blue-700 font-bold py-3.5 rounded-2xl hover:bg-blue-50 transition-colors mt-auto">
-                  Commencer gratuitement →
+                  Commencer l'essai gratuit →
                 </CtaLink>
               </div>
             </div>
 
             {/* Plan Confort */}
-            <div className="hidden md:flex bg-white border-2 border-emerald-200 rounded-3xl p-5 sm:p-7 shadow-lg flex-col relative overflow-hidden">
+            <div className="flex bg-white border-2 border-emerald-200 rounded-3xl p-5 sm:p-7 shadow-lg flex-col relative overflow-hidden">
               <div className="absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">
                 Copros moyennes
               </div>
@@ -1024,12 +1024,12 @@ export default function HomePage() {
               </div>
               <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">45 €/mois</span></p>
               <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-emerald-600 text-white font-bold py-3.5 rounded-2xl hover:bg-emerald-700 transition-colors mt-auto">
-                Commencer gratuitement →
+                Commencer l'essai gratuit →
               </CtaLink>
             </div>
 
             {/* Plan Illimité */}
-            <div className="hidden md:flex bg-white border-2 border-violet-200 rounded-3xl p-5 sm:p-7 shadow-lg flex-col relative overflow-hidden">
+            <div className="flex bg-white border-2 border-violet-200 rounded-3xl p-5 sm:p-7 shadow-lg flex-col relative overflow-hidden">
               <div className="absolute top-4 right-4 bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-1 rounded-full">
                 Grandes copros
               </div>
@@ -1041,15 +1041,11 @@ export default function HomePage() {
               </div>
               <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">80 €/mois</span></p>
               <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-violet-600 text-white font-bold py-3.5 rounded-2xl hover:bg-violet-700 transition-colors mt-auto">
-                Commencer gratuitement →
+                Commencer l'essai gratuit →
               </CtaLink>
             </div>
 
           </div>
-
-          <p className="text-center text-gray-500 text-sm md:hidden mb-4">
-            Autres formules : <strong>Confort 540 €/an</strong> (20 lots) et <strong>Illimité 960 €/an</strong>.
-          </p>
 
           <p className="text-center text-gray-500 text-sm mb-6">Les 3 plans offrent exactement les mêmes fonctionnalités — seule différence&nbsp;: le nombre de lots inclus.</p>
           {/* Fonctionnalités incluses dans tous les plans */}
@@ -1144,7 +1140,7 @@ export default function HomePage() {
             ctaLocation="landing_final"
             className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-7 sm:px-10 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg sm:text-xl shadow-xl shadow-blue-900/30"
           >
-            Créer ma copro gratuitement <ArrowRight size={20} />
+            Commencer l'essai gratuit <ArrowRight size={20} />
           </CtaLink>
           <p className="mt-4 text-blue-300/50 text-sm">Facturation annuelle · Sans engagement · Résiliez à tout moment</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-blue-300/60">
