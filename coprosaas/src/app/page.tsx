@@ -529,7 +529,7 @@ export default function HomePage() {
             <CtaLink href="/register" ctaLocation="landing_features" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
               Commencer l'essai gratuit <ArrowRight size={16} />
             </CtaLink>
-            <p className="mt-3 text-sm text-gray-500">Moyen de paiement requis — aucun débit pendant 14 jours &middot; Résiliable à tout moment</p>
+            <p className="mt-3 text-sm text-gray-500">14 jours offerts &middot; Résiliable à tout moment</p>
           </div>
         </div>
       </section>
