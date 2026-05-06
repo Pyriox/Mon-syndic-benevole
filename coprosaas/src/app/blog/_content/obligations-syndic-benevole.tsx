@@ -141,6 +141,7 @@ export default function ArticleObligationsSyndicBenevole() {
         >
           Créer votre syndic en moins de 30 minutes →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="convocation-ag" className={h2}>Modèle de convocation d&apos;AG conforme</h2>
@@ -259,6 +260,7 @@ export default function ArticleObligationsSyndicBenevole() {
         >
           Créer votre syndic en moins de 30 minutes →
         </CtaLink>
+        <p className="text-xs text-blue-400 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>
 
       <h2 id="erreurs-a-eviter" className={h2}>5 erreurs qui finissent en contentieux</h2>
