@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 import { buildAGReminderEmail, buildAGReminderSubject } from '@/lib/emails/ag-reminders';
-import { buildMilestoneAGPlanifieeSubject, buildMilestoneAGPlanifieeEmail } from '@/lib/emails/syndic-notifications';
+import {
+  buildMilestoneAGPlanifieeSubject, buildMilestoneAGPlanifieeEmail,
+  buildAGConvocationManquanteSubject, buildAGConvocationManquanteEmail,
+} from '@/lib/emails/syndic-notifications';
 import { pushNotification, pushAdminAlert } from '@/lib/notification-center';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { getCronAuthState } from '@/lib/cron-auth';
@@ -509,10 +512,87 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ── Alerte AG sans convocation ────────────────────────────────────────────
+  // AG planifiée dans ≤ 30 jours, créée il y a > 3 jours, sans convocation envoyée.
+  let convocationManquanteSent = 0;
+
+  const createdBefore = new Date(now);
+  createdBefore.setDate(createdBefore.getDate() - 3);
+  const createdBeforeStr = createdBefore.toISOString().slice(0, 10);
+  const in30days = addDays(now, 30);
+
+  const { data: agsManquantes } = await admin
+    .from('assemblees_generales')
+    .select('id, copropriete_id, titre, date_ag, coproprietes(nom, syndic_id)')
+    .eq('statut', 'planifiee')
+    .gt('date_ag', today)
+    .lte('date_ag', in30days)
+    .is('convocation_envoyee_le', null)
+    .lt('created_at', createdBeforeStr);
+
+  for (const ag of agsManquantes ?? []) {
+    const copro = Array.isArray(ag.coproprietes) ? ag.coproprietes[0] : ag.coproprietes;
+    if (!copro?.syndic_id || !copro?.nom) continue;
+
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', copro.syndic_id)
+      .maybeSingle();
+
+    if (!profile?.email) continue;
+
+    const { count: alreadySentAlert } = await admin
+      .from('email_deliveries')
+      .select('id', { count: 'exact', head: true })
+      .eq('recipient_email', profile.email)
+      .eq('template_key', 'ag_convocation_manquante')
+      .eq('ag_id', ag.id);
+
+    if ((alreadySentAlert ?? 0) > 0) continue;
+
+    const dateAgFormatted = new Date(ag.date_ag).toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const syndicPrenom = (profile.full_name ?? '').split(' ')[0] || null;
+    const agUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/assemblees/${ag.id}`;
+    const subject = buildAGConvocationManquanteSubject(copro.nom, ag.titre);
+
+    const result = await resend.emails.send({
+      from: FROM,
+      to: profile.email,
+      subject,
+      html: buildAGConvocationManquanteEmail({
+        syndicPrenom,
+        coproprieteNom: copro.nom,
+        agTitre: ag.titre,
+        dateAg: dateAgFormatted,
+        agUrl,
+      }),
+    });
+
+    if (!result.error) {
+      await trackEmailDelivery({
+        providerMessageId: result.data?.id ?? null,
+        templateKey: 'ag_convocation_manquante',
+        status: 'sent',
+        recipientEmail: profile.email,
+        coproprieteId: ag.copropriete_id,
+        agId: ag.id,
+        subject,
+      });
+      sent++;
+      convocationManquanteSent++;
+    } else {
+      console.error('[cron/rappels-ag] Erreur email convocation manquante:', result.error);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     sent,
     retries,
     milestone_ag: milestoneAGSent,
+    convocation_manquante: convocationManquanteSent,
   });
 }

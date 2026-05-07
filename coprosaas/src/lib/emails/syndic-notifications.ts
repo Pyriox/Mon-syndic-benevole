@@ -102,9 +102,9 @@ export function buildBrouillonEcheanceSubject(
   n: number,
   type: BrouillonEcheanceType,
 ): string {
-  if (type === 'j14') return `[J-14] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} — ${coproprieteNom} — Mon Syndic Bénévole`;
-  if (type === 'j7') return `[J-7] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} — ${coproprieteNom} — Mon Syndic Bénévole`;
-  return `[Urgent] ${n} appel${n > 1 ? 's' : ''} non publié${n > 1 ? 's' : ''} (< 7 jours) — ${coproprieteNom} — Mon Syndic Bénévole`;
+  if (type === 'j14') return `Vos appels de fonds arrivent à échéance dans 14 jours — ${coproprieteNom} — Mon Syndic Bénévole`;
+  if (type === 'j7') return `Plus que 7 jours pour publier vos appels de fonds — ${coproprieteNom} — Mon Syndic Bénévole`;
+  return `Vos appels de fonds doivent être publiés aujourd'hui — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildBrouillonEcheanceEmail(
@@ -541,6 +541,53 @@ ${ctaButton('Reprendre là où je me suis arrêté →', dashboardUrl, COLOR.blu
 </p>`;
 
   return wrapEmail(content, COLOR.blue, 'On vous fait reprendre en 3 minutes.');
+}
+
+// ── Alerte AG planifiée sans convocation envoyée ──────────────────────────────
+// Cible : syndic dont une AG est planifiée dans ≤ 30 jours sans convocation envoyée
+// Condition de déclenchement : AG créée depuis > 3 jours, convocation_envoyee_le IS NULL
+
+export interface AGConvocationManquanteEmailParams {
+  syndicPrenom: string | null;
+  coproprieteNom: string;
+  agTitre: string;
+  dateAg: string; // human-readable, ex: "12 juin 2025"
+  agUrl: string;
+}
+
+export function buildAGConvocationManquanteSubject(coproprieteNom: string, agTitre: string): string {
+  return `Votre AG approche — la convocation n'a pas encore été envoyée — ${coproprieteNom} — Mon Syndic Bénévole`;
+}
+
+export function buildAGConvocationManquanteEmail(params: AGConvocationManquanteEmailParams): string {
+  const { syndicPrenom, coproprieteNom, agTitre, dateAg, agUrl } = params;
+  const prenomStr = syndicPrenom ? `Bonjour <strong>${h(syndicPrenom)}</strong>` : 'Bonjour';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Convocation AG non envoyée</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Votre assemblée générale <strong>« ${h(agTitre)} »</strong> est planifiée le <strong>${h(dateAg)}</strong> pour la copropriété <strong>${h(coproprieteNom)}</strong>.
+</p>
+
+<div style="margin:0 0 20px;padding:14px 16px;background:#fff7ed;border-left:3px solid #f97316;border-radius:0 8px 8px 0">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#9a3412">⚠ Aucune convocation n'a encore été envoyée</p>
+  <p style="margin:0;font-size:13px;color:#c2410c;line-height:1.5">La loi impose un délai minimum de notification avant la date de l'AG. Si vous attendez, vos copropriétaires pourraient ne pas être convoqués dans les délais légaux.</p>
+</div>
+
+<p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Depuis votre espace, vous pouvez envoyer la convocation en quelques clics — Mon Syndic Bénévole prend en charge l'envoi à tous vos copropriétaires et programme automatiquement les rappels à J-14 et J-7.
+</p>
+
+${ctaButton('Envoyer la convocation maintenant →', agUrl, '#f97316')}
+
+<p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};line-height:1.5;text-align:center">
+  Cet e-mail est envoyé automatiquement car votre AG approche sans qu'une convocation ait été transmise.
+</p>`;
+
+  return wrapEmail(content, '#f97316', `AG "${agTitre}" le ${dateAg} — envoyez la convocation avant qu'il ne soit trop tard.`);
 }
 
 export function buildIncidentResoluSubject(titreIncident: string): string {

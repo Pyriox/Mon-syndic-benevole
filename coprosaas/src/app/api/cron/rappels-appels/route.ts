@@ -36,7 +36,7 @@ import {
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
-import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject, buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject, buildCheckoutAbandonJ3Email, buildCheckoutAbandonJ3Subject } from '@/lib/emails/subscription';
+import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject, buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject, buildCheckoutAbandonJ3Email, buildCheckoutAbandonJ3Subject, buildPaymentFailedJ3Email, buildPaymentFailedJ3Subject, buildPaymentFailedJ7Email, buildPaymentFailedJ7Subject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushAdminAlert } from '@/lib/notification-center';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
@@ -113,6 +113,7 @@ export async function GET(req: NextRequest) {
   const onboardingJ2Window = resolveOnboardingConfirmationWindow({ kind: 'j2', referenceDate: today });
   const onboardingJ7Window = resolveOnboardingConfirmationWindow({ kind: 'j7', referenceDate: today });
   const onboardingJ21Window = resolveOnboardingConfirmationWindow({ kind: 'j21', referenceDate: today });
+  const onboardingJ30Window = resolveOnboardingConfirmationWindow({ kind: 'j30', referenceDate: today });
 
   // ── Avis J-30 : appels publiés dont l'email n'a pas encore été envoyé ──
   // .gte('date_echeance', todayStr) empêche d'envoyer un "avis J-30" pour un
@@ -552,6 +553,7 @@ export async function GET(req: NextRequest) {
   let onboardingJ2Sent = 0;
   let onboardingJ7Sent = 0;
   let onboardingJ21Sent = 0;
+  let onboardingJ30Sent = 0;
 
   if (onboardingKinds.includes('j2')) {
     onboardingJ2Sent = await sendSyndicOnboardingReminders(
@@ -590,6 +592,19 @@ export async function GET(req: NextRequest) {
       },
     );
     totalSent += onboardingJ21Sent;
+  }
+
+  if (onboardingKinds.includes('j30')) {
+    onboardingJ30Sent = await sendSyndicOnboardingReminders(
+      supabase,
+      onboardingJ30Window,
+      'j30',
+      {
+        force: onboardingForce,
+        targetEmails: onboardingTargetEmails,
+      },
+    );
+    totalSent += onboardingJ30Sent;
   }
 
   // ── Rappels J-7 / J-3 / J-1 fin d'essai ────────────────────────────────────
@@ -950,6 +965,112 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ── Dunning paiement échoué J+3 / J+7 ───────────────────────────────────────
+  // Cible : syndics dont le plan est 'passe_du' (paiement Stripe en échec)
+  // depuis 3-4j (J+3) ou 7-8j (J+7) sans être réglé.
+  // Idempotence : user_events (event_type: dunning_j3_sent / dunning_j7_sent).
+  let dunningSent = 0;
+  if (!onboardingOnly) {
+    for (const [dunningKind, daysAgo, eventType, buildSubject, buildEmail] of [
+      ['j3',  3, 'dunning_j3_sent', buildPaymentFailedJ3Subject, buildPaymentFailedJ3Email] as const,
+      ['j7',  7, 'dunning_j7_sent', buildPaymentFailedJ7Subject, buildPaymentFailedJ7Email] as const,
+    ]) {
+      const dunningWindowEnd = addDays(today, -daysAgo);
+      const dunningWindowStart = addDays(today, -(daysAgo + 1));
+
+      const { data: dunningFailedEvents } = await supabase
+        .from('user_events')
+        .select('user_email, user_id, copropriete_id')
+        .eq('event_type', 'payment_failed')
+        .gte('created_at', `${dunningWindowStart}T00:00:00.000Z`)
+        .lt('created_at', `${dunningWindowEnd}T23:59:59.999Z`)
+        .not('user_email', 'is', null)
+        .not('copropriete_id', 'is', null);
+
+      if (!dunningFailedEvents?.length) continue;
+
+      type DunningEvent = { user_email: string; user_id: string | null; copropriete_id: string };
+      const seenDunning = new Map<string, DunningEvent>();
+      for (const ev of dunningFailedEvents as DunningEvent[]) {
+        const key = `${ev.user_email}:${ev.copropriete_id}`;
+        seenDunning.set(key, ev);
+      }
+      const dunningCandidates = [...seenDunning.values()];
+      const dunningEmails = [...new Set(dunningCandidates.map((c) => c.user_email.trim().toLowerCase()))];
+
+      const { data: alreadyDunned } = await supabase
+        .from('user_events')
+        .select('user_email')
+        .eq('event_type', eventType)
+        .in('user_email', dunningEmails);
+      const alreadyDunnedSet = new Set(
+        (alreadyDunned ?? []).map((r: { user_email: string }) => r.user_email?.toLowerCase()).filter(Boolean),
+      );
+
+      const dunningCoproIds = [...new Set(dunningCandidates.map((c) => c.copropriete_id))];
+      const { data: batchDunningCopros } = await supabase
+        .from('coproprietes')
+        .select('id, nom, plan_id, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+        .in('id', dunningCoproIds)
+        .eq('plan', 'passe_du');
+      type DunningCopro = { id: string; nom: string; plan_id: string | null; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      const dunningCoproMap = new Map<string, DunningCopro>();
+      for (const c of (batchDunningCopros ?? []) as unknown as DunningCopro[]) dunningCoproMap.set(c.id, c);
+
+      for (const candidate of dunningCandidates) {
+        const email = candidate.user_email.trim().toLowerCase();
+        if (alreadyDunnedSet.has(email)) continue;
+
+        const copro = dunningCoproMap.get(candidate.copropriete_id);
+        if (!copro) continue; // paiement réglé entre temps
+
+        const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
+        if (!coproProfile?.email) continue;
+
+        const prenom = (coproProfile.full_name ?? '').split(' ')[0] || null;
+        const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
+        const subject = buildSubject(copro.nom);
+
+        const result = await resend.emails.send({
+          from: FROM,
+          to: email,
+          subject,
+          html: buildEmail({
+            prenom,
+            coproprieteNom: copro.nom,
+            planLabel,
+            periodEnd: null,
+            dashboardUrl: `${SITE_URL}/abonnement`,
+          }),
+        });
+
+        await trackCronEmail({
+          providerMessageId: result.data?.id,
+          errorMessage: result.error?.message,
+          templateKey: `subscription_dunning_${dunningKind}`,
+          recipientEmail: email,
+          subject,
+          coproprieteId: copro.id,
+          legalEventType: 'payment_dunning',
+          legalReference: copro.id,
+          payload: { trigger: 'cron', reminderType: `dunning_${dunningKind}` },
+        });
+
+        if (!result.error) {
+          await supabase.from('user_events').insert({
+            user_email: email,
+            user_id: candidate.user_id,
+            event_type: eventType,
+            label: `Dunning paiement échoué envoyé (${dunningKind.toUpperCase()}) — ${copro.nom}`,
+            copropriete_id: copro.id,
+          });
+          totalSent++;
+          dunningSent++;
+        } else console.error(`[cron] Erreur email dunning ${dunningKind}:`, result.error);
+      }
+    }
+  }
+
   // ── Réactivation post-churn J+7 / J+30 ─────────────────────────────────────
   // Cible : syndics dont l'abonnement a été résilié il y a ~7j ou ~30j,
   // qui n'ont pas recréé un abonnement (plan toujours 'resilie').
@@ -958,6 +1079,7 @@ export async function GET(req: NextRequest) {
   if (!onboardingOnly) {
     for (const [reminderKind, daysAgo, eventType] of [
       ['j7',  7,  'churn_reactivation_j7_sent'] as const,
+      ['j14', 14, 'churn_reactivation_j14_sent'] as const,
       ['j30', 30, 'churn_reactivation_j30_sent'] as const,
     ]) {
       const windowEnd = addDays(today, -daysAgo);
@@ -1112,11 +1234,13 @@ export async function GET(req: NextRequest) {
     onboarding_j2: onboardingJ2Sent,
     onboarding_j7: onboardingJ7Sent,
     onboarding_j21: onboardingJ21Sent,
+    onboarding_j30: onboardingJ30Sent,
     trial_j7:          trialsEndingJ7?.length ?? 0,
     trial_j3:          trialsEndingJ3?.length ?? 0,
     trial_j1:          trialJ1Sent,
     checkout_abandon_j1: checkoutAbandonSent,
     checkout_abandon_j3: checkoutAbandonJ3Sent,
+    dunning: dunningSent,
     churn_reactivation: churnReactivationSent,
     failed_retry_queue: failedRetryCount ?? 0,
     sent: totalSent,
