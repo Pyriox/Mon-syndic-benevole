@@ -26,6 +26,7 @@ import {
 
 import { isAdminUser } from '@/lib/admin-config';
 import { getGa4AdminAnalytics } from '@/lib/ga4-admin';
+import { formatRelativeDayLabel } from '@/lib/admin-date';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -657,7 +658,7 @@ export default async function AdminAnalyticsPage() {
                     </div>
                     <p className="truncate text-sm text-gray-700">{event.user_email ?? '—'}</p>
                   </div>
-                  <p className="ml-3 shrink-0 tabular-nums text-[11px] text-gray-400">{relativeTime(event.created_at)}</p>
+                  <p className="ml-3 shrink-0 tabular-nums text-[11px] text-gray-400">{formatRelativeDayLabel(event.created_at)}</p>
                 </div>
               ))}
             </div>
