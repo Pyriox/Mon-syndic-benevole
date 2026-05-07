@@ -255,7 +255,7 @@ function renderCoproDashboardKpis(
             {fdtCredit ? '+' : ''}{formatEuros(displayedFdtSolde)}
           </p>
           <p className="text-xs text-gray-500 mt-0.5">
-            {fdtDebt ? 'FdT à régler' : fdtCredit ? 'Avance FdT' : 'FdT à jour'}
+            {fdtDebt ? 'Fonds de travaux à régler' : fdtCredit ? 'Avance fonds de travaux' : 'Fonds de travaux à jour'}
           </p>
         </div>
       </Card>

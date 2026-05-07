@@ -198,7 +198,7 @@ export default function CoproprietaireBalanceHistory({
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium text-slate-900">{getDisplayedLabel(event)}</span>
                         {event.account_type === 'fonds_travaux' && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">FdT</span>
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">Fonds de travaux</span>
                         )}
                         {event.account_type === 'regularisation' && (
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 text-violet-700">Régul.</span>
