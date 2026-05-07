@@ -11,11 +11,12 @@ import { logCurrentUserEvent } from '@/lib/actions/log-user-event';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
+import Card from '@/components/ui/Card';
 
 import {
   Upload, Pencil, File, FileText, FileSpreadsheet, Image as ImageIcon,
   X, CheckCircle2, CloudUpload, MoreVertical, Eye, Download, FolderInput, Trash2, AlertTriangle,
-  Folder, ChevronRight,
+  Folder, ChevronRight, ExternalLink,
 } from 'lucide-react';
 
 function replaceCurrentRoute(router: ReturnType<typeof useRouter>) {
@@ -328,10 +329,12 @@ export function DocumentMenu({
   doc,
   dossiers,
   readOnly = false,
+  onDeleted,
 }: {
   doc: { id: string; nom: string; copropriete_id?: string | null };
   dossiers: { id: string; nom: string; parent_id?: string | null }[];
   readOnly?: boolean;
+  onDeleted?: () => void;
 }) {
   const supabase = createClient();
 
@@ -392,7 +395,11 @@ export function DocumentMenu({
       metadata: { documentId: localDoc.id },
       severity: 'warning',
     }).catch(() => undefined);
-    setHidden(true);
+    if (onDeleted) {
+      onDeleted();
+    } else {
+      setHidden(true);
+    }
     close();
   };
 
@@ -478,5 +485,88 @@ export function DocumentMenu({
         </div>
       </Modal>
     </>
+  );
+}
+
+// ── Wrapper client : carte mobile ────────────────────────────────
+export function DocumentCardItem({
+  doc,
+  dossiers,
+  canWrite,
+  dateLabel,
+  tailleLabel,
+}: {
+  doc: { id: string; nom: string; copropriete_id?: string | null };
+  dossiers: { id: string; nom: string; parent_id?: string | null }[];
+  canWrite: boolean;
+  dateLabel: string;
+  tailleLabel: string;
+}) {
+  const [hidden, setHidden] = useState(false);
+  if (hidden) return null;
+  return (
+    <Card>
+      <div className="flex items-start gap-3">
+        <FileText size={18} className="text-gray-400 mt-0.5 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-gray-900 break-words">{doc.nom}</p>
+          <p className="text-xs text-gray-500 mt-1">{dateLabel} · {tailleLabel}</p>
+        </div>
+        <div className="shrink-0">
+          {canWrite
+            ? <DocumentMenu doc={doc} dossiers={dossiers} onDeleted={() => setHidden(true)} />
+            : (
+              <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-blue-200 hover:text-blue-700 hover:bg-blue-50 transition-colors" title="Voir">
+                <ExternalLink size={13} /> Ouvrir
+              </a>
+            )
+          }
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ── Wrapper client : ligne de table desktop ───────────────────────
+export function DocumentTableRowItem({
+  doc,
+  dossiers,
+  canWrite,
+  dateLabel,
+  tailleLabel,
+}: {
+  doc: { id: string; nom: string; copropriete_id?: string | null };
+  dossiers: { id: string; nom: string; parent_id?: string | null }[];
+  canWrite: boolean;
+  dateLabel: string;
+  tailleLabel: string;
+}) {
+  const [hidden, setHidden] = useState(false);
+  if (hidden) return null;
+  return (
+    <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <FileText size={18} className="text-gray-400 shrink-0" />
+          <span className="font-medium text-gray-900">{doc.nom}</span>
+        </div>
+      </td>
+      <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{dateLabel}</td>
+      <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">{tailleLabel}</td>
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-center">
+          {canWrite
+            ? <DocumentMenu doc={doc} dossiers={dossiers} onDeleted={() => setHidden(true)} />
+            : (
+              <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Voir">
+                <ExternalLink size={14} />
+              </a>
+            )
+          }
+        </div>
+      </td>
+    </tr>
   );
 }
