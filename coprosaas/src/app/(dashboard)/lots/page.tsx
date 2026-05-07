@@ -190,7 +190,8 @@ export default async function LotsPage() {
 
       {allLots.length > 0 ? (
         <>
-          {/* ── Bande de stats ── */}
+          {/* ── Bande de stats — syndic uniquement ── */}
+          {isSyndic && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Card padding="sm" className="flex items-center gap-3">
               <div className="p-2 bg-blue-50 rounded-lg shrink-0">
@@ -261,10 +262,17 @@ export default async function LotsPage() {
               );
             })}
           </div>
+          )}
 
           {/* ── Vue cartes : mobile ── */}
           <div className="md:hidden space-y-3">
-            {allLots.map((lot) => {
+            {[...allLots]
+              .sort((a, b) => {
+                const aIsMe = myFicheId !== null && a.coproprietaire_id === myFicheId ? -1 : 0;
+                const bIsMe = myFicheId !== null && b.coproprietaire_id === myFicheId ? -1 : 0;
+                return aIsMe - bIsMe;
+              })
+              .map((lot) => {
               const owner = lot.coproprietaire_id ? coproMap[lot.coproprietaire_id] : null;
               const ownerName = owner
                 ? owner.raison_sociale ?? `${owner.prenom ?? ''} ${owner.nom ?? ''}`.trim()
@@ -358,7 +366,13 @@ export default async function LotsPage() {
                 </tr>
               </thead>
               <tbody>
-                {allLots.map((lot) => {
+                {[...allLots]
+                  .sort((a, b) => {
+                    const aIsMe = myFicheId !== null && a.coproprietaire_id === myFicheId ? -1 : 0;
+                    const bIsMe = myFicheId !== null && b.coproprietaire_id === myFicheId ? -1 : 0;
+                    return aIsMe - bIsMe;
+                  })
+                  .map((lot) => {
                   const owner = lot.coproprietaire_id ? coproMap[lot.coproprietaire_id] : null;
                   const ownerName = owner
                     ? owner.raison_sociale ?? `${owner.prenom ?? ''} ${owner.nom ?? ''}`.trim()

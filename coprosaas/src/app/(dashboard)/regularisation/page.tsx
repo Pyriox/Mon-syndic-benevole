@@ -32,7 +32,7 @@ export default async function RegularisationPage({
   const annee = parseInt(anneeParam ?? String(currentYear - 1));
 
   const supabase = await createClient();
-  const { selectedCoproId, role: userRole, copro: copropriete, trialUsed } = await requireCoproAccess();
+  const { selectedCoproId, role: userRole, copro: copropriete, user, trialUsed } = await requireCoproAccess();
 
   const isSyndic = userRole === 'syndic' || userRole === null;
   const canWrite = isSubscribed(copropriete?.plan);
@@ -58,6 +58,18 @@ export default async function RegularisationPage({
 
   const isCloture = exercice?.statut === 'cloture';
   const canCalculate = annee < currentYear;
+
+  // Pour les copropriétaires : trouver leur fiche pour n'afficher que leur ligne
+  let currentCoproprietaireId: string | null = null;
+  if (!isSyndic && exercice) {
+    const { data: myFiche } = await supabase
+      .from('coproprietaires')
+      .select('id')
+      .eq('copropriete_id', scopeId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    currentCoproprietaireId = myFiche?.id ?? null;
+  }
 
   // Stats globales (calculées côté serveur pour éviter l'hydratation)
   const totalAppele = (lignes ?? []).reduce((s, l) => s + l.montant_appele, 0);
@@ -196,6 +208,7 @@ export default async function RegularisationPage({
               isCloture={isCloture}
               isSyndic={isSyndic}
               canWrite={canWrite}
+              currentCoproprietaireId={currentCoproprietaireId}
             />
           )}
 

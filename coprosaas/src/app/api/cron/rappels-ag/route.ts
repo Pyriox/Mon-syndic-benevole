@@ -8,7 +8,7 @@ import { trackEmailDelivery } from '@/lib/email-delivery';
 import { getCronAuthState } from '@/lib/cron-auth';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = `Mon Syndic Benevole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
+const FROM = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
 
 function addDays(base: Date, days: number): string {
   const d = new Date(base);
@@ -239,27 +239,41 @@ export async function GET(req: NextRequest) {
     console.warn('[cron/rappels-ag] Limite de relances non-ouvertes atteinte (300) — file partiellement traitée, certains destinataires reportés au prochain run');
   }
 
-  for (const d of unopened ?? []) {
-    if (!d.ag_id || !d.copropriete_id) continue;
+  // Batch-load AGs et coproprietaires pour éviter N+1 (jusqu'à 300 rows)
+  const validUnopenedRows = (unopened ?? []).filter((d) => d.ag_id && d.copropriete_id);
+  const uniqueUnopenedAgIds = [...new Set(validUnopenedRows.map((d) => d.ag_id as string))];
+  const { data: batchUnopenedAGs } = uniqueUnopenedAgIds.length > 0
+    ? await admin
+        .from('assemblees_generales')
+        .select('id, titre, date_ag, lieu, coproprietes(nom, syndic_id)')
+        .in('id', uniqueUnopenedAgIds)
+        .gt('date_ag', j2)
+    : { data: [] };
+  type BatchUnopenedAG = { id: string; titre: string; date_ag: string; lieu: string | null; coproprietes: { nom: string; syndic_id: string | null } | { nom: string; syndic_id: string | null }[] | null };
+  const unopenedAgMap = new Map<string, BatchUnopenedAG>();
+  for (const ag of (batchUnopenedAGs ?? []) as unknown as BatchUnopenedAG[]) unopenedAgMap.set(ag.id, ag);
 
-    // On n'envoie pas la relance si l'AG est dans moins de 3 jours (j2 = today+2)
-    // pour éviter de polluer les destinataires à la veille de l'événement.
-    const { data: ag } = await admin
-      .from('assemblees_generales')
-      .select('id, titre, date_ag, lieu, coproprietes(nom, syndic_id)')
-      .eq('id', d.ag_id)
-      .gt('date_ag', j2)
-      .maybeSingle();
+  const uniqueUnopenedCoproIds = [...new Set(
+    validUnopenedRows
+      .filter((d) => unopenedAgMap.has(d.ag_id as string))
+      .map((d) => d.copropriete_id as string),
+  )];
+  const { data: batchUnopenedCps } = uniqueUnopenedCoproIds.length > 0
+    ? await admin
+        .from('coproprietaires')
+        .select('nom, prenom, email, copropriete_id')
+        .in('copropriete_id', uniqueUnopenedCoproIds)
+    : { data: [] };
+  const unopenedCpMap = new Map<string, { nom: string; prenom: string }>();
+  for (const cp of batchUnopenedCps ?? []) {
+    if (cp.email) unopenedCpMap.set(`${cp.copropriete_id}:${String(cp.email).trim().toLowerCase()}`, { nom: cp.nom, prenom: cp.prenom });
+  }
 
+  for (const d of validUnopenedRows) {
+    const ag = unopenedAgMap.get(d.ag_id as string);
     if (!ag) continue;
 
-    const { data: cp } = await admin
-      .from('coproprietaires')
-      .select('nom, prenom')
-      .eq('copropriete_id', d.copropriete_id)
-      .eq('email', d.recipient_email)
-      .maybeSingle();
-
+    const cp = unopenedCpMap.get(`${d.copropriete_id}:${d.recipient_email.trim().toLowerCase()}`);
     const copro = Array.isArray(ag.coproprietes) ? ag.coproprietes[0] : ag.coproprietes;
 
     const subject = buildAGReminderSubject({
@@ -279,7 +293,23 @@ export async function GET(req: NextRequest) {
     });
 
     const result = await resend.emails.send({ from: FROM, to: d.recipient_email, subject, html });
-    if (result.error) continue;
+
+    if (result.error) {
+      await trackEmailDelivery({
+        templateKey: 'ag_convocation_unopened_relance',
+        status: 'failed',
+        recipientEmail: d.recipient_email,
+        recipientUserId: d.recipient_user_id,
+        coproprieteId: d.copropriete_id,
+        agId: d.ag_id,
+        subject,
+        legalEventType: 'ag_convocation_unopened_relance',
+        legalReference: d.ag_id,
+        payload: { sourceDeliveryId: d.id },
+        lastError: result.error.message,
+      });
+      continue;
+    }
 
     await admin.from('email_deliveries').update({ reminder_unopened_at: new Date().toISOString() }).eq('id', d.id);
 
@@ -314,24 +344,37 @@ export async function GET(req: NextRequest) {
     console.warn('[cron/rappels-ag] Limite de retries atteinte (200) — file partiellement traitée, certains retries reportés au prochain run');
   }
 
-  for (const row of retryRows ?? []) {
-    if (!row.ag_id || !row.copropriete_id) continue;
+  // Batch-load AGs et coproprietaires pour les retries (évite N+1)
+  const validRetryRows = (retryRows ?? []).filter((r) => r.ag_id && r.copropriete_id);
+  const uniqueRetryAgIds = [...new Set(validRetryRows.map((r) => r.ag_id as string))];
+  const { data: batchRetryAGs } = uniqueRetryAgIds.length > 0
+    ? await admin
+        .from('assemblees_generales')
+        .select('id, titre, date_ag, lieu, coproprietes(nom)')
+        .in('id', uniqueRetryAgIds)
+    : { data: [] };
+  type BatchRetryAG = { id: string; titre: string; date_ag: string; lieu: string | null; coproprietes: { nom: string } | { nom: string }[] | null };
+  const retryAgMap = new Map<string, BatchRetryAG>();
+  for (const ag of (batchRetryAGs ?? []) as unknown as BatchRetryAG[]) retryAgMap.set(ag.id, ag);
 
-    const { data: ag } = await admin
-      .from('assemblees_generales')
-      .select('id, titre, date_ag, lieu, coproprietes(nom)')
-      .eq('id', row.ag_id)
-      .maybeSingle();
+  const uniqueRetryCoproIds = [...new Set(validRetryRows.map((r) => r.copropriete_id as string))];
+  const { data: batchRetryCps } = uniqueRetryCoproIds.length > 0
+    ? await admin
+        .from('coproprietaires')
+        .select('nom, prenom, email, copropriete_id')
+        .in('copropriete_id', uniqueRetryCoproIds)
+    : { data: [] };
+  const retryCpMap = new Map<string, { nom: string; prenom: string }>();
+  for (const cp of batchRetryCps ?? []) {
+    if (cp.email) retryCpMap.set(`${cp.copropriete_id}:${String(cp.email).trim().toLowerCase()}`, { nom: cp.nom, prenom: cp.prenom });
+  }
 
+  for (const row of validRetryRows) {
+    const ag = retryAgMap.get(row.ag_id as string);
     if (!ag) continue;
-    const copro = Array.isArray(ag.coproprietes) ? ag.coproprietes[0] : ag.coproprietes;
 
-    const { data: cp } = await admin
-      .from('coproprietaires')
-      .select('nom, prenom')
-      .eq('copropriete_id', row.copropriete_id)
-      .eq('email', row.recipient_email)
-      .maybeSingle();
+    const copro = Array.isArray(ag.coproprietes) ? ag.coproprietes[0] : ag.coproprietes;
+    const cp = retryCpMap.get(`${row.copropriete_id}:${row.recipient_email.trim().toLowerCase()}`);
 
     const subject = buildAGReminderSubject({
       coproprieteNom: copro?.nom ?? '',

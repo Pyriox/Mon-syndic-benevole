@@ -495,6 +495,7 @@ export function getCoproprietaireDashboardSnapshot(userId: string, coproId: stri
       if (!userId || !coproId || coproId === 'none') {
       return {
         fiche: null as null | { id: string; nom: string | null; prenom: string | null; raison_sociale: string | null; solde: number },
+        soldeFondsTravaux: 0,
         assembleesUpcoming: [] as Array<{ id: string; titre: string; date_ag: string; statut: string }>,
         chargesImpayees: [] as Array<{ id: string; montant_du: number; appel: { id: string; titre: string; date_echeance: string | null } | null }>,
         prochaineAG: null as { id: string; titre: string; date_ag: string; statut: string } | null,
@@ -514,7 +515,7 @@ export function getCoproprietaireDashboardSnapshot(userId: string, coproId: stri
     ] = await Promise.all([
       admin
         .from('coproprietaires')
-        .select('id, nom, prenom, raison_sociale, solde')
+        .select('id, nom, prenom, raison_sociale, solde, solde_fonds_travaux')
         .eq('copropriete_id', coproId)
         .eq('user_id', userId)
         .maybeSingle(),
@@ -608,6 +609,7 @@ export function getCoproprietaireDashboardSnapshot(userId: string, coproId: stri
         : null,
       joursAvantAG,
       solde,
+      soldeFondsTravaux: fiche?.solde_fonds_travaux ?? 0,
       displayFirstName,
       balanceEvents: (balanceEvents ?? []).map((event) => ({
         id: event.id,

@@ -270,9 +270,33 @@ export async function GET(req: NextRequest) {
     console.warn('[cron/rappels-appels] Limite de retries atteinte (200) — file partiellement traitée, certains retries reportés au prochain run');
   }
 
-  for (const row of retryRows ?? []) {
-    if (!row.appel_de_fonds_id || !row.copropriete_id) continue;
+  // Batch-load appels et lignes pour les retries (évite N+1)
+  const validRetryRows = (retryRows ?? []).filter((r) => r.appel_de_fonds_id && r.copropriete_id);
+  const retryAppelIds = [...new Set(validRetryRows.map((r) => r.appel_de_fonds_id as string))];
+  const { data: batchRetryAppels } = retryAppelIds.length > 0
+    ? await supabase
+        .from('appels_de_fonds')
+        .select('id, copropriete_id, titre, date_echeance, coproprietes(nom)')
+        .in('id', retryAppelIds)
+    : { data: [] };
+  const retryAppelMap = new Map<string, AppelRow>();
+  for (const a of (batchRetryAppels ?? []) as unknown as AppelRow[]) retryAppelMap.set(a.id, a);
 
+  const { data: batchRetryLignes } = retryAppelIds.length > 0
+    ? await supabase
+        .from('lignes_appels_de_fonds')
+        .select('appel_de_fonds_id, montant_du, regularisation_ajustement, coproprietaires(nom, prenom, email, user_id)')
+        .in('appel_de_fonds_id', retryAppelIds)
+    : { data: [] };
+  type LigneWithAppelId = LigneRow & { appel_de_fonds_id: string };
+  const retryLignesMap = new Map<string, LigneWithAppelId[]>();
+  for (const ligne of (batchRetryLignes ?? []) as unknown as LigneWithAppelId[]) {
+    const list = retryLignesMap.get(ligne.appel_de_fonds_id) ?? [];
+    list.push(ligne);
+    retryLignesMap.set(ligne.appel_de_fonds_id, list);
+  }
+
+  for (const row of validRetryRows) {
     const type: AppelEmailType = row.template_key === 'appel_avis'
       ? 'avis'
       : row.template_key === 'appel_rappel_j1'
@@ -281,21 +305,12 @@ export async function GET(req: NextRequest) {
           ? 'mise_en_demeure'
           : 'rappel';
 
-    const { data: appelRaw } = await supabase
-      .from('appels_de_fonds')
-      .select('id, copropriete_id, titre, date_echeance, coproprietes(nom)')
-      .eq('id', row.appel_de_fonds_id)
-      .maybeSingle();
+    const appel = retryAppelMap.get(row.appel_de_fonds_id as string);
+    if (!appel) continue;
 
-    if (!appelRaw) continue;
-    const appel = appelRaw as unknown as AppelRow;
+    const lignes = retryLignesMap.get(appel.id) ?? [];
 
-    const { data: lignes } = await supabase
-      .from('lignes_appels_de_fonds')
-      .select('montant_du, regularisation_ajustement, coproprietaires(nom, prenom, email, user_id)')
-      .eq('appel_de_fonds_id', appel.id);
-
-    const recipient = ((lignes ?? []) as LigneRow[])
+    const recipient = (lignes as LigneRow[])
       .map((ligne) => {
         const cop = Array.isArray(ligne.coproprietaires) ? ligne.coproprietaires[0] : ligne.coproprietaires;
         return cop
@@ -345,6 +360,15 @@ export async function GET(req: NextRequest) {
           last_error: result.error.message,
         })
         .eq('id', row.id);
+      if (exhausted) {
+        await pushAdminAlert({
+          title: 'Retries email epuises',
+          body: `${row.recipient_email} (${row.template_key})`,
+          href: '/admin/emails',
+          severity: 'danger',
+          metadata: { deliveryId: row.id, templateKey: row.template_key },
+        });
+      }
       continue;
     }
 
@@ -768,18 +792,29 @@ export async function GET(req: NextRequest) {
       const candidateEmails = churnEmails.filter((e) => !alreadySentSet.has(e));
       if (!candidateEmails.length) continue;
 
+      // Batch-load toutes les copropriétés résiliées pour les candidats (évite N+1)
+      const candidateCoproIds = (churnEvents as Array<{ user_email: string | null; copropriete_id: string | null }>)
+        .filter((e) => candidateEmails.includes(e.user_email?.trim().toLowerCase() ?? ''))
+        .map((e) => e.copropriete_id)
+        .filter((id): id is string => Boolean(id));
+      const { data: batchChurnCopros } = candidateCoproIds.length > 0
+        ? await supabase
+            .from('coproprietes')
+            .select('id, nom, plan, plan_id, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+            .in('id', candidateCoproIds)
+            .eq('plan', 'resilie')
+        : { data: [] };
+      type BatchChurnCopro = { id: string; nom: string; plan: string | null; plan_id: string | null; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      const churnCoproMap = new Map<string, BatchChurnCopro>();
+      for (const c of (batchChurnCopros ?? []) as unknown as BatchChurnCopro[]) churnCoproMap.set(c.id, c);
+
       // Récupère les profils + copropriété encore résiliée
       for (const churnEmail of candidateEmails) {
         const churnEvent = (churnEvents as Array<{ user_email: string | null; copropriete_id: string | null }>)
           .find((e) => e.user_email?.trim().toLowerCase() === churnEmail);
         if (!churnEvent?.copropriete_id) continue;
 
-        const { data: copro } = await supabase
-          .from('coproprietes')
-          .select('id, nom, plan, plan_id, profiles!coproprietes_syndic_id_fkey(email, full_name)')
-          .eq('id', churnEvent.copropriete_id)
-          .eq('plan', 'resilie')
-          .maybeSingle();
+        const copro = churnCoproMap.get(churnEvent.copropriete_id);
 
         if (!copro) continue; // s'est réabonné entre temps
 

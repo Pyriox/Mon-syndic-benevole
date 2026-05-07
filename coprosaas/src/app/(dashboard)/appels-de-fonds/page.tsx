@@ -91,6 +91,9 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
   const canWrite = isSubscribed(copropriete?.plan);
   const specialChargesEnabled = hasChargesSpecialesAddon(coproAddons ?? []);
 
+  // Les brouillons sont des données internes au syndic : les masquer aux copropriétaires
+  const filteredAppels = isSyndic ? (appels ?? []) : (appels ?? []).filter((a) => a.statut !== 'brouillon');
+
   // ── Calculer les stats par appel ──────────────────────────────────────────
   type AppelWithStats = {
     appel: NonNullable<typeof appels>[number];
@@ -110,7 +113,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
       };
     });
 
-  const withStats: AppelWithStats[] = (appels ?? []).map((appel) => {
+  const withStats: AppelWithStats[] = filteredAppels.map((appel) => {
     const lignes = normaliseLignes((appel.lignes_appels_de_fonds ?? []) as unknown[]);
     const nbPayes = lignes.filter((l) => (l as unknown as { paye: boolean }).paye).length;
     const echeance = new Date(appel.date_echeance);
@@ -171,7 +174,7 @@ export default async function AppelsDeFondsPage({ searchParams }: { searchParams
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Appels de fonds</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{isSyndic ? 'Appels de fonds' : 'Mes charges'}</h2>
           <p className="text-gray-500 mt-1">{totalCount} appel(s) de fonds</p>
         </div>
         <div className="flex items-center gap-3">

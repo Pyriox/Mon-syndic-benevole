@@ -30,6 +30,7 @@ interface Props {
   isCloture: boolean;
   isSyndic: boolean;
   canWrite: boolean;
+  currentCoproprietaireId?: string | null;
 }
 
 type Mode = 'en_attente' | 'imputation' | 'remboursement';
@@ -143,8 +144,13 @@ function ModeBadge({ mode }: { mode: Mode }) {
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
-export default function RegularisationTable({ lignes, isCloture, isSyndic, canWrite }: Props) {
+export default function RegularisationTable({ lignes, isCloture, isSyndic, canWrite, currentCoproprietaireId }: Props) {
   const canEdit = isSyndic && canWrite && !isCloture;
+
+  // Copropriétaires ne voient que leur propre ligne
+  const displayedLignes = (!isSyndic && currentCoproprietaireId)
+    ? lignes.filter((l) => l.coproprietaire_id === currentCoproprietaireId)
+    : lignes;
 
   const [rowStates, setRowStates] = useState<Record<string, RowState>>(() =>
     Object.fromEntries(lignes.map((l) => [
@@ -167,16 +173,61 @@ export default function RegularisationTable({ lignes, isCloture, isSyndic, canWr
   };
 
   const totals = useMemo(() => ({
-    totalAppele: lignes.reduce((s, l) => s + l.montant_appele, 0),
-    totalReel: lignes.reduce((s, l) => s + l.montant_reel, 0),
-    totalBalance: Object.values(rowStates).reduce((s, r) => s + r.balance, 0),
-  }), [lignes, rowStates]);
+    totalAppele: displayedLignes.reduce((s, l) => s + l.montant_appele, 0),
+    totalReel: displayedLignes.reduce((s, l) => s + l.montant_reel, 0),
+    totalBalance: displayedLignes.reduce((s, l) => s + (rowStates[l.id]?.balance ?? l.balance), 0),
+  }), [displayedLignes, rowStates]);
 
   const showRepriseCol = hasReprises || canEdit;
 
+  // Carte personnalisée pour le copropriétaire
+  const myLigne = (!isSyndic && currentCoproprietaireId) ? (displayedLignes[0] ?? null) : null;
+  const myBalance = myLigne ? (rowStates[myLigne.id]?.balance ?? myLigne.balance) : null;
+  const displayedMyBalance = myBalance !== null ? (Math.abs(myBalance) < 0.005 ? 0 : -myBalance) : null;
+
   return (
     <>
-      {/* Note 1ère année */}
+      {/* Carte de solde personnalisée — copropriétaire uniquement */}
+      {myLigne !== null && displayedMyBalance !== null && (
+        <Card>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Votre solde d’exercice</p>
+              <p className={`text-3xl font-bold ${
+                displayedMyBalance < 0 ? 'text-red-600' : displayedMyBalance > 0 ? 'text-green-700' : 'text-gray-900'
+              }`}>
+                {displayedMyBalance > 0 ? '+' : ''}{formatEuros(displayedMyBalance)}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                {displayedMyBalance < 0
+                  ? 'Un complément vous sera demandé via un appel de régularisation.'
+                  : displayedMyBalance > 0
+                  ? 'Vous avez un trop-perçu. Il sera reporté ou remboursé selon la décision du syndic.'
+                  : 'Vos provisions correspondaient exactement aux dépenses réelles.'}
+              </p>
+            </div>
+            <div className="text-sm text-gray-500 space-y-1 shrink-0">
+              <div className="flex justify-between gap-6">
+                <span>Provisions appelées</span>
+                <span className="font-medium text-gray-900">{formatEuros(myLigne.montant_appele)}</span>
+              </div>
+              <div className="flex justify-between gap-6">
+                <span>Dépenses réelles</span>
+                <span className="font-medium text-gray-900">{formatEuros(myLigne.montant_reel)}</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+      {!isSyndic && currentCoproprietaireId && myLigne === null && (
+        <Card>
+          <p className="text-sm text-gray-500 text-center py-2 italic">
+            Votre fiche copropriétaire n’est pas rattachée à cet exercice. Contactez votre syndic.
+          </p>
+        </Card>
+      )}
+
+      {/* Note 1ère année — syndic uniquement */}
       {canEdit && (
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 flex items-start gap-2">
           <span className="font-semibold shrink-0">1ère année ?</span>
@@ -188,7 +239,8 @@ export default function RegularisationTable({ lignes, isCloture, isSyndic, canWr
         </div>
       )}
 
-      {/* ── Table desktop ── */}
+      {/* ── Table desktop \u2014 syndic uniquement (copropriétaire voit la carte personnalisée) ── */}
+      {isSyndic && (
       <Card padding="none" className="hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -207,7 +259,7 @@ export default function RegularisationTable({ lignes, isCloture, isSyndic, canWr
               </tr>
             </thead>
             <tbody>
-              {lignes.map((l) => {
+              {displayedLignes.map((l) => {
                 const state = rowStates[l.id];
                 return (
                   <tr key={l.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
@@ -266,10 +318,12 @@ export default function RegularisationTable({ lignes, isCloture, isSyndic, canWr
           </table>
         </div>
       </Card>
+      )}
 
-      {/* ── Cartes mobile ── */}
+      {/* ── Cartes mobile \u2014 syndic uniquement (copropriétaire voit la carte personnalisée) ── */}
+      {isSyndic && (
       <div className="md:hidden space-y-3">
-        {lignes.map((l) => {
+        {displayedLignes.map((l) => {
           const state = rowStates[l.id];
           return (
             <Card key={l.id}>
@@ -320,6 +374,7 @@ export default function RegularisationTable({ lignes, isCloture, isSyndic, canWr
           );
         })}
       </div>
+      )}
     </>
   );
 }

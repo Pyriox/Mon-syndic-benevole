@@ -15,6 +15,7 @@ import {
   CalendarDays,
   CheckCircle2,
   FileText,
+  HardHat,
   Mail,
   Minus,
   Radio,
@@ -222,8 +223,13 @@ function renderCoproDashboardKpis(
   hasDebt: boolean,
   hasCredit: boolean,
 ) {
+  const fdtSolde = data.soldeFondsTravaux;
+  const fdtCredit = fdtSolde < 0;
+  const fdtDebt = fdtSolde > 0;
+  const displayedFdtSolde = fdtDebt ? -Math.abs(fdtSolde) : fdtCredit ? Math.abs(fdtSolde) : 0;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <Card className="flex items-center gap-4">
         <div className={`p-3 rounded-xl shrink-0 ${hasDebt ? 'bg-red-100' : hasCredit ? 'bg-green-100' : 'bg-gray-100'}`}>
           <Scale size={24} className={hasDebt ? 'text-red-600' : hasCredit ? 'text-green-600' : 'text-gray-500'} />
@@ -235,6 +241,21 @@ function renderCoproDashboardKpis(
           </p>
           <p className="text-xs text-gray-500 mt-0.5">
             {hasDebt ? 'Charges à régler' : hasCredit ? 'Avance de trésorerie' : 'Solde à jour'}
+          </p>
+        </div>
+      </Card>
+
+      <Card className="flex items-center gap-4">
+        <div className={`p-3 rounded-xl shrink-0 ${fdtDebt ? 'bg-red-100' : fdtCredit ? 'bg-green-100' : 'bg-amber-50'}`}>
+          <HardHat size={24} className={fdtDebt ? 'text-red-600' : fdtCredit ? 'text-green-600' : 'text-amber-600'} />
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 font-medium">Fonds de travaux</p>
+          <p className={`text-2xl font-bold ${fdtDebt ? 'text-red-600' : fdtCredit ? 'text-green-700' : 'text-gray-900'}`}>
+            {fdtCredit ? '+' : ''}{formatEuros(displayedFdtSolde)}
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {fdtDebt ? 'FdT à régler' : fdtCredit ? 'Avance FdT' : 'FdT à jour'}
           </p>
         </div>
       </Card>
@@ -293,6 +314,12 @@ function renderCoproDashboardCharges(data: Awaited<ReturnType<typeof getCopropri
         </ul>
       </Card>
     );
+  }
+
+  // N'afficher la bannière "à jour" que si le solde est différent de 0
+  // Si solde = 0, le KPI vert suffit — pas besoin de la bannière redondante
+  if (data.solde === 0) {
+    return null;
   }
 
   return (
@@ -978,8 +1005,31 @@ export async function OnboardingChecklist({ coproId }: { coproId: string }) {
     .eq('copropriete_id', coproId);
   const hasAG = (agCount ?? 0) > 0;
 
-  // Ne plus afficher une fois tous les modules remplis
+  // Banner "Configuration terminée" : visible 7 jours, puis masqué définitivement.
   if (hasLots && hasCopros && hasAG && hasAppels) {
+    // Lire (et éventuellement tamponner) la date de complétion.
+    const { data: coproRow } = await supabase
+      .from('coproprietes')
+      .select('onboarding_completed_at')
+      .eq('id', coproId)
+      .single();
+
+    let completedAt: Date;
+    if (coproRow?.onboarding_completed_at) {
+      completedAt = new Date(coproRow.onboarding_completed_at);
+    } else {
+      completedAt = new Date();
+      await supabase
+        .from('coproprietes')
+        .update({ onboarding_completed_at: completedAt.toISOString() })
+        .eq('id', coproId);
+    }
+
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    if (Date.now() - completedAt.getTime() >= sevenDaysMs) {
+      return null;
+    }
+
     return (
       <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 flex items-center gap-3">
         <div className="p-2 bg-green-100 rounded-lg shrink-0">
