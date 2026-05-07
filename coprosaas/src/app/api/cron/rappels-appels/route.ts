@@ -36,7 +36,7 @@ import {
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
-import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject, buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject, buildCheckoutAbandonJ3Email, buildCheckoutAbandonJ3Subject, buildPaymentFailedJ3Email, buildPaymentFailedJ3Subject, buildPaymentFailedJ7Email, buildPaymentFailedJ7Subject } from '@/lib/emails/subscription';
+import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject, buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject, buildCheckoutAbandonJ3Email, buildCheckoutAbandonJ3Subject, buildPaymentFailedJ3Email, buildPaymentFailedJ3Subject, buildPaymentFailedJ7Email, buildPaymentFailedJ7Subject, buildCancelRenewalJ30Email, buildCancelRenewalJ30Subject, buildCancelRenewalJ7Email, buildCancelRenewalJ7Subject, buildCancelRenewalJ3Email, buildCancelRenewalJ3Subject, buildCancelRenewalJ1Email, buildCancelRenewalJ1Subject, buildCancelExpiredJ1Email, buildCancelExpiredJ1Subject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushAdminAlert } from '@/lib/notification-center';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
@@ -1071,6 +1071,181 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ── Relances pré-expiration abonnement annuel (cancel_at_period_end) ─────────
+  // Cible : plan='actif', plan_cancel_at_period_end=true, plan_period_end dans N jours.
+  // Séquence : J-30 → J-7 → J-3 → J-1 (pré-expiration) + J+1 (filet oubli post-expiration).
+  // Idempotence : user_events par copropriete_id + event_type.
+  // STOP automatique : si plan_cancel_at_period_end repasse à false, la copropriété
+  // disparaît des requêtes et la séquence s'arrête naturellement.
+  let cancelRenewalSent = 0;
+  if (!onboardingOnly) {
+    const sixMonthsAgoStr = addDays(today, -180);
+
+    // J-30, J-7, J-3, J-1 — pré-expiration
+    type CancelRenewalStep = {
+      kind: 'j30' | 'j7' | 'j3' | 'j1';
+      daysUntil: number;
+      eventType: string;
+    };
+    const cancelSteps: CancelRenewalStep[] = [
+      { kind: 'j30', daysUntil: 30, eventType: 'cancel_renewal_j30_sent' },
+      { kind: 'j7',  daysUntil: 7,  eventType: 'cancel_renewal_j7_sent'  },
+      { kind: 'j3',  daysUntil: 3,  eventType: 'cancel_renewal_j3_sent'  },
+      { kind: 'j1',  daysUntil: 1,  eventType: 'cancel_renewal_j1_sent'  },
+    ];
+
+    for (const step of cancelSteps) {
+      const windowEnd   = addDays(today, step.daysUntil);
+      const windowStart = addDays(today, step.daysUntil - 1);
+
+      const { data: cancelCopros } = await supabase
+        .from('coproprietes')
+        .select('id, nom, plan_id, plan_period_end, created_at, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+        .eq('plan', 'actif')
+        .eq('plan_cancel_at_period_end', true)
+        .gte('plan_period_end', windowStart)
+        .lte('plan_period_end', windowEnd);
+
+      if (!cancelCopros?.length) continue;
+
+      const cancelCoproIds = (cancelCopros as Array<{ id: string }>).map((c) => c.id);
+
+      const { data: alreadySentRows } = await supabase
+        .from('user_events')
+        .select('copropriete_id')
+        .eq('event_type', step.eventType)
+        .in('copropriete_id', cancelCoproIds);
+      const alreadySentSet = new Set(
+        (alreadySentRows ?? []).map((r: { copropriete_id: string | null }) => r.copropriete_id).filter(Boolean),
+      );
+
+      type CancelCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; created_at: string; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      for (const copro of cancelCopros as unknown as CancelCopro[]) {
+        if (alreadySentSet.has(copro.id)) continue;
+
+        const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
+        if (!profile?.email) continue;
+
+        const prenom = (profile.full_name ?? '').split(' ')[0] || null;
+        const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
+        const isLongTimeUser = copro.created_at < sixMonthsAgoStr;
+        const baseParams = {
+          prenom,
+          coproprieteNom: copro.nom,
+          planLabel,
+          periodEnd: copro.plan_period_end,
+          dashboardUrl: `${SITE_URL}`,
+          isLongTimeUser,
+        };
+
+        let subject: string;
+        let html: string;
+        if (step.kind === 'j30') {
+          subject = buildCancelRenewalJ30Subject(copro.nom);
+          html = buildCancelRenewalJ30Email(baseParams);
+        } else if (step.kind === 'j7') {
+          subject = buildCancelRenewalJ7Subject(copro.nom);
+          html = buildCancelRenewalJ7Email(baseParams);
+        } else if (step.kind === 'j3') {
+          subject = buildCancelRenewalJ3Subject(copro.nom);
+          html = buildCancelRenewalJ3Email(baseParams);
+        } else {
+          subject = buildCancelRenewalJ1Subject(copro.nom);
+          html = buildCancelRenewalJ1Email(baseParams);
+        }
+
+        const result = await resend.emails.send({ from: FROM, to: profile.email, subject, html });
+        await trackCronEmail({
+          providerMessageId: result.data?.id,
+          errorMessage: result.error?.message,
+          templateKey: `subscription_cancel_renewal_${step.kind}`,
+          recipientEmail: profile.email,
+          subject,
+          coproprieteId: copro.id,
+          legalEventType: 'subscription_cancel_renewal',
+          legalReference: copro.id,
+          payload: { trigger: 'cron', reminderType: `cancel_${step.kind}`, planId: copro.plan_id, isLongTimeUser },
+        });
+        if (!result.error) {
+          await supabase.from('user_events').insert({
+            user_email: profile.email,
+            event_type: step.eventType,
+            label: `Relance cancel_at_period_end ${step.kind.toUpperCase()} envoyée — ${copro.nom}`,
+            copropriete_id: copro.id,
+          });
+          totalSent++;
+          cancelRenewalSent++;
+        } else console.error(`[cron] Erreur email cancel_renewal ${step.kind}:`, result.error);
+      }
+    }
+
+    // J+1 post-expiration — filet "oubli", avant les churn J+7/J+14/J+30
+    // Cible : plan='resilie', plan_period_end hier (±1j).
+    const expiredJ1End   = addDays(today, -1);
+    const expiredJ1Start = addDays(today, -2);
+
+    const { data: expiredJ1Copros } = await supabase
+      .from('coproprietes')
+      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+      .eq('plan', 'resilie')
+      .gte('plan_period_end', expiredJ1Start)
+      .lte('plan_period_end', expiredJ1End);
+
+    if (expiredJ1Copros?.length) {
+      const expiredCoproIds = (expiredJ1Copros as Array<{ id: string }>).map((c) => c.id);
+      const { data: j1AlreadySent } = await supabase
+        .from('user_events')
+        .select('copropriete_id')
+        .eq('event_type', 'cancel_expired_j1_sent')
+        .in('copropriete_id', expiredCoproIds);
+      const j1AlreadySet = new Set(
+        (j1AlreadySent ?? []).map((r: { copropriete_id: string | null }) => r.copropriete_id).filter(Boolean),
+      );
+
+      type ExpiredCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      for (const copro of expiredJ1Copros as unknown as ExpiredCopro[]) {
+        if (j1AlreadySet.has(copro.id)) continue;
+
+        const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
+        if (!profile?.email) continue;
+
+        const prenom = (profile.full_name ?? '').split(' ')[0] || null;
+        const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
+        const subject = buildCancelExpiredJ1Subject(copro.nom);
+        const html = buildCancelExpiredJ1Email({
+          prenom,
+          coproprieteNom: copro.nom,
+          planLabel,
+          periodEnd: copro.plan_period_end,
+          dashboardUrl: `${SITE_URL}`,
+        });
+
+        const result = await resend.emails.send({ from: FROM, to: profile.email, subject, html });
+        await trackCronEmail({
+          providerMessageId: result.data?.id,
+          errorMessage: result.error?.message,
+          templateKey: 'subscription_cancel_expired_j1',
+          recipientEmail: profile.email,
+          subject,
+          coproprieteId: copro.id,
+          legalEventType: 'subscription_cancel_renewal',
+          legalReference: copro.id,
+          payload: { trigger: 'cron', reminderType: 'cancel_expired_j1', planId: copro.plan_id },
+        });
+        if (!result.error) {
+          await supabase.from('user_events').insert({
+            user_email: profile.email,
+            event_type: 'cancel_expired_j1_sent',
+            label: `Relance expiration J+1 envoyée — ${copro.nom}`,
+            copropriete_id: copro.id,
+          });
+          totalSent++;
+          cancelRenewalSent++;
+        } else console.error('[cron] Erreur email cancel_expired_j1:', result.error);
+      }
+    }
+  }
+
   // ── Réactivation post-churn J+7 / J+30 ─────────────────────────────────────
   // Cible : syndics dont l'abonnement a été résilié il y a ~7j ou ~30j,
   // qui n'ont pas recréé un abonnement (plan toujours 'resilie').
@@ -1241,6 +1416,7 @@ export async function GET(req: NextRequest) {
     checkout_abandon_j1: checkoutAbandonSent,
     checkout_abandon_j3: checkoutAbandonJ3Sent,
     dunning: dunningSent,
+    cancel_renewal: cancelRenewalSent,
     churn_reactivation: churnReactivationSent,
     failed_retry_queue: failedRetryCount ?? 0,
     sent: totalSent,

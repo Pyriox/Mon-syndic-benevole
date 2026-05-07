@@ -498,7 +498,7 @@ ${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.blue)}
 // ── Résiliation programmée (cancel_at_period_end) ────────────────────────────
 
 export function buildCancelScheduledSubject(coproprieteNom: string): string {
-  return `Résiliation programmée de votre abonnement — ${coproprieteNom} — Mon Syndic Bénévole`;
+  return `Votre accès reste actif — résiliation confirmée — ${coproprieteNom} — Mon Syndic Bénévole`;
 }
 
 export function buildCancelScheduledEmail(params: SubscriptionEmailParams): string {
@@ -507,30 +507,312 @@ export function buildCancelScheduledEmail(params: SubscriptionEmailParams): stri
   const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
 
   const content = `
-<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Résiliation programmée</h1>
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Résiliation confirmée</h1>
 <p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
 
 <p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
-<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Nous avons bien pris en compte votre demande de résiliation. Votre abonnement <strong>${h(planLabel)}</strong> pour la copropriété <strong>${h(coproprieteNom)}</strong> restera actif jusqu'au ${endDateStr ? `<strong>${endDateStr}</strong>` : 'la fin de la période en cours'}, puis sera automatiquement résilié.
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Nous avons bien pris en compte votre demande. Votre abonnement <strong>${h(planLabel)}</strong> pour <strong>${h(coproprieteNom)}</strong> reste entièrement actif jusqu&rsquo;au ${endDateStr ? `<strong>${endDateStr}</strong>` : 'la fin de la période en cours'}.
 </p>
-<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Vous pouvez annuler cette résiliation et conserver votre abonnement à tout moment depuis votre espace.
-</p>
-${endDateStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;border:1px solid ${COLOR.border}">
+
+${endDateStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;background:#fff7ed;border:1px solid #fed7aa">
   <tr>
-    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Fin d'accès prévue</td>
-    <td style="padding:12px 16px;font-size:14px;font-weight:600;color:${COLOR.text};text-align:right">${endDateStr}</td>
+    <td style="padding:14px 16px;text-align:center">
+      <p style="margin:0 0 2px;font-size:12px;color:#9a3412;text-transform:uppercase;letter-spacing:0.05em">Fin d&rsquo;accès prévue</p>
+      <p style="margin:0;font-size:20px;font-weight:700;color:#c2410c">${endDateStr}</p>
+    </td>
   </tr>
 </table>` : ''}
 
-${ctaButton('Annuler la résiliation →', `${dashboardUrl}/abonnement`, COLOR.blue)}
+<p style="margin:0 0 8px;font-size:13px;font-weight:600;color:${COLOR.text}">Jusqu&rsquo;à cette date, vous continuez à bénéficier de&nbsp;:</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:10px;border:1px solid ${COLOR.border};overflow:hidden">
+  <tr style="background:#f8fafc">
+    <td style="padding:10px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
+        <span style="color:${COLOR.green};font-weight:700">✓</span>&nbsp; Relances automatiques des impayés
+      </p>
+    </td>
+  </tr>
+  <tr style="background:${COLOR.white}">
+    <td style="padding:10px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
+        <span style="color:${COLOR.green};font-weight:700">✓</span>&nbsp; Convocations AG + rappels automatiques J&minus;14 et J&minus;7
+      </p>
+    </td>
+  </tr>
+  <tr style="background:#f8fafc">
+    <td style="padding:10px 16px">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
+        <span style="color:${COLOR.green};font-weight:700">✓</span>&nbsp; Espace documents accessible à vos copropriétaires
+      </p>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted};line-height:1.5">
+  Vous avez changé d&rsquo;avis&nbsp;? Réactivez le renouvellement automatique en un clic depuis votre espace.
+</p>
+
+${ctaButton('Réactiver le renouvellement automatique →', `${dashboardUrl}/abonnement`, COLOR.blue)}
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
   Des questions ? Écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
 </p>`;
 
-  return wrapEmail(content, COLOR.amber, `Votre accès reste actif jusqu'au ${endDateStr || 'fin de période'}`);
+  return wrapEmail(content, COLOR.amber, `Votre accès est actif jusqu'au ${endDateStr || 'fin de période'} — vous pouvez réactiver à tout moment`);
+}
+
+// ── Relance J-30 avant fin d'abonnement annuel (cancel_at_period_end) ─────────
+// Cible : plan='actif', plan_cancel_at_period_end=true, plan_period_end dans 30j.
+// Idempotence via user_events (event_type: cancel_renewal_j30_sent).
+
+export interface CancelRenewalParams extends SubscriptionEmailParams {
+  isLongTimeUser?: boolean; // ancienneté > 6 mois — J-3 uniquement
+}
+
+export function buildCancelRenewalJ30Subject(coproprieteNom: string): string {
+  return `Il vous reste 1 mois — votre abonnement ${coproprieteNom} expire bientôt — Mon Syndic Bénévole`;
+}
+
+export function buildCancelRenewalJ30Email(params: CancelRenewalParams): string {
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+  const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Il vous reste 1 mois</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Votre abonnement <strong>${h(planLabel)}</strong> pour <strong>${h(coproprieteNom)}</strong> se termine${endDateStr ? ` le <strong>${endDateStr}</strong>` : ' dans 30 jours'}. Après cette date, ces automatisations s&rsquo;arrêtent&nbsp;:
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:10px;border:1px solid ${COLOR.border};overflow:hidden">
+  <tr style="background:#fef2f2">
+    <td style="padding:10px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
+        <span style="color:${COLOR.red};font-weight:700">✗</span>&nbsp; Relances automatiques impayés (J&minus;7, J+3, J+15)
+      </p>
+    </td>
+  </tr>
+  <tr style="background:${COLOR.white}">
+    <td style="padding:10px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
+        <span style="color:${COLOR.red};font-weight:700">✗</span>&nbsp; Rappels automatiques AG à J&minus;14 et J&minus;7
+      </p>
+    </td>
+  </tr>
+  <tr style="background:#fef2f2">
+    <td style="padding:10px 16px">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
+        <span style="color:${COLOR.red};font-weight:700">✗</span>&nbsp; Espace documents copropriétaires
+      </p>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Réactivez le renouvellement automatique maintenant — cela prend 10 secondes depuis votre espace.
+</p>
+
+${ctaButton('Réactiver le renouvellement automatique →', `${dashboardUrl}/abonnement`, COLOR.blue)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Vous pouvez annuler de nouveau à tout moment, sans engagement.
+</p>`;
+
+  return wrapEmail(content, COLOR.amber, `Dans 30 jours, les relances et convocations automatiques s'arrêtent — réactivez en 10 secondes`);
+}
+
+// ── Relance J-7 avant fin d'abonnement annuel ─────────────────────────────────
+// Idempotence via user_events (event_type: cancel_renewal_j7_sent).
+
+export function buildCancelRenewalJ7Subject(coproprieteNom: string): string {
+  return `Dans 7 jours, ${coproprieteNom} perd ses relances automatiques — Mon Syndic Bénévole`;
+}
+
+export function buildCancelRenewalJ7Email(params: CancelRenewalParams): string {
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+  const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">7 jours avant la fin de votre abonnement</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Le ${endDateStr ? `<strong>${endDateStr}</strong>` : 'dans 7 jours'}, voici ce qui s&rsquo;arrête pour <strong>${h(coproprieteNom)}</strong>&nbsp;:
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 10px;border-radius:10px;border:1px solid #fecaca;overflow:hidden">
+  <tr style="background:#fef2f2">
+    <td style="padding:12px 16px;border-bottom:1px solid #fecaca">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.6">
+        <span style="color:${COLOR.red};font-weight:700">✗</span>&nbsp; <strong>Relances automatiques impayés</strong><br>
+        <span style="color:${COLOR.muted};font-size:12px;padding-left:16px">→ Vous devrez relancer chaque copropriétaire manuellement</span>
+      </p>
+    </td>
+  </tr>
+  <tr style="background:${COLOR.white}">
+    <td style="padding:12px 16px;border-bottom:1px solid #fecaca">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.6">
+        <span style="color:${COLOR.red};font-weight:700">✗</span>&nbsp; <strong>Rappels AG automatiques (J&minus;14 et J&minus;7)</strong><br>
+        <span style="color:${COLOR.muted};font-size:12px;padding-left:16px">→ Les convocations envoyées ne seront plus suivies de rappels</span>
+      </p>
+    </td>
+  </tr>
+  <tr style="background:#fef2f2">
+    <td style="padding:12px 16px">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.6">
+        <span style="color:${COLOR.red};font-weight:700">✗</span>&nbsp; <strong>Espace documents copropriétaires</strong><br>
+        <span style="color:${COLOR.muted};font-size:12px;padding-left:16px">→ Vos copropriétaires perdent l&rsquo;accès à leurs documents</span>
+      </p>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted};line-height:1.5">
+  Ces processus ne reprennent pas automatiquement. Réactivez maintenant pour assurer la continuité.
+</p>
+
+${ctaButton('Réactiver le renouvellement →', `${dashboardUrl}/abonnement`, COLOR.blue)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Annulation possible à tout moment. Plan <strong>${h(planLabel)}</strong>.
+</p>`;
+
+  return wrapEmail(content, COLOR.red, `Le ${endDateStr || 'dans 7 jours'}, les relances et rappels AG s'arrêtent — réactivez pour continuer`);
+}
+
+// ── Relance J-3 avant fin d'abonnement annuel ─────────────────────────────────
+// Idempotence via user_events (event_type: cancel_renewal_j3_sent).
+// isLongTimeUser (ancienneté > 6 mois) : message de fidélité + offre contact.
+
+export function buildCancelRenewalJ3Subject(coproprieteNom: string): string {
+  return `3 jours restants — ${coproprieteNom} — Mon Syndic Bénévole`;
+}
+
+export function buildCancelRenewalJ3Email(params: CancelRenewalParams): string {
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl, isLongTimeUser } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+  const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
+
+  const loyaltyBlock = isLongTimeUser ? `
+<div style="margin:0 0 20px;padding:14px 16px;background:#eff6ff;border-left:3px solid ${COLOR.blue};border-radius:0 8px 8px 0">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#1e3a8a">Un geste pour nos abonnés fidèles</p>
+  <p style="margin:0;font-size:13px;color:#1d4ed8;line-height:1.5">
+    Vous utilisez Mon Syndic Bénévole depuis plus de 6 mois. Si un blocage vous a conduit à résilier, écrivez-nous — on trouvera une solution ensemble.
+    <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue};font-weight:600">${CONTACT_EMAIL}</a>
+  </p>
+</div>` : '';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.red}">Plus que 3 jours</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Votre abonnement <strong>${h(planLabel)}</strong> pour <strong>${h(coproprieteNom)}</strong> expire ${endDateStr ? `le <strong>${endDateStr}</strong>` : 'dans 3 jours'}.
+</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Si vous avez des appels de fonds en cours de relance ou une AG planifiée, ces processus s&rsquo;interrompront à la date d&rsquo;expiration. Réactivez maintenant pour ne pas perdre la continuité.
+</p>
+
+${endDateStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca">
+  <tr>
+    <td style="padding:12px 16px;text-align:center">
+      <p style="margin:0 0 2px;font-size:11px;color:#9a3412;text-transform:uppercase;letter-spacing:0.05em">Fin d&rsquo;accès</p>
+      <p style="margin:0;font-size:18px;font-weight:700;color:${COLOR.red}">${endDateStr}</p>
+    </td>
+  </tr>
+</table>` : ''}
+
+${loyaltyBlock}
+
+${ctaButton('Réactiver mon abonnement maintenant →', `${dashboardUrl}/abonnement`, COLOR.red)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Réactivation en 10 secondes — sans engagement — annulation à tout moment.
+</p>`;
+
+  return wrapEmail(content, COLOR.red, `Dans 3 jours, vos relances et convocations automatiques s'arrêtent`);
+}
+
+// ── Relance J-1 avant fin d'abonnement annuel ─────────────────────────────────
+// Idempotence via user_events (event_type: cancel_renewal_j1_sent).
+
+export function buildCancelRenewalJ1Subject(coproprieteNom: string): string {
+  return `Demain, votre accès à ${coproprieteNom} se coupe — réactivez avant minuit`;
+}
+
+export function buildCancelRenewalJ1Email(params: CancelRenewalParams): string {
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+  const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
+
+  const content = `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-radius:8px;background:#fef2f2;border:2px solid ${COLOR.red}">
+  <tr>
+    <td style="padding:16px;text-align:center">
+      <p style="margin:0 0 4px;font-size:12px;color:#9a3412;text-transform:uppercase;font-weight:700;letter-spacing:0.08em">DERNIER JOUR</p>
+      <p style="margin:0;font-size:14px;color:${COLOR.red};font-weight:600">
+        Votre accès à <strong>${h(coproprieteNom)}</strong> se coupe demain${endDateStr ? ` — ${endDateStr}` : ''}
+      </p>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Demain, l&rsquo;abonnement <strong>${h(planLabel)}</strong> de <strong>${h(coproprieteNom)}</strong> arrive à expiration. Toutes les automatisations (relances, rappels AG, espace documents) s&rsquo;arrêtent.
+</p>
+
+${ctaButton('Réactiver maintenant — 10 secondes →', `${dashboardUrl}/abonnement`, COLOR.red)}
+
+<p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};text-align:center;line-height:1.6">
+  Si vous changez d&rsquo;avis après demain, vos données sont conservées 30 jours.<br>
+  Des questions ? <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>
+</p>`;
+
+  return wrapEmail(content, COLOR.red, `Dernière chance — votre accès à ${coproprieteNom} se coupe demain. Réactivez en 10 secondes.`);
+}
+
+// ── J+1 post-expiration abonnement annuel (filet "oubli") ─────────────────────
+// Cible : plan='resilie', plan_period_end hier (±1j), avant les churn J+7/J+14/J+30.
+// Idempotence via user_events (event_type: cancel_expired_j1_sent).
+
+export function buildCancelExpiredJ1Subject(coproprieteNom: string): string {
+  return `Votre accès à ${coproprieteNom} a expiré hier — réactivez maintenant`;
+}
+
+export function buildCancelExpiredJ1Email(params: CancelRenewalParams): string {
+  const { prenom, coproprieteNom, planLabel, dashboardUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre abonnement a expiré hier</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  L&rsquo;abonnement <strong>${h(planLabel)}</strong> de <strong>${h(coproprieteNom)}</strong> a expiré hier. Si c&rsquo;était un oubli, vous pouvez reprendre exactement où vous en étiez — vos données sont intactes.
+</p>
+
+<div style="margin:0 0 20px;padding:14px 16px;background:#f0fdf4;border-left:3px solid ${COLOR.green};border-radius:0 8px 8px 0">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#166534">Vos données sont conservées 30 jours</p>
+  <p style="margin:0;font-size:13px;color:#15803d;line-height:1.5">Copropriétaires, appels de fonds, historique, documents — tout est là. Aucune reconfiguration nécessaire.</p>
+</div>
+
+${ctaButton('Réactiver mon abonnement en 30 secondes →', `${dashboardUrl}/abonnement`, COLOR.green)}
+
+<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Plan <strong>${h(planLabel)}</strong> — sans engagement, annulation à tout moment.<br>
+  Des questions ? <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>
+</p>`;
+
+  return wrapEmail(content, COLOR.green, `Vos données sont intactes — reprenez la gestion de ${coproprieteNom} en 30 secondes`);
 }
 
 // ── Rappel J-1 (veille) avant fin d'essai ────────────────────────────────────
