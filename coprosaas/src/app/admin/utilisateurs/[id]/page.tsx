@@ -16,10 +16,11 @@ import AdminUserActionsDetail from '../../AdminUserActionsDetail';
 import { PlanBadge, RoleBadge } from '../../AdminBadges';
 
 const EVENT_CATEGORY_MAP = {
-  billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'payment_succeeded', 'payment_failed'],
+  billing: ['trial_started', 'subscription_created', 'subscription_cancelled', 'trial_cancelled', 'subscription_cancel_scheduled', 'payment_succeeded', 'payment_failed', 'begin_checkout'],
   account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'password_reset_completed', 'login_success', 'login_failed', 'email_confirmation_resent', 'ticket_created'],
   admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
   copro: ['copropriete_created', 'copropriete_updated', 'coproprietaire_added', 'coproprietaire_updated', 'coproprietaire_deleted', 'lot_added', 'lot_updated', 'lot_deleted', 'document_added', 'document_updated', 'document_deleted', 'ag_created', 'ag_updated', 'ag_status_changed', 'ag_pv_envoye', 'appel_fonds_created', 'appel_fonds_deleted', 'appel_fonds_status_changed', 'paiement_confirme', 'paiement_annule', 'depense_created', 'depense_updated', 'depense_deleted', 'invitation_accepted'],
+  reminders: ['onboarding_copro_reminder_j2_sent', 'onboarding_copro_reminder_j7_sent', 'onboarding_copro_reminder_j21_sent', 'onboarding_copro_reminder_j30_sent', 'checkout_abandon_j1_reminder_sent', 'checkout_abandon_j3_reminder_sent', 'churn_reactivation_j7_sent', 'churn_reactivation_j30_sent'],
   email: ['email_delivery'],
 } as const;
 
@@ -29,6 +30,7 @@ const USER_LEVEL_EVENT_TYPES: string[] = [
   ...EVENT_CATEGORY_MAP.admin,
   ...EVENT_CATEGORY_MAP.copro,
   // email_delivery is merged from email_deliveries table, not from user_events
+  // reminders events are fetched separately by user_email (no user_id on cron events)
 ];
 
 export default async function AdminUtilisateurProfilePage({
@@ -85,6 +87,7 @@ export default async function AdminUtilisateurProfilePage({
     lastEventRes,
     lastSessionRes,
     emailDeliveriesRes,
+    reminderEventsRes,
   ] = await Promise.all([
     admin
       .from('coproprietaires')
@@ -136,6 +139,16 @@ export default async function AdminUtilisateurProfilePage({
           .eq('recipient_email', email)
           .order('created_at', { ascending: false })
           .limit(20)
+      : Promise.resolve({ data: [], error: null }),
+    // Relances cron (stockées avec user_email uniquement, pas de user_id)
+    email
+      ? admin
+          .from('user_events')
+          .select('id, event_type, label, created_at, severity, metadata, copropriete_id')
+          .eq('user_email', email)
+          .in('event_type', EVENT_CATEGORY_MAP.reminders)
+          .order('created_at', { ascending: false })
+          .limit(100)
       : Promise.resolve({ data: [], error: null }),
   ]);
 
@@ -216,9 +229,18 @@ export default async function AdminUtilisateurProfilePage({
     };
   });
 
-  const allEvents = [...enrichedUserEvents, ...emailEvents].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const reminderEvents = ((reminderEventsRes as { data: unknown[] | null }).data ?? []).map((e) => {
+    const ev = e as { id: string; event_type: string; label: string; created_at: string; severity?: 'info' | 'warning' | 'error'; metadata?: Record<string, unknown> | null; copropriete_id?: string | null };
+    return { ...ev, coproprieteContext: null as null };
+  });
 
-  const currentLogCategory = logCategory === 'billing' || logCategory === 'account' || logCategory === 'admin' || logCategory === 'copro' || logCategory === 'email'
+  // Dédupliquer : un même event peut être remonté par les deux requêtes si user_id + user_email sont tous deux présents
+  const seenEventIds = new Set<string>(enrichedUserEvents.map((e) => e.id));
+  const deduplicatedReminderEvents = reminderEvents.filter((e) => !seenEventIds.has(e.id));
+
+  const allEvents = [...enrichedUserEvents, ...deduplicatedReminderEvents, ...emailEvents].sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+  const currentLogCategory = logCategory === 'billing' || logCategory === 'account' || logCategory === 'admin' || logCategory === 'copro' || logCategory === 'email' || logCategory === 'reminders'
     ? logCategory
     : 'all';
   const currentLogLevel = logLevel === 'warning' || logLevel === 'error'
@@ -537,6 +559,7 @@ export default async function AdminUtilisateurProfilePage({
                 { key: 'all', label: 'Tout' },
                 { key: 'account', label: 'Compte' },
                 { key: 'billing', label: 'Facturation' },
+                { key: 'reminders', label: 'Relances' },
                 { key: 'copro', label: 'Copropriété' },
                 { key: 'email', label: 'Emails' },
                 { key: 'admin', label: 'Admin' },
