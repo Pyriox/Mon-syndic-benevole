@@ -1,4 +1,4 @@
-export type OnboardingReminderKind = 'j2' | 'j7' | 'j21';
+export type OnboardingReminderKind = 'j2' | 'j7' | 'j21' | 'j30';
 export type OnboardingReminderKindRequest = OnboardingReminderKind | 'all' | null | undefined;
 
 function startOfUtcDay(value: Date): Date {
@@ -39,6 +39,13 @@ export function resolveOnboardingConfirmationWindow(params: {
     };
   }
 
+  if (params.kind === 'j30') {
+    return {
+      startDateIso: catchUp ? addUtcDays(referenceDate, -34) : addUtcDays(referenceDate, -30),
+      endDateIso: addUtcDays(referenceDate, -30),
+    };
+  }
+
   // Fenêtre de rattrapage plafonnée à 30 jours pour éviter de cibler
   // des syndics très anciens si l'idempotence user_events est corrompue.
   return {
@@ -57,7 +64,8 @@ export function resolveOnboardingKinds(params: {
   if (requestedKind === 'j2') return ['j2'];
   if (requestedKind === 'j7') return ['j7'];
   if (requestedKind === 'j21') return ['j21'];
-  if (requestedKind === 'all') return ['j2', 'j7', 'j21'];
+  if (requestedKind === 'j30') return ['j30'];
+  if (requestedKind === 'all') return ['j2', 'j7', 'j21', 'j30'];
 
   // Pour les déclenchements manuels ciblés, on reste prudent :
   // sans précision explicite, on n'envoie qu'une seule relance par défaut.
@@ -65,5 +73,5 @@ export function resolveOnboardingKinds(params: {
     return ['j2'];
   }
 
-  return ['j2', 'j7', 'j21'];
+  return ['j2', 'j7', 'j21', 'j30'];
 }

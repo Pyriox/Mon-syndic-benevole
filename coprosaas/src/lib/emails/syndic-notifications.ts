@@ -212,7 +212,7 @@ export interface IncidentResoluEmailParams {
 
 // ── Onboarding syndic (J+2 / J+7) ───────────────────────────────────────────
 
-export type SyndicOnboardingReminderKind = 'j2' | 'j7' | 'j21';
+export type SyndicOnboardingReminderKind = 'j2' | 'j7' | 'j21' | 'j30';
 
 // ─── Onboarding J+2 — Réassurance ────────────────────────────────────────────
 
@@ -360,12 +360,16 @@ export function buildSyndicOnboardingReminderSubject(params: {
 }): string {
   if (params.kind === 'j7') return buildSyndicOnboardingJ7Subject({ coproCount: params.coproCount });
   if (params.kind === 'j21') return buildSyndicReactivationSubject();
+  if (params.kind === 'j30') return buildSyndicOnboardingJ30Subject();
   return buildSyndicOnboardingJ2Subject({ coproCount: params.coproCount });
 }
 
 export function buildSyndicOnboardingReminderEmail(params: SyndicOnboardingReminderEmailParams): string {
   if (params.kind === 'j7') {
     return buildSyndicOnboardingJ7Email({ syndicPrenom: params.syndicPrenom, coproCount: params.coproCount, actionUrl: params.actionUrl });
+  }
+  if (params.kind === 'j30') {
+    return buildSyndicOnboardingJ30Email({ syndicPrenom: params.syndicPrenom, dashboardUrl: params.actionUrl });
   }
   return buildSyndicOnboardingJ2Email({ syndicPrenom: params.syndicPrenom, coproCount: params.coproCount, actionUrl: params.actionUrl });
 }
@@ -456,6 +460,87 @@ ${ctaButton(ctaLabel, dashboardUrl, COLOR.green)}
 </p>`;
 
   return wrapEmail(content, COLOR.green, 'Vos relances, vos convocations et vos documents — tout peut être automatisé depuis votre espace.');
+}
+
+// ── Réactivation J+30 — Objection handling / Dernier rappel ──────────────────
+
+export interface SyndicOnboardingJ30EmailParams {
+  syndicPrenom: string;
+  dashboardUrl: string;
+}
+
+export function buildSyndicOnboardingJ30Subject(): string {
+  return "Vous n'avez pas eu le temps\u00a0? Normal. — Mon Syndic Bénévole";
+}
+
+export function buildSyndicOnboardingJ30Email(params: SyndicOnboardingJ30EmailParams): string {
+  const { syndicPrenom, dashboardUrl } = params;
+
+  const objectionBlock = `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:10px;border:1px solid ${COLOR.border};overflow:hidden">
+  <tr style="background:#f8fafc">
+    <td style="padding:14px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:${COLOR.text}">1. &ldquo;Je ne sais pas par où commencer&rdquo;</p>
+      <p style="margin:0;font-size:13px;color:${COLOR.muted};line-height:1.6">
+        <span style="color:${COLOR.blue};font-weight:700">→</span>
+        Commencez juste par créer votre copropriété.<br>
+        C&rsquo;est la seule étape nécessaire pour débloquer tout le reste.
+      </p>
+    </td>
+  </tr>
+  <tr style="background:${COLOR.white}">
+    <td style="padding:14px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:${COLOR.text}">2. &ldquo;Il faut que les autres s&rsquo;inscrivent&rdquo;</p>
+      <p style="margin:0;font-size:13px;color:${COLOR.muted};line-height:1.6">
+        <span style="color:${COLOR.blue};font-weight:700">→</span>
+        Pas du tout.<br>
+        Vous pouvez tout gérer seul, puis inviter les autres plus tard.
+      </p>
+    </td>
+  </tr>
+  <tr style="background:#f8fafc">
+    <td style="padding:14px 16px">
+      <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:${COLOR.text}">3. &ldquo;Je ne suis pas sûr que ça corresponde à mon cas&rdquo;</p>
+      <p style="margin:0;font-size:13px;color:${COLOR.muted};line-height:1.6">
+        <span style="color:${COLOR.blue};font-weight:700">→</span>
+        Répondez simplement à ce mail avec votre situation.<br>
+        On vous répond personnellement sous 24h.
+      </p>
+    </td>
+  </tr>
+</table>`;
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Vous n&rsquo;avez pas eu le temps&nbsp;? Normal.</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">On vous fait reprendre en 3 minutes.</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">Bonjour <strong>${h(syndicPrenom)}</strong>,</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Si vous n&rsquo;avez pas avancé depuis votre inscription, c&rsquo;est souvent pour une seule raison&nbsp;:
+</p>
+<p style="margin:0 0 20px;padding:12px 16px;background:#f0f9ff;border-left:3px solid ${COLOR.blue};border-radius:0 8px 8px 0;font-size:14px;font-weight:600;color:${COLOR.text}">
+  👉 le bon moment n&rsquo;est jamais arrivé.
+</p>
+<p style="margin:0 0 4px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Du coup, on a simplifié au maximum.
+</p>
+<p style="margin:0 0 4px;font-size:14px;font-weight:600;color:${COLOR.text}">Voici comment reprendre en moins de 3 minutes&nbsp;👇</p>
+
+${objectionBlock}
+
+<p style="margin:0 0 16px;font-size:14px;font-weight:700;color:${COLOR.text}">👉 Le plus simple maintenant&nbsp;:</p>
+
+${ctaButton('Reprendre là où je me suis arrêté →', dashboardUrl, COLOR.blue)}
+
+<p style="margin:20px 0 0;font-size:13px;color:${COLOR.muted};line-height:1.6">
+  Si ce n&rsquo;est pas le bon moment, aucun problème.<br>
+  On gardera votre compte encore quelque temps avant archivage.
+</p>
+<p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};line-height:1.6">
+  Cet e-mail vous est envoyé car votre compte Mon Syndic Bénévole est actif. Pour ne plus recevoir ces messages, contactez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.muted}">contact@mon-syndic-benevole.fr</a>.
+</p>`;
+
+  return wrapEmail(content, COLOR.blue, 'On vous fait reprendre en 3 minutes — répondez à ce mail si vous avez une question.');
 }
 
 export function buildIncidentResoluSubject(titreIncident: string): string {

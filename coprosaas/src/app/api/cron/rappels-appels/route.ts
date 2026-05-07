@@ -31,6 +31,8 @@ import {
   buildSyndicImpayesRecapSubject,
   buildSyndicReactivationEmail,
   buildSyndicReactivationSubject,
+  buildSyndicOnboardingJ30Email,
+  buildSyndicOnboardingJ30Subject,
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
@@ -1028,7 +1030,9 @@ async function sendSyndicOnboardingReminders(
     ? 'onboarding_copro_reminder_j2_sent'
     : kind === 'j7'
       ? 'onboarding_copro_reminder_j7_sent'
-      : 'onboarding_copro_reminder_j21_sent';
+      : kind === 'j30'
+        ? 'onboarding_copro_reminder_j30_sent'
+        : 'onboarding_copro_reminder_j21_sent';
 
   const alreadyReminded = force
     ? new Set<string>()
@@ -1090,9 +1094,11 @@ async function sendSyndicOnboardingReminders(
     const actionUrl = coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/coproprietaires`;
     const subject = kind === 'j21'
       ? buildSyndicReactivationSubject()
-      : kind === 'j7'
-        ? buildSyndicOnboardingJ7Subject({ coproCount })
-        : buildSyndicOnboardingJ2Subject({ coproCount });
+      : kind === 'j30'
+        ? buildSyndicOnboardingJ30Subject()
+        : kind === 'j7'
+          ? buildSyndicOnboardingJ7Subject({ coproCount })
+          : buildSyndicOnboardingJ2Subject({ coproCount });
 
     const html = kind === 'j21'
       ? buildSyndicReactivationEmail({
@@ -1101,9 +1107,11 @@ async function sendSyndicOnboardingReminders(
           coproprietairesCount,
           dashboardUrl: coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/dashboard`,
         })
-      : kind === 'j7'
-        ? buildSyndicOnboardingJ7Email({ syndicPrenom: prenom, coproCount, actionUrl })
-        : buildSyndicOnboardingJ2Email({ syndicPrenom: prenom, coproCount, actionUrl });
+      : kind === 'j30'
+        ? buildSyndicOnboardingJ30Email({ syndicPrenom: prenom, dashboardUrl: `${SITE_URL}/dashboard` })
+        : kind === 'j7'
+          ? buildSyndicOnboardingJ7Email({ syndicPrenom: prenom, coproCount, actionUrl })
+          : buildSyndicOnboardingJ2Email({ syndicPrenom: prenom, coproCount, actionUrl });
 
     const result = await resend.emails.send({
       from: FROM,
