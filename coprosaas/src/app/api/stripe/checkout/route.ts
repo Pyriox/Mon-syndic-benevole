@@ -171,6 +171,7 @@ export async function POST(req: NextRequest) {
           user_email: user.email.toLowerCase(),
           event_type: 'begin_checkout',
           label: `Checkout démarré — ${copro.nom} (${planId})`,
+          copropriete_id: coproprieteid,
         });
       } catch (logError) {
         console.error('[stripe/checkout] begin_checkout log error:', logError);

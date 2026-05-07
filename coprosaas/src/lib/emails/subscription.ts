@@ -433,3 +433,70 @@ ${ctaButton('Gérer mon abonnement →', `${dashboardUrl}/abonnement`, COLOR.red
 
   return wrapEmail(content, COLOR.red, `Dernier rappel — votre essai se termine demain${deadlineStr ? ` le ${deadlineStr}` : ''}`);
 }
+
+// ── Relance checkout abandonné (J+1) ─────────────────────────────────────────
+// Cible : utilisateurs ayant déclenché begin_checkout sans finaliser
+// (abandon, 3D Secure échoué, fenêtre fermée).
+// Idempotence via user_events (event_type: checkout_abandon_j1_reminder_sent).
+
+export interface CheckoutAbandonEmailParams {
+  prenom: string | null;
+  coproprieteNom: string;
+  abonnementUrl: string;
+}
+
+export function buildCheckoutAbandonSubject(): string {
+  return 'Votre souscription est restée incomplète — Mon Syndic Bénévole';
+}
+
+export function buildCheckoutAbandonEmail(params: CheckoutAbandonEmailParams): string {
+  const { prenom, coproprieteNom, abonnementUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre souscription est restée incomplète</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Vous avez commencé à souscrire un abonnement pour <strong>${h(coproprieteNom)}</strong>, mais la session de paiement n&rsquo;a pas pu être finalisée.
+</p>
+<p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Cela arrive parfois : authentification 3D Secure expirée, fenêtre fermée au mauvais moment, connexion interrompue. Votre compte est intact et votre copropriété est toujours configurée.
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:10px;border:1px solid ${COLOR.border};overflow:hidden">
+  <tr style="background:#f8fafc">
+    <td style="padding:12px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
+        <span style="color:${COLOR.blue};font-weight:700">→</span>
+        <strong>Essai 14 jours inclus</strong> — aucun paiement avant la fin de la période d&rsquo;essai
+      </p>
+    </td>
+  </tr>
+  <tr style="background:${COLOR.white}">
+    <td style="padding:12px 16px;border-bottom:1px solid ${COLOR.border}">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
+        <span style="color:${COLOR.blue};font-weight:700">→</span>
+        <strong>Résiliation libre</strong> — annulation possible à tout moment, sans engagement
+      </p>
+    </td>
+  </tr>
+  <tr style="background:#f8fafc">
+    <td style="padding:12px 16px">
+      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
+        <span style="color:${COLOR.blue};font-weight:700">→</span>
+        <strong>Paiement sécurisé Stripe</strong> — carte, SEPA, Apple Pay, Google Pay
+      </p>
+    </td>
+  </tr>
+</table>
+
+${ctaButton('Finaliser ma souscription →', abonnementUrl, COLOR.blue)}
+
+<p style="margin:16px 0 0;font-size:13px;color:${COLOR.muted};line-height:1.6">
+  Un problème&nbsp;? Répondez directement à cet e-mail ou écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>. On vous aide.
+</p>`;
+
+  return wrapEmail(content, COLOR.blue, 'Votre essai de 14 jours vous attend — reprenez en 30 secondes.');
+}
