@@ -500,3 +500,50 @@ ${ctaButton('Finaliser ma souscription →', abonnementUrl, COLOR.blue)}
 
   return wrapEmail(content, COLOR.blue, 'Votre essai de 14 jours vous attend — reprenez en 30 secondes.');
 }
+
+// ── Relance checkout abandonné (J+3) ─────────────────────────────────────────
+// Dernier rappel avant d'arrêter les relances.
+// Idempotence via user_events (event_type: checkout_abandon_j3_reminder_sent).
+
+export function buildCheckoutAbandonJ3Subject(): string {
+  return 'Dernier rappel — votre essai 14 jours est encore disponible — Mon Syndic Bénévole';
+}
+
+export function buildCheckoutAbandonJ3Email(params: CheckoutAbandonEmailParams): string {
+  const { prenom, coproprieteNom, abonnementUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre essai est encore disponible</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Il y a quelques jours, vous avez commencé à souscrire un abonnement pour <strong>${h(coproprieteNom)}</strong>. La session s&rsquo;est interrompue avant la fin.
+</p>
+<p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  C&rsquo;est notre dernier rappel. Votre copropriété est toujours là, et l&rsquo;essai 14 jours est toujours inclus — aucun paiement avant la fin de la période.
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:10px;background:#f0f9ff;border:1px solid #bae6fd">
+  <tr>
+    <td style="padding:16px;font-size:14px;color:${COLOR.text};line-height:1.6">
+      <p style="margin:0 0 8px;font-weight:700;color:${COLOR.blue}">Votre espace syndic vous permet de&nbsp;:</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="padding:3px 0;font-size:13px;color:${COLOR.text}"><span style="color:${COLOR.blue};font-weight:700;margin-right:6px">→</span>Envoyer les appels de fonds automatiquement à chaque copropriétaire</td></tr>
+        <tr><td style="padding:3px 0;font-size:13px;color:${COLOR.text}"><span style="color:${COLOR.blue};font-weight:700;margin-right:6px">→</span>Relancer les impayés sans intervention manuelle</td></tr>
+        <tr><td style="padding:3px 0;font-size:13px;color:${COLOR.text}"><span style="color:${COLOR.blue};font-weight:700;margin-right:6px">→</span>Convoquer et envoyer les PV d&rsquo;AG en un clic</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+${ctaButton('Démarrer mon essai gratuit →', abonnementUrl, COLOR.blue)}
+
+<p style="margin:16px 0 0;font-size:13px;color:${COLOR.muted};line-height:1.6">
+  Une question sur la souscription&nbsp;? Répondez à cet e-mail, on vous répond personnellement.<br>
+  Si vous ne souhaitez pas continuer, aucun problème — votre compte reste accessible.
+</p>`;
+
+  return wrapEmail(content, COLOR.blue, 'Dernier rappel — votre essai 14 jours est toujours disponible, sans engagement.');
+}

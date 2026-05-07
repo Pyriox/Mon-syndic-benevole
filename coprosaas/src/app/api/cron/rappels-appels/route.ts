@@ -36,7 +36,7 @@ import {
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
-import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject, buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject } from '@/lib/emails/subscription';
+import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject, buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject, buildCheckoutAbandonJ3Email, buildCheckoutAbandonJ3Subject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushAdminAlert } from '@/lib/notification-center';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
@@ -854,6 +854,102 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ── Relance checkout abandonné J+3 ─────────────────────────────────────────
+  // Dernier rappel pour les utilisateurs qui n’ont toujours pas finalisé après 3 jours.
+  // Idempotence : event_type checkout_abandon_j3_reminder_sent.
+  let checkoutAbandonJ3Sent = 0;
+  if (!onboardingOnly) {
+    const abandonJ3WindowEnd = addDays(today, -3);
+    const abandonJ3WindowStart = addDays(today, -4); // +1j de rattrapage
+
+    const { data: abandonJ3Checkouts } = await supabase
+      .from('user_events')
+      .select('user_email, user_id, copropriete_id')
+      .eq('event_type', 'begin_checkout')
+      .gte('created_at', `${abandonJ3WindowStart}T00:00:00.000Z`)
+      .lt('created_at', `${abandonJ3WindowEnd}T23:59:59.999Z`)
+      .not('user_email', 'is', null)
+      .not('copropriete_id', 'is', null);
+
+    if (abandonJ3Checkouts?.length) {
+      const seenAbandonJ3 = new Map<string, { userEmail: string; userId: string | null; coproprieteId: string }>();
+      for (const ev of (abandonJ3Checkouts as Array<{ user_email: string; user_id: string | null; copropriete_id: string }>)) {
+        const key = `${ev.user_email}:${ev.copropriete_id}`;
+        seenAbandonJ3.set(key, { userEmail: ev.user_email, userId: ev.user_id, coproprieteId: ev.copropriete_id });
+      }
+      const abandonJ3Candidates = [...seenAbandonJ3.values()];
+      const abandonJ3Emails = [...new Set(abandonJ3Candidates.map((c) => c.userEmail))];
+
+      const { data: alreadyAbandonJ3Reminded } = await supabase
+        .from('user_events')
+        .select('user_email')
+        .eq('event_type', 'checkout_abandon_j3_reminder_sent')
+        .in('user_email', abandonJ3Emails);
+      const alreadyAbandonJ3Set = new Set(
+        (alreadyAbandonJ3Reminded ?? []).map((r: { user_email: string }) => r.user_email?.toLowerCase()).filter(Boolean),
+      );
+
+      const coproJ3IdsToCheck = [...new Set(abandonJ3Candidates.map((c) => c.coproprieteId))];
+      const { data: batchAbandonJ3Copros } = await supabase
+        .from('coproprietes')
+        .select('id, nom, plan, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+        .in('id', coproJ3IdsToCheck)
+        .not('plan', 'in', '("actif","essai")');
+      type AbandonJ3Copro = { id: string; nom: string; plan: string | null; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      const abandonJ3CoproMap = new Map<string, AbandonJ3Copro>();
+      for (const c of (batchAbandonJ3Copros ?? []) as unknown as AbandonJ3Copro[]) abandonJ3CoproMap.set(c.id, c);
+
+      for (const candidate of abandonJ3Candidates) {
+        const email = candidate.userEmail.trim().toLowerCase();
+        if (alreadyAbandonJ3Set.has(email)) continue;
+
+        const copro = abandonJ3CoproMap.get(candidate.coproprieteId);
+        if (!copro) continue;
+
+        const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
+        if (!coproProfile?.email) continue;
+
+        const prenom = (coproProfile.full_name ?? '').split(' ')[0] || null;
+        const subject = buildCheckoutAbandonJ3Subject();
+
+        const result = await resend.emails.send({
+          from: FROM,
+          to: email,
+          subject,
+          html: buildCheckoutAbandonJ3Email({
+            prenom,
+            coproprieteNom: copro.nom,
+            abonnementUrl: `${SITE_URL}/abonnement`,
+          }),
+        });
+
+        await trackCronEmail({
+          providerMessageId: result.data?.id,
+          errorMessage: result.error?.message,
+          templateKey: 'subscription_checkout_abandon_j3',
+          recipientEmail: email,
+          subject,
+          coproprieteId: copro.id,
+          legalEventType: 'subscription_checkout_abandon',
+          legalReference: copro.id,
+          payload: { trigger: 'cron', reminderType: 'checkout_abandon_j3' },
+        });
+
+        if (!result.error) {
+          await supabase.from('user_events').insert({
+            user_email: email,
+            user_id: candidate.userId,
+            event_type: 'checkout_abandon_j3_reminder_sent',
+            label: `Relance checkout abandonné envoyée (J+3) — ${copro.nom}`,
+            copropriete_id: copro.id,
+          });
+          totalSent++;
+          checkoutAbandonJ3Sent++;
+        } else console.error('[cron] Erreur email checkout abandon J+3:', result.error);
+      }
+    }
+  }
+
   // ── Réactivation post-churn J+7 / J+30 ─────────────────────────────────────
   // Cible : syndics dont l'abonnement a été résilié il y a ~7j ou ~30j,
   // qui n'ont pas recréé un abonnement (plan toujours 'resilie').
@@ -1020,6 +1116,7 @@ export async function GET(req: NextRequest) {
     trial_j3:          trialsEndingJ3?.length ?? 0,
     trial_j1:          trialJ1Sent,
     checkout_abandon_j1: checkoutAbandonSent,
+    checkout_abandon_j3: checkoutAbandonJ3Sent,
     churn_reactivation: churnReactivationSent,
     failed_retry_queue: failedRetryCount ?? 0,
     sent: totalSent,
