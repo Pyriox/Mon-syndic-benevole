@@ -5,7 +5,7 @@
 //  J-30 : avis initial aux copropriétaires (appels publiés sans email envoyé
 //         dont l'échéance est dans <= 30 jours)
 //  J-7  : rappel pré-échéance aux copropriétaires impayés
-//  J+1  : relance courte post-échéance aux copropriétaires impayés
+//  J+3  : relance courte post-échéance aux copropriétaires impayés
 //  J+15 : rappel d'impayé post-échéance aux copropriétaires impayés
 //  J0   : récapitulatif des impayés au syndic pour vérification des paiements reçus
 //
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
   const dateJ30 = addDays(today, 30);  // avis : appels publiés dont l'échéance est dans <= 30 jours
   const dateJ14 = addDays(today, 14);  // brouillons non publiés : rappel syndic J-14
   const dateJ7  = addDays(today, 7);   // appels avec échéance dans 7 jours
-  const dateJ1  = addDays(today, -1);  // appels échus hier, encore impayés
+  const dateRelanceJ3 = addDays(today, -3);  // appels échus depuis 3 jours, encore impayés
   const dateJ15 = addDays(today, -15); // appels avec échéance il y a 15 jours
   const dateJ90 = addDays(today, -90); // borne inférieure anti-backlog pour J+15
   const onboardingJ2Window = resolveOnboardingConfirmationWindow({ kind: 'j2', referenceDate: today });
@@ -135,13 +135,13 @@ export async function GET(req: NextRequest) {
     .is('rappel_j7_at', null)
     .limit(100);
 
-  // Appels à relancer le lendemain de l'échéance (J+1), avec rattrapage si un cron a été manqué.
+  // Appels à relancer 3 jours après l'échéance (J+3), avec rattrapage si un cron a été manqué.
   const { data: j1Appels } = await supabase
     .from('appels_de_fonds')
     .select('id, copropriete_id, titre, montant_total, date_echeance, emailed_at, coproprietes(nom)')
     .eq('statut', 'publie')
     .not('emailed_at', 'is', null)
-    .lte('date_echeance', dateJ1)
+    .lte('date_echeance', dateRelanceJ3)
     .gt('date_echeance', dateJ15)
     .is('rappel_j1_at', null)
     .limit(100);
@@ -228,7 +228,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Traitement appels publiés tardivement (emailed_at jamais défini, échéance déjà passée)
-    // Si > 15 jours de retard → mise en demeure directe ; sinon → rappel J+1
+    // Si > 15 jours de retard → mise en demeure directe ; sinon → rappel J+3
     for (const appel of latePublishAppels ?? []) {
       const isVeryLate = appel.date_echeance <= dateJ15;
       const type: AppelEmailType = isVeryLate ? 'mise_en_demeure' : 'rappel_j1';
@@ -1178,7 +1178,7 @@ async function sendRappelEmails(
   type: AppelEmailType
 ): Promise<number> {
   // Pour l'avis initial (J-30), on cible toutes les lignes.
-  // Pour les rappels J-7 / J+1 et le rappel d'impayé J+15, uniquement les impayées.
+  // Pour les rappels J-7 / J+3 et le rappel d'impayé J+15, uniquement les impayées.
   const query = supabase
     .from('lignes_appels_de_fonds')
     .select('montant_du, regularisation_ajustement, coproprietaires(nom, prenom, email, user_id)')
