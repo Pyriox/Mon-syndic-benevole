@@ -495,7 +495,7 @@ export function buildCheckoutAbandonEmail(params: CheckoutAbandonEmailParams): s
 ${ctaButton('Finaliser ma souscription →', abonnementUrl, COLOR.blue)}
 
 <p style="margin:16px 0 0;font-size:13px;color:${COLOR.muted};line-height:1.6">
-  Un problème&nbsp;? Répondez directement à cet e-mail ou écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>. On vous aide.
+  Un problème&nbsp;? Écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>. On vous aide.
 </p>`;
 
   return wrapEmail(content, COLOR.blue, 'Votre essai de 14 jours vous attend — reprenez en 30 secondes.');
@@ -541,7 +541,7 @@ export function buildCheckoutAbandonJ3Email(params: CheckoutAbandonEmailParams):
 ${ctaButton('Démarrer mon essai gratuit →', abonnementUrl, COLOR.blue)}
 
 <p style="margin:16px 0 0;font-size:13px;color:${COLOR.muted};line-height:1.6">
-  Une question sur la souscription&nbsp;? Répondez à cet e-mail, on vous répond personnellement.<br>
+  Une question sur la souscription&nbsp;? Écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.muted}">${CONTACT_EMAIL}</a>, on vous répond personnellement.<br>
   Si vous ne souhaitez pas continuer, aucun problème — votre compte reste accessible.
 </p>`;
 

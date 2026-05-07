@@ -503,7 +503,7 @@ export function buildSyndicOnboardingJ30Email(params: SyndicOnboardingJ30EmailPa
       <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:${COLOR.text}">3. &ldquo;Je ne suis pas sûr que ça corresponde à mon cas&rdquo;</p>
       <p style="margin:0;font-size:13px;color:${COLOR.muted};line-height:1.6">
         <span style="color:${COLOR.blue};font-weight:700">→</span>
-        Répondez simplement à ce mail avec votre situation.<br>
+        Écrivez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.blue}">contact@mon-syndic-benevole.fr</a>.<br>
         On vous répond personnellement sous 24h.
       </p>
     </td>
@@ -540,7 +540,7 @@ ${ctaButton('Reprendre là où je me suis arrêté →', dashboardUrl, COLOR.blu
   Cet e-mail vous est envoyé car votre compte Mon Syndic Bénévole est actif. Pour ne plus recevoir ces messages, contactez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.muted}">contact@mon-syndic-benevole.fr</a>.
 </p>`;
 
-  return wrapEmail(content, COLOR.blue, 'On vous fait reprendre en 3 minutes — répondez à ce mail si vous avez une question.');
+  return wrapEmail(content, COLOR.blue, 'On vous fait reprendre en 3 minutes.');
 }
 
 export function buildIncidentResoluSubject(titreIncident: string): string {

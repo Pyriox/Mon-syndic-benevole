@@ -65,6 +65,8 @@ const EVENT_META: Record<string, { icon: string; label: string; color: string }>
   begin_checkout: { icon: '🛒', label: 'Checkout démarré', color: 'text-violet-600 bg-violet-50 border-violet-200' },
   checkout_abandon_j1_reminder_sent: { icon: '✉', label: 'Relance abandon checkout J+1', color: 'text-amber-700 bg-amber-50 border-amber-200' },
   checkout_abandon_j3_reminder_sent: { icon: '✉', label: 'Relance abandon checkout J+3', color: 'text-orange-700 bg-orange-50 border-orange-200' },
+  checkout_session_expired: { icon: '⌛', label: 'Session paiement expirée', color: 'text-red-700 bg-red-50 border-red-200' },
+  checkout_3ds_failed: { icon: '✗', label: 'Échec 3D Secure', color: 'text-red-700 bg-red-50 border-red-200' },
   trial_cancelled: { icon: '↓', label: 'Essai abandonné', color: 'text-rose-600 bg-rose-50 border-rose-200' },
   subscription_cancel_scheduled: { icon: '⏳', label: 'Résiliation programmée', color: 'text-orange-600 bg-orange-50 border-orange-200' },
   churn_reactivation_j7_sent: { icon: '✉', label: 'Relance churn J+7', color: 'text-amber-600 bg-amber-50 border-amber-200' },

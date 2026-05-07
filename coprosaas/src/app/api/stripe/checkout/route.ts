@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
           user_id: user.id,
           user_email: user.email.toLowerCase(),
           event_type: 'begin_checkout',
-          label: `Checkout démarré — ${copro.nom} (${planId})`,
+          label: `Checkout démarré — ${copro.nom} (${planId}) — ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}`,
           copropriete_id: coproprieteid,
         });
       } catch (logError) {
