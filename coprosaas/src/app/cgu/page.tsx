@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import SiteLogo from "@/components/ui/SiteLogo";
+import LandingNav from '@/app/LandingNav';
 
 export const dynamic = 'force-static';
 export const revalidate = 86400;
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "Conditions Générales d'Utilisation et de Vente de Mon Syndic Bénévole — modalités d'accès, abonnements, obligations et responsabilités.",
   alternates: { canonical: 'https://www.mon-syndic-benevole.fr/cgu' },
-  robots: { index: true, follow: true },
+  robots: { index: false, follow: true },
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -31,15 +31,8 @@ export default function CguPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-gray-200">
-      {/* ── Header ── */}
-      <header className="border-b border-slate-800 py-4 px-6">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-            <SiteLogo size={32} />
-            <span className="font-bold text-white text-sm">Mon Syndic Bénévole</span>
-          </Link>
-        </div>
-      </header>
+      <LandingNav />
+      <div className="h-16" aria-hidden="true" />
 
       {/* ── Contenu ── */}
       <main className="max-w-4xl mx-auto px-6 py-16">

@@ -1121,6 +1121,35 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ═══════ NOS GUIDES ═══════ */}
+      <section aria-labelledby="guides-heading" className="bg-white py-10 sm:py-16 px-4 sm:px-6 border-t border-gray-100">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3">Ressources gratuites</p>
+            <h2 id="guides-heading" className="text-2xl sm:text-3xl font-bold text-gray-900">Guides pratiques pour syndics bénévoles</h2>
+            <p className="text-gray-500 mt-3 max-w-xl mx-auto text-sm">Tout ce qu&apos;il faut savoir pour gérer votre copropriété en toute légalité — sans formation préalable.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { href: '/blog/comment-devenir-syndic-benevole', label: 'Devenir syndic bénévole', desc: 'Élection, démarches, 30 premiers jours.' },
+              { href: '/blog/obligations-syndic-benevole', label: 'Obligations légales', desc: 'Checklist complète, délais et modèles.' },
+              { href: '/blog/appel-de-fonds-copropriete-calcul-repartition', label: 'Appels de fonds', desc: 'Calcul, répartition, impayés.' },
+              { href: '/blog/assemblee-generale-copropriete-guide', label: 'Assemblée générale', desc: 'Convocation, votes, PV — guide 2026.' },
+            ].map(({ href, label, desc }) => (
+              <Link key={href} href={href} className="group block rounded-2xl border border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-blue-50 p-5 transition-colors">
+                <p className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors text-sm mb-1">{label}</p>
+                <p className="text-xs text-gray-500">{desc}</p>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center mt-6">
+            <Link href="/blog" className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors">
+              Voir tous les guides →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA final ── */}
       <section data-cta-final className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-12 sm:py-24 px-4 sm:px-6 text-white text-center relative overflow-hidden">
         <div className="hidden sm:block absolute top-0 left-1/3 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />

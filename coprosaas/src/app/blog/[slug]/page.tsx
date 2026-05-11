@@ -75,8 +75,10 @@ export default async function ArticlePage({
 
   const { default: ContentComponent } = await loadContent();
 
-  // Related articles (others)
-  const related = posts.filter((p) => p.slug !== slug).slice(0, 2);
+  // Related articles — même catégorie en priorité, complété par d'autres si besoin
+  const sameCat = posts.filter((p) => p.slug !== slug && p.category === post.category);
+  const otherPosts = posts.filter((p) => p.slug !== slug && p.category !== post.category);
+  const related = [...sameCat, ...otherPosts].slice(0, 2);
 
   const APP_URL = 'https://www.mon-syndic-benevole.fr';
   const articleJsonLd = {
