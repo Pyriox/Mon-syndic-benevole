@@ -241,6 +241,9 @@ export default function ArticleFondsTravaux() {
 
       <h2 id="vote-ag" className={h2}>Le vote en AG : quelle majorité, quelle résolution</h2>
       <p className={p}>
+        Le vote du fonds de travaux s&apos;inscrit à l&apos;ordre du jour de l&apos;AG ordinaire annuelle. Si vous préparez votre assemblée, notre <a href="/blog/assemblee-generale-copropriete-guide" className={a}>guide de l&apos;assemblée générale de copropriété</a> couvre la convocation, les majorités et le PV en détail.
+      </p>
+      <p className={p}>
         Le montant de la cotisation annuelle est soumis au vote à la <strong className={strong}>majorité de l&apos;article 25</strong> (majorité des voix de tous les copropriétaires, présents, représentés ou absents).
       </p>
 

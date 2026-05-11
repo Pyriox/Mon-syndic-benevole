@@ -146,6 +146,9 @@ export default function ArticleObligationsSyndicBenevole() {
 
       <h2 id="convocation-ag" className={h2}>Modèle de convocation d&apos;AG conforme</h2>
       <p className={p}>
+        Pour un détail complet du déroulé — ordre du jour, quorum, votes, dépouillement — consultez notre <a href="/blog/assemblee-generale-copropriete-guide" className={a}>guide complet de l&apos;assemblée générale de copropriété</a>. Ci-dessous les modèles conformes pour la convocation et le PV.
+      </p>
+      <p className={p}>
         La convocation doit être envoyée par <strong className={strong}>lettre recommandée avec accusé de réception</strong> (LRAR) ou par tout autre moyen permettant de justifier la date de remise (remise en main propre avec émargement, voie électronique avec accord préalable écrit des copropriétaires concernés).
       </p>
 

@@ -5,6 +5,7 @@
 export interface BlogPost {
   slug: string;
   title: string;
+  metaTitle?: string; // balise <title> courte (≤70 car.) — n'affecte pas le h1
   description: string;
   publishedAt: string; // ISO date string
   updatedAt?: string;
@@ -19,6 +20,7 @@ export const posts: BlogPost[] = [
   {
     slug: 'gerer-copropriete-sans-syndic-professionnel',
     title: 'Gérer sa copropriété sans syndic professionnel : guide complet 2026',
+    metaTitle: 'Gérer sa copropriété sans syndic bénévole',
     description:
       'Est-ce légal de gérer sa copropriété sans syndic professionnel ? Oui — et plus de 40 % des copropriétés françaises le font. Découvrez les obligations, les erreurs à éviter et les outils pour se lancer sereinement.',
     publishedAt: '2026-03-19',
@@ -89,6 +91,7 @@ export const posts: BlogPost[] = [
   {
     slug: 'appel-de-fonds-copropriete-calcul-repartition',
     title: 'Appel de fonds copropriété : calcul, répartition et erreurs à éviter (2026)',
+    metaTitle: 'Appel de fonds : calcul et répartition 2026',
     description:
       'Comment calculer et répartir un appel de fonds en copropriété selon les tantièmes ? Guide complet pour syndics bénévoles : méthode pas à pas, erreurs fréquentes et conséquences à éviter.',
     publishedAt: '2026-03-19',
@@ -149,6 +152,7 @@ export const posts: BlogPost[] = [
   {
     slug: 'fonds-de-travaux-alur-obligations-montant-gestion',
     title: 'Fonds de travaux ALUR : obligations, montant et gestion pratique (2026)',
+    metaTitle: 'Fonds de travaux ALUR : obligations et montant',
     description:
       'Fonds de travaux ALUR obligatoire depuis 2017 : qui est concerné, quel montant minimum, comment le gérer et quelles erreurs éviter ? Guide complet pour syndics bénévoles, avec exemples concrets.',
     publishedAt: '2026-03-19',
@@ -217,6 +221,7 @@ export const posts: BlogPost[] = [
   {
     slug: 'comment-devenir-syndic-benevole',
     title: 'Comment devenir syndic bénévole ? Guide complet : élection, démarches, obligations',
+    metaTitle: 'Comment devenir syndic bénévole ? Guide 2026',
     description:
       'Élu syndic bénévole ? Voici quoi faire : archives en 15 jours, compte bancaire du syndicat, prestataires notifiés. Checklist + modèles LRAR inclus.',
     // 147 chars
@@ -279,6 +284,7 @@ export const posts: BlogPost[] = [
   {
     slug: 'obligations-syndic-benevole',
     title: 'Obligations du syndic bénévole : liste complète, délais légaux et sanctions (2026)',
+    metaTitle: 'Obligations du syndic bénévole : guide 2026',
     description:
       'Syndic bénévole : 11 échéances légales, 5 fautes qui engagent votre responsabilité, modèles convocation/PV/mise en demeure. Checklist 2026 incluse.',
     publishedAt: '2026-03-21',
@@ -338,6 +344,7 @@ export const posts: BlogPost[] = [
   {
     slug: 'logiciel-syndic-benevole',
     title: 'Meilleur logiciel syndic bénévole (2026) : fonctions, prix, migration',
+    metaTitle: 'Logiciel syndic bénévole 2026 : fonctions, prix',
     description:
       'Quel logiciel pour gérer une copropriété en syndic bénévole ? Comparatif fonctions, prix (à partir de 240 €/an) et migration depuis Excel. Essai 14 jours.',
     publishedAt: '2026-03-21',
@@ -401,6 +408,7 @@ export const posts: BlogPost[] = [
   {
     slug: 'migrer-vers-mon-syndic-benevole',
     title: 'Migrer vers Mon Syndic Bénévole : guide complet en 7 étapes',
+    metaTitle: 'Migrer vers Mon Syndic Bénévole en 7 étapes',
     description:
       'Migrez vers Mon Syndic Bénévole en une demi-journée : lots, tantièmes, soldes de départ, fonds de travaux, premier appel de fonds — guide complet en 7 étapes.',
     // 155 chars
@@ -455,6 +463,7 @@ export const posts: BlogPost[] = [
   {
     slug: 'assemblee-generale-copropriete-guide',
     title: 'Assemblée générale copropriété : guide complet 2026 (convocation, votes, PV)',
+    metaTitle: 'Assemblée générale copropriété : guide 2026',
     description:
       'Assemblée générale de copropriété : convocation J-21, ordre du jour, règles de majorité art. 24/25/26, modèle de PV. Guide complet + templates légaux.',
     // 149 chars

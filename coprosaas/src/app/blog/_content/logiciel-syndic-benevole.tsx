@@ -216,7 +216,7 @@ export default function ArticleLogicielSyndicBenevole() {
       </ol>
 
       <p className={p}>
-        L&apos;historique des 2 ou 3 exercices précédents peut rester dans votre Excel sans impact sur la gestion future. Marc a migré en 35 minutes un dimanche matin. Son premier appel de fonds avec le nouvel outil a été envoyé 3 heures plus tard.
+        L&apos;historique des 2 ou 3 exercices précédents peut rester dans votre Excel sans impact sur la gestion future. Marc a migré en 35 minutes un dimanche matin. Son premier appel de fonds avec le nouvel outil a été envoyé 3 heures plus tard. Notre <a href="/blog/migrer-vers-mon-syndic-benevole" className={a}>guide de migration en 7 étapes</a> détaille chaque action dans l&apos;ordre.
       </p>
 
       <h2 id="couts" className={h2}>Le vrai coût : Excel, logiciel dédié, syndic pro</h2>

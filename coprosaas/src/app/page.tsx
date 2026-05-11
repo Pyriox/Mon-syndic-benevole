@@ -19,7 +19,7 @@ import Link from 'next/link';
 // ── Métadonnées spécifiques à la page d'accueil ──────────────
 export const metadata: Metadata = {
   title: {
-    absolute: 'Logiciel syndic bénévole : appels de fonds, AG, documents | Mon Syndic Bénévole',
+    absolute: 'Logiciel syndic bénévole : appels de fonds & AG | Mon Syndic Bénévole',
   },
   description:
     'Gérez votre copropriété sans syndic professionnel : appels de fonds, charges, AG, documents et incidents. Essai gratuit 14 jours. Dès 360 €/an.',

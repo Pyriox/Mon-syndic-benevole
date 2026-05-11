@@ -353,7 +353,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
 
       <h3 className={h3}>Erreur 2 — Gérer les finances dans un fichier Excel</h3>
       <p className={p}>
-        Un tableur tient 6 mois, parfois un an. Ses limites : aucune traçabilité des relances, impossibilité de partager les comptes en temps réel, risque d&apos;erreur non détectable sur les tantièmes. La migration vers un outil dédié faite trop tard est toujours laborieuse. Partez du bon pied.
+        Un tableur tient 6 mois, parfois un an. Ses limites : aucune traçabilité des relances, impossibilité de partager les comptes en temps réel, risque d&apos;erreur non détectable sur les tantiemes. La migration vers un outil dédié faite trop tard est toujours laborieuse. Partez du bon pied — notre <a href="/blog/migrer-vers-mon-syndic-benevole" className={a}>guide de migration en 7 étapes</a> vous permet d&apos;être opérationnel en une demi-journée.
       </p>
 
       <h3 className={h3}>Erreur 3 — Mélanger les comptes fonds de travaux et charges courantes</h3>
@@ -406,7 +406,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         Devenir syndic bénévole est accessible à tout copropriétaire motivé. Les conditions légales sont minimales. Ce qui fait la différence dans les 6 premiers mois : récupérer les archives rapidement, ouvrir les bons comptes, notifier les prestataires — et s&apos;équiper d&apos;un outil qui gère les flux récurrents sans se perdre dans des tableurs.
       </p>
       <p className={p}>Pierre, 8 mois après sa première AG : &ldquo;Je passe environ 3 heures par mois. L&apos;appel de fonds, je le génère en 10 minutes. La partie la plus longue, c&apos;est la préparation de l&apos;AG annuelle — mais ça m&apos;a pris moins de 5 heures en tout.&rdquo;</p>
-      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a> ou sur le <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>calcul des appels de fonds</a>.</p>
+      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a>, sur le <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>calcul des appels de fonds</a>, ou notre guide complet pour <a href="/blog/assemblee-generale-copropriete-guide" className={a}>préparer et conduire une assemblée générale</a>.</p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Pierre passe 3h par mois. Son appel de fonds : 10 minutes.</p>

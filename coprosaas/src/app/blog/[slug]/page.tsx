@@ -42,7 +42,7 @@ export async function generateMetadata({
   if (!post) return {};
 
   return {
-    title: `${post.title} | Mon Syndic Bénévole`,
+    title: `${post.metaTitle ?? post.title} | Mon Syndic Bénévole`,
     description: post.description,
     keywords: post.keywords,
     robots: { index: true, follow: true },

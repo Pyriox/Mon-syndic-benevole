@@ -1,0 +1,27 @@
+# Mon Syndic Bénévole
+
+> Logiciel de gestion de copropriété en ligne pour syndics bénévoles. Essai gratuit 14 jours, sans engagement. À partir de 360 €/an par copropriété.
+
+Mon Syndic Bénévole permet aux syndics bénévoles de gérer leur copropriété sans formation comptable : appels de fonds automatiques, assemblées générales, fonds de travaux, gestion des incidents, espace copropriétaires. Conforme à la loi ALUR.
+
+## Pages principales
+
+- [Accueil](https://www.mon-syndic-benevole.fr) — Présentation du logiciel, tarifs, FAQ
+- [Blog](https://www.mon-syndic-benevole.fr/blog) — Guides pratiques pour syndics bénévoles
+
+## Articles de blog
+
+- [Gérer sa copropriété sans syndic professionnel : guide complet 2026](https://www.mon-syndic-benevole.fr/blog/gerer-copropriete-sans-syndic-professionnel)
+- [Appel de fonds copropriété : calcul, répartition et erreurs à éviter (2026)](https://www.mon-syndic-benevole.fr/blog/appel-de-fonds-copropriete-calcul-repartition)
+- [Fonds de travaux ALUR : obligations, montant et gestion pratique (2026)](https://www.mon-syndic-benevole.fr/blog/fonds-de-travaux-alur-obligations-montant-gestion)
+- [Comment devenir syndic bénévole ? Guide complet : élection, démarches, obligations](https://www.mon-syndic-benevole.fr/blog/comment-devenir-syndic-benevole)
+- [Obligations du syndic bénévole : liste complète, délais légaux et sanctions (2026)](https://www.mon-syndic-benevole.fr/blog/obligations-syndic-benevole)
+- [Meilleur logiciel syndic bénévole (2026) : fonctions, prix, migration](https://www.mon-syndic-benevole.fr/blog/logiciel-syndic-benevole)
+- [Migrer vers Mon Syndic Bénévole : guide complet en 7 étapes](https://www.mon-syndic-benevole.fr/blog/migrer-vers-mon-syndic-benevole)
+- [Assemblée générale copropriété : guide complet 2026 (convocation, votes, PV)](https://www.mon-syndic-benevole.fr/blog/assemblee-generale-copropriete-guide)
+
+## Pages légales
+
+- [Mentions légales](https://www.mon-syndic-benevole.fr/mentions-legales)
+- [Conditions générales d'utilisation](https://www.mon-syndic-benevole.fr/cgu)
+- [Politique de confidentialité](https://www.mon-syndic-benevole.fr/politique-confidentialite)
