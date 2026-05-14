@@ -60,6 +60,7 @@ const EVENT_META: Record<string, { icon: string; label: string; color: string }>
   admin_coproprietaire_updated: { icon: '👤', label: 'Copropriétaire modifié (admin)', color: 'text-teal-700 bg-teal-50 border-teal-200' },
   onboarding_copro_reminder_j2_sent: { icon: '✉', label: 'Email relance J+2', color: 'text-sky-600 bg-sky-50 border-sky-200' },
   onboarding_copro_reminder_j7_sent: { icon: '✉', label: 'Email relance J+7', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  onboarding_copro_reminder_j14_sent: { icon: '✉', label: 'Email preuve sociale J+14', color: 'text-teal-600 bg-teal-50 border-teal-200' },
   onboarding_copro_reminder_j21_sent: { icon: '↺', label: 'Email réactivation J+21', color: 'text-orange-600 bg-orange-50 border-orange-200' },
   onboarding_copro_reminder_j30_sent: { icon: '↺', label: 'Email réactivation J+30', color: 'text-red-600 bg-red-50 border-red-200' },
   begin_checkout: { icon: '🛒', label: 'Checkout démarré', color: 'text-violet-600 bg-violet-50 border-violet-200' },

@@ -1,4 +1,4 @@
-export type OnboardingReminderKind = 'j2' | 'j7' | 'j21' | 'j30';
+export type OnboardingReminderKind = 'j2' | 'j7' | 'j14' | 'j21' | 'j30';
 export type OnboardingReminderKindRequest = OnboardingReminderKind | 'all' | null | undefined;
 
 function startOfUtcDay(value: Date): Date {
@@ -28,6 +28,13 @@ export function resolveOnboardingConfirmationWindow(params: {
     return {
       startDateIso: catchUp ? addUtcDays(referenceDate, -6) : addUtcDays(referenceDate, -2),
       endDateIso: addUtcDays(referenceDate, -2),
+    };
+  }
+
+  if (params.kind === 'j14') {
+    return {
+      startDateIso: catchUp ? addUtcDays(referenceDate, -18) : addUtcDays(referenceDate, -14),
+      endDateIso: addUtcDays(referenceDate, -14),
     };
   }
 
@@ -63,9 +70,10 @@ export function resolveOnboardingKinds(params: {
 
   if (requestedKind === 'j2') return ['j2'];
   if (requestedKind === 'j7') return ['j7'];
+  if (requestedKind === 'j14') return ['j14'];
   if (requestedKind === 'j21') return ['j21'];
   if (requestedKind === 'j30') return ['j30'];
-  if (requestedKind === 'all') return ['j2', 'j7', 'j21', 'j30'];
+  if (requestedKind === 'all') return ['j2', 'j7', 'j14', 'j21', 'j30'];
 
   // Pour les déclenchements manuels ciblés, on reste prudent :
   // sans précision explicite, on n'envoie qu'une seule relance par défaut.
@@ -73,5 +81,5 @@ export function resolveOnboardingKinds(params: {
     return ['j2'];
   }
 
-  return ['j2', 'j7', 'j21', 'j30'];
+  return ['j2', 'j7', 'j14', 'j21', 'j30'];
 }

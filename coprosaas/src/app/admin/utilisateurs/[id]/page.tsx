@@ -20,7 +20,7 @@ const EVENT_CATEGORY_MAP = {
   account: ['account_confirmed', 'user_registered', 'password_reset_requested', 'password_reset_completed', 'login_success', 'login_failed', 'email_confirmation_resent', 'ticket_created'],
   admin: ['admin_user_deleted', 'admin_resend_confirmation', 'admin_force_confirm', 'admin_invitation_cancelled', 'admin_role_revoked', 'admin_role_granted', 'admin_user_updated', 'admin_invitation_deleted', 'admin_syndic_reassigned', 'admin_copro_updated', 'admin_impersonation_link_created', 'admin_coproprietaire_updated'],
   copro: ['copropriete_created', 'copropriete_updated', 'coproprietaire_added', 'coproprietaire_updated', 'coproprietaire_deleted', 'lot_added', 'lot_updated', 'lot_deleted', 'document_added', 'document_updated', 'document_deleted', 'ag_created', 'ag_updated', 'ag_status_changed', 'ag_pv_envoye', 'appel_fonds_created', 'appel_fonds_deleted', 'appel_fonds_status_changed', 'paiement_confirme', 'paiement_annule', 'depense_created', 'depense_updated', 'depense_deleted', 'invitation_accepted'],
-  reminders: ['onboarding_copro_reminder_j2_sent', 'onboarding_copro_reminder_j7_sent', 'onboarding_copro_reminder_j21_sent', 'onboarding_copro_reminder_j30_sent', 'checkout_abandon_j1_reminder_sent', 'checkout_abandon_j3_reminder_sent', 'churn_reactivation_j7_sent', 'churn_reactivation_j30_sent'],
+  reminders: ['onboarding_copro_reminder_j2_sent', 'onboarding_copro_reminder_j7_sent', 'onboarding_copro_reminder_j14_sent', 'onboarding_copro_reminder_j21_sent', 'onboarding_copro_reminder_j30_sent', 'checkout_abandon_j1_reminder_sent', 'checkout_abandon_j3_reminder_sent', 'churn_reactivation_j7_sent', 'churn_reactivation_j30_sent'],
   email: ['email_delivery'],
 } as const;
 
@@ -193,6 +193,7 @@ export default async function AdminUtilisateurProfilePage({
     relance: 'Relance de paiement',
     onboarding_j2: 'Email d\'onboarding J+2',
     onboarding_j7: 'Email d\'onboarding J+7',
+    onboarding_j14: 'Email preuve sociale J+14',
     onboarding_j21: 'Email d\'onboarding J+21',
   };
 

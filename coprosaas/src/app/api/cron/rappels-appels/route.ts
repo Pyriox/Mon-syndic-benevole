@@ -27,6 +27,8 @@ import {
   buildSyndicOnboardingJ2Subject,
   buildSyndicOnboardingJ7Email,
   buildSyndicOnboardingJ7Subject,
+  buildSyndicOnboardingJ14Email,
+  buildSyndicOnboardingJ14Subject,
   buildSyndicImpayesRecapEmail,
   buildSyndicImpayesRecapSubject,
   buildSyndicReactivationEmail,
@@ -112,6 +114,7 @@ export async function GET(req: NextRequest) {
   const dateJ90 = addDays(today, -90); // borne inférieure anti-backlog pour J+15
   const onboardingJ2Window = resolveOnboardingConfirmationWindow({ kind: 'j2', referenceDate: today });
   const onboardingJ7Window = resolveOnboardingConfirmationWindow({ kind: 'j7', referenceDate: today });
+  const onboardingJ14Window = resolveOnboardingConfirmationWindow({ kind: 'j14', referenceDate: today });
   const onboardingJ21Window = resolveOnboardingConfirmationWindow({ kind: 'j21', referenceDate: today });
   const onboardingJ30Window = resolveOnboardingConfirmationWindow({ kind: 'j30', referenceDate: today });
 
@@ -552,6 +555,7 @@ export async function GET(req: NextRequest) {
   const onboardingTargetEmails = onboardingTestEmail ? [onboardingTestEmail] : undefined;
   let onboardingJ2Sent = 0;
   let onboardingJ7Sent = 0;
+  let onboardingJ14Sent = 0;
   let onboardingJ21Sent = 0;
   let onboardingJ30Sent = 0;
 
@@ -579,6 +583,19 @@ export async function GET(req: NextRequest) {
       },
     );
     totalSent += onboardingJ7Sent;
+  }
+
+  if (onboardingKinds.includes('j14')) {
+    onboardingJ14Sent = await sendSyndicOnboardingReminders(
+      supabase,
+      onboardingJ14Window,
+      'j14',
+      {
+        force: onboardingForce,
+        targetEmails: onboardingTargetEmails,
+      },
+    );
+    totalSent += onboardingJ14Sent;
   }
 
   if (onboardingKinds.includes('j21')) {
@@ -1408,6 +1425,7 @@ export async function GET(req: NextRequest) {
     brouillon_j1_urgent_groupes: brouillonJ1UrgentGroups.size,
     onboarding_j2: onboardingJ2Sent,
     onboarding_j7: onboardingJ7Sent,
+    onboarding_j14: onboardingJ14Sent,
     onboarding_j21: onboardingJ21Sent,
     onboarding_j30: onboardingJ30Sent,
     trial_j7:          trialsEndingJ7?.length ?? 0,
@@ -1528,9 +1546,11 @@ async function sendSyndicOnboardingReminders(
     ? 'onboarding_copro_reminder_j2_sent'
     : kind === 'j7'
       ? 'onboarding_copro_reminder_j7_sent'
-      : kind === 'j30'
-        ? 'onboarding_copro_reminder_j30_sent'
-        : 'onboarding_copro_reminder_j21_sent';
+      : kind === 'j14'
+        ? 'onboarding_copro_reminder_j14_sent'
+        : kind === 'j30'
+          ? 'onboarding_copro_reminder_j30_sent'
+          : 'onboarding_copro_reminder_j21_sent';
 
   const alreadyReminded = force
     ? new Set<string>()
@@ -1594,9 +1614,11 @@ async function sendSyndicOnboardingReminders(
       ? buildSyndicReactivationSubject()
       : kind === 'j30'
         ? buildSyndicOnboardingJ30Subject()
-        : kind === 'j7'
-          ? buildSyndicOnboardingJ7Subject({ coproCount })
-          : buildSyndicOnboardingJ2Subject({ coproCount });
+        : kind === 'j14'
+          ? buildSyndicOnboardingJ14Subject()
+          : kind === 'j7'
+            ? buildSyndicOnboardingJ7Subject({ coproCount })
+            : buildSyndicOnboardingJ2Subject({ coproCount });
 
     const html = kind === 'j21'
       ? buildSyndicReactivationEmail({
@@ -1607,9 +1629,11 @@ async function sendSyndicOnboardingReminders(
         })
       : kind === 'j30'
         ? buildSyndicOnboardingJ30Email({ syndicPrenom: prenom, dashboardUrl: `${SITE_URL}/dashboard` })
-        : kind === 'j7'
-          ? buildSyndicOnboardingJ7Email({ syndicPrenom: prenom, coproCount, actionUrl })
-          : buildSyndicOnboardingJ2Email({ syndicPrenom: prenom, coproCount, actionUrl });
+        : kind === 'j14'
+          ? buildSyndicOnboardingJ14Email({ syndicPrenom: prenom, actionUrl: coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/dashboard` })
+          : kind === 'j7'
+            ? buildSyndicOnboardingJ7Email({ syndicPrenom: prenom, coproCount, actionUrl })
+            : buildSyndicOnboardingJ2Email({ syndicPrenom: prenom, coproCount, actionUrl });
 
     const result = await resend.emails.send({
       from: FROM,
