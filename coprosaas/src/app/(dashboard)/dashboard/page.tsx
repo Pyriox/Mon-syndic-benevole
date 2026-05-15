@@ -38,6 +38,7 @@ import {
 export default async function DashboardPage() {
   const { user, selectedCoproId, role: userRole, copro: copropriete, trialUsed } = await requireCoproAccess();
   const scopeId = selectedCoproId ?? 'none';
+  const syndicFirstName = (user.user_metadata?.prenom as string | undefined) ?? null;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -57,7 +58,7 @@ export default async function DashboardPage() {
         </Suspense>
       ) : (
         <Suspense fallback={<DashboardHeaderSkeleton />}>
-          <SyndicDashboardHeader coproId={scopeId} coproprieteName={copropriete?.nom ?? null} />
+          <SyndicDashboardHeader coproId={scopeId} coproprieteName={copropriete?.nom ?? null} firstName={syndicFirstName} />
         </Suspense>
       )}
 

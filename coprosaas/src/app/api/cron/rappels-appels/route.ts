@@ -5,8 +5,8 @@
 //  J-30 : avis initial aux copropriétaires (appels publiés sans email envoyé
 //         dont l'échéance est dans <= 30 jours)
 //  J-7  : rappel pré-échéance aux copropriétaires impayés
-//  J+3  : relance courte post-échéance aux copropriétaires impayés
-//  J+15 : rappel d'impayé post-échéance aux copropriétaires impayés
+//  J+7  : première relance post-échéance aux copropriétaires impayés
+//  J+30 : relance formelle post-échéance aux copropriétaires toujours impayés
 //  J0   : récapitulatif des impayés au syndic pour vérification des paiements reçus
 //
 // Le J-30 permet de publier tous les appels d'un coup après une AG
@@ -109,9 +109,9 @@ export async function GET(req: NextRequest) {
   const dateJ30 = addDays(today, 30);  // avis : appels publiés dont l'échéance est dans <= 30 jours
   const dateJ14 = addDays(today, 14);  // brouillons non publiés : rappel syndic J-14
   const dateJ7  = addDays(today, 7);   // appels avec échéance dans 7 jours
-  const dateRelanceJ3 = addDays(today, -3);  // appels échus depuis 3 jours, encore impayés
-  const dateJ15 = addDays(today, -15); // appels avec échéance il y a 15 jours
-  const dateJ90 = addDays(today, -90); // borne inférieure anti-backlog pour J+15
+  const dateOverdueJ7  = addDays(today, -7);  // appels échus depuis 7 jours, encore impayés
+  const dateOverdueJ30 = addDays(today, -30); // appels avec échéance il y a 30 jours
+  const dateJ90 = addDays(today, -90); // borne inférieure anti-backlog pour J+30
   const onboardingJ2Window = resolveOnboardingConfirmationWindow({ kind: 'j2', referenceDate: today });
   const onboardingJ7Window = resolveOnboardingConfirmationWindow({ kind: 'j7', referenceDate: today });
   const onboardingJ14Window = resolveOnboardingConfirmationWindow({ kind: 'j14', referenceDate: today });
@@ -141,24 +141,24 @@ export async function GET(req: NextRequest) {
     .is('rappel_j7_at', null)
     .limit(100);
 
-  // Appels à relancer 3 jours après l'échéance (J+3), avec rattrapage si un cron a été manqué.
+  // Appels à relancer 7 jours après l'échéance (J+7), avec rattrapage si un cron a été manqué.
   const { data: j1Appels } = await supabase
     .from('appels_de_fonds')
     .select('id, copropriete_id, titre, montant_total, date_echeance, emailed_at, coproprietes(nom)')
     .eq('statut', 'publie')
     .not('emailed_at', 'is', null)
-    .lte('date_echeance', dateRelanceJ3)
-    .gt('date_echeance', dateJ15)
+    .lte('date_echeance', dateOverdueJ7)
+    .gt('date_echeance', dateOverdueJ30)
     .is('rappel_j1_at', null)
     .limit(100);
 
-  // Appels en rappel d'impayé (J+15), avec rattrapage si le cron ne s'est pas exécuté le jour exact.
+  // Appels en relance formelle (J+30), avec rattrapage si le cron ne s'est pas exécuté le jour exact.
   const { data: j15Appels } = await supabase
     .from('appels_de_fonds')
     .select('id, copropriete_id, titre, montant_total, date_echeance, emailed_at, coproprietes(nom)')
     .eq('statut', 'publie')
     .not('emailed_at', 'is', null)
-    .lte('date_echeance', dateJ15)
+    .lte('date_echeance', dateOverdueJ30)
     .gte('date_echeance', dateJ90)
     .is('rappel_j15_at', null)
     .limit(100);
@@ -234,9 +234,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Traitement appels publiés tardivement (emailed_at jamais défini, échéance déjà passée)
-    // Si > 15 jours de retard → mise en demeure directe ; sinon → rappel J+3
+    // Si > 30 jours de retard → mise en demeure directe ; sinon → rappel J+7
     for (const appel of latePublishAppels ?? []) {
-      const isVeryLate = appel.date_echeance <= dateJ15;
+      const isVeryLate = appel.date_echeance <= dateOverdueJ30;
       const type: AppelEmailType = isVeryLate ? 'mise_en_demeure' : 'rappel_j1';
       const sent = await sendRappelEmails(supabase, appel as unknown as AppelRow, type);
       if (sent > 0) {

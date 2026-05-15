@@ -391,15 +391,19 @@ function renderCoproDashboardHistoryAndAssemblies(
 export async function SyndicDashboardHeader({
   coproId,
   coproprieteName,
+  firstName,
 }: {
   coproId: string;
   coproprieteName: string | null;
+  firstName?: string | null;
 }) {
   const data = await getSyndicDashboardSnapshotCached(coproId);
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900">Tableau de bord</h2>
+      <h2 className="text-2xl font-bold text-gray-900">
+        {firstName ? `Bonjour, ${firstName}` : 'Tableau de bord'}
+      </h2>
       <p className="text-gray-500 mt-1">
         {coproprieteName
           ? `${data.nbLots} lot${data.nbLots > 1 ? 's' : ''} · ${data.nbCoproprietaires} copropriétaire${data.nbCoproprietaires > 1 ? 's' : ''}`
@@ -917,6 +921,38 @@ export async function SyndicNextAction({ coproId }: { coproId: string }) {
         </Link>
       </div>
     );
+  }
+
+  if (data.prochainAppelAVenir) {
+    const joursAvant = Math.ceil(
+      (new Date(data.prochainAppelAVenir.date_echeance).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+    );
+    if (joursAvant >= 0 && joursAvant <= 30) {
+      return (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-xl">
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 mt-0.5">
+              <FileText size={20} className="text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">
+                Prochain appel de fonds dans J&minus;{joursAvant}
+              </p>
+              <p className="text-xs text-gray-600 mt-0.5">
+                {data.prochainAppelAVenir.titre} &middot; échéance le{' '}
+                {new Date(data.prochainAppelAVenir.date_echeance).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/appels-de-fonds"
+            className="shrink-0 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-lg transition-colors"
+          >
+            Voir l&apos;appel →
+          </Link>
+        </div>
+      );
+    }
   }
 
   return (

@@ -52,7 +52,7 @@ export function buildAppelEmailSubject(params: {
     rappel:          `Rappel de paiement — ${params.coproprieteNom}`,
     // P2.b : évite d'afficher une date passée dans le sujet de la relance post-échéance.
     rappel_j1:       `Règlement en attente — ${params.coproprieteNom}`,
-    mise_en_demeure: `Rappel d'impayé (J+15) — ${params.coproprieteNom}`,
+    mise_en_demeure: `Rappel d'impayé (J+30) — ${params.coproprieteNom}`,
   };
 
   // P2.b : pas de suffixe de date pour rappel_j1 (la date serait déjà dépassée).
@@ -77,8 +77,8 @@ export function buildAppelEmail(params: AppelEmailParams): string {
   const intro: Record<AppelEmailType, string> = {
     avis: `Un avis d'appel de fonds est disponible pour la copropriété <strong>${h(coproprieteNom)}</strong>.`,
     rappel: `Cet appel de fonds pour la copropriété <strong>${h(coproprieteNom)}</strong> arrive à échéance dans <strong>7 jours</strong>.`,
-    rappel_j1: `Nous n'avons pas encore enregistré votre règlement pour la copropriété <strong>${h(coproprieteNom)}</strong>. L'échéance de cet appel de fonds est <strong>dépassée depuis 1 jour</strong>.`,
-    mise_en_demeure: `Votre règlement pour l'appel de fonds de la copropriété <strong>${h(coproprieteNom)}</strong> n'a pas été enregistré à ce jour. <strong>15 jours se sont écoulés depuis l'échéance</strong> de cet appel.`,
+    rappel_j1: `Nous n'avons pas encore enregistré votre règlement pour la copropriété <strong>${h(coproprieteNom)}</strong>. L'échéance de cet appel de fonds est <strong>dépassée depuis 7 jours</strong>.`,
+    mise_en_demeure: `Votre règlement pour l'appel de fonds de la copropriété <strong>${h(coproprieteNom)}</strong> n'a pas été enregistré à ce jour. <strong>30 jours se sont écoulés depuis l'échéance</strong> de cet appel.`,
   };
 
   const closing: Record<AppelEmailType, string> = {
