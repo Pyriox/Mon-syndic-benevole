@@ -1,4 +1,4 @@
-import { wrapEmail, h, formatDateFR, ctaButton, COLOR, SITE_URL } from './base';
+import { wrapEmail, h, formatDateFR, ctaButton, legalFooter, COLOR, SITE_URL } from './base';
 
 type ReminderKind = 'j14' | 'j7' | 'unopened';
 
@@ -55,6 +55,8 @@ ${ctaButton("Consulter l'assemblée générale →", params.agUrl ?? `${SITE_URL
 <p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};line-height:1.6">
   Si vous avez déjà consulté cette convocation, vous pouvez ignorer ce message.
 </p>
+
+${legalFooter(params.coproprieteNom)}
 `;
 
   return wrapEmail(content, isUnopened ? COLOR.amber : COLOR.blue, isUnopened

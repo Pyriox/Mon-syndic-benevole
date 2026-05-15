@@ -3,7 +3,7 @@
 // Utilisé par /api/appels-de-fonds/[id]/publier et /api/cron/rappels-appels
 // ============================================================
 
-import { wrapEmail, h, formatDateFR, formatEurosFR, infoTable, infoRow, alertBanner, ctaButton, COLOR, SITE_URL } from './base';
+import { wrapEmail, h, formatDateFR, formatEurosFR, infoTable, infoRow, alertBanner, ctaButton, legalFooter, COLOR, SITE_URL } from './base';
 
 // `mise_en_demeure` est conservé comme clé interne legacy pour compatibilité,
 // mais l'e-mail envoyé au copropriétaire est un simple rappel d'impayé.
@@ -119,7 +119,9 @@ ${hasRegularisation ? `<p style="margin:10px 0 0;font-size:12px;color:${COLOR.mu
 
 ${ctaButton(type === 'avis' ? 'Accéder à mon espace copropriétaire →' : 'Consulter mon espace copropriétaire →', espaceUrl, type === 'mise_en_demeure' ? COLOR.red : COLOR.blue)}
 
-${closing[type]}`;
+${closing[type]}
+
+${legalFooter(coproprieteNom)}`;
 
   return wrapEmail(content, color, preheader[type]);
 }

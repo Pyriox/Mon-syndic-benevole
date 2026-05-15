@@ -126,6 +126,33 @@ export function formatEurosFR(n: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
 }
 
+/**
+ * Footer légal pour les e-mails envoyés aux copropriétaires en vertu d'une
+ * obligation légale ou contractuelle (appels de fonds, convocations, PV d'AG…).
+ * Ces e-mails ne comportent PAS de lien de désabonnement — mentionner explicitement
+ * la base légale est une exigence RGPD (art. 13).
+ */
+export function legalFooter(coproprieteNom: string): string {
+  return `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;border-top:1px solid ${COLOR.border}">
+  <tr>
+    <td style="padding-top:14px">
+      <p style="margin:0;font-size:12px;color:${COLOR.muted};line-height:1.7">
+        Cet e-mail vous est adressé en tant que copropriétaire de
+        <strong>${h(coproprieteNom)}</strong>. Il est transmis par votre syndic
+        bénévole dans le cadre de ses obligations légales au titre de la loi
+        n°&nbsp;65-557 du 10&nbsp;juillet&nbsp;1965 fixant le statut de la copropriété
+        des immeubles bâtis. Il ne constitue pas un e-mail commercial.
+      </p>
+      <p style="margin:6px 0 0;font-size:11px;color:${COLOR.muted}">
+        <a href="${SITE_URL}/politique-confidentialite"
+           style="color:${COLOR.muted};text-decoration:underline">Politique de confidentialité</a>
+      </p>
+    </td>
+  </tr>
+</table>`;
+}
+
 /** Bouton CTA inline-table pour compatibilité max */
 export function ctaButton(label: string, href: string, color: string = COLOR.blue): string {
   return `

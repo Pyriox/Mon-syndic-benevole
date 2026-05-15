@@ -23,7 +23,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function CguPage() {
-  const lastUpdate = new Date("2026-04-25").toLocaleDateString("fr-FR", {
+  const lastUpdate = new Date("2026-05-15").toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -165,17 +165,204 @@ export default function CguPage() {
           </p>
         </Section>
 
-        <Section title="8. Données personnelles">
+        <Section title="8. Données personnelles et protection de la vie privée">
           <p>
             Mon Syndic Bénévole traite des données à caractère personnel dans le cadre de la fourniture du
-            Service. Les modalités de ce traitement sont détaillées dans la{" "}
+            Service. Les modalités complètes de ce traitement sont décrites dans la{" "}
             <Link
               href="/politique-confidentialite"
               className="text-blue-400 hover:text-blue-300 transition-colors underline"
             >
               Politique de Confidentialité
             </Link>
-            , qui fait partie intégrante des présentes CGU/CGV.
+            , qui fait partie intégrante des présentes CGU/CGV. La présente section précise les aspects
+            relatifs au traitement des données de tiers (copropriétaires) confiées à Mon Syndic Bénévole
+            par le syndic utilisateur.
+          </p>
+
+          <h3 className="text-sm font-semibold text-white mt-4 mb-1">
+            8.1 Rôles respectifs — Responsable de traitement et sous-traitant
+          </h3>
+          <p>
+            Dans le cadre du Règlement (UE) 2016/679 (RGPD), les rôles sont répartis comme suit :
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-gray-400 pl-2">
+            <li>
+              <strong className="text-white">Le syndic utilisateur</strong> est <strong className="text-white">responsable de traitement</strong>{" "}
+              pour l{"'"}ensemble des données personnelles relatives aux copropriétaires et aux tiers qu{"'"}il
+              saisit dans le Service (noms, coordonnées, données financières, etc.).
+            </li>
+            <li>
+              <strong className="text-white">Mon Syndic Bénévole</strong> agit en qualité de{" "}
+              <strong className="text-white">sous-traitant</strong> (art. 28 RGPD) pour ces données,
+              en ce qu{"'"}il les traite exclusivement pour le compte et sur instruction du syndic.
+            </li>
+            <li>
+              Mon Syndic Bénévole est <strong className="text-white">responsable de traitement</strong>{" "}
+              pour ses propres données d{"'"}exploitation (comptes utilisateurs, données de facturation,
+              logs techniques, données d{"'"}analyse anonymisées).
+            </li>
+          </ul>
+
+          <h3 className="text-sm font-semibold text-white mt-4 mb-1">
+            8.2 Engagements de Mon Syndic Bénévole en tant que sous-traitant (art. 28 RGPD)
+          </h3>
+          <p>En acceptant les présentes CGU/CGV, le syndic utilisateur donne instruction à Mon Syndic Bénévole de traiter les données de copropriété aux seules fins de la fourniture du Service. Mon Syndic Bénévole s{"'"}engage à :</p>
+          <ul className="list-disc list-inside space-y-1 text-gray-400 pl-2">
+            <li>
+              Ne traiter les données personnelles des copropriétaires que sur instruction documentée du syndic
+              (utilisation du Service), sauf obligation légale contraire ;
+            </li>
+            <li>
+              Garantir la confidentialité des données traitées et s{"'"}assurer que les personnes habilitées
+              à y accéder s{"'"}engagent à la confidentialité ;
+            </li>
+            <li>
+              Mettre en œuvre les mesures techniques et organisationnelles appropriées pour assurer la
+              sécurité des données (chiffrement au repos et en transit, contrôle d{"'"}accès, sauvegardes
+              régulières) ;
+            </li>
+            <li>
+              Notifier le syndic sans délai injustifié en cas de violation de données susceptible d{"'"}affecter
+              les données de sa copropriété (art. 33 RGPD) ;
+            </li>
+            <li>
+              Ne pas recruter de nouveau sous-traitant ultérieur sans en informer le syndic au préalable
+              (voir section 8.4 ci-dessous) ;
+            </li>
+            <li>
+              Restituer ou supprimer les données de copropriété à la résiliation du compte, au choix du
+              syndic, conformément à la section 11 des présentes.
+            </li>
+          </ul>
+          <p>
+            Le syndic, en qualité de responsable de traitement, est seul responsable de s{"'"}assurer que
+            les copropriétaires sont informés du traitement de leurs données personnelles (art. 13 RGPD),
+            notamment lors de leur première invitation sur la plateforme.
+          </p>
+
+          <h3 className="text-sm font-semibold text-white mt-4 mb-1">
+            8.3 Données traitées, finalités et durées de conservation
+          </h3>
+          <p>Mon Syndic Bénévole traite les catégories de données suivantes :</p>
+          <ul className="list-disc list-inside space-y-1 text-gray-400 pl-2">
+            <li>
+              <strong className="text-white">Données de compte syndic :</strong> nom, prénom, adresse e-mail,
+              mot de passe chiffré (bcrypt), rôle — conservées pendant la durée de l{"'"}abonnement actif et
+              jusqu{"'"}à 3 ans après résiliation.
+            </li>
+            <li>
+              <strong className="text-white">Données de copropriété :</strong> identité des copropriétaires,
+              adresses e-mail, tantièmes, données financières (charges, appels de fonds, soldes) — conservées
+              pendant la durée de l{"'"}abonnement et jusqu{"'"}à 5 ans après résiliation (délai de prescription
+              légale en matière de copropriété).
+            </li>
+            <li>
+              <strong className="text-white">Données de facturation :</strong> historique des transactions
+              Stripe, montants, dates — conservées 10 ans (obligation comptable légale).
+            </li>
+            <li>
+              <strong className="text-white">Logs d{"'"}envoi d{"'"}e-mails :</strong> destinataire, objet,
+              horodatage, statut de livraison — conservés 5 ans (preuve légale d{"'"}envoi des convocations et
+              appels de fonds).
+            </li>
+            <li>
+              <strong className="text-white">Données d{"'"}usage anonymisées :</strong> pages visitées,
+              actions réalisées, sans identification possible — conservées 13 mois (recommandation CNIL).
+            </li>
+          </ul>
+
+          <h3 className="text-sm font-semibold text-white mt-4 mb-1">
+            8.4 Sous-traitants ultérieurs
+          </h3>
+          <p>
+            Mon Syndic Bénévole fait appel aux prestataires techniques suivants, qui agissent en qualité de
+            sous-traitants ultérieurs et avec lesquels des contrats de traitement de données conformes à
+            l{"'"}art. 28 RGPD ont été conclus :
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-gray-400 pl-2">
+            <li>
+              <strong className="text-white">Supabase Inc.</strong> (États-Unis) — hébergement de la base de
+              données et authentification. Transfert encadré par les Clauses Contractuelles Types de la
+              Commission européenne.
+            </li>
+            <li>
+              <strong className="text-white">Resend Inc.</strong> (États-Unis) — plateforme d{"'"}envoi d{"'"}e-mails
+              transactionnels. Transfert encadré par les Clauses Contractuelles Types.
+            </li>
+            <li>
+              <strong className="text-white">Stripe Inc.</strong> (États-Unis) — traitement des paiements.
+              Certifié PCI-DSS niveau 1. Transfert encadré par les Clauses Contractuelles Types.
+            </li>
+            <li>
+              <strong className="text-white">Vercel Inc.</strong> (États-Unis) — hébergement de l{"'"}application.
+              Transfert encadré par les Clauses Contractuelles Types.
+            </li>
+          </ul>
+          <p>
+            Mon Syndic Bénévole s{"'"}engage à informer le syndic de tout changement concernant l{"'"}ajout ou
+            le remplacement d{"'"}un sous-traitant ultérieur, en lui donnant la possibilité de s{"'"}y opposer.
+          </p>
+
+          <h3 className="text-sm font-semibold text-white mt-4 mb-1">
+            8.5 Base légale des e-mails automatiques envoyés aux copropriétaires
+          </h3>
+          <p>
+            Le Service envoie automatiquement des e-mails aux copropriétaires pour le compte du syndic.
+            La base légale de ces envois varie selon le type d{"'"}e-mail :
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-gray-400 pl-2">
+            <li>
+              <strong className="text-white">Convocations d{"'"}AG, rappels de convocation, PV d{"'"}AG :</strong>{" "}
+              obligation légale (art. 9 et 17-1 du décret n°&nbsp;67-223 du 17&nbsp;mars&nbsp;1967) — ces
+              e-mails ne comportent pas de lien de désabonnement.
+            </li>
+            <li>
+              <strong className="text-white">Avis d{"'"}appel de fonds, relances d{"'"}impayés :</strong>{" "}
+              exécution du contrat liant le copropriétaire à la copropriété (obligation de payer sa
+              quote-part de charges) — ces e-mails ne comportent pas de lien de désabonnement.
+            </li>
+            <li>
+              <strong className="text-white">Rappels pré-échéance (J-7) :</strong> intérêt légitime —
+              ces e-mails permettent au copropriétaire de s{"'"}y opposer.
+            </li>
+          </ul>
+
+          <h3 className="text-sm font-semibold text-white mt-4 mb-1">
+            8.6 Droits des personnes concernées
+          </h3>
+          <p>
+            Toute personne dont les données sont traitées dans le cadre du Service dispose des droits suivants
+            au titre du RGPD : accès (art. 15), rectification (art. 16), effacement (art. 17), limitation
+            du traitement (art. 18), portabilité (art. 20), opposition (art. 21).
+          </p>
+          <p>
+            <strong className="text-white">Pour les copropriétaires :</strong> ces droits s{"'"}exercent
+            auprès du syndic bénévole responsable de traitement, qui en est l{"'"}interlocuteur principal.
+            En cas de difficulté, une demande peut également être adressée à Mon Syndic Bénévole à
+            l{"'"}adresse{" "}
+            <a href="mailto:contact@mon-syndic-benevole.fr" className="text-blue-400 hover:text-blue-300 transition-colors">
+              contact@mon-syndic-benevole.fr
+            </a>
+            .
+          </p>
+          <p>
+            <strong className="text-white">Pour les syndics utilisateurs :</strong> ces droits s{"'"}exercent
+            directement auprès de Mon Syndic Bénévole à la même adresse.
+          </p>
+          <p>
+            En cas de réponse insatisfaisante, une réclamation peut être introduite auprès de la{" "}
+            <strong className="text-white">CNIL</strong> (Commission Nationale de l{"'"}Informatique et des
+            Libertés) via{" "}
+            <a
+              href="https://www.cnil.fr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              cnil.fr
+            </a>
+            .
           </p>
         </Section>
 
