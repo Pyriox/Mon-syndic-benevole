@@ -201,7 +201,7 @@ La rigueur dans les appels de fonds, c'est la colonne vertébrale de la gestion 
 
 ---
 
-*Article rédigé par l'équipe Mon Syndic Bénévole — Mis à jour en mars 2026*
+*Article rédigé par l'équipe Mon Syndic Bénévole — Mis à jour en mai 2026*
 
 ---
 

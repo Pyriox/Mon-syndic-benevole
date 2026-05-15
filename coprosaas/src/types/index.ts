@@ -1,5 +1,5 @@
 // ============================================================
-// Types TypeScript pour CoproSaaS
+// Types TypeScript pour Mon Syndic Bénévole
 // Ces types reflètent exactement la structure de la base de données Supabase
 // ============================================================
 

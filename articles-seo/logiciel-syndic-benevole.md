@@ -169,7 +169,7 @@ En AG, un copropriétaire demande la facture du plombier de mars. Le syndic doit
 
 La gestion bénévole d'une copropriété n'est pas une tâche ponctuelle. C'est une activité continue, sur plusieurs années, avec des obligations récurrentes, des imprévus réguliers, et des demandes à traiter rapidement.
 
-Un syndic bénévole bien outillé passe **deux heures par mois** là où un autre en passe eight. Il répond à l'état daté en vingt minutes là où son homologue passe une soirée. Il entre en AG avec des comptes clairs là où l'autre arrive avec des approximations à défendre.
+Un syndic bénévole bien outillé passe **deux heures par mois** là où un autre en passe huit. Il répond à l'état daté en vingt minutes là où son homologue passe une soirée. Il entre en AG avec des comptes clairs là où l'autre arrive avec des approximations à défendre.
 
 Ce n'est pas une question de technologie. C'est une question de temps, de sérénité, et de confiance des copropriétaires.
 
@@ -212,7 +212,7 @@ C'est la différence entre un mandat subi et un mandat maîtrisé.
 
 ---
 
-*Article rédigé par l'équipe Mon Syndic Bénévole — Mis à jour en mars 2026*
+*Article rédigé par l'équipe Mon Syndic Bénévole — Mis à jour en mai 2026*
 
 ---
 

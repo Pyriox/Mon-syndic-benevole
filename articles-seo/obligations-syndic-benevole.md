@@ -241,7 +241,7 @@ Le syndic bénévole qui réussit son mandat n'est pas nécessairement celui qui
 
 ---
 
-*Article rédigé par l'équipe Mon Syndic Bénévole — Mis à jour en mars 2026*
+*Article rédigé par l'équipe Mon Syndic Bénévole — Mis à jour en mai 2026*
 
 ---
 

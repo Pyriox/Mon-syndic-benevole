@@ -383,7 +383,7 @@ export default function ArticleAppelDeFonds() {
         Un copropriétaire qui comprend d&apos;où vient son montant, reçoit un avis clair avec la bonne date d&apos;échéance, et peut consulter son historique de paiement est un copropriétaire qui paie à temps et qui fait confiance au syndic.
       </p>
       <p className={p}>
-        <strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur le <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a> ou les <a href="/blog/obligations-syndic-benevole" className={a}>obligations complètes du syndic bénévole</a>.
+        <strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur le <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a>, les <a href="/blog/obligations-syndic-benevole" className={a}>obligations complètes du syndic bénévole</a>, les <a href="/blog/logiciel-syndic-benevole" className={a}>logiciels pour syndic bénévole</a> ou notre guide pour <a href="/blog/comment-devenir-syndic-benevole" className={a}>devenir syndic bénévole</a>.
       </p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">

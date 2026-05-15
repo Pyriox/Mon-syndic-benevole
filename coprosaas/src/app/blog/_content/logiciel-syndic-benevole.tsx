@@ -347,8 +347,9 @@ export default function ArticleLogicielSyndicBenevole() {
         Un logiciel de syndic bénévole n&apos;est pas un luxe. C&apos;est la condition pour exercer ce mandat sereinement au-delà d&apos;un an, sans risquer des erreurs de calcul, des délais manqués ou une comptabilité impossible à présenter en AG.
       </p>
       <p className={p}>
-        Le bon outil doit être opérationnel en moins d&apos;une heure, conforme aux obligations légales, et assez simple pour ne jamais devenir une charge supplémentaire. Marc, 8 mois après sa migration : &ldquo;Je regrette de ne pas l&apos;avoir fait dès le départ.&rdquo;
+        Le bon outil doit être opérationnel en moins d&apos;une heure, conforme aux obligations légales, et assez simple pour ne jamais devenir une charge supplémentaire. Marc, 8 mois après sa migration : &ldquo;Je regrette de ne pas l&apos;avoir fait dès le départ.&rdquo; Sa première AG post-migration : <strong className={strong}>2 heures</strong> au lieu de 6. Les comptes étaient prêts la veille — plus de nuit du dimanche à reconstituer des dépenses.
       </p>
+      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a>, sur le <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>calcul des appels de fonds</a> ou notre guide pour <a href="/blog/comment-devenir-syndic-benevole" className={a}>devenir syndic bénévole</a>.</p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Marc a économisé 4 h/mois et 2 700 €/an. En 35 minutes de migration.</p>
@@ -358,7 +359,7 @@ export default function ArticleLogicielSyndicBenevole() {
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
-          Créer votre syndic en moins de 30 minutes →
+          Migrer depuis Excel en 35 minutes →
         </CtaLink>
         <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>

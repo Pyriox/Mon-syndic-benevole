@@ -20,7 +20,7 @@ export const posts: BlogPost[] = [
   {
     slug: 'gerer-copropriete-sans-syndic-professionnel',
     title: 'Gérer sa copropriété sans syndic professionnel : guide complet 2026',
-    metaTitle: 'Gérer sa copropriété sans syndic bénévole',
+    metaTitle: 'Gérer sa copropriété sans syndic professionnel',
     description:
       'Est-ce légal de gérer sa copropriété sans syndic professionnel ? Oui — et plus de 40 % des copropriétés françaises le font. Découvrez les obligations, les erreurs à éviter et les outils pour se lancer sereinement.',
     publishedAt: '2026-03-19',

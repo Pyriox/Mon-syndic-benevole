@@ -304,17 +304,17 @@ export default function ArticleGererCopropriete() {
         Gérer sa copropriété sans syndic professionnel, c&apos;est légal, courant et économiquement très avantageux pour les petits et moyens immeubles. Isabelle, Marc et Sylvie le font chacun à leur façon — avec entre 1,5 et 5 heures par mois selon la taille de l&apos;immeuble.
       </p>
       <p className={p}>Ce qui fait la différence entre un syndic qui tient dans la durée et un qui abandonne au bout de 2 ans : l&apos;organisation, les bons outils, et une copropriété qui joue le jeu collectivement.</p>
-      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/comment-devenir-syndic-benevole" className={a}>comment devenir syndic bénévole</a> ou sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales détaillées du syndic</a>.</p>
+      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/comment-devenir-syndic-benevole" className={a}>comment devenir syndic bénévole</a>, sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales détaillées du syndic</a> ou notre comparatif des <a href="/blog/logiciel-syndic-benevole" className={a}>logiciels pour syndic bénévole</a>.</p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
-        <p className="text-base font-semibold text-white mb-2">Gérez votre immeuble sans vous y noyer</p>
-        <p className="text-sm text-blue-100 mb-4">Appels de fonds, AG, fonds de travaux — tout en un. Essai gratuit 14 jours.</p>
+        <p className="text-base font-semibold text-white mb-2">Comme Isabelle, Marc et Sylvie — voyez par vous-même si ça vous convient.</p>
+        <p className="text-sm text-blue-100 mb-4">Appels de fonds, AG, fonds de travaux : toutes les fonctions incluses. 14 jours d&apos;essai gratuit, sans carte bancaire, sans engagement.</p>
         <CtaLink
           ctaLocation="blog_article"
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
-          Créer ma copropriété sur Mon Syndic Bénévole →
+          Essayer gratuitement — sans engagement →
         </CtaLink>
         <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>

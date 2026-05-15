@@ -451,6 +451,7 @@ export default function ArticleObligationsSyndicBenevole() {
       <p className={p}>
         Un bon outil de gestion, un calendrier rigoureux, et les bons modèles de documents permettent de tenir ce mandat sereinement — et d&apos;éviter l&apos;erreur de Christophe.
       </p>
+      <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide pour <a href="/blog/comment-devenir-syndic-benevole" className={a}>devenir syndic bénévole</a>, notre comparatif des <a href="/blog/logiciel-syndic-benevole" className={a}>logiciels pour syndic bénévole</a> ou notre guide pour <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>gérer une copropriété sans syndic professionnel</a>.</p>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Christophe a perdu 28 000 € de travaux sur un délai de 3 jours.</p>
@@ -460,7 +461,7 @@ export default function ArticleObligationsSyndicBenevole() {
           href="/register"
           className="inline-block text-sm font-semibold bg-white hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-xl transition-colors"
         >
-          Créer votre syndic en moins de 30 minutes →
+          Activer mes alertes de dates critiques →
         </CtaLink>
         <p className="text-xs text-blue-200 mt-2">Essai gratuit 14 jours · Résiliable à tout moment</p>
       </div>

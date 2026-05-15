@@ -215,7 +215,7 @@ La différence entre un mandat réussi et un mandat épuisant ne tient pas à la
 
 ---
 
-*Article rédigé par l'équipe Mon Syndic Bénévole — Mis à jour en mars 2026*
+*Article rédigé par l'équipe Mon Syndic Bénévole — Mis à jour en mai 2026*
 
 ---
 
