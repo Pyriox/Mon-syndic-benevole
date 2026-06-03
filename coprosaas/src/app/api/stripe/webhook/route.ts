@@ -384,10 +384,13 @@ export async function POST(req: NextRequest) {
             const adminClient = createAdminClient();
             const { email, prenom, coproNom } = await getSyndicInfoByCoproId(adminClient, coproId);
             if (email && coproNom) {
+              // Priorité au planId issu des items Stripe (fiable après upgrade/downgrade),
+              // fallback sur les métadonnées de l'abonnement.
+              const resolvedPlanId = subscriptionSnapshot.planId ?? subMeta?.plan_id ?? null;
               const emailParams: SubscriptionEmailParams = {
                 prenom,
                 coproprieteNom: coproNom,
-                planLabel: getPlanLabel(subMeta?.plan_id),
+                planLabel: getPlanLabel(resolvedPlanId),
                 periodEnd,
                 dashboardUrl: `${SITE_URL}/dashboard`,
               };
@@ -410,7 +413,7 @@ export async function POST(req: NextRequest) {
                 coproprieteId: coproId,
                 legalEventType: templateKey,
                 legalReference: sub['id'] as string,
-                payload: { planId: subMeta?.plan_id ?? null, status: subStatus },
+                payload: { planId: resolvedPlanId, status: subStatus },
               });
             }
           } catch (e) {
@@ -512,19 +515,15 @@ export async function POST(req: NextRequest) {
           .maybeSingle();
         if (!copro) break;
 
+        // stripe_customer_id: null → updateCoproSubscription le persiste (undefined = ignorer)
         await updateCoproSubscription(copro.id, {
-          stripe_customer_id: undefined,
+          stripe_customer_id: null,
           stripe_subscription_id: null,
           plan_id: null,
           plan: 'inactif',
           plan_period_end: null,
         });
         await syncCoproAddons(copro.id, null);
-        // Effacer le stripe_customer_id (updateCoproSubscription ne le met pas à null)
-        await supabase
-          .from('coproprietes')
-          .update({ stripe_customer_id: null })
-          .eq('id', copro.id);
         break;
       }
 
@@ -532,8 +531,8 @@ export async function POST(req: NextRequest) {
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
-        const supabase = createAdminClient();
-        const { data: copro } = await supabase
+        const adminClient = createAdminClient();
+        const { data: copro } = await adminClient
           .from('coproprietes')
           .select('id')
           .eq('stripe_customer_id', customerId)
@@ -541,7 +540,6 @@ export async function POST(req: NextRequest) {
         if (!copro) break;
 
         try {
-          const adminClient = createAdminClient();
           const { email, coproNom, userId } = await getSyndicInfoByCoproId(adminClient, copro.id);
           if (email && coproNom) {
             await logUserEvent(adminClient, email, 'payment_succeeded', `Paiement réussi — ${coproNom}`, userId);
@@ -556,10 +554,10 @@ export async function POST(req: NextRequest) {
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
-        const supabase = createAdminClient();
-        const { data: copro } = await supabase
+        const adminClient = createAdminClient();
+        const { data: copro } = await adminClient
           .from('coproprietes')
-          .select('id')
+          .select('id, plan_id')
           .eq('stripe_customer_id', customerId)
           .maybeSingle();
         if (!copro) break;
@@ -567,13 +565,12 @@ export async function POST(req: NextRequest) {
 
         // Email : paiement échoué
         try {
-          const adminClient = createAdminClient();
           const { email, prenom, coproNom, userId } = await getSyndicInfoByCoproId(adminClient, copro.id);
           if (email && coproNom) {
             const emailParams: SubscriptionEmailParams = {
               prenom,
               coproprieteNom: coproNom,
-              planLabel: getPlanLabel(null),
+              planLabel: getPlanLabel((copro as { id: string; plan_id: string | null }).plan_id),
               periodEnd: null,
               dashboardUrl: `${SITE_URL}/abonnement`,
             };
