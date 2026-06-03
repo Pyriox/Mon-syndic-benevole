@@ -60,6 +60,19 @@ export function summarizeStripeBilling(invoices: AdminStripeInvoiceLike[], year:
   };
 }
 
+// Un add-on compte dans l'ARR / le compteur "actif" uniquement s'il est payant
+// (active ou past_due). Les essais gratuits (trialing) et les résiliations
+// ne génèrent aucun revenu et ne doivent pas gonfler les métriques.
+function isAddonPaying(addon: Partial<CoproAddon>, nowIso: string): boolean {
+  const status = addon.status ?? null;
+  if (status !== 'active' && status !== 'past_due') return false;
+  // Résilié à la fin de période : accès jusqu'à la date, mais déjà compté comme payant
+  if (addon.cancel_at_period_end) {
+    return Boolean(addon.current_period_end && addon.current_period_end > nowIso);
+  }
+  return true;
+}
+
 export function countActiveAddonCopros(
   addons: Array<Partial<CoproAddon> | null | undefined>,
   nowIso: string = new Date().toISOString(),
@@ -68,7 +81,7 @@ export function countActiveAddonCopros(
 
   for (const addon of addons) {
     if (!addon || addon.addon_key !== 'charges_speciales' || !addon.copropriete_id) continue;
-    if (!hasAddonAccess(addon, nowIso)) continue;
+    if (!isAddonPaying(addon, nowIso)) continue;
     coproIds.add(addon.copropriete_id);
   }
 
@@ -88,7 +101,7 @@ export function buildEstimatedRevenueMetrics(
 
   for (const addon of addons) {
     if (!addon?.addon_key || !addon.copropriete_id) continue;
-    if (!hasAddonAccess(addon, nowIso)) continue;
+    if (!isAddonPaying(addon, nowIso)) continue;
 
     const dedupeKey = `${addon.copropriete_id}:${addon.addon_key}`;
     if (seenAddonKeys.has(dedupeKey)) continue;
