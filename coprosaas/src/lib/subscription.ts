@@ -46,13 +46,15 @@ function hasFuturePeriodEnd(periodEnd?: string | null, nowIso: string = new Date
 export function hasAddonAccess(addon?: Partial<CoproAddon> | null, nowIso: string = new Date().toISOString()): boolean {
   if (!addon) return false;
 
+  // Si l'add-on est résilié (cancel_at_period_end), l'accès s'arrête à la fin
+  // de la période, quel que soit le statut (y compris 'trialing').
+  if (addon.cancel_at_period_end) {
+    return hasFuturePeriodEnd(addon.current_period_end, nowIso);
+  }
+
   const status = addon.status ?? null;
   if (status === 'active' || status === 'trialing' || status === 'past_due') {
     return true;
-  }
-
-  if (addon.cancel_at_period_end) {
-    return hasFuturePeriodEnd(addon.current_period_end, nowIso);
   }
 
   return false;

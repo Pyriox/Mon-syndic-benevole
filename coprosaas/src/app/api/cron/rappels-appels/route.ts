@@ -38,7 +38,7 @@ import {
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
-import { buildTrialEndingEmail, buildTrialEndingSubject, buildTrialEndingJ1Email, buildTrialEndingJ1Subject, buildTrialEndingJ7Email, buildTrialEndingJ7Subject, buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject, buildCheckoutAbandonJ3Email, buildCheckoutAbandonJ3Subject, buildPaymentFailedJ3Email, buildPaymentFailedJ3Subject, buildPaymentFailedJ7Email, buildPaymentFailedJ7Subject, buildCancelRenewalJ30Email, buildCancelRenewalJ30Subject, buildCancelRenewalJ7Email, buildCancelRenewalJ7Subject, buildCancelRenewalJ3Email, buildCancelRenewalJ3Subject, buildCancelRenewalJ1Email, buildCancelRenewalJ1Subject, buildCancelExpiredJ1Email, buildCancelExpiredJ1Subject } from '@/lib/emails/subscription';
+import { buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject, buildCheckoutAbandonJ3Email, buildCheckoutAbandonJ3Subject, buildCancelRenewalJ30Email, buildCancelRenewalJ30Subject, buildCancelRenewalJ7Email, buildCancelRenewalJ7Subject, buildCancelRenewalJ3Email, buildCancelRenewalJ3Subject, buildCancelRenewalJ1Email, buildCancelRenewalJ1Subject, buildCancelExpiredJ1Email, buildCancelExpiredJ1Subject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushAdminAlert } from '@/lib/notification-center';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
@@ -624,168 +624,6 @@ export async function GET(req: NextRequest) {
     totalSent += onboardingJ30Sent;
   }
 
-  // ── Rappels J-7 / J-3 / J-1 fin d'essai ────────────────────────────────────
-  // Séquence : J-7 (préparation décision) → J-3 (urgence douce) → J-1 (dernier rappel).
-  // Chaque email est idémpotent via une colonne dédiée + fenêtre de rattrapage de ±1 jour.
-  const dateJ7Trial = addDays(today, 7);
-  const dateJ3 = addDays(today, 3);
-  const dateTrialEndingJ1 = addDays(today, 1);
-
-  const { data: trialsEndingJ7 } = onboardingOnly
-    ? { data: [] }
-    : await supabase
-      .from('coproprietes')
-      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
-      .eq('plan', 'essai')
-      .gte('plan_period_end', addDays(today, 6)) // rattrapage : fenêtre J+6 → J+7
-      .lte('plan_period_end', dateJ7Trial)
-      .is('rappel_trial_j7_at', null);
-
-  const { data: trialsEndingJ3 } = onboardingOnly
-    ? { data: [] }
-    : await supabase
-      .from('coproprietes')
-      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
-      .eq('plan', 'essai')
-      .gte('plan_period_end', addDays(today, 2)) // rattrapage : fenêtre J+2 → J+3
-      .lte('plan_period_end', dateJ3)
-      .is('rappel_trial_j3_at', null);
-
-  const { data: trialsEndingJ1 } = onboardingOnly
-    ? { data: [] }
-    : await supabase
-      .from('coproprietes')
-      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
-      .eq('plan', 'essai')
-      .gte('plan_period_end', todayStr) // rattrapage : fenêtre J+0 → J+1
-      .lte('plan_period_end', dateTrialEndingJ1)
-      .is('rappel_trial_j1_at', null);
-
-  type TrialRow = {
-    id: string;
-    nom: string;
-    plan_id: string | null;
-    plan_period_end: string | null;
-    profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null;
-  };
-
-  // ── Envoi J-7 ──
-  for (const row of (trialsEndingJ7 ?? []) as unknown as TrialRow[]) {
-    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    if (!profile?.email) continue;
-
-    const prenom = (profile.full_name ?? '').split(' ')[0] || null;
-    const planLabel = row.plan_id === 'illimite' ? 'Illimité' : row.plan_id === 'confort' ? 'Confort' : 'Essentiel';
-    const subject = buildTrialEndingJ7Subject(row.nom);
-
-    const result = await resend.emails.send({
-      from: FROM,
-      to: profile.email,
-      subject,
-      html: buildTrialEndingJ7Email({
-        prenom,
-        coproprieteNom: row.nom,
-        planLabel,
-        periodEnd: row.plan_period_end,
-        dashboardUrl: `${SITE_URL}/abonnement`,
-      }),
-    });
-    await trackCronEmail({
-      providerMessageId: result.data?.id,
-      errorMessage: result.error?.message,
-      templateKey: 'subscription_trial_ending_j7',
-      recipientEmail: profile.email,
-      subject,
-      coproprieteId: row.id,
-      legalEventType: 'subscription_trial_ending',
-      legalReference: row.id,
-      payload: { trigger: 'cron', reminderType: 'trial_j7', planId: row.plan_id },
-    });
-    if (!result.error) {
-      await supabase.from('coproprietes').update({ rappel_trial_j7_at: new Date().toISOString() }).eq('id', row.id);
-      totalSent++;
-    } else console.error('[cron] Erreur email trial J-7:', result.error);
-  }
-
-  // ── Envoi J-3 ──
-  for (const row of (trialsEndingJ3 ?? []) as unknown as TrialRow[]) {
-    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    if (!profile?.email) continue;
-
-    const prenom = (profile.full_name ?? '').split(' ')[0] || null;
-    const planLabel = row.plan_id === 'illimite' ? 'Illimité' : row.plan_id === 'confort' ? 'Confort' : 'Essentiel';
-    const subject = buildTrialEndingSubject(row.nom);
-
-    const result = await resend.emails.send({
-      from: FROM,
-      to: profile.email,
-      subject,
-      html: buildTrialEndingEmail({
-        prenom,
-        coproprieteNom: row.nom,
-        planLabel,
-        periodEnd: row.plan_period_end,
-        dashboardUrl: `${SITE_URL}/abonnement`,
-      }),
-    });
-    await trackCronEmail({
-      providerMessageId: result.data?.id,
-      errorMessage: result.error?.message,
-      templateKey: 'subscription_trial_ending_j3',
-      recipientEmail: profile.email,
-      subject,
-      coproprieteId: row.id,
-      legalEventType: 'subscription_trial_ending',
-      legalReference: row.id,
-      payload: { trigger: 'cron', reminderType: 'trial_j3', planId: row.plan_id },
-    });
-    if (!result.error) {
-      await supabase.from('coproprietes').update({ rappel_trial_j3_at: new Date().toISOString() }).eq('id', row.id);
-      totalSent++;
-    } else console.error('[cron] Erreur email trial J-3:', result.error);
-  }
-
-  // ── Rappel J-1 veille de fin d'essai ──────────────────────────────────────
-  // Dernier avertissement avant prélèvement effectif. Ton plus urgent.
-  let trialJ1Sent = 0;
-  for (const row of (trialsEndingJ1 ?? []) as unknown as TrialRow[]) {
-    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    if (!profile?.email) continue;
-
-    const prenom = (profile.full_name ?? '').split(' ')[0] || null;
-    const planLabel = row.plan_id === 'illimite' ? 'Illimité' : row.plan_id === 'confort' ? 'Confort' : 'Essentiel';
-    const subject = buildTrialEndingJ1Subject(row.nom);
-
-    const result = await resend.emails.send({
-      from: FROM,
-      to: profile.email,
-      subject,
-      html: buildTrialEndingJ1Email({
-        prenom,
-        coproprieteNom: row.nom,
-        planLabel,
-        periodEnd: row.plan_period_end,
-        dashboardUrl: `${SITE_URL}/abonnement`,
-      }),
-    });
-    await trackCronEmail({
-      providerMessageId: result.data?.id,
-      errorMessage: result.error?.message,
-      templateKey: 'subscription_trial_ending_j1',
-      recipientEmail: profile.email,
-      subject,
-      coproprieteId: row.id,
-      legalEventType: 'subscription_trial_ending',
-      legalReference: row.id,
-      payload: { trigger: 'cron', reminderType: 'trial_j1', planId: row.plan_id },
-    });
-    if (!result.error) {
-      await supabase.from('coproprietes').update({ rappel_trial_j1_at: new Date().toISOString() }).eq('id', row.id);
-      totalSent++;
-      trialJ1Sent++;
-    } else console.error('[cron] Erreur email trial J-1:', result.error);
-  }
-
   // ── Relance checkout abandonné J+1 ──────────────────────────────────────────
   // Cible : utilisateurs qui ont démarré un checkout (begin_checkout) il y a 1-2 jours
   // sans finaliser (copropriété toujours sans abonnement actif ou essai).
@@ -978,112 +816,6 @@ export async function GET(req: NextRequest) {
           totalSent++;
           checkoutAbandonJ3Sent++;
         } else console.error('[cron] Erreur email checkout abandon J+3:', result.error);
-      }
-    }
-  }
-
-  // ── Dunning paiement échoué J+3 / J+7 ───────────────────────────────────────
-  // Cible : syndics dont le plan est 'passe_du' (paiement Stripe en échec)
-  // depuis 3-4j (J+3) ou 7-8j (J+7) sans être réglé.
-  // Idempotence : user_events (event_type: dunning_j3_sent / dunning_j7_sent).
-  let dunningSent = 0;
-  if (!onboardingOnly) {
-    for (const [dunningKind, daysAgo, eventType, buildSubject, buildEmail] of [
-      ['j3',  3, 'dunning_j3_sent', buildPaymentFailedJ3Subject, buildPaymentFailedJ3Email] as const,
-      ['j7',  7, 'dunning_j7_sent', buildPaymentFailedJ7Subject, buildPaymentFailedJ7Email] as const,
-    ]) {
-      const dunningWindowEnd = addDays(today, -daysAgo);
-      const dunningWindowStart = addDays(today, -(daysAgo + 1));
-
-      const { data: dunningFailedEvents } = await supabase
-        .from('user_events')
-        .select('user_email, user_id, copropriete_id')
-        .eq('event_type', 'payment_failed')
-        .gte('created_at', `${dunningWindowStart}T00:00:00.000Z`)
-        .lt('created_at', `${dunningWindowEnd}T23:59:59.999Z`)
-        .not('user_email', 'is', null)
-        .not('copropriete_id', 'is', null);
-
-      if (!dunningFailedEvents?.length) continue;
-
-      type DunningEvent = { user_email: string; user_id: string | null; copropriete_id: string };
-      const seenDunning = new Map<string, DunningEvent>();
-      for (const ev of dunningFailedEvents as DunningEvent[]) {
-        const key = `${ev.user_email}:${ev.copropriete_id}`;
-        seenDunning.set(key, ev);
-      }
-      const dunningCandidates = [...seenDunning.values()];
-      const dunningEmails = [...new Set(dunningCandidates.map((c) => c.user_email.trim().toLowerCase()))];
-
-      const { data: alreadyDunned } = await supabase
-        .from('user_events')
-        .select('user_email')
-        .eq('event_type', eventType)
-        .in('user_email', dunningEmails);
-      const alreadyDunnedSet = new Set(
-        (alreadyDunned ?? []).map((r: { user_email: string }) => r.user_email?.toLowerCase()).filter(Boolean),
-      );
-
-      const dunningCoproIds = [...new Set(dunningCandidates.map((c) => c.copropriete_id))];
-      const { data: batchDunningCopros } = await supabase
-        .from('coproprietes')
-        .select('id, nom, plan_id, profiles!coproprietes_syndic_id_fkey(email, full_name)')
-        .in('id', dunningCoproIds)
-        .eq('plan', 'passe_du');
-      type DunningCopro = { id: string; nom: string; plan_id: string | null; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
-      const dunningCoproMap = new Map<string, DunningCopro>();
-      for (const c of (batchDunningCopros ?? []) as unknown as DunningCopro[]) dunningCoproMap.set(c.id, c);
-
-      for (const candidate of dunningCandidates) {
-        const email = candidate.user_email.trim().toLowerCase();
-        if (alreadyDunnedSet.has(email)) continue;
-
-        const copro = dunningCoproMap.get(candidate.copropriete_id);
-        if (!copro) continue; // paiement réglé entre temps
-
-        const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
-        if (!coproProfile?.email) continue;
-
-        const prenom = (coproProfile.full_name ?? '').split(' ')[0] || null;
-        const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
-        const subject = buildSubject(copro.nom);
-
-        const result = await resend.emails.send({
-          from: FROM,
-          to: email,
-          subject,
-          html: buildEmail({
-            prenom,
-            coproprieteNom: copro.nom,
-            planLabel,
-            periodEnd: null,
-            dashboardUrl: `${SITE_URL}/abonnement`,
-          }),
-        });
-
-        await trackCronEmail({
-          providerMessageId: result.data?.id,
-          errorMessage: result.error?.message,
-          templateKey: `subscription_dunning_${dunningKind}`,
-          recipientEmail: email,
-          subject,
-          coproprieteId: copro.id,
-          legalEventType: 'payment_dunning',
-          legalReference: copro.id,
-          payload: { trigger: 'cron', reminderType: `dunning_${dunningKind}` },
-        });
-
-        if (!result.error) {
-          await supabase.from('user_events').insert({
-            user_email: email,
-            user_id: candidate.user_id,
-            event_type: eventType,
-            label: `Dunning paiement échoué envoyé (${dunningKind.toUpperCase()}) — ${copro.nom}`,
-            copropriete_id: copro.id,
-          });
-          totalSent++;
-          dunningSent++;
-        } else console.error(`[cron] Erreur email dunning ${dunningKind}:`, result.error);
       }
     }
   }
@@ -1428,12 +1160,8 @@ export async function GET(req: NextRequest) {
     onboarding_j14: onboardingJ14Sent,
     onboarding_j21: onboardingJ21Sent,
     onboarding_j30: onboardingJ30Sent,
-    trial_j7:          trialsEndingJ7?.length ?? 0,
-    trial_j3:          trialsEndingJ3?.length ?? 0,
-    trial_j1:          trialJ1Sent,
     checkout_abandon_j1: checkoutAbandonSent,
     checkout_abandon_j3: checkoutAbandonJ3Sent,
-    dunning: dunningSent,
     cancel_renewal: cancelRenewalSent,
     churn_reactivation: churnReactivationSent,
     failed_retry_queue: failedRetryCount ?? 0,

@@ -493,7 +493,7 @@ export default async function AdminUtilisateursPage({
                         </span>
                       )}
 
-                      {!hasActiveSubscription && hasTrialInProgress && (
+                      {!hasActiveSubscription && hasTrialInProgress && role !== 'membre' && (
                         <span className="inline-flex items-center gap-1 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">
                           Essai en cours
                         </span>
