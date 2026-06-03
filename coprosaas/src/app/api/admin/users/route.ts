@@ -145,7 +145,8 @@ export async function POST(request: NextRequest) {
     // Récupérer les métadonnées pour le prénom
     const { data: authUserData } = await admin.auth.admin.getUserById(userId);
     const fullName = authUserData?.user?.user_metadata?.full_name as string | undefined;
-    const prenom = fullName ? (fullName.trim().split(' ')[0] ?? null) : null;
+    const prenomMeta = authUserData?.user?.user_metadata?.prenom as string | undefined;
+    const prenom = prenomMeta?.trim() || (fullName ? fullName.trim().split(' ')[0] : null) || null;
 
     const { buildWelcomeEmail, buildWelcomeSubject } = await import('@/lib/emails/welcome');
     const { trackResendSendResult } = await import('@/lib/email-delivery');
