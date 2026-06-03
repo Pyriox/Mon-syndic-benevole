@@ -467,7 +467,7 @@ export async function GET(req: NextRequest) {
     // Récupère le profil du syndic
     const { data: profile } = await admin
       .from('profiles')
-      .select('email, full_name')
+      .select('email, full_name, prenom')
       .eq('id', copro.syndic_id)
       .maybeSingle();
 
@@ -483,7 +483,7 @@ export async function GET(req: NextRequest) {
 
     if (alreadySent) continue;
 
-    const syndicPrenom = (profile.full_name ?? '').split(' ')[0] || '';
+    const syndicPrenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || '';
     const subject = buildMilestoneAGPlanifieeSubject(copro.nom);
     const result = await resend.emails.send({
       from: FROM,
@@ -536,7 +536,7 @@ export async function GET(req: NextRequest) {
 
     const { data: profile } = await admin
       .from('profiles')
-      .select('email, full_name')
+      .select('email, full_name, prenom')
       .eq('id', copro.syndic_id)
       .maybeSingle();
 
@@ -554,7 +554,7 @@ export async function GET(req: NextRequest) {
     const dateAgFormatted = new Date(ag.date_ag).toLocaleDateString('fr-FR', {
       day: 'numeric', month: 'long', year: 'numeric',
     });
-    const syndicPrenom = (profile.full_name ?? '').split(' ')[0] || null;
+    const syndicPrenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || null;
     const agUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/assemblees/${ag.id}`;
     const subject = buildAGConvocationManquanteSubject(copro.nom, ag.titre);
 

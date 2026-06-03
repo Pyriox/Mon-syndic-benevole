@@ -225,7 +225,8 @@ export async function GET(request: NextRequest) {
       const { id: userId, email } = data.user;
       if (email) {
         try {
-          const prenom = getFirstName(data.user.user_metadata?.full_name);
+          const prenom = (data.user.user_metadata?.prenom as string | undefined)?.trim() ||
+            getFirstName(data.user.user_metadata?.full_name);
           await runSignupFollowups({
             email,
             prenom,
@@ -300,7 +301,8 @@ export async function GET(request: NextRequest) {
     const { id: userId, email } = data.user;
     if (email) {
       try {
-        const prenom = getFirstName(data.user.user_metadata?.full_name);
+        const prenom = (data.user.user_metadata?.prenom as string | undefined)?.trim() ||
+          getFirstName(data.user.user_metadata?.full_name);
         await runSignupFollowups({
           email,
           prenom,

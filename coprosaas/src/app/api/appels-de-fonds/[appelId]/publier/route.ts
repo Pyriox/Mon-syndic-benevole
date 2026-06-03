@@ -244,7 +244,8 @@ export async function POST(
           to: user.email,
           subject: milestoneSubject,
           html: buildMilestoneAppelPublieEmail({
-            syndicPrenom: (user.user_metadata?.full_name as string | undefined ?? '').split(' ')[0] || '',
+            syndicPrenom: ((user.user_metadata?.prenom as string | undefined)?.trim()) ||
+              (user.user_metadata?.full_name as string | undefined ?? '').split(' ')[0] || '',
             coproprieteNom,
             appelTitre: appel.titre,
             dashboardUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/dashboard`,

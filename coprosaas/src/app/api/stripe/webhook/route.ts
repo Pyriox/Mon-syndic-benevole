@@ -88,7 +88,8 @@ async function getSyndicInfoByCoproId(
     .maybeSingle();
   if (!copro?.syndic_id) return { email: null, prenom: null, coproNom: copro?.nom ?? null, userId: null };
   const { data: { user } } = await supabase.auth.admin.getUserById(copro.syndic_id);
-  const prenom = (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
+  const prenom = (((user?.user_metadata?.prenom as string | undefined)?.trim()) ||
+    (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0]) ?? null;
   return { email: user?.email ?? null, prenom, coproNom: copro.nom, userId: copro.syndic_id };
 }
 
@@ -301,7 +302,8 @@ export async function POST(req: NextRequest) {
             ]);
             const userEmail = syndicUser?.email;
             if (userEmail && coproData) {
-              const prenom = (syndicUser?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
+              const prenom = (((syndicUser?.user_metadata?.prenom as string | undefined)?.trim()) ||
+                (syndicUser?.user_metadata?.full_name as string | undefined)?.split(' ')[0]) ?? null;
               const emailParams: SubscriptionEmailParams = {
                 prenom,
                 coproprieteNom: coproData.nom,

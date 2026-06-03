@@ -34,6 +34,7 @@ export interface Profile {
   id: string;          // UUID lié à auth.users
   email: string;
   full_name: string;
+  prenom?: string | null;
   role: Role;
   created_at: string;
   trial_used: boolean; // true si l'utilisateur a déjà activé un essai gratuit

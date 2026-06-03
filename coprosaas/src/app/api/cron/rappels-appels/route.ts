@@ -179,7 +179,7 @@ export async function GET(req: NextRequest) {
   // Récapitulatif syndic à l'échéance (J0)
   const { data: j0SyndicAppels } = await supabase
     .from('appels_de_fonds')
-    .select('id, copropriete_id, titre, date_echeance, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(id, email, full_name))')
+    .select('id, copropriete_id, titre, date_echeance, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(id, email, full_name, prenom))')
     .eq('statut', 'publie')
     .eq('date_echeance', todayStr)
     .is('rappel_syndic_j0_at', null)
@@ -401,7 +401,7 @@ export async function GET(req: NextRequest) {
 
   const { data: brouillons } = await supabase
     .from('appels_de_fonds')
-    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom))')
     .eq('statut', 'brouillon')
     .lt('created_at', threeDaysAgo)
     .gt('date_echeance', dateJ14) // exclusif avec brouillonsJ14 (≤ J+14) et brouillonsJ7 (≤ J+7)
@@ -409,7 +409,7 @@ export async function GET(req: NextRequest) {
 
   const { data: brouillonsJ14 } = await supabase
     .from('appels_de_fonds')
-    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom))')
     .eq('statut', 'brouillon')
     .gt('date_echeance', dateJ7)
     .lte('date_echeance', dateJ14)
@@ -417,7 +417,7 @@ export async function GET(req: NextRequest) {
 
   const { data: brouillonsJ7 } = await supabase
     .from('appels_de_fonds')
-    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom))')
     .eq('statut', 'brouillon')
     .gte('date_echeance', todayStr)
     .lte('date_echeance', dateJ7)
@@ -426,7 +426,7 @@ export async function GET(req: NextRequest) {
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data: brouillonsJ1Urgent } = await supabase
     .from('appels_de_fonds')
-    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name))')
+    .select('id, copropriete_id, coproprietes(nom, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom))')
     .eq('statut', 'brouillon')
     .lt('created_at', oneDayAgo)
     .gte('date_echeance', todayStr)
@@ -437,7 +437,7 @@ export async function GET(req: NextRequest) {
   type BrouillonRow = {
     id: string;
     copropriete_id: string;
-    coproprietes: { nom: string; profiles: { email: string; full_name: string } | { email: string; full_name: string }[] | null } | null;
+    coproprietes: { nom: string; profiles: { email: string; full_name: string; prenom: string | null } | { email: string; full_name: string; prenom: string | null }[] | null } | null;
   };
 
   function groupBrouillons(rows: BrouillonRow[]) {
@@ -452,7 +452,7 @@ export async function GET(req: NextRequest) {
         groups.set(b.copropriete_id, {
           coproprieteNom: copro.nom,
           syndicEmail: profile.email,
-          syndicPrenom: (profile.full_name ?? '').split(' ')[0] || 'Syndic',
+          syndicPrenom: getPrenom(profile),
           ids: [],
         });
       }
@@ -666,10 +666,10 @@ export async function GET(req: NextRequest) {
       const coproIdsToCheck = [...new Set(abandonCandidates.map((c) => c.coproprieteId))];
       const { data: batchAbandonCopros } = await supabase
         .from('coproprietes')
-        .select('id, nom, plan, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+        .select('id, nom, plan, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
         .in('id', coproIdsToCheck)
         .not('plan', 'in', '("actif","essai")');
-      type AbandonCopro = { id: string; nom: string; plan: string | null; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      type AbandonCopro = { id: string; nom: string; plan: string | null; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
       const abandonCoproMap = new Map<string, AbandonCopro>();
       for (const c of (batchAbandonCopros ?? []) as unknown as AbandonCopro[]) abandonCoproMap.set(c.id, c);
 
@@ -683,7 +683,7 @@ export async function GET(req: NextRequest) {
         const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!coproProfile?.email) continue;
 
-        const prenom = (coproProfile.full_name ?? '').split(' ')[0] || null;
+        const prenom = coproProfile.prenom?.trim() || (coproProfile.full_name ?? '').split(' ')[0] || null;
         const subject = buildCheckoutAbandonSubject();
 
         const result = await resend.emails.send({
@@ -762,10 +762,10 @@ export async function GET(req: NextRequest) {
       const coproJ3IdsToCheck = [...new Set(abandonJ3Candidates.map((c) => c.coproprieteId))];
       const { data: batchAbandonJ3Copros } = await supabase
         .from('coproprietes')
-        .select('id, nom, plan, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+        .select('id, nom, plan, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
         .in('id', coproJ3IdsToCheck)
         .not('plan', 'in', '("actif","essai")');
-      type AbandonJ3Copro = { id: string; nom: string; plan: string | null; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      type AbandonJ3Copro = { id: string; nom: string; plan: string | null; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
       const abandonJ3CoproMap = new Map<string, AbandonJ3Copro>();
       for (const c of (batchAbandonJ3Copros ?? []) as unknown as AbandonJ3Copro[]) abandonJ3CoproMap.set(c.id, c);
 
@@ -779,7 +779,7 @@ export async function GET(req: NextRequest) {
         const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!coproProfile?.email) continue;
 
-        const prenom = (coproProfile.full_name ?? '').split(' ')[0] || null;
+        const prenom = coproProfile.prenom?.trim() || (coproProfile.full_name ?? '').split(' ')[0] || null;
         const subject = buildCheckoutAbandonJ3Subject();
 
         const result = await resend.emails.send({
@@ -849,7 +849,7 @@ export async function GET(req: NextRequest) {
 
       const { data: cancelCopros } = await supabase
         .from('coproprietes')
-        .select('id, nom, plan_id, plan_period_end, created_at, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+        .select('id, nom, plan_id, plan_period_end, created_at, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
         .eq('plan', 'actif')
         .eq('plan_cancel_at_period_end', true)
         .gte('plan_period_end', windowStart)
@@ -868,14 +868,14 @@ export async function GET(req: NextRequest) {
         (alreadySentRows ?? []).map((r: { copropriete_id: string | null }) => r.copropriete_id).filter(Boolean),
       );
 
-      type CancelCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; created_at: string; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      type CancelCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; created_at: string; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
       for (const copro of cancelCopros as unknown as CancelCopro[]) {
         if (alreadySentSet.has(copro.id)) continue;
 
         const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!profile?.email) continue;
 
-        const prenom = (profile.full_name ?? '').split(' ')[0] || null;
+        const prenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || null;
         const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
         const isLongTimeUser = copro.created_at < sixMonthsAgoStr;
         const baseParams = {
@@ -935,7 +935,7 @@ export async function GET(req: NextRequest) {
 
     const { data: expiredJ1Copros } = await supabase
       .from('coproprietes')
-      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
       .eq('plan', 'resilie')
       .gte('plan_period_end', expiredJ1Start)
       .lte('plan_period_end', expiredJ1End);
@@ -951,14 +951,14 @@ export async function GET(req: NextRequest) {
         (j1AlreadySent ?? []).map((r: { copropriete_id: string | null }) => r.copropriete_id).filter(Boolean),
       );
 
-      type ExpiredCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      type ExpiredCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
       for (const copro of expiredJ1Copros as unknown as ExpiredCopro[]) {
         if (j1AlreadySet.has(copro.id)) continue;
 
         const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!profile?.email) continue;
 
-        const prenom = (profile.full_name ?? '').split(' ')[0] || null;
+        const prenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || null;
         const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
         const subject = buildCancelExpiredJ1Subject(copro.nom);
         const html = buildCancelExpiredJ1Email({
@@ -1044,11 +1044,11 @@ export async function GET(req: NextRequest) {
       const { data: batchChurnCopros } = candidateCoproIds.length > 0
         ? await supabase
             .from('coproprietes')
-            .select('id, nom, plan, plan_id, profiles!coproprietes_syndic_id_fkey(email, full_name)')
+            .select('id, nom, plan, plan_id, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
             .in('id', candidateCoproIds)
             .eq('plan', 'resilie')
         : { data: [] };
-      type BatchChurnCopro = { id: string; nom: string; plan: string | null; plan_id: string | null; profiles: { email: string; full_name: string | null } | { email: string; full_name: string | null }[] | null };
+      type BatchChurnCopro = { id: string; nom: string; plan: string | null; plan_id: string | null; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
       const churnCoproMap = new Map<string, BatchChurnCopro>();
       for (const c of (batchChurnCopros ?? []) as unknown as BatchChurnCopro[]) churnCoproMap.set(c.id, c);
 
@@ -1065,7 +1065,7 @@ export async function GET(req: NextRequest) {
         const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!coproProfile?.email) continue;
 
-        const prenom = (coproProfile.full_name ?? '').split(' ')[0] || null;
+        const prenom = coproProfile.prenom?.trim() || (coproProfile.full_name ?? '').split(' ')[0] || null;
         const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
         const subject = buildChurnReactivationSubject(copro.nom, reminderKind);
 
@@ -1146,11 +1146,11 @@ export async function GET(req: NextRequest) {
         // Charger les profils et copropriétés associées (plan='resilie')
         const { data: surveyProfiles } = await supabase
           .from('profiles')
-          .select('id, email, full_name')
+          .select('id, email, full_name, prenom')
           .in('email', surveyCandidates);
 
         if (surveyProfiles?.length) {
-          type SurveyProfile = { id: string; email: string; full_name: string | null };
+          type SurveyProfile = { id: string; email: string; full_name: string | null; prenom: string | null };
           const profileMap = new Map<string, SurveyProfile>();
           for (const p of surveyProfiles as SurveyProfile[]) profileMap.set(p.id, p);
           const profileIds = [...profileMap.keys()];
@@ -1175,7 +1175,7 @@ export async function GET(req: NextRequest) {
             const copro = syndicCoproMap.get(profile.id);
             if (!copro) continue; // copropriété non résiliée ou introuvable
 
-            const prenom = (profile.full_name ?? '').split(' ')[0] || null;
+            const prenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || null;
             const subject = buildTrialSurveyJ1Subject(copro.nom);
             const html = buildTrialSurveyJ1Email({
               prenom,
@@ -1286,7 +1286,7 @@ interface AppelRow {
   coproprietes: { nom: string } | null;
 }
 
-type SyndicProfileRow = { id: string; email: string | null; full_name: string | null };
+type SyndicProfileRow = { id: string; email: string | null; full_name: string | null; prenom: string | null };
 
 interface AppelWithSyndicRow extends Omit<AppelRow, 'coproprietes'> {
   coproprietes: {
@@ -1299,7 +1299,15 @@ type OnboardingSyndicProfile = {
   id: string;
   email: string;
   full_name: string | null;
+  prenom: string | null;
 };
+
+/** Extrait le prénom depuis un profil : utilise profiles.prenom si disponible,
+ *  sinon premier mot de full_name (fallback). */
+function getPrenom(profile: { prenom?: string | null; full_name?: string | null } | null | undefined, fallback = 'Syndic'): string {
+  if (!profile) return fallback;
+  return profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || fallback;
+}
 
 type OnboardingCopro = {
   id: string;
@@ -1397,7 +1405,7 @@ async function sendSyndicOnboardingReminders(
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, email, full_name')
+    .select('id, email, full_name, prenom')
     .eq('role', 'syndic')
     .eq('email_bounced_hard', false)
     .in('email', candidateEmails);
@@ -1443,7 +1451,7 @@ async function sendSyndicOnboardingReminders(
 
     if (!force && !(coproCount === 0 || coproprietairesCount < 2)) continue;
 
-    const prenom = (profile.full_name ?? '').split(' ')[0] || 'Syndic';
+    const prenom = getPrenom(profile, 'Syndic');
     const actionUrl = coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/coproprietaires`;
     const subject = kind === 'j21'
       ? buildSyndicReactivationSubject()
@@ -1711,7 +1719,7 @@ async function sendSyndicImpayesRecap(
 
   if (impayes.length === 0) return 0;
 
-  const syndicPrenom = (profile?.full_name ?? '').split(' ')[0] || 'Syndic';
+  const syndicPrenom = getPrenom(profile, 'Syndic');
   const subject = buildSyndicImpayesRecapSubject(copro.nom, appel.titre, impayes.length);
   const result = await resend.emails.send({
     from: FROM,

@@ -60,7 +60,7 @@ export async function POST(
   const { data: ag } = await supabase
     .from('assemblees_generales')
     .select(
-      'id, titre, date_ag, lieu, notes, statut, quorum_atteint, copropriete_id, coproprietes(nom, syndic_id, profiles!coproprietes_syndic_id_fkey(email, full_name))'
+      'id, titre, date_ag, lieu, notes, statut, quorum_atteint, copropriete_id, coproprietes(nom, syndic_id, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom))'
     )
     .eq('id', agId)
     .single();
@@ -219,7 +219,8 @@ export async function POST(
   const syndicEmail = profile?.email;
   if (syndicEmail) {
     const siteUrl = getCanonicalSiteUrl();
-    const prenom = (profile?.full_name ?? '').split(' ')[0] || 'Syndic';
+    const prenom = (profile as { prenom?: string | null; full_name?: string | null } | null)?.prenom?.trim() ||
+      (profile?.full_name ?? '').split(' ')[0] || 'Syndic';
     const subject = buildAGTermineeSubject(copro.nom ?? '');
     await resend.emails
       .send({

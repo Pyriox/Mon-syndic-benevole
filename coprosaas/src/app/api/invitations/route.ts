@@ -129,10 +129,10 @@ export async function POST(request: NextRequest) {
   // Récupérer le prénom du syndic pour personnaliser l'email
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name')
+    .select('full_name, prenom')
     .eq('id', user.id)
     .single();
-  const syndicPrenom = (profile?.full_name ?? '').split(' ')[0] || 'Le syndic';
+  const syndicPrenom = profile?.prenom?.trim() || (profile?.full_name ?? '').split(' ')[0] || 'Le syndic';
 
   // Construire le lien d'invitation (utiliser la variable d'environnement plutôt que l'en-tête Origin)
   const siteUrl = getCanonicalSiteUrl();

@@ -83,7 +83,8 @@ export async function PATCH(
       const { data: { user: declarant } } = await admin.auth.admin.getUserById(incident.declare_par);
       const declarantEmail = declarant?.email;
       if (declarantEmail) {
-        const prenom = (declarant?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? null;
+        const prenom = (((declarant?.user_metadata?.prenom as string | undefined)?.trim()) ||
+          (declarant?.user_metadata?.full_name as string | undefined)?.split(' ')[0]) ?? null;
         const subject = buildIncidentResoluSubject(incident.titre);
         const result = await resend.emails.send({
           from: FROM,

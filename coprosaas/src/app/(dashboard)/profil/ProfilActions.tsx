@@ -114,6 +114,11 @@ export function ProfilEditActions({
     const newFullName = isSci ? raisonSociale.trim() : `${prenom.trim()} ${nom.trim()}`.trim();
     await supabase.auth.updateUser({ data: { full_name: newFullName } });
 
+    // Synchroniser profiles.prenom pour les e-mails automatiques
+    if (!isSci && prenom.trim()) {
+      await supabase.from('profiles').update({ prenom: prenom.trim() }).eq('id', user.id);
+    }
+
     if (fiche) {
       await supabase.from('coproprietaires').update({
         nom: nom.trim() || null,
