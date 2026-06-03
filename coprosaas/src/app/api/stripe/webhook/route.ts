@@ -379,42 +379,52 @@ export async function POST(req: NextRequest) {
         const isTrialToPaid = prev['status'] === 'trialing' && plan === 'actif';
         const isRenewal = prev['current_period_end'] !== undefined && plan === 'actif' && !isTrialToPaid;
         const isCancelScheduled = subscriptionSnapshot.cancelAtPeriodEnd && prev['cancel_at_period_end'] === false;
-        if (isTrialToPaid || isRenewal || isCancelScheduled) {
+        const isPlanChanged = prev['items'] !== undefined && !isTrialToPaid;
+        if (isTrialToPaid || isRenewal || isCancelScheduled || isPlanChanged) {
           try {
             const adminClient = createAdminClient();
-            const { email, prenom, coproNom } = await getSyndicInfoByCoproId(adminClient, coproId);
+            const { email, prenom, coproNom, userId } = await getSyndicInfoByCoproId(adminClient, coproId);
             if (email && coproNom) {
               // Priorité au planId issu des items Stripe (fiable après upgrade/downgrade),
               // fallback sur les métadonnées de l'abonnement.
               const resolvedPlanId = subscriptionSnapshot.planId ?? subMeta?.plan_id ?? null;
-              const emailParams: SubscriptionEmailParams = {
-                prenom,
-                coproprieteNom: coproNom,
-                planLabel: getPlanLabel(resolvedPlanId),
-                periodEnd,
-                dashboardUrl: `${SITE_URL}/dashboard`,
-              };
-              const [subject, html] = isCancelScheduled
-                ? [buildCancelScheduledSubject(coproNom), buildCancelScheduledEmail(emailParams)]
-                : isTrialToPaid
-                ? [buildTrialToPaidSubject(coproNom), buildTrialToPaidEmail(emailParams)]
-                : [buildRenewalSubject(coproNom), buildRenewalEmail(emailParams)];
-              const templateKey = isCancelScheduled
-                ? 'subscription_cancel_scheduled'
-                : isTrialToPaid
-                ? 'subscription_trial_to_paid'
-                : 'subscription_renewal';
-              await sendStripeEmail({
-                to: email,
-                subject,
-                html,
-                context: 'customer.subscription.updated',
-                templateKey,
-                coproprieteId: coproId,
-                legalEventType: templateKey,
-                legalReference: sub['id'] as string,
-                payload: { planId: resolvedPlanId, status: subStatus },
-              });
+              if (isTrialToPaid || isRenewal || isCancelScheduled) {
+                const emailParams: SubscriptionEmailParams = {
+                  prenom,
+                  coproprieteNom: coproNom,
+                  planLabel: getPlanLabel(resolvedPlanId),
+                  periodEnd,
+                  dashboardUrl: `${SITE_URL}/dashboard`,
+                };
+                const [subject, html] = isCancelScheduled
+                  ? [buildCancelScheduledSubject(coproNom), buildCancelScheduledEmail(emailParams)]
+                  : isTrialToPaid
+                  ? [buildTrialToPaidSubject(coproNom), buildTrialToPaidEmail(emailParams)]
+                  : [buildRenewalSubject(coproNom), buildRenewalEmail(emailParams)];
+                const templateKey = isCancelScheduled
+                  ? 'subscription_cancel_scheduled'
+                  : isTrialToPaid
+                  ? 'subscription_trial_to_paid'
+                  : 'subscription_renewal';
+                await sendStripeEmail({
+                  to: email,
+                  subject,
+                  html,
+                  context: 'customer.subscription.updated',
+                  templateKey,
+                  coproprieteId: coproId,
+                  legalEventType: templateKey,
+                  legalReference: sub['id'] as string,
+                  payload: { planId: resolvedPlanId, status: subStatus },
+                });
+              }
+              if (isCancelScheduled) {
+                await logUserEvent(adminClient, email, 'subscription_cancel_scheduled', `Résiliation programmée — ${coproNom}`, userId);
+              } else if (isTrialToPaid) {
+                await logUserEvent(adminClient, email, 'subscription_created', `Abonnement activé — ${coproNom} (${getPlanLabel(resolvedPlanId)})`, userId);
+              } else if (isPlanChanged) {
+                await logUserEvent(adminClient, email, 'subscription_plan_changed', `Plan modifié — ${coproNom} (${getPlanLabel(resolvedPlanId)})`, userId);
+              }
             }
           } catch (e) {
             console.error('[Stripe webhook] Erreur email subscription update:', e);

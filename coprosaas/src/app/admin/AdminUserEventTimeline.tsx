@@ -70,6 +70,7 @@ const EVENT_META: Record<string, { icon: string; label: string; color: string }>
   checkout_3ds_failed: { icon: '✗', label: 'Échec 3D Secure', color: 'text-red-700 bg-red-50 border-red-200' },
   trial_cancelled: { icon: '↓', label: 'Essai abandonné', color: 'text-rose-600 bg-rose-50 border-rose-200' },
   subscription_cancel_scheduled: { icon: '⏳', label: 'Résiliation programmée', color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  subscription_plan_changed: { icon: '⇄', label: 'Changement de plan', color: 'text-blue-700 bg-blue-50 border-blue-200' },
   churn_reactivation_j7_sent: { icon: '✉', label: 'Relance churn J+7', color: 'text-amber-600 bg-amber-50 border-amber-200' },
   churn_reactivation_j30_sent: { icon: '✉', label: 'Relance churn J+30', color: 'text-orange-600 bg-orange-50 border-orange-200' },
   invitation_accepted: { icon: '✓', label: 'Invitation acceptée', color: 'text-cyan-600 bg-cyan-50 border-cyan-200' },
