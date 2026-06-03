@@ -38,7 +38,7 @@ import {
   type SyndicOnboardingReminderKind,
   type BrouillonEcheanceType,
 } from '@/lib/emails/syndic-notifications';
-import { buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject, buildCheckoutAbandonJ3Email, buildCheckoutAbandonJ3Subject, buildCancelRenewalJ30Email, buildCancelRenewalJ30Subject, buildCancelRenewalJ7Email, buildCancelRenewalJ7Subject, buildCancelRenewalJ3Email, buildCancelRenewalJ3Subject, buildCancelRenewalJ1Email, buildCancelRenewalJ1Subject, buildCancelExpiredJ1Email, buildCancelExpiredJ1Subject } from '@/lib/emails/subscription';
+import { buildChurnReactivationEmail, buildChurnReactivationSubject, buildCheckoutAbandonEmail, buildCheckoutAbandonSubject, buildCheckoutAbandonJ3Email, buildCheckoutAbandonJ3Subject, buildCancelRenewalJ30Email, buildCancelRenewalJ30Subject, buildCancelRenewalJ7Email, buildCancelRenewalJ7Subject, buildCancelRenewalJ3Email, buildCancelRenewalJ3Subject, buildCancelRenewalJ1Email, buildCancelRenewalJ1Subject, buildCancelExpiredJ1Email, buildCancelExpiredJ1Subject, buildTrialSurveyJ1Email, buildTrialSurveyJ1Subject } from '@/lib/emails/subscription';
 import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushAdminAlert } from '@/lib/notification-center';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
@@ -1106,6 +1106,112 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ── Sondage J+1 — essai non converti ────────────────────────────────────────
+  // Cible : syndics dont l'essai a expiré sans souscription il y a ~1j
+  // (event_type trial_cancelled créé hier, plan toujours 'resilie').
+  // Idempotence : event_type trial_survey_j1_sent.
+  let trialSurveyJ1Sent = 0;
+  if (!onboardingOnly) {
+    const surveyWindowEnd   = addDays(today, -1);
+    const surveyWindowStart = addDays(today, -2); // +1j de rattrapage
+
+    const { data: trialCancelledEvents } = await supabase
+      .from('user_events')
+      .select('user_email')
+      .eq('event_type', 'trial_cancelled')
+      .gte('created_at', `${surveyWindowStart}T00:00:00.000Z`)
+      .lt('created_at',  `${surveyWindowEnd}T23:59:59.999Z`)
+      .not('user_email', 'is', null);
+
+    if (trialCancelledEvents?.length) {
+      const surveyEmails = [...new Set(
+        (trialCancelledEvents as Array<{ user_email: string }>)
+          .map((e) => e.user_email.trim().toLowerCase())
+          .filter(Boolean),
+      )];
+
+      // Idempotence : exclure ceux qui ont déjà reçu le sondage
+      const { data: alreadySurveyed } = await supabase
+        .from('user_events')
+        .select('user_email')
+        .eq('event_type', 'trial_survey_j1_sent')
+        .in('user_email', surveyEmails);
+      const alreadySurveyedSet = new Set(
+        (alreadySurveyed ?? []).map((r: { user_email: string }) => r.user_email?.trim().toLowerCase()).filter(Boolean),
+      );
+      const surveyCandidates = surveyEmails.filter((e) => !alreadySurveyedSet.has(e));
+      if (!surveyCandidates.length) {
+        // tous déjà traités, continuer
+      } else {
+        // Charger les profils et copropriétés associées (plan='resilie')
+        const { data: surveyProfiles } = await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .in('email', surveyCandidates);
+
+        if (surveyProfiles?.length) {
+          type SurveyProfile = { id: string; email: string; full_name: string | null };
+          const profileMap = new Map<string, SurveyProfile>();
+          for (const p of surveyProfiles as SurveyProfile[]) profileMap.set(p.id, p);
+          const profileIds = [...profileMap.keys()];
+
+          const { data: surveyCopros } = await supabase
+            .from('coproprietes')
+            .select('id, nom, plan_id, syndic_id')
+            .in('syndic_id', profileIds)
+            .eq('plan', 'resilie');
+
+          type SurveyCopro = { id: string; nom: string; plan_id: string | null; syndic_id: string };
+          // Un syndic peut avoir plusieurs copropriétés : on prend la première par syndic_id
+          const syndicCoproMap = new Map<string, SurveyCopro>();
+          for (const c of (surveyCopros ?? []) as SurveyCopro[]) {
+            if (!syndicCoproMap.has(c.syndic_id)) syndicCoproMap.set(c.syndic_id, c);
+          }
+
+          for (const profile of surveyProfiles as SurveyProfile[]) {
+            const email = profile.email.trim().toLowerCase();
+            if (alreadySurveyedSet.has(email)) continue;
+
+            const copro = syndicCoproMap.get(profile.id);
+            if (!copro) continue; // copropriété non résiliée ou introuvable
+
+            const prenom = (profile.full_name ?? '').split(' ')[0] || null;
+            const subject = buildTrialSurveyJ1Subject(copro.nom);
+            const html = buildTrialSurveyJ1Email({
+              prenom,
+              coproprieteNom: copro.nom,
+              abonnementUrl: `${SITE_URL}/abonnement`,
+            });
+
+            const result = await resend.emails.send({ from: FROM, to: email, subject, html });
+            await trackCronEmail({
+              providerMessageId: result.data?.id,
+              errorMessage: result.error?.message,
+              templateKey: 'trial_survey_j1',
+              recipientEmail: email,
+              subject,
+              coproprieteId: copro.id,
+              legalEventType: 'trial_survey',
+              legalReference: copro.id,
+              payload: { trigger: 'cron', reminderType: 'trial_survey_j1', planId: copro.plan_id },
+            });
+
+            if (!result.error) {
+              await supabase.from('user_events').insert({
+                user_email: email,
+                event_type: 'trial_survey_j1_sent',
+                label: `Sondage essai non converti J+1 envoyé — ${copro.nom}`,
+                copropriete_id: copro.id,
+              });
+              totalSent++;
+              trialSurveyJ1Sent++;
+            } else console.error('[cron] Erreur email trial_survey_j1:', result.error);
+          }
+        }
+      }
+    }
+  }
+
   // ── Garde-fou volume (P4.a) ──────────────────────────────────────────────────
   const MAX_EMAILS_PER_RUN = 500;
   if (totalSent > MAX_EMAILS_PER_RUN) {
@@ -1164,6 +1270,7 @@ export async function GET(req: NextRequest) {
     checkout_abandon_j3: checkoutAbandonJ3Sent,
     cancel_renewal: cancelRenewalSent,
     churn_reactivation: churnReactivationSent,
+    trial_survey_j1: trialSurveyJ1Sent,
     failed_retry_queue: failedRetryCount ?? 0,
     sent: totalSent,
     retries,

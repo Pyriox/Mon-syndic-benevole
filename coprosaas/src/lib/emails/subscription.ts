@@ -954,3 +954,61 @@ ${ctaButton('Démarrer mon essai gratuit →', abonnementUrl, COLOR.blue)}
 
   return wrapEmail(content, COLOR.blue, 'Dernier rappel — votre essai 14 jours est toujours disponible, sans engagement.');
 }
+
+// ── Sondage J+1 après essai non converti ──────────────────────────────────────
+// Cible : essai terminé sans souscription (event_type: trial_cancelled).
+// Idempotence via user_events (event_type: trial_survey_j1_sent).
+
+export interface TrialSurveyParams {
+  prenom: string | null;
+  coproprieteNom: string;
+  abonnementUrl: string;
+}
+
+export function buildTrialSurveyJ1Subject(coproprieteNom: string): string {
+  return `Une question sur votre essai — ${coproprieteNom} — Mon Syndic Bénévole`;
+}
+
+export function buildTrialSurveyJ1Email(params: TrialSurveyParams): string {
+  const { prenom, coproprieteNom, abonnementUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+  const encName = encodeURIComponent(`${coproprieteNom} — Mon Syndic Bénévole`);
+
+  const reasons: Array<{ label: string; body: string }> = [
+    { label: 'Pas encore prêt(e), je reviendrai plus tard', body: "Je ne suis pas encore prêt(e) à souscrire, mais j'envisage de revenir." },
+    { label: 'Le tarif est trop élevé', body: 'Je trouve le tarif trop élevé pour mes besoins actuels.' },
+    { label: 'Il manque une fonctionnalité importante', body: "Il manque une fonctionnalité dont j'aurais besoin : (préciser)" },
+    { label: 'Je gère avec un autre outil', body: 'Je continue à gérer ma copropriété avec un autre outil (Excel, autre logiciel…).' },
+    { label: 'Autre raison', body: 'Voici ma raison : (préciser)' },
+  ];
+
+  const reasonLinks = reasons.map(({ label, body }) =>
+    `<tr><td style="padding:4px 0"><a href="mailto:${CONTACT_EMAIL}?subject=Retour%20essai%20—%20${encName}&body=${encodeURIComponent(body)}" style="display:inline-block;padding:9px 14px;font-size:13px;color:${COLOR.blue};background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;text-decoration:none;line-height:1.4">${h(label)}</a></td></tr>`,
+  ).join('\n');
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre essai s&rsquo;est terminé hier</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Votre essai gratuit sur <strong>${h(coproprieteNom)}</strong> s&rsquo;est terminé hier sans souscription. Pour améliorer notre service, pourriez-vous nous dire en un clic pourquoi vous n&rsquo;avez pas souscrit&nbsp;?
+</p>
+
+<table cellpadding="0" cellspacing="0" style="margin:0 0 24px">
+${reasonLinks}
+</table>
+
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted};line-height:1.6">
+  Si c&rsquo;était un oubli ou si vous avez changé d&rsquo;avis, vos données sont conservées 30&nbsp;jours — vous pouvez reprendre exactement là où vous en étiez.
+</p>
+
+${ctaButton('Voir les offres d\'abonnement →', abonnementUrl, COLOR.green)}
+
+<p style="margin:12px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Merci pour votre retour — cela nous aide vraiment à améliorer l&rsquo;application.<br>
+  Des questions&nbsp;? <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>
+</p>`;
+
+  return wrapEmail(content, COLOR.blue, `Une minute pour nous dire pourquoi vous n'avez pas souscrit ? Votre avis compte vraiment.`);
+}
