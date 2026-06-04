@@ -43,6 +43,7 @@ import { trackEmailDelivery } from '@/lib/email-delivery';
 import { pushAdminAlert } from '@/lib/notification-center';
 import { resolveOnboardingConfirmationWindow, resolveOnboardingKinds } from '@/lib/onboarding-reminders';
 import { getCronAuthState } from '@/lib/cron-auth';
+import { buildUnsubscribeUrl } from '@/lib/unsubscribe-token';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mon-syndic-benevole.fr';
 
@@ -666,10 +667,10 @@ export async function GET(req: NextRequest) {
       const coproIdsToCheck = [...new Set(abandonCandidates.map((c) => c.coproprieteId))];
       const { data: batchAbandonCopros } = await supabase
         .from('coproprietes')
-        .select('id, nom, plan, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
+        .select('id, nom, plan, profiles!coproprietes_syndic_id_fkey(id, email, full_name, prenom, unsubscribe_marketing)')
         .in('id', coproIdsToCheck)
         .not('plan', 'in', '("actif","essai")');
-      type AbandonCopro = { id: string; nom: string; plan: string | null; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
+      type AbandonCopro = { id: string; nom: string; plan: string | null; profiles: { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean } | { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean }[] | null };
       const abandonCoproMap = new Map<string, AbandonCopro>();
       for (const c of (batchAbandonCopros ?? []) as unknown as AbandonCopro[]) abandonCoproMap.set(c.id, c);
 
@@ -682,9 +683,11 @@ export async function GET(req: NextRequest) {
 
         const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!coproProfile?.email) continue;
+        if (coproProfile.unsubscribe_marketing) continue;
 
         const prenom = coproProfile.prenom?.trim() || (coproProfile.full_name ?? '').split(' ')[0] || null;
         const subject = buildCheckoutAbandonSubject();
+        const abandonUserId = candidate.userId ?? coproProfile.id;
 
         const result = await resend.emails.send({
           from: FROM,
@@ -694,6 +697,7 @@ export async function GET(req: NextRequest) {
             prenom,
             coproprieteNom: copro.nom,
             abonnementUrl: `${SITE_URL}/abonnement`,
+            unsubscribeUrl: buildUnsubscribeUrl(abandonUserId, SITE_URL),
           }),
         });
 
@@ -762,10 +766,10 @@ export async function GET(req: NextRequest) {
       const coproJ3IdsToCheck = [...new Set(abandonJ3Candidates.map((c) => c.coproprieteId))];
       const { data: batchAbandonJ3Copros } = await supabase
         .from('coproprietes')
-        .select('id, nom, plan, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
+        .select('id, nom, plan, profiles!coproprietes_syndic_id_fkey(id, email, full_name, prenom, unsubscribe_marketing)')
         .in('id', coproJ3IdsToCheck)
         .not('plan', 'in', '("actif","essai")');
-      type AbandonJ3Copro = { id: string; nom: string; plan: string | null; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
+      type AbandonJ3Copro = { id: string; nom: string; plan: string | null; profiles: { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean } | { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean }[] | null };
       const abandonJ3CoproMap = new Map<string, AbandonJ3Copro>();
       for (const c of (batchAbandonJ3Copros ?? []) as unknown as AbandonJ3Copro[]) abandonJ3CoproMap.set(c.id, c);
 
@@ -778,9 +782,11 @@ export async function GET(req: NextRequest) {
 
         const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!coproProfile?.email) continue;
+        if (coproProfile.unsubscribe_marketing) continue;
 
         const prenom = coproProfile.prenom?.trim() || (coproProfile.full_name ?? '').split(' ')[0] || null;
         const subject = buildCheckoutAbandonJ3Subject();
+        const abandonJ3UserId = candidate.userId ?? coproProfile.id;
 
         const result = await resend.emails.send({
           from: FROM,
@@ -790,6 +796,7 @@ export async function GET(req: NextRequest) {
             prenom,
             coproprieteNom: copro.nom,
             abonnementUrl: `${SITE_URL}/abonnement`,
+            unsubscribeUrl: buildUnsubscribeUrl(abandonJ3UserId, SITE_URL),
           }),
         });
 
@@ -849,7 +856,7 @@ export async function GET(req: NextRequest) {
 
       const { data: cancelCopros } = await supabase
         .from('coproprietes')
-        .select('id, nom, plan_id, plan_period_end, created_at, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
+        .select('id, nom, plan_id, plan_period_end, created_at, profiles!coproprietes_syndic_id_fkey(id, email, full_name, prenom, unsubscribe_marketing)')
         .eq('plan', 'actif')
         .eq('plan_cancel_at_period_end', true)
         .gte('plan_period_end', windowStart)
@@ -868,16 +875,18 @@ export async function GET(req: NextRequest) {
         (alreadySentRows ?? []).map((r: { copropriete_id: string | null }) => r.copropriete_id).filter(Boolean),
       );
 
-      type CancelCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; created_at: string; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
+      type CancelCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; created_at: string; profiles: { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean } | { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean }[] | null };
       for (const copro of cancelCopros as unknown as CancelCopro[]) {
         if (alreadySentSet.has(copro.id)) continue;
 
         const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!profile?.email) continue;
+        if (profile.unsubscribe_marketing) continue;
 
         const prenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || null;
         const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
         const isLongTimeUser = copro.created_at < sixMonthsAgoStr;
+        const cancelUnsubUrl = buildUnsubscribeUrl(profile.id, SITE_URL);
         const baseParams = {
           prenom,
           coproprieteNom: copro.nom,
@@ -885,6 +894,7 @@ export async function GET(req: NextRequest) {
           periodEnd: copro.plan_period_end,
           dashboardUrl: `${SITE_URL}`,
           isLongTimeUser,
+          unsubscribeUrl: cancelUnsubUrl,
         };
 
         let subject: string;
@@ -935,7 +945,7 @@ export async function GET(req: NextRequest) {
 
     const { data: expiredJ1Copros } = await supabase
       .from('coproprietes')
-      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
+      .select('id, nom, plan_id, plan_period_end, profiles!coproprietes_syndic_id_fkey(id, email, full_name, prenom, unsubscribe_marketing)')
       .eq('plan', 'resilie')
       .gte('plan_period_end', expiredJ1Start)
       .lte('plan_period_end', expiredJ1End);
@@ -951,12 +961,13 @@ export async function GET(req: NextRequest) {
         (j1AlreadySent ?? []).map((r: { copropriete_id: string | null }) => r.copropriete_id).filter(Boolean),
       );
 
-      type ExpiredCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
+      type ExpiredCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; profiles: { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean } | { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean }[] | null };
       for (const copro of expiredJ1Copros as unknown as ExpiredCopro[]) {
         if (j1AlreadySet.has(copro.id)) continue;
 
         const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!profile?.email) continue;
+        if (profile.unsubscribe_marketing) continue;
 
         const prenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || null;
         const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
@@ -967,6 +978,7 @@ export async function GET(req: NextRequest) {
           planLabel,
           periodEnd: copro.plan_period_end,
           dashboardUrl: `${SITE_URL}`,
+          unsubscribeUrl: buildUnsubscribeUrl(profile.id, SITE_URL),
         });
 
         const result = await resend.emails.send({ from: FROM, to: profile.email, subject, html });
@@ -1044,11 +1056,11 @@ export async function GET(req: NextRequest) {
       const { data: batchChurnCopros } = candidateCoproIds.length > 0
         ? await supabase
             .from('coproprietes')
-            .select('id, nom, plan, plan_id, profiles!coproprietes_syndic_id_fkey(email, full_name, prenom)')
+            .select('id, nom, plan, plan_id, profiles!coproprietes_syndic_id_fkey(id, email, full_name, prenom, unsubscribe_marketing)')
             .in('id', candidateCoproIds)
             .eq('plan', 'resilie')
         : { data: [] };
-      type BatchChurnCopro = { id: string; nom: string; plan: string | null; plan_id: string | null; profiles: { email: string; full_name: string | null; prenom: string | null } | { email: string; full_name: string | null; prenom: string | null }[] | null };
+      type BatchChurnCopro = { id: string; nom: string; plan: string | null; plan_id: string | null; profiles: { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean } | { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean }[] | null };
       const churnCoproMap = new Map<string, BatchChurnCopro>();
       for (const c of (batchChurnCopros ?? []) as unknown as BatchChurnCopro[]) churnCoproMap.set(c.id, c);
 
@@ -1064,10 +1076,12 @@ export async function GET(req: NextRequest) {
 
         const coproProfile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!coproProfile?.email) continue;
+        if (coproProfile.unsubscribe_marketing) continue;
 
         const prenom = coproProfile.prenom?.trim() || (coproProfile.full_name ?? '').split(' ')[0] || null;
         const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
         const subject = buildChurnReactivationSubject(copro.nom, reminderKind);
+        const churnUnsubUrl = buildUnsubscribeUrl(coproProfile.id, SITE_URL);
 
         const result = await resend.emails.send({
           from: FROM,
@@ -1079,6 +1093,7 @@ export async function GET(req: NextRequest) {
             planLabel,
             dashboardUrl: `${SITE_URL}/abonnement`,
             kind: reminderKind,
+            unsubscribeUrl: churnUnsubUrl,
           }),
         });
         await trackCronEmail({
@@ -1146,11 +1161,11 @@ export async function GET(req: NextRequest) {
         // Charger les profils et copropriétés associées (plan='resilie')
         const { data: surveyProfiles } = await supabase
           .from('profiles')
-          .select('id, email, full_name, prenom')
+          .select('id, email, full_name, prenom, unsubscribe_marketing')
           .in('email', surveyCandidates);
 
         if (surveyProfiles?.length) {
-          type SurveyProfile = { id: string; email: string; full_name: string | null; prenom: string | null };
+          type SurveyProfile = { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean };
           const profileMap = new Map<string, SurveyProfile>();
           for (const p of surveyProfiles as SurveyProfile[]) profileMap.set(p.id, p);
           const profileIds = [...profileMap.keys()];
@@ -1171,9 +1186,10 @@ export async function GET(req: NextRequest) {
           for (const profile of surveyProfiles as SurveyProfile[]) {
             const email = profile.email.trim().toLowerCase();
             if (alreadySurveyedSet.has(email)) continue;
+            if (profile.unsubscribe_marketing) continue;
 
             const copro = syndicCoproMap.get(profile.id);
-            if (!copro) continue; // copropriété non résiliée ou introuvable
+            if (!copro) continue;
 
             const prenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || null;
             const subject = buildTrialSurveyJ1Subject(copro.nom);
@@ -1181,6 +1197,7 @@ export async function GET(req: NextRequest) {
               prenom,
               coproprieteNom: copro.nom,
               abonnementUrl: `${SITE_URL}/abonnement`,
+              unsubscribeUrl: buildUnsubscribeUrl(profile.id, SITE_URL),
             });
 
             const result = await resend.emails.send({ from: FROM, to: email, subject, html });
@@ -1408,6 +1425,7 @@ async function sendSyndicOnboardingReminders(
     .select('id, email, full_name, prenom')
     .eq('role', 'syndic')
     .eq('email_bounced_hard', false)
+    .eq('unsubscribe_marketing', false)
     .in('email', candidateEmails);
 
   const syndicProfiles = (profiles ?? []) as OnboardingSyndicProfile[];
@@ -1463,20 +1481,22 @@ async function sendSyndicOnboardingReminders(
             ? buildSyndicOnboardingJ7Subject({ coproCount })
             : buildSyndicOnboardingJ2Subject({ coproCount });
 
+    const unsubUrl = buildUnsubscribeUrl(profile.id, SITE_URL);
     const html = kind === 'j21'
       ? buildSyndicReactivationEmail({
           syndicPrenom: prenom,
           coproCount,
           coproprietairesCount,
           dashboardUrl: coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/dashboard`,
+          unsubscribeUrl: unsubUrl,
         })
       : kind === 'j30'
-        ? buildSyndicOnboardingJ30Email({ syndicPrenom: prenom, dashboardUrl: `${SITE_URL}/dashboard` })
+        ? buildSyndicOnboardingJ30Email({ syndicPrenom: prenom, dashboardUrl: `${SITE_URL}/dashboard`, unsubscribeUrl: unsubUrl })
         : kind === 'j14'
-          ? buildSyndicOnboardingJ14Email({ syndicPrenom: prenom, actionUrl: coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/dashboard` })
+          ? buildSyndicOnboardingJ14Email({ syndicPrenom: prenom, actionUrl: coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/dashboard`, unsubscribeUrl: unsubUrl })
           : kind === 'j7'
-            ? buildSyndicOnboardingJ7Email({ syndicPrenom: prenom, coproCount, actionUrl })
-            : buildSyndicOnboardingJ2Email({ syndicPrenom: prenom, coproCount, actionUrl });
+            ? buildSyndicOnboardingJ7Email({ syndicPrenom: prenom, coproCount, actionUrl, unsubscribeUrl: unsubUrl })
+            : buildSyndicOnboardingJ2Email({ syndicPrenom: prenom, coproCount, actionUrl, unsubscribeUrl: unsubUrl });
 
     const result = await resend.emails.send({
       from: FROM,

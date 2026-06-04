@@ -220,6 +220,7 @@ export interface SyndicOnboardingJ2EmailParams {
   syndicPrenom: string;
   coproCount: number;
   actionUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export function buildSyndicOnboardingJ2Subject(params: { coproCount: number }): string {
@@ -229,7 +230,7 @@ export function buildSyndicOnboardingJ2Subject(params: { coproCount: number }): 
 }
 
 export function buildSyndicOnboardingJ2Email(params: SyndicOnboardingJ2EmailParams): string {
-  const { syndicPrenom, coproCount, actionUrl } = params;
+  const { syndicPrenom, coproCount, actionUrl, unsubscribeUrl } = params;
   const hasNoCopro = coproCount === 0;
 
   const ctaLabel = hasNoCopro ? 'Activer mes relances automatiques →' : 'Ajouter mes copropriétaires (3 min) →';
@@ -277,6 +278,7 @@ ${ctaButton(ctaLabel, actionUrl, COLOR.blue)}
     hasNoCopro
       ? 'Créez votre copropriété en 2 minutes pour activer les relances automatiques.'
       : 'Ajoutez vos copropriétaires en 3 minutes pour activer les notifications automatiques.',
+    unsubscribeUrl,
   );
 }
 
@@ -286,6 +288,7 @@ export interface SyndicOnboardingJ7EmailParams {
   syndicPrenom: string;
   coproCount: number;
   actionUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export function buildSyndicOnboardingJ7Subject(params: { coproCount: number }): string {
@@ -295,7 +298,7 @@ export function buildSyndicOnboardingJ7Subject(params: { coproCount: number }): 
 }
 
 export function buildSyndicOnboardingJ7Email(params: SyndicOnboardingJ7EmailParams): string {
-  const { syndicPrenom, coproCount, actionUrl } = params;
+  const { syndicPrenom, coproCount, actionUrl, unsubscribeUrl } = params;
   const hasNoCopro = coproCount === 0;
 
   const ctaLabel = hasNoCopro ? 'Configurer en 2 minutes →' : 'Ajouter mes copropriétaires →';
@@ -333,6 +336,7 @@ ${ctaButton(ctaLabel, actionUrl, COLOR.amber)}
     hasNoCopro
       ? 'Votre espace est prêt — configurez votre copropriété en 2 minutes pour activer les relances automatiques.'
       : 'Vos copropriétaires ne reçoivent encore rien — ajoutez-les pour activer les notifications automatiques.',
+    unsubscribeUrl,
   );
 }
 
@@ -341,6 +345,7 @@ ${ctaButton(ctaLabel, actionUrl, COLOR.amber)}
 export interface SyndicOnboardingJ14EmailParams {
   syndicPrenom: string;
   actionUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export function buildSyndicOnboardingJ14Subject(): string {
@@ -348,7 +353,7 @@ export function buildSyndicOnboardingJ14Subject(): string {
 }
 
 export function buildSyndicOnboardingJ14Email(params: SyndicOnboardingJ14EmailParams): string {
-  const { syndicPrenom, actionUrl } = params;
+  const { syndicPrenom, actionUrl, unsubscribeUrl } = params;
 
   const content = `
 <h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">D&rsquo;autres syndics bénévoles l&rsquo;ont fait.</h1>
@@ -376,7 +381,7 @@ ${ctaButton('Reprendre ma configuration →', actionUrl, COLOR.blue)}
   — L&rsquo;équipe Mon Syndic Bénévole
 </p>`;
 
-  return wrapEmail(content, COLOR.blue, 'D’autres syndics bénévoles ont configuré leur espace en 10 minutes — votre tour.');
+  return wrapEmail(content, COLOR.blue, 'D’autres syndics bénévoles ont configuré leur espace en 10 minutes — votre tour.', unsubscribeUrl);
 }
 
 // ─── Compat : buildSyndicOnboardingReminderSubject / Email ───────────────────
@@ -421,6 +426,7 @@ export interface SyndicReactivationEmailParams {
   coproCount: number;
   coproprietairesCount: number;
   dashboardUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export function buildSyndicReactivationSubject(): string {
@@ -428,7 +434,7 @@ export function buildSyndicReactivationSubject(): string {
 }
 
 export function buildSyndicReactivationEmail(params: SyndicReactivationEmailParams): string {
-  const { syndicPrenom, coproCount, coproprietairesCount, dashboardUrl } = params;
+  const { syndicPrenom, coproCount, coproprietairesCount, dashboardUrl, unsubscribeUrl } = params;
 
   const hasNoCopro = coproCount === 0;
   const hasNoCopropriétaires = !hasNoCopro && coproprietairesCount < 2;
@@ -499,7 +505,7 @@ ${ctaButton(ctaLabel, dashboardUrl, COLOR.green)}
   Besoin d&rsquo;aide pour démarrer&nbsp;? <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.blue}">Contactez-nous</a> — on vous accompagne personnellement sous 24h.
 </p>`;
 
-  return wrapEmail(content, COLOR.green, 'Vos relances, vos convocations et vos documents — tout peut être automatisé depuis votre espace.');
+  return wrapEmail(content, COLOR.green, 'Vos relances, vos convocations et vos documents — tout peut être automatisé depuis votre espace.', unsubscribeUrl);
 }
 
 // ── Réactivation J+30 — Objection handling / Dernier rappel ──────────────────
@@ -507,6 +513,7 @@ ${ctaButton(ctaLabel, dashboardUrl, COLOR.green)}
 export interface SyndicOnboardingJ30EmailParams {
   syndicPrenom: string;
   dashboardUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export function buildSyndicOnboardingJ30Subject(): string {
@@ -514,7 +521,7 @@ export function buildSyndicOnboardingJ30Subject(): string {
 }
 
 export function buildSyndicOnboardingJ30Email(params: SyndicOnboardingJ30EmailParams): string {
-  const { syndicPrenom, dashboardUrl } = params;
+  const { syndicPrenom, dashboardUrl, unsubscribeUrl } = params;
 
   const objectionBlock = `
 <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:10px;border:1px solid ${COLOR.border};overflow:hidden">
@@ -587,7 +594,7 @@ ${ctaButton('Reprendre là où je me suis arrêté →', dashboardUrl, COLOR.blu
   Si vous souhaitez fermer votre compte, contactez-nous à <a href="mailto:contact@mon-syndic-benevole.fr" style="color:${COLOR.muted}">contact@mon-syndic-benevole.fr</a>.
 </p>`;
 
-  return wrapEmail(content, COLOR.blue, 'On vous fait reprendre en 3 minutes.');
+  return wrapEmail(content, COLOR.blue, 'On vous fait reprendre en 3 minutes.', unsubscribeUrl);
 }
 
 // ── Alerte AG planifiée sans convocation envoyée ──────────────────────────────

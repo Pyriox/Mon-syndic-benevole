@@ -25,11 +25,12 @@ export const COLOR = {
 /**
  * Wraps `innerHtml` in the shared email shell.
  *
- * @param innerHtml   - The content between header and footer
- * @param accentColor - Top border accent color (hex)
- * @param preheader   - Short text shown in inbox preview (after subject)
+ * @param innerHtml      - The content between header and footer
+ * @param accentColor    - Top border accent color (hex)
+ * @param preheader      - Short text shown in inbox preview (after subject)
+ * @param unsubscribeUrl - Optional unsubscribe URL (required for COMMERCIAL emails per LCEN art. L.34-5)
  */
-export function wrapEmail(innerHtml: string, accentColor: string = COLOR.blue, preheader?: string): string {
+export function wrapEmail(innerHtml: string, accentColor: string = COLOR.blue, preheader?: string, unsubscribeUrl?: string): string {
   // The preheader padding trick hides the rest of the email body from inbox snippets
   const preheaderHtml = preheader
     ? `<!-- Préheader : visible dans la liste inbox avant d'ouvrir l'e-mail -->
@@ -84,6 +85,9 @@ ${preheaderHtml}
               <p style="margin:0;font-size:12px;color:${COLOR.muted};line-height:1.6">
                 ${BRAND_NAME} · <a href="${SITE_URL}" style="color:${COLOR.muted};text-decoration:underline">mon-syndic-benevole.fr</a>
               </p>
+              ${unsubscribeUrl ? `<p style="margin:8px 0 0;font-size:11px;color:${COLOR.muted};line-height:1.6">
+                <a href="${unsubscribeUrl}" style="color:${COLOR.muted};text-decoration:underline">Se désabonner de ces rappels</a>
+              </p>` : ''}
             </td>
           </tr>
 

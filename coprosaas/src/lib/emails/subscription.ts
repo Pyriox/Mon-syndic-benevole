@@ -319,10 +319,8 @@ export function buildCancelledEmail(params: SubscriptionEmailParams): string {
   L'abonnement de la copropriété <strong>${h(coproprieteNom)}</strong> a été résilié. Votre accès a été désactivé.
 </p>
 <p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Vos données (copropriétés, appels de fonds, documents) sont conservées. Vous pouvez souscrire un nouvel abonnement à tout moment.
+  Vos données (copropriétés, appels de fonds, documents) sont conservées pendant 30 jours.
 </p>
-
-${ctaButton('Réactiver mon abonnement →', `${dashboardUrl}`, COLOR.blue)}
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
   Des questions ? Écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
@@ -340,6 +338,7 @@ export interface ChurnReactivationEmailParams {
   dashboardUrl: string;
   /** 'j7' = relance douce ; 'j14' = urgence médium ; 'j30' = dernière chance avant suppression probable */
   kind: 'j7' | 'j14' | 'j30';
+  unsubscribeUrl?: string;
 }
 
 export function buildChurnReactivationSubject(coproprieteNom: string, kind: 'j7' | 'j14' | 'j30'): string {
@@ -349,7 +348,7 @@ export function buildChurnReactivationSubject(coproprieteNom: string, kind: 'j7'
 }
 
 export function buildChurnReactivationEmail(params: ChurnReactivationEmailParams): string {
-  const { prenom, coproprieteNom, planLabel, dashboardUrl, kind } = params;
+  const { prenom, coproprieteNom, planLabel, dashboardUrl, kind, unsubscribeUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
 
   const isJ30 = kind === 'j30';
@@ -400,6 +399,7 @@ ${ctaButton('Réactiver mon abonnement →', dashboardUrl, COLOR.green)}
       : isJ14
         ? 'Reprenez en 30 secondes — vos données et votre configuration sont intactes'
         : 'Retrouvez vos copropriétaires, appels et documents exactement où vous les avez laissés',
+    unsubscribeUrl,
   );
 }
 
@@ -420,33 +420,8 @@ export function buildTrialEndingJ7Email(params: SubscriptionEmailParams): string
 
 <p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
 <p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Votre essai pour <strong>${h(coproprieteNom)}</strong> se termine${deadlineStr ? ` le <strong>${deadlineStr}</strong>` : ' dans 7 jours'}. Voici ce qui est déjà en place grâce à votre abonnement <strong>${h(planLabel)}</strong>&nbsp;:
+  Votre essai pour <strong>${h(coproprieteNom)}</strong> se termine${deadlineStr ? ` le <strong>${deadlineStr}</strong>` : ' dans 7 jours'}.
 </p>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:10px;border:1px solid ${COLOR.border};overflow:hidden">
-  <tr style="background:#f8fafc">
-    <td style="padding:12px 16px;border-bottom:1px solid ${COLOR.border}">
-      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
-        <span style="color:${COLOR.green};font-weight:700">✓</span>&nbsp; <strong>Relances automatiques</strong> — les impayés sont suivis à J-7, J+3 et J+15 sans aucune action de votre part
-      </p>
-    </td>
-  </tr>
-  <tr style="background:${COLOR.white}">
-    <td style="padding:12px 16px;border-bottom:1px solid ${COLOR.border}">
-      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
-        <span style="color:${COLOR.green};font-weight:700">✓</span>&nbsp; <strong>Convocations d'AG</strong> — envoyées en un clic avec rappels automatiques à J-14 et J-7
-      </p>
-    </td>
-  </tr>
-  <tr style="background:#f8fafc">
-    <td style="padding:12px 16px">
-      <p style="margin:0;font-size:13px;color:${COLOR.text};line-height:1.5">
-        <span style="color:${COLOR.green};font-weight:700">✓</span>&nbsp; <strong>Documents centralisés</strong> — vos copropriétaires accèdent à tout depuis leur espace, sans vous solliciter
-      </p>
-    </td>
-  </tr>
-</table>
-
 <p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
   Dans 7 jours, votre abonnement <strong>${h(planLabel)}</strong> démarre automatiquement${deadlineStr ? ` (le <strong>${deadlineStr}</strong>)` : ''}. Vous n'avez rien à faire pour continuer.
 </p>
@@ -549,17 +524,11 @@ ${endDateStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margi
   </tr>
 </table>
 
-<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted};line-height:1.5">
-  Vous avez changé d&rsquo;avis&nbsp;? Réactivez le renouvellement automatique en un clic depuis votre espace.
-</p>
-
-${ctaButton('Réactiver le renouvellement automatique →', `${dashboardUrl}/abonnement`, COLOR.blue)}
-
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
   Des questions ? Écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
 </p>`;
 
-  return wrapEmail(content, COLOR.amber, `Votre accès est actif jusqu'au ${endDateStr || 'fin de période'} — vous pouvez réactiver à tout moment`);
+  return wrapEmail(content, COLOR.amber, `Votre accès est actif jusqu'au ${endDateStr || 'fin de période'}`);
 }
 
 // ── Relance J-30 avant fin d'abonnement annuel (cancel_at_period_end) ─────────
@@ -568,6 +537,7 @@ ${ctaButton('Réactiver le renouvellement automatique →', `${dashboardUrl}/abo
 
 export interface CancelRenewalParams extends SubscriptionEmailParams {
   isLongTimeUser?: boolean; // ancienneté > 6 mois — J-3 uniquement
+  unsubscribeUrl?: string;
 }
 
 export function buildCancelRenewalJ30Subject(coproprieteNom: string): string {
@@ -575,7 +545,7 @@ export function buildCancelRenewalJ30Subject(coproprieteNom: string): string {
 }
 
 export function buildCancelRenewalJ30Email(params: CancelRenewalParams): string {
-  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl, unsubscribeUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
   const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
 
@@ -622,7 +592,7 @@ ${ctaButton('Réactiver le renouvellement automatique →', `${dashboardUrl}/abo
   Vous pouvez annuler de nouveau à tout moment, sans engagement.
 </p>`;
 
-  return wrapEmail(content, COLOR.amber, `Dans 30 jours, les relances et convocations automatiques s'arrêtent — réactivez en 10 secondes`);
+  return wrapEmail(content, COLOR.amber, `Dans 30 jours, les relances et convocations automatiques s'arrêtent — réactivez en 10 secondes`, unsubscribeUrl);
 }
 
 // ── Relance J-7 avant fin d'abonnement annuel ─────────────────────────────────
@@ -633,7 +603,7 @@ export function buildCancelRenewalJ7Subject(coproprieteNom: string): string {
 }
 
 export function buildCancelRenewalJ7Email(params: CancelRenewalParams): string {
-  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl, unsubscribeUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
   const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
 
@@ -683,7 +653,7 @@ ${ctaButton('Réactiver le renouvellement →', `${dashboardUrl}/abonnement`, CO
   Annulation possible à tout moment. Plan <strong>${h(planLabel)}</strong>.
 </p>`;
 
-  return wrapEmail(content, COLOR.red, `Le ${endDateStr || 'dans 7 jours'}, les relances et rappels AG s'arrêtent — réactivez pour continuer`);
+  return wrapEmail(content, COLOR.red, `Le ${endDateStr || 'dans 7 jours'}, les relances et rappels AG s'arrêtent — réactivez pour continuer`, unsubscribeUrl);
 }
 
 // ── Relance J-3 avant fin d'abonnement annuel ─────────────────────────────────
@@ -695,7 +665,7 @@ export function buildCancelRenewalJ3Subject(coproprieteNom: string): string {
 }
 
 export function buildCancelRenewalJ3Email(params: CancelRenewalParams): string {
-  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl, isLongTimeUser } = params;
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl, isLongTimeUser, unsubscribeUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
   const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
 
@@ -737,7 +707,7 @@ ${ctaButton('Réactiver mon abonnement maintenant →', `${dashboardUrl}/abonnem
   Réactivation en 10 secondes — sans engagement — annulation à tout moment.
 </p>`;
 
-  return wrapEmail(content, COLOR.red, `Dans 3 jours, vos relances et convocations automatiques s'arrêtent`);
+  return wrapEmail(content, COLOR.red, `Dans 3 jours, vos relances et convocations automatiques s'arrêtent`, unsubscribeUrl);
 }
 
 // ── Relance J-1 avant fin d'abonnement annuel ─────────────────────────────────
@@ -748,7 +718,7 @@ export function buildCancelRenewalJ1Subject(coproprieteNom: string): string {
 }
 
 export function buildCancelRenewalJ1Email(params: CancelRenewalParams): string {
-  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
+  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl, unsubscribeUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
   const endDateStr = periodEnd ? formatDateFR(periodEnd) : '';
 
@@ -776,7 +746,7 @@ ${ctaButton('Réactiver maintenant — 10 secondes →', `${dashboardUrl}/abonne
   Des questions ? <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>
 </p>`;
 
-  return wrapEmail(content, COLOR.red, `Dernière chance — votre accès à ${coproprieteNom} se coupe demain. Réactivez en 10 secondes.`);
+  return wrapEmail(content, COLOR.red, `Dernière chance — votre accès à ${coproprieteNom} se coupe demain. Réactivez en 10 secondes.`, unsubscribeUrl);
 }
 
 // ── J+1 post-expiration abonnement annuel (filet "oubli") ─────────────────────
@@ -788,7 +758,7 @@ export function buildCancelExpiredJ1Subject(coproprieteNom: string): string {
 }
 
 export function buildCancelExpiredJ1Email(params: CancelRenewalParams): string {
-  const { prenom, coproprieteNom, planLabel, dashboardUrl } = params;
+  const { prenom, coproprieteNom, planLabel, dashboardUrl, unsubscribeUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
 
   const content = `
@@ -812,7 +782,7 @@ ${ctaButton('Réactiver mon abonnement en 30 secondes →', `${dashboardUrl}/abo
   Des questions ? <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>
 </p>`;
 
-  return wrapEmail(content, COLOR.green, `Vos données sont intactes — reprenez la gestion de ${coproprieteNom} en 30 secondes`);
+  return wrapEmail(content, COLOR.green, `Vos données sont intactes — reprenez la gestion de ${coproprieteNom} en 30 secondes`, unsubscribeUrl);
 }
 
 // ── Rappel J-1 (veille) avant fin d'essai ────────────────────────────────────
@@ -860,6 +830,7 @@ export interface CheckoutAbandonEmailParams {
   prenom: string | null;
   coproprieteNom: string;
   abonnementUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export function buildCheckoutAbandonSubject(): string {
@@ -867,7 +838,7 @@ export function buildCheckoutAbandonSubject(): string {
 }
 
 export function buildCheckoutAbandonEmail(params: CheckoutAbandonEmailParams): string {
-  const { prenom, coproprieteNom, abonnementUrl } = params;
+  const { prenom, coproprieteNom, abonnementUrl, unsubscribeUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
 
   const content = `
@@ -905,7 +876,7 @@ ${ctaButton('Finaliser ma souscription →', abonnementUrl, COLOR.blue)}
   Un problème&nbsp;? Écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>. On vous aide.
 </p>`;
 
-  return wrapEmail(content, COLOR.blue, 'Rejoignez les syndics bénévoles qui ne font plus de relances manuelles — essai 14 jours inclus.');
+  return wrapEmail(content, COLOR.blue, 'Rejoignez les syndics bénévoles qui ne font plus de relances manuelles — essai 14 jours inclus.', unsubscribeUrl);
 }
 
 // ── Relance checkout abandonné (J+3) ─────────────────────────────────────────
@@ -917,7 +888,7 @@ export function buildCheckoutAbandonJ3Subject(): string {
 }
 
 export function buildCheckoutAbandonJ3Email(params: CheckoutAbandonEmailParams): string {
-  const { prenom, coproprieteNom, abonnementUrl } = params;
+  const { prenom, coproprieteNom, abonnementUrl, unsubscribeUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
 
   const content = `
@@ -952,7 +923,7 @@ ${ctaButton('Démarrer mon essai gratuit →', abonnementUrl, COLOR.blue)}
   Si vous ne souhaitez pas continuer, aucun problème — votre compte reste accessible.
 </p>`;
 
-  return wrapEmail(content, COLOR.blue, 'Dernier rappel — votre essai 14 jours est toujours disponible, sans engagement.');
+  return wrapEmail(content, COLOR.blue, 'Dernier rappel — votre essai 14 jours est toujours disponible, sans engagement.', unsubscribeUrl);
 }
 
 // ── Sondage J+1 après essai non converti ──────────────────────────────────────
@@ -963,6 +934,7 @@ export interface TrialSurveyParams {
   prenom: string | null;
   coproprieteNom: string;
   abonnementUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export function buildTrialSurveyJ1Subject(coproprieteNom: string): string {
@@ -970,7 +942,7 @@ export function buildTrialSurveyJ1Subject(coproprieteNom: string): string {
 }
 
 export function buildTrialSurveyJ1Email(params: TrialSurveyParams): string {
-  const { prenom, coproprieteNom, abonnementUrl } = params;
+  const { prenom, coproprieteNom, abonnementUrl, unsubscribeUrl } = params;
   const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
   const encName = encodeURIComponent(`${coproprieteNom} — Mon Syndic Bénévole`);
 
@@ -1006,18 +978,10 @@ ${reasonLinks}
   Vous préférez répondre librement&nbsp;? <a href="mailto:${CONTACT_EMAIL}?subject=Retour%20essai%20—%20${encName}" style="color:${COLOR.blue};font-weight:500">Répondez directement à cet e-mail</a> — je lis chaque message personnellement.
 </p>
 
-<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
-
-<p style="margin:0 0 16px;font-size:13px;color:${COLOR.muted};line-height:1.6">
-  Si c&rsquo;était simplement un oubli, vos données sont conservées 30&nbsp;jours. Vous pouvez reprendre exactement là où vous en étiez.
-</p>
-
-${ctaButton('Reprendre mon abonnement →', abonnementUrl, COLOR.green)}
-
 <p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
   Merci d&rsquo;avance pour votre réponse — elle compte vraiment.<br>
   Fabien — fondateur de Mon Syndic Bénévole
 </p>`;
 
-  return wrapEmail(content, COLOR.blue, `Qu'est-ce qui vous a retenu(e) de continuer ? Votre avis nous aide à nous améliorer.`);
+  return wrapEmail(content, COLOR.blue, `Qu'est-ce qui vous a retenu(e) de continuer ? Votre avis nous aide à nous améliorer.`, unsubscribeUrl);
 }
