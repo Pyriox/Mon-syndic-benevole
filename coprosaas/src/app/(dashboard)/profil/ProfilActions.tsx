@@ -852,3 +852,56 @@ export function DeleteAccountSection() {
     </>
   );
 }
+
+// ── Préférences e-mail (désabonnement marketing) ──────────────────────────────
+
+export function EmailPreferencesToggle({ initialValue }: { initialValue: boolean }) {
+  const [checked, setChecked] = useState(initialValue);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+
+  const toggle = async () => {
+    const next = !checked;
+    setSaving(true);
+    setStatus('idle');
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setSaving(false); setStatus('error'); return; }
+    const { error } = await supabase
+      .from('profiles')
+      .update({ unsubscribe_marketing: next })
+      .eq('id', user.id);
+    setSaving(false);
+    if (error) { setStatus('error'); return; }
+    setChecked(next);
+    setStatus('saved');
+    setTimeout(() => setStatus('idle'), 3000);
+  };
+
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <p className="text-sm font-medium text-gray-900">E-mails de suivi et de rétention</p>
+        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+          Relances d&apos;onboarding, rappels d&apos;abonnement, sondages, offres de réactivation.
+          Les e-mails liés à votre compte (factures, confirmations, alertes) ne sont pas concernés.
+        </p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0 mt-0.5">
+        {status === 'saved' && <Check size={14} className="text-green-500" />}
+        {status === 'error' && <X size={14} className="text-red-500" />}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={!checked}
+          onClick={toggle}
+          disabled={saving}
+          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 ${checked ? 'bg-gray-200' : 'bg-blue-600'}`}
+          title={checked ? 'Réactiver les e-mails de suivi' : 'Se désabonner des e-mails de suivi'}
+        >
+          <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-1' : 'translate-x-4'}`} />
+        </button>
+      </div>
+    </div>
+  );
+}

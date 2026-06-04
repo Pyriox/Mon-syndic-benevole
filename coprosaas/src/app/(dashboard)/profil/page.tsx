@@ -12,7 +12,7 @@ import { redirect } from 'next/navigation';
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import Card, { CardHeader } from '@/components/ui/Card';
 import PageHelp from '@/components/ui/PageHelp';
-import { ProfilEditActions, ProfilIdentiteEditor, LotsActions, SecurityActions, DeleteAccountSection } from './ProfilActions';
+import { ProfilEditActions, ProfilIdentiteEditor, LotsActions, SecurityActions, DeleteAccountSection, EmailPreferencesToggle } from './ProfilActions';
 import { User, Building2, Mail, ShieldCheck } from 'lucide-react';
 
 export default async function ProfilPage() {
@@ -31,6 +31,14 @@ export default async function ProfilPage() {
     .select('id, nom, lots(id, numero, tantiemes, coproprietaire_id)')
     .eq('syndic_id', user.id)
     .order('nom');
+
+  // Préférences e-mail
+  const { data: profilePrefs } = await supabase
+    .from('profiles')
+    .select('unsubscribe_marketing')
+    .eq('id', user.id)
+    .maybeSingle();
+  const unsubscribeMarketing = (profilePrefs as { unsubscribe_marketing: boolean } | null)?.unsubscribe_marketing ?? false;
 
   // Le profil doit refléter la vue active sélectionnée dans le dashboard.
   const accountRole: 'syndic' | 'copropriétaire' = currentViewRole ?? ((coproprietes ?? []).length > 0 ? 'syndic' : 'copropriétaire');
@@ -199,6 +207,17 @@ export default async function ProfilPage() {
         )}
       </Card>
       )}
+      {/* ---- Préférences e-mail ---- */}
+      <Card>
+        <CardHeader
+          title="Préférences e-mail"
+          description="Contrôlez les notifications que vous recevez"
+        />
+        <div className="mt-4">
+          <EmailPreferencesToggle initialValue={unsubscribeMarketing} />
+        </div>
+      </Card>
+
       {/* ---- Suppression du compte ---- */}
       <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-4">
         <p className="text-xs text-gray-400">Supprimer définitivement votre compte et toutes vos données.</p>

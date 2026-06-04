@@ -58,7 +58,7 @@ export default async function AdminUtilisateurProfilePage({
   ] = await Promise.all([
     admin.auth.admin.getUserById(id),
     admin.from('admin_users').select('user_id').eq('user_id', id).maybeSingle(),
-    admin.from('profiles').select('last_active_at, full_name, suspended_at').eq('id', id).maybeSingle(),
+    admin.from('profiles').select('last_active_at, full_name, suspended_at, unsubscribe_marketing').eq('id', id).maybeSingle(),
     admin.from('coproprietes').select('id, nom, plan, plan_id, created_at').eq('syndic_id', id).order('created_at', { ascending: false }),
   ]);
 
@@ -167,6 +167,7 @@ export default async function AdminUtilisateurProfilePage({
   });
 
   const lastVisit = (profileRes.data as { last_active_at: string | null } | null)?.last_active_at ?? null;
+  const unsubscribeMarketing = (profileRes.data as { unsubscribe_marketing: boolean } | null)?.unsubscribe_marketing ?? false;
   const lastEventAt = (lastEventRes.data as { created_at: string } | null)?.created_at ?? null;
   const lastSessionAt = (lastSessionRes.data as { last_activity_at: string } | null)?.last_activity_at ?? null;
   // Prend le timestamp le plus récent parmi : session heartbeat, heartbeat profil, dernier event, dernière connexion
@@ -369,6 +370,12 @@ export default async function AdminUtilisateurProfilePage({
                 <p><span className="text-gray-500">Email :</span> {authUser.email ?? '—'}</p>
                 <p><span className="text-gray-500">Téléphone :</span> {phones[0] ?? '—'}</p>
                 <p><span className="text-gray-500">Dernière visite :</span> {lastActive ? formatAdminDateTime(lastActive) : '—'}{lastActiveSource === 'session' || lastActiveSource === 'event' ? <span className="ml-1.5 text-xs text-gray-400">(activité récente)</span> : lastActiveSource === 'login' ? <span className="ml-1.5 text-xs text-gray-400">(dernière connexion)</span> : null}</p>
+                <p><span className="text-gray-500">E-mails marketing :</span>{' '}
+                  {unsubscribeMarketing
+                    ? <span className="inline-flex items-center gap-0.5 text-amber-700 font-medium">Désabonné</span>
+                    : <span className="text-gray-700">Actifs</span>
+                  }
+                </p>
               </div>
             </div>
 
