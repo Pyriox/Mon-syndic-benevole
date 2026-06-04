@@ -37,43 +37,51 @@ ${content}
 const encName = encodeURIComponent(`${coproprieteNom} — Mon Syndic Bénévole`);
 
 const reasons = [
-  { label: 'Pas encore prêt(e), je reviendrai plus tard',     body: "Je ne suis pas encore prêt(e) à souscrire, mais j'envisage de revenir." },
-  { label: 'Le tarif est trop élevé',                          body: 'Je trouve le tarif trop élevé pour mes besoins actuels.' },
-  { label: 'Il manque une fonctionnalité importante',          body: "Il manque une fonctionnalité dont j'aurais besoin : (préciser)" },
-  { label: 'Je gère avec un autre outil',                      body: 'Je continue à gérer ma copropriété avec un autre outil (Excel, autre logiciel…).' },
-  { label: 'Autre raison',                                     body: 'Voici ma raison : (préciser)' },
+  { label: '⏳ Pas encore prêt(e), je reviendrai',     body: "Je ne suis pas encore prêt(e) à souscrire, mais j'envisage de revenir." },
+  { label: '💸 Le tarif est trop élevé',                body: 'Je trouve le tarif trop élevé pour mes besoins actuels.' },
+  { label: '🔧 Il manque une fonctionnalité',           body: "Il manque une fonctionnalité dont j'aurais besoin : (préciser)" },
+  { label: '📊 Je gère avec un autre outil',            body: 'Je continue à gérer ma copropriété avec un autre outil (Excel, autre logiciel…).' },
+  { label: '✏️ Autre raison',                           body: 'Voici ma raison : (préciser)' },
 ];
 
 const reasonLinks = reasons.map(({ label, body }) =>
-  `<tr><td style="padding:4px 0"><a href="mailto:${CONTACT_EMAIL}?subject=Retour%20essai%20%E2%80%94%20${encName}&body=${encodeURIComponent(body)}" style="display:inline-block;padding:9px 14px;font-size:13px;color:${COLOR.blue};background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;text-decoration:none;line-height:1.4">${h(label)}</a></td></tr>`
+  `<tr><td style="padding:5px 0"><a href="mailto:${CONTACT_EMAIL}?subject=Retour%20essai%20%E2%80%94%20${encName}&body=${encodeURIComponent(body)}" style="display:inline-block;padding:10px 16px;font-size:14px;color:${COLOR.blue};background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;text-decoration:none;line-height:1.4;font-weight:500">${h(label)}</a></td></tr>`
 ).join('\n');
 
 const content = `
 <h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre essai s&rsquo;est terminé hier</h1>
-<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
+<p style="margin:0 0 24px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
 
 <p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">Bonjour <strong>${h(prenom)}</strong>,</p>
-<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Votre essai gratuit sur <strong>${h(coproprieteNom)}</strong> s&rsquo;est terminé hier sans souscription.
-  Pour améliorer notre service, pourriez-vous nous dire en un clic pourquoi vous n&rsquo;avez pas souscrit&nbsp;?
+<p style="margin:0 0 8px;font-size:15px;color:${COLOR.text};line-height:1.7;font-weight:600">
+  Je voulais juste vous poser une question directe&nbsp;: qu&rsquo;est-ce qui vous a retenu(e) de continuer&nbsp;?
+</p>
+<p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.7">
+  Votre retour — même en quelques mots — m&rsquo;aide vraiment à améliorer l&rsquo;application. <strong>Répondez simplement à cet e-mail</strong> ou cliquez sur la raison qui vous correspond&nbsp;:
 </p>
 
-<table cellpadding="0" cellspacing="0" style="margin:0 0 24px">
+<table cellpadding="0" cellspacing="0" style="margin:0 0 28px">
 ${reasonLinks}
 </table>
 
-<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted};line-height:1.6">
-  Si c&rsquo;était un oubli ou si vous avez changé d&rsquo;avis, vos données sont conservées 30&nbsp;jours — vous pouvez reprendre exactement là où vous en étiez.
+<p style="margin:0 0 6px;font-size:13px;color:${COLOR.muted};line-height:1.6">
+  Vous préférez répondre librement&nbsp;? <a href="mailto:${CONTACT_EMAIL}?subject=Retour%20essai%20%E2%80%94%20${encName}" style="color:${COLOR.blue};font-weight:500">Répondez directement à cet e-mail</a> — je lis chaque message personnellement.
 </p>
 
-${ctaButton("Voir les offres d'abonnement →", `${SITE_URL}/abonnement`, COLOR.green)}
+<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
 
-<p style="margin:12px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
-  Merci pour votre retour — cela nous aide vraiment à améliorer l&rsquo;application.<br>
-  Des questions&nbsp;? <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>
+<p style="margin:0 0 16px;font-size:13px;color:${COLOR.muted};line-height:1.6">
+  Si c&rsquo;était simplement un oubli, vos données sont conservées 30&nbsp;jours. Vous pouvez reprendre exactement là où vous en étiez.
+</p>
+
+${ctaButton('Reprendre mon abonnement →', `${SITE_URL}/abonnement`, COLOR.green)}
+
+<p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
+  Merci d&rsquo;avance pour votre réponse — elle compte vraiment.<br>
+  Fabien — fondateur de Mon Syndic Bénévole
 </p>`;
 
-const html = wrapEmail(content, COLOR.blue, "Une minute pour nous dire pourquoi vous n'avez pas souscrit ? Votre avis compte vraiment.");
+const html = wrapEmail(content, COLOR.blue, "Qu'est-ce qui vous a retenu(e) de continuer ? Votre avis nous aide à nous améliorer.");
 const subject = `Une question sur votre essai — ${coproprieteNom} — Mon Syndic Bénévole`;
 
 // ── Envoi ───────────────────────────────────────────────────────────────────────

@@ -217,7 +217,7 @@ export default function PlansGridSection({
                   <>
                     <CheckoutButton planId={plan.id} coproprieteid={coproprieteId} isPrimary={isPrimary} />
                     <p className={`mt-2 text-[11px] text-center ${isPrimary ? 'text-blue-200' : 'text-gray-400'}`}>
-                      14 jours d&apos;essai gratuit inclus
+                      14 jours offerts — puis {plan.annual}&nbsp;€/an automatiquement
                     </p>
                   </>
                 )}

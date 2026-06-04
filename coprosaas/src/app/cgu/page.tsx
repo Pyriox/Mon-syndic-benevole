@@ -23,7 +23,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function CguPage() {
-  const lastUpdate = new Date("2026-05-15").toLocaleDateString("fr-FR", {
+  const lastUpdate = new Date("2026-06-04").toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -98,13 +98,22 @@ export default function CguPage() {
 
         <Section title="4. Période d'essai">
           <p>
-            Un essai gratuit peut être proposé aux nouveaux utilisateurs pour une durée limitée, selon les
-            conditions affichées lors de l{"'"}inscription. À l{"'"}issue de la période d{"'"}essai, l{"'"}accès
-            aux fonctionnalités premium est conditionné à la souscription d{"'"}un abonnement payant.
+            Un essai gratuit de <strong className="text-white">14 jours</strong> est accordé à tout
+            nouvel utilisateur. Lors de la souscription, un moyen de paiement valide (carte bancaire ou
+            IBAN) est enregistré via la plateforme{" "}
+            <strong className="text-white">Stripe</strong>{" "}; aucun montant n{"'"}est prélevé pendant
+            la période d{"'"}essai.
           </p>
           <p>
-            La période d{"'"}essai est accordée une seule fois par utilisateur. Toute tentative de contournement
-            (comptes multiples, etc.) peut entraîner la suspension du compte.
+            À l{"'"}issue des 14 jours, l{"'"}abonnement sélectionné démarre{" "}
+            <strong className="text-white">automatiquement</strong> et le premier prélèvement est
+            effectué. Pour ne pas être prélevé, l{"'"}utilisateur doit annuler son abonnement avant la
+            fin de l{"'"}essai depuis son espace « Abonnement ». Des rappels sont envoyés par e-mail
+            à J‑7, J‑3 et J‑1 avant l{"’"}échéance.
+          </p>
+          <p>
+            La période d{"'"}essai est accordée une seule fois par utilisateur. Toute tentative de
+            contournement (comptes multiples, etc.) peut entraîner la suspension du compte.
           </p>
         </Section>
 
@@ -125,9 +134,20 @@ export default function CguPage() {
             période en cours, sans remboursement proratisé sauf disposition légale contraire.
           </p>
           <p>
-            Conformément à l{"'"}article L.221-28 12° du Code de la consommation, le droit de rétractation de
-            14 jours ne s{"'"}applique pas aux contenus numériques fournis immédiatement après acceptation
-            expresse de l{"'"}utilisateur et renonciation à son droit de rétractation.
+            <strong className="text-white">Droit de rétractation :</strong> conformément à l{"'"}article
+            L.221-18 du Code de la consommation, l{"'"}utilisateur consommateur dispose d{"'"}un délai de
+            rétractation de 14&nbsp;jours à compter de la conclusion du contrat, qu{"'"}il peut exercer sans
+            frais ni pénalité en annulant depuis l{"'"}espace « Abonnement » ou par e-mail à{" "}
+            <a href="mailto:contact@mon-syndic-benevole.fr" className="text-blue-400 hover:text-blue-300 transition-colors">
+              contact@mon-syndic-benevole.fr
+            </a>.
+          </p>
+          <p>
+            Pour les abonnements avec période d{"'"}essai, l{"'"}annulation pendant les 14&nbsp;jours d{"'"}essai
+            entraîne la résiliation immédiate et aucun montant ne sera prélevé — ce qui constitue
+            l{"'"}exercice plein et entier du droit de rétractation. Pour les souscriptions directes sans
+            période d{"'"}essai, l{"'"}utilisateur peut demander la résiliation et le remboursement intégral
+            dans les 14&nbsp;jours suivant la souscription.
           </p>
         </Section>
 
@@ -427,7 +447,29 @@ export default function CguPage() {
           </p>
           <p>
             Conformément aux articles L.611-1 et suivants du Code de la consommation, l{"'"}utilisateur
-            consommateur peut recourir gratuitement à un médiateur de la consommation en cas de litige.
+            consommateur peut recourir gratuitement à un médiateur de la consommation. Mon Syndic
+            Bénévole a désigné le{" "}
+            <strong className="text-white">CNPM Médiation-Consommation</strong>, accessible à
+            l{"'"}adresse{" "}
+            <a
+              href="https://www.cnpm-mediation-consommation.eu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              cnpm-mediation-consommation.eu
+            </a>
+            . La plateforme européenne de règlement en ligne des litiges (RLL) est également accessible
+            via{" "}
+            <a
+              href="https://ec.europa.eu/consumers/odr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              ec.europa.eu/consumers/odr
+            </a>
+            .
           </p>
         </Section>
 

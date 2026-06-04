@@ -1062,7 +1062,7 @@ export default function HomePage() {
           </div>
 
           <p className="text-center text-gray-500 text-xs mt-8">
-            Un abonnement par copropriété. Facturation annuelle.
+            Un abonnement par copropriété. Facturation annuelle. TVA non applicable — art.&nbsp;293&nbsp;B du CGI.
           </p>
         </div>
       </section>

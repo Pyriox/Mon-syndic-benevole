@@ -65,6 +65,7 @@ export default function CheckoutButton({ planId, coproprieteid, isPrimary }: Che
           <Link href="/cgu" target="_blank" className={`underline ${isPrimary ? 'text-white' : 'text-blue-600'}`}>
             conditions générales de vente
           </Link>
+          {' '}— y compris le démarrage automatique de l&apos;abonnement à l&apos;issue des 14 jours d&apos;essai.
         </span>
       </label>
       <button

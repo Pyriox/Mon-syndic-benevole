@@ -60,7 +60,7 @@ export default function ArticleGererCopropriete() {
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Ce qui différencie ceux qui tiennent de ceux qui abandonnent</p>
         <p className="text-sm text-gray-600 mb-4">
-          Isabelle, Marc et Sylvie ont tous le même point commun : un outil qui calcule les tantièmes, suit les paiements et prépare les documents AG à leur place. Sans ça, la gestion manuelle finit par peser. Essai gratuit 14 jours, sans carte bancaire.
+          Isabelle, Marc et Sylvie ont tous le même point commun : un outil qui calcule les tantièmes, suit les paiements et prépare les documents AG à leur place. Sans ça, la gestion manuelle finit par peser. Essai gratuit 14 jours, aucun prélèvement pendant l&apos;essai.
         </p>
         <CtaLink
           ctaLocation="blog_article"
@@ -308,7 +308,7 @@ export default function ArticleGererCopropriete() {
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Comme Isabelle, Marc et Sylvie — voyez par vous-même si ça vous convient.</p>
-        <p className="text-sm text-blue-100 mb-4">Appels de fonds, AG, fonds de travaux : toutes les fonctions incluses. 14 jours d&apos;essai gratuit, sans carte bancaire, sans engagement.</p>
+        <p className="text-sm text-blue-100 mb-4">Appels de fonds, AG, fonds de travaux : toutes les fonctions incluses. 14 jours d&apos;essai gratuit — aucun prélèvement pendant l&apos;essai — sans engagement.</p>
         <CtaLink
           ctaLocation="blog_article"
           href="/register"

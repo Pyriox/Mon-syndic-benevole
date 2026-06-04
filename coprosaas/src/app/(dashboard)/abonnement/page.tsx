@@ -691,6 +691,7 @@ export default async function AbonnementPage({
 
         <p className="text-xs text-gray-500 text-center pb-4">
           Facturation annuelle · Résiliable à tout moment, sans préavis.{' '}
+          TVA non applicable — art.&nbsp;293&nbsp;B du CGI.{' '}
           Pour toute question :{' '}
           <Link
             href="/aide"

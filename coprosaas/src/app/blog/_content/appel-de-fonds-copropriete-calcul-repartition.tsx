@@ -388,7 +388,7 @@ export default function ArticleAppelDeFonds() {
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Générez vos appels de fonds automatiquement — en 30 secondes</p>
-        <p className="text-sm text-blue-100 mb-4">Tantièmes, quotes-parts, avis de paiement, suivi des virements — tout en un. 14 jours d&apos;essai gratuit, sans carte bancaire.</p>
+        <p className="text-sm text-blue-100 mb-4">Tantièmes, quotes-parts, avis de paiement, suivi des virements — tout en un. 14 jours d&apos;essai gratuit, aucun prélèvement pendant l&apos;essai.</p>
         <CtaLink
           ctaLocation="blog_article"
           href="/register"
