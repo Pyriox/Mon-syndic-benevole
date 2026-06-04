@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default function UnsubscribePage({
+export default async function UnsubscribePage({
   searchParams,
 }: {
-  searchParams: { status?: string };
+  searchParams: Promise<{ status?: string }>;
 }) {
-  const status = searchParams?.status;
+  const { status } = await searchParams;
 
   const content = status === 'success'
     ? {
