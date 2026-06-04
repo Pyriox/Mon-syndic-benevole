@@ -215,8 +215,9 @@ export function buildPaymentFailedEmail(params: SubscriptionEmailParams): string
 ${ctaButton('Mettre à jour mon paiement →', `${dashboardUrl}?tab=billing`, COLOR.red)}
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
-  En cas de problème, contactez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
-</p>`;
+  En cas de problème, contactez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.</p>
+<p style="margin:8px 0 0;font-size:11px;color:${COLOR.muted};text-align:center;line-height:1.5">
+  Cet email est envoyé automatiquement en cas de paiement échoué et ne peut pas être désactivé.</p>`;
 
   return wrapEmail(content, COLOR.red, 'Action requise : votre paiement a échoué, mettez à jour votre moyen de paiement');
 }
@@ -256,6 +257,9 @@ ${ctaButton('Mettre à jour mon paiement →', `${dashboardUrl}?tab=billing`, CO
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
   Un problème&nbsp;? Écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
+</p>
+<p style="margin:8px 0 0;font-size:11px;color:${COLOR.muted};text-align:center;line-height:1.5">
+  Cet email est envoyé automatiquement en cas de paiement échoué et ne peut pas être désactivé.
 </p>`;
 
   return wrapEmail(content, COLOR.red, '3 jours sans accès — mettez à jour votre paiement pour réactiver votre espace');
@@ -296,6 +300,9 @@ ${ctaButton('Régulariser mon paiement maintenant →', `${dashboardUrl}?tab=bil
 
 <p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
   Si vous rencontrez des difficultés, écrivez-nous à <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>. On vous aide.
+</p>
+<p style="margin:8px 0 0;font-size:11px;color:${COLOR.muted};text-align:center;line-height:1.5">
+  Cet email est envoyé automatiquement en cas de paiement échoué et ne peut pas être désactivé.
 </p>`;
 
   return wrapEmail(content, COLOR.red, 'Dernière chance — régularisez votre paiement pour éviter la résiliation');

@@ -228,111 +228,6 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const { data: unopened } = await admin
-    .from('email_deliveries')
-    .select('id, recipient_email, recipient_user_id, copropriete_id, ag_id, template_key, sent_at')
-    .in('template_key', ['ag_convocation', 'ag_convocation_reminder_j14', 'ag_convocation_reminder_j7'])
-    .is('opened_at', null)
-    .is('reminder_unopened_at', null)
-    .in('status', ['sent', 'delivered'])
-    .lt('sent_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
-    .limit(300);
-
-  if ((unopened?.length ?? 0) >= 300) {
-    console.warn('[cron/rappels-ag] Limite de relances non-ouvertes atteinte (300) — file partiellement traitée, certains destinataires reportés au prochain run');
-  }
-
-  // Batch-load AGs et coproprietaires pour éviter N+1 (jusqu'à 300 rows)
-  const validUnopenedRows = (unopened ?? []).filter((d) => d.ag_id && d.copropriete_id);
-  const uniqueUnopenedAgIds = [...new Set(validUnopenedRows.map((d) => d.ag_id as string))];
-  const { data: batchUnopenedAGs } = uniqueUnopenedAgIds.length > 0
-    ? await admin
-        .from('assemblees_generales')
-        .select('id, titre, date_ag, lieu, coproprietes(nom, syndic_id)')
-        .in('id', uniqueUnopenedAgIds)
-        .gt('date_ag', j2)
-    : { data: [] };
-  type BatchUnopenedAG = { id: string; titre: string; date_ag: string; lieu: string | null; coproprietes: { nom: string; syndic_id: string | null } | { nom: string; syndic_id: string | null }[] | null };
-  const unopenedAgMap = new Map<string, BatchUnopenedAG>();
-  for (const ag of (batchUnopenedAGs ?? []) as unknown as BatchUnopenedAG[]) unopenedAgMap.set(ag.id, ag);
-
-  const uniqueUnopenedCoproIds = [...new Set(
-    validUnopenedRows
-      .filter((d) => unopenedAgMap.has(d.ag_id as string))
-      .map((d) => d.copropriete_id as string),
-  )];
-  const { data: batchUnopenedCps } = uniqueUnopenedCoproIds.length > 0
-    ? await admin
-        .from('coproprietaires')
-        .select('nom, prenom, email, copropriete_id')
-        .in('copropriete_id', uniqueUnopenedCoproIds)
-    : { data: [] };
-  const unopenedCpMap = new Map<string, { nom: string; prenom: string }>();
-  for (const cp of batchUnopenedCps ?? []) {
-    if (cp.email) unopenedCpMap.set(`${cp.copropriete_id}:${String(cp.email).trim().toLowerCase()}`, { nom: cp.nom, prenom: cp.prenom });
-  }
-
-  for (const d of validUnopenedRows) {
-    const ag = unopenedAgMap.get(d.ag_id as string);
-    if (!ag) continue;
-
-    const cp = unopenedCpMap.get(`${d.copropriete_id}:${d.recipient_email.trim().toLowerCase()}`);
-    const copro = Array.isArray(ag.coproprietes) ? ag.coproprietes[0] : ag.coproprietes;
-
-    const subject = buildAGReminderSubject({
-      coproprieteNom: copro?.nom ?? '',
-      dateAg: ag.date_ag,
-      kind: 'unopened',
-    });
-
-    const html = buildAGReminderEmail({
-      prenom: cp?.prenom ?? 'Coproprietaire',
-      nom: cp?.nom ?? '',
-      coproprieteNom: copro?.nom ?? '',
-      agTitre: ag.titre,
-      dateAg: ag.date_ag,
-      lieu: ag.lieu,
-      kind: 'unopened',
-    });
-
-    const result = await resend.emails.send({ from: FROM, to: d.recipient_email, subject, html });
-
-    if (result.error) {
-      await trackEmailDelivery({
-        templateKey: 'ag_convocation_unopened_relance',
-        status: 'failed',
-        recipientEmail: d.recipient_email,
-        recipientUserId: d.recipient_user_id,
-        coproprieteId: d.copropriete_id,
-        agId: d.ag_id,
-        subject,
-        legalEventType: 'ag_convocation_unopened_relance',
-        legalReference: d.ag_id,
-        payload: { sourceDeliveryId: d.id },
-        lastError: result.error.message,
-      });
-      continue;
-    }
-
-    await admin.from('email_deliveries').update({ reminder_unopened_at: new Date().toISOString() }).eq('id', d.id);
-
-    await trackEmailDelivery({
-      providerMessageId: result.data?.id,
-      templateKey: 'ag_convocation_unopened_relance',
-      status: 'sent',
-      recipientEmail: d.recipient_email,
-      recipientUserId: d.recipient_user_id,
-      coproprieteId: d.copropriete_id,
-      agId: d.ag_id,
-      subject,
-      legalEventType: 'ag_convocation_unopened_relance',
-      legalReference: d.ag_id,
-      payload: { sourceDeliveryId: d.id },
-    });
-
-    sent++;
-  }
-
   const { data: retryRows } = await admin
     .from('email_deliveries')
     .select('id, recipient_email, recipient_user_id, copropriete_id, ag_id, template_key, retry_count, next_retry_at')
@@ -340,7 +235,7 @@ export async function GET(req: NextRequest) {
     .not('next_retry_at', 'is', null)
     .lte('next_retry_at', new Date().toISOString())
     .lt('retry_count', 3)
-    .in('template_key', ['ag_convocation', 'ag_convocation_reminder_j14', 'ag_convocation_reminder_j7', 'ag_convocation_unopened_relance'])
+    .in('template_key', ['ag_convocation', 'ag_convocation_reminder_j14', 'ag_convocation_reminder_j7'])
     .limit(200);
 
   if ((retryRows?.length ?? 0) >= 200) {

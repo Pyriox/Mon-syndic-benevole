@@ -116,7 +116,6 @@ export async function GET(req: NextRequest) {
   const onboardingJ2Window = resolveOnboardingConfirmationWindow({ kind: 'j2', referenceDate: today });
   const onboardingJ7Window = resolveOnboardingConfirmationWindow({ kind: 'j7', referenceDate: today });
   const onboardingJ14Window = resolveOnboardingConfirmationWindow({ kind: 'j14', referenceDate: today });
-  const onboardingJ21Window = resolveOnboardingConfirmationWindow({ kind: 'j21', referenceDate: today });
   const onboardingJ30Window = resolveOnboardingConfirmationWindow({ kind: 'j30', referenceDate: today });
 
   // ── Avis J-30 : appels publiés dont l'email n'a pas encore été envoyé ──
@@ -432,6 +431,7 @@ export async function GET(req: NextRequest) {
     .lt('created_at', oneDayAgo)
     .gte('date_echeance', todayStr)
     .lt('date_echeance', dateJ7)
+    .is('rappel_brouillon_j7_at', null)
     .is('rappel_brouillon_j1_urgent_at', null);
 
   // Groupe par copropriété (un seul e-mail par copropriété, listant tous ses brouillons)
@@ -557,7 +557,6 @@ export async function GET(req: NextRequest) {
   let onboardingJ2Sent = 0;
   let onboardingJ7Sent = 0;
   let onboardingJ14Sent = 0;
-  let onboardingJ21Sent = 0;
   let onboardingJ30Sent = 0;
 
   if (onboardingKinds.includes('j2')) {
@@ -597,19 +596,6 @@ export async function GET(req: NextRequest) {
       },
     );
     totalSent += onboardingJ14Sent;
-  }
-
-  if (onboardingKinds.includes('j21')) {
-    onboardingJ21Sent = await sendSyndicOnboardingReminders(
-      supabase,
-      onboardingJ21Window,
-      'j21',
-      {
-        force: onboardingForce,
-        targetEmails: onboardingTargetEmails,
-      },
-    );
-    totalSent += onboardingJ21Sent;
   }
 
   if (onboardingKinds.includes('j30')) {
@@ -886,6 +872,7 @@ export async function GET(req: NextRequest) {
         const prenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || null;
         const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
         const isLongTimeUser = copro.created_at < sixMonthsAgoStr;
+        if (step.kind === 'j30' && !isLongTimeUser) continue;
         const cancelUnsubUrl = buildUnsubscribeUrl(profile.id, SITE_URL);
         const baseParams = {
           prenom,
@@ -961,16 +948,28 @@ export async function GET(req: NextRequest) {
         (j1AlreadySent ?? []).map((r: { copropriete_id: string | null }) => r.copropriete_id).filter(Boolean),
       );
 
+      // Skip si cancel_renewal_j1 reçu dans les 48h (résiliation délibérée, déjà relanceée)
+      const { data: recentCancelJ1 } = await supabase
+        .from('user_events')
+        .select('copropriete_id')
+        .eq('event_type', 'cancel_renewal_j1_sent')
+        .in('copropriete_id', expiredCoproIds)
+        .gte('created_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString());
+      const recentCancelJ1Set = new Set(
+        (recentCancelJ1 ?? []).map((r: { copropriete_id: string | null }) => r.copropriete_id).filter(Boolean),
+      );
+
       type ExpiredCopro = { id: string; nom: string; plan_id: string | null; plan_period_end: string | null; profiles: { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean } | { id: string; email: string; full_name: string | null; prenom: string | null; unsubscribe_marketing: boolean }[] | null };
       for (const copro of expiredJ1Copros as unknown as ExpiredCopro[]) {
         if (j1AlreadySet.has(copro.id)) continue;
+        if (recentCancelJ1Set.has(copro.id)) continue;
 
         const profile = Array.isArray(copro.profiles) ? copro.profiles[0] : copro.profiles;
         if (!profile?.email) continue;
         if (profile.unsubscribe_marketing) continue;
 
         const prenom = profile.prenom?.trim() || (profile.full_name ?? '').split(' ')[0] || null;
-        const planLabel = copro.plan_id === 'illimite' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
+        const planLabel = copro.plan_id === 'illimité' ? 'Illimité' : copro.plan_id === 'confort' ? 'Confort' : 'Essentiel';
         const subject = buildCancelExpiredJ1Subject(copro.nom);
         const html = buildCancelExpiredJ1Email({
           prenom,
@@ -1016,7 +1015,6 @@ export async function GET(req: NextRequest) {
     for (const [reminderKind, daysAgo, eventType] of [
       ['j7',  7,  'churn_reactivation_j7_sent'] as const,
       ['j14', 14, 'churn_reactivation_j14_sent'] as const,
-      ['j30', 30, 'churn_reactivation_j30_sent'] as const,
     ]) {
       const windowEnd = addDays(today, -daysAgo);
       const windowStart = addDays(today, -(daysAgo + 1));
@@ -1281,7 +1279,6 @@ export async function GET(req: NextRequest) {
     onboarding_j2: onboardingJ2Sent,
     onboarding_j7: onboardingJ7Sent,
     onboarding_j14: onboardingJ14Sent,
-    onboarding_j21: onboardingJ21Sent,
     onboarding_j30: onboardingJ30Sent,
     checkout_abandon_j1: checkoutAbandonSent,
     checkout_abandon_j3: checkoutAbandonJ3Sent,
@@ -1460,14 +1457,29 @@ async function sendSyndicOnboardingReminders(
     coproCountById.set(cp.copropriete_id, (coproCountById.get(cp.copropriete_id) ?? 0) + 1);
   }
 
+  // Syndics ayant au moins un appel de fonds publié (condition de sortie de séquence onboarding)
+  const syndicIdsWithPublishedAppel = new Set<string>();
+  if (coproIds.length) {
+    const { data: publishedAppels } = await supabase
+      .from('appels_de_fonds')
+      .select('copropriete_id')
+      .eq('statut', 'publie')
+      .in('copropriete_id', coproIds);
+    for (const a of (publishedAppels ?? []) as Array<{ copropriete_id: string }>) {
+      const coproRow = coproRows.find((c) => c.id === a.copropriete_id);
+      if (coproRow) syndicIdsWithPublishedAppel.add(coproRow.syndic_id);
+    }
+  }
+
   let sent = 0;
   for (const profile of syndicProfiles) {
     const email = profile.email.trim().toLowerCase();
     const syndicCoproIds = coproBySyndicId.get(profile.id) ?? [];
     const coproCount = syndicCoproIds.length;
     const coproprietairesCount = syndicCoproIds.reduce((acc, coproId) => acc + (coproCountById.get(coproId) ?? 0), 0);
+    const hasPublishedAppel = syndicIdsWithPublishedAppel.has(profile.id);
 
-    if (!force && !(coproCount === 0 || coproprietairesCount < 2)) continue;
+    if (!force && coproCount > 0 && coproprietairesCount >= 2 && hasPublishedAppel) continue;
 
     const prenom = getPrenom(profile, 'Syndic');
     const actionUrl = coproCount === 0 ? `${SITE_URL}/coproprietes` : `${SITE_URL}/coproprietaires`;
