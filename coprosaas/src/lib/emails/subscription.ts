@@ -7,8 +7,9 @@
 //  4. renewal              : renouvellement mensuel ou annuel
 //  5. payment_failed       : paiement échoué
 //  6. cancelled            : abonnement résilié
-//  7. trial_ending_j3      : rappel 3 jours avant fin d'essai
-//  8. trial_ending_j1      : dernier rappel veille de fin d'essai
+//
+// Note : les rappels J-7 / J-3 / J-1 de fin d'essai sont gérés
+// nativement par Stripe (Settings → Billing → Subscription lifecycle).
 // ============================================================
 
 import { wrapEmail, h, formatDateFR, ctaButton, COLOR, CONTACT_EMAIL } from './base';
@@ -403,73 +404,6 @@ ${ctaButton('Réactiver mon abonnement →', dashboardUrl, COLOR.green)}
   );
 }
 
-// ── Rappel J-7 avant fin d'essai ─────────────────────────────────────────────
-
-export function buildTrialEndingJ7Subject(coproprieteNom: string): string {
-  return `Votre essai se termine dans 7 jours — ${coproprieteNom} — Mon Syndic Bénévole`;
-}
-
-export function buildTrialEndingJ7Email(params: SubscriptionEmailParams): string {
-  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
-  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
-  const deadlineStr = periodEnd ? formatDateFR(periodEnd) : '';
-
-  const content = `
-<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre essai se termine dans 7 jours</h1>
-<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
-
-<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
-<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Votre essai pour <strong>${h(coproprieteNom)}</strong> se termine${deadlineStr ? ` le <strong>${deadlineStr}</strong>` : ' dans 7 jours'}.
-</p>
-<p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Dans 7 jours, votre abonnement <strong>${h(planLabel)}</strong> démarre automatiquement${deadlineStr ? ` (le <strong>${deadlineStr}</strong>)` : ''}. Vous n'avez rien à faire pour continuer.
-</p>
-
-${ctaButton('Vérifier mon abonnement →', dashboardUrl, COLOR.blue)}
-
-<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
-  Vous pouvez modifier votre plan ou annuler à tout moment depuis votre espace syndic avant la fin de l'essai.
-</p>`;
-
-  return wrapEmail(content, COLOR.blue, `Votre essai se termine le ${deadlineStr || 'dans 7 jours'} — tout ce que vous avez configuré continue sans interruption`);
-}
-
-// ── Rappel J-3 avant fin d'essai ─────────────────────────────────────────────────────────
-
-export function buildTrialEndingSubject(coproprieteNom: string): string {
-  return `Votre essai se termine dans 3 jours — ${coproprieteNom} — Mon Syndic Bénévole`;
-}
-
-export function buildTrialEndingEmail(params: SubscriptionEmailParams): string {
-  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
-  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
-  const deadlineStr = periodEnd ? formatDateFR(periodEnd) : '';
-
-  const content = `
-<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.text}">Votre essai se termine dans 3 jours</h1>
-<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
-
-<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
-<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  Votre période d'essai pour la copropriété <strong>${h(coproprieteNom)}</strong> se termine${deadlineStr ? ` le <strong>${deadlineStr}</strong>` : ' dans 3 jours'}. À cette date, votre abonnement <strong>${h(planLabel)}</strong> démarrera et votre premier prélèvement sera effectué.
-</p>
-${deadlineStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;border:1px solid ${COLOR.border}">
-  <tr>
-    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Fin de l'essai</td>
-    <td style="padding:12px 16px;font-size:14px;font-weight:600;color:${COLOR.text};text-align:right">${deadlineStr}</td>
-  </tr>
-</table>` : ''}
-
-${ctaButton('Accéder à mon espace syndic →', dashboardUrl, COLOR.blue)}
-
-<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
-  Vous pouvez gérer ou annuler votre abonnement à tout moment depuis votre espace syndic avant la fin de l'essai.
-</p>`;
-
-  return wrapEmail(content, COLOR.amber, `Votre essai se termine le ${deadlineStr || 'dans 3 jours'} — le plan ${planLabel} démarrera automatiquement`);
-}
-
 // ── Résiliation programmée (cancel_at_period_end) ────────────────────────────
 
 export function buildCancelScheduledSubject(coproprieteNom: string): string {
@@ -783,42 +717,6 @@ ${ctaButton('Réactiver mon abonnement en 30 secondes →', `${dashboardUrl}/abo
 </p>`;
 
   return wrapEmail(content, COLOR.green, `Vos données sont intactes — reprenez la gestion de ${coproprieteNom} en 30 secondes`, unsubscribeUrl);
-}
-
-// ── Rappel J-1 (veille) avant fin d'essai ────────────────────────────────────
-
-export function buildTrialEndingJ1Subject(coproprieteNom: string): string {
-  return `Votre essai se termine demain — dernière chance — ${coproprieteNom} — Mon Syndic Bénévole`;
-}
-
-export function buildTrialEndingJ1Email(params: SubscriptionEmailParams): string {
-  const { prenom, coproprieteNom, planLabel, periodEnd, dashboardUrl } = params;
-  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
-  const deadlineStr = periodEnd ? formatDateFR(periodEnd) : '';
-
-  const content = `
-<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.red}">Votre essai se termine demain</h1>
-<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">${h(coproprieteNom)}</p>
-
-<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
-<p style="margin:0 0 16px;font-size:14px;color:${COLOR.text};line-height:1.6">
-  La période d'essai de votre copropriété <strong>${h(coproprieteNom)}</strong> se termine <strong>demain${deadlineStr ? ` (${deadlineStr})` : ''}</strong>. Votre abonnement <strong>${h(planLabel)}</strong> démarrera automatiquement et le premier prélèvement sera effectué.
-</p>
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca">
-  <tr>
-    <td style="padding:14px 16px;font-size:13px;color:${COLOR.red};line-height:1.6">
-      Si vous souhaitez <strong>annuler avant d'être prélevé</strong>, rendez-vous dès maintenant dans votre espace syndic → Abonnement.
-    </td>
-  </tr>
-</table>
-
-${ctaButton('Gérer mon abonnement →', `${dashboardUrl}/abonnement`, COLOR.red)}
-
-<p style="margin:8px 0 0;font-size:12px;color:${COLOR.muted};text-align:center">
-  Sans action de votre part, l'abonnement <strong>${h(planLabel)}</strong> démarrera demain. Des questions ? <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>.
-</p>`;
-
-  return wrapEmail(content, COLOR.red, `Dernier rappel — votre essai se termine demain${deadlineStr ? ` le ${deadlineStr}` : ''}`);
 }
 
 // ── Relance checkout abandonné (J+1) ─────────────────────────────────────────
