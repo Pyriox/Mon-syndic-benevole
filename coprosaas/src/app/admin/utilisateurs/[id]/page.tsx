@@ -13,6 +13,7 @@ import AdminUserConfirmActions from '../../AdminUserConfirmActions';
 import AdminLinkCoproprietaireUser from '../../AdminLinkCoproprietaireUser';
 import AdminUserSuspendAction from '../../AdminUserSuspendAction';
 import AdminUserActionsDetail from '../../AdminUserActionsDetail';
+import AdminUserMarketingAction from '../../AdminUserMarketingAction';
 import { PlanBadge, RoleBadge } from '../../AdminBadges';
 
 const EVENT_CATEGORY_MAP = {
@@ -219,17 +220,26 @@ export default async function AdminUtilisateurProfilePage({
     return { ...e, coproprieteContext };
   });
 
-  const emailEvents = (emailDeliveriesRes.data ?? []).map((d) => {
-    const delivery = d as { id: string; template_key: string; subject: string | null; status: string; sent_at: string | null; created_at: string };
-    return {
-      id: `email-${delivery.id}`,
-      event_type: 'email_delivery' as const,
-      label: delivery.subject ?? TEMPLATE_LABELS[delivery.template_key] ?? delivery.template_key,
-      severity: (delivery.status === 'bounced' || delivery.status === 'failed') ? 'error' as const : 'info' as const,
-      created_at: delivery.sent_at ?? delivery.created_at,
-      metadata: { template: delivery.template_key, statut: delivery.status } as Record<string, unknown>,
-    };
-  });
+  // Templates déjà affichés via un événement user_events dans la catégorie "Relances" — ne pas dupliquer.
+  const REMINDER_COVERED_TEMPLATES = new Set([
+    'syndic_onboarding_j2', 'syndic_onboarding_j7', 'syndic_onboarding_j14', 'syndic_onboarding_j21', 'syndic_onboarding_j30',
+    'subscription_checkout_abandon_j1', 'subscription_checkout_abandon_j3',
+    'subscription_churn_reactivation_j7', 'subscription_churn_reactivation_j30',
+  ]);
+
+  const emailEvents = (emailDeliveriesRes.data ?? [])
+    .filter((d) => !REMINDER_COVERED_TEMPLATES.has((d as { template_key: string }).template_key))
+    .map((d) => {
+      const delivery = d as { id: string; template_key: string; subject: string | null; status: string; sent_at: string | null; created_at: string };
+      return {
+        id: `email-${delivery.id}`,
+        event_type: 'email_delivery' as const,
+        label: delivery.subject ?? TEMPLATE_LABELS[delivery.template_key] ?? delivery.template_key,
+        severity: (delivery.status === 'bounced' || delivery.status === 'failed') ? 'error' as const : 'info' as const,
+        created_at: delivery.sent_at ?? delivery.created_at,
+        metadata: { template: delivery.template_key, statut: delivery.status } as Record<string, unknown>,
+      };
+    });
 
   const reminderEvents = ((reminderEventsRes as { data: unknown[] | null }).data ?? []).map((e) => {
     const ev = e as { id: string; event_type: string; label: string; created_at: string; severity?: 'info' | 'warning' | 'error'; metadata?: Record<string, unknown> | null; copropriete_id?: string | null };
@@ -371,10 +381,7 @@ export default async function AdminUtilisateurProfilePage({
                 <p><span className="text-gray-500">Téléphone :</span> {phones[0] ?? '—'}</p>
                 <p><span className="text-gray-500">Dernière visite :</span> {lastActive ? formatAdminDateTime(lastActive) : '—'}{lastActiveSource === 'session' || lastActiveSource === 'event' ? <span className="ml-1.5 text-xs text-gray-400">(activité récente)</span> : lastActiveSource === 'login' ? <span className="ml-1.5 text-xs text-gray-400">(dernière connexion)</span> : null}</p>
                 <p><span className="text-gray-500">E-mails marketing :</span>{' '}
-                  {unsubscribeMarketing
-                    ? <span className="inline-flex items-center gap-0.5 text-amber-700 font-medium">Désabonné</span>
-                    : <span className="text-gray-700">Actifs</span>
-                  }
+                  <AdminUserMarketingAction userId={id} unsubscribeMarketing={unsubscribeMarketing} />
                 </p>
               </div>
             </div>

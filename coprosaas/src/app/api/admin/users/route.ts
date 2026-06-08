@@ -367,7 +367,28 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ success: true, suspended: !isSuspended });
   }
-
+  // ── Modifier l'abonnement aux e-mails marketing ─────────────────────────
+  if (action === 'toggle_marketing') {
+    if (!userId) return NextResponse.json({ error: 'userId requis' }, { status: 400 });
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('unsubscribe_marketing')
+      .eq('id', userId)
+      .maybeSingle();
+    const current = !!(profile as { unsubscribe_marketing?: boolean } | null)?.unsubscribe_marketing;
+    const next = !current;
+    const { error: updateError } = await admin
+      .from('profiles')
+      .upsert({ id: userId, unsubscribe_marketing: next }, { onConflict: 'id' });
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+    void logAdminAction({
+      adminEmail: requester.email ?? '',
+      eventType: 'admin_user_updated',
+      label: `E-mails marketing ${next ? 'désactivés' : 'réactivés'} (admin) — ${userId}`,
+      metadata: { targetUserId: userId, unsubscribe_marketing: next },
+    });
+    return NextResponse.json({ success: true, unsubscribeMarketing: next });
+  }
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 });
 }
 
