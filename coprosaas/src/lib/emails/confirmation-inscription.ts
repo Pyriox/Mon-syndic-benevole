@@ -15,6 +15,11 @@ export const CONFIRMATION_INSCRIPTION_SUBJECT =
   'Confirmez votre adresse e-mail — Mon Syndic Bénévole';
 
 export function confirmationInscriptionHtml(): string {
+  return confirmationInscriptionHtmlWithUrl('{{ .ConfirmationURL }}');
+}
+
+/** Variante pour envoi via Resend : remplace la variable Supabase par une vraie URL. */
+export function confirmationInscriptionHtmlWithUrl(confirmationUrl: string): string {
   const content = `
 <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:${COLOR.text}">Confirmez votre adresse e-mail</h1>
 <p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">Dernière étape pour activer votre compte</p>
@@ -24,7 +29,7 @@ export function confirmationInscriptionHtml(): string {
   Cliquez sur le bouton ci-dessous pour valider votre adresse et activer votre compte.
 </p>
 
-${ctaButton('Confirmer mon adresse e-mail →', '{{ .ConfirmationURL }}')}
+${ctaButton('Confirmer mon adresse e-mail →', confirmationUrl)}
 
 <p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted};line-height:1.5">
   Ce lien est valable <strong>24 heures</strong>. Passé ce délai, vous pourrez en demander un nouveau depuis la page de connexion.
@@ -35,8 +40,8 @@ ${ctaButton('Confirmer mon adresse e-mail →', '{{ .ConfirmationURL }}')}
     <td style="padding-top:16px">
       <p style="margin:0;font-size:12px;color:${COLOR.muted};line-height:1.5">
         Bouton ne fonctionnant pas ? Copiez ce lien dans votre navigateur :<br/>
-        <a href="{{ .ConfirmationURL }}" style="color:${COLOR.blue};word-break:break-all;font-size:11px">
-          {{ .ConfirmationURL }}
+        <a href="${confirmationUrl}" style="color:${COLOR.blue};word-break:break-all;font-size:11px">
+          ${confirmationUrl}
         </a>
       </p>
     </td>

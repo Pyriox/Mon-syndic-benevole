@@ -191,16 +191,55 @@ export async function POST(request: NextRequest) {
   // Renvoyer l'email de confirmation (en utilisant magiclink au lieu de signup qui requiert password)
   if (action === 'resend_confirmation') {
     if (!email) return NextResponse.json({ error: 'email requis' }, { status: 400 });
-    const { error } = await admin.auth.admin.generateLink({
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
       type: 'magiclink',
-      email,
+      email: normalizedEmail,
     });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (linkError || !linkData?.properties) {
+      return NextResponse.json({ error: linkError?.message ?? 'Erreur génération lien' }, { status: 500 });
+    }
+
+    const { confirmationInscriptionHtmlWithUrl, CONFIRMATION_INSCRIPTION_SUBJECT } = await import('@/lib/emails/confirmation-inscription');
+    const { trackResendSendResult } = await import('@/lib/email-delivery');
+    const { Resend } = await import('resend');
+    const { getCanonicalSiteUrl } = await import('@/lib/site-url');
+
+    const props = linkData.properties as { hashed_token?: string; action_link: string };
+    const tokenHash = props.hashed_token;
+    const confirmationUrl = tokenHash
+      ? `${getCanonicalSiteUrl()}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=magiclink`
+      : props.action_link;
+
+    const resendClient = new Resend(process.env.RESEND_API_KEY);
+    const FROM_ADDR = `Mon Syndic Bénévole <${process.env.EMAIL_FROM ?? 'noreply@mon-syndic-benevole.fr'}>`;
+
+    const result = await resendClient.emails.send({
+      from: FROM_ADDR,
+      to: normalizedEmail,
+      subject: CONFIRMATION_INSCRIPTION_SUBJECT,
+      html: confirmationInscriptionHtmlWithUrl(confirmationUrl),
+    });
+
+    const tracked = await trackResendSendResult(result, {
+      templateKey: 'signup_confirmation',
+      recipientEmail: normalizedEmail,
+      subject: CONFIRMATION_INSCRIPTION_SUBJECT,
+      legalEventType: 'signup_confirmation',
+      legalReference: normalizedEmail,
+      payload: { flow: 'admin_resend_confirmation' },
+    });
+
+    if (!tracked.ok) {
+      return NextResponse.json({ error: tracked.errorMessage ?? 'Erreur envoi' }, { status: 500 });
+    }
+
     void logAdminAction({
       adminEmail: requester.email ?? '',
       eventType: 'admin_resend_confirmation',
-      label: `Email de confirmation renvoyé — ${email}`,
-      metadata: { targetEmail: email.toLowerCase() },
+      label: `Email de confirmation renvoyé via Resend — ${normalizedEmail}`,
+      metadata: { targetEmail: normalizedEmail },
     });
     return NextResponse.json({ success: true });
   }
