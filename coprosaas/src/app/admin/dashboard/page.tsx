@@ -22,6 +22,8 @@ import { formatRelativeDayLabel } from '@/lib/admin-date';
 import { formatAdminCurrency } from '@/lib/admin-format';
 import { buildEstimatedRevenueMetrics, countActiveAddonCopros, summarizeStripeBilling } from '@/lib/admin-dashboard';
 import AdminStatCard from '../AdminStatCard';
+import AdminInvitationDelete from '../AdminInvitationDelete';
+import AdminUserConfirmActions from '../AdminUserConfirmActions';
 const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 function timeAgo(s: string | null | undefined): string {
@@ -405,21 +407,37 @@ export default async function AdminDashboardPage() {
               </div>
             )}
             {alertNonConfirmedOld.length > 0 && (
-              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <Clock size={14} className="text-amber-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-800">{alertNonConfirmedOld.length} compte{alertNonConfirmedOld.length > 1 ? 's' : ''} non vérifié depuis plus de 7j</p>
-                  <Link href="/admin/utilisateurs" className="text-xs text-amber-600 mt-0.5 hover:underline">Voir utilisateurs</Link>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <div className="flex items-start gap-3">
+                  <Clock size={14} className="text-amber-600 mt-0.5 shrink-0" />
+                  <p className="text-sm font-semibold text-amber-800">{alertNonConfirmedOld.length} compte{alertNonConfirmedOld.length > 1 ? 's' : ''} non vérifié{alertNonConfirmedOld.length > 1 ? 's' : ''} depuis plus de 7j</p>
                 </div>
+                <ul className="mt-2 space-y-2 pl-5">
+                  {alertNonConfirmedOld.map((u) => (
+                    <li key={u.id} className="flex flex-col gap-1.5">
+                      <span className="text-xs text-amber-700 truncate">{u.email}</span>
+                      <div className="flex gap-2 flex-wrap">
+                        <AdminUserConfirmActions userId={u.id} userEmail={u.email ?? ''} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
             {alertInvitationsExpirees.length > 0 && (
-              <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-3">
-                <Send size={14} className="text-orange-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-orange-800">{alertInvitationsExpirees.length} invitation{alertInvitationsExpirees.length > 1 ? 's' : ''} expirée{alertInvitationsExpirees.length > 1 ? 's' : ''}</p>
-                  <Link href="/admin/utilisateurs" className="text-xs text-orange-600 mt-0.5 hover:underline">Voir utilisateurs</Link>
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+                <div className="flex items-start gap-3">
+                  <Send size={14} className="text-orange-600 mt-0.5 shrink-0" />
+                  <p className="text-sm font-semibold text-orange-800">{alertInvitationsExpirees.length} invitation{alertInvitationsExpirees.length > 1 ? 's' : ''} expirée{alertInvitationsExpirees.length > 1 ? 's' : ''} — à supprimer</p>
                 </div>
+                <ul className="mt-2 space-y-1 pl-5">
+                  {alertInvitationsExpirees.map((inv) => (
+                    <li key={inv.id} className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-orange-700 truncate">{inv.email}</span>
+                      <AdminInvitationDelete invitationId={inv.id} email={inv.email} />
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>
