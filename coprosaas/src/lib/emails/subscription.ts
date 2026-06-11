@@ -890,3 +890,73 @@ ${reasonLinks}
 
   return wrapEmail(content, COLOR.blue, `Qu'est-ce qui vous a retenu(e) de continuer ? Votre avis nous aide à nous améliorer.`, unsubscribeUrl);
 }
+
+// ── Avertissement suppression compte inactif ──────────────────────────────────
+// E-mail transactionnel (administrative) — envoyé sans égard à unsubscribe_marketing.
+// Cible : syndics sans abonnement actif, inactifs depuis >= 120 jours.
+// Idempotence via user_events (event_type: dormant_account_warning_sent).
+
+export interface DormantAccountWarningParams {
+  prenom: string | null;
+  deletionDate: string; // formaté en français ex. "11 août 2026"
+  inactiveDays: number;
+  loginUrl: string;
+}
+
+export function buildDormantAccountWarningSubject(): string {
+  return `Votre compte Mon Syndic Bénévole sera supprimé prochainement — action requise`;
+}
+
+export function buildDormantAccountWarningEmail(params: DormantAccountWarningParams): string {
+  const { prenom, deletionDate, inactiveDays, loginUrl } = params;
+  const prenomStr = prenom ? `Bonjour <strong>${h(prenom)}</strong>` : 'Bonjour';
+
+  const content = `
+<h1 style="margin:0 0 6px;font-size:20px;font-weight:700;color:${COLOR.red}">Votre compte va être supprimé</h1>
+<p style="margin:0 0 20px;font-size:13px;color:${COLOR.muted}">Avertissement — compte inactif</p>
+
+<p style="margin:0 0 16px;font-size:15px;color:${COLOR.text}">${prenomStr},</p>
+<p style="margin:0 0 14px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Votre compte Mon Syndic Bénévole est inactif depuis <strong>${inactiveDays}&nbsp;jours</strong> et ne dispose d'aucun abonnement actif.
+</p>
+<p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Conformément à notre politique de conservation des données, votre compte et l'ensemble de vos données
+  (copropriétés, appels de fonds, documents) seront <strong>définitivement et irrévocablement supprimés</strong> le&nbsp;:
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-radius:8px;background:#fef2f2;border:2px solid ${COLOR.red}">
+  <tr>
+    <td style="padding:16px;text-align:center">
+      <p style="margin:0 0 2px;font-size:11px;color:#9a3412;text-transform:uppercase;font-weight:700;letter-spacing:0.08em">Date de suppression prévue</p>
+      <p style="margin:0;font-size:22px;font-weight:700;color:${COLOR.red}">${h(deletionDate)}</p>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0 0 20px;font-size:14px;color:${COLOR.text};line-height:1.6">
+  Pour annuler cette suppression, <strong>il vous suffit de vous connecter une seule fois</strong> avant cette date. Aucune souscription n'est requise — une simple connexion suffit à réinitialiser le compteur d'inactivité.
+</p>
+
+<div style="margin:0 0 24px;padding:14px 16px;background:#f0fdf4;border-left:3px solid ${COLOR.green};border-radius:0 8px 8px 0">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#166534">Vos données sont encore disponibles</p>
+  <p style="margin:0;font-size:13px;color:#15803d;line-height:1.5">
+    Copropriétaires, appels de fonds, documents et historique — tout est conservé jusqu'au <strong>${h(deletionDate)}</strong>.
+  </p>
+</div>
+
+${ctaButton('Me connecter pour conserver mon compte →', loginUrl, COLOR.green)}
+
+<p style="margin:16px 0 0;font-size:12px;color:${COLOR.muted};text-align:center;line-height:1.6">
+  Si vous ne souhaitez pas conserver votre compte, vous n'avez rien à faire.<br>
+  Des questions&nbsp;? <a href="mailto:${CONTACT_EMAIL}" style="color:${COLOR.blue}">${CONTACT_EMAIL}</a>
+</p>
+<p style="margin:12px 0 0;font-size:11px;color:${COLOR.muted};text-align:center;line-height:1.5">
+  Cet e-mail est une notification administrative et ne peut pas être désactivé.
+</p>`;
+
+  return wrapEmail(
+    content,
+    COLOR.red,
+    `Reconnectez-vous avant le ${deletionDate} pour conserver votre compte et vos données.`,
+  );
+}
