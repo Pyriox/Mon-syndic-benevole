@@ -163,6 +163,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
     const safeName = sanitizeFileName(pdfAttachment.filename.replace(/\.pdf$/i, ''));
     const storagePath = `${ag.copropriete_id}/${Date.now()}-${safeName}.pdf`;
 
+    const pvNom = buildPvPdfDisplayName({
+      coproprieteNom: ag.coproprietes?.nom,
+      titreAg: ag.titre,
+      dateAg: ag.date_ag,
+    });
+
+    // Supprimer l'éventuel PV existant avec le même nom dans le même dossier (évite les doublons)
+    if (dossierId) {
+      const { data: existingDocs } = await admin
+        .from('documents')
+        .select('id, url')
+        .eq('copropriete_id', ag.copropriete_id)
+        .eq('dossier_id', dossierId)
+        .eq('nom', pvNom);
+      if (existingDocs && existingDocs.length > 0) {
+        const oldPaths = existingDocs.map((d: { id: string; url: string }) => d.url).filter(Boolean);
+        const oldIds = existingDocs.map((d: { id: string; url: string }) => d.id);
+        await admin.from('documents').delete().in('id', oldIds);
+        if (oldPaths.length > 0) {
+          await admin.storage.from('documents').remove(oldPaths).catch(() => undefined);
+        }
+      }
+    }
+
     const { data: uploadData, error: uploadError } = await admin.storage
       .from('documents')
       .upload(storagePath, pdfBuffer, {
@@ -173,11 +197,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ agI
 
     if (uploadError) throw new Error(uploadError.message);
 
-    const pvNom = buildPvPdfDisplayName({
-      coproprieteNom: ag.coproprietes?.nom,
-      titreAg: ag.titre,
-      dateAg: ag.date_ag,
-    });
     const { error: documentError } = await admin.from('documents').insert({
       copropriete_id: ag.copropriete_id,
       dossier_id: dossierId,
