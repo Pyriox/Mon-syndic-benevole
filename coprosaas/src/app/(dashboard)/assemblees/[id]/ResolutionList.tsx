@@ -229,6 +229,21 @@ function SortableCard({
           )}
 
           {/* Zone de vote */}
+          {isTravaux && !isPreLaunch && (res.montant_travaux != null || res.devis_url) && (
+            <div className="mt-2 mb-1 flex flex-wrap items-center gap-2">
+              {res.montant_travaux != null && (
+                <span className="inline-flex items-center text-xs text-orange-700 bg-orange-50 border border-orange-100 rounded-lg px-3 py-1.5 font-medium">
+                  Montant : {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(res.montant_travaux)}
+                </span>
+              )}
+              {res.devis_url && (
+                <a href={buildCoproStorageDownloadHref(coproprieteId, res.devis_url)} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-orange-600 hover:text-orange-800 bg-orange-50 border border-orange-100 rounded-lg px-3 py-1.5 transition-colors">
+                  <FileText size={12} /> Voir le devis
+                </a>
+              )}
+            </div>
+          )}
           {canVote ? (
             hasPresences && voteurs.length > 0 ? (
               <VoteParCopro
