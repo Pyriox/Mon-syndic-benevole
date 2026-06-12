@@ -672,72 +672,78 @@ export interface TypeResolutionConfig {
   optional: boolean;        // Peut être passée (reportée) sans vote en séance — bouton "Passer" affiché
   hasBudget: boolean;       // Nécessite la saisie de postes budgétaires
   hasFondsTravaux: boolean; // Nécessite un montant en €
+  hasTravaux: boolean;      // Résolution travaux : montant total + devis (optionnel)
 }
 
 export const TYPES_RESOLUTION: Record<string, TypeResolutionConfig> = {
   libre: {
     label: 'Résolution libre',
     majorite: '', designation: false, multiple: false, optional: false,
-    hasBudget: false, hasFondsTravaux: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: false,
   },
   president_seance: {
     label: 'Désignation du président de séance',
     majorite: 'article_24', designation: true, multiple: false, optional: false,
-    hasBudget: false, hasFondsTravaux: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: false,
   },
   secretaire_seance: {
     label: 'Désignation du secrétaire de séance',
     majorite: 'article_24', designation: true, multiple: false, optional: false,
-    hasBudget: false, hasFondsTravaux: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: false,
   },
   scrutateurs: {
     label: 'Désignation des scrutateurs',
     majorite: 'article_24', designation: true, multiple: true, optional: true,
-    hasBudget: false, hasFondsTravaux: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: false,
   },
   approbation_comptes: {
     label: "Approbation des comptes de l'exercice",
     majorite: 'article_24', designation: false, multiple: false, optional: false,
-    hasBudget: false, hasFondsTravaux: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: false,
   },
   quitus_syndic: {
     label: 'Quitus au syndic',
     majorite: 'article_24', designation: false, multiple: false, optional: false,
-    hasBudget: false, hasFondsTravaux: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: false,
   },
   revision_budget: {
     label: "Révision du budget de l'exercice en cours",
     majorite: 'article_24', designation: false, multiple: false, optional: false,
-    hasBudget: true, hasFondsTravaux: false,
+    hasBudget: true, hasFondsTravaux: false, hasTravaux: false,
   },
   revision_fonds_travaux: {
     label: "Révision du fonds de travaux de l'exercice en cours",
     majorite: 'article_24', designation: false, multiple: false, optional: false,
-    hasBudget: false, hasFondsTravaux: true,
+    hasBudget: false, hasFondsTravaux: true, hasTravaux: false,
   },
   budget_previsionnel: {
     label: 'Vote du budget prévisionnel',
     majorite: 'article_24', designation: false, multiple: false, optional: false,
-    hasBudget: true, hasFondsTravaux: false,
+    hasBudget: true, hasFondsTravaux: false, hasTravaux: false,
   },
   fonds_travaux: {
     label: 'Cotisation fonds de travaux (art. L.731-4 ALUR)',
     majorite: 'article_25', designation: false, multiple: false, optional: false,
-    hasBudget: false, hasFondsTravaux: true,
+    hasBudget: false, hasFondsTravaux: true, hasTravaux: false,
   },
   calendrier_financement: {
     label: 'Calendrier de financement du budget prévisionnel et du fonds travaux',
     majorite: 'article_24', designation: false, multiple: false, optional: false,
-    hasBudget: false, hasFondsTravaux: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: false,
   },
   designation_syndic: {
     label: 'Désignation ou renouvellement du syndic',
     majorite: 'article_25', designation: true, multiple: false, optional: false,
-    hasBudget: false, hasFondsTravaux: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: false,
   },
   conseil_syndical: {
     label: 'Désignation ou renouvellement du conseil syndical',
     majorite: 'article_24', designation: true, multiple: true, optional: true,
-    hasBudget: false, hasFondsTravaux: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: false,
+  },
+  travaux: {
+    label: 'Vote de travaux',
+    majorite: 'article_24', designation: false, multiple: false, optional: false,
+    hasBudget: false, hasFondsTravaux: false, hasTravaux: true,
   },
 };

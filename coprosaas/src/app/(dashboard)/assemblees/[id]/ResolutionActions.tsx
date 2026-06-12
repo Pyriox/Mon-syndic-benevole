@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -11,7 +11,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { FileText, Plus, Pencil, Trash2, X } from 'lucide-react';
 import { collectAvailableRepartitionGroups, formatEuros, TYPES_RESOLUTION } from '@/lib/utils';
 
 type PosteBudget = {
@@ -73,6 +73,7 @@ const TYPE_OPTIONS = [
   { value: 'revision_fonds_travaux', label: "Révision du fonds de travaux de l'exercice en cours" },
   { value: 'budget_previsionnel',    label: 'Vote du budget prévisionnel' },
   { value: 'fonds_travaux',       label: 'Cotisation fonds de travaux (ALUR)' },
+  { value: 'travaux',             label: 'Vote de travaux' },
   { value: 'designation_syndic',  label: 'Désignation ou renouvellement du syndic' },
   { value: 'conseil_syndical',    label: 'Désignation ou renouvellement du conseil syndical' },
 ];
@@ -94,6 +95,7 @@ const HINTS: Record<string, string> = {
   revision_fonds_travaux: '🏗️ Révision du montant du fonds de travaux pour l’année en cours. Une fois à l’ordre du jour, doit être votée.',
   budget_previsionnel: '💰 Vote du budget prévisionnel — à détailler par poste de dépense.',
   fonds_travaux:       '🏗️ Cotisation obligatoire au fonds de travaux (art. L.731-4 ALUR) — indiquer le montant.',
+  travaux:             '🛠️ Vote pour réaliser des travaux. Précisez le montant total et joignez un devis si disponible.',
   designation_syndic:  '🏢 Désignation ou renouvellement du syndic — majorité absolue Art. 25 requise.',
   conseil_syndical:    '👥 Désignation ou renouvellement du conseil syndical — facultatif.',
 };
@@ -115,7 +117,11 @@ export default function ResolutionActions({ agId, showLabel, nextNumero, special
   });
   const [budgetPostes, setBudgetPostes] = useState<PosteBudgetForm[]>([]);
   const [fondsTravaux, setFondsTravaux] = useState('');
+  const [montantTravaux, setMontantTravaux] = useState('');
+  const [devisFile, setDevisFile] = useState<File | null>(null);
+  const devisInputRef = useRef<HTMLInputElement>(null);
   const [availableRepartitionGroups, setAvailableRepartitionGroups] = useState<string[]>([]);
+  const [coproId, setCoproId] = useState<string | null>(null);
 
   const typeConfig = TYPES_RESOLUTION[typeResolution] ?? TYPES_RESOLUTION['libre'];
 
@@ -133,6 +139,8 @@ export default function ResolutionActions({ agId, showLabel, nextNumero, special
         setAvailableRepartitionGroups([]);
         return;
       }
+
+      setCoproId(ag.copropriete_id);
 
       const { data: lots } = await supabase
         .from('lots')
@@ -184,6 +192,25 @@ export default function ResolutionActions({ agId, showLabel, nextNumero, special
       return;
     }
 
+    // Upload devis si fourni (type travaux)
+    let devisUrl: string | null = null;
+    if (typeConfig.hasTravaux && devisFile && coproId) {
+      const fd = new FormData();
+      fd.append('file', devisFile);
+      fd.append('copropriete_id', coproId);
+      fd.append('nom', devisFile.name);
+      fd.append('type', 'devis');
+      const uploadRes = await fetch('/api/upload-document', { method: 'POST', body: fd });
+      if (!uploadRes.ok) {
+        const json = await uploadRes.json().catch(() => ({}));
+        setError(json.error ?? 'Erreur lors de l\'upload du devis.');
+        setLoading(false);
+        return;
+      }
+      const { storagePath } = await uploadRes.json();
+      devisUrl = storagePath ?? null;
+    }
+
     const { error: dbError } = await supabase.from('resolutions').insert({
       ag_id: agId,
       numero: nextNumero ?? 1,
@@ -197,6 +224,8 @@ export default function ResolutionActions({ agId, showLabel, nextNumero, special
       type_resolution: typeResolution === 'libre' ? null : typeResolution,
       budget_postes: postesValides.length > 0 ? postesValides : null,
       fonds_travaux_montant: typeConfig.hasFondsTravaux && fondsTravaux ? parseFloat(fondsTravaux) : null,
+      montant_travaux: typeConfig.hasTravaux && montantTravaux ? parseFloat(montantTravaux) : null,
+      devis_url: devisUrl,
     });
 
     if (dbError) {
@@ -210,6 +239,8 @@ export default function ResolutionActions({ agId, showLabel, nextNumero, special
     setFormData({ titre: '', description: '', majorite: '', statut: 'en_attente' });
     setBudgetPostes([]);
     setFondsTravaux('');
+    setMontantTravaux('');
+    setDevisFile(null);
     router.refresh();
   };
 
@@ -263,6 +294,43 @@ export default function ResolutionActions({ agId, showLabel, nextNumero, special
                 className="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
+            </div>
+          )}
+
+          {/* Travaux */}
+          {typeConfig.hasTravaux && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Montant total des travaux (€)</label>
+                <input
+                  type="number" min="0" step="0.01" placeholder="0.00"
+                  value={montantTravaux} onChange={(e) => setMontantTravaux(e.target.value)}
+                  className="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Devis (optionnel)</label>
+                {devisFile ? (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                    <FileText size={14} />
+                    <span className="flex-1 truncate">{devisFile.name}</span>
+                    <button type="button" onClick={() => { setDevisFile(null); if (devisInputRef.current) devisInputRef.current.value = ''; }}
+                      className="p-0.5 hover:text-red-500 transition-colors"><X size={14} /></button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 cursor-pointer hover:border-blue-400 hover:text-blue-600 transition-colors">
+                    <FileText size={14} />
+                    <span>Joindre un devis (PDF, image…)</span>
+                    <input
+                      ref={devisInputRef}
+                      type="file"
+                      accept=".pdf,image/*,.doc,.docx"
+                      className="hidden"
+                      onChange={(e) => setDevisFile(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
           )}
 
@@ -366,6 +434,8 @@ interface Resolution {
   budget_postes?: PosteBudget[] | null;
   type_resolution?: string | null;
   fonds_travaux_montant?: number | null;
+  montant_travaux?: number | null;
+  devis_url?: string | null;
 }
 
 export function ResolutionEdit({
@@ -397,7 +467,12 @@ export function ResolutionEdit({
     mapBudgetPostesToForm(resolution.budget_postes ?? [])
   );
   const [fondsTravaux, setFondsTravaux] = useState(resolution.fonds_travaux_montant ? String(resolution.fonds_travaux_montant) : '');
+  const [montantTravaux, setMontantTravaux] = useState(resolution.montant_travaux ? String(resolution.montant_travaux) : '');
+  const [devisFile, setDevisFile] = useState<File | null>(null);
+  const [devisUrl, setDevisUrl] = useState<string | null>(resolution.devis_url ?? null);
+  const editDevisInputRef = useRef<HTMLInputElement>(null);
   const [availableRepartitionGroups, setAvailableRepartitionGroups] = useState<string[]>([]);
+  const [editCoproId, setEditCoproId] = useState<string | null>(null);
 
   const typeResolution = resolution.type_resolution ?? 'libre';
   const typeConfig = TYPES_RESOLUTION[typeResolution] ?? TYPES_RESOLUTION['libre'];
@@ -427,6 +502,8 @@ export function ResolutionEdit({
         setAvailableRepartitionGroups([]);
         return;
       }
+
+      setEditCoproId(ag.copropriete_id);
 
       const { data: lots } = await supabase
         .from('lots')
@@ -470,6 +547,28 @@ export function ResolutionEdit({
     const nextVoixAbstention = isPreLaunch ? 0 : (parseInt(formData.voix_abstention) || 0);
     const nextBudgetPostes = editPostesValides.length > 0 ? editPostesValides : null;
     const nextFondsTravaux = typeConfig.hasFondsTravaux && fondsTravaux ? parseFloat(fondsTravaux) : null;
+    const nextMontantTravaux = typeConfig.hasTravaux && montantTravaux ? parseFloat(montantTravaux) : null;
+
+    // Upload nouveau devis si fourni
+    let nextDevisUrl = devisUrl;
+    if (typeConfig.hasTravaux && devisFile && editCoproId) {
+      const fd = new FormData();
+      fd.append('file', devisFile);
+      fd.append('copropriete_id', editCoproId);
+      fd.append('nom', devisFile.name);
+      fd.append('type', 'devis');
+      const uploadRes = await fetch('/api/upload-document', { method: 'POST', body: fd });
+      if (!uploadRes.ok) {
+        const json = await uploadRes.json().catch(() => ({}));
+        setError(json.error ?? 'Erreur lors de l\'upload du devis.');
+        setLoading(false);
+        return;
+      }
+      const { storagePath } = await uploadRes.json();
+      nextDevisUrl = storagePath ?? null;
+    } else if (!typeConfig.hasTravaux) {
+      nextDevisUrl = null;
+    }
 
     const { error: dbError } = await supabase.from('resolutions').update({
       titre: formData.titre.trim(),
@@ -481,6 +580,8 @@ export function ResolutionEdit({
       voix_abstention: nextVoixAbstention,
       budget_postes: nextBudgetPostes,
       fonds_travaux_montant: nextFondsTravaux,
+      montant_travaux: nextMontantTravaux,
+      devis_url: nextDevisUrl,
     }).eq('id', resolution.id);
 
     if (dbError) { setError('Erreur : ' + dbError.message); setLoading(false); return; }
@@ -495,6 +596,8 @@ export function ResolutionEdit({
       voix_abstention: nextVoixAbstention,
       budget_postes: nextBudgetPostes,
       fonds_travaux_montant: nextFondsTravaux,
+      montant_travaux: nextMontantTravaux,
+      devis_url: nextDevisUrl,
     });
     setLoading(false);
     setIsOpen(false);
@@ -543,6 +646,43 @@ export function ResolutionEdit({
               <input type="number" min="0" step="0.01" value={fondsTravaux} onChange={(e) => setFondsTravaux(e.target.value)}
                 className="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+          )}
+
+          {typeConfig.hasTravaux && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Montant total des travaux (€)</label>
+                <input type="number" min="0" step="0.01" value={montantTravaux} onChange={(e) => setMontantTravaux(e.target.value)}
+                  className="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Devis (optionnel)</label>
+                {devisUrl && !devisFile && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 mb-2">
+                    <FileText size={14} />
+                    <span className="flex-1 truncate text-xs">Devis existant joint</span>
+                    <button type="button" onClick={() => setDevisUrl(null)}
+                      className="p-0.5 hover:text-red-500 transition-colors" title="Supprimer le devis"><X size={14} /></button>
+                  </div>
+                )}
+                {devisFile ? (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                    <FileText size={14} />
+                    <span className="flex-1 truncate">{devisFile.name}</span>
+                    <button type="button" onClick={() => { setDevisFile(null); if (editDevisInputRef.current) editDevisInputRef.current.value = ''; }}
+                      className="p-0.5 hover:text-red-500 transition-colors"><X size={14} /></button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 cursor-pointer hover:border-blue-400 hover:text-blue-600 transition-colors">
+                    <FileText size={14} />
+                    <span>{devisUrl ? 'Remplacer le devis' : 'Joindre un devis (PDF, image…)'}</span>
+                    <input ref={editDevisInputRef} type="file" accept=".pdf,image/*,.doc,.docx" className="hidden"
+                      onChange={(e) => setDevisFile(e.target.files?.[0] ?? null)} />
+                  </label>
+                )}
+              </div>
             </div>
           )}
 

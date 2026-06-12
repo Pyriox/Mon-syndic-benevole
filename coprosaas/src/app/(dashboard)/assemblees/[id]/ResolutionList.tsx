@@ -22,9 +22,10 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, CheckCircle, XCircle } from 'lucide-react';
+import { GripVertical, CheckCircle, XCircle, FileText } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { formatRepartitionScope, TYPES_RESOLUTION } from '@/lib/utils';
+import { buildCoproStorageDownloadHref, extractStorageBasename } from '@/lib/storage-path';
 import { ResolutionEdit, ResolutionDelete } from './ResolutionActions';
 import VoteParCopro from './VoteParCopro';
 import VoteActions from './VoteActions';
@@ -48,6 +49,8 @@ type AnyResolution = {
     repartition_cible?: string | null;
   }[] | null;
   fonds_travaux_montant?: number | null;
+  montant_travaux?: number | null;
+  devis_url?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   designation_resultats?: any[] | null;
   date_fin_mandat?: string | null;
@@ -69,6 +72,7 @@ interface ResolutionListProps {
   tantiemesMap: Record<string, number>;
   totalTantiemes: number;
   specialChargesEnabled?: boolean;
+  coproprieteId: string;
 }
 
 const badgeVariant = (statut: string): 'success' | 'danger' | 'warning' | 'default' => {
@@ -96,6 +100,7 @@ function SortableCard({
   tantiemesMap,
   totalTantiemes,
   specialChargesEnabled,
+  coproprieteId,
   onResolutionUpdated,
   onResolutionDeleted,
 }: {
@@ -114,20 +119,27 @@ function SortableCard({
 
   const isFinancier = !!(cfg?.hasBudget || cfg?.hasFondsTravaux || tr === 'calendrier_financement');
   const isDesignation = !!cfg?.designation;
+  const isTravaux = !!cfg?.hasTravaux;
 
-  const cardColor = isFinancier
+  const cardColor = isTravaux
+    ? 'border-orange-200 bg-orange-50'
+    : isFinancier
     ? 'border-indigo-200 bg-indigo-50'
     : isDesignation
     ? 'border-amber-200 bg-amber-50'
     : 'border-slate-200 bg-slate-50';
 
-  const numColor = isFinancier
+  const numColor = isTravaux
+    ? 'bg-orange-100 text-orange-600'
+    : isFinancier
     ? 'bg-indigo-100 text-indigo-500'
     : isDesignation
     ? 'bg-amber-100 text-amber-600'
     : 'bg-slate-200 text-slate-500';
 
-  const categorieBadge = isFinancier
+  const categorieBadge = isTravaux
+    ? { label: 'Travaux', cls: 'text-orange-700 bg-orange-100' }
+    : isFinancier
     ? { label: 'Financier', cls: 'text-indigo-600 bg-indigo-100' }
     : isDesignation
     ? { label: 'Désignation', cls: 'text-amber-700 bg-amber-100' }
@@ -190,6 +202,18 @@ function SortableCard({
                   <span className="font-semibold">Cotisation fonds de travaux : </span>
                   {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(res.fonds_travaux_montant)}
                 </div>
+              )}
+              {res.montant_travaux != null && (
+                <div className="text-xs text-orange-700 bg-white/70 rounded-lg px-3 py-1.5 border border-orange-100">
+                  <span className="font-semibold">Montant des travaux : </span>
+                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(res.montant_travaux)}
+                </div>
+              )}
+              {res.devis_url && (
+                <a href={buildCoproStorageDownloadHref(coproprieteId, res.devis_url)} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-orange-600 hover:text-orange-800 bg-white/70 rounded-lg px-3 py-1.5 border border-orange-100 transition-colors">
+                  <FileText size={12} /> {extractStorageBasename(res.devis_url)}
+                </a>
               )}
               {tr === 'calendrier_financement' && (res.budget_postes?.length ?? 0) > 0 && (
                 <div className="text-xs text-green-700 bg-white/70 rounded-lg px-3 py-1.5 border border-green-100">
@@ -254,6 +278,18 @@ function SortableCard({
                   <span className="font-medium">Cotisation fonds de travaux : </span>
                   {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(res.fonds_travaux_montant)}
                 </div>
+              )}
+              {res.montant_travaux != null && (
+                <div className="mt-2 text-xs text-orange-700 bg-orange-50 rounded-lg px-3 py-2">
+                  <span className="font-medium">Montant des travaux : </span>
+                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(res.montant_travaux)}
+                </div>
+              )}
+              {res.devis_url && (
+                <a href={buildCoproStorageDownloadHref(coproprieteId, res.devis_url)} target="_blank" rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1.5 text-xs text-orange-600 hover:text-orange-800 bg-orange-50 rounded-lg px-3 py-2 transition-colors">
+                  <FileText size={12} /> Voir le devis
+                </a>
               )}
               {!cfg?.designation && (
                 <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">

@@ -180,6 +180,7 @@ export type TypeDocument =
   | 'contrat'
   | 'assurance'
   | 'reglement'
+  | 'devis'
   | 'autre';
 
 export interface Document {
