@@ -896,33 +896,6 @@ export async function SyndicNextAction({ coproId }: { coproId: string }) {
     );
   }
 
-  if (data.agUrgente && data.prochaineAG && data.joursAvantAG !== null) {
-    return (
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
-        <div className="flex items-start gap-3">
-          <div className="shrink-0 mt-0.5">
-            <CalendarDays size={20} className="text-amber-600" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-900">
-              AG dans J&minus;{data.joursAvantAG} — préparez l&apos;ordre du jour
-            </p>
-            <p className="text-xs text-gray-600 mt-0.5">
-              {data.prochaineAG.titre} &middot;{' '}
-              {new Date(data.prochaineAG.date_ag).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
-            </p>
-          </div>
-        </div>
-        <Link
-          href={`/assemblees/${data.prochaineAG.id}`}
-          className="shrink-0 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors"
-        >
-          Préparer l&apos;AG →
-        </Link>
-      </div>
-    );
-  }
-
   if (data.prochainAppelAVenir) {
     const joursAvant = Math.ceil(
       (new Date(data.prochainAppelAVenir.date_echeance).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
