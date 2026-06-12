@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { CheckCircle, XCircle, MinusCircle, Plus, Trash2 } from 'lucide-react';
 import { formatEuros, formatRepartitionScope } from '@/lib/utils';
@@ -35,6 +36,7 @@ export default function VoteActions({
   budgetPostes = [],
 }: VoteActionsProps) {
   const supabase = createClient();
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [optimisticState, setOptimisticState] = useState<{
@@ -143,6 +145,7 @@ export default function VoteActions({
     });
     setEditing(false);
     setLoading(false);
+    router.refresh();
   };
 
   if (!editing) {
