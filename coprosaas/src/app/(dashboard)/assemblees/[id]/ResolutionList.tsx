@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
   DndContext,
@@ -318,6 +318,10 @@ export default function ResolutionList({
 }: ResolutionListProps) {
   const supabase = createClient();
   const [resolutions, setResolutions] = useState(initialResolutions);
+
+  useEffect(() => {
+    setResolutions(initialResolutions);
+  }, [initialResolutions]);
 
   const handleResolutionUpdated = (updated: AnyResolution) => {
     setResolutions((prev) => prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r)));
