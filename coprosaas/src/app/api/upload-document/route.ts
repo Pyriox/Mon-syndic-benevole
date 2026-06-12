@@ -149,7 +149,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erreur lors de l'upload du fichier." }, { status: 500 });
   }
 
-  // 5. Enregistrement en base via le client admin
+  // 5. Suppression de l'éventuel document existant avec le même nom dans le même dossier (évite les doublons)
+  if (dossier_id) {
+    const { data: existingDocs } = await admin
+      .from('documents')
+      .select('id, url')
+      .eq('copropriete_id', copropriete_id)
+      .eq('dossier_id', dossier_id)
+      .eq('nom', nom.trim());
+    if (existingDocs && existingDocs.length > 0) {
+      const oldPaths = existingDocs.map((d: { id: string; url: string }) => d.url).filter(Boolean);
+      const oldIds = existingDocs.map((d: { id: string; url: string }) => d.id);
+      await admin.from('documents').delete().in('id', oldIds);
+      if (oldPaths.length > 0) {
+        await admin.storage.from('documents').remove(oldPaths).catch(() => undefined);
+      }
+    }
+  }
+
+  // 6. Enregistrement en base via le client admin
   const { error: dbError } = await admin.from('documents').insert({
     copropriete_id,
     dossier_id: dossier_id || null,
