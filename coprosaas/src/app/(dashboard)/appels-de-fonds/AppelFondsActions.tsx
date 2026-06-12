@@ -51,11 +51,13 @@ interface BudgetResolution {
     repartition_cible?: string | null;
   }[] | null;
   fonds_travaux_montant: number | null;
+  montant_travaux: number | null;
 }
 
 const LABELS_BUDGET_TYPE: Record<string, string> = {
   budget_previsionnel: 'Budget prévisionnel',
   revision_budget: 'Révision budget',
+  travaux: 'Travaux votés',
 };
 
 function extractYearFromTitle(titre: string): number | null {
@@ -259,6 +261,11 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
           fondsTravauxTotal += res.fonds_travaux_montant;
         }
       }
+      if (res.type_resolution === 'travaux') {
+        if (res.montant_travaux) {
+          newPostes.push({ libelle: res.titre, categorie: 'travaux', montant: String(res.montant_travaux), repartition_type: 'generale', repartition_cible: null });
+        }
+      }
     }
     setMontantFondsTravaux(fondsTravauxTotal);
     setPostes(newPostes.length > 0 ? newPostes : [{ ...POSTE_VIDE }]);
@@ -267,13 +274,23 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
     // Extraire l'année depuis le titre de la résolution budget (ex : "Budget prévisionnel 2026" → 2026)
     // Fallback sur agYear+1 si aucune année trouvée dans le titre
     let budgetYear = nextYear;
+    let hasTravaux = false;
     for (const res of ag.resolutions) {
       if (res.type_resolution === 'budget_previsionnel' || res.type_resolution === 'revision_budget') {
         const match = res.titre.match(/\b(20\d{2})\b/);
         if (match) { budgetYear = parseInt(match[1], 10); break; }
       }
+      if (res.type_resolution === 'travaux') hasTravaux = true;
     }
-    setTitre(`Calendrier de financement du budget prévisionnel et du fonds travaux ${budgetYear}`);
+    if (hasBudgetPrev) {
+      setTitre(`Calendrier de financement du budget prévisionnel et du fonds travaux ${budgetYear}`);
+    } else if (hasTravaux && newPostes.length === 1) {
+      setTitre(`Appel de fonds travaux — ${newPostes[0].libelle}`);
+    } else if (hasTravaux) {
+      setTitre(`Appel de fonds travaux ${agYear}`);
+    } else {
+      setTitre(`Calendrier de financement du budget prévisionnel et du fonds travaux ${budgetYear}`);
+    }
 
     // Montant local (dépenses + fonds travaux) pour initialiser les versements
     const localMontantTotal = (newPostes.length > 0 ? newPostes : [{ ...POSTE_VIDE }])
@@ -300,7 +317,9 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
     } else {
       // Pas de calendrier_financement voté : génération automatique d'un échéancier trimestriel
       const yearStart = `${budgetYear}-01-01`;
-      if (localTotalAvecFT > 0 && (hasBudgetPrev || fondsTravauxTotal > 0)) {
+      const hasAmount = localTotalAvecFT > 0;
+      const hasSource = hasBudgetPrev || fondsTravauxTotal > 0 || hasTravaux;
+      if (hasAmount && hasSource) {
         const nb = PERIODICITE_NB['trimestriel'];
         const baseAmount = Math.round((localTotalAvecFT / nb) * 100) / 100;
         setEditableVersements(
@@ -314,7 +333,7 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
       } else {
         setEditableVersements([]);
         setFromAGDates(false);
-        setUseEcheancier(hasBudgetPrev || fondsTravauxTotal > 0);
+        setUseEcheancier(hasSource);
       }
       setDateSingle(yearStart);
       setGenDateDebut(yearStart);
@@ -342,9 +361,9 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
 
       const { data: resolutions } = await supabase
         .from('resolutions')
-        .select('id, titre, type_resolution, budget_postes, fonds_travaux_montant, ag_id')
+        .select('id, titre, type_resolution, budget_postes, fonds_travaux_montant, montant_travaux, ag_id')
         .in('ag_id', ags.map((a) => a.id))
-        .in('type_resolution', ['budget_previsionnel', 'revision_budget', 'fonds_travaux', 'revision_fonds_travaux', 'calendrier_financement'])
+        .in('type_resolution', ['budget_previsionnel', 'revision_budget', 'fonds_travaux', 'revision_fonds_travaux', 'calendrier_financement', 'travaux'])
         .eq('statut', 'approuvee');
 
       const grouped: AGWithBudgets[] = ags
@@ -359,6 +378,7 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
           const ftResolutions = agRes.filter((r) =>
             r.type_resolution === 'fonds_travaux' || r.type_resolution === 'revision_fonds_travaux'
           );
+          const travauxResolutions = agRes.filter((r) => r.type_resolution === 'travaux');
 
           const toEntry = (res: typeof agRes[number]) => ({
             id: res.id,
@@ -366,10 +386,22 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
             type_resolution: res.type_resolution,
             budget_postes: res.budget_postes as BudgetResolution['budget_postes'],
             fonds_travaux_montant: res.fonds_travaux_montant,
+            montant_travaux: (res as { montant_travaux?: number | null }).montant_travaux ?? null,
           });
 
           if (budgetResolutions.length <= 1) {
             // Cas standard : une seule résolution budgétaire → une entrée
+            // Résolutions travaux sans budget : une entrée par résolution travaux
+            if (budgetResolutions.length === 0 && travauxResolutions.length > 0) {
+              return travauxResolutions.map((tv) => ({
+                ag_id: ag.id,
+                ag_titre: ag.titre,
+                ag_date: ag.date_ag,
+                budgetLabel: tv.titre,
+                votedDates,
+                resolutions: [toEntry(tv)],
+              }));
+            }
             const allRes = agRes
               .filter((r) => r.type_resolution !== 'calendrier_financement')
               .map(toEntry);
@@ -728,7 +760,7 @@ export default function AppelFondsActions({ coproprietes, showLabel, specialChar
                 <div className="space-y-2">
                   {agsDisponibles.map((ag, i) => {
                     const total = ag.resolutions.reduce((s, r) =>
-                      s + (r.fonds_travaux_montant ?? (r.budget_postes ?? []).reduce((x, p) => x + p.montant, 0)), 0);
+                      s + (r.montant_travaux ?? r.fonds_travaux_montant ?? (r.budget_postes ?? []).reduce((x, p) => x + p.montant, 0)), 0);
                     const agDate = new Date(ag.ag_date.slice(0, 10) + 'T00:00:00');
                     const isFirst = i === 0 || ag.ag_id !== agsDisponibles[i - 1]?.ag_id;
                     return (
