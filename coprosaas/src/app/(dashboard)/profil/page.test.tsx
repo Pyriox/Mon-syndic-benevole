@@ -20,6 +20,7 @@ vi.mock('./ProfilActions', () => ({
   LotsActions: () => <button type="button">Gérer mes lots</button>,
   SecurityActions: () => <div>Actions sécurité</div>,
   DeleteAccountSection: () => <button type="button">Supprimer mon compte</button>,
+  EmailPreferencesToggle: () => null,
 }));
 
 type Row = Record<string, unknown>;

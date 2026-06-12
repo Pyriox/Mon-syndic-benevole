@@ -21,8 +21,8 @@ describe('appel email reminders', () => {
       dateEcheance: '2026-04-10',
     });
 
-    expect(subject).toMatch(/Relance/i);
-    expect(subject).toMatch(/Échéance 10 avril 2026/i);
+    expect(subject).toMatch(/Règlement en attente/i);
+    expect(subject).not.toMatch(/Échéance/i);
     expect(html).toMatch(/échéance.*dépassée/i);
     expect(html).toMatch(/242,10\s?€/i);
   });
@@ -67,7 +67,7 @@ describe('appel email reminders', () => {
 
     expect(subject).toMatch(/Rappel d'impayé/i);
     expect(subject).not.toMatch(/Mise en demeure/i);
-    expect(html).toMatch(/paiement non encore enregistré|ignorez ce message/i);
+    expect(html).toMatch(/n.a pas .t. enregistr.|contactez votre syndic/i);
     expect(html).not.toMatch(/ordre du jour/i);
   });
 });

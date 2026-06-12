@@ -78,6 +78,8 @@ export default function ActivityHeartbeat() {
   useEffect(() => {
     if (initialPingSentRef.current) return;
     initialPingSentRef.current = true;
+    lastHeartbeatRef.current = Date.now();
+    setLastHeartbeatAt(lastHeartbeatRef.current);
     void pingActivity();
   }, []);
 

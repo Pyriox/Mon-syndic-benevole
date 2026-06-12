@@ -80,6 +80,10 @@ describe('requireCoproAccess', () => {
           });
         }
 
+        if (table === 'profiles') {
+          return createMaybeSingleQuery(() => null);
+        }
+
         throw new Error(`Unexpected table: ${table}`);
       },
     }));

@@ -50,6 +50,10 @@ vi.mock('@/lib/actions/revalidate-copro-finance', () => ({
   revalidateCoproFinance: vi.fn(async () => undefined),
 }));
 
+vi.mock('@/lib/actions/log-user-event', () => ({
+  logCurrentUserEvent: vi.fn(async () => undefined),
+}));
+
 vi.mock('@/lib/coproprietaire-balance', () => ({
   applyCoproprietaireBalanceDelta: vi.fn(async () => ({ error: null })),
   resolveAppelBalanceAccountType: vi.fn(() => 'principal'),

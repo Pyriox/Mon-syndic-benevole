@@ -420,34 +420,56 @@ export async function SyndicDashboardAlert({ coproId }: { coproId: string }) {
   const showUnpaidAlert = data.totalMontantImpaye > 0 && overdueLineCount > 0;
   const showAgAlert = Boolean(data.agUrgente && data.prochaineAG && data.joursAvantAG !== null);
 
-  if (!showAgAlert) {
+  if (!showAgAlert && !showUnpaidAlert) {
     return null;
   }
 
+  if (showAgAlert) {
+    return (
+      <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+        <BellRing size={18} className="text-amber-700 shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-amber-800">
+            Assemblée Générale dans{' '}
+            <span className="inline-flex items-center bg-amber-100 text-amber-700 rounded-md px-2 py-0.5 text-xs font-bold">
+              J&minus;{data.joursAvantAG}
+            </span>
+          </p>
+          <p className="text-xs text-amber-700 mt-0.5 line-clamp-2">
+            {data.prochaineAG!.titre} &middot;{' '}
+            {new Date(data.prochaineAG!.date_ag).toLocaleDateString('fr-FR', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })}
+          </p>
+        </div>
+        <Link
+          href={`/assemblees/${data.prochaineAG!.id}`}
+          className="shrink-0 text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+        >
+          Préparer l&apos;AG →
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-      <BellRing size={18} className="text-amber-700 shrink-0 mt-0.5" />
+    <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+      <BellRing size={18} className="text-red-600 shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-amber-800">
-          Assemblée Générale dans{' '}
-          <span className="inline-flex items-center bg-amber-100 text-amber-700 rounded-md px-2 py-0.5 text-xs font-bold">
-            J&minus;{data.joursAvantAG}
-          </span>
+        <p className="text-sm font-semibold text-red-800">
+          {overdueLineCount} appel{overdueLineCount > 1 ? 's' : ''} de fonds en retard
         </p>
-        <p className="text-xs text-amber-700 mt-0.5 line-clamp-2">
-          {data.prochaineAG!.titre} &middot;{' '}
-          {new Date(data.prochaineAG!.date_ag).toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-          })}
+        <p className="text-xs text-red-700 mt-0.5">
+          {formatEuros(data.totalMontantImpaye)} impayés — relancez les copropriétaires concernés.
         </p>
       </div>
       <Link
-        href={`/assemblees/${data.prochaineAG!.id}`}
-        className="shrink-0 text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+        href="/appels-de-fonds"
+        className="shrink-0 text-xs font-semibold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
       >
-        Préparer l&apos;AG →
+        Voir les impayés →
       </Link>
     </div>
   );

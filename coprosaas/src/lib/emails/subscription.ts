@@ -137,7 +137,7 @@ export function buildTrialToPaidEmail(params: SubscriptionEmailParams): string {
 
 ${renewStr ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-radius:8px;border:1px solid ${COLOR.border}">
   <tr>
-    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Prochaine échéance d&rsquo;abonnement</td>
+    <td style="padding:12px 16px;font-size:13px;color:${COLOR.muted}">Prochaine échéance d’abonnement</td>
     <td style="padding:12px 16px;font-size:14px;font-weight:600;color:${COLOR.text};text-align:right">${renewStr}</td>
   </tr>
 </table>` : ''}

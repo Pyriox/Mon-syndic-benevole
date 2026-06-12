@@ -17,7 +17,7 @@ describe('resolveOnboardingKinds', () => {
   });
 
   it('keeps both kinds for the regular daily cron when no explicit kind is provided', () => {
-    expect(resolveOnboardingKinds({ requestedKind: null, force: false, hasTargetEmails: false })).toEqual(['j2', 'j7']);
+    expect(resolveOnboardingKinds({ requestedKind: null, force: false, hasTargetEmails: false })).toEqual(['j2', 'j7', 'j14', 'j21', 'j30']);
   });
 });
 
@@ -33,7 +33,7 @@ describe('resolveOnboardingConfirmationWindow', () => {
 
   it('keeps a J+7 catch-up window for every confirmation up to J+7', () => {
     expect(resolveOnboardingConfirmationWindow({ kind: 'j7', referenceDate })).toEqual({
-      startDateIso: null,
+      startDateIso: '2026-03-14',
       endDateIso: '2026-04-06',
     });
   });

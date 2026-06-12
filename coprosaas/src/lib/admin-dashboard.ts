@@ -60,17 +60,15 @@ export function summarizeStripeBilling(invoices: AdminStripeInvoiceLike[], year:
   };
 }
 
-// Un add-on compte dans l'ARR / le compteur "actif" uniquement s'il est payant
-// (active ou past_due). Les essais gratuits (trialing) et les résiliations
-// ne génèrent aucun revenu et ne doivent pas gonfler les métriques.
+// Un add-on compte dans l'ARR / le compteur "actif" s'il est actif ou en essai
+// (active, past_due, trialing) ou résilié avec une période encore en cours.
 function isAddonPaying(addon: Partial<CoproAddon>, nowIso: string): boolean {
   const status = addon.status ?? null;
-  if (status !== 'active' && status !== 'past_due') return false;
-  // Résilié à la fin de période : accès jusqu'à la date, mais déjà compté comme payant
-  if (addon.cancel_at_period_end) {
-    return Boolean(addon.current_period_end && addon.current_period_end > nowIso);
+  // Résilié : accès jusqu'à current_period_end si cancel_at_period_end
+  if (status === 'canceled') {
+    return Boolean(addon.cancel_at_period_end && addon.current_period_end && addon.current_period_end > nowIso);
   }
-  return true;
+  return status === 'active' || status === 'past_due' || status === 'trialing';
 }
 
 export function countActiveAddonCopros(
