@@ -12,7 +12,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import DepenseActions, { DepenseDelete } from './DepenseActions';
 import AnneeSelector from '@/components/ui/AnneeSelector';
 import {
-  calculerPart,
+  repartirMontant,
   filterLotsByRepartitionScope,
   formatEuros,
   formatDate,
@@ -150,11 +150,19 @@ function computeExpensePartsByOwner(
       continue;
     }
 
-    const { weightByOwner, totalWeight } = getScopeWeights(lots, depense.repartition_type, depense.repartition_cible);
-    if (totalWeight <= 0) continue;
+    const scopedLots = filterLotsByRepartitionScope(lots, depense.repartition_type, depense.repartition_cible)
+      .filter((lot) => lot.coproprietaire_id)
+      .map((lot) => ({
+        ...lot,
+        tantiemes: getLotTantiemesForRepartitionScope(lot, depense.repartition_type, depense.repartition_cible),
+      }))
+      .filter((lot) => lot.tantiemes > 0);
 
-    for (const [coproprietaireId, weight] of Object.entries(weightByOwner)) {
-      totals[coproprietaireId] = roundEuros((totals[coproprietaireId] ?? 0) + calculerPart(depense.montant, weight, totalWeight));
+    if (scopedLots.length === 0) continue;
+
+    for (const item of repartirMontant(depense.montant, scopedLots)) {
+      if (!item.coproprietaire_id) continue;
+      totals[item.coproprietaire_id] = roundEuros((totals[item.coproprietaire_id] ?? 0) + item.montant);
     }
   }
 
@@ -206,13 +214,22 @@ function computeExpenseBreakdownByScope(
       continue;
     }
 
-    if (totalWeight <= 0) {
+    const scopedLots = filterLotsByRepartitionScope(lots, depense.repartition_type, depense.repartition_cible)
+      .filter((lot) => lot.coproprietaire_id)
+      .map((lot) => ({
+        ...lot,
+        tantiemes: getLotTantiemesForRepartitionScope(lot, depense.repartition_type, depense.repartition_cible),
+      }))
+      .filter((lot) => lot.tantiemes > 0);
+
+    if (scopedLots.length === 0) {
       breakdown.set(label, entry);
       continue;
     }
 
-    for (const [coproprietaireId, weight] of Object.entries(weightByOwner)) {
-      entry.ownerAmounts[coproprietaireId] = roundEuros((entry.ownerAmounts[coproprietaireId] ?? 0) + calculerPart(depense.montant, weight, totalWeight));
+    for (const item of repartirMontant(depense.montant, scopedLots)) {
+      if (!item.coproprietaire_id) continue;
+      entry.ownerAmounts[item.coproprietaire_id] = roundEuros((entry.ownerAmounts[item.coproprietaire_id] ?? 0) + item.montant);
     }
 
     breakdown.set(label, entry);
