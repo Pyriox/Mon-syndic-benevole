@@ -403,6 +403,7 @@ export function AGEnvoyerConvocation({
   recipients?: AgRecipient[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sentDate, setSentDate] = useState<string | null>(convocationEnvoyeeLe ?? null);
@@ -474,6 +475,7 @@ export function AGEnvoyerConvocation({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await supabase.from('assemblees_generales').update({ convocation_envoyee_le: now } as any).eq('id', agId);
           setSentDate(now);
+          router.refresh();
           // Optimistic status — preserve 'ouvert', set others to 'envoyé'
           const optimistic: Record<string, AgEmailStatut> = { ...localEmailStatus };
           for (const r of recipients ?? []) {
