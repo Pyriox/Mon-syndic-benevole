@@ -363,7 +363,7 @@ export function getSyndicDashboardSnapshot(coproId: string) {
     const totalDepensesAnPasse = depensesAnPasse?.reduce((sum, depense) => sum + depense.montant, 0) ?? 0;
 
     const provisionsBP = (appelsProvisions ?? []).filter(
-      (appel) => appel.type_appel === 'budget_previsionnel' || appel.type_appel === 'revision_budget' || appel.type_appel == null,
+      (appel) => appel.type_appel === 'budget_previsionnel' || appel.type_appel === 'revision_budget' || appel.type_appel === 'exceptionnel' || appel.type_appel === 'travaux' || appel.type_appel == null,
     );
     const provisionsRows = (appelsProvisions ?? []).filter(
       (appel) => appel.type_appel === 'budget_previsionnel' || appel.type_appel === 'revision_budget' || appel.type_appel === 'fonds_travaux' || appel.type_appel === 'exceptionnel' || appel.type_appel === 'travaux' || appel.type_appel == null,
