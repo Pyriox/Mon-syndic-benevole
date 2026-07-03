@@ -3,7 +3,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { buildConvocationPdfFileName, buildPvPdfFileName } from '@/lib/pdf-filenames';
 import { formatDate, formatTime } from '@/lib/utils';
-import { addPdfFooters, drawPdfHero, drawPdfInfoCard, drawPdfSectionTitle, PDF_COLORS } from '@/lib/pdf';
+import { addPdfFooters, drawPdfHero, drawPdfInfoCard, drawPdfSectionTitle, formatPdfEuros, PDF_COLORS } from '@/lib/pdf';
 
 type ConvocationResolutionPdf = {
   numero: number;
@@ -18,6 +18,9 @@ type PVResolutionPdf = {
   voix_pour?: number | null;
   voix_contre?: number | null;
   voix_abstention?: number | null;
+  type_resolution?: string | null;
+  description?: string | null;
+  montant_travaux?: number | null;
 };
 
 function pdfText(value: string | null | undefined): string {
@@ -301,6 +304,34 @@ export function buildPVPdfAttachment(params: {
       y += 6;
     }
     y += 8;
+
+    // ── Résolution travaux (détail + montant) ─────────
+    if (res.type_resolution === 'travaux' && (res.description || res.montant_travaux != null)) {
+      const TBLUE: [number, number, number] = [219, 234, 254];
+      const TBLUE_TEXT: [number, number, number] = [30, 64, 175];
+      if (res.description) {
+        const descLines = doc.splitTextToSize(pdfText(res.description), inner - 10);
+        const descH = descLines.length * 5 + 7;
+        y = checkPage(y, descH + 4);
+        doc.setFillColor(...TBLUE);
+        doc.roundedRect(mL + 1, y, inner - 2, descH, 1, 1, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...TBLUE_TEXT);
+        doc.text(descLines, mL + 4, y + 5);
+        y += descH + 2;
+      }
+      if (res.montant_travaux != null) {
+        y = checkPage(y, 14);
+        doc.setFillColor(...TBLUE);
+        doc.roundedRect(mL + 1, y, inner - 2, 8, 1, 1, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...TBLUE_TEXT);
+        doc.text(`Montant des travaux : ${formatPdfEuros(res.montant_travaux)}`, mL + 4, y + 5.5);
+        y += 10;
+      }
+    }
   }
 
   // ════════════════════════════════════════════════════════
@@ -370,7 +401,7 @@ export function buildPVPdfAttachment(params: {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(100);
-  doc.text(`Fait le ${new Date().toLocaleDateString('fr-FR')}`, mL, y);
+  doc.text(`Fait le ${formatDate(params.dateAg, { day: 'numeric', month: 'long', year: 'numeric' })}`, mL, y);
 
   // ── Pieds de page ───────────────────────────────────────
   addPdfFooters(doc, {

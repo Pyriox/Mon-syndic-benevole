@@ -27,6 +27,7 @@ interface Resolution {
   type_resolution?: string | null;
   designation_resultats?: { id: string; nom: string; prenom: string }[] | null;
   fonds_travaux_montant?: number | null;
+  montant_travaux?: number | null;
 }
 
 interface PresenceRecord {
@@ -344,6 +345,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         const eIsDesig = !!(res.designation_resultats && res.designation_resultats.length > 0);
         const eIsCalendrier = res.type_resolution === 'calendrier_financement';
         const eHasBudget = !!(res.budget_postes && res.budget_postes.length > 0) && !eIsCalendrier;
+        const eIsTravaux = res.type_resolution === 'travaux';
         let estH = Math.max(10, eLines.length * 5 + 4) + 2; // rect titre
         if (eIsDesig) {
           const eDesigStr = res.designation_resultats!.map((d) => `${d.prenom} ${d.nom}`).join(', ');
@@ -352,6 +354,11 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         }
         estH += 22; // 3 lignes de résultats de vote (pour toutes les résolutions)
         if (res.fonds_travaux_montant != null) estH += 10;
+        if (eIsTravaux && res.description) {
+          const eDescLines = doc.splitTextToSize(res.description, inner - 10);
+          estH += eDescLines.length * 5 + 9;
+        }
+        if (eIsTravaux && res.montant_travaux != null) estH += 12;
         if (eIsCalendrier && (res.budget_postes?.length ?? 0) > 0) estH += (res.budget_postes?.length ?? 0) * 6 + 10;
         if (eHasBudget) estH += 4 + 12 + (res.budget_postes?.length ?? 0) * 7 + 10;
         estH += 6; // espacement final
@@ -362,6 +369,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
       const badge = statutBadge(resStatutEffectif);
       const isDesig = !!(res.designation_resultats && res.designation_resultats.length > 0);
       const isCalendrier = res.type_resolution === 'calendrier_financement';
+      const isTravaux = res.type_resolution === 'travaux';
       const hasBudget = !!(res.budget_postes && res.budget_postes.length > 0) && !isCalendrier;
 
       // ── Numéro + titre ────────────────────────────────────
@@ -468,6 +476,32 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
         doc.setTextColor(...AMBER);
         doc.text(`Cotisation fonds de travaux : ${formatPdfEuros(res.fonds_travaux_montant)}`, mL + 4, y + 5.5);
         y += 10;
+      }
+
+      // ── Résolution travaux (détail + montant) ─────────────
+      if (isTravaux && (res.description || res.montant_travaux != null)) {
+        const TBLUE: [number, number, number] = [219, 234, 254];
+        const TBLUE_TEXT: [number, number, number] = [30, 64, 175];
+        if (res.description) {
+          const descLines = doc.splitTextToSize(res.description, inner - 10);
+          const descH = descLines.length * 5 + 7;
+          doc.setFillColor(...TBLUE);
+          doc.roundedRect(mL + 1, y, inner - 2, descH, 1, 1, 'F');
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8.5);
+          doc.setTextColor(...TBLUE_TEXT);
+          doc.text(descLines, mL + 4, y + 5);
+          y += descH + 2;
+        }
+        if (res.montant_travaux != null) {
+          doc.setFillColor(...TBLUE);
+          doc.roundedRect(mL + 1, y, inner - 2, 8, 1, 1, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8.5);
+          doc.setTextColor(...TBLUE_TEXT);
+          doc.text(`Montant des travaux : ${formatPdfEuros(res.montant_travaux)}`, mL + 4, y + 5.5);
+          y += 10;
+        }
       }
 
       // ── Calendrier de financement ──────────────────────
@@ -600,7 +634,7 @@ export default function PVPDF({ ag, coproprieteId, resolutions, presences = [], 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(100);
-    doc.text(`Fait le ${new Date().toLocaleDateString('fr-FR')}`, mL, y);
+    doc.text(`Fait le ${formatDate(ag.date_ag, { day: 'numeric', month: 'long', year: 'numeric' })}`, mL, y);
 
     // ── Pied de page sur toutes les pages ──────────────────
     addPdfFooters(doc, {

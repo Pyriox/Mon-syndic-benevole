@@ -100,7 +100,7 @@ export async function POST(
 
     const { data: resolutionsPV } = await supabase
       .from('resolutions')
-      .select('numero, titre, statut, voix_pour, voix_contre, voix_abstention')
+      .select('numero, titre, statut, voix_pour, voix_contre, voix_abstention, type_resolution, description, montant_travaux')
       .eq('ag_id', agId)
       .order('numero');
 
@@ -119,6 +119,9 @@ export async function POST(
         voix_pour: r.voix_pour,
         voix_contre: r.voix_contre,
         voix_abstention: r.voix_abstention,
+        type_resolution: r.type_resolution,
+        description: r.description,
+        montant_travaux: r.montant_travaux,
       })),
     });
 
