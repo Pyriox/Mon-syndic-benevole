@@ -198,10 +198,14 @@ export default async function AdminDashboardPage() {
     })
     .slice(0, 5);
 
-  const stripeFailures = stripeCharges.filter((c) => c.status === 'failed');
+  // Paiements échoués : uniquement les 30 derniers jours (au-delà, plus actionnable)
+  const failuresCutoffTs = todayTs / 1000 - 30 * 86400;
+  const stripeFailures = stripeCharges.filter((c) => c.status === 'failed' && c.created >= failuresCutoffTs);
   const alertNonConfirmedOld = authUsers.filter((u) => !u.email_confirmed_at && u.created_at < new Date(todayTs - 7 * 86400000).toISOString() && !adminUserIds.has(u.id));
   const alertInvitationsExpirees = (invitations ?? []).filter((inv) => inv.statut === 'en_attente' && new Date(inv.expires_at) < new Date());
-  const alertPasseDu = coprosReal.filter((c) => c.plan === 'passe_du');
+  // Impayés : plan passe_du avec period_end dans les 45 derniers jours (après 45j sans règlement → abonnement abandonné)
+  const passeDuCutoff = new Date(todayTs - 45 * 86400000).toISOString();
+  const alertPasseDu = coprosReal.filter((c) => c.plan === 'passe_du' && (!c.plan_period_end || c.plan_period_end >= passeDuCutoff));
   const pendingSupportCount = supportAttention.pendingCount;
   const nbAlertes = alertNonConfirmedOld.length + alertInvitationsExpirees.length + alertPasseDu.length + stripeFailures.length + upcomingRenewals.length + pendingSupportCount;
   const priorityActions = [
