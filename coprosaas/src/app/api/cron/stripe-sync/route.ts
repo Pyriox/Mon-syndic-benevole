@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       });
 
       const snapshot = extractStripeSubscriptionSnapshot(subscription);
-      const newPlan = mapStripeSubscriptionStatus(snapshot.status);
+      const newPlan = mapStripeSubscriptionStatus(snapshot.status, snapshot.currentPeriodEnd);
       const newPeriodEnd = snapshot.currentPeriodEnd;
       const newCancelAtPeriodEnd = snapshot.cancelAtPeriodEnd;
       const newPlanId = snapshot.planId;

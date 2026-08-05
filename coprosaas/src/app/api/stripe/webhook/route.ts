@@ -363,7 +363,7 @@ export async function POST(req: NextRequest) {
 
         const subStatus = sub['status'] as string;
         const subscriptionSnapshot = extractStripeSubscriptionSnapshot(sub);
-        const plan = mapStripeSubscriptionStatus(subStatus);
+        const plan = mapStripeSubscriptionStatus(subStatus, subscriptionSnapshot.currentPeriodEnd);
         const periodEnd = subscriptionSnapshot.currentPeriodEnd;
 
         await updateCoproSubscription(coproId, {

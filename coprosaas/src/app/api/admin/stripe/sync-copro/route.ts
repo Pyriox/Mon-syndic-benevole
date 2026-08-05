@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         expand: ['items.data.price.product'],
       });
       const snapshot = extractStripeSubscriptionSnapshot(sub);
-      const newPlan = mapStripeSubscriptionStatus(snapshot.status);
+      const newPlan = mapStripeSubscriptionStatus(snapshot.status, snapshot.currentPeriodEnd);
 
       await admin
         .from('coproprietes')
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
         expand: ['items.data.price.product'],
       });
       const snapshot = extractStripeSubscriptionSnapshot(fullSub);
-      const newPlan = mapStripeSubscriptionStatus(fullSub.status);
+      const newPlan = mapStripeSubscriptionStatus(fullSub.status, snapshot.currentPeriodEnd);
 
       await admin
         .from('coproprietes')
