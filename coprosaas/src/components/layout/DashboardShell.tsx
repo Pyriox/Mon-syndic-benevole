@@ -54,6 +54,7 @@ export default function DashboardShell({
           userRole={userRole}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
+          supportUnreadCount={notifications.filter((n) => n.type === 'support').length}
         />
 
         {/* Zone principale */}

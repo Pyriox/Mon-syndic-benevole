@@ -33,9 +33,10 @@ interface SidebarProps {
   userRole: 'syndic' | 'copropriétaire';
   isOpen?: boolean;
   onClose?: () => void;
+  supportUnreadCount?: number;
 }
 
-export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpen = false, onClose, supportUnreadCount = 0 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -130,12 +131,14 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
     icon: Icon,
     matchPrefix,
     excludePrefix,
+    badge,
   }: {
     href: string;
     label: string;
     icon: React.ElementType;
     matchPrefix?: string;
     excludePrefix?: string;
+    badge?: number;
   }) => {
     const prefix = matchPrefix ?? href;
     const matchesPrefix = pathname === href || pathname.startsWith(prefix + '/') || pathname === prefix;
@@ -162,7 +165,10 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
             isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'
           )}
         />
-        <span className="truncate">{label}</span>
+        <span className="flex-1 truncate">{label}</span>
+        {!!badge && (
+          <span className="shrink-0 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-blue-100" />
+        )}
       </Link>
     );
   };
@@ -213,7 +219,7 @@ export default function Sidebar({ coproprietes, selectedCoproId, userRole, isOpe
             )}
             <div className="space-y-0.5">
               {section.items.map((item) => (
-                <NavLink key={item.href} {...item} />
+                <NavLink key={item.href} {...item} badge={item.href === '/aide' ? supportUnreadCount : undefined} />
               ))}
             </div>
           </div>

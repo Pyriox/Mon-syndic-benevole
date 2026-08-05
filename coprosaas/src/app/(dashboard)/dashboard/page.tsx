@@ -7,6 +7,7 @@ export const metadata: Metadata = { title: 'Tableau de bord' };
 
 import { requireCoproAccess } from '@/lib/supabase/require-copro-access';
 import { isSubscribed } from '@/lib/subscription';
+import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import Card from '@/components/ui/Card';
@@ -14,7 +15,7 @@ import PageHelp from '@/components/ui/PageHelp';
 import ReadOnlyBanner from '@/components/ui/ReadOnlyBanner';
 import AccountActivatedBanner from '@/components/ui/AccountActivatedBanner';
 import SectionErrorBoundary from '@/components/ui/SectionErrorBoundary';
-import { Building2 } from 'lucide-react';
+import { Building2, MessageSquare } from 'lucide-react';
 import {
   CoproDashboardAlert,
   CoproDashboardHeader,
@@ -35,6 +36,38 @@ import {
   DashboardPanelSkeleton,
 } from './DashboardSections';
 
+async function SupportUnreadBanner() {
+  try {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from('support_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('author', 'admin')
+      .eq('client_read', false);
+    if (!count || count === 0) return null;
+    return (
+      <Link
+        href="/aide"
+        className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors"
+      >
+        <div className="relative shrink-0">
+          <MessageSquare size={18} className="text-blue-600" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-blue-50" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-blue-800">
+            {count === 1 ? 'Nouveau message du support' : `${count} nouveaux messages du support`}
+          </p>
+          <p className="text-xs text-blue-600 mt-0.5">Cliquez pour consulter votre demande dans Aide &amp; Contact.</p>
+        </div>
+        <span className="shrink-0 text-xs font-semibold text-blue-600">Voir →</span>
+      </Link>
+    );
+  } catch {
+    return null;
+  }
+}
+
 export default async function DashboardPage() {
   const { user, selectedCoproId, role: userRole, copro: copropriete, trialUsed } = await requireCoproAccess();
   const scopeId = selectedCoproId ?? 'none';
@@ -48,6 +81,9 @@ export default async function DashboardPage() {
       {userRole !== 'copropriétaire' && copropriete && !isSubscribed(copropriete.plan) && (
         <ReadOnlyBanner freemium trialUsed={trialUsed} />
       )}
+      <Suspense fallback={null}>
+        <SupportUnreadBanner />
+      </Suspense>
       {userRole === 'copropriétaire' ? (
         <Suspense fallback={<DashboardHeaderSkeleton />}>
           <CoproDashboardHeader
