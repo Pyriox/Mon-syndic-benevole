@@ -85,7 +85,7 @@ export default async function AdminDashboardPage() {
 
   // Stripe (non-blocking)
   type StripeCharge = { id: string; amount: number; status: string; customerId: string | null; created: number };
-  type StripeInvoice = { id: string; amount_paid: number; status: string; customerId: string | null; subscriptionId: string | null; created: number; billingReason: string | null };
+  type StripeInvoice = { id: string; amount_paid: number; status: string; customerId: string | null; subscriptionId: string | null; created: number; paidAt: number | null; billingReason: string | null };
   let stripeCharges: StripeCharge[] = [];
   let stripeInvoices: StripeInvoice[] = [];
   let stripeStatus: 'ok' | 'warning' = 'ok';
@@ -109,6 +109,7 @@ export default async function AdminDashboardPage() {
       customerId: typeof inv.customer === 'string' ? inv.customer : null,
       subscriptionId: null,
       created: inv.created,
+      paidAt: inv.status_transitions?.paid_at ?? null,
       billingReason: inv.billing_reason ?? null,
     }));
 
@@ -151,10 +152,11 @@ export default async function AdminDashboardPage() {
 
   // ── KPIs financiers avancés ──
   // Cash réel du mois en cours (factures Stripe payées ce mois)
+  // On utilise paidAt (date effective du paiement) plutôt que created (date de création de la facture)
   const nowTs = today.getTime() / 1000;
   const startOfMonthTs = new Date(today.getFullYear(), today.getMonth(), 1).getTime() / 1000;
   const cashCeMois = stripeInvoices
-    .filter((inv) => inv.created >= startOfMonthTs && inv.created <= nowTs)
+    .filter((inv) => { const ts = inv.paidAt ?? inv.created; return ts >= startOfMonthTs && ts <= nowTs; })
     .reduce((s, inv) => s + inv.amount_paid, 0);
 
   // Renouvellements payants cette année, en excluant le 1er paiement après essai.
@@ -167,14 +169,14 @@ export default async function AdminDashboardPage() {
 
   // Total cash encaissé cette année
   const cashTotalAnnee = stripeInvoices
-    .filter((inv) => inv.created >= startOfYearTs)
+    .filter((inv) => (inv.paidAt ?? inv.created) >= startOfYearTs)
     .reduce((s, inv) => s + inv.amount_paid, 0);
 
   // Répartition mensuelle des paiements sur l'année en cours
   const cashParMois: number[] = Array(12).fill(0);
   const subsParMois: number[] = Array(12).fill(0);
   for (const inv of stripeInvoices) {
-    const d = new Date(inv.created * 1000);
+    const d = new Date((inv.paidAt ?? inv.created) * 1000);
     if (d.getFullYear() === today.getFullYear()) {
       cashParMois[d.getMonth()] += inv.amount_paid;
       subsParMois[d.getMonth()]++;

@@ -9,6 +9,7 @@ export type AdminStripeInvoiceLike = {
   id: string;
   amount_paid: number;
   created: number;
+  paidAt?: number | null;
   billingReason: string | null;
   customerId: string | null;
   subscriptionId?: string | null;
@@ -17,8 +18,8 @@ export type AdminStripeInvoiceLike = {
 export function summarizeStripeBilling(invoices: AdminStripeInvoiceLike[], year: number) {
   const startOfYearTs = new Date(year, 0, 1).getTime() / 1000;
   const paidInvoices = invoices
-    .filter((invoice) => invoice.created >= startOfYearTs && invoice.amount_paid > 0)
-    .sort((a, b) => a.created - b.created);
+    .filter((invoice) => (invoice.paidAt ?? invoice.created) >= startOfYearTs && invoice.amount_paid > 0)
+    .sort((a, b) => (a.paidAt ?? a.created) - (b.paidAt ?? b.created));
 
   const firstPaidInvoiceBySubscription = new Map<string, string>();
 
