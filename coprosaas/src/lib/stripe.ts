@@ -134,10 +134,11 @@ export function getAddonKeyFromPrice(price?: string | PriceLike | Stripe.Price |
   return (fromKnownKey as CoproAddonKey | null) ?? null;
 }
 
-export function mapStripeSubscriptionStatus(status: string): 'actif' | 'essai' | 'passe_du' | 'inactif' {
+export function mapStripeSubscriptionStatus(status: string): 'actif' | 'essai' | 'passe_du' | 'inactif' | 'resilie' {
   if (status === 'active') return 'actif';
   if (status === 'trialing') return 'essai';
   if (status === 'past_due') return 'passe_du';
+  if (status === 'canceled') return 'resilie';
   return 'inactif';
 }
 
