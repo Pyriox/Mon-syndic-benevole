@@ -91,7 +91,6 @@ export async function POST(req: NextRequest) {
         customer: copro.stripe_customer_id,
         status: 'all',
         limit: 5,
-        expand: ['data.items.data.price.product'],
       });
       const activeSub = subs.data.find((s) =>
         ['active', 'past_due', 'trialing'].includes(s.status)
@@ -101,8 +100,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: false, message: 'Aucun abonnement Stripe trouvé pour ce client' }, { status: 404 });
       }
 
-      const snapshot = extractStripeSubscriptionSnapshot(activeSub);
-      const newPlan = mapStripeSubscriptionStatus(activeSub.status);
+      // Retrieve pour avoir les items expandés (max 4 niveaux : items.data.price.product)
+      const fullSub = await stripeClient.subscriptions.retrieve(activeSub.id, {
+        expand: ['items.data.price.product'],
+      });
+      const snapshot = extractStripeSubscriptionSnapshot(fullSub);
+      const newPlan = mapStripeSubscriptionStatus(fullSub.status);
 
       await admin
         .from('coproprietes')
