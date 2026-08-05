@@ -535,7 +535,7 @@ function MessageBubble({ msg }: { msg: Message }) {
         }
       </div>
       <div className={`max-w-[80%] min-w-0 ${isAdmin ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-        <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${`
+        <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
           isAdmin
             ? 'bg-blue-600 text-white rounded-tr-sm'
             : 'bg-gray-100 text-gray-800 rounded-tl-sm'
