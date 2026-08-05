@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import AdminCoproActions from '../AdminCoproActions';
 import AdminImpersonate from '../AdminImpersonate';
+import AdminStripeSyncButton from '../AdminStripeSyncButton';
 import AdminCoproFilters from '../AdminCoproFilters';
 import AdminSearch from '../AdminSearch';
 import AdminPagination from '../AdminPagination';
@@ -576,11 +577,16 @@ export default async function AdminCopropietesPage({
                         }
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 justify-end">
-                          {typeof profile?.email === 'string' && profile.email.length > 0 && (!c.syndic_id || !adminUserIds.has(c.syndic_id)) && (
-                            <AdminImpersonate email={profile.email} iconOnly />
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex items-center gap-1 justify-end">
+                            {typeof profile?.email === 'string' && profile.email.length > 0 && (!c.syndic_id || !adminUserIds.has(c.syndic_id)) && (
+                              <AdminImpersonate email={profile.email} iconOnly />
+                            )}
+                            <AdminCoproActions coproId={c.id} coproNom={c.nom} isOrphaned={!c.syndic_id} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} contextHref={currentListHref} />
+                          </div>
+                          {(c.stripe_subscription_id || c.stripe_customer_id) && (
+                            <AdminStripeSyncButton coproId={c.id} coproNom={c.nom} />
                           )}
-                          <AdminCoproActions coproId={c.id} coproNom={c.nom} isOrphaned={!c.syndic_id} adresse={c.adresse} codePostal={c.code_postal} ville={c.ville} nombreLots={c.nombre_lots} contextHref={currentListHref} />
                         </div>
                       </td>
                     </tr>
