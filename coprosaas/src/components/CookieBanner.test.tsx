@@ -41,10 +41,10 @@ describe('CookieBanner', () => {
     const { default: CookieBanner } = await import('./CookieBanner');
     render(<CookieBanner />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Refuser les cookies optionnels/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Tout refuser/i }));
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /Préférences cookies/i })).toBeNull();
+      expect(screen.queryByRole('dialog', { name: /Consentement aux cookies/i })).toBeNull();
     });
 
     const stored = JSON.parse(localStorage.getItem('cookie_consent') ?? '{}');
@@ -53,17 +53,17 @@ describe('CookieBanner', () => {
 
     window.dispatchEvent(new Event('show-cookie-banner'));
 
-    expect(await screen.findByRole('dialog', { name: /Préférences cookies/i })).not.toBeNull();
+    expect(await screen.findByRole('dialog', { name: /Consentement aux cookies/i })).not.toBeNull();
   });
 
   it('enregistre une acceptation sans pageview immédiate', async () => {
     const { default: CookieBanner } = await import('./CookieBanner');
     render(<CookieBanner />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Oui, j’accepte|Oui, j&apos;accepte|Oui, j'accepte/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Tout accepter/i }));
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /Préférences cookies/i })).toBeNull();
+      expect(screen.queryByRole('dialog', { name: /Consentement aux cookies/i })).toBeNull();
     });
 
     const stored = JSON.parse(localStorage.getItem('cookie_consent') ?? '{}');
