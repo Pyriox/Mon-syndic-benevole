@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
   experimental: {
     // Tree-shake lucide-react : réduit significativement la taille du bundle JS
     optimizePackageImports: ['lucide-react'],
+    // Réduit la fragmentation CSS (moins de shared chunks render-blocking)
+    cssChunking: 'loose',
+    // Inline le CSS critique + charge le reste en non-bloquant (nécessite critters)
+    optimizeCss: true,
   },
   // Cache HTTP pour les assets statiques Next.js
   async headers() {

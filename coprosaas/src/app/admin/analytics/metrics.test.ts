@@ -66,6 +66,8 @@ describe('buildAdminAnalyticsMetrics', () => {
       activeTrialsCount: 0,
       sessionRows: [] as SessionRow[],
       recentFeedEvents: [] as RecentFeedEvent[],
+      paidUserEmails: new Set<string>(),
+      syndicIdsWithCopro: new Set<string>(),
       nowMs,
     });
 

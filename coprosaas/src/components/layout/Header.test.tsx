@@ -36,10 +36,11 @@ describe('Header view switch', () => {
   });
 
   it('affiche un chargement pendant le switch de vue puis relance le refresh', async () => {
-    let resolveSwitch: (() => void) | null = null;
+    // Objet-ref : évite le narrowing `never` de TypeScript sur les let closures
+    const switchRef: { resolve: (() => void) | null } = { resolve: null };
     setDashboardViewModeMock.mockImplementation(
       () => new Promise<void>((resolve) => {
-        resolveSwitch = resolve;
+        switchRef.resolve = resolve as () => void;
       })
     );
 
@@ -62,7 +63,7 @@ describe('Header view switch', () => {
     expect(screen.getByRole('button', { name: /syndic/i }).hasAttribute('disabled')).toBe(true);
     expect(screen.getByRole('button', { name: /copropriétaire/i }).hasAttribute('disabled')).toBe(true);
 
-    resolveSwitch?.();
+    switchRef.resolve?.();
 
     await waitFor(() => {
       expect(refreshMock).toHaveBeenCalledTimes(1);
