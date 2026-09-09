@@ -44,7 +44,7 @@ describe('CookieBanner', () => {
     fireEvent.click(screen.getByRole('button', { name: /Tout refuser/i }));
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /Consentement aux cookies/i })).toBeNull();
+      expect(screen.queryByRole('region', { name: /Consentement aux cookies/i })).toBeNull();
     });
 
     const stored = JSON.parse(localStorage.getItem('cookie_consent') ?? '{}');
@@ -53,7 +53,7 @@ describe('CookieBanner', () => {
 
     window.dispatchEvent(new Event('show-cookie-banner'));
 
-    expect(await screen.findByRole('dialog', { name: /Consentement aux cookies/i })).not.toBeNull();
+    expect(await screen.findByRole('region', { name: /Consentement aux cookies/i })).not.toBeNull();
   });
 
   it('enregistre une acceptation sans pageview immédiate', async () => {
@@ -63,7 +63,7 @@ describe('CookieBanner', () => {
     fireEvent.click(screen.getByRole('button', { name: /Tout accepter/i }));
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /Consentement aux cookies/i })).toBeNull();
+      expect(screen.queryByRole('region', { name: /Consentement aux cookies/i })).toBeNull();
     });
 
     const stored = JSON.parse(localStorage.getItem('cookie_consent') ?? '{}');

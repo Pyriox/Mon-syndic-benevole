@@ -9,9 +9,20 @@ const routerMock = {
   push: pushMock,
   prefetch: prefetchMock,
 };
+const getSessionMock = vi.fn();
+const unsubscribeMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => routerMock,
+}));
+
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: () => ({
+    auth: {
+      getSession: getSessionMock,
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: unsubscribeMock } } }),
+    },
+  }),
 }));
 
 vi.mock('next/link', () => ({
@@ -36,6 +47,9 @@ describe('LandingNav auth navigation', () => {
   beforeEach(() => {
     pushMock.mockReset();
     prefetchMock.mockReset();
+    getSessionMock.mockReset();
+    unsubscribeMock.mockReset();
+    getSessionMock.mockResolvedValue({ data: { session: null } });
     document.cookie = '';
   });
 
@@ -55,7 +69,7 @@ describe('LandingNav auth navigation', () => {
   });
 
   it('ouvre /dashboard quand un cookie auth est détecté', async () => {
-    document.cookie = 'sb-project-auth-token=token';
+    getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } } });
 
     const { default: LandingNav } = await import('./LandingNav');
     render(<LandingNav />);

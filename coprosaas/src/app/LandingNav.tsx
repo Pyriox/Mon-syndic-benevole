@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SiteLogo from '@/components/ui/SiteLogo';
 import CtaLink from '@/components/ui/CtaLink';
+import { createClient } from '@/lib/supabase/client';
 
 function DashboardIcon() {
   return (
@@ -36,14 +37,6 @@ function MenuIcon({ open }: { open: boolean }) {
   );
 }
 
-function hasLikelyAuthCookie() {
-  if (typeof document === 'undefined') return false;
-
-  return document.cookie
-    .split('; ')
-    .some((cookie) => cookie.startsWith('sb-') && cookie.includes('auth-token='));
-}
-
 const navLinks = [
   { href: '/#fonctionnalites', label: 'Fonctionnalités' },
   { href: '/#tarif', label: 'Tarifs' },
@@ -53,6 +46,9 @@ const navLinks = [
 
 export default function LandingNav() {
   const router = useRouter();
+  const supabase = createClient();
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [accountHref, setAccountHref] = useState('/login');
   const [accountLabel, setAccountLabel] = useState('Connexion');
@@ -65,8 +61,9 @@ export default function LandingNav() {
       void router.prefetch('/register');
     };
 
-    const updateAccountState = () => {
-      const isAuthenticated = hasLikelyAuthCookie();
+    const updateAccountState = async () => {
+      const { data } = await supabase.auth.getSession();
+      const isAuthenticated = Boolean(data.session);
       setAccountHref(isAuthenticated ? '/dashboard' : '/login');
       setAccountLabel(isAuthenticated ? 'Mon espace' : 'Connexion');
     };
@@ -75,9 +72,15 @@ export default function LandingNav() {
       ? window.requestIdleCallback(prefetch, { timeout: 1200 })
       : window.setTimeout(prefetch, 300);
 
-    updateAccountState();
-    window.addEventListener('focus', updateAccountState);
-    document.addEventListener('visibilitychange', updateAccountState);
+    const handleVisibilityChange = () => void updateAccountState();
+    const handleWindowFocus = () => void updateAccountState();
+
+    void updateAccountState();
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      void updateAccountState();
+    });
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       if (typeof idle === 'number') {
@@ -85,10 +88,11 @@ export default function LandingNav() {
       } else if (window.cancelIdleCallback) {
         window.cancelIdleCallback(idle);
       }
-      window.removeEventListener('focus', updateAccountState);
-      document.removeEventListener('visibilitychange', updateAccountState);
+      authListener.subscription.unsubscribe();
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [router]);
+  }, [router, supabase]);
 
   const handleAccountNavigation = () => {
     setNavPending(true);
@@ -97,6 +101,45 @@ export default function LandingNav() {
     // Filet de sécurité si la navigation est interrompue.
     window.setTimeout(() => setNavPending(false), 3000);
   };
+
+  useEffect(() => {
+    if (!open) return;
+
+    const menu = mobileMenuRef.current;
+    if (!menu) return;
+
+    const focusableSelector = 'a[href], button:not([disabled])';
+    const firstFocusable = menu.querySelector<HTMLElement>(focusableSelector);
+    firstFocusable?.focus();
+
+    const handleMenuKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setOpen(false);
+        menuButtonRef.current?.focus();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusable = Array.from(menu.querySelectorAll<HTMLElement>(focusableSelector));
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    menu.addEventListener('keydown', handleMenuKeyDown);
+    return () => menu.removeEventListener('keydown', handleMenuKeyDown);
+  }, [open]);
 
   return (
     <nav
@@ -150,8 +193,11 @@ export default function LandingNav() {
             Essai gratuit
           </CtaLink>
           <button
+            ref={menuButtonRef}
+            type="button"
             aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
             aria-expanded={open}
+            aria-controls="mobile-navigation-menu"
             onClick={() => setOpen((v) => !v)}
             className="p-2 text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10"
           >
@@ -162,7 +208,14 @@ export default function LandingNav() {
 
       {/* Mobile drawer */}
       {open && (
-        <div className="md:hidden border-t border-white/10 bg-slate-900/98 px-6 py-4 flex flex-col gap-1">
+        <div
+          ref={mobileMenuRef}
+          id="mobile-navigation-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu de navigation mobile"
+          className="md:hidden border-t border-white/10 bg-slate-900/98 px-6 py-4 flex flex-col gap-1"
+        >
           {navLinks.map(({ href, label }) => (
             <Link
               key={href}

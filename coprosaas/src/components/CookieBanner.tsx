@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { CONSENT_KEY, denyConsent, grantConsent, updateConsent, type ConsentPreferences } from '@/lib/gtag';
 
@@ -58,11 +58,26 @@ export default function CookieBanner() {
 
   useEffect(() => {
     const stored = getStoredConsent();
-    if (!stored) { setVisible(true); setIsReady(true); return; }
+    if (!stored) {
+      startTransition(() => {
+        setVisible(true);
+        setIsReady(true);
+      });
+      return;
+    }
     const expired = Date.now() - stored.timestamp > CONSENT_MAX_AGE_MS;
-    if (expired) { localStorage.removeItem(CONSENT_KEY); setVisible(true); setIsReady(true); return; }
-    setVisible(false);
-    setIsReady(true);
+    if (expired) {
+      localStorage.removeItem(CONSENT_KEY);
+      startTransition(() => {
+        setVisible(true);
+        setIsReady(true);
+      });
+      return;
+    }
+    startTransition(() => {
+      setVisible(false);
+      setIsReady(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -101,7 +116,28 @@ export default function CookieBanner() {
   useEffect(() => {
     if (!showCustom) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setShowCustom(false); customizeBtnRef.current?.focus(); }
+      if (e.key === 'Escape') {
+        setShowCustom(false);
+        customizeBtnRef.current?.focus();
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+
+      const panel = document.getElementById('cookie-pref-panel');
+      if (!panel) return;
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>('button, a[href]'));
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
@@ -139,12 +175,13 @@ export default function CookieBanner() {
       {showCustom && (
         <div
           id="cookie-pref-panel"
-          role="region"
-          aria-label="Centre de préférences cookies"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cookie-pref-title"
           className="max-h-[60vh] overflow-y-auto overscroll-contain border-t border-white/10 bg-[#0c1525] px-4 py-5 sm:px-8"
         >
           <div className="mx-auto max-w-3xl">
-            <h3 className="mb-1 text-sm font-semibold text-white">Centre de préférences</h3>
+            <h3 id="cookie-pref-title" className="mb-1 text-sm font-semibold text-white">Centre de préférences</h3>
             <p className="mb-4 text-xs text-slate-400">Gérez les cookies utilisés sur Mon Syndic Bénévole.</p>
 
             <div className="space-y-2.5">
@@ -231,11 +268,9 @@ export default function CookieBanner() {
 
       {/* ── Bandeau principal (niveau 1) ───────────────────────────────────── */}
       <div
-        role="dialog"
-        aria-modal="false"
+        role="region"
+        aria-live="polite"
         aria-label="Consentement aux cookies"
-        aria-controls="cookie-pref-panel"
-        aria-expanded={showCustom}
         className="border-t border-white/10 bg-[#0c1525]/95 px-4 py-3.5 shadow-[0_-4px_32px_rgba(0,0,0,0.5)] backdrop-blur-md sm:px-8"
       >
         <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:gap-8">

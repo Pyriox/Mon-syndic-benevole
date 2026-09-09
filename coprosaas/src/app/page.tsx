@@ -236,7 +236,7 @@ export default function HomePage() {
               ctaLocation="landing_hero"
               className="flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg shadow-lg shadow-blue-900/30 w-full sm:w-auto justify-center"
             >
-              Commencer l'essai gratuit <ArrowRight size={18} />
+              Commencer l&apos;essai gratuit <ArrowRight size={18} />
             </CtaLink>
             <a
               href="#demo"
@@ -388,7 +388,7 @@ export default function HomePage() {
               C&apos;est votre copropriété. La loi vous autorise à la gérer vous-même — syndic bénévole, sans agrémentation requise.
             </p>
             <CtaLink href="/register" ctaLocation="landing_comparison" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-7 py-3.5 rounded-xl transition-colors text-sm">
-              Commencer l'essai gratuit — 14 jours offerts <ArrowRight size={14} />
+              Commencer l&apos;essai gratuit — 14 jours offerts <ArrowRight size={14} />
             </CtaLink>
           </div>
         </div>
@@ -472,7 +472,7 @@ export default function HomePage() {
 
           <div className="text-center">
             <CtaLink href="/register" ctaLocation="landing_testimonials" className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-base shadow-lg shadow-blue-900/30 w-full sm:w-auto">
-              Commencer l'essai gratuit <ArrowRight size={16} />
+              Commencer l&apos;essai gratuit <ArrowRight size={16} />
             </CtaLink>
           </div>
         </div>
@@ -527,7 +527,7 @@ export default function HomePage() {
 
           <div className="mt-10 text-center">
             <CtaLink href="/register" ctaLocation="landing_features" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
-              Commencer l'essai gratuit <ArrowRight size={16} />
+              Commencer l&apos;essai gratuit <ArrowRight size={16} />
             </CtaLink>
             <p className="mt-3 text-sm text-gray-500">14 jours offerts &middot; Résiliable à tout moment</p>
           </div>
@@ -605,7 +605,7 @@ export default function HomePage() {
 
           <div className="mt-10 text-center">
             <CtaLink href="/register" ctaLocation="landing_howto" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base">
-              Commencer l'essai gratuit <ArrowRight size={16} />
+              Commencer l&apos;essai gratuit <ArrowRight size={16} />
             </CtaLink>
             <p className="mt-3 text-sm text-gray-500">Opérationnel en 30 minutes · Aucune formation requise</p>
           </div>
@@ -963,7 +963,7 @@ export default function HomePage() {
           </div>
           <div className="text-center mt-10 sm:mt-14">
             <CtaLink href="/register" ctaLocation="landing_demo" className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg shadow-lg shadow-blue-900/30">
-              Commencer l'essai gratuit <ArrowRight size={18} />
+              Commencer l&apos;essai gratuit <ArrowRight size={18} />
             </CtaLink>
             <p className="mt-3 text-blue-300/50 text-sm">14 jours offerts · Annulation sans frais</p>
           </div>
@@ -1006,7 +1006,7 @@ export default function HomePage() {
                   </div>
                   <p className="text-blue-200/80 text-xs mb-6">soit <span className="font-semibold text-white">30 €/mois</span></p>
                 <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-white text-blue-700 font-bold py-3.5 rounded-2xl hover:bg-blue-50 transition-colors mt-auto">
-                  Commencer l'essai gratuit →
+                  Commencer l&apos;essai gratuit →
                 </CtaLink>
               </div>
             </div>
@@ -1024,7 +1024,7 @@ export default function HomePage() {
               </div>
               <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">45 €/mois</span></p>
               <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-emerald-600 text-white font-bold py-3.5 rounded-2xl hover:bg-emerald-700 transition-colors mt-auto">
-                Commencer l'essai gratuit →
+                Commencer l&apos;essai gratuit →
               </CtaLink>
             </div>
 
@@ -1041,7 +1041,7 @@ export default function HomePage() {
               </div>
               <p className="text-gray-500 text-xs mb-6">soit <span className="font-semibold text-gray-700">80 €/mois</span></p>
               <CtaLink href="/register" ctaLocation="landing_pricing" className="block text-center bg-violet-600 text-white font-bold py-3.5 rounded-2xl hover:bg-violet-700 transition-colors mt-auto">
-                Commencer l'essai gratuit →
+                Commencer l&apos;essai gratuit →
               </CtaLink>
             </div>
 
@@ -1169,7 +1169,7 @@ export default function HomePage() {
             ctaLocation="landing_final"
             className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-7 sm:px-10 py-4 rounded-2xl hover:bg-blue-50 transition-colors text-lg sm:text-xl shadow-xl shadow-blue-900/30"
           >
-            Commencer l'essai gratuit <ArrowRight size={20} />
+            Commencer l&apos;essai gratuit <ArrowRight size={20} />
           </CtaLink>
           <p className="mt-4 text-blue-300/50 text-sm">Facturation annuelle · Sans engagement · Résiliez à tout moment</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-blue-300/60">
