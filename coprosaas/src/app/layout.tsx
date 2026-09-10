@@ -139,7 +139,7 @@ export default function RootLayout({
               `}
             </Script>
             {gtmId ? (
-              <Script id="gtm-init" strategy="beforeInteractive">
+              <Script id="gtm-init" strategy="afterInteractive">
                 {`
                   (function(w,d,s,l,i){
                     w[l]=w[l]||[];
@@ -158,9 +158,9 @@ export default function RootLayout({
                 {/* Fallback historique si GTM n'est pas configuré */}
                 <Script
                   src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-                  strategy="beforeInteractive"
+                  strategy="afterInteractive"
                 />
-                <Script id="gtag-init" strategy="beforeInteractive">
+                <Script id="gtag-init" strategy="afterInteractive">
                   {`
                     gtag('js', new Date());
                     gtag('config', '${gaId}', {
