@@ -53,13 +53,13 @@ export default function ArticleMigrer() {
       </div>
 
       <p className={p}>
-        Si vous migrez depuis Excel, ces informations sont probablement dispersées dans plusieurs fichiers. Si vous venez d&apos;un syndic professionnel, elles doivent figurer dans les archives qu&apos;il est légalement tenu de vous remettre dans les 15 jours suivant la fin de son mandat (art. 18-2 de la loi du 10 juillet 1965). Consultez notre <a href="/blog/comment-devenir-syndic-benevole" className={a}>guide sur les 30 premiers jours du syndic bénévole</a> si vous venez de reprendre le mandat, ou notre <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>guide complet pour gérer sa copropriété sans syndic professionnel</a> si vous êtes dans la phase de réflexion.
+        Si vous migrez depuis Excel, ces informations sont probablement dispersées dans plusieurs fichiers. Si vous venez d&apos;un syndic professionnel, elles doivent figurer dans les archives qu&apos;il est légalement tenu de vous remettre — l&apos;état de trésorerie et les références bancaires sous 15 jours, puis l&apos;ensemble des documents et archives sous un mois (art. 18-2 de la loi du 10 juillet 1965). Consultez notre <a href="/blog/comment-devenir-syndic-benevole" className={a}>guide sur les 30 premiers jours du syndic bénévole</a> si vous venez de reprendre le mandat, ou notre <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>guide complet pour gérer sa copropriété sans syndic professionnel</a> si vous êtes dans la phase de réflexion.
       </p>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Vous avez vos documents ? C&apos;est parti.</p>
         <p className="text-sm text-gray-600 mb-4">
-          Créez votre espace en moins d&apos;une minute. Aucune installation nécessaire, aucune carte bancaire requise pour démarrer.
+          Créez votre espace en moins d&apos;une minute. Aucune installation nécessaire, aucun prélèvement pendant les 14 jours d&apos;essai.
         </p>
         <CtaLink
           ctaLocation="blog_article"

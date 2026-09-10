@@ -3,39 +3,9 @@
 import { useState } from 'react';
 import { CheckCircle, Lock } from 'lucide-react';
 import CheckoutButton from './CheckoutButton';
+import { PRICING_PLANS } from '@/lib/pricing-plans';
 
-const PLANS = [
-  {
-    id: 'essentiel' as const,
-    name: 'Essentiel',
-    desc: '10 lots inclus',
-    annual: 360,
-    monthlyLabel: '30 €',
-    badge: 'Le plus populaire',
-    highlight: true,
-    maxLots: 10,
-  },
-  {
-    id: 'confort' as const,
-    name: 'Confort',
-    desc: '20 lots inclus',
-    annual: 540,
-    monthlyLabel: '45 €',
-    badge: null,
-    highlight: false,
-    maxLots: 20,
-  },
-  {
-    id: 'illimite' as const,
-    name: 'Illimité',
-    desc: 'Lots illimités',
-    annual: 960,
-    monthlyLabel: '80 €',
-    badge: null,
-    highlight: false,
-    maxLots: Infinity,
-  },
-];
+const PLANS = PRICING_PLANS;
 
 type PlanId = (typeof PLANS)[number]['id'];
 

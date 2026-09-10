@@ -51,12 +51,6 @@ export default function ArticleObligationsSyndicBenevole() {
         <p className="text-xs text-red-600 font-semibold">Fautes les plus sanctionnées : AG convoquée hors délai, fonds du syndicat mélangés aux fonds personnels, travaux votés non engagés.</p>
       </div>
 
-      <div className="my-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles utiles</p>
-        <p className="text-sm text-gray-700">
-          Pour recouper ce guide avec les références publiques, consultez la fiche <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur le syndic de copropriété</a>, le dossier <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/N31338" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur les acteurs de la copropriété</a>, la page <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/" target="_blank" rel="noopener noreferrer" className={a}>ANIL sur le syndic</a> et la page ANIL sur <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/immatriculation-des-coproprietes/" target="_blank" rel="noopener noreferrer" className={a}>l&apos;immatriculation des copropriétés</a>.
-        </p>
-      </div>
 
       <h2 id="calendrier-annuel" className={h2}>Le calendrier complet des obligations annuelles</h2>
 
@@ -452,6 +446,16 @@ export default function ArticleObligationsSyndicBenevole() {
         Un bon outil de gestion, un calendrier rigoureux, et les bons modèles de documents permettent de tenir ce mandat sereinement — et d&apos;éviter l&apos;erreur de Christophe.
       </p>
       <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide pour <a href="/blog/comment-devenir-syndic-benevole" className={a}>devenir syndic bénévole</a>, notre comparatif des <a href="/blog/logiciel-syndic-benevole" className={a}>logiciels pour syndic bénévole</a> ou notre guide pour <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>gérer une copropriété sans syndic professionnel</a>.</p>
+
+      <div className="my-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles</p>
+        <ul className="text-sm text-gray-700 space-y-1">
+          <li><a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service-Public.fr — le syndic de copropriété</a></li>
+          <li><a href="https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256" target="_blank" rel="noopener noreferrer" className={a}>Légifrance — loi n° 65-557 du 10 juillet 1965</a></li>
+          <li><a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/" target="_blank" rel="noopener noreferrer" className={a}>ANIL — le syndic en copropriété</a></li>
+          <li><a href="https://www.anah.fr/" target="_blank" rel="noopener noreferrer" className={a}>ANAH — Agence nationale de l&apos;habitat</a></li>
+        </ul>
+      </div>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Christophe a perdu 28 000 € de travaux sur un délai de 3 jours.</p>

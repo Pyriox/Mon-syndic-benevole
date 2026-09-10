@@ -29,7 +29,7 @@ Pas de carte professionnelle requise. Pas de formation certifiante obligatoire. 
 - disposer d'un mandat à durée définie (en général un an, renouvelable),
 - ouvrir un compte bancaire séparé au nom du syndicat des copropriétaires.
 
-C'est tout. Et contrairement aux idées reçues, **plus de 40 % des copropriétés françaises sont gérées sans syndic professionnel**. Dans les immeubles de moins de dix lots, les syndics bénévoles sont même majoritaires. Ce n'est pas un montage atypique : c'est une réalité quotidienne pour des centaines de milliers de Français.
+C'est tout. Et selon un guide de l'ANAH, la France comptait **52 839 syndics bénévoles pour 550 529 lots principaux** au 1er janvier 2024. Ce n'est pas un montage atypique : c'est une réalité quotidienne pour des centaines de milliers de Français.
 
 ---
 
@@ -155,7 +155,7 @@ La transition est plus simple qu'on ne l'imagine. Elle se fait en cinq étapes.
 Inscrivez une résolution à l'ordre du jour de la prochaine AG. Le changement de syndic se vote à la majorité de l'article 25 (majorité absolue des voix de tous les copropriétaires, présents ou non).
 
 **Étape 2 — Récupérer l'intégralité des archives**
-L'ancien syndic a l'obligation légale de remettre tous les documents dans un délai de 15 jours après la fin de son mandat : carnet d'entretien, procès-verbaux des AG précédentes, liste des copropriétaires avec tantièmes, contrats en cours, relevés bancaires, justificatifs de dépenses. Ne laissez rien passer.
+L'ancien syndic a l'obligation légale de transmettre l'état de la trésorerie et les références bancaires sous 15 jours, puis l'ensemble des documents et archives sous un mois après la fin de son mandat (art. 18-2 de la loi du 10 juillet 1965) : carnet d'entretien, procès-verbaux des AG précédentes, liste des copropriétaires avec tantièmes, contrats en cours, relevés bancaires, justificatifs de dépenses. Ne laissez rien passer.
 
 **Étape 3 — Ouvrir le compte bancaire séparé**
 Ce compte doit être au nom du **syndicat des copropriétaires** — pas du bénévole lui-même. C'est une obligation légale, et une protection essentielle pour tout le monde.
@@ -189,7 +189,7 @@ La gestion bénévole n'a pas à être artisanale. Des outils existent aujourd'h
 
 C'est exactement ce que [Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) propose : une plateforme pensée pour les copropriétés de taille humaine, qui rend la gestion bénévole aussi rigoureuse qu'une gestion professionnelle — sans en avoir le coût ni la complexité.
 
-> Plusieurs centaines de syndics bénévoles l'utilisent aujourd'hui pour **gagner du temps et sécuriser la gestion** de leur copropriété. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
+> Plusieurs centaines de syndics bénévoles l'utilisent aujourd'hui pour **gagner du temps et sécuriser la gestion** de leur copropriété. [Essai gratuit 14 jours, aucun prélèvement pendant l'essai →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -215,7 +215,7 @@ Gérer sa copropriété sans syndic professionnel, c'est légal, courant, et pou
 
 La bonne volonté ne suffit pas si elle repose sur un tableur bricolé et des mails éparpillés. Mais avec une méthode claire et un outil adapté, la gestion bénévole devient réellement accessible — et souvent plus satisfaisante que de confier son immeuble à un cabinet qui le traitera comme un dossier parmi d'autres.
 
-**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Appels de fonds, assemblées, documents, incidents, trésorerie : gérez votre copropriété simplement, sans Excel, sans erreur. Essai gratuit 30 jours.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Appels de fonds, assemblées, documents, incidents, trésorerie : gérez votre copropriété simplement, sans Excel, sans erreur. Essai gratuit 14 jours.**
 
 ---
 
@@ -229,7 +229,7 @@ La bonne volonté ne suffit pas si elle repose sur un tableur bricolé et des ma
 `Gérer sa copropriété sans syndic professionnel : guide complet 2026 | Mon Syndic Bénévole`
 
 ### Meta description
-`Est-ce légal de gérer sa copropriété sans syndic professionnel ? Oui — et plus de 40 % des copropriétés françaises le font. Découvrez les obligations, les erreurs à éviter et les outils pour se lancer sereinement.`
+`Est-ce légal de gérer sa copropriété sans syndic professionnel ? Oui — l'ANAH recensait 52 839 syndics bénévoles au 1er janvier 2024. Découvrez les obligations, les erreurs à éviter et les outils pour se lancer sereinement.`
 
 ---
 

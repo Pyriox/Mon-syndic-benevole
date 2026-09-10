@@ -206,7 +206,7 @@ C'est précisément pour ça que des outils dédiés à la gestion bénévole ex
 
 [Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) centralise l'ensemble du cycle : appels de fonds trimestriels calculés automatiquement, convocations guidées, suivi des paiements en temps réel, archivage des documents, tableau de bord des obligations à venir.
 
-> **Simplifier la gestion sans Excel** — c'est possible dès le premier jour. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
+> **Simplifier la gestion sans Excel** — c'est possible dès le premier jour. [Essai gratuit 14 jours, aucun prélèvement pendant l'essai →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -237,7 +237,7 @@ Tout ça est accessible. Mais pas sans méthode.
 
 Le syndic bénévole qui réussit son mandat n'est pas nécessairement celui qui a le plus de connaissances juridiques. C'est celui qui a mis en place un système qui lui permet de ne rien oublier, de tout retrouver, et de répondre à n'importe quelle demande — copropriétaire, notaire ou assureur — en quelques minutes.
 
-**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Toutes vos obligations légales, organisées et suivies dans une seule interface. Appels de fonds, AG, archives, comptabilité. Essai gratuit 30 jours, sans engagement.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Toutes vos obligations légales, organisées et suivies dans une seule interface. Appels de fonds, AG, archives, comptabilité. Essai gratuit 14 jours, sans engagement.**
 
 ---
 

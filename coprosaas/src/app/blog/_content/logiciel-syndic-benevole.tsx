@@ -1,12 +1,17 @@
 ﻿// ============================================================
-// Article : Logiciel syndic bénévole — ce qui change vraiment
-// Target KW : "logiciel syndic bénévole", "logiciel gestion copropriété"
+// Article : Comparatif logiciel syndic bénévole — comment bien choisir
+// Target KW : "comparatif logiciel syndic bénévole", "comment choisir logiciel syndic bénévole"
 // ============================================================
 
 /* eslint-disable @next/next/no-html-link-for-pages */
 
 import CtaLink from '@/components/ui/CtaLink';
 import { h2, h3, p, ul, ol, li, strong, a } from './styles';
+import { planForLotCount } from '@/lib/pricing-plans';
+
+// Exemple chiffré de l'article : copropriété de 12 lots → plan Confort
+const EXAMPLE_LOTS = 12;
+const examplePlan = planForLotCount(EXAMPLE_LOTS);
 
 export default function ArticleLogicielSyndicBenevole() {
   return (
@@ -94,7 +99,7 @@ export default function ArticleLogicielSyndicBenevole() {
             <tr className="bg-blue-50 border-y-2 border-blue-200">
               <td className="py-3 px-4 font-semibold text-gray-900">Prix / an (12 lots)</td>
               <td className="py-3 px-4 text-center font-medium text-gray-700">Gratuit</td>
-              <td className="py-3 px-4 text-center font-bold text-blue-700 bg-blue-100">~240 €/an</td>
+              <td className="py-3 px-4 text-center font-bold text-blue-700 bg-blue-100">{examplePlan.annual} €/an</td>
               <td className="py-3 px-4 text-center font-bold text-red-600">2 400–4 200 €/an</td>
             </tr>
             <tr className="bg-gray-50">
@@ -236,7 +241,7 @@ export default function ArticleLogicielSyndicBenevole() {
             Recommandé
           </span>
           <p className="text-sm font-semibold text-blue-700 mb-3">Mon Syndic Bénévole</p>
-          <p className="text-3xl font-bold text-blue-700 mb-0.5">~240 €</p>
+          <p className="text-3xl font-bold text-blue-700 mb-0.5">{examplePlan.annual} €</p>
           <p className="text-xs text-blue-400 mb-4">par an · tout inclus</p>
           <div className="pt-3 border-t border-blue-200 space-y-1.5">
             <p className="text-xs text-gray-700">~2–3 h de gestion / mois</p>
@@ -255,7 +260,7 @@ export default function ArticleLogicielSyndicBenevole() {
       </div>
 
       <p className={p}>
-        Pour 12 lots, passer à Mon Syndic Bénévole représente une économie de <strong className={strong}>2 160 à 3 960 € par an</strong> par rapport à un syndic professionnel. Une économie qui revient directement aux copropriétaires sous forme de charges moins élevées.
+        Pour 12 lots, passer à Mon Syndic Bénévole représente une économie de <strong className={strong}>1 860 à 3 660 € par an</strong> par rapport à un syndic professionnel. Une économie qui revient directement aux copropriétaires sous forme de charges moins élevées.
       </p>
 
       <div className="my-8 rounded-2xl bg-green-50 border border-green-100 p-6">

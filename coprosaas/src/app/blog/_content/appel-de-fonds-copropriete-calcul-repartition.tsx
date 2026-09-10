@@ -26,8 +26,9 @@ export default function ArticleAppelDeFonds() {
       <p className={p}>
         Un appel de fonds est une <strong className={strong}>demande de paiement adressée à chaque copropriétaire</strong> pour couvrir les dépenses à venir de la copropriété. C&apos;est une provision — une avance sur des frais collectifs dont le total réel ne sera connu qu&apos;en fin d&apos;exercice. Ce n&apos;est pas une facture pour une prestation déjà rendue.
       </p>
-      <p className={p}>La distinction a une conséquence pratique : il y a toujours une régularisation en fin d&apos;année entre ce qui a été appelé et ce qui a réellement été dépensé.</p>
-      <p className={p}>On distingue trois types d&apos;appels de fonds :</p>
+      <p className={p}>La distinction a une conséquence pratique : il y a toujours une régularisation en fin d&apos;année entre ce qui a été appelé et ce qui a réellement été dépensé.</p>      <p className={p}>
+        <strong className={strong}>« Appel de fonds » ou « appel de provisions » ?</strong> Les deux désignent la même chose. La loi du 10 juillet 1965 (art. 14-1) parle juridiquement de « provisions » pour les sommes dues au titre du budget prévisionnel ; « appel de fonds » est simplement le terme usuel employé par les syndics pour désigner la demande de paiement de ces provisions. Aucune différence juridique entre les deux expressions.
+      </p>      <p className={p}>On distingue trois types d&apos;appels de fonds :</p>
       <ul className={ul}>
         <li className={li}><strong className={strong}>Les appels de budget prévisionnel</strong> — charges courantes (entretien, assurance, espaces verts, électricité des communs…). Émis chaque trimestre à date fixe.</li>
         <li className={li}><strong className={strong}>Les appels exceptionnels</strong> — travaux votés en AG (ravalement, toiture, remplacement chaudière). Émis selon le calendrier du chantier.</li>
@@ -191,7 +192,7 @@ export default function ArticleAppelDeFonds() {
         </li>
       </ol>
 
-      <h2 id="template-avis" className={h2}>Modèle d&apos;avis de paiement : ce qu&apos;il faut obligatoirement mentionner</h2>
+      <h2 id="template-avis" className={h2}>Modèle d&apos;appel de fonds (avis de paiement) : exemple et mentions obligatoires</h2>
       <p className={p}>Aucun format légal imposé, mais ces éléments permettent d&apos;éviter toute contestation :</p>
 
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8 text-sm leading-relaxed">
@@ -375,6 +376,12 @@ export default function ArticleAppelDeFonds() {
       <h3 className={h3}>Peut-on "sauter" un trimestre si la trésorerie est suffisante ?</h3>
       <p className={p}>Les appels provisionnels sont légalement dus à date fixe, quelle que soit la trésorerie. Si la copropriété a un excédent important, l&apos;AG peut voter un budget prévisionnel réduit pour l&apos;exercice suivant. Ne sautez pas un appel sans décision formelle de l&apos;AG — cela crée des problèmes comptables en fin d&apos;exercice.</p>
 
+      <h3 className={h3}>Quelle est la différence entre un appel de fonds et un appel de provisions ?</h3>
+      <p className={p}>Aucune différence de fond : ce sont deux noms pour la même chose. La loi du 10 juillet 1965 (art. 14-1) parle de « provisions » pour désigner les sommes dues au titre du budget prévisionnel, tandis que « appel de fonds » est le terme courant utilisé par les syndics et les copropriétaires pour désigner la demande de paiement de ces provisions. Un avis de paiement peut donc indifféremment porter l&apos;un ou l&apos;autre intitulé.</p>
+
+      <h3 className={h3}>Un appel de fonds est-il une facture ?</h3>
+      <p className={p}>Non. Une facture correspond à une prestation déjà rendue, avec un montant définitif. L&apos;appel de fonds est une provision — une avance sur des dépenses à venir dont le montant réel ne sera connu qu&apos;à la clôture de l&apos;exercice. C&apos;est pour cela qu&apos;une <a href="#regularisation" className={a}>régularisation</a> (complément à payer ou trop-perçu à rembourser) intervient chaque année après approbation des comptes en <a href="/blog/assemblee-generale-copropriete-guide" className={a}>assemblée générale</a>.</p>
+
       <h2 id="ce-quil-faut-retenir" className={h2}>Ce qu&apos;il faut retenir</h2>
       <p className={p}>
         L&apos;appel de fonds est la colonne vertébrale financière de votre copropriété. Le principe de calcul est simple — c&apos;est le suivi dans le temps qui crée des difficultés sans outil adapté : qui a payé, qui est en retard, comment régulariser proprement en fin d&apos;exercice.
@@ -383,8 +390,17 @@ export default function ArticleAppelDeFonds() {
         Un copropriétaire qui comprend d&apos;où vient son montant, reçoit un avis clair avec la bonne date d&apos;échéance, et peut consulter son historique de paiement est un copropriétaire qui paie à temps et qui fait confiance au syndic.
       </p>
       <p className={p}>
-        <strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur le <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a>, les <a href="/blog/obligations-syndic-benevole" className={a}>obligations complètes du syndic bénévole</a>, les <a href="/blog/logiciel-syndic-benevole" className={a}>logiciels pour syndic bénévole</a> ou notre guide pour <a href="/blog/comment-devenir-syndic-benevole" className={a}>devenir syndic bénévole</a>.
+        <strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur le <a href="/blog/fonds-de-travaux-alur-obligations-montant-gestion" className={a}>fonds de travaux ALUR</a>, sur la <a href="/blog/assemblee-generale-copropriete-guide" className={a}>préparation d&apos;une assemblée générale</a>, les <a href="/blog/obligations-syndic-benevole" className={a}>obligations complètes du syndic bénévole</a>, les <a href="/blog/logiciel-syndic-benevole" className={a}>logiciels pour syndic bénévole</a> ou notre guide pour <a href="/blog/comment-devenir-syndic-benevole" className={a}>devenir syndic bénévole</a>.
       </p>
+
+      <div className="my-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles</p>
+        <ul className="text-sm text-gray-700 space-y-1">
+          <li><a href="https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256" target="_blank" rel="noopener noreferrer" className={a}>Légifrance — loi n° 65-557 du 10 juillet 1965</a></li>
+          <li><a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service-Public.fr — le syndic de copropriété</a></li>
+          <li><a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/" target="_blank" rel="noopener noreferrer" className={a}>ANIL — dossier copropriété</a></li>
+        </ul>
+      </div>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Générez vos appels de fonds automatiquement — en 30 secondes</p>

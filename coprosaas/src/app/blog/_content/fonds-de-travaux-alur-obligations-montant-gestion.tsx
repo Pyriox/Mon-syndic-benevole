@@ -38,15 +38,9 @@ export default function ArticleFondsTravaux() {
         La notion de &ldquo;lot&rdquo; inclut les lots principaux (appartements, locaux) ET les lots accessoires (caves, parkings, garages). Un immeuble de 8 appartements + 4 caves + 4 parkings = 16 lots — mais même une petite copropriété de 3 appartements est désormais concernée.
       </p>
       <p className={p}>
-        <strong className={strong}>Seule exception maintenue :</strong> une copropriété peut décider, à l&apos;unanimité, de ne pas constituer le fonds pendant les <strong className={strong}>cinq premières années</strong> suivant la réception de l&apos;immeuble. Au-delà, l&apos;obligation s&apos;applique sans exception.
+        <strong className={strong}>Exceptions prévues :</strong> une copropriété peut décider, à l&apos;unanimité, de ne pas constituer le fonds pendant les <strong className={strong}>cinq premières années</strong> suivant la réception de l&apos;immeuble. L&apos;AG peut également en être dispensée lorsqu&apos;un <strong className={strong}>diagnostic technique global (DTG)</strong> conclut à l&apos;absence de travaux nécessaires dans les dix années suivantes. En dehors de ces deux cas, l&apos;obligation s&apos;applique sans exception.
       </p>
 
-      <div className="my-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles utiles</p>
-        <p className="text-sm text-gray-700">
-          Pour vérifier ce guide dans les textes et références publiques, consultez la <a href="https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256" target="_blank" rel="noopener noreferrer" className={a}>loi du 10 juillet 1965 sur Légifrance</a>, la fiche <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur le syndic de copropriété</a>, la fiche <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F32058" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur l&apos;immatriculation des copropriétés</a> et le dossier <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/" target="_blank" rel="noopener noreferrer" className={a}>ANIL consacré à la copropriété</a>.
-        </p>
-      </div>
 
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Votre fonds de travaux, géré sans risque d&apos;oubli</p>
@@ -67,7 +61,7 @@ export default function ArticleFondsTravaux() {
 
       <h3 className={h3}>Le plancher légal</h3>
       <p className={p}>
-        La cotisation annuelle doit être <strong className={strong}>au minimum égale à 5 % du budget prévisionnel</strong> des charges courantes voté en AG. Exemple concret : budget annuel 18 000 € → fonds de travaux minimum : 900 €/an.
+        La cotisation annuelle doit être <strong className={strong}>au minimum égale à 5 % du budget prévisionnel</strong> des charges courantes voté en AG. Lorsqu&apos;un plan pluriannuel de travaux (PPT) a été adopté, un second seuil s&apos;ajoute : la cotisation doit également représenter au moins <strong className={strong}>2,5 % du montant des travaux prévus par ce plan</strong> — le montant retenu est le plus élevé des deux. Exemple concret (hors PPT) : budget annuel 18 000 € → fonds de travaux minimum : 900 €/an.
       </p>
 
       <div className="overflow-x-auto mb-6 rounded-xl border border-gray-200">
@@ -318,7 +312,10 @@ export default function ArticleFondsTravaux() {
         Lors d&apos;une vente d&apos;un lot dans la copropriété, le notaire vérifie l&apos;existence de ce compte séparé. Un fonds de travaux géré sur le compte courant ordinaire peut bloquer ou compliquer la transaction.
       </p>
 
-      <h2 id="utilisation" className={h2}>À quoi ces fonds peuvent — et ne peuvent pas — servir</h2>
+      <h2 id="utilisation" className={h2}>Déblocage et utilisation : à quoi peuvent servir ces fonds ?</h2>
+      <p className={p}>
+        Le « déblocage » du fonds de travaux n&apos;est pas une procédure administrative lourde : c&apos;est une simple opération bancaire, encadrée par le vote de l&apos;AG. Une fois les travaux votés et le devis signé, le syndic <strong className={strong}>vire le montant nécessaire depuis le Livret A du fonds de travaux vers le compte courant</strong> de la copropriété, sur présentation des factures ou des situations de travaux transmises par l&apos;entreprise. Aucun accord bancaire préalable n&apos;est requis au-delà de celui du syndicat lui-même — mais chaque mouvement doit rester traçable dans la comptabilité et présenté en AG.
+      </p>
 
       <h3 className={h3}>Ce qui est éligible</h3>
       <ul className={ul}>
@@ -342,7 +339,7 @@ export default function ArticleFondsTravaux() {
         Exemple : M. Durand a versé 1 800 € au fonds de travaux sur 6 ans. Il vend son appartement. Ces 1 800 € restent dans la copropriété — ils ne viennent pas en déduction du prix de vente (c&apos;est l&apos;acheteur qui bénéficie du fonds constitué). En revanche, le notaire mentionne l&apos;état du fonds dans l&apos;acte : un fonds bien alimenté est un <strong className={strong}>argument de vente positif</strong>, car l&apos;acheteur sait qu&apos;il n&apos;aura pas à financer seul les prochains travaux.
       </p>
       <p className={p}>
-        Communicquez cette règle à vos copropriétaires dès votre premier appel incluant le fonds de travaux — c&apos;est la source de confusion n°1, et ça évite des disputes après coup.
+        Communiquez cette règle à vos copropriétaires dès votre premier appel incluant le fonds de travaux — c&apos;est la source de confusion n°1, et ça évite des disputes après coup.
       </p>
 
       <h2 id="risques" className={h2}>Ce que vous risquez si vous ne respectez pas ces règles</h2>
@@ -370,7 +367,7 @@ export default function ArticleFondsTravaux() {
 
       <h2 id="dtg" className={h2}>Fonds de travaux et plan pluriannuel de travaux (PPT)</h2>
       <p className={p}>
-        Depuis le 1er janvier 2025, toutes les copropriétés dont l&apos;immeuble a plus de <strong className={strong}>15 ans</strong> ont l&apos;obligation d&apos;élaborer un <strong className={strong}>plan pluriannuel de travaux (PPT)</strong> (loi Climat et Résilience, 2021). Cette obligation est distincte du fonds de travaux ALUR mais complémentaire : le PPT identifie et planifie les travaux sur 10 ans, tandis que le fonds en constitue la réserve financière. Le DTG (diagnostic technique global), quant à lui, reste facultatif pour la majorité des copropriétés, mais constitue l&apos;outil de diagnostic idéal pour élaborer un PPT solide ou justifier en AG une dotation supérieure au minimum légal.
+        Depuis le 1er janvier 2025, toutes les copropriétés dont l&apos;immeuble a plus de <strong className={strong}>15 ans</strong> ont l&apos;obligation d&apos;élaborer un <strong className={strong}>plan pluriannuel de travaux (PPT)</strong> (loi Climat et Résilience, 2021). Cette obligation est distincte du fonds de travaux ALUR mais complémentaire : le PPT identifie et planifie les travaux sur 10 ans, tandis que le fonds en constitue la réserve financière. Une fois le PPT adopté en AG, il fixe un second plancher de cotisation (2,5 % du montant des travaux qu&apos;il prévoit), qui s&apos;ajoute à la règle des 5 % du budget prévisionnel. Le DTG (diagnostic technique global), quant à lui, reste facultatif pour la majorité des copropriétés, mais constitue l&apos;outil de diagnostic idéal pour élaborer un PPT solide ou justifier en AG une dotation supérieure au minimum légal — et, s&apos;il conclut à l&apos;absence de travaux nécessaires dans les dix ans, il permet à l&apos;AG de dispenser la copropriété de l&apos;obligation de fonds.
       </p>
       <p className={p}>
         Un DTG coûte entre 800 et 2 500 € selon la taille de l&apos;immeuble. Il projette les travaux nécessaires sur 10 ans avec une estimation de coût. C&apos;est le meilleur outil pour présenter en AG une dotation ambitieuse mais justifiée — et obtenir l&apos;approbation des copropriétaires.
@@ -391,10 +388,19 @@ export default function ArticleFondsTravaux() {
       <p className={p}>Sur le budget prévisionnel des charges courantes voté en AG, <em>hors fonds de travaux lui-même</em>. Budget 20 000 € de charges courantes → minimum légal : 1 000 €/an.</p>
 
       <h3 className={h3}>Peut-on moduler la cotisation en fonction des travaux prévus ?</h3>
-      <p className={p}>Oui. L&apos;AG peut voter un montant différent chaque année — à condition de rester au-dessus du plancher légal (5 %). Si de gros travaux approchent, il est judicieux d&apos;augmenter la dotation 2 à 3 ans à l&apos;avance pour éviter un appel exceptionnel massif.</p>
+      <p className={p}>Oui. L&apos;AG peut voter un montant différent chaque année — à condition de rester au-dessus du plancher légal (5 %, ou 2,5 % du montant des travaux si un PPT a été adopté, le plus élevé des deux s&apos;appliquant). Si de gros travaux approchent, il est judicieux d&apos;augmenter la dotation 2 à 3 ans à l&apos;avance pour éviter un appel exceptionnel massif.</p>
 
       <h3 className={h3}>L&apos;AG peut-elle supprimer le fonds de travaux par un vote ?</h3>
-      <p className={p}>Non. Depuis le 1er janvier 2025, l&apos;obligation s&apos;applique à toutes les copropriétés sans condition de taille. Un vote de suppression serait nul et contraire à la loi. La seule dérogation encore possible concerne les immeubles neufs (5 premières années après réception, à l&apos;unanimité).</p>
+      <p className={p}>Non. Depuis le 1er janvier 2025, l&apos;obligation s&apos;applique à toutes les copropriétés sans condition de taille. Un vote de suppression serait nul et contraire à la loi. Les seules dérogations possibles concernent les immeubles neufs (5 premières années après réception, à l&apos;unanimité) et les copropriétés disposant d&apos;un DTG concluant à l&apos;absence de travaux nécessaires dans les dix ans.</p>
+
+      <h3 className={h3}>Comment débloquer les fonds du compte séparé pour payer des travaux ?</h3>
+      <p className={p}>Une fois les travaux votés en AG et le devis signé, le syndic vire le montant nécessaire depuis le compte du fonds de travaux (Livret A du syndicat) vers le compte courant de la copropriété, sur présentation des factures ou situations de travaux. Aucune démarche administrative particulière n&apos;est requise — c&apos;est une opération bancaire décidée par l&apos;AG et exécutée par le syndic, à tracer dans la comptabilité.</p>
+
+      <h3 className={h3}>À qui appartiennent les intérêts produits par le fonds de travaux ALUR ?</h3>
+      <p className={p}>Les intérêts générés par le compte séparé (généralement un Livret A ouvert au nom du syndicat) reviennent à la copropriété et viennent grossir le fonds — ils ne sont pas reversés individuellement aux copropriétaires. Ils s&apos;ajoutent à la réserve disponible pour les travaux futurs.</p>
+
+      <h3 className={h3}>Existe-t-il un montant maximum pour le fonds de travaux ALUR ?</h3>
+      <p className={p}>Non. La loi fixe uniquement un plancher (5 % du budget prévisionnel, ou 2,5 % du montant des travaux si un PPT a été adopté), pas de plafond. L&apos;AG peut voter un montant supérieur aussi élevé que nécessaire pour couvrir les travaux à venir — c&apos;est même recommandé pour les immeubles anciens ou avec des équipements en fin de vie.</p>
 
       <h2 id="ce-quil-faut-retenir" className={h2}>Ce qu&apos;il faut retenir</h2>
       <p className={p}>
@@ -404,6 +410,17 @@ export default function ArticleFondsTravaux() {
         Le défi du syndic bénévole n&apos;est pas de comprendre le principe — il est simple. C&apos;est de le mettre en œuvre rigoureusement, année après année, avec les bons outils et la bonne traçabilité.
       </p>
       <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>le calcul et la répartition des appels de fonds</a>, <a href="/blog/obligations-syndic-benevole" className={a}>les obligations complètes du syndic bénévole</a>, notre comparatif des <a href="/blog/logiciel-syndic-benevole" className={a}>logiciels pour syndic bénévole</a> ou notre guide pour <a href="/blog/comment-devenir-syndic-benevole" className={a}>devenir syndic bénévole</a>.</p>
+
+      <div className="my-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles</p>
+        <ul className="text-sm text-gray-700 space-y-1">
+          <li><a href="https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256" target="_blank" rel="noopener noreferrer" className={a}>Légifrance — loi n° 65-557 du 10 juillet 1965</a></li>
+          <li><a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service-Public.fr — le syndic de copropriété</a></li>
+          <li><a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F32058" target="_blank" rel="noopener noreferrer" className={a}>Service-Public.fr — immatriculation des copropriétés</a></li>
+          <li><a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/" target="_blank" rel="noopener noreferrer" className={a}>ANIL — dossier copropriété</a></li>
+          <li><a href="https://www.anah.fr/" target="_blank" rel="noopener noreferrer" className={a}>ANAH — Agence nationale de l&apos;habitat</a></li>
+        </ul>
+      </div>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Gérez votre fonds de travaux sans risque d&apos;oubli</p>

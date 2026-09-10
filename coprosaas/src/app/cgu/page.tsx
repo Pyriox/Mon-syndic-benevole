@@ -123,7 +123,7 @@ export default function CguPage() {
             en vigueur sont indiqués sur la page de tarification du site.
           </p>
           <p>
-            Les abonnements sont proposés sur une base mensuelle ou annuelle. Le paiement est effectué par
+            Les abonnements sont proposés sur une base annuelle. Le paiement est effectué par
             carte bancaire via la plateforme sécurisée{" "}
             <strong className="text-white">Stripe</strong>, certifiée PCI-DSS. Mon Syndic Bénévole ne conserve
             aucune donnée bancaire.

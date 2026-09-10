@@ -166,7 +166,7 @@ Il ne s'agit pas de compétence. Il s'agit d'avoir un outil qui fait ce que les 
 
 Des solutions existent aujourd'hui pour prendre en charge l'ensemble du cycle — de la création de l'appel à la régularisation annuelle — sans qu'il faille être comptable pour s'en servir. [Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) est conçu spécifiquement pour ça : automatiser ce qui peut l'être, sécuriser ce qui est réglementaire, et redonner au syndic bénévole une visibilité permanente sur l'état de sa trésorerie.
 
-> Plusieurs centaines de syndics bénévoles l'utilisent pour **simplifier la gestion sans Excel** et gagner plusieurs heures chaque trimestre. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
+> Plusieurs centaines de syndics bénévoles l'utilisent pour **simplifier la gestion sans Excel** et gagner plusieurs heures chaque trimestre. [Essai gratuit 14 jours, aucun prélèvement pendant l'essai →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -197,7 +197,7 @@ Un copropriétaire qui reçoit un avis de paiement clair, qui comprend son monta
 
 La rigueur dans les appels de fonds, c'est la colonne vertébrale de la gestion d'une copropriété. Et cette rigueur ne devrait pas dépendre de la solidité d'un fichier Excel bricolé.
 
-**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Appels de fonds automatisés, répartition par tantièmes, suivi des paiements, fonds de travaux ALUR : gérez votre copropriété avec la même rigueur qu'un professionnel, sans la complexité. Essai gratuit 30 jours.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Appels de fonds automatisés, répartition par tantièmes, suivi des paiements, fonds de travaux ALUR : gérez votre copropriété avec la même rigueur qu'un professionnel, sans la complexité. Essai gratuit 14 jours.**
 
 ---
 

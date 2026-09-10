@@ -2,6 +2,14 @@
 // Blog — métadonnées des articles
 // ============================================================
 
+// Auteur unique de tous les articles — affiché en byline et dans le JSON-LD
+// pour l'E-E-A-T (qui a écrit le contenu et pourquoi lui faire confiance).
+export const BLOG_AUTHOR = {
+  name: 'Fabien',
+  role: 'Fondateur de Mon Syndic Bénévole · syndic bénévole',
+  bio: "Fabien a géré sa propre copropriété en tant que syndic bénévole avant de créer Mon Syndic Bénévole. Les guides du blog s'appuient sur cette expérience de terrain et sont recoupés avec les textes officiels (Légifrance, Service-Public.fr, ANIL, ANAH).",
+};
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -22,7 +30,7 @@ export const posts: BlogPost[] = [
     title: 'Gérer sa copropriété sans syndic professionnel : guide complet 2026',
     metaTitle: 'Gérer sa copropriété sans syndic professionnel',
     description:
-      'Est-ce légal de gérer sa copropriété sans syndic professionnel ? Oui — et plus de 40 % des copropriétés françaises le font. Découvrez les obligations, les erreurs à éviter et les outils pour se lancer sereinement.',
+      'Est-ce légal de gérer sa copropriété sans syndic professionnel ? Oui — l’ANAH recensait 52 839 syndics bénévoles au 1er janvier 2024. Découvrez les obligations, les erreurs à éviter et les outils pour se lancer sereinement.',
     publishedAt: '2026-03-19',
     updatedAt: '2026-05-06',
     readingTime: 8,
@@ -64,7 +72,7 @@ export const posts: BlogPost[] = [
       },
       {
         q: "Comment passer d'un syndic professionnel à un syndic bénévole ?",
-        a: "La transition nécessite un vote en AG à la majorité de l'article 25, la récupération des archives auprès de l'ancien syndic dans les 15 jours, l'ouverture d'un compte bancaire séparé au nom du syndicat, et la notification des prestataires du changement.",
+        a: "La transition nécessite un vote en AG à la majorité de l'article 25, la récupération auprès de l'ancien syndic de l'état de trésorerie et des références bancaires sous 15 jours puis de l'ensemble des archives sous un mois, l'ouverture d'un compte bancaire séparé au nom du syndicat, et la notification des prestataires du changement.",
       },
       {
         q: "Peut-on ne pas avoir de syndic dans une copropriété ?",
@@ -91,9 +99,9 @@ export const posts: BlogPost[] = [
   {
     slug: 'appel-de-fonds-copropriete-calcul-repartition',
     title: 'Appel de fonds copropriété : calcul, répartition et erreurs à éviter (2026)',
-    metaTitle: 'Appel de fonds : calcul et répartition 2026',
+    metaTitle: 'Appel de fonds copropriété 2026 : calcul, modèle, répartition',
     description:
-      'Comment calculer et répartir un appel de fonds en copropriété selon les tantièmes ? Guide complet pour syndics bénévoles : méthode pas à pas, erreurs fréquentes et conséquences à éviter.',
+      'Appel de fonds copropriété : définition, calcul par tantièmes, modèle d\'avis de paiement, régularisation et impayés. Guide complet 2026 pour syndics bénévoles.',
     publishedAt: '2026-03-19',
     updatedAt: '2026-05-06',
     readingTime: 9,
@@ -101,10 +109,12 @@ export const posts: BlogPost[] = [
     keywords: [
       'appel de fonds copropriété',
       'calcul appel de fonds copropriété',
+      'modèle appel de fonds copropriété',
+      'appel de fonds exemple',
       'répartition charges copropriété tantièmes',
       'tantièmes millièmes copropriété',
       'budget prévisionnel copropriété',
-      'implayés charges copropriété procédure',
+      'impayés charges copropriété procédure',
       'appel de fonds trimestriel',
       'charges générales spéciales copropriété',
     ],
@@ -113,7 +123,7 @@ export const posts: BlogPost[] = [
       { id: 'tantiemes', text: 'La base de tout : les tantièmes' },
       { id: 'types-charges', text: 'Les deux types de charges et leur répartition' },
       { id: 'calcul-trimestriel', text: 'Comment calculer un appel de fonds trimestriel : la méthode pas à pas' },
-      { id: 'template-avis', text: 'Modèle d\'avis de paiement : mentions obligatoires' },
+      { id: 'template-avis', text: 'Modèle d\'appel de fonds (avis de paiement) : exemple et mentions obligatoires' },
       { id: 'appel-exceptionnel', text: 'L\'appel de fonds exceptionnel : même logique, calendrier différent' },
       { id: 'impayes', text: 'Ce qui se passe quand un copropriétaire ne paie pas' },
       { id: 'regularisation', text: 'La régularisation annuelle : l\'étape que tout le monde redoute' },
@@ -140,6 +150,14 @@ export const posts: BlogPost[] = [
         a: "L'appel de fonds couvre les charges courantes et les travaux votés. Le fonds de travaux ALUR est une cotisation annuelle obligatoire (5 % du budget minimum) placée sur un compte séparé pour anticiper les gros travaux futurs.",
       },
       {
+        q: "Quelle est la différence entre un appel de fonds et un appel de provisions ?",
+        a: "Aucune différence de fond : ce sont deux noms pour la même chose. La loi du 10 juillet 1965 (art. 14-1) parle de \u00ab provisions \u00bb pour désigner les sommes dues au titre du budget prévisionnel, tandis que \u00ab appel de fonds \u00bb est le terme courant utilisé par les syndics et les copropriétaires pour désigner la demande de paiement de ces provisions. Un avis de paiement peut donc indifféremment porter l'un ou l'autre intitulé.",
+      },
+      {
+        q: "Un appel de fonds est-il une facture ?",
+        a: "Non. Une facture correspond à une prestation déjà rendue, avec un montant définitif. L'appel de fonds est une provision — une avance sur des dépenses à venir dont le montant réel ne sera connu qu'à la clôture de l'exercice. C'est pour cela qu'une régularisation (complément à payer ou trop-perçu à rembourser) intervient chaque année après approbation des comptes en AG.",
+      },
+      {
         q: "Les tantièmes peuvent-ils changer au cours de la vie d'une copropriété ?",
         a: "Rarement. Une modification des tantièmes nécessite un vote à l'unanimité des copropriétaires en assemblée générale, puis une modification du règlement de copropriété enregistrée chez le notaire. En pratique, les tantièmes restent stables toute la vie d'une copropriété sauf réunion ou division de lots.",
       },
@@ -152,19 +170,23 @@ export const posts: BlogPost[] = [
   {
     slug: 'fonds-de-travaux-alur-obligations-montant-gestion',
     title: 'Fonds de travaux ALUR : obligations, montant et gestion pratique (2026)',
-    metaTitle: 'Fonds de travaux ALUR : obligations et montant',
+    metaTitle: 'Fonds de travaux loi ALUR : obligations, montant, gestion',
     description:
-      'Fonds de travaux ALUR obligatoire depuis 2017 : qui est concerné, quel montant minimum, comment le gérer et quelles erreurs éviter ? Guide complet pour syndics bénévoles, avec exemples concrets.',
+      'Fonds de travaux loi ALUR, obligatoire pour toutes les copropriétés depuis 2025 : montant minimum, déblocage, intérêts, vente d’un lot. Guide complet pour syndics bénévoles.',
     publishedAt: '2026-03-19',
     updatedAt: '2026-05-06',
     readingTime: 8,
     category: 'Guide pratique – Finances & Réglementation',
     keywords: [
       'fonds de travaux ALUR',
-      'fonds travaux copropriété obligatoire',
+      'fonds travaux loi ALUR',
+      'loi ALUR copropriété travaux',
+      'fonds travaux ALUR obligatoire',
+      'déblocage fonds travaux ALUR',
+      'intérêts fonds travaux ALUR',
+      'montant maximum fonds travaux ALUR',
+      'fonds travaux ALUR en cas de vente',
       'cotisation fonds travaux',
-      '5% budget prévisionnel',
-      'loi ALUR copropriété',
       'compte séparé fonds travaux',
     ],
     toc: [
@@ -174,7 +196,7 @@ export const posts: BlogPost[] = [
       { id: 'planification', text: 'Comment calculer un plan de dotation réaliste' },
       { id: 'vote-ag', text: 'Le vote en AG : quelle majorité ?' },
       { id: 'compte-separe', text: 'Un compte bancaire séparé : l\'obligation méconnue' },
-      { id: 'utilisation', text: 'À quoi peuvent servir ces fonds ?' },
+      { id: 'utilisation', text: 'Déblocage et utilisation : à quoi peuvent servir ces fonds ?' },
       { id: 'vente-lot', text: 'Ce qui se passe lors de la vente d\'un lot' },
       { id: 'risques', text: 'Les risques en cas de non-respect' },
       { id: 'notre-outil', text: 'Gérer le fonds de travaux sans erreur : ce que l\'outil automatise' },
@@ -189,7 +211,7 @@ export const posts: BlogPost[] = [
       },
       {
         q: "Quel est le montant minimum du fonds de travaux obligatoire ?",
-        a: "Le minimum légal est de 5 % du montant du budget prévisionnel des charges courantes voté en AG. L'AG peut voter un montant supérieur selon les besoins de l'immeuble.",
+        a: "Le minimum légal est de 5 % du montant du budget prévisionnel des charges courantes voté en AG. Lorsqu'un plan pluriannuel de travaux (PPT) a été adopté, un second seuil s'ajoute : 2,5 % du montant des travaux prévus par ce plan, le plus élevé des deux montants s'appliquant. L'AG peut voter un montant supérieur selon les besoins de l'immeuble.",
       },
       {
         q: "Les sommes versées au fonds de travaux sont-elles remboursables lors d'une vente ?",
@@ -214,6 +236,18 @@ export const posts: BlogPost[] = [
       {
         q: "Que se passe-t-il si l'AG ne vote pas le montant du fonds de travaux ?",
         a: "La copropriété est en infraction légale. Tout copropriétaire peut saisir le tribunal judiciaire pour faire constater l'irrégularité et contraindre la tenue d'une nouvelle AG avec cette résolution à l'ordre du jour.",
+      },
+      {
+        q: "Comment débloquer les fonds du compte séparé pour payer des travaux ?",
+        a: "Une fois les travaux votés en AG et le devis signé, le syndic vire le montant nécessaire depuis le compte du fonds de travaux (Livret A du syndicat) vers le compte courant de la copropriété, sur présentation des factures ou situations de travaux. Aucune démarche administrative particulière n'est requise — c'est une opération bancaire décidée par l'AG et exécutée par le syndic, à tracer dans la comptabilité.",
+      },
+      {
+        q: "À qui appartiennent les intérêts produits par le fonds de travaux ALUR ?",
+        a: "Les intérêts générés par le compte séparé (généralement un Livret A ouvert au nom du syndicat) reviennent à la copropriété et viennent grossir le fonds — ils ne sont pas reversés individuellement aux copropriétaires. Ils s'ajoutent à la réserve disponible pour les travaux futurs.",
+      },
+      {
+        q: "Existe-t-il un montant maximum pour le fonds de travaux ALUR ?",
+        a: "Non. La loi fixe uniquement un plancher (5 % du budget prévisionnel, ou 2,5 % du montant des travaux si un PPT a été adopté), pas de plafond. L'AG peut voter un montant supérieur aussi élevé que nécessaire pour couvrir les travaux à venir — c'est même recommandé pour les immeubles anciens ou avec des équipements en fin de vie.",
       },
     ],
   },
@@ -257,7 +291,7 @@ export const posts: BlogPost[] = [
       },
       {
         q: "Quelles sont les premières démarches après l'élection comme syndic bénévole ?",
-        a: "Dans les 30 premiers jours : récupérer les archives de l'ancien syndic (sous 15 jours), ouvrir un compte bancaire au nom du syndicat des copropriétaires, notifier les prestataires, constituer le registre des copropriétaires, et identifier les contrats en cours.",
+        a: "Dans les 30 premiers jours : récupérer auprès de l'ancien syndic l'état de trésorerie et les références bancaires (sous 15 jours), puis l'ensemble des archives (sous un mois), ouvrir un compte bancaire au nom du syndicat des copropriétaires, notifier les prestataires, constituer le registre des copropriétaires, et identifier les contrats en cours.",
       },
       {
         q: "Le syndic bénévole peut-il être rémunéré ?",
@@ -269,7 +303,7 @@ export const posts: BlogPost[] = [
       },
       {
         q: "Comment remplacer un syndic professionnel par un syndic bénévole ?",
-        a: "La résolution doit figurer à l'ordre du jour de l'AG avec une candidature formalisée à l'avance. L'élection se fait à la majorité de l'article 25. La prise d'effet coïncide avec la fin du contrat du syndic professionnel — respectez le préavis contractuel (généralement 3 mois avant l'AG). Une fois élu, l'ancien syndic dispose de 15 jours pour transmettre les archives.",
+        a: "La résolution doit figurer à l'ordre du jour de l'AG avec une candidature formalisée à l'avance. L'élection se fait à la majorité de l'article 25. La prise d'effet coïncide avec la fin du contrat du syndic professionnel — respectez le préavis contractuel (généralement 3 mois avant l'AG). Une fois élu, l'ancien syndic doit transmettre l'état de trésorerie et les références bancaires sous 15 jours, puis l'ensemble des archives sous un mois.",
       },
       {
         q: "Quelle est la durée d'un mandat de syndic bénévole ?",
@@ -343,21 +377,21 @@ export const posts: BlogPost[] = [
   },
   {
     slug: 'logiciel-syndic-benevole',
-    title: 'Meilleur logiciel syndic bénévole (2026) : fonctions, prix, migration',
-    metaTitle: 'Logiciel syndic bénévole 2026 : fonctions, prix',
+    title: 'Comparatif logiciel syndic bénévole (2026) : comment bien choisir',
+    metaTitle: 'Comparatif logiciel syndic bénévole 2026 : prix et fonctions',
     description:
-      'Quel logiciel pour gérer une copropriété en syndic bénévole ? Comparatif fonctions, prix (à partir de 240 €/an) et migration depuis Excel. Essai 14 jours.',
+      'Comment choisir son logiciel de syndic bénévole ? Comparatif des fonctions indispensables, des prix (à partir de 360 €/an) et guide de migration depuis Excel.',
     publishedAt: '2026-03-21',
     updatedAt: '2026-05-06',
     readingTime: 9,
     category: 'Guide pratique – Outils & Logiciels',
     keywords: [
-      'logiciel syndic bénévole',
+      'comparatif logiciel syndic bénévole',
+      'comment choisir logiciel syndic bénévole',
       'logiciel gestion copropriété',
       'outil syndic bénévole',
       'application copropriété',
-      'logiciel appel de fonds copropriété',
-      'gestion copropriété sans cabinet',
+      'excel vs logiciel copropriété',
     ],
     toc: [
       { id: 'excel-vs-logiciel', text: 'La comparaison honnête : Excel, logiciel dédié, syndic pro' },
@@ -381,7 +415,7 @@ export const posts: BlogPost[] = [
       },
       {
         q: "Combien coûte un logiciel de gestion pour syndic bénévole ?",
-        a: "Mon Syndic Bénévole coûte à partir de 30 € par mois pour l'ensemble de la copropriété, quel que soit le nombre de lots. C'est à comparer à 1 500–5 000 € par an pour un syndic professionnel sur un immeuble de 10 à 20 lots.",
+        a: "Mon Syndic Bénévole coûte à partir de 30 € par mois (360 €/an) pour les copropriétés jusqu'à 10 lots, et jusqu'à 80 € par mois (960 €/an) en lots illimités. C'est à comparer à 1 500–5 000 € par an pour un syndic professionnel sur un immeuble de 10 à 20 lots.",
       },
       {
         q: "Un logiciel de syndic bénévole est-il conforme aux obligations légales ?",
@@ -463,9 +497,9 @@ export const posts: BlogPost[] = [
   {
     slug: 'assemblee-generale-copropriete-guide',
     title: 'Assemblée générale copropriété : guide complet 2026 (convocation, votes, PV)',
-    metaTitle: 'Assemblée générale copropriété : guide 2026',
+    metaTitle: 'Assemblée générale copropriété 2026 : convocation, votes, PV',
     description:
-      'Assemblée générale de copropriété : convocation J-21, ordre du jour, règles de majorité art. 24/25/26, modèle de PV. Guide complet + templates légaux.',
+      'Assemblée générale de copropriété : définition, convocation J-21, ordre du jour, majorités art. 24/25/26, modèle de PV. Guide complet + templates légaux.',
     // 149 chars
     publishedAt: '2026-04-15',
     updatedAt: '2026-05-06',
@@ -473,6 +507,7 @@ export const posts: BlogPost[] = [
     category: 'Guide pratique – Assemblée générale',
     keywords: [
       'assemblée générale copropriété',
+      'qu’est-ce qu’une assemblée générale de copropriété',
       'préparer AG copropriété',
       'convoquer assemblée générale copropriété',
       'ordre du jour AG copropriété',
@@ -481,6 +516,7 @@ export const posts: BlogPost[] = [
       'convocation AG copropriété délai 21 jours',
     ],
     toc: [
+      { id: 'definition', text: 'Qu\'est-ce qu\'une assemblée générale de copropriété ?' },
       { id: 'quand-ag', text: 'Quand tenir l\'AG : les dates légales' },
       { id: 'preparation', text: 'J-8 semaines : préparer le contenu de l\'AG' },
       { id: 'convocation', text: 'La convocation : template et points légaux (J-21)' },
@@ -528,7 +564,82 @@ export const posts: BlogPost[] = [
       },
       {
         q: "Que faire si le syndic ne convoque pas l'assemblée générale dans les délais ?",
-        a: "Le conseil syndical peut mettre en demeure le syndic d'organiser l'AG. À défaut, un ou plusieurs copropriétaires représentant au moins 15 % des voix peuvent convoquer eux-mêmes l'AG (art. 8 du décret du 17 mars 1967). En cas de carence grave, le président du tribunal judiciaire peut désigner un administrateur provisoire.",
+        a: "Le conseil syndical peut mettre en demeure le syndic d'organiser l'AG. À défaut, un ou plusieurs copropriétaires représentant au moins le quart des voix du syndicat peuvent convoquer eux-mêmes l'AG (art. 8 du décret du 17 mars 1967). En cas de carence grave, le président du tribunal judiciaire peut désigner un administrateur provisoire.",
+      },
+      {
+        q: "Comment se déroule une assemblée générale de copropriété ?",
+        a: "Dans l'ordre : vérification des présents et des pouvoirs (feuille de présence), désignation du président de séance et du secrétaire, puis vote de chaque résolution de l'ordre du jour à la majorité requise (art. 24, 25 ou 26). Le procès-verbal est rédigé et signé séance tenante, puis notifié aux copropriétaires opposants ou défaillants dans le mois qui suit.",
+      },
+    ],
+  },
+  {
+    slug: 'copropriete-sans-syndic-que-faire',
+    title: 'Copropriété sans syndic : est-ce légal et que faire ?',
+    metaTitle: 'Copropriété sans syndic : est-ce légal ? Que faire',
+    description:
+      'Copropriété sans syndic : mandat expiré, démission, révocation... Est-ce légal ? Risques (banque, assurance, vente), sanctions et comment régulariser en 2026.',
+    // 156 chars
+    publishedAt: '2026-09-10',
+    readingTime: 10,
+    category: 'Guide pratique – Syndic',
+    keywords: [
+      'copropriété sans syndic',
+      'copropriété sans syndic que faire',
+      'que faire sans syndic de copropriété',
+      'immeuble sans syndic',
+      'copro sans syndic',
+      'absence de syndic',
+      'copropriété sans syndic sanction',
+      'petite copropriété sans syndic',
+      'assurance copropriété sans syndic',
+      'nommer un syndic bénévole',
+    ],
+    toc: [
+      { id: 'legal', text: 'Peut-on légalement avoir une copropriété sans syndic ?' },
+      { id: 'cas-frequents', text: 'Dans quels cas une copropriété se retrouve sans syndic ?' },
+      { id: 'risques', text: 'Quels sont les risques concrets ?' },
+      { id: 'sanction', text: 'Y a-t-il une amende ou une sanction automatique ?' },
+      { id: 'regulariser', text: 'Comment régulariser une copropriété sans syndic' },
+      { id: 'qui-convoque-ag', text: 'Qui peut convoquer l\'assemblée générale sans syndic ?' },
+      { id: 'nommer-syndic-benevole', text: 'Comment nommer un syndic bénévole' },
+      { id: 'syndic-pro-ou-benevole', text: 'Faut-il forcément reprendre un syndic professionnel ?' },
+      { id: 'petite-copropriete', text: 'Cas particulier : la petite copropriété de 2 à 5 lots' },
+      { id: 'checklist', text: 'Que faire immédiatement : checklist' },
+      { id: 'questions-frequentes', text: 'Questions fréquentes' },
+      { id: 'en-resume', text: 'En résumé' },
+    ],
+    faqs: [
+      {
+        q: "Est-il obligatoire d'avoir un syndic ?",
+        a: "Oui. L'article 17 de la loi du 10 juillet 1965 impose qu'un syndic administre tout syndicat de copropriétaires, quelle que soit la taille de l'immeuble. Seule la nature du syndic (professionnel, bénévole, syndicat coopératif) est laissée au choix des copropriétaires.",
+      },
+      {
+        q: "Une copropriété peut-elle fonctionner sans syndic ?",
+        a: "Pas normalement, et pas durablement. Le syndicat des copropriétaires continue d'exister juridiquement, mais sans syndic, plus personne n'est habilité à mouvementer le compte bancaire, signer des contrats, représenter le syndicat en justice ou établir les documents nécessaires à une vente.",
+      },
+      {
+        q: "Qui paie les factures lorsqu'il n'y a plus de syndic ?",
+        a: "En théorie, personne n'est légalement habilité à valider et régler les factures du syndicat tant qu'aucun syndic n'est en exercice. Cette situation doit être régularisée au plus vite par l'élection d'un nouveau syndic.",
+      },
+      {
+        q: "Peut-on vendre un appartement si la copropriété n'a pas de syndic ?",
+        a: "C'est compliqué mais pas nécessairement impossible. Le notaire demande systématiquement un état daté établi par le syndic ; sans syndic pour l'établir, la vente est généralement retardée le temps qu'un syndic (ou un administrateur provisoire désigné par le tribunal judiciaire) soit en mesure de le produire.",
+      },
+      {
+        q: "Qui peut convoquer une assemblée générale sans syndic ?",
+        a: "Dans l'ordre : le conseil syndical (si l'AG n'a pas été réunie depuis plus de 12 mois), un copropriétaire habilité par le règlement de copropriété, ou à défaut un ou plusieurs copropriétaires représentant au moins le quart des voix du syndicat (art. 8 du décret du 17 mars 1967). En dernier recours, un administrateur provisoire peut être désigné par le président du tribunal judiciaire.",
+      },
+      {
+        q: "Peut-on devenir syndic bénévole du jour au lendemain ?",
+        a: "L'élection elle-même prend le temps d'une AG (convoquée avec un délai de 21 jours). Une fois élu en revanche, le nouveau syndic bénévole peut agir dès le lendemain : ouvrir le compte bancaire, notifier les prestataires, réunir les documents de la copropriété. Aucune formation ni période de carence n'est requise.",
+      },
+      {
+        q: "Que se passe-t-il si personne ne veut être syndic ?",
+        a: "Si aucun copropriétaire ne se porte candidat et qu'aucun syndic professionnel n'est retenu, tout intéressé peut saisir le président du tribunal judiciaire pour faire désigner un administrateur provisoire, chargé des pouvoirs du syndic le temps qu'une solution stable soit trouvée. Ses honoraires sont à la charge de la copropriété.",
+      },
+      {
+        q: "Une copropriété de deux lots doit-elle avoir un syndic ?",
+        a: "Oui. Le régime simplifié des petites copropriétés (ordonnance du 30 octobre 2019) allège certaines règles de fonctionnement pour les copropriétés de 2 à 5 lots, mais ne supprime pas l'obligation légale d'avoir un syndic prévue par l'article 17 de la loi de 1965.",
       },
     ],
   },

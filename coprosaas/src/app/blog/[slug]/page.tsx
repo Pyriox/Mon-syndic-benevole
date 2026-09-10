@@ -7,7 +7,7 @@ import SiteLogo from '@/components/ui/SiteLogo';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import ArticleViewTracker from '@/components/ui/ArticleViewTracker';
 import LandingNav from '@/app/LandingNav';
-import { getPost, formatPublishedAt, posts } from '@/lib/blog';
+import { getPost, formatPublishedAt, posts, BLOG_AUTHOR } from '@/lib/blog';
 import PublicFooter from '@/components/layout/PublicFooter';
 
 export const dynamic = 'force-static';
@@ -24,6 +24,7 @@ const contentLoaders: Record<string, () => Promise<ArticleModule>> = {
   'logiciel-syndic-benevole': () => import('../_content/logiciel-syndic-benevole'),
   'migrer-vers-mon-syndic-benevole': () => import('../_content/migrer-vers-mon-syndic-benevole'),
   'assemblee-generale-copropriete-guide': () => import('../_content/assemblee-generale-copropriete-guide'),
+  'copropriete-sans-syndic-que-faire': () => import('../_content/copropriete-sans-syndic-que-faire'),
 };
 
 // ── Static params ────────────────────────────────────────────────────────────
@@ -42,7 +43,8 @@ export async function generateMetadata({
   if (!post) return {};
 
   return {
-    title: `${post.metaTitle ?? post.title} | Mon Syndic Bénévole`,
+    // Le suffixe " | Mon Syndic Bénévole" est déjà ajouté par le template du layout racine.
+    title: post.metaTitle ?? post.title,
     description: post.description,
     keywords: post.keywords,
     robots: { index: true, follow: true },
@@ -55,6 +57,7 @@ export async function generateMetadata({
       type: 'article',
       publishedTime: post.publishedAt,
       modifiedTime: post.updatedAt ?? post.publishedAt,
+      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: post.title }],
     },
     alternates: { canonical: `https://www.mon-syndic-benevole.fr/blog/${post.slug}` },
   };
@@ -90,11 +93,20 @@ export default async function ArticlePage({
         headline: post.title,
         description: post.description,
         url: `${APP_URL}/blog/${post.slug}`,
+        image: [`${APP_URL}/opengraph-image`],
         datePublished: post.publishedAt,
         dateModified: post.updatedAt ?? post.publishedAt,
         inLanguage: 'fr-FR',
         keywords: post.keywords.join(', '),
-        author: { '@type': 'Organization', name: 'Mon Syndic Bénévole', url: APP_URL },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': `${APP_URL}/blog/${post.slug}` },
+        author: {
+          '@type': 'Person',
+          name: BLOG_AUTHOR.name,
+          jobTitle: BLOG_AUTHOR.role,
+          description: BLOG_AUTHOR.bio,
+          url: APP_URL,
+          worksFor: { '@type': 'Organization', name: 'Mon Syndic Bénévole', url: APP_URL },
+        },
         publisher: {
           '@type': 'Organization',
           name: 'Mon Syndic Bénévole',
@@ -164,6 +176,17 @@ export default async function ArticlePage({
             {post.title}
           </h1>
 
+          {/* Auteur */}
+          <div className="flex items-center gap-2.5 mb-4 text-sm text-blue-100">
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 border border-white/20 text-xs font-semibold shrink-0" aria-hidden="true">
+              {BLOG_AUTHOR.name.charAt(0)}
+            </span>
+            <span>
+              Par <span className="font-semibold text-white">{BLOG_AUTHOR.name}</span>
+              <span className="text-blue-300/70"> · {BLOG_AUTHOR.role}</span>
+            </span>
+          </div>
+
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-blue-200 border-t border-white/20 pt-6">
             <span>
@@ -203,8 +226,19 @@ export default async function ArticlePage({
       )}
 
       {/* ── Article body ── */}
-      <main className="max-w-3xl mx-auto px-6 pb-16">
+      <main className="max-w-3xl mx-auto px-6 pb-10">
         <ContentComponent />
+
+        {/* Bio auteur — qui a écrit ce contenu et pourquoi lui faire confiance */}
+        <div className="mt-12 flex items-start gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+          <span className="flex items-center justify-center w-11 h-11 rounded-full bg-blue-600 text-white font-semibold shrink-0" aria-hidden="true">
+            {BLOG_AUTHOR.name.charAt(0)}
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">{BLOG_AUTHOR.name} — {BLOG_AUTHOR.role}</p>
+            <p className="text-sm text-gray-600 mt-1">{BLOG_AUTHOR.bio}</p>
+          </div>
+        </div>
       </main>
 
       {/* ── Related articles ── */}

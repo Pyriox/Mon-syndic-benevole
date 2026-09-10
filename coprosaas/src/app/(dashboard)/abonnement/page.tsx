@@ -18,6 +18,7 @@ import PlansGridSection from './PlansGridSection';
 import SubscriptionSuccessTracker from './SubscriptionSuccessTracker';
 import AddonBillingButton from './AddonBillingButton';
 import { AlertCircle, CheckCircle, Clock, Lock, Settings2 } from 'lucide-react';
+import { PRICING_PLANS } from '@/lib/pricing-plans';
 
 const FEATURES = [
   'Copropriétaires illimités',
@@ -30,38 +31,7 @@ const FEATURES = [
   'Export PDF',
 ];
 
-const PLANS = [
-  {
-    id: 'essentiel',
-    name: 'Essentiel',
-    desc: '10 lots inclus',
-    annual: 360,
-    monthlyLabel: '30 €',
-    badge: 'Le plus populaire',
-    highlight: true,
-    maxLots: 10,
-  },
-  {
-    id: 'confort',
-    name: 'Confort',
-    desc: '20 lots inclus',
-    annual: 540,
-    monthlyLabel: '45 €',
-    badge: null,
-    highlight: false,
-    maxLots: 20,
-  },
-  {
-    id: 'illimite',
-    name: 'Illimité',
-    desc: 'Lots illimités',
-    annual: 960,
-    monthlyLabel: '80 €',
-    badge: null,
-    highlight: false,
-    maxLots: Infinity,
-  },
-] as const;
+const PLANS = PRICING_PLANS;
 
 type PlanId = (typeof PLANS)[number]['id'];
 type AddonPricingDetails = {

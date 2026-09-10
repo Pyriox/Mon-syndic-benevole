@@ -91,7 +91,7 @@ En l'absence de syndic, la copropriété est en situation irrégulière. Tout co
 Être élu est une chose. Prendre en main la gestion concrètement en est une autre. Voici ce qui doit être fait dans les premières semaines.
 
 **1. Récupérer les archives auprès de l'ancien syndic**
-L'ancien syndic (professionnel ou bénévole) a l'obligation légale de remettre tous les documents dans un délai de **15 jours** suivant la fin de son mandat : carnet d'entretien, procès-verbaux des AG précédentes, liste des copropriétaires avec tantièmes, contrats en cours, relevés bancaires, justificatifs de dépenses.
+L'ancien syndic (professionnel ou bénévole) a l'obligation légale de transmettre l'état de la trésorerie et les références bancaires du syndicat sous **15 jours**, puis l'ensemble des documents et archives sous **un mois** suivant la fin de son mandat (art. 18-2 de la loi du 10 juillet 1965) : carnet d'entretien, procès-verbaux des AG précédentes, liste des copropriétaires avec tantièmes, contrats en cours, relevés bancaires, justificatifs de dépenses.
 
 Ne laissez rien passer. Une archive manquante peut poser problème des années plus tard — lors d'une vente, d'un sinistre ou d'un litige.
 
@@ -180,7 +180,7 @@ Des plateformes existent aujourd'hui pour prendre en charge l'ensemble du cycle 
 
 [Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) est conçu spécifiquement pour ça : **simplifier la gestion sans Excel**, sécuriser les obligations légales, et redonner au syndic bénévole le temps et la sérénité de bien exercer son mandat.
 
-> Des centaines de syndics bénévoles utilisent la plateforme pour **gagner du temps et sécuriser la gestion** de leur copropriété dès le premier jour. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
+> Des centaines de syndics bénévoles utilisent la plateforme pour **gagner du temps et sécuriser la gestion** de leur copropriété dès le premier jour. [Essai gratuit 14 jours, aucun prélèvement pendant l'essai →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -211,7 +211,7 @@ Mais c'est aussi un engagement réel, avec des responsabilités légales, une ch
 
 La différence entre un mandat réussi et un mandat épuisant ne tient pas à la compétence juridique. Elle tient à l'organisation et aux outils. Un syndic bénévole bien outillé dès le premier jour gère en 2 heures par mois ce qu'un autre passe une journée entière à reconstituer.
 
-**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Prenez en main votre copropriété avec les bons outils dès le premier jour : appels de fonds, assemblées, documents, trésorerie. Essai gratuit 30 jours, sans engagement.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Prenez en main votre copropriété avec les bons outils dès le premier jour : appels de fonds, assemblées, documents, trésorerie. Essai gratuit 14 jours, sans engagement.**
 
 ---
 

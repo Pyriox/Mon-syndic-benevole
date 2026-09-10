@@ -31,11 +31,11 @@ Toutes les copropriétés comportant **plus de 10 lots** sont concernées. Le d�
 
 Les copropriétés de 10 lots et moins sont dispensées de l'obligation, mais peuvent voter un fonds volontaire — ce qui est fortement recommandé pour les petits immeubles anciens.
 
-**Exception** : une copropriété neuve peut décider à l'unanimité de ne pas constituer ce fonds pendant les **cinq premières années** suivant la réception de l'immeuble.
+**Exceptions** : une copropriété neuve peut décider à l'unanimité de ne pas constituer ce fonds pendant les **cinq premières années** suivant la réception de l'immeuble. L'AG peut également en être dispensée lorsqu'un **diagnostic technique global (DTG)** conclut à l'absence de travaux nécessaires dans les dix années suivantes.
 
 ### Le montant minimum légal
 
-La loi fixe un plancher : **5 % du budget prévisionnel annuel voté en AG**.
+La loi fixe un plancher : **5 % du budget prévisionnel annuel voté en AG**. Lorsqu'un plan pluriannuel de travaux (PPT) a été adopté, un second seuil s'ajoute : la cotisation doit aussi représenter au moins **2,5 % du montant des travaux prévus par ce plan** — le montant retenu est le plus élevé des deux.
 
 Ce taux s'applique aux charges courantes uniquement — le fonds de travaux lui-même n'entre pas dans l'assiette de calcul.
 
@@ -156,7 +156,7 @@ Des solutions permettent aujourd'hui de gérer le fonds de travaux ALUR comme un
 
 [Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) est conçu pour ça : **gagner du temps et sécuriser la gestion** du fonds de travaux, de la création du premier appel jusqu'à l'export pour votre assemblée générale.
 
-> Plusieurs centaines de syndics bénévoles l'utilisent pour rester en conformité sans y penser. [Essai gratuit 30 jours, sans carte bancaire →](https://www.mon-syndic-benevole.fr)
+> Plusieurs centaines de syndics bénévoles l'utilisent pour rester en conformité sans y penser. [Essai gratuit 14 jours, aucun prélèvement pendant l'essai →](https://www.mon-syndic-benevole.fr)
 
 ---
 
@@ -185,7 +185,7 @@ Le fonds de travaux ALUR n'est pas une contrainte administrative parmi d'autres.
 
 Le défi pour le syndic bénévole n'est pas de comprendre le principe. C'est de l'appliquer rigoureusement, chaque année, avec la traçabilité que la loi impose implicitement. Et ça, Excel ne le fait pas seul.
 
-**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Fonds de travaux séparé, cotisations automatiques, historique par copropriétaire, export pour le notaire : restez en conformité sans y penser. Essai gratuit 30 jours, sans engagement.**
+**[Mon Syndic Bénévole](https://www.mon-syndic-benevole.fr) — Fonds de travaux séparé, cotisations automatiques, historique par copropriétaire, export pour le notaire : restez en conformité sans y penser. Essai gratuit 14 jours, sans engagement.**
 
 ---
 

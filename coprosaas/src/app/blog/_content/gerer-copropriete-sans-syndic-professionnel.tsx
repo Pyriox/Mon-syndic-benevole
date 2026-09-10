@@ -18,7 +18,7 @@ export default function ArticleGererCopropriete() {
         De l&apos;autre : l&apos;idée de tout gérer soi-même, qui fait peur. Comptabilité, assemblées générales, appels de fonds, travaux, impayés… Par où commencer ? Combien de temps ça prend vraiment ? Et si on rate une obligation légale, qui est responsable ?
       </p>
       <p className={p}>
-        La réalité : en France, <strong className={strong}>plus de 40 % des copropriétés</strong> sont gérées sans cabinet professionnel — chiffre qui monte à 60 % pour les immeubles de moins de 10 lots. Ce n&apos;est pas marginal. Ce guide n&apos;est pas une liste d&apos;obligations abstraites — c&apos;est une réponse concrète à la question : <strong className={strong}>comment faire ça correctement, sans y passer sa vie ?</strong>
+        La réalité : selon un guide de l&apos;ANAH, la France comptait <strong className={strong}>52 839 syndics bénévoles pour 550 529 lots principaux</strong> au 1er janvier 2024. Ce n&apos;est pas marginal. Ce guide n&apos;est pas une liste d&apos;obligations abstraites — c&apos;est une réponse concrète à la question : <strong className={strong}>comment faire ça correctement, sans y passer sa vie ?</strong>
       </p>
 
       <h2 id="explication" className={h2}>L&apos;explication : ce que ça implique vraiment</h2>
@@ -258,7 +258,7 @@ export default function ArticleGererCopropriete() {
       <h2 id="comment-passer" className={h2}>Comment passer d&apos;un syndic professionnel à un syndic bénévole en 5 étapes</h2>
       <ol className={ol}>
         <li className={li}><strong className={strong}>Décider et voter en AG.</strong> La résolution de remplacement du syndic doit être à l&apos;ordre du jour. Élection du bénévole à la majorité art. 25.</li>
-        <li className={li}><strong className={strong}>Envoyer la LRAR à l&apos;ancien syndic</strong> dès le lendemain pour demander le transfert des archives dans les 15 jours légaux.</li>
+        <li className={li}><strong className={strong}>Envoyer la LRAR à l&apos;ancien syndic</strong> dès le lendemain pour demander l&apos;état de la trésorerie et les références bancaires sous 15 jours, puis l&apos;ensemble des documents et archives sous un mois (art. 18-2 de la loi de 1965).</li>
         <li className={li}><strong className={strong}>Ouvrir le compte séparé</strong> au nom du syndicat. Les anciens mandats bancaires de l&apos;ancien syndic sont annulés de plein droit à la fin de son mandat.</li>
         <li className={li}><strong className={strong}>S&apos;équiper.</strong> Un tableur peut convenir pour 4 lots. Au-delà, un outil dédié évite les erreurs et le temps perdu.</li>
         <li className={li}><strong className={strong}>Informer résidents et prestataires</strong> de vos nouvelles coordonnées et du nouveau RIB.</li>
@@ -294,7 +294,7 @@ export default function ArticleGererCopropriete() {
       <p className={p}>Légalement, il n&apos;y a qu&apos;un seul syndic. Mais le travail peut parfaitement être réparti : un copropriétaire gère les finances, un autre les prestataires, un troisième les relations avec les résidents. La responsabilité légale reste sur la personne élue syndic — les autres sont des collaborateurs bénévoles.</p>
 
       <h3 className={h3}>Peut-on ne pas avoir de syndic dans une copropriété ?</h3>
-      <p className={p}>Non. La loi du 10 juillet 1965 (art. 17) impose l&apos;existence d&apos;un syndic dans <strong className={strong}>toute copropriété, sans exception</strong>. Ce qui est libre, c&apos;est la <em>nature</em> du syndic : professionnel ou bénévole. &ldquo;Gérer sans syndic professionnel&rdquo; signifie confier la gestion à un copropriétaire élu — pas supprimer toute organisation. Une copropriété sans syndic est en situation irrégulière : tout copropriétaire peut saisir le tribunal pour faire désigner un administrateur provisoire, aux frais de la copropriété.</p>
+      <p className={p}>Non. La loi du 10 juillet 1965 (art. 17) impose l&apos;existence d&apos;un syndic dans <strong className={strong}>toute copropriété, sans exception</strong>. Ce qui est libre, c&apos;est la <em>nature</em> du syndic : professionnel ou bénévole. &ldquo;Gérer sans syndic professionnel&rdquo; signifie confier la gestion à un copropriétaire élu — pas supprimer toute organisation. Une copropriété qui n&apos;a plus aucun syndic est en situation irrégulière : voir notre guide <a href="/blog/copropriete-sans-syndic-que-faire" className={a}>copropriété sans syndic : est-ce légal et que faire ?</a> pour les risques concrets et la marche à suivre pour régulariser.</p>
 
       <h3 className={h3}>Quelles sont les obligations légales d&apos;une copropriété gérée en bénévole ?</h3>
       <p className={p}>Elles sont <strong className={strong}>identiques</strong> à celles d&apos;une copropriété gérée par un professionnel. Le syndic bénévole doit : convoquer l&apos;AG annuelle avec au moins 21 jours de préavis, émettre les appels de fonds trimestriels, tenir une comptabilité séparée, ouvrir un compte bancaire au nom du syndicat, gérer le fonds de travaux ALUR sur un compte rémunéré séparé (obligatoire pour toutes les copropriétés depuis 2025), maintenir l&apos;assurance multirisques immeuble, et archiver les documents pendant 10 ans. Le bénévolat concerne la personne qui exerce — pas le niveau d&apos;exigence légale.</p>
@@ -305,6 +305,15 @@ export default function ArticleGererCopropriete() {
       </p>
       <p className={p}>Ce qui fait la différence entre un syndic qui tient dans la durée et un qui abandonne au bout de 2 ans : l&apos;organisation, les bons outils, et une copropriété qui joue le jeu collectivement.</p>
       <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur <a href="/blog/comment-devenir-syndic-benevole" className={a}>comment devenir syndic bénévole</a>, sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales détaillées du syndic</a> ou notre comparatif des <a href="/blog/logiciel-syndic-benevole" className={a}>logiciels pour syndic bénévole</a>.</p>
+
+      <div className="my-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles</p>
+        <ul className="text-sm text-gray-700 space-y-1">
+          <li><a href="https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256" target="_blank" rel="noopener noreferrer" className={a}>Légifrance — loi n° 65-557 du 10 juillet 1965</a></li>
+          <li><a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service-Public.fr — le syndic de copropriété</a></li>
+          <li><a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/" target="_blank" rel="noopener noreferrer" className={a}>ANIL — le syndic en copropriété</a></li>
+        </ul>
+      </div>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-2">Comme Isabelle, Marc et Sylvie — voyez par vous-même si ça vous convient.</p>

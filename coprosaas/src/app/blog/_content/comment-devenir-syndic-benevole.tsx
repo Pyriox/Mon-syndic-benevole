@@ -12,7 +12,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
   return (
     <>
       <p className={p}>
-        Devenir syndic bénévole ne nécessite ni diplôme, ni carte professionnelle, ni formation. <strong className={strong}>Il suffit d&apos;être copropriétaire et d&apos;être élu à la majorité de l&apos;article 25.</strong> C&apos;est tout — et plus de 60 % des immeubles de moins de 10 lots sont gérés sans cabinet professionnel.
+        Devenir syndic bénévole ne nécessite ni diplôme, ni carte professionnelle, ni formation. <strong className={strong}>Il suffit d&apos;être copropriétaire et d&apos;être élu à la majorité de l&apos;article 25.</strong> C&apos;est tout — et selon un guide de l&apos;ANAH, la France comptait 52 839 syndics bénévoles au 1er janvier 2024.
       </p>
       <p className={p}>
         Il est 21 h 15. L&apos;assemblée générale vient de se terminer. Pierre, 52 ans, a levé la main quand personne d&apos;autre ne se proposait. «D&apos;accord, je veux bien essayer.» Il rentre chez lui avec le procès-verbal sous le bras et une seule question : <strong className={strong}>par où je commence demain matin ?</strong>
@@ -35,7 +35,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
         Pas de carte professionnelle. Pas de formation certifiante. Pas d&apos;assurance obligatoire spécifique. En revanche : vérifiez que votre assurance habitation couvre la <strong className={strong}>responsabilité civile du mandataire</strong> — certaines polices l&apos;incluent automatiquement, d&apos;autres non. Une simple vérification par téléphone à votre assureur suffit.
       </p>
       <p className={p}>
-        Contexte : plus de <strong className={strong}>40 % des copropriétés françaises</strong> sont gérées sans cabinet professionnel selon les estimations du ministère du Logement. Ce chiffre monte à plus de 60 % pour les immeubles de moins de 10 lots. Ce n&apos;est pas un cas marginal — c&apos;est la norme pour les petits immeubles.
+        Contexte : selon un guide de l&apos;ANAH, la France comptait <strong className={strong}>52 839 syndics bénévoles pour 550 529 lots principaux</strong> au 1er janvier 2024. Ce n&apos;est pas un cas marginal — c&apos;est une réalité courante, notamment pour les petits immeubles.
       </p>
 
       <h2 id="election-ag" className={h2}>L&apos;élection en AG : ce qui peut invalider votre mandat si vous n&apos;y faites pas attention</h2>
@@ -92,7 +92,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
 
       <h3 className={h3}>Ce que le syndic professionnel doit vous remettre</h3>
       <p className={p}>
-        Dès la fin de son mandat, le syndic professionnel dispose de <strong className={strong}>15 jours pour transférer l&apos;intégralité des archives</strong> (art. 18-2 de la loi de 1965). En pratique, les cabinets professionnels sont souvent mieux organisés que les particuliers sur ce point — mais ils peuvent facturer ce transfert comme « frais de sortie ». Vérifiez ce point dans le contrat avant l&apos;AG.
+        Dès la fin de son mandat, le syndic professionnel doit transmettre <strong className={strong}>l&apos;état de la trésorerie et les références bancaires du syndicat sous 15 jours</strong>, puis <strong className={strong}>l&apos;ensemble des documents et archives sous un mois</strong> (art. 18-2 de la loi de 1965). En pratique, les cabinets professionnels sont souvent mieux organisés que les particuliers sur ce point — mais ils peuvent facturer ce transfert comme « frais de sortie ». Vérifiez ce point dans le contrat avant l&apos;AG.
       </p>
 
       <div className="my-6 bg-emerald-50 border border-emerald-200 rounded-xl p-5">
@@ -107,7 +107,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       </p>
       <ol className={ol}>
         <li className={li}>
-          <strong className={strong}>Envoyer une lettre recommandée à l&apos;ancien syndic</strong> pour demander le transfert des archives dans le délai légal de 15 jours. N&apos;attendez pas qu&apos;il prenne l&apos;initiative — certains cabinets font traîner volontairement.
+          <strong className={strong}>Envoyer une lettre recommandée à l&apos;ancien syndic</strong> pour demander l&apos;état de la trésorerie et les références bancaires sous 15 jours, puis l&apos;ensemble des documents et archives sous un mois (art. 18-2 de la loi de 1965). N&apos;attendez pas qu&apos;il prenne l&apos;initiative — certains cabinets font traîner volontairement.
         </li>
         <li className={li}>
           <strong className={strong}>Prévenir les copropriétaires</strong> de votre prise de fonction et de vos coordonnées de contact. Un simple e-mail collectif suffit.
@@ -119,9 +119,9 @@ export default function ArticleCommentDevenirSyndicBenevole() {
 
       <h2 id="30-premiers-jours" className={h2}>Les 30 premiers jours : 5 démarches dans l&apos;ordre</h2>
 
-      <h3 className={h3}>1. Récupérer les archives de l&apos;ancien syndic (délai légal : 15 jours)</h3>
+      <h3 className={h3}>1. Récupérer les archives de l&apos;ancien syndic (15 jours pour la trésorerie, 1 mois pour le reste)</h3>
       <p className={p}>
-        L&apos;ancien syndic est légalement tenu de remettre l&apos;intégralité des documents dans les <strong className={strong}>15 jours</strong> suivant la fin de son mandat (art. 18-2 de la loi de 1965). Ce délai est strict. Ne laissez pas traîner.
+        L&apos;ancien syndic est légalement tenu de transmettre <strong className={strong}>l&apos;état de la trésorerie et les références bancaires sous 15 jours</strong>, puis <strong className={strong}>l&apos;ensemble des documents et archives sous un mois</strong> suivant la fin de son mandat (art. 18-2 de la loi de 1965). Ces délais sont stricts. Ne laissez pas traîner.
       </p>
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
@@ -148,7 +148,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-6 text-sm">
         <p className="text-gray-500 text-xs mb-3 uppercase tracking-wider">Modèle e-mail/LRAR — Demande de transfert d&apos;archives</p>
         <p className="text-gray-700 italic leading-relaxed">
-          &ldquo;Madame, Monsieur, À la suite de mon élection en qualité de syndic bénévole du Syndicat des Copropriétaires de [nom copropriété], lors de l&apos;AG du [date], je vous informe que votre mandat a pris fin à cette date. Conformément à l&apos;article 18-2 de la loi du 10 juillet 1965, je vous demande de me remettre, dans un délai de 15 jours, l&apos;ensemble des documents et archives relatifs à la copropriété. [Liste des documents]. À défaut de remise dans ce délai, je me verrai contraint d&apos;engager les voies de droit appropriées. Veuillez agréer...&rdquo;
+          &ldquo;Madame, Monsieur, À la suite de mon élection en qualité de syndic bénévole du Syndicat des Copropriétaires de [nom copropriété], lors de l&apos;AG du [date], je vous informe que votre mandat a pris fin à cette date. Conformément à l&apos;article 18-2 de la loi du 10 juillet 1965, je vous demande de me remettre, sous 15 jours, l&apos;état de la trésorerie et les références bancaires du syndicat, puis, sous un mois, l&apos;ensemble des documents et archives relatifs à la copropriété. [Liste des documents]. À défaut de remise dans ces délais, je me verrai contraint d&apos;engager les voies de droit appropriées. Veuillez agréer...&rdquo;
         </p>
       </div>
 
@@ -197,7 +197,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
               'Noter la date de fin de mandat de l\'ancien syndic',
             ]},
             { delai: 'J+1 à J+2', items: [
-              'LRAR à l\'ancien syndic — transfert d\'archives (délai légal : 15 jours)',
+              'LRAR à l\'ancien syndic — trésorerie et RIB sous 15 jours, archives complètes sous 1 mois (art. 18-2)',
               'E-mail collectif aux copropriétaires — annonce de prise de fonction',
               'Identifier la banque et organiser le changement de signataire',
             ]},
@@ -388,7 +388,7 @@ export default function ArticleCommentDevenirSyndicBenevole() {
 
       <h3 className={h3}>Comment remplacer un syndic professionnel par un syndic bénévole ?</h3>
       <p className={p}>
-        La résolution doit figurer à l&apos;ordre du jour de l&apos;AG avec candidature formalisée. L&apos;élection se fait à la majorité de l&apos;article 25. <strong className={strong}>La prise d&apos;effet coïncide avec la fin du contrat du syndic professionnel</strong> — respectez le préavis contractuel (généralement 3 mois avant l&apos;AG où le contrat n&apos;est pas renouvelé). Demandez au syndic sortant son contrat pour vérifier la clause de résiliation. Une fois élu, les mêmes 15 jours de transfert d&apos;archives s&apos;appliquent.
+        La résolution doit figurer à l&apos;ordre du jour de l&apos;AG avec candidature formalisée. L&apos;élection se fait à la majorité de l&apos;article 25. <strong className={strong}>La prise d&apos;effet coïncide avec la fin du contrat du syndic professionnel</strong> — respectez le préavis contractuel (généralement 3 mois avant l&apos;AG où le contrat n&apos;est pas renouvelé). Demandez au syndic sortant son contrat pour vérifier la clause de résiliation. Une fois élu, les mêmes délais de transfert d&apos;archives s&apos;appliquent (15 jours pour la trésorerie et les références bancaires, 1 mois pour le reste).
       </p>
 
       <h3 className={h3}>Quelle est la durée d&apos;un mandat de syndic bénévole ?</h3>
@@ -407,6 +407,15 @@ export default function ArticleCommentDevenirSyndicBenevole() {
       </p>
       <p className={p}>Pierre, 8 mois après sa première AG : &ldquo;Je passe environ 3 heures par mois. L&apos;appel de fonds, je le génère en 10 minutes. La partie la plus longue, c&apos;est la préparation de l&apos;AG annuelle — mais ça m&apos;a pris moins de 5 heures en tout.&rdquo;</p>
       <p className={p}><strong className={strong}>Pour aller plus loin :</strong> consultez notre guide sur les <a href="/blog/obligations-syndic-benevole" className={a}>obligations légales du syndic bénévole</a>, sur le <a href="/blog/appel-de-fonds-copropriete-calcul-repartition" className={a}>calcul des appels de fonds</a>, notre guide complet pour <a href="/blog/assemblee-generale-copropriete-guide" className={a}>préparer et conduire une assemblée générale</a>, notre comparatif des <a href="/blog/logiciel-syndic-benevole" className={a}>logiciels pour syndic bénévole</a> ou notre guide pour <a href="/blog/gerer-copropriete-sans-syndic-professionnel" className={a}>gérer une copropriété sans syndic professionnel</a>.</p>
+
+      <div className="my-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles</p>
+        <ul className="text-sm text-gray-700 space-y-1">
+          <li><a href="https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256" target="_blank" rel="noopener noreferrer" className={a}>Légifrance — loi n° 65-557 du 10 juillet 1965</a></li>
+          <li><a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2608" target="_blank" rel="noopener noreferrer" className={a}>Service-Public.fr — le syndic de copropriété</a></li>
+          <li><a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/syndic/" target="_blank" rel="noopener noreferrer" className={a}>ANIL — le syndic en copropriété</a></li>
+        </ul>
+      </div>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Pierre passe 3h par mois. Son appel de fonds : 10 minutes.</p>

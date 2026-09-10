@@ -25,6 +25,11 @@ export default function ArticleAssembleeGenerale() {
         Ce guide couvre l&apos;intégralité du cycle légal en une seule page : <strong className={strong}>quand convoquer, quoi mettre à l&apos;ordre du jour, comment calculer les majorités (articles 24, 25 et 26), rédiger le PV séance tenante et notifier dans les délais</strong>. Avec les templates conformes que vous pouvez utiliser directement. Temps estimé pour une AG de 10 lots : <strong className={strong}>6 à 9 heures sans outil, 1 h 30 avec un outil dédié</strong>. Le guide explique pourquoi.
       </p>
 
+      <h2 id="definition" className={h2}>Qu&apos;est-ce qu&apos;une assemblée générale de copropriété ?</h2>
+      <p className={p}>
+        L&apos;assemblée générale (AG) est la réunion annuelle obligatoire de tous les copropriétaires d&apos;un immeuble, au cours de laquelle sont votées les décisions qui engagent le syndicat des copropriétaires : approbation des comptes, budget prévisionnel, travaux, fonds de travaux, désignation du syndic. Chaque copropriétaire vote en proportion de ses <strong className={strong}>tantièmes</strong> — pas &ldquo;une personne, une voix&rdquo;. Elle est encadrée par la loi du 10 juillet 1965 et son décret d&apos;application du 17 mars 1967, qui fixent le délai de convocation, l&apos;ordre du jour, les règles de majorité et la rédaction du procès-verbal.
+      </p>
+
       <div className="my-8 rounded-2xl bg-blue-50 border border-blue-100 p-6">
         <p className="text-sm font-semibold text-blue-700 mb-1">Anne-Sophie prépare son AG en une matinée. Vous pouvez faire pareil.</p>
         <p className="text-sm text-gray-600 mb-4">
@@ -88,12 +93,6 @@ export default function ArticleAssembleeGenerale() {
         </p>
       </div>
 
-      <div className="my-6 rounded-xl bg-slate-50 border border-slate-200 p-5">
-        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles utiles</p>
-        <p className="text-sm text-gray-700">
-          Pour recouper ce guide avec les références publiques, consultez la page de l&apos;<a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/assemblee-generale/" target="_blank" rel="noopener noreferrer" className={a}>ANIL sur l&apos;assemblée générale</a>, la fiche <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F35288" target="_blank" rel="noopener noreferrer" className={a}>Service Public sur la contestation d&apos;une décision d&apos;AG</a> et la page ANIL sur <a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/immatriculation-des-coproprietes/" target="_blank" rel="noopener noreferrer" className={a}>l&apos;immatriculation et la mise à jour du registre des copropriétés</a>.
-        </p>
-      </div>
 
       <h2 id="preparation" className={h2}>J-8 semaines : préparer le contenu de l&apos;AG</h2>
       <p className={p}>
@@ -685,19 +684,32 @@ export default function ArticleAssembleeGenerale() {
 
       <h3 className={h3}>Que faire si le syndic ne convoque pas l&apos;AG dans les délais ?</h3>
       <p className={p}>
-        Si le syndic tarde à convoquer l&apos;AG annuelle, les copropriétaires peuvent agir. Le <strong className={strong}>conseil syndical peut mettre en demeure le syndic</strong> d&apos;organiser l&apos;AG. À défaut de réponse, <strong className={strong}>un ou plusieurs copropriétaires représentant au moins 15 % des voix peuvent convoquer eux-mêmes l&apos;AG</strong> (art. 8 du décret du 17 mars 1967). En cas de carence grave, le président du tribunal judiciaire peut désigner un administrateur provisoire. Dans une copropriété gérée en syndic bénévole, cette situation est rarissime — elle survient généralement lors de vacance du poste.
+        Si le syndic tarde à convoquer l&apos;AG annuelle, les copropriétaires peuvent agir. Le <strong className={strong}>conseil syndical peut mettre en demeure le syndic</strong> d&apos;organiser l&apos;AG. À défaut de réponse, <strong className={strong}>un ou plusieurs copropriétaires représentant au moins le quart des voix du syndicat peuvent convoquer eux-mêmes l&apos;AG</strong> (art. 8 du décret du 17 mars 1967). En cas de carence grave, le président du tribunal judiciaire peut désigner un administrateur provisoire. Dans une copropriété gérée en syndic bénévole, cette situation est rarissime — elle survient généralement lors de vacance du poste.
       </p>
-
+      <h3 className={h3}>Comment se déroule une assemblée générale de copropriété ?</h3>
+      <p className={p}>
+        Dans l&apos;ordre : vérification des présents et des pouvoirs (feuille de présence), désignation du président de séance et du secrétaire, puis vote de chaque résolution de l&apos;ordre du jour à la majorité requise (art. 24, 25 ou 26). Le procès-verbal est rédigé et signé séance tenante, puis notifié aux copropriétaires opposants ou défaillants dans le mois qui suit.
+      </p>
       <h2 id="en-resume" className={h2}>En résumé</h2>
       <p className={p}>
         L&apos;assemblée générale n&apos;est pas une réunion de routine — c&apos;est le moment où se prennent toutes les décisions engageant la copropriété pour l&apos;année. Bien préparée, elle se tient en 1 h 30 et donne à tous les copropriétaires une vision claire des finances et des projets. Mal préparée (délai manqué, résolution hors ordre du jour, PV non envoyé), elle peut déboucher sur des contentieux coûteux.
       </p>
       <p className={p}>
-        Le calendrier est simple : commencez à préparer 8 semaines avant, envoyez les convocations à J-24 minimum, tenez votre réunion, signez le PV séance tenante, notifiez-le rapidement aux copropriétaires concernés et mettez à jour le registre des copropriétés dans les 2 mois après l&apos;AG d&apos;approbation des comptes. Si vous venez de prendre vos fonctions, consultez notre <a href="/blog/comment-devenir-syndic-benevole" className={a}>guide des premières démarches du syndic bénévole</a> pour les démarches qui précèdent la première AG.
+        Le calendrier est simple : commencez à préparer 8 semaines avant, envoyez les convocations à J-24 minimum, tenez votre réunion, signez le PV séance tenante, notifiez-le rapidement aux copropriétaires concernés et mettez à jour le registre des copropriétés dans les 2 mois après l&apos;AG d&apos;approbation des comptes. Si vous venez de prendre vos fonctions, consultez notre <a href="/blog/comment-devenir-syndic-benevole" className={a}>guide des premières démarches du syndic bénévole</a> pour les démarches qui précèdent la première AG, ou notre <a href="/blog/migrer-vers-mon-syndic-benevole" className={a}>guide de migration en 7 étapes</a> si vous gérez encore votre copropriété sous Excel.
       </p>
       <p className={p}>
         Pour un syndic bénévole, la différence entre &ldquo;subir&rdquo; l&apos;AG et la gérer sereinement tient souvent à un seul facteur : les données sont-elles en ordre tout au long de l&apos;année, ou tout est-il à reconstituer la veille ? C&apos;est exactement ce que règle un outil de gestion dédié.
       </p>
+
+      <div className="my-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Sources officielles</p>
+        <ul className="text-sm text-gray-700 space-y-1">
+          <li><a href="https://www.anil.org/votre-besoin/gerer-un-bien/copropriete/assemblee-generale/" target="_blank" rel="noopener noreferrer" className={a}>ANIL — l&apos;assemblée générale de copropriété</a></li>
+          <li><a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F35288" target="_blank" rel="noopener noreferrer" className={a}>Service-Public.fr — contester une décision d&apos;AG</a></li>
+          <li><a href="https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256" target="_blank" rel="noopener noreferrer" className={a}>Légifrance — loi n° 65-557 du 10 juillet 1965</a></li>
+          <li><a href="https://www.anah.fr/" target="_blank" rel="noopener noreferrer" className={a}>ANAH — Agence nationale de l&apos;habitat</a></li>
+        </ul>
+      </div>
 
       <div className="mt-8 rounded-2xl bg-blue-600 p-6 text-center">
         <p className="text-base font-semibold text-white mb-1">Préparez votre prochaine AG en une matinée.</p>
