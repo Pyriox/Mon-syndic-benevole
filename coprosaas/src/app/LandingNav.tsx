@@ -1,22 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SiteLogo from '@/components/ui/SiteLogo';
 import CtaLink from '@/components/ui/CtaLink';
-import { createClient } from '@/lib/supabase/client';
 
-function DashboardIcon() {
-  return (
-    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
-      <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
-      <rect x="13" y="3" width="8" height="5" rx="1.5" stroke="currentColor" strokeWidth="2" />
-      <rect x="13" y="10" width="8" height="11" rx="1.5" stroke="currentColor" strokeWidth="2" />
-      <rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-}
+// Chargé après hydratation : évite d'embarquer @supabase/ssr dans le JS critique de la home.
+const AccountNavButton = dynamic(() => import('./AccountNavButton'), { ssr: false });
 
 function MenuIcon({ open }: { open: boolean }) {
   if (open) {
@@ -46,13 +38,9 @@ const navLinks = [
 
 export default function LandingNav() {
   const router = useRouter();
-  const supabase = createClient();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [accountHref, setAccountHref] = useState('/login');
-  const [accountLabel, setAccountLabel] = useState('Connexion');
-  const [navPending, setNavPending] = useState(false);
 
   useEffect(() => {
     const prefetch = () => {
@@ -61,26 +49,9 @@ export default function LandingNav() {
       void router.prefetch('/register');
     };
 
-    const updateAccountState = async () => {
-      const { data } = await supabase.auth.getSession();
-      const isAuthenticated = Boolean(data.session);
-      setAccountHref(isAuthenticated ? '/dashboard' : '/login');
-      setAccountLabel(isAuthenticated ? 'Mon espace' : 'Connexion');
-    };
-
     const idle = window.requestIdleCallback
       ? window.requestIdleCallback(prefetch, { timeout: 1200 })
       : window.setTimeout(prefetch, 300);
-
-    const handleVisibilityChange = () => void updateAccountState();
-    const handleWindowFocus = () => void updateAccountState();
-
-    void updateAccountState();
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      void updateAccountState();
-    });
-    window.addEventListener('focus', handleWindowFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       if (typeof idle === 'number') {
@@ -88,19 +59,8 @@ export default function LandingNav() {
       } else if (window.cancelIdleCallback) {
         window.cancelIdleCallback(idle);
       }
-      authListener.subscription.unsubscribe();
-      window.removeEventListener('focus', handleWindowFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [router, supabase]);
-
-  const handleAccountNavigation = () => {
-    setNavPending(true);
-    setOpen(false);
-    router.push(accountHref);
-    // Filet de sécurité si la navigation est interrompue.
-    window.setTimeout(() => setNavPending(false), 3000);
-  };
+  }, [router]);
 
   useEffect(() => {
     if (!open) return;
@@ -164,16 +124,7 @@ export default function LandingNav() {
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleAccountNavigation}
-            disabled={navPending}
-            aria-busy={navPending}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:border-white/35 transition-colors disabled:opacity-70"
-          >
-            {navPending ? <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <DashboardIcon />}
-            {navPending ? 'Ouverture...' : accountLabel}
-          </button>
+          <AccountNavButton className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:border-white/35 transition-colors disabled:opacity-70" />
           <CtaLink
             href="/register"
             ctaLocation="nav_header"
@@ -226,16 +177,10 @@ export default function LandingNav() {
               {label}
             </Link>
           ))}
-          <button
-            type="button"
-            onClick={handleAccountNavigation}
-            disabled={navPending}
-            aria-busy={navPending}
+          <AccountNavButton
             className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-white/10 hover:border-white/35 transition-colors disabled:opacity-70"
-          >
-            {navPending ? <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <DashboardIcon />}
-            {navPending ? 'Ouverture...' : accountLabel}
-          </button>
+            onNavigate={() => setOpen(false)}
+          />
         </div>
       )}
     </nav>
